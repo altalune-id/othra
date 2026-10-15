@@ -1,6 +1,4 @@
 import type { Component } from 'vue';
-import AgentCreateView from './AgentCreateView.vue';
-import AgentListView from './AgentListView.vue';
 import AuthWhoami from './AuthWhoami.vue';
 import DefaultView from './DefaultView.vue';
 import InviteConfirm from './InviteConfirm.vue';
@@ -21,8 +19,6 @@ const registry: Record<string, Component> = {
   org_list: OrgListView,
   project_create: ProjectCreateView,
   project_list: ProjectListView,
-  agent_create: AgentCreateView,
-  agent_list: AgentListView,
   webhook_create: WebhookCreateView,
   webhook_list: WebhookListView,
   webhook_deliveries: WebhookDeliveriesView,

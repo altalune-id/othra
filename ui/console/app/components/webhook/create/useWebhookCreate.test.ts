@@ -7,7 +7,7 @@ import { WebhookSchema } from '../../../../gen/webhook/v1/webhook_pb';
 import { connectError, deferred, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
 import { useWebhookCreate } from './useWebhookCreate';
 
-const hookPB = create(WebhookSchema, { id: 'UxVy4UK3vmrHzPZ273hCA', orgId: 'V3StGXR8Z5jdHj6BmyT2a', projectId: 'x6MH9WPWjktMwCBKHy4pF', url: 'https://a.test', eventTypes: ['agent.created'], active: true });
+const hookPB = create(WebhookSchema, { id: 'UxVy4UK3vmrHzPZ273hCA', orgId: 'V3StGXR8Z5jdHj6BmyT2a', projectId: 'x6MH9WPWjktMwCBKHy4pF', url: 'https://a.test', eventTypes: ['invite.created'], active: true });
 
 describe('useWebhookCreate', () => {
   let createWebhook: ReturnType<typeof vi.fn>;
@@ -25,7 +25,7 @@ describe('useWebhookCreate', () => {
     form.show();
     form.url.value = ' https://a.test ';
     form.description.value = 'd';
-    form.eventTypes.value = ['agent.created'];
+    form.eventTypes.value = ['invite.created'];
     return form;
   }
 
@@ -43,7 +43,7 @@ describe('useWebhookCreate', () => {
   it('creates a webhook, adds it and shows the secret', async () => {
     const form = filled();
     await form.submit();
-    expect(createWebhook).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', projectId: 'x6MH9WPWjktMwCBKHy4pF', url: 'https://a.test', description: 'd', eventTypes: ['agent.created'] });
+    expect(createWebhook).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', projectId: 'x6MH9WPWjktMwCBKHy4pF', url: 'https://a.test', description: 'd', eventTypes: ['invite.created'] });
     expect(useWebhooksStore().items.map(w => w.id)).toEqual(['UxVy4UK3vmrHzPZ273hCA']);
     expect(form.secret.value).toBe('whsec_1');
     form.hide();

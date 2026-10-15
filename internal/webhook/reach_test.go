@@ -21,12 +21,12 @@ func TestWebhookReach(t *testing.T) {
 	sb := newScope()
 	sa := newScopeIn(sb.refs, uuid.New())
 	orgA, orgB, prj := sa.org, sb.org, sb.project
-	e := sb.endpoint(events.AgentCreated)
+	e := sb.endpoint(events.InviteCreated)
 	cp := controlPlane(t, &fakeStore{endpoints: []*Endpoint{e}}, sb)
 	ctx := session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceAPIKey, ActiveOrgID: orgA, AllProjects: true})
 	b, p, id := sb.o, sb.p, e.PublicID
 
-	_, err := cp.CreateWebhook(ctx, connect.NewRequest(&webhookv1.CreateWebhookRequest{OrgId: b, ProjectId: p, Url: "https://x.com", EventTypes: []string{string(events.AgentCreated)}}))
+	_, err := cp.CreateWebhook(ctx, connect.NewRequest(&webhookv1.CreateWebhookRequest{OrgId: b, ProjectId: p, Url: "https://x.com", EventTypes: []string{string(events.InviteCreated)}}))
 	assert.True(t, IsNotFoundError(err), "create: %v", err)
 	_, err = cp.ListWebhooks(ctx, connect.NewRequest(&webhookv1.ListWebhooksRequest{OrgId: b, ProjectId: p}))
 	assert.True(t, IsNotFoundError(err), "list: %v", err)
@@ -64,18 +64,18 @@ func TestCreate_ProjectMustBelongToOrg(t *testing.T) {
 	store := &fakeStore{}
 	svc := NewService(store, nil, unexpectedStub, testSealer(t), &fakeOutbox{}, fakeResolver{}, WithProjects(projectOrgs{prjB: orgB}))
 
-	_, _, err := svc.Create(tenantCtx(orgA, prjB), "https://e.com", "", []events.Type{events.AgentCreated})
+	_, _, err := svc.Create(tenantCtx(orgA, prjB), "https://e.com", "", []events.Type{events.InviteCreated})
 	assert.True(t, tenant.IsProjectOutsideOrgError(err), "got %v", err)
 	assert.Empty(t, store.endpoints)
 
-	_, _, err = svc.Create(tenantCtx(orgB, prjB), "https://e.com", "", []events.Type{events.AgentCreated})
+	_, _, err = svc.Create(tenantCtx(orgB, prjB), "https://e.com", "", []events.Type{events.InviteCreated})
 	require.NoError(t, err)
 }
 
 func TestOrgWideEventsNeedWholeOrgAndMemberRead(t *testing.T) {
 	s := newScope()
 	org, prj := s.org, s.project
-	e := s.endpoint(events.AgentCreated)
+	e := s.endpoint(events.MemberAdded)
 	cp := controlPlane(t, &fakeStore{endpoints: []*Endpoint{e}}, s)
 	o, p, id := s.o, s.p, e.PublicID
 	callers := map[string]struct {
@@ -101,8 +101,6 @@ func TestOrgWideEventsNeedWholeOrgAndMemberRead(t *testing.T) {
 				assert.True(t, authz.IsForbiddenError(err), "create %s: %v", typ, err)
 				assert.True(t, authz.IsForbiddenError(uerr), "update %s: %v", typ, uerr)
 			}
-			_, err := cp.CreateWebhook(ctx, connect.NewRequest(&webhookv1.CreateWebhookRequest{OrgId: o, ProjectId: p, Url: "https://x.com", EventTypes: []string{string(events.AgentCreated)}}))
-			require.NoError(t, err, "project events stay open")
 		})
 	}
 }
@@ -110,10 +108,10 @@ func TestOrgWideEventsNeedWholeOrgAndMemberRead(t *testing.T) {
 func TestOrgWideDeliveryPayloadsAreHiddenFromProjectCallers(t *testing.T) {
 	s := newScope()
 	org, prj := s.org, s.project
-	e := s.endpoint(events.InviteCreated, events.AgentCreated)
+	e := s.endpoint(events.InviteCreated)
 	entries := []outbox.Entry{
 		{ID: uuid.New(), Payload: []byte(`{"type":"invite.created","data":{"email":"bob@x.io"}}`), Status: outbox.StatusDelivered, Attempt: 1},
-		{ID: uuid.New(), Payload: []byte(`{"type":"agent.created"}`), Status: outbox.StatusDelivered, Attempt: 1},
+		{ID: uuid.New(), Payload: []byte(`{"type":"webhook.ping"}`), Status: outbox.StatusDelivered, Attempt: 1},
 	}
 	cp := NewControlPlane(testService(t, &fakeStore{endpoints: []*Endpoint{e}}, &fakeOutbox{entries: entries}), s.refs)
 	req := &webhookv1.ListWebhookDeliveriesRequest{OrgId: s.o, ProjectId: s.p, Id: e.PublicID, Limit: 10}

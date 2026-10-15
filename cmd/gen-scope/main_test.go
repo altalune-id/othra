@@ -75,7 +75,7 @@ func TestRun_WritesTheGeneratedFile(t *testing.T) {
 	require.NoError(t, os.WriteFile("scope/scopes.json", []byte(`{`), 0o600))
 	require.Error(t, run())
 
-	require.NoError(t, os.WriteFile("scope/scopes.json", []byte(`[{"name":"org:read","level":"org"},{"name":"agent:write","level":"project"}]`), 0o600))
+	require.NoError(t, os.WriteFile("scope/scopes.json", []byte(`[{"name":"org:read","level":"org"},{"name":"webhook:write","level":"project"}]`), 0o600))
 	require.NoError(t, run())
 	out, err := os.ReadFile("scope/names.gen.go")
 	require.NoError(t, err)
@@ -85,8 +85,8 @@ package scope
 
 // Scope names, generated from scope/scopes.json.
 const (
-	OrgRead    = "org:read"
-	AgentWrite = "agent:write"
+	OrgRead      = "org:read"
+	WebhookWrite = "webhook:write"
 )
 `, string(out))
 

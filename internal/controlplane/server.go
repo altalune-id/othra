@@ -9,7 +9,6 @@ import (
 	"connectrpc.com/connect"
 
 	"altalune.id/othra/apperror"
-	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
@@ -17,7 +16,6 @@ import (
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/othra/internal/agent"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel/authn"
@@ -42,7 +40,6 @@ type Options struct {
 type Services struct {
 	Orgs     *org.Service
 	Projects *project.Service
-	Agents   *agent.Service
 	APIKeys  *apikey.Service
 	Webhooks *webhook.Service
 	Users    *user.Service
@@ -56,7 +53,6 @@ type Services struct {
 type Refs interface {
 	invite.OrgIDs
 	project.OrgRefs
-	agent.Refs
 	apikey.Refs
 	webhook.Refs
 	member.Refs
@@ -67,13 +63,11 @@ type Refs interface {
 type Server struct {
 	Orgs     *org.Service
 	Projects *project.Service
-	Agents   *agent.Service
 	APIKeys  *apikey.Service
 	Webhooks *webhook.Service
 
 	OrgSvc     *org.OrgService
 	ProjectSvc *project.ProjectService
-	AgentSvc   *agent.AgentService
 	APIKeySvc  *apikey.APIKeyService
 	WebhookSvc *webhook.WebhookControlPlane
 	AuthSvc    *auth.AuthService
@@ -93,7 +87,6 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 	s := &Server{
 		Orgs:             svcs.Orgs,
 		Projects:         svcs.Projects,
-		Agents:           svcs.Agents,
 		APIKeys:          svcs.APIKeys,
 		Webhooks:         svcs.Webhooks,
 		OrgSvc:           org.NewControlPlane(svcs.Orgs),
@@ -105,9 +98,6 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 	}
 	if svcs.Projects != nil {
 		s.ProjectSvc = project.NewControlPlane(svcs.Projects, svcs.Refs)
-	}
-	if svcs.Agents != nil {
-		s.AgentSvc = agent.NewControlPlane(svcs.Agents, svcs.Refs)
 	}
 	if svcs.APIKeys != nil {
 		s.APIKeySvc = apikey.NewControlPlane(svcs.APIKeys, svcs.Refs)
@@ -135,10 +125,6 @@ func (s *Server) Handler(basePath string) http.Handler {
 	if s.ProjectSvc != nil {
 		projectPath, projectHandler := projectv1connect.NewProjectServiceHandler(s.ProjectSvc, s.handlerOptions()...)
 		inner.Handle(projectPath, projectHandler)
-	}
-	if s.AgentSvc != nil {
-		agentPath, agentHandler := agentv1connect.NewAgentServiceHandler(s.AgentSvc, s.handlerOptions()...)
-		inner.Handle(agentPath, agentHandler)
 	}
 	if s.APIKeySvc != nil {
 		keyPath, keyHandler := apikeyv1connect.NewAPIKeyServiceHandler(s.APIKeySvc, s.handlerOptions()...)

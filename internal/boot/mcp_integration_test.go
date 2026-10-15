@@ -34,7 +34,7 @@ func (f *apiFixture) mcpCall(t *testing.T, bearer, body string) (int, http.Heade
 
 func TestMCP_KeyScopesTheToolList(t *testing.T) {
 	f := newAPIFixture(t)
-	key := f.mint(t, apikey.KindOrg, "agent:read")
+	key := f.mint(t, apikey.KindOrg, "webhook:read")
 
 	status, _, body := f.mcpCall(t, key, `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
 	require.Equal(t, http.StatusOK, status, string(body))
@@ -48,12 +48,12 @@ func TestMCP_KeyScopesTheToolList(t *testing.T) {
 	for _, tool := range list.Result.Tools {
 		names = append(names, tool.Name)
 	}
-	assert.ElementsMatch(t, []string{"agent_get", "agent_list", "auth_whoami"}, names)
+	assert.ElementsMatch(t, []string{"webhook_list", "webhook_deliveries", "auth_whoami"}, names)
 }
 
 func TestMCP_WhoamiWithAKey(t *testing.T) {
 	f := newAPIFixture(t)
-	key := f.mint(t, apikey.KindOrg, "agent:read")
+	key := f.mint(t, apikey.KindOrg, "webhook:read")
 
 	status, _, body := f.mcpCall(t, key, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth_whoami","arguments":{}}}`)
 	require.Equal(t, http.StatusOK, status, string(body))
@@ -101,9 +101,9 @@ func TestMCP_ToolResultsHoldNoUUID(t *testing.T) {
 	values := map[string]any{
 		"org_id": s.pub.org, "project_id": s.pub.project, "invite_id": s.pub.invite, "user_id": s.pub.member,
 		"delivery_id": s.pub.delivery, "name": "Probe", "email": "probe@example.com", "role": "member",
-		"url": "https://example.com/probe", "event_types": []string{"agent.created"},
+		"url": "https://example.com/probe", "event_types": []string{"invite.created"},
 	}
-	ids := map[string]string{"org": s.pub.org, "project": s.pub.project, "agent": s.pub.agent, "webhook": s.pub.webhook}
+	ids := map[string]string{"org": s.pub.org, "project": s.pub.project, "webhook": s.pub.webhook}
 	answered := 0
 	for _, tool := range list.Result.Tools {
 		args := map[string]any{}

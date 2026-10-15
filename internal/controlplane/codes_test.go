@@ -22,7 +22,6 @@ func TestConnectCodeOf(t *testing.T) {
 		apperror.CodeUnexpected:       connect.CodeInternal,
 		apperror.Code("BOGUS"):        connect.CodeInternal,
 
-		apperror.CodeAgentNotFound:          connect.CodeNotFound,
 		apperror.CodeAPIKeyInvalidScope:     connect.CodeInvalidArgument,
 		apperror.CodeProjectAlreadyExists:   connect.CodeAlreadyExists,
 		apperror.CodeUnauthenticated:        connect.CodeUnauthenticated,

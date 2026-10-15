@@ -402,7 +402,7 @@ func TestRefresh_KeyUntouchedAndUnknownStripped(t *testing.T) {
 	f := newFixture(t, BasicCredentials{})
 	ctx := context.Background()
 
-	key := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), Scopes: []string{"agent:read"}, ActiveOrgID: uuid.New()}
+	key := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), Scopes: []string{"webhook:read"}, ActiveOrgID: uuid.New()}
 	p, err := f.svc.Refresh(ctx, key)
 	require.NoError(t, err)
 	assert.Equal(t, key, p)

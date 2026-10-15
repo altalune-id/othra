@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/agent"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/project"
@@ -17,7 +16,6 @@ import (
 type publicIDs struct {
 	orgs     *org.Service
 	projects *project.Service
-	agents   *agent.Service
 	users    *user.Service
 	webhooks webhook.Store
 }
@@ -26,7 +24,6 @@ func newPublicIDs(s *Services) publicIDs {
 	return publicIDs{
 		orgs:     s.Orgs,
 		projects: s.Projects,
-		agents:   s.Agents,
 		users:    s.Users,
 		webhooks: s.WebhookStore,
 	}
@@ -89,15 +86,8 @@ func (p publicIDs) UserPublicID(ctx context.Context, id uuid.UUID) (string, erro
 	return u.PublicID, nil
 }
 
-// ResourceID resolves an agent's or a webhook endpoint's public id within orgID.
+// ResourceID resolves a webhook endpoint's public id within orgID.
 func (p publicIDs) ResourceID(ctx context.Context, orgID uuid.UUID, publicID string) (uuid.UUID, bool, error) {
-	a, err := p.agents.ByPublicID(ctx, publicID)
-	switch {
-	case err == nil && a.OrgID == orgID:
-		return a.ID, true, nil
-	case err != nil && !isNotFound(err):
-		return uuid.Nil, false, err
-	}
 	e, err := p.webhooks.ByPublicID(tenant.Into(ctx, tenant.Context{OrgID: orgID}), publicID)
 	if err != nil {
 		return uuid.Nil, false, notFoundIsAbsent(err)
@@ -106,13 +96,6 @@ func (p publicIDs) ResourceID(ctx context.Context, orgID uuid.UUID, publicID str
 }
 
 func (p publicIDs) ResourcePublicID(ctx context.Context, orgID, id uuid.UUID) (publicID string, ok bool, err error) {
-	a, err := p.agents.Get(ctx, id)
-	switch {
-	case err == nil && a.OrgID == orgID:
-		return a.PublicID, true, nil
-	case err != nil && !isNotFound(err):
-		return "", false, err
-	}
 	e, err := p.webhooks.ByID(tenant.Into(ctx, tenant.Context{OrgID: orgID}), id)
 	if err != nil {
 		return "", false, notFoundIsAbsent(err)

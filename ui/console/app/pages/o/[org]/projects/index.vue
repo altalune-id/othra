@@ -20,6 +20,8 @@ const editModal = ref<InstanceType<typeof ProjectEditModal>>();
 function edit(project: Project) {
   editModal.value?.show(project);
 }
+
+useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.title')} · Othra` });
 </script>
 
 <template>

@@ -21,7 +21,7 @@ The request chain on `/api` is: authn and the permission check (`internal/permis
 1. **Proto.** Add the `rpc` and its `XxxRequest` / `XxxResponse` to `api/<domain>/v1/<domain>.proto`. Put a rule on every request field. Use the shared rules from `api/othra/v1/rules.proto` (`public_id`, `name`, `email`, `slug`) and pair them with `required` when the field must be set:
 
    ```proto
-   message GetAgentRequest {
+   message GetProjectRequest {
      string id = 1 [
        (buf.validate.field).required = true,
        (buf.validate.field).string.(othra.v1.public_id) = true
@@ -29,7 +29,7 @@ The request chain on `/api` is: authn and the permission check (`internal/permis
    }
    ```
 
-   When no shared rule fits, write a field CEL rule whose id is `<domain>.<field>.<rule>`, with the limit as a trailing number (`agent.description.max_len.2000`). The validator turns the last segment into the reason and the number into `param`. Add every new rule id to `internal/controlplane/testdata/rule_reasons.json`. A field that truly needs no rule (an empty request, a bool) goes in the `unruled` allowlist in `internal/controlplane/rules_test.go`, with a reason.
+   When no shared rule fits, write a field CEL rule whose id is `<domain>.<field>.<rule>`, with the limit as a trailing number (`webhook.description.max_len.200`). The validator turns the last segment into the reason and the number into `param`. Add every new rule id to `internal/controlplane/testdata/rule_reasons.json`. A field that truly needs no rule (an empty request, a bool) goes in the `unruled` allowlist in `internal/controlplane/rules_test.go`, with a reason.
 
 2. **`make generate`.** It runs `buf generate` (Go, Connect, OpenAPI under `gen/openapi`, TypeScript under `ui/console/gen`), `buf generate --template buf.gen.mcp.yaml` (MCP tools), `gen-scope` and `gen-apperror`. Never edit `gen/` by hand.
 
@@ -37,23 +37,23 @@ The request chain on `/api` is: authn and the permission check (`internal/permis
 
 4. **Service method.** Add it in `internal/<domain>/service.go` ([service-method.md](service-method.md)). It takes ids, enforces domain rules and owns the transaction. It never checks permissions or reach.
 
-5. **Handler.** Add the method to the domain's control-plane type in `internal/<domain>/controlplane.go`. Shape, copied from `AgentService.GetAgent`:
+5. **Handler.** Add the method to the domain's control-plane type in `internal/<domain>/controlplane.go`. Shape, copied from `ProjectService.GetProject`:
 
    ```go
-   // GetAgent loads an agent by id.
-   func (s *AgentService) GetAgent(
+   // GetProject loads a project by id.
+   func (s *ProjectService) GetProject(
        ctx context.Context,
-       req *connect.Request[agentv1.GetAgentRequest],
-   ) (*connect.Response[agentv1.GetAgentResponse], error) {
-       a, err := s.reachable(ctx, req.Msg.GetId())
+       req *connect.Request[projectv1.GetProjectRequest],
+   ) (*connect.Response[projectv1.GetProjectResponse], error) {
+       p, err := s.reachable(ctx, req.Msg.GetId(), authz.ReachProject)
        if err != nil {
            return nil, err
        }
-       out, err := s.toProto(ctx, a)
+       out, err := s.toProto(ctx, p)
        if err != nil {
            return nil, err
        }
-       return connect.NewResponse(&agentv1.GetAgentResponse{Agent: out}), nil
+       return connect.NewResponse(&projectv1.GetProjectResponse{Project: out}), nil
    }
    ```
 
@@ -98,15 +98,16 @@ The request chain on `/api` is: authn and the permission check (`internal/permis
 
 ## Reference code
 
-- [api/agent/v1/agent.proto](../../api/agent/v1/agent.proto): `AgentService`, `CreateAgentRequest`
+- [api/project/v1/project.proto](../../api/project/v1/project.proto): `ProjectService`, `CreateProjectRequest`
 - [api/othra/v1/rules.proto](../../api/othra/v1/rules.proto): `public_id`, `name`, `email`, `slug`
-- [internal/agent/controlplane.go](../../internal/agent/controlplane.go): `AgentService`, `reachable`, `project`, `toProto`
+- [internal/project/controlplane.go](../../internal/project/controlplane.go): `ProjectService`, `reachable`, `org`, `toProto`
+- [internal/webhook/controlplane.go](../../internal/webhook/controlplane.go): `scopeCtx`, `scopedID` (org and project ids resolved as a pair)
 - [internal/permission/permission.go](../../internal/permission/permission.go): `Table`, `For`
 - [internal/kernel/authz/reach.go](../../internal/kernel/authz/reach.go): `ReachProject`, `ReachResource`
 - [internal/controlplane/server.go](../../internal/controlplane/server.go): `Services`, `New`, `Handler`, `handlerOptions`
 - [internal/controlplane/validate.go](../../internal/controlplane/validate.go): `Validator`, `reasonOf`
 - [internal/controlplane/rules_test.go](../../internal/controlplane/rules_test.go): `TestEveryRequestFieldHasARule`, `unruled`
-- [internal/agent/reach_test.go](../../internal/agent/reach_test.go): `TestAgentReach_IDOnlyRPCs`
+- [internal/project/reach_test.go](../../internal/project/reach_test.go): `TestProjectReach_IDOnlyRPCs`
 - [internal/boot/reach_integration_test.go](../../internal/boot/reach_integration_test.go): `seedReach`, `noTenantInput`, `limitedKeyAllowed`
 - [internal/boot/publicid_integration_test.go](../../internal/boot/publicid_integration_test.go): `TestPublicIDs_NoRPCAnswersWithAUUID`, `fillProbe`
 - [internal/boot/publicids.go](../../internal/boot/publicids.go): `publicIDs`

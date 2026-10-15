@@ -5,12 +5,12 @@ import { grants, mintableForMe } from './grants';
 
 describe('grants', () => {
   it('matches like scope.Grants in Go', () => {
-    expect(grants(['*'], 'agent:read')).toBe(true);
-    expect(grants(['agent:*'], 'agent:read')).toBe(true);
-    expect(grants(['agent:*'], 'webhook:read')).toBe(false);
-    expect(grants(['agent:read'], 'agent:read')).toBe(true);
-    expect(grants(['agent:read'], 'agent:write')).toBe(false);
-    expect(grants([], 'agent:read')).toBe(false);
+    expect(grants(['*'], 'webhook:read')).toBe(true);
+    expect(grants(['webhook:*'], 'webhook:read')).toBe(true);
+    expect(grants(['webhook:*'], 'member:read')).toBe(false);
+    expect(grants(['webhook:read'], 'webhook:read')).toBe(true);
+    expect(grants(['webhook:read'], 'webhook:write')).toBe(false);
+    expect(grants([], 'webhook:read')).toBe(false);
     expect(grants(['*'], '')).toBe(false);
   });
 });
@@ -18,17 +18,17 @@ describe('grants', () => {
 describe('mintableForMe', () => {
   const catalog: Scope[] = [
     { name: 'org:write', level: 'org', labelKey: 'scope.org_write' },
-    { name: 'agent:read', level: 'project', labelKey: 'scope.agent_read' },
-    { name: 'agent:write', level: 'project', labelKey: 'scope.agent_write' },
+    { name: 'webhook:read', level: 'project', labelKey: 'scope.webhook_read' },
+    { name: 'webhook:write', level: 'project', labelKey: 'scope.webhook_write' },
     { name: 'apikey:write', level: 'org', labelKey: 'scope.apikey_write', personOnly: true },
   ];
 
   it('drops person-only and above-role scopes', () => {
-    expect(mintableForMe(catalog, ['agent:*', 'apikey:write']).map(s => s.name)).toEqual(['agent:read', 'agent:write']);
+    expect(mintableForMe(catalog, ['webhook:*', 'apikey:write']).map(s => s.name)).toEqual(['webhook:read', 'webhook:write']);
   });
 
   it('an owner mints every mintable scope', () => {
-    expect(mintableForMe(catalog, ['*']).map(s => s.name)).toEqual(['org:write', 'agent:read', 'agent:write']);
+    expect(mintableForMe(catalog, ['*']).map(s => s.name)).toEqual(['org:write', 'webhook:read', 'webhook:write']);
   });
 
   it('nothing without permissions', () => {

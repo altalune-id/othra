@@ -78,15 +78,3 @@ func TestNewProjects(t *testing.T) {
 	query, _ = jetpg.SELECT(def.ID).FROM(def).Sql()
 	assert.Contains(t, query, "projects")
 }
-
-func TestNewAgents(t *testing.T) {
-	agents := entity.NewAgents("auth", "t_")
-	query, _ := jetpg.SELECT(agents.Description).FROM(agents).Sql()
-	assert.Contains(t, query, "t_agents")
-	assert.Contains(t, query, "description")
-
-	// Empty schema falls back to public.
-	def := entity.NewAgents("", "")
-	query, _ = jetpg.SELECT(def.ID).FROM(def).Sql()
-	assert.Contains(t, query, "agents")
-}

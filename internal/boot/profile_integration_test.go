@@ -74,7 +74,7 @@ func TestProfile_ThroughTheAPI(t *testing.T) {
 func TestProfile_KeysAreRefused(t *testing.T) {
 	f := newAPIFixture(t)
 	client := authv1connect.NewAuthServiceClient(http.DefaultClient, f.url)
-	key := f.mint(t, apikey.KindOrg, scope.AgentRead)
+	key := f.mint(t, apikey.KindOrg, scope.WebhookRead)
 	_, err := client.UpdateProfile(t.Context(), withBearer(connect.NewRequest(&authv1.UpdateProfileRequest{Name: "x"}), key))
 	assert.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
 	_, err = client.ChangePassword(t.Context(), withBearer(connect.NewRequest(&authv1.ChangePasswordRequest{}), key))

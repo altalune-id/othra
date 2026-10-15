@@ -13,7 +13,7 @@ func TestBuiltinPermissions(t *testing.T) {
 	assert.Equal(t, []string{"*"}, BuiltinPermissions(RoleOwner))
 	assert.False(t, scope.Grants(BuiltinPermissions(RoleAdmin), scope.OrgWrite), "org settings are owner-only")
 	assert.True(t, scope.Grants(BuiltinPermissions(RoleAdmin), scope.MemberWrite))
-	assert.True(t, scope.Grants(BuiltinPermissions(RoleMember), scope.AgentWrite))
+	assert.True(t, scope.Grants(BuiltinPermissions(RoleMember), scope.WebhookWrite))
 	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.ProjectWrite))
 	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.MemberWrite))
 	assert.Empty(t, BuiltinPermissions("root"))

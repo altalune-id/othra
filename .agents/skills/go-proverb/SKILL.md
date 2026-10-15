@@ -144,7 +144,7 @@ In review, flag: `panic` on bad input, missing config at run time or a failed re
 ## Applying them in Othra
 
 - **Small interfaces at the consumer (4).** Each domain declares the ports it
-  needs in its own `ports.go` (for example `internal/agent/ports.go`). Keep
+  needs in its own `ports.go` (for example `internal/org/invite/ports.go`). Keep
   each port to the methods that domain calls; do not export one big store
   interface for everyone.
 - **Errors are values (15, 16).** Return the typed errors from `apperror`

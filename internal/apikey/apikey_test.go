@@ -18,7 +18,7 @@ func future() *time.Time {
 }
 
 func TestScheme_MintProject(t *testing.T) {
-	k, plaintext, err := NewScheme("othra_").MintProject(uuid.New(), uuid.New(), "ci", []string{scope.AgentRead}, nil, future(), time.Now().UTC())
+	k, plaintext, err := NewScheme("othra_").MintProject(uuid.New(), uuid.New(), "ci", []string{scope.WebhookRead}, nil, future(), time.Now().UTC())
 	require.NoError(t, err)
 	assert.Equal(t, KindProject, k.Kind)
 	assert.NotEqual(t, uuid.Nil, k.ProjectID)

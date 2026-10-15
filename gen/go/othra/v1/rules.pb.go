@@ -70,7 +70,7 @@ var (
 	//
 	// optional bool email = 104003;
 	E_Email = &file_othra_v1_rules_proto_extTypes[2]
-	// slug is a URL slug, as org, project and agent slugs are: 3 to 64 lowercase letters, digits and inner dashes.
+	// slug is a URL slug, as org and project slugs are: 3 to 64 lowercase letters, digits and inner dashes.
 	//
 	// optional bool slug = 104004;
 	E_Slug = &file_othra_v1_rules_proto_extTypes[3]

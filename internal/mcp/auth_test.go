@@ -64,7 +64,7 @@ func call(h http.Handler, header http.Header) *httptest.ResponseRecorder {
 }
 
 func keyPrincipal() session.Principal {
-	return session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), Scopes: []string{scope.AgentRead}}
+	return session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), Scopes: []string{scope.WebhookRead}}
 }
 
 func TestAuthenticate_NoCredentialOptionalPassesAnonymous(t *testing.T) {
@@ -181,10 +181,10 @@ func TestScopesFromContext(t *testing.T) {
 		{name: "owner", p: &session.Principal{Source: session.SourceLocal, UserID: uuid.New(), Scopes: []string{"*"}}, want: all},
 		{name: "system", p: new(session.System()), want: notPerson},
 		{name: "basic", p: &session.Principal{Source: session.SourceBasic, Operator: true}, want: notPerson},
-		{name: "org key with agent:read", p: &session.Principal{Source: session.SourceAPIKey, Scopes: []string{scope.AgentRead}},
-			want: []string{authz.AnyAuthenticated, scope.AgentRead}},
-		{name: "personal key keeps its intersected scopes", p: &session.Principal{Source: session.SourceAPIKey, OwnerID: uuid.New(), Scopes: []string{scope.AgentRead, scope.WebhookRead}},
-			want: []string{authz.AnyAuthenticated, scope.AgentRead, scope.WebhookRead}},
+		{name: "org key with webhook:read", p: &session.Principal{Source: session.SourceAPIKey, Scopes: []string{scope.WebhookRead}},
+			want: []string{authz.AnyAuthenticated, scope.WebhookRead}},
+		{name: "personal key keeps its intersected scopes", p: &session.Principal{Source: session.SourceAPIKey, OwnerID: uuid.New(), Scopes: []string{scope.ProjectRead, scope.WebhookRead}},
+			want: []string{authz.AnyAuthenticated, scope.ProjectRead, scope.WebhookRead}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -202,6 +202,6 @@ func TestScopesFromContext_MemberHasNoOrgWrite(t *testing.T) {
 	got := ScopesFromContext(session.PrincipalInto(context.Background(), p))
 	assert.NotContains(t, got, scope.OrgWrite)
 	assert.NotContains(t, got, scope.ProjectWrite)
-	assert.Contains(t, got, scope.AgentWrite)
+	assert.Contains(t, got, scope.WebhookWrite)
 	assert.Contains(t, got, authz.AnyAuthenticated)
 }

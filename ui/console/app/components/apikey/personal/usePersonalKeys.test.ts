@@ -11,9 +11,9 @@ import { mcpSnippet } from './mcpSnippet';
 import { usePersonalKeys } from './usePersonalKeys';
 
 const now = new Date('2026-10-01T00:00:00Z');
-const personalPB = create(APIKeySchema, { secretHint: 'aaaa', kind: 'personal', name: 'Mine', scopes: ['agent:read', 'mystery:do'] });
-const orgPB = create(APIKeySchema, { secretHint: 'bbbb', kind: 'org', name: 'CI', scopes: ['agent:read'] });
-const form = { name: 'Laptop', scopes: ['agent:read'], expiresInHours: 24, allProjects: true, projectIds: ['x6MH9WPWjktMwCBKHy4pF'] };
+const personalPB = create(APIKeySchema, { secretHint: 'aaaa', kind: 'personal', name: 'Mine', scopes: ['webhook:read', 'mystery:do'] });
+const orgPB = create(APIKeySchema, { secretHint: 'bbbb', kind: 'org', name: 'CI', scopes: ['webhook:read'] });
+const form = { name: 'Laptop', scopes: ['webhook:read'], expiresInHours: 24, allProjects: true, projectIds: ['x6MH9WPWjktMwCBKHy4pF'] };
 
 describe('usePersonalKeys', () => {
   let client: Record<string, ReturnType<typeof vi.fn>>;
@@ -30,7 +30,7 @@ describe('usePersonalKeys', () => {
       createAPIKey: vi.fn().mockResolvedValue({ key: create(APIKeySchema, { secretHint: 'cccc', kind: 'personal', name: 'Laptop' }), plaintext: 'oak_new' }),
       revokeAPIKey: vi.fn().mockResolvedValue({}),
     };
-    whoami = vi.fn().mockResolvedValue({ source: 'local', permissions: ['agent:*', 'member:write'] });
+    whoami = vi.fn().mockResolvedValue({ source: 'local', permissions: ['webhook:*', 'member:write'] });
     listProjects = vi.fn().mockResolvedValue({ projects: [{ id: 'x6MH9WPWjktMwCBKHy4pF', orgId: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'web', name: 'Web' }, { id: 'KdrF3t3FHtppBPmMgj4sy', orgId: 'YeDxg2kMYznPJJG3wVmjj', slug: 'x', name: 'X' }] });
     setClient('$apiKeyClient', client);
     setClient('$authClient', { whoami });
@@ -49,10 +49,10 @@ describe('usePersonalKeys', () => {
     expect(client.listAPIKeys).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a' });
     expect(listProjects).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a' });
     expect(keys.signedIn.value).toBe(true);
-    expect(keys.mine.value.map(k => [k.secretHint, k.scopes])).toEqual([['aaaa', ['scope.agent_read', 'mystery:do']]]);
+    expect(keys.mine.value.map(k => [k.secretHint, k.scopes])).toEqual([['aaaa', ['scope.webhook_read', 'mystery:do']]]);
     expect(keys.mintable.value).toEqual([
-      { name: 'agent:read', label: 'scope.agent_read' },
-      { name: 'agent:write', label: 'scope.agent_write' },
+      { name: 'webhook:read', label: 'scope.webhook_read' },
+      { name: 'webhook:write', label: 'scope.webhook_write' },
     ]);
     expect(keys.orgProjects.value).toEqual([{ id: 'x6MH9WPWjktMwCBKHy4pF', name: 'Web' }]);
   });
@@ -69,7 +69,7 @@ describe('usePersonalKeys', () => {
     const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
     await keys.create(form);
     const req = client.createAPIKey!.mock.calls[0]![0];
-    expect(req).toMatchObject({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', kind: 'personal', name: 'Laptop', scopes: ['agent:read'], allProjects: true, projectIds: [] });
+    expect(req).toMatchObject({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', kind: 'personal', name: 'Laptop', scopes: ['webhook:read'], allProjects: true, projectIds: [] });
     expect(timestampDate(req.expiresAt)).toEqual(new Date(now.getTime() + 24 * 3600_000));
     expect(useAPIKeysStore().items.map(k => k.secretHint)).toEqual(['cccc']);
     expect(keys.created.value).toEqual({ plaintext: 'oak_new', snippet: mcpSnippet('othra', 'https://console.test/base/mcp', 'oak_new') });
@@ -89,10 +89,10 @@ describe('usePersonalKeys', () => {
 
   it('shows create errors', async () => {
     setKnownKeys('apperror.GEN007');
-    client.createAPIKey!.mockRejectedValueOnce(connectError('GEN007', { permission: 'agent:write' })).mockRejectedValueOnce(new Error('boom'));
+    client.createAPIKey!.mockRejectedValueOnce(connectError('GEN007', { permission: 'webhook:write' })).mockRejectedValueOnce(new Error('boom'));
     const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
     await keys.create(form);
-    expect(keys.error.value).toEqual({ message: 'apperror.GEN007|{"permission":"scope.agent_write"}', reference: 'error.ref|{"id":"req-1"}' });
+    expect(keys.error.value).toEqual({ message: 'apperror.GEN007|{"permission":"scope.webhook_write"}', reference: 'error.ref|{"id":"req-1"}' });
     expect(keys.created.value).toBeNull();
     await keys.create(form);
     expect(keys.error.value).toEqual({ message: 'error.create_apikey' });

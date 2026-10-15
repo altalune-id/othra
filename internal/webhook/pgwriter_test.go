@@ -19,7 +19,7 @@ func TestSave(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectExec("INSERT").WillReturnResult(sqlmock.NewResult(0, 1))
 		mock.ExpectCommit()
-		e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, URL: "u", Active: true, EventTypes: []events.Type{events.AgentCreated}}
+		e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, URL: "u", Active: true, EventTypes: []events.Type{events.InviteCreated}}
 		assert.NoError(t, s.Save(storeCtx(org, project), e))
 	})
 
@@ -36,7 +36,7 @@ func TestSave(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectExec("INSERT").WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
-		e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, EventTypes: []events.Type{events.AgentCreated}}
+		e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, EventTypes: []events.Type{events.InviteCreated}}
 		assert.True(t, IsNotFoundError(s.Save(storeCtx(org, project), e)))
 	})
 }
@@ -102,7 +102,7 @@ func TestSaveAttempt(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectExec("INSERT").WillReturnResult(sqlmock.NewResult(0, 1))
 		mock.ExpectCommit()
-		a := Attempt{OrgID: org, ProjectID: project, EndpointID: uuid.New(), EventType: events.AgentCreated, ResponseHeaders: nil}
+		a := Attempt{OrgID: org, ProjectID: project, EndpointID: uuid.New(), EventType: events.InviteCreated, ResponseHeaders: nil}
 		assert.NoError(t, s.SaveAttempt(storeCtx(org, project), a))
 	})
 
@@ -138,7 +138,7 @@ func TestWriterErrorBranches(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectExec("INSERT").WillReturnError(errBoom)
 		mock.ExpectRollback()
-		e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, EventTypes: []events.Type{events.AgentCreated}}
+		e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, EventTypes: []events.Type{events.InviteCreated}}
 		assert.Error(t, s.Save(ctx, e))
 	})
 

@@ -26,7 +26,7 @@ func newAttempt(tc tenant.Context, endpointID, deliveryID uuid.UUID, n int, at t
 		EndpointID:        endpointID,
 		DeliveryID:        deliveryID,
 		EventID:           uuid.New(),
-		EventType:         events.AgentCreated,
+		EventType:         events.InviteCreated,
 		Attempt:           n,
 		StatusCode:        500,
 		Error:             "upstream said no",
@@ -75,7 +75,7 @@ func TestPostgresAttempt_RoundTrip(t *testing.T) {
 			a.StatusCode = 0
 			a.Error = "dial tcp: connection refused"
 			a.ResponseTruncated = true
-			a.EventType = events.AgentUpdated
+			a.EventType = events.MemberAdded
 		}},
 	}
 	for _, tt := range cases {

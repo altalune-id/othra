@@ -34,7 +34,7 @@ describe('useAPIKeyCreate', () => {
     const form = useAPIKeyCreate('V3StGXR8Z5jdHj6BmyT2a');
     form.name.value = 'old';
     form.kind.value = 'project';
-    form.scopes.value = ['agent:read'];
+    form.scopes.value = ['webhook:read'];
     form.allProjects.value = false;
     form.projectId.value = 'x6MH9WPWjktMwCBKHy4pF';
     form.projectIds.value = ['x6MH9WPWjktMwCBKHy4pF'];
@@ -50,11 +50,11 @@ describe('useAPIKeyCreate', () => {
     const form = useAPIKeyCreate('V3StGXR8Z5jdHj6BmyT2a');
     form.show();
     form.name.value = ' CI ';
-    form.scopes.value = ['agent:read'];
+    form.scopes.value = ['webhook:read'];
     form.projectIds.value = ['JZUkSkpK8MF8Gw66EKSvm'];
     await form.submit();
     const req = request();
-    expect(req).toMatchObject({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', kind: 'org', name: 'CI', scopes: ['agent:read'], projectId: '', allProjects: true, projectIds: [] });
+    expect(req).toMatchObject({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', kind: 'org', name: 'CI', scopes: ['webhook:read'], projectId: '', allProjects: true, projectIds: [] });
     expect(timestampDate(req.expiresAt)).toEqual(new Date(now.getTime() + 720 * 3600_000));
     expect(useAPIKeysStore().items.map(k => k.secretHint)).toEqual(['abcd']);
     expect(form.plaintext.value).toBe('oak_secret');

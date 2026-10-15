@@ -112,11 +112,11 @@ func TestAuthorize_CustomRoleSet(t *testing.T) {
 	assert.NoError(t, member.Authorize(lead, peer, ""), "a person with no role yet (an add) is within reach")
 
 	plain := &member.Membership{UserID: uuid.New(), Role: member.RoleMember}
-	assert.True(t, member.IsRoleNotAllowedError(member.Authorize(lead, plain, member.RoleMember)), "a member holds agent:*, the lead does not")
+	assert.True(t, member.IsRoleNotAllowedError(member.Authorize(lead, plain, member.RoleMember)), "a member holds webhook:*, the lead does not")
 	assert.True(t, member.IsRoleNotAllowedError(member.Authorize(lead, plain, "")), "the lead cannot remove someone who holds more")
 	assert.True(t, member.IsRoleNotAllowedError(member.Authorize(lead, peer, member.RoleMember)), "the lead cannot grant what it lacks")
 
-	noWrite := member.Actor{UserID: uuid.New(), Permissions: []string{"agent:*", scope.MemberRead}}
+	noWrite := member.Actor{UserID: uuid.New(), Permissions: []string{"webhook:*", scope.MemberRead}}
 	assert.True(t, authz.IsForbiddenError(member.Authorize(noWrite, peer, "")))
 }
 

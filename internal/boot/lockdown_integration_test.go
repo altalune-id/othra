@@ -107,7 +107,7 @@ func TestLockdown_NoCredential(t *testing.T) {
 
 	for path, want := range map[string]string{
 		"/console/":             "/login?return_to=%2Fconsole%2F",
-		"/console/o/x/agents":   "/login?return_to=%2Fconsole%2Fo%2Fx%2Fagents",
+		"/console/o/x/projects": "/login?return_to=%2Fconsole%2Fo%2Fx%2Fprojects",
 		"/console/o/x?tab=keys": "/login?return_to=%2Fconsole%2Fo%2Fx%3Ftab%3Dkeys",
 	} {
 		rec = l.do(http.MethodGet, path, nil, "")
@@ -128,7 +128,7 @@ func TestLockdown_CredentialsWork(t *testing.T) {
 	l := localLockdown(t)
 	cookie := l.sessionCookie(t)
 
-	rec := l.do(http.MethodGet, "/console/o/x/agents", http.Header{"Cookie": {cookie}}, "")
+	rec := l.do(http.MethodGet, "/console/o/x/projects", http.Header{"Cookie": {cookie}}, "")
 	assert.Equal(t, http.StatusOK, rec.Code, "console with a session")
 	h := connectJSON()
 	h.Set("Cookie", cookie)
@@ -141,7 +141,7 @@ func TestLockdown_CredentialsWork(t *testing.T) {
 	require.NoError(t, err)
 	exp := time.Now().Add(time.Hour)
 	_, personal, err := l.svcs.APIKeys.Create(t.Context(), apikey.CreateRequest{
-		OrgID: sys.ID, Kind: apikey.KindPersonal, Name: "laptop", Scopes: []string{"agent:read"}, AllProjects: true, ExpiresAt: &exp, CreatedBy: owner.ID,
+		OrgID: sys.ID, Kind: apikey.KindPersonal, Name: "laptop", Scopes: []string{"webhook:read"}, AllProjects: true, ExpiresAt: &exp, CreatedBy: owner.ID,
 	})
 	require.NoError(t, err)
 	h = mcpJSON()
@@ -161,7 +161,7 @@ func TestLockdown_StaleCookieNoLoop(t *testing.T) {
 	l := localLockdown(t)
 	stale := session.CookieName + "=" + session.Sign(l.svcs.StateSecret, "deleted-session")
 
-	rec := l.do(http.MethodGet, "/console/o/x/agents", http.Header{"Cookie": {stale}}, "")
+	rec := l.do(http.MethodGet, "/console/o/x/projects", http.Header{"Cookie": {stale}}, "")
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	loc, err := url.Parse(rec.Header().Get("Location"))
 	require.NoError(t, err)

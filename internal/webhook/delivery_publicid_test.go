@@ -76,7 +76,7 @@ func TestInactiveEndpointErrorHoldsNoUUID(t *testing.T) {
 	ep.PublicID, ep.Active = nanoid.MustNew(21), false
 	d := NewDeliverer(&fakeStore{endpoints: []*Endpoint{ep}}, sl, http.DefaultClient, nil)
 
-	err := d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`))
+	err := d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`))
 	require.True(t, IsEndpointInactiveError(err))
 	assert.Empty(t, uuidShaped.FindAllString(err.Error(), -1), err.Error())
 	assert.Contains(t, err.Error(), ep.PublicID)

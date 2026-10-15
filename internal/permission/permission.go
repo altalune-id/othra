@@ -2,7 +2,6 @@
 package permission
 
 import (
-	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
@@ -26,12 +25,6 @@ func Table() map[string][]string {
 		projectv1connect.ProjectServiceGetProjectProcedure:    {scope.ProjectRead},
 		projectv1connect.ProjectServiceListProjectsProcedure:  {scope.ProjectRead},
 		projectv1connect.ProjectServiceUpdateProjectProcedure: {scope.ProjectWrite},
-
-		agentv1connect.AgentServiceCreateAgentProcedure: {scope.AgentWrite},
-		agentv1connect.AgentServiceGetAgentProcedure:    {scope.AgentRead},
-		agentv1connect.AgentServiceListAgentsProcedure:  {scope.AgentRead},
-		agentv1connect.AgentServiceUpdateAgentProcedure: {scope.AgentWrite},
-		agentv1connect.AgentServiceDeleteAgentProcedure: {scope.AgentWrite},
 
 		apikeyv1connect.APIKeyServiceListAPIKeysProcedure:  {scope.ApikeyRead},
 		apikeyv1connect.APIKeyServiceCreateAPIKeyProcedure: {authz.AnyAuthenticated},

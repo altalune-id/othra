@@ -15,7 +15,7 @@ import (
 
 func TestNew(t *testing.T) {
 	org, project := uuid.New(), uuid.New()
-	e, err := New(org, project, "https://example.com/hook", " desc ", []events.Type{events.AgentCreated})
+	e, err := New(org, project, "https://example.com/hook", " desc ", []events.Type{events.InviteCreated})
 	require.NoError(t, err)
 	assert.Equal(t, org, e.OrgID)
 	assert.Equal(t, project, e.ProjectID)
@@ -23,13 +23,13 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, "desc", e.Description)
 	assert.True(t, e.Active)
 	assert.NotEmpty(t, e.PublicID)
-	assert.True(t, e.Subscribes(events.AgentCreated))
-	assert.False(t, e.Subscribes(events.AgentUpdated))
+	assert.True(t, e.Subscribes(events.InviteCreated))
+	assert.False(t, e.Subscribes(events.MemberAdded))
 }
 
 func TestNewRejects(t *testing.T) {
 	org, project := uuid.New(), uuid.New()
-	types := []events.Type{events.AgentCreated}
+	types := []events.Type{events.InviteCreated}
 	long := "https://example.com/" + strings.Repeat("a", MaxURLLen)
 
 	for name, tc := range map[string]struct {
@@ -46,7 +46,7 @@ func TestNewRejects(t *testing.T) {
 		"no host":        {"https://", types, string(URLNoHost)},
 		"no types":       {"https://example.com", nil, string(EventTypesRequired)},
 		"unknown type":   {"https://example.com", []events.Type{"nope"}, string(EventTypeUnknown)},
-		"twice":          {"https://example.com", []events.Type{events.AgentCreated, events.AgentCreated}, string(EventTypeDuplicate)},
+		"twice":          {"https://example.com", []events.Type{events.InviteCreated, events.InviteCreated}, string(EventTypeDuplicate)},
 		"ping":           {"https://example.com", []events.Type{events.WebhookPing}, string(EventTypeNotSubscribable)},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -57,31 +57,31 @@ func TestNewRejects(t *testing.T) {
 		})
 	}
 
-	_, err := New(org, project, "https://example.com", "d", []events.Type{events.AgentCreated, "nope"})
+	_, err := New(org, project, "https://example.com", "d", []events.Type{events.InviteCreated, "nope"})
 	assert.True(t, IsInvalidEventTypesError(err))
 	ae, _ := apperror.AsAppError(err)
 	assert.Equal(t, "nope", ae.Meta()["event"])
 }
 
 func TestNewAllowsInsecureURL(t *testing.T) {
-	_, err := New(uuid.New(), uuid.New(), "http://localhost:8080", "", []events.Type{events.AgentCreated}, AllowInsecureURL())
+	_, err := New(uuid.New(), uuid.New(), "http://localhost:8080", "", []events.Type{events.InviteCreated}, AllowInsecureURL())
 	require.NoError(t, err)
 }
 
 func TestUpdate(t *testing.T) {
-	e, err := New(uuid.New(), uuid.New(), "https://example.com", "", []events.Type{events.AgentCreated})
+	e, err := New(uuid.New(), uuid.New(), "https://example.com", "", []events.Type{events.InviteCreated})
 	require.NoError(t, err)
 
-	require.NoError(t, e.Update("https://example.com/v2", "new", []events.Type{events.AgentUpdated}, false))
+	require.NoError(t, e.Update("https://example.com/v2", "new", []events.Type{events.MemberAdded}, false))
 	assert.Equal(t, "https://example.com/v2", e.URL)
 	assert.False(t, e.Active)
-	assert.True(t, e.Subscribes(events.AgentUpdated))
+	assert.True(t, e.Subscribes(events.MemberAdded))
 
-	assert.True(t, IsInvalidURLError(e.Update("", "d", []events.Type{events.AgentCreated}, true)))
+	assert.True(t, IsInvalidURLError(e.Update("", "d", []events.Type{events.InviteCreated}, true)))
 }
 
 func TestSetSecrets(t *testing.T) {
-	e, err := New(uuid.New(), uuid.New(), "https://example.com", "", []events.Type{events.AgentCreated})
+	e, err := New(uuid.New(), uuid.New(), "https://example.com", "", []events.Type{events.InviteCreated})
 	require.NoError(t, err)
 	e.SetSecrets(SealedSecrets{Primary: []byte("p")})
 	assert.Equal(t, []byte("p"), e.Secrets.Primary)
@@ -92,13 +92,13 @@ func TestValidateDescriptionTooLong(t *testing.T) {
 	for i := range long {
 		long[i] = 'a'
 	}
-	_, err := New(uuid.New(), uuid.New(), "https://example.com", string(long), []events.Type{events.AgentCreated})
+	_, err := New(uuid.New(), uuid.New(), "https://example.com", string(long), []events.Type{events.InviteCreated})
 	assert.True(t, IsInvalidDescriptionError(err))
 	ae, ok := apperror.AsAppError(err)
 	require.True(t, ok)
 	assert.Equal(t, string(DescriptionTooLong), ae.Meta()["reason"])
 
-	_, err = New(uuid.New(), uuid.New(), "https://example.com", "\xff", []events.Type{events.AgentCreated})
+	_, err = New(uuid.New(), uuid.New(), "https://example.com", "\xff", []events.Type{events.InviteCreated})
 	ae, ok = apperror.AsAppError(err)
 	require.True(t, ok)
 	assert.Equal(t, string(DescriptionNotUTF8), ae.Meta()["reason"])
@@ -110,7 +110,7 @@ func TestResolveValidateOpts(t *testing.T) {
 }
 
 func TestValidationTimestamps(t *testing.T) {
-	e, err := New(uuid.New(), uuid.New(), "https://example.com", "", []events.Type{events.AgentCreated})
+	e, err := New(uuid.New(), uuid.New(), "https://example.com", "", []events.Type{events.InviteCreated})
 	require.NoError(t, err)
 	assert.WithinDuration(t, time.Now(), e.CreatedAt, time.Second)
 	assert.NotEqual(t, uuid.Nil, e.ID)

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import CopyButton from '~/components/ui/CopyButton.vue';
-import { useAgentsStore } from '~/stores/agents';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 
@@ -8,7 +7,6 @@ const route = useRoute();
 const { t } = useI18n();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
-const agents = useAgentsStore();
 
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const project = computed(() =>
@@ -19,9 +17,12 @@ if (!project.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }
 
-await agents.ensureLoaded(project.value.id);
+const base = computed(() => `/o/${route.params.org}/projects/${route.params.project}`);
 
-const items = computed(() => (project.value ? agents.forProject(project.value.id) : []));
+const sections = computed(() => [
+  { key: 'webhooks', to: `${base.value}/webhooks`, icon: 'lucide:webhook', title: t('webhooks.title'), hint: t('webhooks.subtitle') },
+  { key: 'settings', to: `${base.value}/settings`, icon: 'lucide:settings', title: t('nav.settings'), hint: t('project.settings_hint') },
+]);
 
 useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` });
 </script>
@@ -41,33 +42,23 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
       </div>
     </div>
 
-    <section class="space-y-3">
-      <h2 class="text-lg font-semibold">
-        {{ t('nav.agents') }}
-      </h2>
-      <div v-if="items.length" class="grid gap-3 sm:grid-cols-2">
-        <NuxtLink
-          v-for="agent in items"
-          :key="agent.id"
-          :to="`/o/${org?.slug}/projects/${project.slug}/agents/${agent.slug}`"
-          class="card border border-base-300 bg-base-100 transition-colors hover:border-primary"
-        >
-          <div class="card-body">
-            <h3 class="card-title text-base">
-              {{ agent.name }}
-            </h3>
-            <p class="text-sm text-base-content/60">
-              {{ agent.slug }}
-            </p>
-            <p v-if="agent.description" class="text-sm text-base-content/50">
-              {{ agent.description }}
-            </p>
-          </div>
-        </NuxtLink>
-      </div>
-      <p v-else class="text-sm text-base-content/60">
-        {{ t('agent.empty') }}
-      </p>
-    </section>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <NuxtLink
+        v-for="section in sections"
+        :key="section.key"
+        :to="section.to"
+        class="card border border-base-300 bg-base-100 transition-colors hover:border-primary"
+      >
+        <div class="card-body">
+          <h2 class="card-title text-base">
+            <Icon :name="section.icon" size="18" />
+            {{ section.title }}
+          </h2>
+          <p class="text-sm text-base-content/60">
+            {{ section.hint }}
+          </p>
+        </div>
+      </NuxtLink>
+    </div>
   </div>
 </template>

@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/config"
-	"altalune.id/othra/internal/agent"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/controlplane"
@@ -39,8 +38,6 @@ type Services struct {
 	Orgs            *org.Service
 	ProjectStore    project.Store
 	Projects        *project.Service
-	AgentStore      agent.Store
-	Agents          *agent.Service
 	APIKeyStore     apikey.Store
 	APIKeys         *apikey.Service
 	KeyScheme       apikey.Scheme
@@ -71,7 +68,6 @@ type Services struct {
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	orgStore := org.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 	projectStore := project.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
-	agentStore := agent.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 	apiKeyStore := apikey.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 
 	uow := db.NewTransactor(k.Pool)
@@ -93,7 +89,6 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		refResolver{projects: projects, orgs: orgs}, append(webhookServiceOpts(cfg), webhook.WithProjects(projectOwners))...,
 	)
 
-	agents := agent.NewService(agentStore, uow, k.Reporter.Unexpected).WithPublisher(webhooks).WithProjects(projectOwners)
 	users := user.NewService(user.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), k.Reporter.Unexpected)
 	members := member.NewService(member.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, k.Reporter.Unexpected).
 		WithOperatorSupport(caps.OperatorOrgSupport)
@@ -128,8 +123,6 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Orgs:         orgs,
 		ProjectStore: projectStore,
 		Projects:     projects,
-		AgentStore:   agentStore,
-		Agents:       agents,
 		APIKeyStore:  apiKeyStore,
 		APIKeys:      apiKeys,
 		KeyScheme:    keyScheme,

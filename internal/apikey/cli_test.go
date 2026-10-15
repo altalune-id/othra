@@ -97,7 +97,7 @@ func TestAPIKeyCreate_ProjectKeyScopes(t *testing.T) {
 	orgID := uuid.New()
 	buf, err := runAPIKey(t, apiKeyClient(t, refs, &fakes.APIKeyStore{}), "create",
 		"--org-id", refs.Org(orgID), "--kind", "project", "--project-id", refs.Project(knownProject, orgID),
-		"--name", "ci", "--scopes", "agent:read,agent:write", "--output", "text")
+		"--name", "ci", "--scopes", "webhook:read,webhook:write", "--output", "text")
 
 	require.NoError(t, err)
 	assert.Contains(t, buf.String(), "Created API key ci")

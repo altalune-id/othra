@@ -8,8 +8,6 @@ type Type string
 
 // Event types; the catalog is additive-only once a type has shipped.
 const (
-	AgentCreated Type = "agent.created"
-	AgentUpdated Type = "agent.updated"
 	// NOTE: org events; every project's subscribed endpoints receive them, so only a caller reaching the whole org may subscribe.
 	InviteCreated Type = "invite.created"
 	MemberAdded   Type = "member.added"
@@ -31,8 +29,6 @@ func (s Spec) APIVersion() string { return "v" + strconv.Itoa(s.Version) }
 // All returns every catalog entry in a stable order.
 func All() []Spec {
 	return []Spec{
-		{Type: AgentCreated, Version: 1, Subscribable: true},
-		{Type: AgentUpdated, Version: 1, Subscribable: true},
 		{Type: InviteCreated, Version: 1, Subscribable: true, OrgWide: true},
 		{Type: MemberAdded, Version: 1, Subscribable: true, OrgWide: true},
 		{Type: WebhookPing, Version: 1},
@@ -70,14 +66,6 @@ func Lookup(t Type) (Spec, bool) {
 // CheckPayload reports a *PayloadMismatchError when data is not t's payload type, or an *UnknownTypeError when t is not in the catalog.
 func CheckPayload(t Type, data any) error {
 	switch t {
-	case AgentCreated:
-		if _, ok := data.(AgentCreatedV1); !ok {
-			return &PayloadMismatchError{Type: t, Data: data}
-		}
-	case AgentUpdated:
-		if _, ok := data.(AgentUpdatedV1); !ok {
-			return &PayloadMismatchError{Type: t, Data: data}
-		}
 	case InviteCreated:
 		if _, ok := data.(InviteCreatedV1); !ok {
 			return &PayloadMismatchError{Type: t, Data: data}

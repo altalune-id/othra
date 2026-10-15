@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"altalune.id/othra/config"
-	"altalune.id/othra/internal/agent"
 	"altalune.id/othra/internal/apiclient"
 	"altalune.id/othra/internal/cli"
 	"altalune.id/othra/internal/controlplane"
@@ -86,33 +85,4 @@ func TestRoot_ProjectGet_Remote(t *testing.T) {
 	_, err = run("unknwnunknwnunknwnabc")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not_found", "a well-formed unknown id")
-}
-
-func TestRoot_AgentGet_Remote(t *testing.T) {
-	a, err := agent.New(uuid.New(), uuid.New(), "acme", "Acme", "", uuid.New())
-	require.NoError(t, err)
-	refs := fakes.NewPublicIDs()
-	refs.Org(a.OrgID)
-	refs.Project(a.ProjectID, a.OrgID)
-	srv := controlplane.New(controlplane.Services{
-		Agents: agent.NewService(&fakes.AgentStore{Agent: a}, fakes.Transactor{}, nil),
-		Refs:   refs,
-	}, nil, cptest.OperatorOptions())
-	ts := httptest.NewServer(srv.Handler(""))
-	t.Cleanup(ts.Close)
-
-	t.Setenv("OTHRA_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
-	clientFn := func(context.Context, config.Config, *slog.Logger, string, apiclient.Credential) (*apiclient.Client, error) {
-		return apiclient.New(ts.URL, cptest.OperatorCredential()), nil
-	}
-	buf := new(bytes.Buffer)
-	root := cli.NewRootCmd(nil, clientFn)
-	root.SetOut(buf)
-	root.SetErr(buf)
-	root.SetArgs([]string{"agent", "get", a.PublicID, "--output", "json"})
-
-	require.NoError(t, root.ExecuteContext(t.Context()))
-	assert.Contains(t, buf.String(), `"slug": "acme"`)
-	assert.Contains(t, buf.String(), `"id": "`+a.PublicID+`"`)
-	assert.NotContains(t, buf.String(), a.ID.String())
 }

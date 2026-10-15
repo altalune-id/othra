@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
@@ -19,7 +18,6 @@ import (
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/othra/internal/agent"
 	"altalune.id/othra/internal/apiclient"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
@@ -40,7 +38,6 @@ func cliRoot(c *apiclient.Client) *cobra.Command {
 	root.AddCommand(
 		org.NewCmd(func(*cobra.Command) (orgv1connect.OrgServiceClient, error) { return c.Org, nil }),
 		project.NewCmd(func(*cobra.Command) (projectv1connect.ProjectServiceClient, error) { return c.Projects, nil }),
-		agent.NewCmd(func(*cobra.Command) (agentv1connect.AgentServiceClient, error) { return c.Agents, nil }),
 		apikey.NewCmd(func(*cobra.Command) (apikeyv1connect.APIKeyServiceClient, error) { return c.APIKeys, nil }),
 		webhook.NewCmd(func(*cobra.Command) (webhookv1connect.WebhookServiceClient, error) { return c.Webhooks, nil }),
 		member.NewCmd(func(*cobra.Command) (memberv1connect.MemberServiceClient, error) { return c.Members, nil }),
@@ -62,9 +59,7 @@ func TestCLI_JSONHoldsNoUUID(t *testing.T) {
 		{"org", "get", s.pub.org},
 		{"project", "list", "--org-id", s.pub.org},
 		{"project", "get", s.pub.project},
-		{"agent", "list", "--project-id", s.pub.project},
-		{"agent", "get", s.pub.agent},
-		{"apikey", "create", "--org-id", s.pub.org, "--name", "probe", "--scopes", "agent:read", "--all-projects"},
+		{"apikey", "create", "--org-id", s.pub.org, "--name", "probe", "--scopes", "webhook:read", "--all-projects"},
 		{"apikey", "list", "--org-id", s.pub.org},
 		append([]string{"webhook", "list"}, scope...),
 		append([]string{"webhook", "get", s.pub.webhook}, scope...),

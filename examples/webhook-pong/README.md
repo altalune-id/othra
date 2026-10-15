@@ -14,7 +14,7 @@ Env: `OTHRA_WEBHOOK_SECRET` (signing secret; unset ⇒ signatures not verified, 
 
 ## Point a webhook at it
 
-Console → **Project → Webhooks → New endpoint**, URL `http://127.0.0.1:9099/`, subscribe to `agent.created` / `agent.updated`, and copy the secret (shown once) into `.env`. Then create/update an agent to trigger a delivery.
+Console → **Project → Webhooks → New endpoint**, URL `http://127.0.0.1:9099/`, subscribe to `invite.created` / `member.added`, and copy the secret (shown once) into `.env`. Then invite a member (or press **Send test**, which delivers `webhook.ping`) to trigger a delivery.
 
 > Non-production only: dev allows `http://` + loopback. Production requires `https` and blocks private hosts (SSRF).
 

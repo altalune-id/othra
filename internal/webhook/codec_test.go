@@ -13,11 +13,11 @@ import (
 )
 
 func TestEventTypesCodec(t *testing.T) {
-	raw, err := marshalEventTypes([]events.Type{events.AgentCreated, events.AgentUpdated})
+	raw, err := marshalEventTypes([]events.Type{events.InviteCreated, events.MemberAdded})
 	require.NoError(t, err)
 	got, err := unmarshalEventTypes(raw)
 	require.NoError(t, err)
-	assert.Equal(t, []events.Type{events.AgentCreated, events.AgentUpdated}, got)
+	assert.Equal(t, []events.Type{events.InviteCreated, events.MemberAdded}, got)
 
 	raw, err = marshalEventTypes(nil)
 	require.NoError(t, err)

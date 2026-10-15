@@ -41,7 +41,6 @@ func TestExitCodeFor_UserAndMember(t *testing.T) {
 func TestExitCodeFor_EveryDomainFollowsTheKind(t *testing.T) {
 	for code, want := range map[apperror.Code]int{
 		apperror.CodeProjectNotFound:        ExitNotFound,
-		apperror.CodeAgentNotFound:          ExitNotFound,
 		apperror.CodeWebhookNotFound:        ExitNotFound,
 		apperror.CodeAuthInvalidCredentials: ExitUnauth,
 		apperror.CodeAuthPasswordPolicy:     ExitInvalidArg,

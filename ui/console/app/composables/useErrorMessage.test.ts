@@ -12,8 +12,8 @@ describe('useErrorMessage', () => {
 
   it('passes scope labels to the message', () => {
     setKnownKeys('apperror.GEN007');
-    const shown = useErrorMessage()(connectError('GEN007', { permission: 'agent:read' }, ''), 'error.load_orgs');
-    expect(shown).toEqual({ message: 'apperror.GEN007|{"permission":"scope.agent_read"}' });
+    const shown = useErrorMessage()(connectError('GEN007', { permission: 'webhook:read' }, ''), 'error.load_orgs');
+    expect(shown).toEqual({ message: 'apperror.GEN007|{"permission":"scope.webhook_read"}' });
   });
 
   it('passes field labels to the message', () => {

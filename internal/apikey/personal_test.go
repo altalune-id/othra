@@ -42,7 +42,7 @@ func (f *fakeOwners) set(orgID, userID uuid.UUID, r member.Role) {
 
 func TestScheme_MintPersonal(t *testing.T) {
 	orgID, owner, prj := uuid.New(), uuid.New(), uuid.New()
-	k, plain, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{scope.AgentRead},
+	k, plain, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{scope.WebhookRead},
 		apikey.ProjectGrant{ProjectIDs: []uuid.UUID{prj}}, future(), time.Now().UTC())
 	require.NoError(t, err)
 	assert.NotEmpty(t, plain)
@@ -73,7 +73,7 @@ func TestService_CreatePersonal_WithinRole(t *testing.T) {
 	owners.set(orgID, owner, member.RoleAdmin)
 	store := &fakes.APIKeyStore{}
 
-	k, _, err := personalService(store, owners, true).Create(context.Background(), personalReq(orgID, owner, "project:write", "agent:write"))
+	k, _, err := personalService(store, owners, true).Create(context.Background(), personalReq(orgID, owner, "project:write", "webhook:write"))
 	require.NoError(t, err)
 	assert.Equal(t, apikey.KindPersonal, k.Kind)
 	assert.Equal(t, owner, k.CreatedBy)
@@ -85,7 +85,7 @@ func TestService_CreatePersonal_AboveRole(t *testing.T) {
 	owners := &fakeOwners{}
 	owners.set(orgID, owner, member.RoleMember)
 
-	_, _, err := personalService(&fakes.APIKeyStore{}, owners, true).Create(context.Background(), personalReq(orgID, owner, "agent:write", "project:write"))
+	_, _, err := personalService(&fakes.APIKeyStore{}, owners, true).Create(context.Background(), personalReq(orgID, owner, "webhook:write", "project:write"))
 	require.True(t, apikey.IsScopeExceedsRoleError(err), "got %v", err)
 	ae, ok := apperror.AsAppError(err)
 	require.True(t, ok)
@@ -94,12 +94,12 @@ func TestService_CreatePersonal_AboveRole(t *testing.T) {
 }
 
 func TestService_CreatePersonal_NotAMember(t *testing.T) {
-	_, _, err := personalService(&fakes.APIKeyStore{}, &fakeOwners{}, true).Create(context.Background(), personalReq(uuid.New(), uuid.New(), "agent:read"))
+	_, _, err := personalService(&fakes.APIKeyStore{}, &fakeOwners{}, true).Create(context.Background(), personalReq(uuid.New(), uuid.New(), "webhook:read"))
 	assert.True(t, apikey.IsScopeExceedsRoleError(err))
 }
 
 func TestService_CreatePersonal_NeedsOwner(t *testing.T) {
-	_, _, err := personalService(&fakes.APIKeyStore{}, &fakeOwners{}, true).Create(context.Background(), personalReq(uuid.New(), uuid.Nil, "agent:read"))
+	_, _, err := personalService(&fakes.APIKeyStore{}, &fakeOwners{}, true).Create(context.Background(), personalReq(uuid.New(), uuid.Nil, "webhook:read"))
 	ae, ok := apperror.AsAppError(err)
 	require.True(t, ok)
 	assert.Equal(t, apperror.CodeValidation, ae.Code())
@@ -115,7 +115,7 @@ func TestService_CreatePersonal_Disabled(t *testing.T) {
 		"no owner port":  newService(&fakes.APIKeyStore{}, stubProjects{}).WithPersonalKeys(true),
 	} {
 		t.Run(name, func(t *testing.T) {
-			_, _, err := svc.Create(context.Background(), personalReq(orgID, owner, "agent:read"))
+			_, _, err := svc.Create(context.Background(), personalReq(orgID, owner, "webhook:read"))
 			require.True(t, apikey.IsPersonalKeysDisabledError(err), "got %v", err)
 			ae, _ := apperror.AsAppError(err)
 			assert.Equal(t, apperror.KindFailedPrecondition, apperror.KindOf(ae.Code()))
@@ -125,7 +125,7 @@ func TestService_CreatePersonal_Disabled(t *testing.T) {
 
 func TestService_CreatePersonal_RoleLookupError(t *testing.T) {
 	_, _, err := personalService(&fakes.APIKeyStore{}, &fakeOwners{err: errors.New("db down")}, true).
-		Create(context.Background(), personalReq(uuid.New(), uuid.New(), "agent:read"))
+		Create(context.Background(), personalReq(uuid.New(), uuid.New(), "webhook:read"))
 	ae, ok := apperror.AsAppError(err)
 	require.True(t, ok)
 	assert.Equal(t, apperror.CodeUnexpected, ae.Code())
@@ -170,14 +170,14 @@ func TestService_Revoke_OthersPersonalKeyIsNotFound(t *testing.T) {
 
 func TestAuthenticator_PersonalKeyFollowsOwnerRole(t *testing.T) {
 	orgID, owner := uuid.New(), uuid.New()
-	k, plain := personalKey(t, orgID, owner, "project:write", "agent:write")
+	k, plain := personalKey(t, orgID, owner, "project:write", "webhook:write")
 	owners := &fakeOwners{}
 	owners.set(orgID, owner, member.RoleAdmin)
 	a := apikey.NewAuthenticator(&fakes.APIKeyStore{Key: k}, nil, apikey.NewScheme(""), owners, nil)
 
 	p, err := a.Authenticate(context.Background(), keyCred(plain))
 	require.NoError(t, err)
-	assert.ElementsMatch(t, []string{"project:write", "agent:write"}, p.Scopes)
+	assert.ElementsMatch(t, []string{"project:write", "webhook:write"}, p.Scopes)
 	assert.Equal(t, owner, p.OwnerID)
 	assert.Equal(t, uuid.Nil, p.UserID)
 	assert.False(t, p.Operator)
@@ -185,7 +185,7 @@ func TestAuthenticator_PersonalKeyFollowsOwnerRole(t *testing.T) {
 	owners.set(orgID, owner, member.RoleMember)
 	p, err = a.Authenticate(context.Background(), keyCred(plain))
 	require.NoError(t, err)
-	assert.Equal(t, []string{"agent:write"}, p.Scopes)
+	assert.Equal(t, []string{"webhook:write"}, p.Scopes)
 
 	delete(owners.roles, roleKey{orgID, owner})
 	_, err = a.Authenticate(context.Background(), keyCred(plain))
@@ -196,7 +196,7 @@ func TestAuthenticator_PersonalKeyRefusals(t *testing.T) {
 	orgID, owner := uuid.New(), uuid.New()
 
 	t.Run("owner deleted", func(t *testing.T) {
-		k, plain := personalKey(t, orgID, owner, "agent:read")
+		k, plain := personalKey(t, orgID, owner, "webhook:read")
 		k.CreatedBy = uuid.Nil
 		owners := &fakeOwners{}
 		owners.set(orgID, uuid.Nil, member.RoleOwner)
@@ -205,13 +205,13 @@ func TestAuthenticator_PersonalKeyRefusals(t *testing.T) {
 		assert.True(t, authn.IsUnauthorizedError(err))
 	})
 	t.Run("no owner port", func(t *testing.T) {
-		k, plain := personalKey(t, orgID, owner, "agent:read")
+		k, plain := personalKey(t, orgID, owner, "webhook:read")
 		a := apikey.NewAuthenticator(&fakes.APIKeyStore{Key: k}, nil, apikey.NewScheme(""), nil, nil)
 		_, err := a.Authenticate(context.Background(), keyCred(plain))
 		assert.True(t, authn.IsUnauthorizedError(err))
 	})
 	t.Run("role lookup fails", func(t *testing.T) {
-		k, plain := personalKey(t, orgID, owner, "agent:read")
+		k, plain := personalKey(t, orgID, owner, "webhook:read")
 		r := &reported{}
 		a := apikey.NewAuthenticator(&fakes.APIKeyStore{Key: k}, nil, apikey.NewScheme(""), &fakeOwners{err: errors.New("db down")}, r.fn)
 		_, err := a.Authenticate(context.Background(), keyCred(plain))
@@ -232,7 +232,7 @@ func TestService_MachineKeyNeverExceedsCreatorRole(t *testing.T) {
 	assert.True(t, apikey.IsScopeExceedsRoleError(err), "org key above the admin role: %v", err)
 
 	_, _, err = svc.Create(context.Background(), apikey.CreateRequest{
-		OrgID: orgID, Kind: apikey.KindOrg, Name: "ci", Scopes: []string{"agent:write"}, AllProjects: true, ExpiresAt: future(), CreatedBy: admin,
+		OrgID: orgID, Kind: apikey.KindOrg, Name: "ci", Scopes: []string{"webhook:write"}, AllProjects: true, ExpiresAt: future(), CreatedBy: admin,
 	})
 	require.NoError(t, err, "within the role is fine")
 
@@ -245,7 +245,7 @@ func TestService_MachineKeyNeverExceedsCreatorRole(t *testing.T) {
 func TestService_MachineKeyCreatorMustBeMember(t *testing.T) {
 	svc := newService(&fakes.APIKeyStore{}, stubProjects{}).WithOwnerRoles(&fakeOwners{})
 	_, _, err := svc.Create(context.Background(), apikey.CreateRequest{
-		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "ci", Scopes: []string{"agent:read"}, AllProjects: true, ExpiresAt: future(), CreatedBy: uuid.New(),
+		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "ci", Scopes: []string{"webhook:read"}, AllProjects: true, ExpiresAt: future(), CreatedBy: uuid.New(),
 	})
 	assert.True(t, apikey.IsScopeExceedsRoleError(err))
 }

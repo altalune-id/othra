@@ -52,5 +52,5 @@ func TestAuthorize(t *testing.T) {
 func TestAuthorize_CustomRoleSet(t *testing.T) {
 	a := member.Actor{UserID: uuid.New(), Permissions: []string{scope.MemberRead, scope.MemberWrite}}
 	assert.True(t, member.IsRoleNotAllowedError(invite.Authorize(a, member.RoleMember)),
-		"a member holds agent:*, which this set does not")
+		"a member holds webhook:*, which this set does not")
 }

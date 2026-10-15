@@ -42,7 +42,7 @@ func (f *PublicIDs) Project(id, orgID uuid.UUID) string { return f.add(kindProje
 // User registers a user and returns its public id.
 func (f *PublicIDs) User(id uuid.UUID) string { return f.add(kindUser, id, uuid.Nil) }
 
-// Resource registers an agent or webhook endpoint of orgID and returns its public id.
+// Resource registers a webhook endpoint of orgID and returns its public id.
 func (f *PublicIDs) Resource(id, orgID uuid.UUID) string { return f.add(kindResource, id, orgID) }
 
 func (f *PublicIDs) add(kind string, id, orgID uuid.UUID) string {

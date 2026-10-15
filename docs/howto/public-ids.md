@@ -37,27 +37,33 @@ Use this whenever an identifier crosses a surface: a new RPC field, MCP tool arg
 5. **Resolve once, at the edge.** In `<domain>/controlplane.go`, through the `Refs` port in `ports.go`. Boot fills it with `publicIDs` (`internal/boot/publicids.go`), which serves `controlplane.Refs`. `ok == false` means unknown. Answer "not found" for unknown and out-of-reach alike:
 
    ```go
-   // SECURITY: an unknown agent and an agent outside the caller's reach answer the same not-found.
-   func (s *AgentService) reachable(ctx context.Context, publicID string) (*Agent, error) {
-       a, err := s.agents.ByPublicID(ctx, publicID)
+   // SECURITY: an unknown project and a project out of reach answer the same not-found.
+   func (s *ProjectService) reachable(
+       ctx context.Context,
+       publicID string,
+       reach func(ctx context.Context, orgID, projectID uuid.UUID) bool,
+   ) (*Project, error) {
+       p, err := s.projects.ByPublicID(ctx, publicID)
        if IsNotFoundError(err) {
            return nil, &NotFoundError{}
        }
        if err != nil {
            return nil, err
        }
-       if !authz.ReachResource(ctx, a.OrgID, a.ProjectID, a.ID) {
+       if !reach(ctx, p.OrgID, p.ID) {
            return nil, &NotFoundError{}
        }
-       return a, nil
+       return p, nil
    }
    ```
 
+   A resource inside a project (a webhook endpoint) resolves the org and project pair first and checks `authz.ReachResource`: `WebhookControlPlane.scopedID`.
+
    The service below it takes UUIDs only ([service-method.md](service-method.md)).
 
-6. **Map outgoing objects** to public ids: `agentToProto(a, orgPublicID, projectPublicID)` sets `Id: a.PublicID`. Look the others up with `refs.OrgPublicID` / `refs.ProjectPublicID`.
+6. **Map outgoing objects** to public ids: `projectToProto(p, orgPublicID)` sets `Id: p.PublicID`; `webhookToProto(e, orgPublicID, projectPublicID)` does the same for a project resource. Look the others up with `refs.OrgPublicID` / `refs.ProjectPublicID`.
 7. **New kind of resolvable id?** Add a method to the domain's `Refs` port, implement it on `publicIDs` in `internal/boot/publicids.go`, add it to `controlplane.Refs`, and to `fakes.PublicIDs` for unit tests.
-8. **Other surfaces.** CLI flags keep their names (`--org-id`, `--project-id`) and say "public id" in the help ([cli-command.md](cli-command.md)). MCP tools follow the proto ([mcp-tool.md](mcp-tool.md)). Event payloads use `a.PublicID` ([webhook-event.md](webhook-event.md)). The console sends public ids in API calls and uses slugs in routes (`/o/[org]/projects/[project]/agents/[agent]`); an object with no slug, like a webhook endpoint, uses its public id in the path ([console-page.md](console-page.md)).
+8. **Other surfaces.** CLI flags keep their names (`--org-id`, `--project-id`) and say "public id" in the help ([cli-command.md](cli-command.md)). MCP tools follow the proto ([mcp-tool.md](mcp-tool.md)). Event payloads use the public id ([webhook-event.md](webhook-event.md)). The console sends public ids in API calls and uses slugs in routes (`/o/[org]/projects/[project]/settings`); an object with no slug, like a webhook endpoint, uses its public id in the path ([console-page.md](console-page.md)).
 9. **Errors.** A `ToAppError` meta never carries a UUID ([error-code.md](error-code.md)).
 10. **Gates.** `make generate`, `make check`, `make test-integration`, `make cover`.
 
@@ -74,24 +80,24 @@ Use this whenever an identifier crosses a surface: a new RPC field, MCP tool arg
 
 The tests that guard the rule:
 
-| Test                                                    | Guards                                                                     |
-| ------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `TestPublicIDs_NoRPCAnswersWithAUUID` (`internal/boot`) | every RPC response and error, called by a caller who can see the data      |
-| `TestReach_UUIDsAndGarbageAreRefused` (`internal/boot`) | UUID and garbage ids → `InvalidArgument`; unknown ids → `NotFound`         |
-| `TestReach_AnotherOrgIsRefused` (`internal/boot`)       | another org's public ids are refused and change nothing                    |
-| `TestCLI_JSONHoldsNoUUID` (`internal/boot`)             | CLI JSON output                                                            |
-| `TestMCP_ToolResultsHoldNoUUID` (`internal/boot`)       | every MCP tool result                                                      |
-| `TestDeliveryCarriesPublicIDsOnly` (`internal/webhook`) | webhook body and headers                                                   |
-| `TestAgentReach_IDOnlyRPCs` (`internal/agent`)          | a foreign agent, by public id or UUID, is not found (per-domain unit test) |
-| `TestPostgres_ByPublicID` (`internal/agent`)            | the store finds by public id, and a UUID is not a public id                |
+| Test                                                    | Guards                                                                       |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `TestPublicIDs_NoRPCAnswersWithAUUID` (`internal/boot`) | every RPC response and error, called by a caller who can see the data        |
+| `TestReach_UUIDsAndGarbageAreRefused` (`internal/boot`) | UUID and garbage ids → `InvalidArgument`; unknown ids → `NotFound`           |
+| `TestReach_AnotherOrgIsRefused` (`internal/boot`)       | another org's public ids are refused and change nothing                      |
+| `TestCLI_JSONHoldsNoUUID` (`internal/boot`)             | CLI JSON output                                                              |
+| `TestMCP_ToolResultsHoldNoUUID` (`internal/boot`)       | every MCP tool result                                                        |
+| `TestDeliveryCarriesPublicIDsOnly` (`internal/webhook`) | webhook body and headers                                                     |
+| `TestProjectReach_IDOnlyRPCs` (`internal/project`)      | a foreign project, by public id or UUID, is not found (per-domain unit test) |
+| `TestProjectStore_ByPublicID` (`internal/project`)      | the store finds by public id, and a UUID is not a public id                  |
 
 ## Reference code
 
 - Generator: [nanoid/nanoid.go](../../nanoid/nanoid.go) (`New`, `IsValid`)
-- Proto rule: [api/othra/v1/rules.proto](../../api/othra/v1/rules.proto) (`public_id`), used in [api/agent/v1/agent.proto](../../api/agent/v1/agent.proto)
-- Aggregate: [internal/agent/agent.go](../../internal/agent/agent.go) (`New`, `agentToProto`)
-- Port: [internal/agent/ports.go](../../internal/agent/ports.go) (`Refs`)
-- Edge: [internal/agent/controlplane.go](../../internal/agent/controlplane.go) (`reachable`, `project`, `toProto`)
+- Proto rule: [api/othra/v1/rules.proto](../../api/othra/v1/rules.proto) (`public_id`), used in [api/project/v1/project.proto](../../api/project/v1/project.proto)
+- Aggregate: [internal/project/project.go](../../internal/project/project.go) (`NewProject`, `projectToProto`)
+- Port: [internal/apikey/ports.go](../../internal/apikey/ports.go) (`Refs`)
+- Edge: [internal/project/controlplane.go](../../internal/project/controlplane.go) (`reachable`, `org`, `toProto`), [internal/webhook/controlplane.go](../../internal/webhook/controlplane.go) (`scopedID`)
 - Boot resolver: [internal/boot/publicids.go](../../internal/boot/publicids.go) (`publicIDs`, `ResourceID`)
 - Fake: [internal/testutil/fakes/publicids.go](../../internal/testutil/fakes/publicids.go) (`PublicIDs`)
 - Tests: [internal/boot/publicid_integration_test.go](../../internal/boot/publicid_integration_test.go), [internal/boot/reach_integration_test.go](../../internal/boot/reach_integration_test.go), [internal/boot/cli_publicid_integration_test.go](../../internal/boot/cli_publicid_integration_test.go), [internal/boot/mcp_integration_test.go](../../internal/boot/mcp_integration_test.go), [internal/webhook/delivery_publicid_test.go](../../internal/webhook/delivery_publicid_test.go)

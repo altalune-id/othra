@@ -37,7 +37,7 @@ func keyCred(plain string) authn.Credential {
 }
 
 func TestAuthenticator_OrgKey(t *testing.T) {
-	k, plain := mintOrgKey(t, []string{"agent:read", "agent:write"})
+	k, plain := mintOrgKey(t, []string{"webhook:read", "webhook:write"})
 	store := &fakes.APIKeyStore{Key: k}
 	a := apikey.NewAuthenticator(store, nil, apikey.NewScheme(""), nil, nil)
 
@@ -49,7 +49,7 @@ func TestAuthenticator_OrgKey(t *testing.T) {
 	assert.Equal(t, uuid.Nil, p.UserID)
 	assert.Equal(t, k.OrgID, p.ActiveOrgID)
 	assert.True(t, p.AllProjects)
-	assert.Equal(t, []string{"agent:read", "agent:write"}, p.Scopes)
+	assert.Equal(t, []string{"webhook:read", "webhook:write"}, p.Scopes)
 	assert.False(t, p.Operator)
 	assert.WithinDuration(t, time.Now(), p.IssuedAt, time.Minute)
 }
@@ -57,7 +57,7 @@ func TestAuthenticator_OrgKey(t *testing.T) {
 func TestAuthenticator_ProjectKey(t *testing.T) {
 	exp := time.Now().UTC().Add(time.Hour)
 	orgID, projectID, res := uuid.New(), uuid.New(), uuid.New()
-	k, plain, err := apikey.NewScheme("").MintProject(orgID, projectID, "bot", []string{"agent:read"}, []uuid.UUID{res}, &exp, time.Now().UTC())
+	k, plain, err := apikey.NewScheme("").MintProject(orgID, projectID, "bot", []string{"webhook:read"}, []uuid.UUID{res}, &exp, time.Now().UTC())
 	require.NoError(t, err)
 	a := apikey.NewAuthenticator(&fakes.APIKeyStore{Key: k}, nil, apikey.NewScheme(""), nil, nil)
 
@@ -78,7 +78,7 @@ func TestAuthenticator_Refuses(t *testing.T) {
 	}
 	for name, mutate := range cases {
 		t.Run(name, func(t *testing.T) {
-			k, plain := mintOrgKey(t, []string{"agent:read"})
+			k, plain := mintOrgKey(t, []string{"webhook:read"})
 			mutate(k)
 			a := apikey.NewAuthenticator(&fakes.APIKeyStore{Key: k}, nil, apikey.NewScheme(""), nil, nil)
 			_, err := a.Authenticate(context.Background(), keyCred(plain))
@@ -86,8 +86,8 @@ func TestAuthenticator_Refuses(t *testing.T) {
 		})
 	}
 	t.Run("unknown key", func(t *testing.T) {
-		k, _ := mintOrgKey(t, []string{"agent:read"})
-		_, other := mintOrgKey(t, []string{"agent:read"})
+		k, _ := mintOrgKey(t, []string{"webhook:read"})
+		_, other := mintOrgKey(t, []string{"webhook:read"})
 		a := apikey.NewAuthenticator(&fakes.APIKeyStore{Key: k}, nil, apikey.NewScheme(""), nil, nil)
 		_, err := a.Authenticate(context.Background(), keyCred(other))
 		assert.True(t, authn.IsUnauthorizedError(err))
@@ -113,7 +113,7 @@ func TestAuthenticator_WrongShapeSkipsStore(t *testing.T) {
 
 func TestAuthenticator_StoreErrorIsReported(t *testing.T) {
 	r := &reported{}
-	_, plain := mintOrgKey(t, []string{"agent:read"})
+	_, plain := mintOrgKey(t, []string{"webhook:read"})
 	a := apikey.NewAuthenticator(&fakes.APIKeyStore{Err: errors.New("db down")}, nil, apikey.NewScheme(""), nil, r.fn)
 
 	_, err := a.Authenticate(context.Background(), keyCred(plain))
@@ -124,7 +124,7 @@ func TestAuthenticator_StoreErrorIsReported(t *testing.T) {
 
 func TestAuthenticator_NotFoundIsNotReported(t *testing.T) {
 	r := &reported{}
-	_, plain := mintOrgKey(t, []string{"agent:read"})
+	_, plain := mintOrgKey(t, []string{"webhook:read"})
 	a := apikey.NewAuthenticator(&fakes.APIKeyStore{}, nil, apikey.NewScheme(""), nil, r.fn)
 
 	_, err := a.Authenticate(context.Background(), keyCred(plain))
@@ -133,17 +133,17 @@ func TestAuthenticator_NotFoundIsNotReported(t *testing.T) {
 }
 
 func TestAuthenticator_StripsPersonOnlyScopes(t *testing.T) {
-	k, plain := mintOrgKey(t, []string{"agent:read"})
+	k, plain := mintOrgKey(t, []string{"webhook:read"})
 	k.Scopes = append(k.Scopes, "apikey:write", "member:write")
 	a := apikey.NewAuthenticator(&fakes.APIKeyStore{Key: k}, nil, apikey.NewScheme(""), nil, nil)
 
 	p, err := a.Authenticate(context.Background(), keyCred(plain))
 	require.NoError(t, err)
-	assert.Equal(t, []string{"agent:read"}, p.Scopes)
+	assert.Equal(t, []string{"webhook:read"}, p.Scopes)
 }
 
 func TestAuthenticator_RecordsUsage(t *testing.T) {
-	k, plain := mintOrgKey(t, []string{"agent:read"})
+	k, plain := mintOrgKey(t, []string{"webhook:read"})
 	store := &fakes.APIKeyStore{Key: k}
 	usage := apikey.NewUsageWorker(store, time.Hour, nil)
 	a := apikey.NewAuthenticator(store, usage, apikey.NewScheme(""), nil, nil)

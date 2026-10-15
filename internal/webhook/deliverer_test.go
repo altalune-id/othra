@@ -19,7 +19,7 @@ import (
 
 func sealedEndpoint(t *testing.T, sl sealer.Sealer, org, project uuid.UUID, secret string) *Endpoint {
 	t.Helper()
-	e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.AgentCreated}}
+	e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.InviteCreated}}
 	primary, err := sealSecret(sl, e.ID, slotPrimary, secret)
 	require.NoError(t, err)
 	e.Secrets = SealedSecrets{Primary: primary}
@@ -48,7 +48,7 @@ func TestDelivererDeliver(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		signature = r.Header.Get(HeaderSignature)
 		assert.Equal(t, Sign("whsec_test", r.Header.Get(HeaderTimestamp), body), signature)
-		assert.Equal(t, string(events.AgentCreated), r.Header.Get(HeaderEventType))
+		assert.Equal(t, string(events.InviteCreated), r.Header.Get(HeaderEventType))
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
@@ -57,7 +57,7 @@ func TestDelivererDeliver(t *testing.T) {
 	store := &fakeStore{endpoints: []*Endpoint{ep}}
 	d := NewDeliverer(store, sl, srv.Client(), nil)
 
-	require.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`)))
+	require.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`)))
 	require.Len(t, store.attempts, 1)
 	assert.Equal(t, http.StatusOK, store.attempts[0].StatusCode)
 	assert.Contains(t, signature, "v1=")
@@ -74,7 +74,7 @@ func TestDelivererFailure(t *testing.T) {
 	store := &fakeStore{endpoints: []*Endpoint{ep}}
 	d := NewDeliverer(store, sl, srv.Client(), nil)
 
-	err := d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`))
+	err := d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`))
 	assert.True(t, IsDeliveryFailedError(err))
 	require.Len(t, store.attempts, 1)
 	assert.Equal(t, http.StatusInternalServerError, store.attempts[0].StatusCode)
@@ -86,7 +86,7 @@ func TestDelivererInactive(t *testing.T) {
 	ep := sealedEndpoint(t, sl, org, project, "whsec_test")
 	ep.Active = false
 	d := NewDeliverer(&fakeStore{endpoints: []*Endpoint{ep}}, sl, http.DefaultClient, nil)
-	assert.True(t, IsEndpointInactiveError(d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`))))
+	assert.True(t, IsEndpointInactiveError(d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`))))
 }
 
 func TestDelivererEndpointDeleted(t *testing.T) {
@@ -95,7 +95,7 @@ func TestDelivererEndpointDeleted(t *testing.T) {
 	ep := sealedEndpoint(t, sl, org, project, "whsec_test")
 	store := &fakeStore{byIDErr: &NotFoundError{ID: ep.ID.String()}}
 	d := NewDeliverer(store, sl, http.DefaultClient, nil)
-	assert.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`)))
+	assert.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`)))
 }
 
 func TestDelivererScopeMismatch(t *testing.T) {
@@ -104,7 +104,7 @@ func TestDelivererScopeMismatch(t *testing.T) {
 	ep := sealedEndpoint(t, sl, org, project, "whsec_test")
 	d := NewDeliverer(&fakeStore{endpoints: []*Endpoint{ep}}, sl, http.DefaultClient, nil)
 
-	e := entryFor(ep, `{"type":"agent.created"}`)
+	e := entryFor(ep, `{"type":"invite.created"}`)
 	e.OrgID = uuid.New()
 	assert.NoError(t, d.Deliver(context.Background(), e))
 }
@@ -121,7 +121,7 @@ func TestDelivererSecretUnavailable(t *testing.T) {
 	ep := sealedEndpoint(t, sl, org, project, "whsec_test")
 	ep.Secrets.Primary = []byte("junk")
 	d := NewDeliverer(&fakeStore{endpoints: []*Endpoint{ep}}, sl, http.DefaultClient, nil)
-	assert.True(t, IsSecretUnavailableError(d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`))))
+	assert.True(t, IsSecretUnavailableError(d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`))))
 }
 
 func TestDelivererBadEnvelope(t *testing.T) {
@@ -153,7 +153,7 @@ func TestDelivererSecondarySecret(t *testing.T) {
 	ep.URL = srv2.URL
 
 	d := NewDeliverer(&fakeStore{endpoints: []*Endpoint{ep}}, sl, srv2.Client(), nil)
-	require.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`)))
+	require.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`)))
 	assert.Contains(t, signatures, " ")
 }
 

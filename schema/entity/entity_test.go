@@ -22,11 +22,6 @@ func TestBindings(t *testing.T) {
 		columns []string
 	}{
 		{
-			"agents",
-			func(s, p string) binding { b := entity.NewAgents(s, p); return binding{b, b.AllColumns} },
-			[]string{"id", "public_id", "org_id", "project_id", "slug", "name", "description", "created_by", "created_at", "updated_at"},
-		},
-		{
 			"api_key_projects",
 			func(s, p string) binding { b := entity.NewAPIKeyProjects(s, p); return binding{b, b.AllColumns} },
 			[]string{"org_id", "key_id", "project_id", "created_at"},

@@ -13,7 +13,7 @@ const revoked = new Date('2026-06-01T00:00:00Z');
 const keyPB = create(APIKeySchema, {
   kind: 'org',
   name: 'CI',
-  scopes: ['agent:read'],
+  scopes: ['webhook:read'],
   projectId: '',
   projectIds: ['x6MH9WPWjktMwCBKHy4pF'],
   allProjects: false,
@@ -24,7 +24,7 @@ const key: APIKey = {
   rowKey: expect.any(String),
   kind: 'org',
   name: 'CI',
-  scopes: ['agent:read'],
+  scopes: ['webhook:read'],
   projectId: '',
   projectIds: ['x6MH9WPWjktMwCBKHy4pF'],
   allProjects: false,

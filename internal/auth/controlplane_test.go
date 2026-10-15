@@ -88,7 +88,7 @@ func TestWhoami(t *testing.T) {
 	t.Run("session", func(t *testing.T) {
 		got, err := whoami(t, whoamiClient(t, orgs, projects, users, session.Principal{
 			UserID: owner.ID, Email: owner.Email, Name: "Ada", AvatarURL: "https://x/a.png", Source: session.SourceLocal,
-			ActiveOrgID: acme.ID, ActiveProjectID: prj.ID, Scopes: []string{"agent:*"}, Operator: true,
+			ActiveOrgID: acme.ID, ActiveProjectID: prj.ID, Scopes: []string{"webhook:*"}, Operator: true,
 		}))
 		require.NoError(t, err)
 		assert.Equal(t, "local", got.GetSource())
@@ -98,14 +98,14 @@ func TestWhoami(t *testing.T) {
 		assert.Equal(t, acme.PublicID, got.GetActiveOrgId())
 		assert.Equal(t, "acme", got.GetActiveOrgSlug())
 		assert.Equal(t, prj.PublicID, got.GetActiveProjectId())
-		assert.Equal(t, []string{"agent:*"}, got.GetPermissions())
+		assert.Equal(t, []string{"webhook:*"}, got.GetPermissions())
 		assert.True(t, got.GetOperator())
 		assert.Empty(t, got.GetKeyHint())
 	})
 
 	t.Run("org key", func(t *testing.T) {
 		got, err := whoami(t, whoamiClient(t, orgs, projects, users, session.Principal{
-			KeyID: uuid.New(), KeyHint: "a1b2", Name: "ci", Source: session.SourceAPIKey, ActiveOrgID: acme.ID, Scopes: []string{"agent:read"},
+			KeyID: uuid.New(), KeyHint: "a1b2", Name: "ci", Source: session.SourceAPIKey, ActiveOrgID: acme.ID, Scopes: []string{"webhook:read"},
 		}))
 		require.NoError(t, err)
 		assert.Equal(t, "apikey", got.GetSource())
@@ -115,7 +115,7 @@ func TestWhoami(t *testing.T) {
 		assert.Empty(t, got.GetOwnerId())
 		assert.Equal(t, acme.PublicID, got.GetActiveOrgId())
 		assert.Equal(t, "acme", got.GetActiveOrgSlug())
-		assert.Equal(t, []string{"agent:read"}, got.GetPermissions())
+		assert.Equal(t, []string{"webhook:read"}, got.GetPermissions())
 		assert.False(t, got.GetOperator())
 	})
 

@@ -15,11 +15,6 @@ PRJ001 ProjectNotFound
 PRJ002 ProjectAlreadyExists
 PRJ003 ProjectInvalidSlug
 PRJ004 ProjectInvalidName
-AGT001 AgentNotFound
-AGT002 AgentAlreadyExists
-AGT003 AgentInvalidSlug
-AGT004 AgentInvalidName
-AGT005 AgentInvalidDescription
 KEY001 APIKeyNotFound
 KEY002 APIKeyInvalidName
 KEY003 APIKeyInvalidScope

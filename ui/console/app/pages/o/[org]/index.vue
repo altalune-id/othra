@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { StatItem } from '~/components/ui/types';
-import AppStats from '~/components/ui/AppStats.vue';
 import CopyButton from '~/components/ui/CopyButton.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -11,12 +9,6 @@ const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const items = computed(() => (org.value ? projects.forOrg(org.value.id) : []));
-
-const stats = computed<StatItem[]>(() => [
-  { label: t('nav.projects'), value: items.value.length },
-  { label: t('stat.agents'), value: 0 },
-  { label: t('stat.members'), value: 1 },
-]);
 
 useHead({ title: () => `${org.value?.name ?? t('org.title')} · Othra` });
 </script>
@@ -36,8 +28,6 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · Othra` });
       </div>
     </div>
 
-    <AppStats :items="stats" />
-
     <section class="space-y-3">
       <h2 class="text-lg font-semibold">
         {{ t('project.title') }}
@@ -53,9 +43,6 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · Othra` });
             <h3 class="card-title text-base">
               {{ project.name }}
             </h3>
-            <p class="text-sm text-base-content/60">
-              {{ project.slug }}
-            </p>
           </div>
         </NuxtLink>
       </div>

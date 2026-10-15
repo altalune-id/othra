@@ -103,14 +103,6 @@ mail:
 mcp:
   # env: OTHRA_MCP_APPS_UI
   appsUI: ""
-  # env: OTHRA_MCP_AUDIENCE
-  audience: ""
-  # env: OTHRA_MCP_AUDIENCE_OVERRIDE
-  audienceOverride: ""
-  # env: OTHRA_MCP_CHALLENGE_PREFIX
-  challengePrefix: ""
-  # env: OTHRA_MCP_CHALLENGE_TOKEN
-  challengeToken: ""
   # env: OTHRA_MCP_ENABLED
   enabled: false
 

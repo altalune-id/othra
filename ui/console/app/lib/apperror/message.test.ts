@@ -14,7 +14,7 @@ const messages: Record<string, string> = {
   'apperror.GEN900': 'Something went wrong',
   'field.organization_id': 'Organization ID',
   'apperror.WHK003_unknown': 'Unknown event {event}',
-  'webhooks.event_agent_created': 'Agent created',
+  'webhooks.event_invite_created': 'Invite sent',
 };
 const seen: Record<string, unknown>[] = [];
 function t(key: string, params?: Record<string, unknown>): string {
@@ -59,9 +59,9 @@ describe('describeError', () => {
   });
 
   it('shows scope and field labels instead of raw names', () => {
-    const scope = (name: string) => (name === 'agent:read' ? 'Read agents' : name);
-    expect(describeError(connectError('GEN007', { permission: 'agent:read' }), t, te, 'fallback', { scope }).message)
-      .toBe('Missing permission: Read agents');
+    const scope = (name: string) => (name === 'webhook:read' ? 'Read webhooks' : name);
+    expect(describeError(connectError('GEN007', { permission: 'webhook:read' }), t, te, 'fallback', { scope }).message)
+      .toBe('Missing permission: Read webhooks');
     expect(describeError(connectError('GEN004', { field: 'organization_id', reason: 'invalid' }), t, te, 'fallback').message)
       .toBe('Organization ID is invalid');
     expect(describeError(connectError('GEN004', { field: 'mystery_id', reason: 'invalid' }), t, te, 'fallback').message)
@@ -69,10 +69,10 @@ describe('describeError', () => {
   });
 
   it('shows a webhook event label, or the raw name when it has none', () => {
-    expect(describeError(connectError('WHK003', { reason: 'unknown', event: 'agent.created' }), t, te, 'fallback').message)
-      .toBe('Unknown event Agent created');
-    expect(describeError(connectError('WHK003', { reason: 'unknown', event: 'agent.gone' }), t, te, 'fallback').message)
-      .toBe('Unknown event agent.gone');
+    expect(describeError(connectError('WHK003', { reason: 'unknown', event: 'invite.created' }), t, te, 'fallback').message)
+      .toBe('Unknown event Invite sent');
+    expect(describeError(connectError('WHK003', { reason: 'unknown', event: 'thing.gone' }), t, te, 'fallback').message)
+      .toBe('Unknown event thing.gone');
   });
 
   it('never passes diagnostic meta to a message', () => {

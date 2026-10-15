@@ -7,7 +7,7 @@ const meta = {
   args: {
     items: [
       { label: 'Projects', value: 2 },
-      { label: 'Agents', value: 0 },
+      { label: 'Webhooks', value: 0 },
       { label: 'Members', value: 1 },
     ],
   },

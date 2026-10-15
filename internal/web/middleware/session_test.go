@@ -68,9 +68,9 @@ func TestSession_RefreshesAuthority(t *testing.T) {
 	assert.Equal(t, stored.UserID, f.seen.UserID)
 	assert.Equal(t, []string{"*"}, f.seen.Scopes)
 
-	role = []string{"agent:read"}
+	role = []string{"webhook:read"}
 	f.serve(session.Sign(secret, "sid-1"))
-	assert.Equal(t, []string{"agent:read"}, f.seen.Scopes, "a role change shows on the next request")
+	assert.Equal(t, []string{"webhook:read"}, f.seen.Scopes, "a role change shows on the next request")
 }
 
 func TestSession_AnonymousCases(t *testing.T) {

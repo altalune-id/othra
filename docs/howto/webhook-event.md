@@ -6,7 +6,7 @@ How it flows: the domain service saves its change and calls its event port **in 
 
 ## Plan
 
-- [ ] **Name.** `<domain>.<past-tense verb>`: `agent.created`, `invite.created`, `member.added`.
+- [ ] **Name.** `<domain>.<past-tense verb>`: `invite.created`, `member.added`.
 - [ ] **Project or org event.** A project event goes to the endpoints of one project. An org event (`OrgWide: true`) goes to the subscribed endpoints of every project in the org, and only a caller who reaches the whole org may subscribe to it or see its deliveries.
 - [ ] **Payload.** Only what a receiver needs. Every id is a **public id** ([public-ids.md](public-ids.md)); never a UUID, a token, a link with a token, a hash or a secret.
 - [ ] **Trigger.** Which service method emits it, and whether a failed enqueue should fail that method (it does today: the write rolls back).
@@ -17,7 +17,7 @@ How it flows: the domain service saves its change and calls its event port **in 
    - a `Type` const (`InviteCreated Type = "invite.created"`);
    - a row in `All()`: `{Type: InviteCreated, Version: 1, Subscribable: true, OrgWide: true}`;
    - a case in `CheckPayload` that accepts only the payload type.
-2. **Payload** in `internal/kernel/events/<domain>_payloads.go`: one named `<Event>V1` type per event, even when two share a shape (`AgentCreatedV1 AgentSnapshotV1`). JSON `snake_case`, `time.Time` for times, `omitempty` only for an optional reference. The doc comment says the ids are public ids.
+2. **Payload** in `internal/kernel/events/<domain>_payloads.go`: one named `<Event>V1` type per event, even when two share a shape. JSON `snake_case`, `time.Time` for times, `omitempty` only for an optional reference. The doc comment says the ids are public ids.
 
    ```go
    // InviteCreatedV1 is the payload for InviteCreated; ids are public ids and the token or link is never included.
@@ -33,35 +33,29 @@ How it flows: the domain service saves its change and calls its event port **in 
 4. **Port** in the domain's `ports.go`. The domain imports `internal/kernel/events`, never `internal/webhook`:
 
    ```go
-   // Publisher fans a domain event out to its subscribers; the webhook module implements it.
-   type Publisher interface {
-   	Enqueue(ctx context.Context, t events.Type, data any) error
+   // Events publishes an org event to its webhook subscribers; it joins the transaction on ctx.
+   type Events interface {
+   	EnqueueOrg(ctx context.Context, orgID uuid.UUID, t events.Type, data any) error
    }
    ```
 
-   An org event uses `EnqueueOrg(ctx context.Context, orgID uuid.UUID, t events.Type, data any) error` instead (`invite.Events`). Reuse the domain's port if it already has one.
+   A project event uses `Enqueue(ctx context.Context, t events.Type, data any) error` instead (`webhook.Service.Enqueue`); no domain emits one today. Reuse the domain's port if it already has one.
 
-5. **Emit inside the unit of work.** Save and enqueue in one `RunInTx` closure, so the outbox rows commit with the write or not at all. `Enqueue` reads the org and project from ctx, so bind them first:
+5. **Emit inside the unit of work.** Save and enqueue in one `RunInTx` closure, so the outbox rows commit with the write or not at all. `invite.Service.Create` runs `issue` inside its `RunInTx`; `issue` saves the invite, then emits:
 
    ```go
-   // NOTE: one unit of work, so the save and its event commit together or not at all.
-   func (s *Service) saveAndPublish(ctx context.Context, t events.Type, a *Agent) error {
-   	return s.uow.RunInTx(ctx, func(ctx context.Context) error {
-   		if err := s.store.Save(ctx, a); err != nil {
-   			return err
-   		}
-   		return s.publish(ctx, t, a) // tenant.Into(ctx, ...) then s.publisher.Enqueue
-   	})
-   }
+   err = s.emit(ctx, inv.OrgID, events.InviteCreated, events.InviteCreatedV1{
+   	ID: inv.PublicID, Email: inv.Email, Role: string(inv.Role), InvitedBy: inviter, ExpiresAt: inv.ExpiresAt,
+   })
    ```
 
-   A nil port skips emission. An enqueue error is wrapped (`fmt.Errorf("agent: publish %s: %w", t, err)`), rolls the write back and reaches the caller through the service's `unexpected` reporter.
+   `emit` skips a nil port. An enqueue error rolls the write back and reaches the caller through `errOrReport` (`"invite: create"`). A project event's `Enqueue` reads the org and project from ctx, so bind them first with `tenant.Into`.
 
-6. **Boot** passes `*webhook.Service` as the port in `buildServices` (`internal/boot/services.go`): `.WithPublisher(webhooks)` or `Deps{Events: webhooks}`.
+6. **Boot** passes `*webhook.Service` as the port in `buildServices` (`internal/boot/services.go`): `Deps{Events: webhooks}`.
 7. **Console picker:** add `{ name, labelKey }` to `webhookEvents` in `ui/console/app/components/webhook/events.ts` (it is kept in sync with the Go catalog by hand), update `events.test.ts`, and add `webhooks.event_<type with . as _>` to `ui/console/i18n/locales/en-US.json` and `id-ID.json`.
 8. **Tests:**
-   - service unit tests on a fake publisher: the event fires with the right type and payload (public ids), a publish error fails the call as an internal error, a nil publisher still saves (`internal/agent/publish_test.go`);
-   - integration on Postgres with the real store and `db.NewTransactor`: a failing publisher leaves nothing saved, and the publisher runs inside the save transaction (`internal/agent/service_integration_test.go`);
+   - service unit tests on a fake port: the event fires with the right type and payload (public ids), and a publish error fails the change (`internal/org/invite/service_test.go`: `TestService_EventsOnSend`, `TestService_EventsOnJoin`, `TestService_EventFailureFailsTheChange`);
+   - integration on Postgres with the real store and `db.NewTransactor`: a failure after the first write leaves nothing saved (`internal/org/member/service_integration_test.go`: `TestService_FailedEffectRollsBack`);
    - an org event: a boot integration test that every project's subscribed endpoint gets a delivery (`internal/boot/invite_events_integration_test.go`).
 
 ## Delivery facts you rely on
@@ -83,9 +77,8 @@ How it flows: the domain service saves its change and calls its event port **in 
 ## Reference code
 
 - [internal/kernel/events/catalog.go](../../internal/kernel/events/catalog.go): `Type`, `Spec`, `All`, `CheckPayload`, `IsOrgWide`
-- [internal/kernel/events/agent_payloads.go](../../internal/kernel/events/agent_payloads.go), [invite_payloads.go](../../internal/kernel/events/invite_payloads.go)
-- [internal/agent/service.go](../../internal/agent/service.go): `saveAndPublish`, `publish`; [internal/agent/ports.go](../../internal/agent/ports.go): `Publisher`
-- [internal/org/invite/ports.go](../../internal/org/invite/ports.go): `Events`
+- [internal/kernel/events/invite_payloads.go](../../internal/kernel/events/invite_payloads.go), [ping_payloads.go](../../internal/kernel/events/ping_payloads.go)
+- [internal/org/invite/service.go](../../internal/org/invite/service.go): `Create`, `issue`, `emit`; [internal/org/invite/ports.go](../../internal/org/invite/ports.go): `Events`
 - [internal/webhook/service.go](../../internal/webhook/service.go): `Enqueue`, `EnqueueOrg`, `fanOut`, `Envelope`
 - [internal/webhook/sign.go](../../internal/webhook/sign.go): `Sign`; [internal/webhook/deliverer.go](../../internal/webhook/deliverer.go): `deliveryHeaders`
 - [internal/kernel/outbox/outbox.go](../../internal/kernel/outbox/outbox.go): `MaxAttempts`, `ClaimLease`, `Backoff`

@@ -24,7 +24,6 @@ import (
 
 	"altalune.id/othra/apperror"
 	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
-	"altalune.id/othra/internal/agent"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/install"
@@ -46,7 +45,7 @@ func errOf[T any](_ T, err error) error { return err }
 
 func samples() []error {
 	nobody := uuid.New()
-	hook := []events.Type{events.AgentCreated}
+	hook := []events.Type{events.InviteCreated}
 	return []error{
 		&tenant.MissingError{},
 		&tenant.UnscopedError{},
@@ -61,7 +60,7 @@ func samples() []error {
 		errOf(member.New(uuid.Nil, nobody, member.RoleOwner)),
 		apperror.New(apperror.CodeNotFound, "Not found"),
 		apperror.New(apperror.CodeAlreadyExists, "Already exists"),
-		&authz.ForbiddenError{Permission: scope.AgentWrite},
+		&authz.ForbiddenError{Permission: scope.WebhookWrite},
 		&tenant.ProjectOutsideOrgError{},
 		apperror.NewReporter(nil, false).Unexpected(context.Background(), "boom", errors.New("secret detail")),
 
@@ -78,13 +77,6 @@ func samples() []error {
 		errOf(project.NewProject(nobody, "a", "Web", nobody)),
 		errOf(project.NewProject(nobody, "Not_A_Slug", "Web", nobody)),
 		errOf(project.NewProject(nobody, "web", "", nobody)),
-
-		&agent.NotFoundError{Slug: "bot"},
-		&agent.AlreadyExistsError{Slug: "bot"},
-		errOf(agent.New(nobody, nobody, "a", "Bot", "", nobody)),
-		errOf(agent.New(nobody, nobody, "Not_A_Slug", "Bot", "", nobody)),
-		errOf(agent.New(nobody, nobody, "bot", "", "", nobody)),
-		errOf(agent.New(nobody, nobody, "bot", "Bot", strings.Repeat("d", 2001), nobody)),
 
 		&apikey.NotFoundError{ID: "x"},
 		apikey.ValidateName(""),
@@ -152,7 +144,7 @@ func samples() []error {
 		errOf(webhook.New(nobody, nobody, "https://e.com", "", nil)),
 		errOf(webhook.New(nobody, nobody, "https://e.com", "", []events.Type{"x.y"})),
 		errOf(webhook.New(nobody, nobody, "https://e.com", "", []events.Type{events.WebhookPing})),
-		errOf(webhook.New(nobody, nobody, "https://e.com", "", []events.Type{events.AgentCreated, events.AgentCreated})),
+		errOf(webhook.New(nobody, nobody, "https://e.com", "", []events.Type{events.InviteCreated, events.InviteCreated})),
 		errOf(webhook.New(nobody, nobody, "https://e.com", "\xff", hook)),
 		errOf(webhook.New(nobody, nobody, "https://e.com", strings.Repeat("d", webhook.MaxDescriptionRunes+1), hook)),
 		&webhook.EndpointLimitError{Limit: 3},
@@ -275,7 +267,6 @@ func TestEchoedInputIsCapped(t *testing.T) {
 		&org.InvalidSlugError{Slug: long, Reason: org.SlugReserved},
 		&org.InvalidSlugError{Slug: long, Reason: "other"},
 		&project.InvalidSlugError{Slug: long, Reason: "other"},
-		&agent.InvalidSlugError{Slug: long, Reason: "other"},
 	} {
 		det, _ := wireDetail(t, err)
 		for k, v := range det.GetMeta() {

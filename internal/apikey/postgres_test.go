@@ -28,7 +28,7 @@ func TestRow_ToKey(t *testing.T) {
 		Name:        "n",
 		SecretHash:  hash[:],
 		SecretHint:  "cret",
-		Scopes:      "{org:read,agent:write}",
+		Scopes:      "{org:read,webhook:write}",
 		ResourceIDs: "{}",
 		CreatedBy:   &createdBy,
 		CreatedAt:   time.Now(),
@@ -38,7 +38,7 @@ func TestRow_ToKey(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, KindOrg, k.Kind)
 	assert.True(t, k.Matches("secret"))
-	assert.Equal(t, []string{"org:read", "agent:write"}, k.Scopes)
+	assert.Equal(t, []string{"org:read", "webhook:write"}, k.Scopes)
 	assert.Len(t, k.ProjectIDs, 1)
 	assert.Equal(t, pid, k.ProjectID)
 	assert.Equal(t, createdBy, k.CreatedBy)

@@ -78,7 +78,7 @@ func randomBytes(t *testing.T, n int) []byte {
 func newEndpoint(t *testing.T, tc tenant.Context) *webhook.Endpoint {
 	t.Helper()
 	e, err := webhook.New(tc.OrgID, tc.ProjectID, "https://example.com/hook", "orders feed",
-		[]events.Type{events.AgentCreated, events.AgentUpdated})
+		[]events.Type{events.InviteCreated, events.MemberAdded})
 	require.NoError(t, err)
 	e.Secrets = webhook.SealedSecrets{Primary: randomBytes(t, 32)}
 	e.CreatedAt = e.CreatedAt.Truncate(time.Microsecond)
@@ -180,7 +180,7 @@ func TestPostgresEndpoint_SecondSaveUpdatesEditableColumnsOnly(t *testing.T) {
 	changed.CreatedAt = e.CreatedAt.Add(-24 * time.Hour)
 	changed.URL = "https://example.org/other"
 	changed.Description = "renamed"
-	changed.EventTypes = []events.Type{events.AgentUpdated}
+	changed.EventTypes = []events.Type{events.MemberAdded}
 	changed.Active = false
 	changed.UpdatedAt = e.UpdatedAt.Add(time.Minute)
 	require.NoError(t, f.store.Save(ctx, &changed))

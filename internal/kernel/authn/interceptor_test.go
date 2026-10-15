@@ -95,7 +95,7 @@ func call(t *testing.T, srv *httptest.Server, proc, auth string) error {
 }
 
 func TestInterceptor(t *testing.T) {
-	reader := session.Principal{Source: session.SourceAPIKey, Scopes: []string{"agent:read"}}
+	reader := session.Principal{Source: session.SourceAPIKey, Scopes: []string{"webhook:read"}}
 	writerOnly := session.Principal{Source: session.SourceAPIKey, Scopes: []string{"webhook:write"}}
 	cases := []struct {
 		name     string
@@ -126,7 +126,7 @@ func TestInterceptor(t *testing.T) {
 				Chain:        Chain{tc.authn},
 				KeyPrefix:    testPrefix,
 				CookieSecret: testSecret,
-				Permissions:  PermissionTable{procRead: {"agent:read"}},
+				Permissions:  PermissionTable{procRead: {"webhook:read"}},
 				Required:     tc.required,
 			}, s)
 
@@ -143,12 +143,12 @@ func TestInterceptor(t *testing.T) {
 }
 
 func TestInterceptor_PrincipalInContext(t *testing.T) {
-	want := session.Principal{Source: session.SourceAPIKey, Name: "ci", Scopes: []string{"agent:read"}}
+	want := session.Principal{Source: session.SourceAPIKey, Name: "ci", Scopes: []string{"webhook:read"}}
 	s := &seen{}
 	srv := serve(t, InterceptorOptions{
 		Chain:       Chain{&fakeAuthn{p: want}},
 		KeyPrefix:   testPrefix,
-		Permissions: PermissionTable{procRead: {"agent:read"}},
+		Permissions: PermissionTable{procRead: {"webhook:read"}},
 	}, s)
 
 	require.NoError(t, call(t, srv, procRead, "Bearer othra_x"))
@@ -177,7 +177,7 @@ func TestInterceptor_AnyAuthenticated(t *testing.T) {
 
 // SECURITY: a procedure that lists several permissions needs every one of them.
 func TestInterceptor_AllOf(t *testing.T) {
-	table := PermissionTable{procBoth: {"agent:read", "webhook:read"}, procEmpty: {}}
+	table := PermissionTable{procBoth: {"project:read", "webhook:read"}, procEmpty: {}}
 	cases := []struct {
 		name    string
 		proc    string
@@ -185,9 +185,9 @@ func TestInterceptor_AllOf(t *testing.T) {
 		denied  string
 		reached bool
 	}{
-		{"holds both", procBoth, []string{"agent:read", "webhook:read"}, "", true},
-		{"holds only the first", procBoth, []string{"agent:read"}, "webhook:read", false},
-		{"holds only the second", procBoth, []string{"webhook:read"}, "agent:read", false},
+		{"holds both", procBoth, []string{"project:read", "webhook:read"}, "", true},
+		{"holds only the first", procBoth, []string{"project:read"}, "webhook:read", false},
+		{"holds only the second", procBoth, []string{"webhook:read"}, "project:read", false},
 		{"empty entry", procEmpty, []string{"*"}, "", false},
 		{"unmapped", procUnmapped, []string{"*"}, "", false},
 	}

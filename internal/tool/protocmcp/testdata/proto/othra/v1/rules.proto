@@ -39,7 +39,7 @@ extend buf.validate.StringRules {
     }
   ];
 
-  // slug is a URL slug, as org, project and agent slugs are: 3 to 64 lowercase letters, digits and inner dashes.
+  // slug is a URL slug, as org and project slugs are: 3 to 64 lowercase letters, digits and inner dashes.
   optional bool slug = 104004 [
     (buf.validate.predefined).cel = {
       id: "othra.slug.min_len.3"

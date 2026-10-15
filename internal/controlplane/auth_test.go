@@ -12,13 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	agentv1 "altalune.id/othra/gen/go/agent/v1"
-	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
-	"altalune.id/othra/internal/agent"
+	projectv1 "altalune.id/othra/gen/go/project/v1"
+	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/kernel/tenant"
@@ -48,7 +47,6 @@ func authServerWith(t *testing.T, refs *fakes.PublicIDs, p session.Principal) st
 	srv := New(Services{
 		Orgs:     org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, nil).WithCreation(true),
 		Projects: project.NewService(&fakes.ProjectStore{}, nil),
-		Agents:   agent.NewService(&fakes.AgentStore{}, fakes.Transactor{}, nil),
 		Users:    user.NewService(fakes.NewUserStore(), nil),
 		Refs:     refs,
 	}, nil, Options{Authn: authn.InterceptorOptions{
@@ -81,17 +79,17 @@ func TestAPI_BadCredentialIs401(t *testing.T) {
 }
 
 func TestAPI_KeyWithoutPermissionIs403(t *testing.T) {
-	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"agent:read"}}
+	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"project:read"}}
 	refs := fakes.NewPublicIDs()
 	url := authServerWith(t, refs, p)
-	_, err := agentv1connect.NewAgentServiceClient(http.DefaultClient, url).CreateAgent(context.Background(), bearer(connect.NewRequest(&agentv1.CreateAgentRequest{
-		OrgId: refs.Org(p.ActiveOrgID), ProjectId: refs.Project(uuid.New(), p.ActiveOrgID), Slug: "bot", Name: "Bot",
+	_, err := projectv1connect.NewProjectServiceClient(http.DefaultClient, url).CreateProject(context.Background(), bearer(connect.NewRequest(&projectv1.CreateProjectRequest{
+		OrgId: refs.Org(p.ActiveOrgID), Name: "Web",
 	}), "othra_good"))
 	assert.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
 }
 
 func TestAPI_WhoamiWithKey(t *testing.T) {
-	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), KeyHint: "a1b2", Name: "ci", Scopes: []string{"agent:read"}}
+	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), KeyHint: "a1b2", Name: "ci", Scopes: []string{"project:read"}}
 	url := authServer(t, p)
 	c := authv1connect.NewAuthServiceClient(http.DefaultClient, url)
 

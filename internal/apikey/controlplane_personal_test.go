@@ -54,7 +54,7 @@ func withRole(p session.Principal, role member.Role) session.Principal {
 
 func personalCreate(orgPub string) *connect.Request[apikeyv1.CreateAPIKeyRequest] {
 	return connect.NewRequest(&apikeyv1.CreateAPIKeyRequest{
-		OrgId: orgPub, Kind: "personal", Name: "laptop", Scopes: []string{"agent:read"},
+		OrgId: orgPub, Kind: "personal", Name: "laptop", Scopes: []string{"webhook:read"},
 		AllProjects: true, ExpiresAt: timestamppb.New(time.Now().UTC().Add(time.Hour)),
 	})
 }
@@ -189,7 +189,7 @@ func TestAPIKeyService_ReachIsTheActiveOrg(t *testing.T) {
 
 func orgCreate(orgPub string) *connect.Request[apikeyv1.CreateAPIKeyRequest] {
 	return connect.NewRequest(&apikeyv1.CreateAPIKeyRequest{
-		OrgId: orgPub, Kind: "org", Name: "ci", Scopes: []string{"agent:read"}, AllProjects: true,
+		OrgId: orgPub, Kind: "org", Name: "ci", Scopes: []string{"webhook:read"}, AllProjects: true,
 		ExpiresAt: timestamppb.New(time.Now().UTC().Add(time.Hour)),
 	})
 }
@@ -280,8 +280,8 @@ func TestAPIKeyService_KeyPrincipalNeverReachesTheService(t *testing.T) {
 	refs := fakes.NewPublicIDs()
 	orgPub := refs.Org(orgID)
 	for name, p := range map[string]session.Principal{
-		"org key":      {Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: orgID, AllProjects: true, Scopes: []string{"agent:read"}},
-		"personal key": {Source: session.SourceAPIKey, KeyID: uuid.New(), OwnerID: uuid.New(), ActiveOrgID: orgID, AllProjects: true, Scopes: []string{"agent:read"}},
+		"org key":      {Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: orgID, AllProjects: true, Scopes: []string{"webhook:read"}},
+		"personal key": {Source: session.SourceAPIKey, KeyID: uuid.New(), OwnerID: uuid.New(), ActiveOrgID: orgID, AllProjects: true, Scopes: []string{"webhook:read"}},
 	} {
 		t.Run(name, func(t *testing.T) {
 			// NOTE: the store fails every read, so reaching the service would answer NotFound, not these codes.

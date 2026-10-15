@@ -188,7 +188,7 @@ func loginOK(w http.ResponseWriter, _ *http.Request) {
 		"expires_at": loginExpires,
 		"principal": map[string]any{
 			"source": "local", "user_id": "u-1", "email": "ada@example.com", "name": "Ada",
-			"active_org_id": "o-1", "permissions": []string{"agent:read"}, "operator": true,
+			"active_org_id": "o-1", "permissions": []string{"webhook:read"}, "operator": true,
 		},
 	})
 }
@@ -254,7 +254,7 @@ func TestLogin_WhoamiFailureKeepsLoginPrincipal(t *testing.T) {
 			require.NotNil(t, profiles.s)
 			assert.Equal(t, auth.CLIPrincipal{
 				Source: "local", UserID: "u-1", Email: "ada@example.com", Name: "Ada",
-				ActiveOrgID: "o-1", Permissions: []string{"agent:read"}, Operator: true,
+				ActiveOrgID: "o-1", Permissions: []string{"webhook:read"}, Operator: true,
 			}, profiles.s.Principal)
 			assert.Contains(t, out, "as ada@example.com")
 		})
@@ -424,7 +424,7 @@ func TestWhoami_Errors(t *testing.T) {
 
 var fullWhoami = &authv1.WhoamiResponse{
 	Source: "apikey", UserId: "u-1", Email: "ada@example.com", Name: "Ada", KeyHint: "a1b2", OwnerId: "u-1",
-	ActiveOrgId: "o-1", ActiveOrgSlug: "acme", Permissions: []string{"agent:read", "agent:write"}, Operator: true,
+	ActiveOrgId: "o-1", ActiveOrgSlug: "acme", Permissions: []string{"webhook:read", "webhook:write"}, Operator: true,
 }
 
 func TestWhoami_Text(t *testing.T) {
@@ -441,7 +441,7 @@ func TestWhoami_Text(t *testing.T) {
 				"email:       ada@example.com\n" +
 				"name:        Ada\n" +
 				"org:         acme\n" +
-				"permissions: agent:read, agent:write\n" +
+				"permissions: webhook:read, webhook:write\n" +
 				"operator:    true\n",
 		},
 		{
@@ -480,7 +480,7 @@ func TestWhoami_JSON(t *testing.T) {
 			assert.Equal(t, map[string]any{
 				"source": "apikey", "user_id": "u-1", "email": "ada@example.com", "name": "Ada",
 				"key_hint": "a1b2", "owner_id": "u-1", "active_org_id": "o-1", "active_org_slug": "acme",
-				"permissions": []any{"agent:read", "agent:write"}, "operator": true,
+				"permissions": []any{"webhook:read", "webhook:write"}, "operator": true,
 			}, got)
 		})
 	}

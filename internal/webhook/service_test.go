@@ -201,7 +201,7 @@ func TestServiceCreate(t *testing.T) {
 	store := &fakeStore{}
 	svc := testService(t, store, &fakeOutbox{})
 
-	e, secret, err := svc.Create(tenantCtx(org, project), "https://example.com", "d", []events.Type{events.AgentCreated})
+	e, secret, err := svc.Create(tenantCtx(org, project), "https://example.com", "d", []events.Type{events.InviteCreated})
 	require.NoError(t, err)
 	assert.Contains(t, secret, secretPrefix)
 	assert.Equal(t, org, e.OrgID)
@@ -216,20 +216,20 @@ func TestServiceCreateLimit(t *testing.T) {
 		store.endpoints = append(store.endpoints, &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true})
 	}
 	svc := testService(t, store, &fakeOutbox{})
-	_, _, err := svc.Create(tenantCtx(org, project), "https://example.com", "", []events.Type{events.AgentCreated})
+	_, _, err := svc.Create(tenantCtx(org, project), "https://example.com", "", []events.Type{events.InviteCreated})
 	assert.True(t, IsEndpointLimitError(err))
 }
 
 func TestServiceCreateListError(t *testing.T) {
 	store := &fakeStore{listErr: errors.New("boom")}
 	svc := testService(t, store, &fakeOutbox{})
-	_, _, err := svc.Create(tenantCtx(uuid.New(), uuid.New()), "https://example.com", "", []events.Type{events.AgentCreated})
+	_, _, err := svc.Create(tenantCtx(uuid.New(), uuid.New()), "https://example.com", "", []events.Type{events.InviteCreated})
 	assert.Error(t, err)
 }
 
 func TestServiceCreateSealerUnavailable(t *testing.T) {
 	svc := NewService(&fakeStore{}, nil, unexpectedStub, sealer.Disabled(), &fakeOutbox{}, fakeResolver{})
-	_, _, err := svc.Create(tenantCtx(uuid.New(), uuid.New()), "https://example.com", "", []events.Type{events.AgentCreated})
+	_, _, err := svc.Create(tenantCtx(uuid.New(), uuid.New()), "https://example.com", "", []events.Type{events.InviteCreated})
 	assert.True(t, sealer.IsUnavailableError(err))
 }
 
@@ -260,16 +260,16 @@ func TestServiceByID(t *testing.T) {
 
 func TestServiceUpdate(t *testing.T) {
 	org, project := uuid.New(), uuid.New()
-	e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, URL: "https://a.example.com", EventTypes: []events.Type{events.AgentCreated}}
+	e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, URL: "https://a.example.com", EventTypes: []events.Type{events.InviteCreated}}
 	store := &fakeStore{endpoints: []*Endpoint{e}}
 	svc := testService(t, store, &fakeOutbox{})
 
-	got, err := svc.Update(tenantCtx(org, project), e.ID, "https://b.example.com", "d", []events.Type{events.AgentUpdated}, false)
+	got, err := svc.Update(tenantCtx(org, project), e.ID, "https://b.example.com", "d", []events.Type{events.MemberAdded}, false)
 	require.NoError(t, err)
 	assert.Equal(t, "https://b.example.com", got.URL)
 	require.Len(t, store.saved, 1)
 
-	_, err = svc.Update(tenantCtx(org, project), e.ID, "", "d", []events.Type{events.AgentCreated}, true)
+	_, err = svc.Update(tenantCtx(org, project), e.ID, "", "d", []events.Type{events.InviteCreated}, true)
 	assert.True(t, IsInvalidURLError(err))
 }
 
@@ -331,15 +331,15 @@ func TestServiceRetireSecondary(t *testing.T) {
 
 func TestServiceEnqueue(t *testing.T) {
 	org, project := uuid.New(), uuid.New()
-	subscribed := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.AgentCreated}}
-	other := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.AgentUpdated}}
-	inactive := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: false, EventTypes: []events.Type{events.AgentCreated}}
+	subscribed := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.InviteCreated}}
+	other := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.MemberAdded}}
+	inactive := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: false, EventTypes: []events.Type{events.InviteCreated}}
 	store := &fakeStore{endpoints: []*Endpoint{subscribed, other, inactive}}
 	ob := &fakeOutbox{}
 	svc := testService(t, store, ob)
 
-	payload := events.AgentCreatedV1{Slug: "a"}
-	require.NoError(t, svc.Enqueue(tenantCtx(org, project), events.AgentCreated, payload))
+	payload := events.InviteCreatedV1{ID: "i"}
+	require.NoError(t, svc.Enqueue(tenantCtx(org, project), events.InviteCreated, payload))
 	require.Len(t, ob.enqueued, 1)
 	assert.Equal(t, subscribed.ID.String(), ob.enqueued[0].Target)
 }
@@ -349,19 +349,19 @@ func TestServiceEnqueueErrors(t *testing.T) {
 	svc := testService(t, &fakeStore{}, &fakeOutbox{})
 
 	assert.True(t, events.IsUnknownTypeError(svc.Enqueue(tenantCtx(org, project), "nope", 1)))
-	assert.True(t, events.IsPayloadMismatchError(svc.Enqueue(tenantCtx(org, project), events.AgentCreated, 1)))
-	assert.True(t, tenant.IsMissingError(svc.Enqueue(context.Background(), events.AgentCreated, events.AgentCreatedV1{})))
+	assert.True(t, events.IsPayloadMismatchError(svc.Enqueue(tenantCtx(org, project), events.InviteCreated, 1)))
+	assert.True(t, tenant.IsMissingError(svc.Enqueue(context.Background(), events.InviteCreated, events.InviteCreatedV1{})))
 
 	bad := testService(t, &fakeStore{listErr: errors.New("boom")}, &fakeOutbox{})
-	assert.Error(t, bad.Enqueue(tenantCtx(org, project), events.AgentCreated, events.AgentCreatedV1{}))
+	assert.Error(t, bad.Enqueue(tenantCtx(org, project), events.InviteCreated, events.InviteCreatedV1{}))
 }
 
 func TestServiceEnqueueSlugError(t *testing.T) {
 	org, project := uuid.New(), uuid.New()
-	e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.AgentCreated}}
+	e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project, Active: true, EventTypes: []events.Type{events.InviteCreated}}
 	store := &fakeStore{endpoints: []*Endpoint{e}}
 	svc := NewService(store, nil, unexpectedStub, testSealer(t), &fakeOutbox{}, fakeResolver{err: errors.New("boom")})
-	assert.Error(t, svc.Enqueue(tenantCtx(org, project), events.AgentCreated, events.AgentCreatedV1{}))
+	assert.Error(t, svc.Enqueue(tenantCtx(org, project), events.InviteCreated, events.InviteCreatedV1{}))
 }
 
 func TestServiceSendTest(t *testing.T) {
@@ -383,7 +383,7 @@ func TestServiceEnqueueOrg_FansOutPerProject(t *testing.T) {
 	a := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: p1, Active: true, EventTypes: []events.Type{events.MemberAdded}}
 	b := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: p2, Active: true, EventTypes: []events.Type{events.MemberAdded, events.InviteCreated}}
 	c := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: p2, Active: true, EventTypes: []events.Type{events.MemberAdded}}
-	unsubscribed := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: p1, Active: true, EventTypes: []events.Type{events.AgentCreated}}
+	unsubscribed := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: p1, Active: true, EventTypes: []events.Type{events.InviteCreated}}
 	inactive := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: p1, Active: false, EventTypes: []events.Type{events.MemberAdded}}
 	elsewhere := &Endpoint{ID: uuid.New(), OrgID: uuid.New(), ProjectID: uuid.New(), Active: true, EventTypes: []events.Type{events.MemberAdded}}
 	ob := &fakeOutbox{}

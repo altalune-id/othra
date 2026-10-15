@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	agentv1 "altalune.id/othra/gen/go/agent/v1"
 	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
@@ -22,7 +21,6 @@ import (
 func allProcedures() []string {
 	var out []string
 	for _, f := range []protoreflect.FileDescriptor{
-		agentv1.File_agent_v1_agent_proto,
 		apikeyv1.File_apikey_v1_apikey_proto,
 		authv1.File_auth_v1_auth_proto,
 		invitev1.File_invite_v1_invite_proto,
@@ -44,7 +42,7 @@ func allProcedures() []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 42, "Org 4, Project 4, Agent 5, APIKey 3, Webhook 11, Auth 4, Member 4, Invite 7")
+	require.Len(t, procs, 37, "Org 4, Project 4, APIKey 3, Webhook 11, Auth 4, Member 4, Invite 7")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]
@@ -68,8 +66,6 @@ func TestPermissionTable_Spec15(t *testing.T) {
 		"/org.v1.OrgService/UpdateOrg":                            "org:write",
 		"/project.v1.ProjectService/UpdateProject":                "project:write",
 		"/project.v1.ProjectService/ListProjects":                 "project:read",
-		"/agent.v1.AgentService/DeleteAgent":                      "agent:write",
-		"/agent.v1.AgentService/GetAgent":                         "agent:read",
 		"/webhook.v1.WebhookService/ListWebhookDeliveryAttempts":  "webhook:read",
 		"/webhook.v1.WebhookService/RotateWebhookSecret":          "webhook:write",
 		"/webhook.v1.WebhookService/RetryFailedWebhookDeliveries": "webhook:write",
@@ -97,6 +93,6 @@ func TestPermissionTable_Spec15(t *testing.T) {
 }
 
 func TestFor(t *testing.T) {
-	assert.Equal(t, []string{scope.AgentRead}, For("/agent.v1.AgentService/GetAgent"))
+	assert.Equal(t, []string{scope.ProjectRead}, For("/project.v1.ProjectService/GetProject"))
 	assert.Nil(t, For("/nope.v1.Nope/Nothing"), "an unknown procedure has no permission, so it is denied")
 }

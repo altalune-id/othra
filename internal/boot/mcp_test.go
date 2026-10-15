@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"altalune.id/othra/config"
-	agentv1mcp "altalune.id/othra/gen/go/agent/v1/agentv1mcp"
 	authv1mcp "altalune.id/othra/gen/go/auth/v1/authv1mcp"
 	invitev1mcp "altalune.id/othra/gen/go/invite/v1/invitev1mcp"
 	memberv1mcp "altalune.id/othra/gen/go/member/v1/memberv1mcp"
@@ -71,7 +70,7 @@ func TestBuildMCPHandler(t *testing.T) {
 func TestApp_RunMCPActsAsSystem(t *testing.T) {
 	seen := make(chan session.Principal, 1)
 	reg := rootmcp.NewRegistry()
-	reg.Register(rootmcp.ToolSpec{Name: "probe", Scopes: []string{scope.AgentRead}, Handler: func(ctx context.Context, _ json.RawMessage) (json.RawMessage, error) {
+	reg.Register(rootmcp.ToolSpec{Name: "probe", Scopes: []string{scope.WebhookRead}, Handler: func(ctx context.Context, _ json.RawMessage) (json.RawMessage, error) {
 		seen <- session.PrincipalFrom(ctx)
 		return json.RawMessage(`{}`), nil
 	}}, nil)
@@ -108,11 +107,6 @@ func TestMCPTools_PermissionsComeFromTheTable(t *testing.T) {
 		projectv1mcp.ProjectCreateToolName:      {scope.ProjectWrite},
 		projectv1mcp.ProjectGetToolName:         {scope.ProjectRead},
 		projectv1mcp.ProjectListToolName:        {scope.ProjectRead},
-		agentv1mcp.AgentCreateToolName:          {scope.AgentWrite},
-		agentv1mcp.AgentGetToolName:             {scope.AgentRead},
-		agentv1mcp.AgentListToolName:            {scope.AgentRead},
-		agentv1mcp.AgentUpdateToolName:          {scope.AgentWrite},
-		agentv1mcp.AgentDeleteToolName:          {scope.AgentWrite},
 		webhookv1mcp.WebhookCreateToolName:      {scope.WebhookWrite},
 		webhookv1mcp.WebhookListToolName:        {scope.WebhookRead},
 		webhookv1mcp.WebhookDeliveriesToolName:  {scope.WebhookRead},

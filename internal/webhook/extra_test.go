@@ -25,7 +25,7 @@ func TestDelivererSaveAttemptError(t *testing.T) {
 	ep.URL = srv.URL
 
 	d := NewDeliverer(&fakeStore{endpoints: []*Endpoint{ep}, attemptErr: errBoom}, sl, srv.Client(), nil)
-	assert.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"agent.created"}`)))
+	assert.NoError(t, d.Deliver(context.Background(), entryFor(ep, `{"type":"invite.created"}`)))
 }
 
 func TestDelivererExhausted(t *testing.T) {
@@ -37,7 +37,7 @@ func TestDelivererExhausted(t *testing.T) {
 	ep.URL = srv.URL
 
 	d := NewDeliverer(&fakeStore{endpoints: []*Endpoint{ep}}, sl, srv.Client(), nil)
-	e := entryFor(ep, `{"type":"agent.created"}`)
+	e := entryFor(ep, `{"type":"invite.created"}`)
 	e.Attempt = outbox.MaxAttempts
 	assert.True(t, IsDeliveryFailedError(d.Deliver(context.Background(), e)))
 }
@@ -52,13 +52,13 @@ func TestTrimPartialRune(t *testing.T) {
 func TestServiceInsecureURL(t *testing.T) {
 	org, project := uuid.New(), uuid.New()
 	svc := NewService(&fakeStore{}, nil, unexpectedStub, testSealer(t), &fakeOutbox{}, fakeResolver{}, WithAllowInsecureURL())
-	_, _, err := svc.Create(tenantCtx(org, project), "http://localhost:9999/hook", "", []events.Type{events.AgentCreated})
+	_, _, err := svc.Create(tenantCtx(org, project), "http://localhost:9999/hook", "", []events.Type{events.InviteCreated})
 	require.NoError(t, err)
 }
 
 func TestServiceCreateSaveError(t *testing.T) {
 	svc := testService(t, &fakeStore{saveErr: errBoom}, &fakeOutbox{})
-	_, _, err := svc.Create(tenantCtx(uuid.New(), uuid.New()), "https://e.com", "", []events.Type{events.AgentCreated})
+	_, _, err := svc.Create(tenantCtx(uuid.New(), uuid.New()), "https://e.com", "", []events.Type{events.InviteCreated})
 	assert.Error(t, err)
 }
 

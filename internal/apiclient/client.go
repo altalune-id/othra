@@ -8,7 +8,6 @@ import (
 
 	"connectrpc.com/connect"
 
-	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
@@ -33,7 +32,6 @@ type Credential struct {
 type Client struct {
 	Org      orgv1connect.OrgServiceClient
 	Projects projectv1connect.ProjectServiceClient
-	Agents   agentv1connect.AgentServiceClient
 	APIKeys  apikeyv1connect.APIKeyServiceClient
 	Webhooks webhookv1connect.WebhookServiceClient
 	Auth     authv1connect.AuthServiceClient
@@ -52,7 +50,6 @@ func New(baseURL string, cred Credential) *Client {
 	return &Client{
 		Org:      orgv1connect.NewOrgServiceClient(httpClient, base, opts...),
 		Projects: projectv1connect.NewProjectServiceClient(httpClient, base, opts...),
-		Agents:   agentv1connect.NewAgentServiceClient(httpClient, base, opts...),
 		APIKeys:  apikeyv1connect.NewAPIKeyServiceClient(httpClient, base, opts...),
 		Webhooks: webhookv1connect.NewWebhookServiceClient(httpClient, base, opts...),
 		Auth:     authv1connect.NewAuthServiceClient(httpClient, base, opts...),

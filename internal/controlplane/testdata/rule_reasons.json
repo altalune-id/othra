@@ -15,7 +15,6 @@
   {"rule": "othra.slug.max_len.64", "reason": "too_long", "param": "64"},
   {"rule": "apikey.name.max_len.100", "reason": "too_long", "param": "100"},
   {"rule": "user.name.max_len.200", "reason": "too_long", "param": "200"},
-  {"rule": "agent.description.max_len.2000", "reason": "too_long", "param": "2000"},
   {"rule": "webhook.url.max_len.2048", "reason": "too_long", "param": "2048"},
   {"rule": "webhook.description.max_len.200", "reason": "too_long", "param": "200"},
   {"rule": "string.len", "reason": "invalid_format"},

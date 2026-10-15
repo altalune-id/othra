@@ -215,7 +215,7 @@ func TestAPI_AuthenticatesBeforeValidating(t *testing.T) {
 }
 
 func TestAPI_ChecksPermissionBeforeValidating(t *testing.T) {
-	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"agent:read"}}
+	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"webhook:read"}}
 	url := authServer(t, p)
 	_, err := orgv1connect.NewOrgServiceClient(http.DefaultClient, url).
 		CreateOrg(context.Background(), bearer(connect.NewRequest(&orgv1.CreateOrgRequest{Name: strings.Repeat("a", 201)}), "othra_good"))
@@ -230,7 +230,7 @@ func TestValidate_NilValidatorStillRefuses(t *testing.T) {
 }
 
 func TestAPI_PersonOnlyRefusesAKeyBeforeValidating(t *testing.T) {
-	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"agent:read"}}
+	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"webhook:read"}}
 	url := authServer(t, p)
 	_, err := authv1connect.NewAuthServiceClient(http.DefaultClient, url).
 		ChangePassword(context.Background(), bearer(connect.NewRequest(&authv1.ChangePasswordRequest{}), "othra_good"))

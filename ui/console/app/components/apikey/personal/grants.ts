@@ -5,7 +5,7 @@ export interface Scope {
   personOnly?: boolean;
 }
 
-// Same matching as scope.Grants in Go: '*', 'agent:*' or the exact permission.
+// Same matching as scope.Grants in Go: '*', 'webhook:*' or the exact permission.
 export function grants(granted: string[], permission: string): boolean {
   if (!permission) {
     return false;

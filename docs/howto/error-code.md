@@ -8,7 +8,7 @@ Most bad input does **not** need a new code. A request that breaks its proto rul
 
 - [ ] Is it a domain rule the proto cannot express (a uniqueness clash, a reserved slug, a state that forbids the action, a limit read from the database)? Then it needs a code. Shape alone is `GEN004`.
 - [ ] Does an existing code already fit, with a new `reason`? Prefer a reason over a new code (`KEY003` carries `unknown` and `level`).
-- [ ] Domain mnemonic: reuse the domain's three letters (`GEN`, `ORG`, `PRJ`, `AGT`, `KEY`, `WHK`, `MBR`, `INV`, `AUT`, `USR`, `INS`). A new mnemonic only for a new domain.
+- [ ] Domain mnemonic: reuse the domain's three letters (`GEN`, `ORG`, `PRJ`, `KEY`, `WHK`, `MBR`, `INV`, `AUT`, `USR`, `INS`). A new mnemonic only for a new domain.
 - [ ] Number: the next free one in that domain. Never reuse a retired number. `900`-`999` is reserved for unexpected failures (`GEN900`).
 - [ ] Kind: `invalid`, `not_found`, `already_exists`, `unauthenticated`, `forbidden`, `failed_precondition`, `resource_exhausted` or `internal`.
 - [ ] Params: the values the message needs (`slug`, `min`, `max`, `scope`), snake_case. Never a secret, a password or an email; user input only through `apperror.Echo`. `reason` is reserved for reasons.
@@ -19,12 +19,12 @@ Most bad input does **not** need a new code. A request that breaks its proto rul
 1. **Catalog entry.** Add one line to the domain's group in `apperror/codes.json`:
 
    ```json
-   { "code": "AGT002", "name": "AgentAlreadyExists", "kind": "already_exists", "params": ["slug"], "reasons": [] }
+   { "code": "PRJ002", "name": "ProjectAlreadyExists", "kind": "already_exists", "params": ["slug"], "reasons": [] }
    ```
 
    `name` becomes the Go constant `Code<Name>`; it is a Go identifier and unique.
 
-2. **Issued list.** Append `AGT002 AgentAlreadyExists` as the **last** line of `apperror/issued_codes.txt`. The file is append-only: `TestCatalog_KeepsEveryIssuedCode` fails when a code is missing from it, removed from the catalog, or renamed.
+2. **Issued list.** Append `PRJ002 ProjectAlreadyExists` as the **last** line of `apperror/issued_codes.txt`. The file is append-only: `TestCatalog_KeepsEveryIssuedCode` fails when a code is missing from it, removed from the catalog, or renamed. Othra's issued list starts at the M0 baseline; every code issued since then stays.
 
 3. **`make generate`.** `gen-apperror` rewrites `apperror/codes.gen.go` (the constants and the kind table) and refuses a bad code, a duplicate, an unknown kind, or a param or reason that is not snake_case.
 
@@ -33,7 +33,7 @@ Most bad input does **not** need a new code. A request that breaks its proto rul
    ```go
    // ToAppError maps AlreadyExistsError to the canonical AlreadyExists envelope.
    func (e *AlreadyExistsError) ToAppError() *apperror.AppError {
-       return apperror.New(apperror.CodeAgentAlreadyExists, "Agent slug already taken").
+       return apperror.New(apperror.CodeProjectAlreadyExists, "Project slug already taken").
            WithMeta(map[string]string{"slug": apperror.Echo(e.Slug)}).WithCause(e)
    }
    ```
@@ -44,7 +44,7 @@ Most bad input does **not** need a new code. A request that breaks its proto rul
 
    ```json
    {
-     "apperror.AGT002": "An agent with the slug {slug} already exists"
+     "apperror.PRJ002": "A project with the slug {slug} already exists"
    }
    ```
 
@@ -85,7 +85,7 @@ Most bad input does **not** need a new code. A request that breaks its proto rul
 - [apperror/kind.go](../../apperror/kind.go): `Kind`, `KindOf`
 - [apperror/truncate.go](../../apperror/truncate.go): `Echo`, `EchoLimit`
 - [cmd/gen-apperror/main.go](../../cmd/gen-apperror/main.go): `parse`
-- [internal/agent/errors.go](../../internal/agent/errors.go): `AlreadyExistsError`, `InvalidSlugError`, `ToAppError`
+- [internal/project/errors.go](../../internal/project/errors.go): `AlreadyExistsError`, `InvalidSlugError`, `ToAppError`
 - [internal/controlplane/codes.go](../../internal/controlplane/codes.go): `connectCodeOf`
 - [internal/controlplane/validate.go](../../internal/controlplane/validate.go): `violationsOf`, `reasonOf`
 - [internal/controlplane/catalog_test.go](../../internal/controlplane/catalog_test.go): `samples`

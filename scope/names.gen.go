@@ -8,8 +8,6 @@ const (
 	OrgWrite     = "org:write"
 	ProjectRead  = "project:read"
 	ProjectWrite = "project:write"
-	AgentRead    = "agent:read"
-	AgentWrite   = "agent:write"
 	WebhookRead  = "webhook:read"
 	WebhookWrite = "webhook:write"
 	MemberRead   = "member:read"

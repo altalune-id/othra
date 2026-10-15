@@ -10,7 +10,7 @@ const orgID = ref((input?.value?.org_id as string) ?? '');
 const projectID = ref((input?.value?.project_id as string) ?? '');
 const url = ref('');
 const description = ref('');
-const eventTypes = ref('agent.created, agent.updated');
+const eventTypes = ref('invite.created, member.added');
 const error = ref('');
 const busy = ref(false);
 
@@ -57,7 +57,7 @@ function again() {
       <label>Project ID<input v-model="projectID" required placeholder="public id"></label>
       <label>URL<input v-model="url" required placeholder="https://example.com/hook"></label>
       <label>Description<input v-model="description" placeholder="optional"></label>
-      <label>Event types<input v-model="eventTypes" placeholder="agent.created, agent.updated"></label>
+      <label>Event types<input v-model="eventTypes" placeholder="invite.created, member.added"></label>
       <button type="submit" :disabled="busy">
         {{ busy ? "Creating…" : "Create" }}
       </button>

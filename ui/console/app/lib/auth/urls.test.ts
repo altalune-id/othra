@@ -21,9 +21,9 @@ describe('siblingURL', () => {
 
 describe('loginURL', () => {
   it('keeps path, query and hash, encoded', () => {
-    const url = loginURL('/app/api', { pathname: '/app/console/o/acme/agents', search: '?tab=keys&x=1', hash: '#top' });
-    expect(url).toBe('/app/login?return_to=%2Fapp%2Fconsole%2Fo%2Facme%2Fagents%3Ftab%3Dkeys%26x%3D1%23top');
-    expect(decodeURIComponent(url.split('return_to=')[1]!)).toBe('/app/console/o/acme/agents?tab=keys&x=1#top');
+    const url = loginURL('/app/api', { pathname: '/app/console/o/acme/projects', search: '?tab=keys&x=1', hash: '#top' });
+    expect(url).toBe('/app/login?return_to=%2Fapp%2Fconsole%2Fo%2Facme%2Fprojects%3Ftab%3Dkeys%26x%3D1%23top');
+    expect(decodeURIComponent(url.split('return_to=')[1]!)).toBe('/app/console/o/acme/projects?tab=keys&x=1#top');
   });
 
   it('works at the root', () => {

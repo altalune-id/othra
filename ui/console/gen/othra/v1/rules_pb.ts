@@ -38,7 +38,7 @@ export const email: GenExtension<StringRules, boolean> = /*@__PURE__*/
   extDesc(file_othra_v1_rules, 2);
 
 /**
- * slug is a URL slug, as org, project and agent slugs are: 3 to 64 lowercase letters, digits and inner dashes.
+ * slug is a URL slug, as org and project slugs are: 3 to 64 lowercase letters, digits and inner dashes.
  *
  * @generated from extension: optional bool slug = 104004;
  */

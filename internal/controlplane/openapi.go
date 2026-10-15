@@ -22,6 +22,8 @@ type BasicAuth struct {
 	Password string
 }
 
+const openAPITitle = "Othra API"
+
 //nolint:gochecknoglobals // module-scoped memoized bundle; lazy singleton is intentional.
 var (
 	openAPIOnce sync.Once
@@ -198,6 +200,7 @@ func mergeOpenAPI(docs []map[string]any) map[string]any {
 	if len(tags) > 0 {
 		out["tags"] = tags
 	}
+	out["info"] = map[string]any{"title": openAPITitle}
 	return out
 }
 

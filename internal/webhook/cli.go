@@ -75,7 +75,7 @@ func newCreateCmd(clientFn ClientFn) *cobra.Command {
 	cmd.Flags().StringVar(&projectID, "project-id", "", "Project public id")
 	cmd.Flags().StringVar(&endpointURL, "endpoint-url", "", "HTTPS endpoint URL")
 	cmd.Flags().StringVar(&description, "description", "", "Description")
-	cmd.Flags().StringSliceVar(&types, "event", nil, "Event type (repeatable), e.g. agent.created")
+	cmd.Flags().StringSliceVar(&types, "event", nil, "Event type (repeatable), e.g. invite.created")
 	_ = cmd.MarkFlagRequired("org-id")
 	_ = cmd.MarkFlagRequired("project-id")
 	_ = cmd.MarkFlagRequired("url")

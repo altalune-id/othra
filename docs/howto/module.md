@@ -15,7 +15,7 @@ Use this when Othra needs a new bounded context: a new aggregate with its own ta
 
 ## Build
 
-1. **Migration.** `schema/migrations/NNN_<name>.sql` at the next number, bump `schema/migrations/VERSION`, add the jet binding in `schema/entity/<table>.go`, and update `schema/README.md` (diagram and constraints table). Follow [migration.md](migration.md). The table shape copies `003_agents.sql`:
+1. **Migration.** `schema/migrations/NNN_<name>.sql` at the next number, bump `schema/migrations/VERSION`, add the jet binding in `schema/entity/<table>.go`, and update `schema/README.md` (diagram and constraints table). Follow [migration.md](migration.md). The table shape follows `webhook_endpoints` in `006_webhooks.sql`:
 
    ```sql
    id          UUID PRIMARY KEY,
@@ -31,7 +31,7 @@ Use this when Othra needs a new bounded context: a new aggregate with its own ta
    | ------------------------------------------- | --------------------------------------------------------------------------------------- |
    | `<domain>.go`                               | the aggregate, its constructor and verbs, the row struct (`toX`) and `xToProto`. No I/O |
    | `errors.go`                                 | typed errors, `Is<Name>Error`, `IsExpectedError`, `ToAppError`                          |
-   | `ports.go`                                  | interfaces it consumes from other domains (`Publisher`, `Refs`…)                        |
+   | `ports.go`                                  | interfaces it consumes from other domains (`Events`, `Refs`…)                           |
    | `store.go`                                  | `Store` = `Reader` + `Writer` interfaces                                                |
    | `postgres.go`, `pgreader.go`, `pgwriter.go` | `postgresStore`, `NewStore(pool, schema, tablePrefix)`, reads, writes                   |
    | `service.go`                                | `Service`, `NewService(...)`, `With*` options, use cases                                |
@@ -39,18 +39,18 @@ Use this when Othra needs a new bounded context: a new aggregate with its own ta
    | `cli.go`                                    | `ClientFn` and `NewCmd(clientFn)`                                                       |
    | `web.go`, `views/`                          | only for pre-sign-in pages                                                              |
 
-   The constructor mints the ids, copied from `agent.New`:
+   The constructor mints the ids, copied from `project.NewProject`:
 
    ```go
    publicID, err := nanoid.New(21)
    if err != nil {
        return nil, err
    }
-   a := &Agent{ID: uuid.New(), PublicID: publicID, OrgID: orgID, CreatedAt: now, UpdatedAt: now}
+   p := &Project{ID: uuid.New(), PublicID: publicID, OrgID: orgID, Slug: s, Name: n, CreatedAt: now, UpdatedAt: now}
    ```
 
 3. **Store and service.** Follow [store-method.md](store-method.md) per verb and [service-method.md](service-method.md) per use case.
-4. **Test double.** `internal/testutil/fakes/<domain>.go` with `var _ <domain>.Store = (*<Name>Store)(nil)`, like `fakes.AgentStore`.
+4. **Test double.** `internal/testutil/fakes/<domain>.go` with `var _ <domain>.Store = (*<Name>Store)(nil)`, like `fakes.ProjectStore`.
 5. **Lint scope.** Add the package name to both `domain-purity` globs in `.golangci.yml`. That rule keeps `<domain>.go`, `store.go` and `errors.go` free of I/O imports.
 6. **Boot.** In `internal/boot/services.go`: a field on `Services`, the store and service built in `buildServices`, adapters for its ports. Pass `uow` when it writes more than one row. If its public ids must be resolved by other domains, extend `publicIDs` in `internal/boot/publicids.go`.
 7. **Surfaces.** For Connect: `Services`, `Server` and `New` in `internal/controlplane/server.go`, the `Refs` interface there, and every RPC in `internal/permission/permission.go`. For MCP: `internal/boot/mcp.go`. For CLI: `NewCmd` added in `internal/cli/root.go`. For web: `buildRoutes` in `internal/boot/http.go`.
@@ -70,13 +70,13 @@ Use this when Othra needs a new bounded context: a new aggregate with its own ta
 
 ## Reference code
 
-- Aggregate: [internal/agent/agent.go](../../internal/agent/agent.go) (`Agent`, `New`, `agentRow`, `agentToProto`)
-- Errors: [internal/agent/errors.go](../../internal/agent/errors.go) (`NotFoundError`, `IsExpectedError`)
-- Ports: [internal/agent/ports.go](../../internal/agent/ports.go) (`Publisher`, `Refs`)
-- Store: [internal/agent/store.go](../../internal/agent/store.go), [internal/agent/postgres.go](../../internal/agent/postgres.go) (`NewStore`)
-- Service: [internal/agent/service.go](../../internal/agent/service.go) (`NewService`, `WithPublisher`, `WithProjects`)
-- Handler: [internal/agent/controlplane.go](../../internal/agent/controlplane.go) (`AgentService`, `NewControlPlane`)
-- CLI: [internal/agent/cli.go](../../internal/agent/cli.go) (`NewCmd`, `ClientFn`)
+- Aggregate: [internal/project/project.go](../../internal/project/project.go) (`Project`, `NewProject`, `projectRow`, `projectToProto`)
+- Errors: [internal/project/errors.go](../../internal/project/errors.go) (`NotFoundError`, `IsExpectedError`)
+- Ports: [internal/apikey/ports.go](../../internal/apikey/ports.go) (`Refs`), [internal/org/invite/ports.go](../../internal/org/invite/ports.go) (`Events`)
+- Store: [internal/project/store.go](../../internal/project/store.go), [internal/project/postgres.go](../../internal/project/postgres.go) (`NewStore`)
+- Service: [internal/project/service.go](../../internal/project/service.go) (`NewService`); options: [internal/org/member/service.go](../../internal/org/member/service.go) (`WithEffects`, `WithDirectory`), [internal/webhook/service.go](../../internal/webhook/service.go) (`WithProjects`)
+- Handler: [internal/project/controlplane.go](../../internal/project/controlplane.go) (`ProjectService`, `NewControlPlane`)
+- CLI: [internal/project/cli.go](../../internal/project/cli.go) (`NewCmd`, `ClientFn`)
 - Subdomain: [internal/org/member/](../../internal/org/member/) and [internal/org/invite/](../../internal/org/invite/)
 - Wiring: [internal/boot/services.go](../../internal/boot/services.go) (`buildServices`), [internal/boot/README.md](../../internal/boot/README.md) ("Add a domain")
 - Layers: [docs/architecture/README.md](../architecture/README.md)

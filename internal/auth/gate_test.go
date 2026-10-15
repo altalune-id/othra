@@ -122,7 +122,7 @@ func TestConsoleGate_OnlyTheConsoleIsWrapped(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 
 	rec = httptest.NewRecorder()
-	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/console/o/x/agents", nil))
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/console/o/x/projects", nil))
 	assert.Equal(t, http.StatusSeeOther, rec.Code)
-	assert.Equal(t, "/login?return_to=%2Fconsole%2Fo%2Fx%2Fagents", rec.Header().Get("Location"))
+	assert.Equal(t, "/login?return_to=%2Fconsole%2Fo%2Fx%2Fprojects", rec.Header().Get("Location"))
 }

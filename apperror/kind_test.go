@@ -8,7 +8,7 @@ import (
 
 func TestKindOf(t *testing.T) {
 	cases := map[Code]Kind{
-		CodeAgentNotFound:          KindNotFound,
+		CodeProjectNotFound:        KindNotFound,
 		CodeAPIKeyPersonOnlyScope:  KindInvalid,
 		CodeForbidden:              KindForbidden,
 		CodeUnauthenticated:        KindUnauthenticated,

@@ -4,7 +4,7 @@ A page in the web console (`ui/console`): the Nuxt 4 single-page app served at `
 
 ## When to use
 
-- A signed-in person views or changes something (orgs, projects, agents, keys, webhooks, members, profile).
+- A signed-in person views or changes something (orgs, projects, keys, webhooks, members, profile).
 - For a page that must work before sign-in, use [web-page.md](web-page.md).
 
 ## Plan
@@ -107,7 +107,7 @@ A page in the web console (`ui/console`): the Nuxt 4 single-page app served at `
    </script>
    ```
 
-6. **Nav.** Add the item and its target to the matching sidebar: `AppSidebar.vue`, `SettingsSidebar.vue`, `ProjectSidebar.vue` or `AgentSidebar.vue`.
+6. **Nav.** Add the item and its target to the matching sidebar: `AppSidebar.vue`, `SettingsSidebar.vue` or `ProjectSidebar.vue`.
 7. **i18n.** Add every key to every file in `ui/console/i18n/locales/` (`en-US.json`, `id-ID.json`). Keys are flat and dotted (`things.title`). Use `error.<action>` for fallbacks, `field.<proto_field>` for field names in validation messages and `apperror.<CODE>` / `apperror.<CODE>_<reason>` for error codes. `app/lib/apperror/catalog.test.ts` fails when the locales differ in keys or params, or an error code has no message.
 8. **Stories.** `<Component>.stories.ts` next to a presentational component (`title: '<Area>/<Name>'`), one story per state: empty, filled, error, confirming.
 9. **Tests.** `<file>.test.ts` next to every store, composable and helper. Fake clients with `setClient`, refusals with `connectError` ([test/nuxt-globals.ts](../../ui/console/test/nuxt-globals.ts)). Coverage counts `.ts` files only and fails below 90% lines, functions and statements, 85% branches, so keep logic out of `.vue` files.

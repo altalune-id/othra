@@ -8,15 +8,15 @@ import (
 
 func TestCatalog(t *testing.T) {
 	assert.Contains(t, Names(), "org:read")
-	assert.Contains(t, Names(), "agent:write")
-	assert.True(t, Valid("agent:read"))
+	assert.Contains(t, Names(), "webhook:write")
+	assert.True(t, Valid("webhook:read"))
 	assert.False(t, Valid("nope"))
 
 	level, ok := LevelOf("org:write")
 	assert.True(t, ok)
 	assert.Equal(t, LevelOrg, level)
 
-	level, ok = LevelOf("agent:read")
+	level, ok = LevelOf("webhook:read")
 	assert.True(t, ok)
 	assert.Equal(t, LevelProject, level)
 
@@ -46,13 +46,13 @@ func TestGrants(t *testing.T) {
 		required string
 		want     bool
 	}{
-		"exact":             {[]string{AgentRead}, AgentRead, true},
-		"other":             {[]string{AgentRead}, AgentWrite, false},
+		"exact":             {[]string{WebhookRead}, WebhookRead, true},
+		"other":             {[]string{WebhookRead}, WebhookWrite, false},
 		"star":              {[]string{"*"}, MemberWrite, true},
-		"resource wildcard": {[]string{"agent:*"}, AgentWrite, true},
-		"wildcard no leak":  {[]string{"agent:*"}, ProjectRead, false},
-		"prefix trick":      {[]string{"agent:*"}, "agents:read", false},
-		"empty":             {nil, AgentRead, false},
+		"resource wildcard": {[]string{"webhook:*"}, WebhookWrite, true},
+		"wildcard no leak":  {[]string{"webhook:*"}, ProjectRead, false},
+		"prefix trick":      {[]string{"webhook:*"}, "webhooks:read", false},
+		"empty":             {nil, WebhookRead, false},
 		"empty required":    {[]string{"*"}, "", false},
 	} {
 		t.Run(name, func(t *testing.T) { assert.Equal(t, tc.want, Grants(tc.granted, tc.required)) })
@@ -60,8 +60,8 @@ func TestGrants(t *testing.T) {
 }
 
 func TestCovers(t *testing.T) {
-	admin := []string{OrgRead, "project:*", "agent:*", "webhook:*", "member:*", "apikey:*"}
-	plain := []string{OrgRead, ProjectRead, "agent:*", "webhook:*", MemberRead, ApikeyRead}
+	admin := []string{OrgRead, "project:*", "webhook:*", "member:*", "apikey:*"}
+	plain := []string{OrgRead, ProjectRead, "webhook:*", MemberRead, ApikeyRead}
 	assert.True(t, Covers([]string{"*"}, admin), "* covers everything")
 	assert.True(t, Covers(admin, admin), "a set covers itself")
 	assert.True(t, Covers(admin, plain))
@@ -69,6 +69,6 @@ func TestCovers(t *testing.T) {
 	assert.False(t, Covers(plain, admin))
 	assert.True(t, Covers(plain, nil), "anything covers nothing")
 	assert.False(t, Covers(nil, []string{MemberRead}))
-	assert.True(t, Covers([]string{AgentRead, AgentWrite}, []string{"agent:*"}), "a wildcard is the catalog permissions it names")
-	assert.False(t, Covers([]string{AgentRead}, []string{"agent:*"}))
+	assert.True(t, Covers([]string{WebhookRead, WebhookWrite}, []string{"webhook:*"}), "a wildcard is the catalog permissions it names")
+	assert.False(t, Covers([]string{WebhookRead}, []string{"webhook:*"}))
 }

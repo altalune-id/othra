@@ -24,12 +24,6 @@ const (
 	CodeProjectInvalidSlug   Code = "PRJ003"
 	CodeProjectInvalidName   Code = "PRJ004"
 
-	CodeAgentNotFound           Code = "AGT001"
-	CodeAgentAlreadyExists      Code = "AGT002"
-	CodeAgentInvalidSlug        Code = "AGT003"
-	CodeAgentInvalidName        Code = "AGT004"
-	CodeAgentInvalidDescription Code = "AGT005"
-
 	CodeAPIKeyNotFound             Code = "KEY001"
 	CodeAPIKeyInvalidName          Code = "KEY002"
 	CodeAPIKeyInvalidScope         Code = "KEY003"
@@ -94,12 +88,6 @@ var kinds = map[Code]Kind{
 	CodeProjectAlreadyExists: KindAlreadyExists,
 	CodeProjectInvalidSlug:   KindInvalid,
 	CodeProjectInvalidName:   KindInvalid,
-
-	CodeAgentNotFound:           KindNotFound,
-	CodeAgentAlreadyExists:      KindAlreadyExists,
-	CodeAgentInvalidSlug:        KindInvalid,
-	CodeAgentInvalidName:        KindInvalid,
-	CodeAgentInvalidDescription: KindInvalid,
 
 	CodeAPIKeyNotFound:             KindNotFound,
 	CodeAPIKeyInvalidName:          KindInvalid,

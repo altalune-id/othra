@@ -19,29 +19,29 @@ A domain's command tree is its `internal/<domain>/cli.go`. `internal/cli` is onl
 
 ## Build
 
-1. **Remote: add the subcommand** to `internal/<domain>/cli.go` and list it in `NewCmd`. Every command is a factory taking the domain's `ClientFn`, so each test gets a fresh tree. Shape, copied from `agent`'s `newGetCmd`:
+1. **Remote: add the subcommand** to `internal/<domain>/cli.go` and list it in `NewCmd`. Every command is a factory taking the domain's `ClientFn`, so each test gets a fresh tree. Shape, copied from `project`'s `newGetCmd`:
 
    ```go
    func newGetCmd(clientFn ClientFn) *cobra.Command {
        return &cobra.Command{
            Use:   "get <public-id>",
-           Short: "Get an agent by id",
+           Short: "Get a project by id",
            Args:  cobra.ExactArgs(1),
            RunE: func(cmd *cobra.Command, args []string) error {
                client, err := clientFn(cmd)
                if err != nil {
                    return err
                }
-               resp, err := client.GetAgent(cmd.Context(), connect.NewRequest(&agentv1.GetAgentRequest{Id: args[0]}))
+               resp, err := client.GetProject(cmd.Context(), connect.NewRequest(&projectv1.GetProjectRequest{Id: args[0]}))
                if err != nil {
                    return err
                }
-               a := resp.Msg.GetAgent()
+               p := resp.Msg.GetProject()
                if isJSON(cmd) {
-                   return render.JSON(cmd.OutOrStdout(), agentMap(a))
+                   return render.JSON(cmd.OutOrStdout(), projectMap(p))
                }
-               return render.Table(cmd.OutOrStdout(), []string{"ID", "PROJECT_ID", "SLUG", "NAME"},
-                   [][]string{{a.GetId(), a.GetProjectId(), a.GetSlug(), a.GetName()}})
+               return render.Table(cmd.OutOrStdout(), []string{"ID", "ORG_ID", "SLUG", "NAME"},
+                   [][]string{{p.GetId(), p.GetOrgId(), p.GetSlug(), p.GetName()}})
            },
        }
    }
@@ -63,7 +63,7 @@ A domain's command tree is its `internal/<domain>/cli.go`. `internal/cli` is onl
    - `internal/cli/root.go` adds the method to the `App` interface, an adapter that runs it through `withOperatorApp`, and wraps the command in `markOperator(...)`, which makes `refuseRemoteFlags` reject the remote flags.
 
 4. **Tests.**
-   - Command: `internal/<domain>/cli_test.go` runs the tree against a real `controlplane.New` behind `httptest` with `cptest.OperatorOptions()` and fake stores (`runAgent`, `agentClient`). Cover text and JSON output and an error.
+   - Command: `internal/<domain>/cli_test.go` runs the tree against a real `controlplane.New` behind `httptest` with `cptest.OperatorOptions()` and fake stores (`runProject`, `projectClient`). Cover text and JSON output and an error.
    - Root: a new group goes in `remoteCommands` (`internal/cli/clientfn_root_test.go`); an operator command gets a `…RefusesRemoteFlags` test like `TestUserSetPassword_RefusesRemoteFlags`.
    - Public ids: add a JSON-output case to `TestCLI_JSONHoldsNoUUID` (`internal/boot/cli_publicid_integration_test.go`).
 
@@ -83,7 +83,7 @@ A domain's command tree is its `internal/<domain>/cli.go`. `internal/cli` is onl
 
 ## Reference code
 
-- [internal/agent/cli.go](../../internal/agent/cli.go): `ClientFn`, `NewCmd`, `newGetCmd`, `agentMap`
+- [internal/project/cli.go](../../internal/project/cli.go): `ClientFn`, `NewCmd`, `newGetCmd`, `projectMap`
 - [internal/org/member/cli.go](../../internal/org/member/cli.go): `AddFn`, `NewAddCmd`, `prompt.YesNo` with `--yes`
 - [internal/user/cli.go](../../internal/user/cli.go): `SetPasswordFn`, `prompt.NewSecret`
 - [internal/cli/root.go](../../internal/cli/root.go): `NewRootCmd`, `App`, `connectClient`, `withOperatorApp`, `markOperator`, `refuseRemoteFlags`
@@ -93,5 +93,5 @@ A domain's command tree is its `internal/<domain>/cli.go`. `internal/cli` is onl
 - [internal/render/render.go](../../internal/render/render.go): `Detect`, `JSON`, `Table`
 - [internal/prompt/prompt.go](../../internal/prompt/prompt.go): `YesNo`, `Secret`, `NewSecret`
 - [internal/boot/app.go](../../internal/boot/app.go): `SetPassword`, `AddMember`
-- [internal/agent/cli_test.go](../../internal/agent/cli_test.go): `runAgent`, `agentClient`
+- [internal/project/cli_test.go](../../internal/project/cli_test.go): `runProject`, `projectClient`
 - [internal/boot/cli_publicid_integration_test.go](../../internal/boot/cli_publicid_integration_test.go): `TestCLI_JSONHoldsNoUUID`

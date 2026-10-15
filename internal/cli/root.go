@@ -13,7 +13,6 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/config"
-	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
@@ -21,7 +20,6 @@ import (
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/othra/internal/agent"
 	"altalune.id/othra/internal/apiclient"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
@@ -143,9 +141,6 @@ func NewRootCmd(bootServer ServerBootFn, bootClient ClientBootFn) *cobra.Command
 	projectCmd := project.NewCmd(projectClientFn(bootClient))
 	markClientTree(projectCmd)
 
-	agentCmd := agent.NewCmd(agentClientFn(bootClient))
-	markClientTree(agentCmd)
-
 	apiKeyCmd := apikey.NewCmd(apiKeyClientFn(bootClient))
 	markClientTree(apiKeyCmd)
 
@@ -164,7 +159,6 @@ func NewRootCmd(bootServer ServerBootFn, bootClient ClientBootFn) *cobra.Command
 		memberCmd,
 		inviteCmd,
 		projectCmd,
-		agentCmd,
 		apiKeyCmd,
 		webhookCmd,
 		newVersionCmd(),
@@ -237,16 +231,6 @@ func projectClientFn(bootClient ClientBootFn) project.ClientFn {
 			return nil, err
 		}
 		return client.Projects, nil
-	}
-}
-
-func agentClientFn(bootClient ClientBootFn) agent.ClientFn {
-	return func(cmd *cobra.Command) (agentv1connect.AgentServiceClient, error) {
-		client, err := connectClient(cmd, bootClient)
-		if err != nil {
-			return nil, err
-		}
-		return client.Agents, nil
 	}
 }
 

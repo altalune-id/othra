@@ -2,14 +2,13 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { connectError, deferred, setClient, setKnownKeys } from '../../test/nuxt-globals';
-import { useAgentsStore } from './agents';
 import { useAPIKeysStore } from './apiKeys';
 import { useProjectsStore } from './projects';
 import { useWebhooksStore } from './webhooks';
 
 interface Case {
   name: string;
-  client: '$projectClient' | '$agentClient' | '$apiKeyClient' | '$webhookClient';
+  client: '$projectClient' | '$apiKeyClient' | '$webhookClient';
   method: string;
   field: string;
   item: (id: string) => Record<string, unknown>;
@@ -28,16 +27,6 @@ const cases: Case[] = [
     item: id => ({ id, orgId: 'o', slug: id, name: id }),
     store: () => useProjectsStore(),
     ids: [['V3StGXR8Z5jdHj6BmyT2a'], ['YeDxg2kMYznPJJG3wVmjj']],
-  },
-  {
-    name: 'agents',
-    client: '$agentClient',
-    method: 'listAgents',
-    field: 'agents',
-    key: 'id',
-    item: id => ({ id, projectId: 'p', slug: id, name: id, description: '' }),
-    store: () => useAgentsStore(),
-    ids: [['x6MH9WPWjktMwCBKHy4pF'], ['KdrF3t3FHtppBPmMgj4sy']],
   },
   {
     name: 'apiKeys',

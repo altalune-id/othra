@@ -4,8 +4,8 @@ Use this when a domain that already exists needs a new use case: create, change,
 
 ## Plan
 
-- [ ] **Where does the rule live?** An invariant on one aggregate goes on the aggregate (`Agent.Update`, `agent.New`), not in the service. The service loads, calls the verb, saves.
-- [ ] **Inputs.** UUIDs only (`orgID`, `projectID`, `id`). Public ids are resolved at the edge ([public-ids.md](public-ids.md)). More than two or three fields → a `<Verb>Request` struct, like `agent.CreateRequest`.
+- [ ] **Where does the rule live?** An invariant on one aggregate goes on the aggregate (`Project.Update`, `project.NewProject`), not in the service. The service loads, calls the verb, saves.
+- [ ] **Inputs.** UUIDs only (`orgID`, `projectID`, `id`). Public ids are resolved at the edge ([public-ids.md](public-ids.md)). More than two or three fields → a `<Verb>Request` struct, like `project.CreateRequest`.
 - [ ] **Writes.** One row → call the store. More than one row, or a row plus an event or a mail → one unit of work through `s.uow.RunInTx`.
 - [ ] **Other domains.** Need something from another domain? Add a port in `ports.go` and a `With<Port>` option; boot wires it.
 - [ ] **Failures.** List the expected failures. Each is a typed error the aggregate or store returns, plus an error code ([error-code.md](error-code.md)). Everything else is unexpected.
@@ -16,57 +16,71 @@ Use this when a domain that already exists needs a new use case: create, change,
 1. **Aggregate verb**, if the method mutates state, in `internal/<domain>/<domain>.go`. It validates and returns typed errors, no I/O:
 
    ```go
-   func (a *Agent) Update(name, description string) error {
+   // Update applies a new display name and slug.
+   func (p *Project) Update(name, slug string) error {
        n := strings.TrimSpace(name)
        if err := ValidateName(n); err != nil {
            return err
        }
-       a.Name = n
+       s := strings.TrimSpace(slug)
+       if err := ValidateSlug(s); err != nil {
+           return err
+       }
+       p.Name = n
+       p.Slug = s
        return nil
    }
    ```
 
-2. **Failing test first** in `internal/<domain>/service_test.go` (package `<domain>_test`), over the fake store and the fake transactor:
+2. **Failing test first** in `internal/<domain>/service_test.go` (package `<domain>_test`), over the fake store (plus `fakes.Transactor{}` when the service takes a unit of work):
 
    ```go
-   svc := agent.NewService(&fakes.AgentStore{Agent: a}, fakes.Transactor{}, testUnexpected())
+   svc := project.NewService(&fakes.ProjectStore{Project: p}, testUnexpected())
    ```
 
 3. **The method** in `internal/<domain>/service.go`. A one-sentence doc comment. Load, mutate, save, and send every store error through `errOrReport`:
 
    ```go
-   // Update changes an agent's name and description.
-   func (s *Service) Update(ctx context.Context, id uuid.UUID, name, description string) (*Agent, error) {
-       a, err := s.store.ByID(ctx, id)
+   // Update changes a project's display name and slug.
+   func (s *Service) Update(ctx context.Context, id uuid.UUID, name, slug string) (*Project, error) {
+       p, err := s.store.ByID(ctx, id)
        if err != nil {
-           return nil, s.errOrReport(ctx, "agent: update", err)
+           return nil, s.errOrReport(ctx, "project: update", err)
        }
-       if err := a.Update(name, description); err != nil {
+       if err := p.Update(name, slug); err != nil {
            return nil, err
        }
-       if err := s.saveAndPublish(ctx, events.AgentUpdated, a); err != nil {
-           return nil, s.errOrReport(ctx, "agent: update", err)
+       if err := s.store.Save(ctx, p); err != nil {
+           return nil, s.errOrReport(ctx, "project: update", err)
        }
-       return a, nil
+       return p, nil
    }
    ```
 
-4. **Unit of work** when it writes more than once. Use the `ctx` the closure receives, so every store call joins the transaction. A nested `RunInTx` joins the outer one:
+4. **Unit of work** when it writes more than once. Use the `ctx` the closure receives, so every store call joins the transaction. A nested `RunInTx` joins the outer one. `invite.Service.Create` saves the invite, queues its mail and enqueues `invite.created` in one transaction (`issue`, `emit`):
 
    ```go
-   // NOTE: one unit of work, so the save and its event commit together or not at all.
-   func (s *Service) saveAndPublish(ctx context.Context, t events.Type, a *Agent) error {
-       return s.uow.RunInTx(ctx, func(ctx context.Context) error {
-           if err := s.store.Save(ctx, a); err != nil {
-               return err
-           }
-           return s.publish(ctx, t, a)
-       })
+   var out *Created
+   err = s.uow.RunInTx(ctx, func(ctx context.Context) error {
+       a, err := s.actor(ctx, r, orgID, role)
+       if err != nil {
+           return err
+       }
+       inv, err := s.claim(ctx, a, orgID, email)
+       if err != nil {
+           return err
+       }
+       inv.Role = role
+       out, err = s.issue(ctx, inv)
+       return err
+   })
+   if err != nil {
+       return nil, s.errOrReport(ctx, "invite: create", err)
    }
    ```
 
 5. **Required ids and cross-domain checks.** A missing UUID is `apperror.Invalid("<field>", apperror.FieldRequired)`. A project that must belong to the org goes through `tenant.RequireProjectInOrg(ctx, s.projects, orgID, projectID)`.
-6. **Generated slugs.** An empty slug is minted with `slugpkg.Retry(slugpkg.MaxAttempts, IsAlreadyExistsError, ...)`, as in `agent.Service.createGenerated`.
+6. **Generated slugs.** An empty slug is minted with `slugpkg.Retry(slugpkg.MaxAttempts, IsAlreadyExistsError, ...)`, as in `project.Service.createGenerated`.
 7. **New store verb?** [store-method.md](store-method.md). **New error?** [error-code.md](error-code.md), and add its `Is…` helper to `IsExpectedError` in `errors.go`.
 8. **Integration test** in `service_integration_test.go` (`//go:build integration`) when the method uses a unit of work: make the second write fail and assert nothing was saved.
 9. **Surface.** Call it from `controlplane.go` ([rpc.md](rpc.md)), `cli.go` via the RPC ([cli-command.md](cli-command.md)), or a worker ([worker.md](worker.md)).
@@ -86,12 +100,12 @@ Use this when a domain that already exists needs a new use case: create, change,
 
 ## Reference code
 
-- Load, mutate, save: [internal/agent/service.go](../../internal/agent/service.go) (`Service.Update`)
-- Create with request struct and generated slug: [internal/agent/service.go](../../internal/agent/service.go) (`Service.Create`, `createGenerated`)
-- Unit of work with an event: [internal/agent/service.go](../../internal/agent/service.go) (`saveAndPublish`)
+- Load, mutate, save: [internal/project/service.go](../../internal/project/service.go) (`Service.Update`)
+- Create with request struct and generated slug: [internal/project/service.go](../../internal/project/service.go) (`Service.Create`, `createGenerated`)
+- Unit of work with an event: [internal/org/invite/service.go](../../internal/org/invite/service.go) (`Service.Create`, `issue`, `emit`)
 - Unit of work with a hook: [internal/org/service.go](../../internal/org/service.go) (`Service.Create`, `WithAfterCreate`)
 - Ports and options: [internal/org/member/service.go](../../internal/org/member/service.go) (`WithEffects`, `WithDirectory`)
 - Transactor: [internal/kernel/db/uow.go](../../internal/kernel/db/uow.go) (`Transactor`, `RunInTx`)
 - Project in org: [internal/kernel/tenant/project.go](../../internal/kernel/tenant/project.go) (`RequireProjectInOrg`)
 - Unexpected errors: [apperror/reporter.go](../../apperror/reporter.go) (`UnexpectedFunc`)
-- Tests: [internal/agent/service_test.go](../../internal/agent/service_test.go), [internal/agent/service_integration_test.go](../../internal/agent/service_integration_test.go) (`TestService_CreateWithAFailedEventSavesNothing`)
+- Tests: [internal/project/service_test.go](../../internal/project/service_test.go); a failed later write saves nothing, on Postgres: [internal/org/member/service_integration_test.go](../../internal/org/member/service_integration_test.go) (`TestService_FailedEffectRollsBack`), [internal/install/service_integration_test.go](../../internal/install/service_integration_test.go) (`TestInstall_FailureAfterUserRollsBack`)

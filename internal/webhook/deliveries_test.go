@@ -15,13 +15,13 @@ import (
 func TestServiceDeliveries(t *testing.T) {
 	org, project := uuid.New(), uuid.New()
 	e := &Endpoint{ID: uuid.New(), OrgID: org, ProjectID: project}
-	entry := outbox.Entry{ID: uuid.New(), Payload: []byte(`{"type":"agent.created"}`), Status: outbox.StatusDelivered, Attempt: 1}
+	entry := outbox.Entry{ID: uuid.New(), Payload: []byte(`{"type":"invite.created"}`), Status: outbox.StatusDelivered, Attempt: 1}
 	svc := testService(t, &fakeStore{endpoints: []*Endpoint{e}}, &fakeOutbox{entries: []outbox.Entry{entry}})
 
 	got, err := svc.Deliveries(tenantCtx(org, project), e.ID, 10)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
-	assert.Equal(t, events.AgentCreated, got[0].EventType)
+	assert.Equal(t, events.InviteCreated, got[0].EventType)
 
 	_, err = svc.Deliveries(tenantCtx(org, project), uuid.New(), 10)
 	assert.True(t, IsNotFoundError(err))

@@ -16,7 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"altalune.id/othra/apperror"
-	agentv1 "altalune.id/othra/gen/go/agent/v1"
 	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
@@ -169,7 +168,7 @@ func TestRequestRules_Accept(t *testing.T) {
 		{"domain-literal email", &invitev1.DraftInviteRequest{OrgId: goodID, Email: "dina@[1.2.3.4]"}},
 		{"254-character email", &invitev1.DraftInviteRequest{OrgId: goodID, Email: strings.Repeat("a", 242) + "@example.com"}},
 		{"each role", &invitev1.CreateInviteRequest{OrgId: goodID, Email: "a@b.c", Role: "admin"}},
-		{"org key", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: " ci ", Scopes: []string{"agent:read", "agent:read"}, ProjectIds: []string{goodID}, ExpiresAt: future}},
+		{"org key", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: " ci ", Scopes: []string{"webhook:read", "webhook:read"}, ProjectIds: []string{goodID}, ExpiresAt: future}},
 		{"project key", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, ProjectId: goodID, Kind: "project", Name: strings.Repeat("k", 100), ResourceIds: []string{goodID}, ExpiresAt: future}},
 		{"bare hint", &apikeyv1.RevokeAPIKeyRequest{OrgId: goodID, Hint: "a_9-"}},
 		{"hint as shown", &apikeyv1.RevokeAPIKeyRequest{OrgId: goodID, Hint: " …...Zz09 "}},
@@ -178,14 +177,14 @@ func TestRequestRules_Accept(t *testing.T) {
 		{"256-character password", &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: strings.Repeat("ü", 256)}},
 		{"12-character password counted in runes", &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: strings.Repeat("ü", 12)}},
 		{"common password is the domain's", &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: "password1234"}},
-		{"padded description", &agentv1.UpdateAgentRequest{Id: goodID, Name: "Bot", Description: " " + strings.Repeat("d", 2000) + " "}},
-		{"webhook url url.Parse accepts", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: " HTTPS://example.com/a b/ü ", EventTypes: []string{"agent.created"}}},
-		{"duplicate events are the domain's", &webhookv1.UpdateWebhookRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, Url: "http://[::1]:8080/x", EventTypes: []string{"agent.created", "agent.created"}}},
+		{"padded description", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https://e.com", Description: " " + strings.Repeat("d", 200) + " ", EventTypes: []string{"member.added"}}},
+		{"webhook url url.Parse accepts", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: " HTTPS://example.com/a b/ü ", EventTypes: []string{"invite.created"}}},
+		{"duplicate events are the domain's", &webhookv1.UpdateWebhookRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, Url: "http://[::1]:8080/x", EventTypes: []string{"invite.created", "invite.created"}}},
 		{"any delivery limit", &webhookv1.ListWebhookDeliveriesRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, Limit: -5}},
 		{"webhook description of 200", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https://e.com", Description: strings.Repeat("ß", 200), EventTypes: []string{"member.added"}}},
 		{"empty slug on create mints one", &orgv1.CreateOrgRequest{Name: "Acme"}},
 		{"shortest slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: "a-1"}},
-		{"longest slug", &agentv1.CreateAgentRequest{OrgId: goodID, ProjectId: goodID, Name: "Bot", Slug: strings.Repeat("a", 64)}},
+		{"longest slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: strings.Repeat("a", 64)}},
 		{"reserved slug is the domain's", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme", Slug: "new"}},
 	}
 	for _, tt := range accepted {
@@ -207,7 +206,7 @@ func TestRequestRules_Refuse(t *testing.T) {
 		{"missing org id", &invitev1.ListInvitesRequest{}, "org_id", apperror.FieldRequired},
 		{"missing invite id", &invitev1.RevokeInviteRequest{OrgId: goodID}, "invite_id", apperror.FieldRequired},
 		{"missing name", &projectv1.CreateProjectRequest{OrgId: goodID}, "name", apperror.FieldRequired},
-		{"blank name", &agentv1.CreateAgentRequest{OrgId: goodID, ProjectId: goodID, Name: " \t "}, "name", apperror.FieldRequired},
+		{"blank name", &projectv1.CreateProjectRequest{OrgId: goodID, Name: " \t "}, "name", apperror.FieldRequired},
 		{"201-character name", &orgv1.UpdateOrgRequest{Id: goodID, Name: strings.Repeat("a", 201), Slug: "acme"}, "name", apperror.FieldTooLong},
 		{"missing email", &invitev1.DraftInviteRequest{OrgId: goodID}, "email", apperror.FieldRequired},
 		{"not an email", &invitev1.DraftInviteRequest{OrgId: goodID, Email: "dina"}, "email", apperror.FieldInvalidFormat},
@@ -218,28 +217,27 @@ func TestRequestRules_Refuse(t *testing.T) {
 		{"unknown kind", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "admin", Name: "ci", ExpiresAt: future}, "kind", apperror.FieldNotAllowed},
 		{"blank key name", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: "  ", ExpiresAt: future}, "name", apperror.FieldRequired},
 		{"101-character key name", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: strings.Repeat("k", 101), ExpiresAt: future}, "name", apperror.FieldTooLong},
-		{"scope shape", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: "ci", Scopes: []string{"agent:*"}, ExpiresAt: future}, "scopes[0]", apperror.FieldInvalidFormat},
+		{"scope shape", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: "ci", Scopes: []string{"webhook:*"}, ExpiresAt: future}, "scopes[0]", apperror.FieldInvalidFormat},
 		{"project ids are public ids", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: "ci", ProjectIds: []string{goodID, "x"}, ExpiresAt: future}, "project_ids[1]", apperror.FieldInvalidFormat},
 		{"missing expiry", &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: "ci"}, "expires_at", apperror.FieldRequired},
 		{"hint shape", &apikeyv1.RevokeAPIKeyRequest{OrgId: goodID, Hint: "abcde"}, "hint", apperror.FieldInvalidFormat},
 		{"201-character profile name", &authv1.UpdateProfileRequest{Name: strings.Repeat("n", 201)}, "name", apperror.FieldTooLong},
 		{"missing current password", &authv1.ChangePasswordRequest{NewPassword: "a long enough one"}, "current_password", apperror.FieldRequired},
 		{"257-character password", &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: strings.Repeat("p", 257)}, "new_password", apperror.FieldTooLong},
-		{"2001-character description", &agentv1.CreateAgentRequest{OrgId: goodID, ProjectId: goodID, Name: "Bot", Description: strings.Repeat("d", 2001)}, "description", apperror.FieldTooLong},
-		{"missing url", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, EventTypes: []string{"agent.created"}}, "url", apperror.FieldRequired},
-		{"relative url", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "/hook", EventTypes: []string{"agent.created"}}, "url", apperror.FieldInvalidFormat},
-		{"url without host", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https:///x", EventTypes: []string{"agent.created"}}, "url", apperror.FieldInvalidFormat},
-		{"2049-character url", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https://e.com/" + strings.Repeat("u", 2035), EventTypes: []string{"agent.created"}}, "url", apperror.FieldTooLong},
-		{"201-character webhook description", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https://e.com", Description: strings.Repeat("d", 201), EventTypes: []string{"agent.created"}}, "description", apperror.FieldTooLong},
+		{"missing url", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, EventTypes: []string{"invite.created"}}, "url", apperror.FieldRequired},
+		{"relative url", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "/hook", EventTypes: []string{"invite.created"}}, "url", apperror.FieldInvalidFormat},
+		{"url without host", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https:///x", EventTypes: []string{"invite.created"}}, "url", apperror.FieldInvalidFormat},
+		{"2049-character url", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https://e.com/" + strings.Repeat("u", 2035), EventTypes: []string{"invite.created"}}, "url", apperror.FieldTooLong},
+		{"201-character webhook description", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https://e.com", Description: strings.Repeat("d", 201), EventTypes: []string{"invite.created"}}, "description", apperror.FieldTooLong},
 		{"no event types", &webhookv1.CreateWebhookRequest{OrgId: goodID, ProjectId: goodID, Url: "https://e.com"}, "event_types", apperror.FieldRequired},
-		{"event type shape", &webhookv1.UpdateWebhookRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, Url: "https://e.com", EventTypes: []string{"Agent Created"}}, "event_types[0]", apperror.FieldInvalidFormat},
+		{"event type shape", &webhookv1.UpdateWebhookRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, Url: "https://e.com", EventTypes: []string{"Invite Created"}}, "event_types[0]", apperror.FieldInvalidFormat},
 		{"short new password", &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: "short"}, "new_password", apperror.FieldTooShort},
 		{"11-character password counted in runes", &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: strings.Repeat("ü", 11)}, "new_password", apperror.FieldTooShort},
 		{"slug outside the alphabet", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme", Slug: "NOT A SLUG"}, "slug", apperror.FieldInvalidFormat},
 		{"slug ending in a dash", &projectv1.UpdateProjectRequest{Id: goodID, Name: "Web", Slug: "web-"}, "slug", apperror.FieldInvalidFormat},
 		{"padded slug", &orgv1.CreateOrgRequest{Name: "Acme", Slug: " acme "}, "slug", apperror.FieldInvalidFormat},
 		{"2-character slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: "ab"}, "slug", apperror.FieldTooShort},
-		{"65-character slug", &agentv1.CreateAgentRequest{OrgId: goodID, ProjectId: goodID, Name: "Bot", Slug: strings.Repeat("a", 65)}, "slug", apperror.FieldTooLong},
+		{"65-character slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: strings.Repeat("a", 65)}, "slug", apperror.FieldTooLong},
 		{"missing slug on update", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme"}, "slug", apperror.FieldRequired},
 		{"delivery id", &webhookv1.RetryWebhookDeliveryRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, DeliveryId: "x"}, "delivery_id", apperror.FieldInvalidFormat},
 	}
@@ -265,14 +263,13 @@ func paramOf(vs []apperror.Violation, field string) string {
 func TestRequestRules_ParamsCarryTheLimit(t *testing.T) {
 	v := newTestValidator(t)
 	limits := map[string]proto.Message{
-		"200":  &orgv1.UpdateOrgRequest{Id: goodID, Name: strings.Repeat("a", 201), Slug: "acme"},
-		"254":  &invitev1.DraftInviteRequest{OrgId: goodID, Email: strings.Repeat("a", 243) + "@example.com"},
-		"100":  &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: strings.Repeat("k", 101), ExpiresAt: timestamppb.Now()},
-		"2000": &agentv1.CreateAgentRequest{OrgId: goodID, ProjectId: goodID, Name: "Bot", Description: strings.Repeat("d", 2001)},
-		"256":  &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: strings.Repeat("p", 257)},
-		"12":   &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: "short"},
-		"3":    &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: "ab"},
-		"64":   &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme", Slug: strings.Repeat("a", 65)},
+		"200": &orgv1.UpdateOrgRequest{Id: goodID, Name: strings.Repeat("a", 201), Slug: "acme"},
+		"254": &invitev1.DraftInviteRequest{OrgId: goodID, Email: strings.Repeat("a", 243) + "@example.com"},
+		"100": &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, Kind: "org", Name: strings.Repeat("k", 101), ExpiresAt: timestamppb.Now()},
+		"256": &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: strings.Repeat("p", 257)},
+		"12":  &authv1.ChangePasswordRequest{CurrentPassword: "x", NewPassword: "short"},
+		"3":   &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: "ab"},
+		"64":  &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme", Slug: strings.Repeat("a", 65)},
 	}
 	for want, msg := range limits {
 		ae, ok := apperror.AsAppError(v.Validate(msg))

@@ -8,7 +8,7 @@ Two transports serve the same registry: `/mcp` over HTTP (an API key or Basic au
 
 - [ ] Does the RPC exist, with rules and a `permission.Table()` entry? If not, start with [rpc.md](rpc.md).
 - [ ] Is it unary? The generator refuses streaming RPCs.
-- [ ] Tool name: `<domain>_<verb>` in snake case (`agent_create`, `webhook_retry_failed`), matching `^[a-z_][a-z0-9_]{0,63}$`, unique across all protos.
+- [ ] Tool name: `<domain>_<verb>` in snake case (`project_create`, `webhook_retry_failed`), matching `^[a-z_][a-z0-9_]{0,63}$`, unique across all protos.
 - [ ] Does it write (`mutation: true`)? Does it delete or overwrite (`destructive: true`)? Both hints must be true to the facts; hosts use them for confirmation prompts.
 - [ ] Should the model see it, or only the MCP view (`app_only: true`, needs `ui`)? A step that sends something on the user's behalf after a draft (`member_invite_confirm`) is app-only.
 - [ ] Does it need a view in the MCP App (`ui: "app"`), or is the generic `DefaultView` enough?
@@ -18,13 +18,12 @@ Two transports serve the same registry: `/mcp` over HTTP (an API key or Basic au
 1. **Annotate the rpc** in `api/<domain>/v1/<domain>.proto`:
 
    ```proto
-   rpc DeleteAgent(DeleteAgentRequest) returns (DeleteAgentResponse) {
+   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
      option (mcp.v1.tool) = {
-       name: "agent_delete"
-       description: "Delete an agent by id."
-       required: ["id"]
+       name: "project_create"
+       description: "Create a project within an organization, minting a slug when one is not supplied."
        mutation: true
-       destructive: true
+       destructive: false
        ui: "app"
      };
    }
@@ -40,7 +39,7 @@ Two transports serve the same registry: `/mcp` over HTTP (an API key or Basic au
 3. **New service only: register it** in `buildMCPServer` (`internal/boot/mcp.go`), with the same control-plane constructor the API uses:
 
    ```go
-   agentv1mcp.RegisterAgentServiceTools(registry, agent.NewControlPlane(svcs.Agents, refs), permission.For, validate)
+   projectv1mcp.RegisterProjectServiceTools(registry, project.NewControlPlane(svcs.Projects, refs), permission.For, validate)
    ```
 
    An existing service needs no wiring: the new tool is already inside its `Register…Tools`.
@@ -78,11 +77,11 @@ Two transports serve the same registry: `/mcp` over HTTP (an API key or Basic au
 ## Reference code
 
 - [api/mcp/v1/annotations.proto](../../api/mcp/v1/annotations.proto): `Tool`
-- [api/agent/v1/agent.proto](../../api/agent/v1/agent.proto): `AgentService` annotations
+- [api/project/v1/project.proto](../../api/project/v1/project.proto): `ProjectService` annotations
 - [api/invite/v1/invite.proto](../../api/invite/v1/invite.proto): `member_invite_confirm` (app-only)
 - [internal/tool/protocmcp/generator.go](../../internal/tool/protocmcp/generator.go): `newTool` (refusals)
 - [internal/tool/protocmcp/rules.go](../../internal/tool/protocmcp/rules.go): `applyFieldRules`
-- [gen/go/agent/v1/agentv1mcp/agent_service.mcp.go](../../gen/go/agent/v1/agentv1mcp/agent_service.mcp.go): `RegisterAgentServiceTools`
+- [gen/go/project/v1/projectv1mcp/project_service.mcp.go](../../gen/go/project/v1/projectv1mcp/project_service.mcp.go): `RegisterProjectServiceTools`
 - [internal/boot/mcp.go](../../internal/boot/mcp.go): `buildMCPServer`
 - [mcp/registry.go](../../mcp/registry.go): `ToolSpec`, `Registry`
 - [mcp/server.go](../../mcp/server.go): app-only and `ui` handling

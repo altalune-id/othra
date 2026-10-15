@@ -130,7 +130,7 @@ func TestAPIKeyService_Create_ProjectKey(t *testing.T) {
 
 	resp, err := c.CreateAPIKey(context.Background(), connect.NewRequest(&apikeyv1.CreateAPIKeyRequest{
 		OrgId: orgPub, ProjectId: projectPub, Kind: "project", Name: "ci",
-		Scopes: []string{"agent:read"}, ResourceIds: []string{resourcePub},
+		Scopes: []string{"webhook:read"}, ResourceIds: []string{resourcePub},
 		ExpiresAt: timestamppb.New(time.Now().UTC().Add(time.Hour)),
 	}))
 	require.NoError(t, err)
@@ -176,7 +176,7 @@ func TestAPIKeyService_Create_UnknownResource(t *testing.T) {
 		store := &fakes.APIKeyStore{}
 		_, err := newAPIKeyClient(t, store, refs).CreateAPIKey(context.Background(), connect.NewRequest(&apikeyv1.CreateAPIKeyRequest{
 			OrgId: orgPub, ProjectId: projectPub, Kind: "project", Name: "ci",
-			Scopes: []string{"agent:read"}, ResourceIds: []string{res}, ExpiresAt: timestamppb.New(time.Now().UTC().Add(time.Hour)),
+			Scopes: []string{"webhook:read"}, ResourceIds: []string{res}, ExpiresAt: timestamppb.New(time.Now().UTC().Add(time.Hour)),
 		}))
 		assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err), res)
 		assert.Nil(t, store.Saved, res)

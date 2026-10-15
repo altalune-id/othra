@@ -51,7 +51,7 @@ func TestControlPlaneCreate(t *testing.T) {
 	s := newScope()
 	store := &fakeStore{}
 	resp, err := controlPlane(t, store, s).CreateWebhook(systemCtx(), connect.NewRequest(&webhookv1.CreateWebhookRequest{
-		OrgId: s.o, ProjectId: s.p, Url: "https://e.com", EventTypes: []string{string(events.AgentCreated)},
+		OrgId: s.o, ProjectId: s.p, Url: "https://e.com", EventTypes: []string{string(events.InviteCreated)},
 	}))
 	require.NoError(t, err)
 	assert.NotEmpty(t, resp.Msg.GetSecret())
@@ -78,7 +78,7 @@ func TestControlPlaneUnknownScope(t *testing.T) {
 		"org of another project": {other.o, s.p},
 	} {
 		_, err := cp.CreateWebhook(systemCtx(), connect.NewRequest(&webhookv1.CreateWebhookRequest{
-			OrgId: ids[0], ProjectId: ids[1], Url: "https://e.com", EventTypes: []string{string(events.AgentCreated)},
+			OrgId: ids[0], ProjectId: ids[1], Url: "https://e.com", EventTypes: []string{string(events.InviteCreated)},
 		}))
 		assert.True(t, IsNotFoundError(err), "%s: %v", name, err)
 	}
@@ -88,7 +88,7 @@ func TestControlPlaneUnknownScope(t *testing.T) {
 
 func TestControlPlaneGetList(t *testing.T) {
 	s := newScope()
-	e := s.endpoint(events.AgentCreated)
+	e := s.endpoint(events.InviteCreated)
 	cp := controlPlane(t, &fakeStore{endpoints: []*Endpoint{e}}, s)
 
 	got, err := cp.GetWebhook(systemCtx(), connect.NewRequest(&webhookv1.GetWebhookRequest{OrgId: s.o, ProjectId: s.p, Id: e.PublicID}))
@@ -111,7 +111,7 @@ func TestControlPlaneGetList(t *testing.T) {
 func TestControlPlaneEndpointOfAnotherProject(t *testing.T) {
 	s := newScope()
 	sibling := newScopeIn(s.refs, s.org)
-	e := sibling.endpoint(events.AgentCreated)
+	e := sibling.endpoint(events.InviteCreated)
 	cp := controlPlane(t, &fakeStore{endpoints: []*Endpoint{e}}, s)
 
 	_, err := cp.GetWebhook(systemCtx(), connect.NewRequest(&webhookv1.GetWebhookRequest{OrgId: s.o, ProjectId: s.p, Id: e.PublicID}))
@@ -122,12 +122,12 @@ func TestControlPlaneEndpointOfAnotherProject(t *testing.T) {
 
 func TestControlPlaneUpdateDelete(t *testing.T) {
 	s := newScope()
-	e := s.endpoint(events.AgentCreated)
+	e := s.endpoint(events.InviteCreated)
 	store := &fakeStore{endpoints: []*Endpoint{e}}
 	cp := controlPlane(t, store, s)
 
 	upd, err := cp.UpdateWebhook(systemCtx(), connect.NewRequest(&webhookv1.UpdateWebhookRequest{
-		OrgId: s.o, ProjectId: s.p, Id: e.PublicID, Url: "https://e2.com", EventTypes: []string{string(events.AgentUpdated)}, Active: true,
+		OrgId: s.o, ProjectId: s.p, Id: e.PublicID, Url: "https://e2.com", EventTypes: []string{string(events.MemberAdded)}, Active: true,
 	}))
 	require.NoError(t, err)
 	assert.Equal(t, "https://e2.com", upd.Msg.GetWebhook().GetUrl())
@@ -140,7 +140,7 @@ func TestControlPlaneUpdateDelete(t *testing.T) {
 
 func TestControlPlaneRotatePing(t *testing.T) {
 	s := newScope()
-	e := s.endpoint(events.AgentCreated)
+	e := s.endpoint(events.InviteCreated)
 	cp := controlPlane(t, &fakeStore{endpoints: []*Endpoint{e}}, s)
 
 	rot, err := cp.RotateWebhookSecret(systemCtx(), connect.NewRequest(&webhookv1.RotateWebhookSecretRequest{OrgId: s.o, ProjectId: s.p, Id: e.PublicID}))
@@ -159,7 +159,7 @@ func TestControlPlaneErrors(t *testing.T) {
 
 	_, err := cp.GetWebhook(ctx, connect.NewRequest(&webhookv1.GetWebhookRequest{OrgId: s.o, ProjectId: s.p, Id: id}))
 	assert.True(t, IsNotFoundError(err), "get: %v", err)
-	_, err = cp.UpdateWebhook(ctx, connect.NewRequest(&webhookv1.UpdateWebhookRequest{OrgId: s.o, ProjectId: s.p, Id: id, Url: "https://e.com", EventTypes: []string{"agent.created"}}))
+	_, err = cp.UpdateWebhook(ctx, connect.NewRequest(&webhookv1.UpdateWebhookRequest{OrgId: s.o, ProjectId: s.p, Id: id, Url: "https://e.com", EventTypes: []string{"invite.created"}}))
 	assert.True(t, IsNotFoundError(err), "update: %v", err)
 	_, err = cp.DeleteWebhook(ctx, connect.NewRequest(&webhookv1.DeleteWebhookRequest{OrgId: s.o, ProjectId: s.p, Id: id}))
 	assert.True(t, IsNotFoundError(err), "delete: %v", err)
@@ -186,7 +186,7 @@ func TestControlPlaneBadProject(t *testing.T) {
 func TestControlPlaneDeliveryLogs(t *testing.T) {
 	s := newScope()
 	e := s.endpoint()
-	entry := outbox.Entry{ID: uuid.New(), PublicID: nanoid.MustNew(21), EventPublicID: nanoid.MustNew(21), Target: e.ID.String(), Payload: []byte(`{"type":"agent.created"}`)}
+	entry := outbox.Entry{ID: uuid.New(), PublicID: nanoid.MustNew(21), EventPublicID: nanoid.MustNew(21), Target: e.ID.String(), Payload: []byte(`{"type":"invite.created"}`)}
 	ob := &fakeOutbox{entries: []outbox.Entry{entry}}
 	store := &fakeStore{endpoints: []*Endpoint{e}, attempts: []Attempt{{Attempt: 1, StatusCode: 200}}}
 	cp := NewControlPlane(testService(t, store, ob), s.refs)
@@ -198,7 +198,7 @@ func TestControlPlaneDeliveryLogs(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Msg.GetDeliveries(), 1)
 	d := resp.Msg.GetDeliveries()[0]
-	assert.Equal(t, string(events.AgentCreated), d.GetEventType())
+	assert.Equal(t, string(events.InviteCreated), d.GetEventType())
 	assert.Equal(t, entry.PublicID, d.GetId())
 	assert.Equal(t, entry.EventPublicID, d.GetEventId())
 
@@ -240,11 +240,11 @@ func TestControlPlaneErrorCodes(t *testing.T) {
 	for range MaxEndpointsPerProject {
 		full.endpoints = append(full.endpoints, s.endpoint())
 	}
-	e := s.endpoint(events.AgentCreated)
+	e := s.endpoint(events.InviteCreated)
 
 	t.Run("http url", func(t *testing.T) {
 		_, err := controlPlane(t, &fakeStore{}, s).CreateWebhook(ctx, connect.NewRequest(&webhookv1.CreateWebhookRequest{
-			OrgId: s.o, ProjectId: s.p, Url: "http://x", EventTypes: []string{string(events.AgentCreated)},
+			OrgId: s.o, ProjectId: s.p, Url: "http://x", EventTypes: []string{string(events.InviteCreated)},
 		}))
 		ae := appErr(t, err)
 		assert.Equal(t, apperror.CodeWebhookInvalidURL, ae.Code())
@@ -252,7 +252,7 @@ func TestControlPlaneErrorCodes(t *testing.T) {
 	})
 	t.Run("endpoint limit", func(t *testing.T) {
 		_, err := controlPlane(t, full, s).CreateWebhook(ctx, connect.NewRequest(&webhookv1.CreateWebhookRequest{
-			OrgId: s.o, ProjectId: s.p, Url: "https://e.com", EventTypes: []string{string(events.AgentCreated)},
+			OrgId: s.o, ProjectId: s.p, Url: "https://e.com", EventTypes: []string{string(events.InviteCreated)},
 		}))
 		ae := appErr(t, err)
 		assert.Equal(t, apperror.CodeWebhookEndpointLimit, ae.Code())

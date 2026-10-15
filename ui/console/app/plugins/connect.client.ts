@@ -1,7 +1,6 @@
 import type { Interceptor } from '@connectrpc/connect';
 import { createClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
-import { AgentService } from '~~/gen/agent/v1/agent_pb';
 import { APIKeyService } from '~~/gen/apikey/v1/apikey_pb';
 import { AuthService } from '~~/gen/auth/v1/auth_pb';
 import { InviteService } from '~~/gen/invite/v1/invite_pb';
@@ -41,7 +40,6 @@ export default defineNuxtPlugin({
       provide: {
         orgClient: createClient(OrgService, transport),
         projectClient: createClient(ProjectService, transport),
-        agentClient: createClient(AgentService, transport),
         apiKeyClient: createClient(APIKeyService, transport),
         webhookClient: createClient(WebhookService, transport),
         memberClient: createClient(MemberService, transport),

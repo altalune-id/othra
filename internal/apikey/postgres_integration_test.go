@@ -87,7 +87,7 @@ func expiry() *time.Time {
 
 func projectKey(t *testing.T, orgID, projectID uuid.UUID) *apikey.APIKey {
 	t.Helper()
-	k, _, err := apikey.NewScheme("").MintProject(orgID, projectID, "ci", []string{scope.AgentRead}, nil, expiry(), time.Now().UTC())
+	k, _, err := apikey.NewScheme("").MintProject(orgID, projectID, "ci", []string{scope.WebhookRead}, nil, expiry(), time.Now().UTC())
 	require.NoError(t, err)
 	return k
 }
@@ -132,7 +132,7 @@ func TestPostgres_ProjectKeyRoundTrip(t *testing.T) {
 			k.ExpiresAt = nil
 		}},
 		{name: "nullable columns set", mutate: func(k *apikey.APIKey) {
-			k.Scopes = []string{scope.AgentRead, `quote"back\slash`, "comma,brace{}", "NULL", ""}
+			k.Scopes = []string{scope.WebhookRead, `quote"back\slash`, "comma,brace{}", "NULL", ""}
 			k.ResourceIDs = []uuid.UUID{uuid.New(), uuid.New()}
 			k.CreatedBy = creator
 			k.ExpiresAt = at(10)
@@ -230,7 +230,7 @@ func TestPostgres_KeySaveUpdatesOnlyMutableColumns(t *testing.T) {
 
 	changed := *k
 	changed.Name = "renamed"
-	changed.Scopes = []string{scope.AgentWrite, scope.ProjectRead}
+	changed.Scopes = []string{scope.WebhookWrite, scope.ProjectRead}
 	changed.ResourceIDs = nil
 	changed.ExpiresAt = nil
 	revoked := time.Now().UTC().Truncate(time.Microsecond)
@@ -591,7 +591,7 @@ func TestPostgres_KeyUpsertCannotRewriteAnotherOrgsKey(t *testing.T) {
 	intruder := projectKey(t, orgB, projectB)
 	intruder.ID = victim.ID
 	intruder.Name = "hijacked"
-	intruder.Scopes = []string{scope.AgentWrite, scope.ProjectWrite}
+	intruder.Scopes = []string{scope.WebhookWrite, scope.ProjectWrite}
 	far := time.Now().UTC().Add(300 * 24 * time.Hour)
 	intruder.ExpiresAt = &far
 	_ = f.store.Save(t.Context(), intruder)
@@ -607,7 +607,7 @@ func TestPostgres_BySecretHashLoadsGrants(t *testing.T) {
 	f := newPgFixture(t)
 	orgID, p1 := f.seedScope(t)
 	p2 := f.seedProject(t, orgID)
-	k, plain, err := apikey.NewScheme("").MintOrg(orgID, "ci", []string{"agent:read"},
+	k, plain, err := apikey.NewScheme("").MintOrg(orgID, "ci", []string{"webhook:read"},
 		apikey.ProjectGrant{ProjectIDs: []uuid.UUID{p1, p2}}, expiry(), time.Now().UTC())
 	require.NoError(t, err)
 	require.NoError(t, f.store.Save(t.Context(), k))
@@ -616,7 +616,7 @@ func TestPostgres_BySecretHashLoadsGrants(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, k.ID, got.ID)
 	assert.ElementsMatch(t, []uuid.UUID{p1, p2}, got.ProjectIDs)
-	assert.Equal(t, []string{"agent:read"}, got.Scopes)
+	assert.Equal(t, []string{"webhook:read"}, got.Scopes)
 
 	_, err = f.store.BySecretHash(t.Context(), sha256.Sum256([]byte("othra_unknown")))
 	assert.True(t, apikey.IsNotFoundError(err), "got %v", err)
@@ -625,7 +625,7 @@ func TestPostgres_BySecretHashLoadsGrants(t *testing.T) {
 func TestPostgres_TouchLastUsedNeverMovesBack(t *testing.T) {
 	f := newPgFixture(t)
 	orgID, projectID := f.seedScope(t)
-	k, _, err := apikey.NewScheme("").MintProject(orgID, projectID, "bot", []string{"agent:read"}, nil, expiry(), time.Now().UTC())
+	k, _, err := apikey.NewScheme("").MintProject(orgID, projectID, "bot", []string{"webhook:read"}, nil, expiry(), time.Now().UTC())
 	require.NoError(t, err)
 	require.NoError(t, f.store.Save(t.Context(), k))
 
@@ -655,7 +655,7 @@ func TestPostgres_PersonalKeyRoundTrip(t *testing.T) {
 	f := newPgFixture(t)
 	orgID, projectID := f.seedScope(t)
 	owner := f.seedUser(t)
-	k, plain, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{"agent:read"},
+	k, plain, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{"webhook:read"},
 		apikey.ProjectGrant{ProjectIDs: []uuid.UUID{projectID}}, expiry(), time.Now().UTC())
 	require.NoError(t, err)
 	require.NoError(t, f.store.Save(t.Context(), k))
@@ -672,7 +672,7 @@ func TestPostgres_DeletingUserNullsKeyOwner(t *testing.T) {
 	f := newPgFixture(t)
 	orgID, projectID := f.seedScope(t)
 	owner := f.seedUser(t)
-	personal, _, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{"agent:read"},
+	personal, _, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{"webhook:read"},
 		apikey.ProjectGrant{All: true}, expiry(), time.Now().UTC())
 	require.NoError(t, err)
 	machine := projectKey(t, orgID, projectID)
@@ -707,7 +707,7 @@ func TestPostgres_RevokePersonalOf(t *testing.T) {
 	otherOrg := f.seedOrg(t)
 	owner, someoneElse := f.seedUser(t), f.seedUser(t)
 	personal := func(org, user uuid.UUID) *apikey.APIKey {
-		k, _, err := apikey.NewScheme("").MintPersonal(org, user, "laptop", []string{"agent:read"},
+		k, _, err := apikey.NewScheme("").MintPersonal(org, user, "laptop", []string{"webhook:read"},
 			apikey.ProjectGrant{All: true}, expiry(), time.Now().UTC())
 		require.NoError(t, err)
 		return k
@@ -752,7 +752,7 @@ func TestPostgres_RevokePersonalOfJoinsTheTransaction(t *testing.T) {
 	f := newPgFixture(t)
 	orgID := f.seedOrg(t)
 	owner := f.seedUser(t)
-	k, _, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{"agent:read"},
+	k, _, err := apikey.NewScheme("").MintPersonal(orgID, owner, "laptop", []string{"webhook:read"},
 		apikey.ProjectGrant{All: true}, expiry(), time.Now().UTC())
 	require.NoError(t, err)
 	require.NoError(t, f.store.Save(t.Context(), k))

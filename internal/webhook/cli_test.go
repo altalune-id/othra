@@ -36,7 +36,7 @@ func (f *fakeClient) ListWebhooks(context.Context, *connect.Request[webhookv1.Li
 	if f.err != nil {
 		return nil, f.err
 	}
-	return connect.NewResponse(&webhookv1.ListWebhooksResponse{Webhooks: []*webhookv1.Webhook{{Id: "w1", EventTypes: []string{"agent.created"}, Active: true}}}), nil
+	return connect.NewResponse(&webhookv1.ListWebhooksResponse{Webhooks: []*webhookv1.Webhook{{Id: "w1", EventTypes: []string{"invite.created"}, Active: true}}}), nil
 }
 
 func (f *fakeClient) UpdateWebhook(context.Context, *connect.Request[webhookv1.UpdateWebhookRequest]) (*connect.Response[webhookv1.UpdateWebhookResponse], error) {
@@ -86,7 +86,7 @@ func (f *fakeClient) ListWebhookDeliveries(context.Context, *connect.Request[web
 		return nil, f.err
 	}
 	return connect.NewResponse(&webhookv1.ListWebhookDeliveriesResponse{
-		Deliveries: []*webhookv1.WebhookDelivery{{Id: "d1", EventType: "agent.created", Status: "delivered", Attempt: 1, CreatedAt: timestamppb.Now()}},
+		Deliveries: []*webhookv1.WebhookDelivery{{Id: "d1", EventType: "invite.created", Status: "delivered", Attempt: 1, CreatedAt: timestamppb.Now()}},
 	}), nil
 }
 
@@ -114,10 +114,10 @@ func runCmd(t *testing.T, client *fakeClient, args ...string) error {
 func TestCLICommands(t *testing.T) {
 	t.Setenv("OTHRA_OUTPUT", "text")
 	c := &fakeClient{}
-	require.NoError(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.created"))
+	require.NoError(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "invite.created"))
 	require.NoError(t, runCmd(t, c, "get", "w1", "--org-id", "o", "--project-id", "p"))
 	require.NoError(t, runCmd(t, c, "list", "--org-id", "o", "--project-id", "p"))
-	require.NoError(t, runCmd(t, c, "update", "w1", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.updated"))
+	require.NoError(t, runCmd(t, c, "update", "w1", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "member.added"))
 	require.NoError(t, runCmd(t, c, "delete", "w1", "--org-id", "o", "--project-id", "p"))
 	require.NoError(t, runCmd(t, c, "rotate", "w1", "--org-id", "o", "--project-id", "p"))
 	require.NoError(t, runCmd(t, c, "ping", "w1", "--org-id", "o", "--project-id", "p"))
@@ -130,18 +130,18 @@ func TestCLICommands(t *testing.T) {
 func TestCLIJSON(t *testing.T) {
 	t.Setenv("OTHRA_OUTPUT", "json")
 	c := &fakeClient{}
-	require.NoError(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.created"))
+	require.NoError(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "invite.created"))
 	require.NoError(t, runCmd(t, c, "get", "w1", "--org-id", "o", "--project-id", "p"))
 	require.NoError(t, runCmd(t, c, "list", "--org-id", "o", "--project-id", "p"))
-	require.NoError(t, runCmd(t, c, "update", "w1", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.updated"))
+	require.NoError(t, runCmd(t, c, "update", "w1", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "member.added"))
 }
 
 func TestCLIErrors(t *testing.T) {
 	c := &fakeClient{err: errors.New("boom")}
-	assert.Error(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.created"))
+	assert.Error(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "invite.created"))
 	assert.Error(t, runCmd(t, c, "get", "w1", "--org-id", "o", "--project-id", "p"))
 	assert.Error(t, runCmd(t, c, "list", "--org-id", "o", "--project-id", "p"))
-	assert.Error(t, runCmd(t, c, "update", "w1", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.updated"))
+	assert.Error(t, runCmd(t, c, "update", "w1", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "member.added"))
 	assert.Error(t, runCmd(t, c, "delete", "w1", "--org-id", "o", "--project-id", "p"))
 	assert.Error(t, runCmd(t, c, "rotate", "w1", "--org-id", "o", "--project-id", "p"))
 	assert.Error(t, runCmd(t, c, "ping", "w1", "--org-id", "o", "--project-id", "p"))

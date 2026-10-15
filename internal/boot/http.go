@@ -62,7 +62,6 @@ func buildAPIHandler(
 	h := controlplane.New(controlplane.Services{
 		Orgs:     svcs.Orgs,
 		Projects: svcs.Projects,
-		Agents:   svcs.Agents,
 		APIKeys:  svcs.APIKeys,
 		Webhooks: svcs.Webhooks,
 		Users:    svcs.Users,

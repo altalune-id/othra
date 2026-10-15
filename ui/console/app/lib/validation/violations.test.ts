@@ -33,7 +33,7 @@ describe('checkRequest', () => {
   });
 
   it('takes a shared rule limit from its id and paths items like the server', () => {
-    const msg = create(CreateAPIKeyRequestSchema, { orgId: goodID, kind: 'org', name: 'k'.repeat(101), scopes: ['agent:*'] });
+    const msg = create(CreateAPIKeyRequestSchema, { orgId: goodID, kind: 'org', name: 'k'.repeat(101), scopes: ['webhook:*'] });
     expect(checkRequest(CreateAPIKeyRequestSchema, msg)).toEqual({
       'name': { reason: 'too_long', param: '100' },
       'scopes[0]': { reason: 'invalid_format' },
@@ -64,7 +64,7 @@ describe('checkRequest', () => {
   });
 
   it('accepts what the domain accepts', () => {
-    const msg = create(CreateWebhookRequestSchema, { orgId: goodID, projectId: goodID, url: ' HTTPS://example.com/a b ', eventTypes: ['agent.created'] });
+    const msg = create(CreateWebhookRequestSchema, { orgId: goodID, projectId: goodID, url: ' HTTPS://example.com/a b ', eventTypes: ['invite.created'] });
     expect(checkRequest(CreateWebhookRequestSchema, msg)).toEqual({});
   });
 });

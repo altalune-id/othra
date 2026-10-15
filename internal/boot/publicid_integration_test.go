@@ -36,10 +36,10 @@ func fillProbe(msg *dynamicpb.Message) {
 		switch {
 		case fd.IsList() && fd.Name() == "event_types":
 			list := msg.Mutable(fd).List()
-			list.Append(protoreflect.ValueOfString("agent.created"))
+			list.Append(protoreflect.ValueOfString("invite.created"))
 		case fd.IsList() && fd.Name() == "scopes":
 			list := msg.Mutable(fd).List()
-			list.Append(protoreflect.ValueOfString("agent:read"))
+			list.Append(protoreflect.ValueOfString("webhook:read"))
 		case fd.Kind() == protoreflect.StringKind && !fd.IsList():
 			if v, ok := probeStrings[fd.Name()]; ok {
 				msg.Set(fd, protoreflect.ValueOfString(v))

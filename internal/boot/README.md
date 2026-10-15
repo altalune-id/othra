@@ -84,7 +84,6 @@ flowchart TD
 | `org/invite` | member (actor, add from invite), user (create, by email, accept terms), org (name, slug), user (contact, public id), mail queue, webhook (`invite.created`, `member.added` to every project's subscribers, in the same transaction); auth (sign-in, sessions, the auth rate limiter) on the web side; org (public id → id, `publicIDs`) for the API | ✓ (writes: people and the operator only); CLI `invite create/list/resend/revoke`                                                                             | `member_invite` (drafts only); `member_invite_confirm`, `member_invite_discard` (app-only) | `/invite/{token}`, `/invite`, `POST /invite/join`, `/invite/accept`, `/invite/switch` (local login only)            |
 | `org/member` | effects: sessions, apikey (personal keys), user (contact), org (name), mail queue                                                                                                                                                                                                                                                                   | ✓ (role changes and removal: people and the operator only; leave: the signed-in person); CLI `member add` (operator, boots the `App`)                        | `member_list`                                                                              | —                                                                                                                   |
 | `project`    | —                                                                                                                                                                                                                                                                                                                                                   | ✓                                                                                                                                                            | ✓                                                                                          | —                                                                                                                   |
-| `agent`      | webhook (publisher, same transaction), project (org of project)                                                                                                                                                                                                                                                                                     | ✓                                                                                                                                                            | ✓                                                                                          | —                                                                                                                   |
 | `apikey`     | project (ids), member (owner roles)                                                                                                                                                                                                                                                                                                                 | ✓                                                                                                                                                            | —                                                                                          | —                                                                                                                   |
 | `webhook`    | project + org (refs), project (org of project), outbox                                                                                                                                                                                                                                                                                              | ✓ (org events `invite.created`, `member.added`: only a caller who reaches the whole org and holds `member:read` subscribes or reads their payloads)          | ✓                                                                                          | —                                                                                                                   |
 | `user`       | —                                                                                                                                                                                                                                                                                                                                                   | CLI `user set-password` (operator, boots the `App`)                                                                                                          | —                                                                                          | —                                                                                                                   |
@@ -110,7 +109,7 @@ whoever needs it. An arrow means "depends on". Small adapters in `services.go`
 (`projectIDs`, `projectOrgs`, `ownerRoles`, `refResolver`, `memberPeople`, `memberDirectory`,
 `memberOrgs`) fit one service to another domain's port; `memberPeople` and `memberOrgs`
 (name and slug) serve `invite` too. `publicIDs` (`publicids.go`) turns org, project, user and
-resource (agent or webhook endpoint) public ids into ids and back for every surface handler.
+resource (webhook endpoint) public ids into ids and back for every surface handler.
 
 ```mermaid
 flowchart TD
@@ -124,7 +123,6 @@ flowchart TD
         health
     end
     subgraph Resources
-        agent
         webhook
         apikey
         keyAuthn["apikey.Authenticator"]
@@ -146,8 +144,6 @@ flowchart TD
     invite -. web .-> auth & sessions
     auth --> user & member & org & project & sessions & mailqueue
 
-    agent --> webhook
-    agent --> project
     webhook --> project & org
     apikey --> project & member
     keyAuthn --> member
@@ -159,13 +155,12 @@ flowchart TD
 
 **Unit of work:** a use case owns its transaction; stores never begin one. `buildServices` makes one
 `db.NewTransactor(k.Pool)` and hands it to every service that writes more than one row (`org`,
-`agent`, `org/member`, `org/invite`, `install`, `legal`, the password resets in `auth`). A store joins the transaction on `ctx`
+`org/member`, `org/invite`, `install`, `legal`, the password resets in `auth`). A store joins the transaction on `ctx`
 (`db.Reader`, `db.Writer`, `db.InTx`) or runs alone; a nested `RunInTx` joins the outer one.
 `kernel/db`'s guard test fails if any other package begins a transaction.
 
 `org → project` is the after-create hook that adds the default project, in the org's unit of work:
-if it fails, the org is not created. An agent's save and its `agent.created`/`agent.updated` event
-commit together; a failed enqueue fails the request.
+if it fails, the org is not created.
 `member → …` (dotted) are the effects set by `memberEffects` after every service exists
 (`apikey` already depends on `member`). A removal ends the person's sessions, revokes their
 personal keys in that org and queues a notice; a role change queues a notice and, when it lowers

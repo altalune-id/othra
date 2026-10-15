@@ -56,6 +56,7 @@ func TestOpenAPI_Enabled_NoAuth_ReturnsYAMLAndJSON(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	body, _ = io.ReadAll(resp.Body)
 	assert.Contains(t, string(body), `"openapi"`)
+	assert.Contains(t, string(body), `"title": "Othra API"`, "the bundled spec names the product, not the first proto walked")
 }
 
 func TestOpenAPI_BasicAuth(t *testing.T) {
@@ -124,6 +125,9 @@ func TestLoadOpenAPI_Merges(t *testing.T) {
 	assert.Contains(t, string(yamlBody), "x-custom")
 	assert.Contains(t, string(jsonBody), `"/a"`)
 	assert.Contains(t, string(jsonBody), `"/b"`)
+	assert.Contains(t, string(yamlBody), "title: Othra API")
+	assert.NotContains(t, string(yamlBody), "title: a")
+	assert.Contains(t, string(jsonBody), `"title": "Othra API"`)
 }
 
 func TestLoadOpenAPI_FallbackYAML(t *testing.T) {

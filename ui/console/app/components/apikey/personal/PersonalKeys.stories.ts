@@ -3,9 +3,9 @@ import { mcpSnippet } from './mcpSnippet';
 import PersonalKeys from './PersonalKeys.vue';
 
 const scopes = [
-  { name: 'agent:read', label: 'Read agents' },
-  { name: 'agent:write', label: 'Write agents' },
   { name: 'webhook:read', label: 'Read webhooks' },
+  { name: 'webhook:write', label: 'Manage webhooks' },
+  { name: 'member:read', label: 'Read members' },
 ];
 const projects = [{ id: 'x6MH9WPWjktMwCBKHy4pF', name: 'Default' }, { id: 'KdrF3t3FHtppBPmMgj4sy', name: 'Support' }];
 
@@ -29,8 +29,8 @@ export const Empty: Story = { render };
 export const List: Story = {
   args: {
     keys: [
-      { rowKey: 'key-1', name: 'laptop', scopes: ['agent:read', 'agent:write'], secretHint: 'a1b2' },
-      { rowKey: 'key-2', name: 'old ci', scopes: ['agent:read'], secretHint: 'c3d4', revokedAt: new Date('2026-10-01') },
+      { rowKey: 'key-1', name: 'laptop', scopes: ['webhook:read', 'webhook:write'], secretHint: 'a1b2' },
+      { rowKey: 'key-2', name: 'old ci', scopes: ['webhook:read'], secretHint: 'c3d4', revokedAt: new Date('2026-10-01') },
     ],
   },
   render,
@@ -38,7 +38,7 @@ export const List: Story = {
 
 export const JustCreated: Story = {
   args: {
-    keys: [{ rowKey: 'key-1', name: 'laptop', scopes: ['agent:read'], secretHint: 'uAuE' }],
+    keys: [{ rowKey: 'key-1', name: 'laptop', scopes: ['webhook:read'], secretHint: 'uAuE' }],
     created: {
       plaintext: 'othra_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE',
       snippet: mcpSnippet('othra', 'https://othra.example.com/mcp', 'othra_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE'),

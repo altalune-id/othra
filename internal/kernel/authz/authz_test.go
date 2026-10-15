@@ -14,8 +14,8 @@ import (
 )
 
 func TestAllowed(t *testing.T) {
-	person := session.Principal{Source: session.SourceLocal, UserID: uuid.New(), Scopes: []string{"agent:*", scope.OrgRead}}
-	assert.True(t, authz.Allowed(person, scope.AgentWrite))
+	person := session.Principal{Source: session.SourceLocal, UserID: uuid.New(), Scopes: []string{"webhook:*", scope.OrgRead}}
+	assert.True(t, authz.Allowed(person, scope.WebhookWrite))
 	assert.False(t, authz.Allowed(person, scope.MemberWrite))
 	assert.True(t, authz.Allowed(person, authz.AnyAuthenticated))
 
@@ -37,15 +37,15 @@ func TestAllowed_KeyNeverHoldsPersonOnly(t *testing.T) {
 }
 
 func TestRequire(t *testing.T) {
-	ctx := session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceLocal, UserID: uuid.New(), Scopes: []string{scope.AgentRead}})
-	assert.NoError(t, authz.Require(ctx, scope.AgentRead))
-	assert.True(t, authz.IsForbiddenError(authz.Require(ctx, scope.AgentWrite)))
-	assert.True(t, authz.IsForbiddenError(authz.Require(context.Background(), scope.AgentRead)))
+	ctx := session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceLocal, UserID: uuid.New(), Scopes: []string{scope.WebhookRead}})
+	assert.NoError(t, authz.Require(ctx, scope.WebhookRead))
+	assert.True(t, authz.IsForbiddenError(authz.Require(ctx, scope.WebhookWrite)))
+	assert.True(t, authz.IsForbiddenError(authz.Require(context.Background(), scope.WebhookRead)))
 }
 
 func TestForbiddenError(t *testing.T) {
-	err := &authz.ForbiddenError{Permission: scope.AgentWrite}
-	assert.Contains(t, err.Error(), scope.AgentWrite)
+	err := &authz.ForbiddenError{Permission: scope.WebhookWrite}
+	assert.Contains(t, err.Error(), scope.WebhookWrite)
 	ae := err.ToAppError()
 	assert.Equal(t, apperror.CodeForbidden, ae.Code())
 	assert.Equal(t, "You do not have permission to do this", ae.Message())

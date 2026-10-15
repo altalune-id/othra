@@ -45,7 +45,7 @@ func TestService_Create_Project(t *testing.T) {
 	store := &fakes.APIKeyStore{}
 	k, plaintext, err := newService(store, stubProjects{ids: []uuid.UUID{knownProject}}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), ProjectID: knownProject, Kind: apikey.KindProject, Name: "ci",
-		Scopes: []string{scope.AgentRead}, ExpiresAt: future(),
+		Scopes: []string{scope.WebhookRead}, ExpiresAt: future(),
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, plaintext)
@@ -171,7 +171,7 @@ func TestService_Create_ProjectKeyProjectMustBelongToOrg(t *testing.T) {
 	svc := newService(store, stubProjects{ids: []uuid.UUID{mine}})
 
 	_, _, err := svc.Create(context.Background(), apikey.CreateRequest{
-		OrgID: uuid.New(), ProjectID: uuid.New(), Kind: apikey.KindProject, Name: "ci", Scopes: []string{scope.AgentRead}, ExpiresAt: future(),
+		OrgID: uuid.New(), ProjectID: uuid.New(), Kind: apikey.KindProject, Name: "ci", Scopes: []string{scope.WebhookRead}, ExpiresAt: future(),
 	})
 	ae, ok := apperror.AsAppError(err)
 	require.True(t, ok, "got %v", err)
@@ -179,7 +179,7 @@ func TestService_Create_ProjectKeyProjectMustBelongToOrg(t *testing.T) {
 	assert.Nil(t, store.Saved)
 
 	_, _, err = svc.Create(context.Background(), apikey.CreateRequest{
-		OrgID: uuid.New(), ProjectID: mine, Kind: apikey.KindProject, Name: "ci", Scopes: []string{scope.AgentRead}, ExpiresAt: future(),
+		OrgID: uuid.New(), ProjectID: mine, Kind: apikey.KindProject, Name: "ci", Scopes: []string{scope.WebhookRead}, ExpiresAt: future(),
 	})
 	require.NoError(t, err)
 }
