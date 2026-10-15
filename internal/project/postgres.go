@@ -1,0 +1,16 @@
+package project
+
+import (
+	"altalune.id/oagent/internal/kernel/db"
+	"altalune.id/oagent/schema/entity"
+)
+
+type postgresStore struct {
+	pool     db.Pool
+	projects *entity.Projects
+}
+
+// NewStore builds the Postgres store over pool.
+func NewStore(pool db.Pool, schema, tablePrefix string) *postgresStore {
+	return &postgresStore{pool: pool, projects: entity.NewProjects(schema, tablePrefix)}
+}

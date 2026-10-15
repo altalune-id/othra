@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package apikey.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "oagent/v1/rules.proto";
+
+option go_package = "altalune.id/oagent/gen/go/apikey/v1;apikeyv1";
+
+// APIKeyService mints, lists and revokes API keys. Every id is a public id.
+service APIKeyService {
+  rpc CreateAPIKey(CreateAPIKeyRequest) returns (CreateAPIKeyResponse);
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse);
+  rpc RevokeAPIKey(RevokeAPIKeyRequest) returns (RevokeAPIKeyResponse);
+}
+
+// APIKey has no id: within its org a live key is named by secret_hint.
+message APIKey {
+  reserved 1;
+  reserved "id";
+  string org_id = 2;
+  string project_id = 3;
+  // project, org or personal; a personal key acts for the person who created it.
+  string kind = 4;
+  string name = 5;
+  repeated string scopes = 6;
+  repeated string project_ids = 7;
+  bool all_projects = 8;
+  repeated string resource_ids = 9;
+  string secret_hint = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp expires_at = 12;
+  google.protobuf.Timestamp revoked_at = 13;
+  google.protobuf.Timestamp last_used_at = 14;
+}
+
+message CreateAPIKeyRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  string project_id = 2 [
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  // project, org or personal; personal needs a signed-in person and never exceeds their role.
+  string kind = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string = {in: ["project", "org", "personal"]}
+  ];
+  string name = 4 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).cel = {id: "apikey.name.blank", expression: "this.trim() != '' ? '' : 'must not be blank'"},
+    (buf.validate.field).cel = {id: "apikey.name.max_len.100", expression: "this.trim().size() <= 100 ? '' : 'must be at most 100 characters'"}
+  ];
+  repeated string scopes = 5 [
+    (buf.validate.field).repeated.items.string.pattern = "^[a-z]+:(read|write)$"
+  ];
+  repeated string project_ids = 6 [
+    (buf.validate.field).repeated.items.string.(oagent.v1.public_id) = true
+  ];
+  bool all_projects = 7;
+  repeated string resource_ids = 8 [
+    (buf.validate.field).repeated.items.string.(oagent.v1.public_id) = true
+  ];
+  // Required: when the key stops working, in the future and at most one year away.
+  google.protobuf.Timestamp expires_at = 9 [
+    (buf.validate.field).required = true
+  ];
+}
+
+message CreateAPIKeyResponse {
+  APIKey key = 1;
+  // plaintext is the one-time secret. It is never present on any other response.
+  string plaintext = 2;
+}
+
+message ListAPIKeysRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+}
+
+message ListAPIKeysResponse {
+  repeated APIKey keys = 1;
+}
+
+message RevokeAPIKeyRequest {
+  reserved 2;
+  reserved "id";
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  // The last 4 characters of the key's secret, as secret_hint shows them.
+  string hint = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).cel = {id: "apikey.hint.format", expression: "this.trim().matches('^\\u2026?([.][.][.])?[A-Za-z0-9_-]{4}$') ? '' : 'must be the last 4 characters of the key'"}
+  ];
+}
+
+message RevokeAPIKeyResponse {}

@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package member.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "oagent/v1/rules.proto";
+
+option go_package = "altalune.id/oagent/gen/go/member/v1;memberv1";
+
+// MemberService manages an organization's members, named by the user's public id.
+service MemberService {
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse) {
+    option (mcp.v1.tool) = {
+      name: "member_list"
+      title: "List members"
+      description: "List the members of an organization with their roles."
+      required: ["org_id"]
+      ui: "app"
+    };
+  }
+  rpc SetMemberRole(SetMemberRoleRequest) returns (SetMemberRoleResponse);
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse);
+  rpc LeaveOrg(LeaveOrgRequest) returns (LeaveOrgResponse);
+}
+
+message Member {
+  string user_id = 1;
+  string email = 2;
+  string name = 3;
+  // owner, admin or member.
+  string role = 4;
+  google.protobuf.Timestamp joined_at = 5;
+}
+
+message ListMembersRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+}
+
+message ListMembersResponse {
+  repeated Member members = 1;
+}
+
+message SetMemberRoleRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  string user_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  // owner, admin or member; only an owner grants or changes the owner role.
+  string role = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string = {in: ["owner", "admin", "member"]}
+  ];
+}
+
+message SetMemberRoleResponse {
+  Member member = 1;
+}
+
+message RemoveMemberRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  string user_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+}
+
+message RemoveMemberResponse {}
+
+message LeaveOrgRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+}
+
+message LeaveOrgResponse {}

@@ -1,0 +1,27 @@
+{
+  "name": "@oagent/mcp-ui",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@modelcontextprotocol/core": "^2.3.1",
+    "@modelcontextprotocol/ext-apps": "^2.0.3",
+    "vue": "catalog:"
+  },
+  "devDependencies": {
+    "@oagent/vitest-config": "workspace:*",
+    "@vitejs/plugin-vue": "catalog:",
+    "typescript": "catalog:",
+    "unplugin-auto-import": "^21.1.0",
+    "vite": "catalog:",
+    "vite-plugin-singlefile": "^2.1.0",
+    "vitest": "catalog:",
+    "vue-tsc": "catalog:"
+  }
+}

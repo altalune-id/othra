@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package project.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "oagent/v1/rules.proto";
+
+option go_package = "altalune.id/oagent/gen/go/project/v1;projectv1";
+
+// ProjectService manages projects. Every id is a public id.
+service ProjectService {
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
+    option (mcp.v1.tool) = {
+      name: "project_create"
+      description: "Create a project within an organization, minting a slug when one is not supplied."
+      mutation: true
+      destructive: false
+      ui: "app"
+    };
+  }
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {
+    option (mcp.v1.tool) = {
+      name: "project_get"
+      description: "Get a project by id."
+      required: ["id"]
+      ui: "app"
+    };
+  }
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {
+    option (mcp.v1.tool) = {
+      name: "project_list"
+      description: "List projects in an organization."
+      required: ["org_id"]
+      ui: "app"
+    };
+  }
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+}
+
+message Project {
+  reserved 2;
+  reserved "public_id";
+  string id = 1;
+  string org_id = 3;
+  string slug = 4;
+  string name = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message CreateProjectRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  string slug = 2 [
+    (buf.validate.field).string.(oagent.v1.slug) = true
+  ];
+  string name = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.name) = true
+  ];
+}
+
+message CreateProjectResponse {
+  Project project = 1;
+}
+
+message GetProjectRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+}
+
+message GetProjectResponse {
+  Project project = 1;
+}
+
+message ListProjectsRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+}
+
+message ListProjectsResponse {
+  repeated Project projects = 1;
+}
+
+message UpdateProjectRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.name) = true
+  ];
+  string slug = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.slug) = true
+  ];
+}
+
+message UpdateProjectResponse {
+  Project project = 1;
+}

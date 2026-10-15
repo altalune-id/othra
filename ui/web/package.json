@@ -1,0 +1,25 @@
+{
+  "name": "@oagent/web",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24.15"
+  },
+  "scripts": {
+    "build": "tailwindcss -i app.css -o ../../internal/web/static/app.css --minify && node ../scripts/compress.mts ../../internal/web/static/app.css",
+    "build:js": "vite build && node ../scripts/compress.mts ../../internal/web/static/password.js",
+    "test": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@oagent/vitest-config": "workspace:*",
+    "@tailwindcss/cli": "4.3.3",
+    "@vitest/coverage-v8": "catalog:",
+    "daisyui": "catalog:",
+    "happy-dom": "21.0.1",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

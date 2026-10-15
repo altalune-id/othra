@@ -1,0 +1,346 @@
+version: "2"
+
+# Run locally: make lint (pinned golangci-lint version, see GOLANGCI_VERSION in the Makefile).
+
+run:
+  timeout: 3m
+  tests: true
+  build-tags:
+    - integration
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - depguard
+    - errorlint
+    - forbidigo
+    - gochecknoglobals
+    - gocritic
+    - gosec
+    - lll
+    - misspell
+    - modernize
+    - nilerr
+    - prealloc
+    - revive
+    - unconvert
+    - unparam
+    - whitespace
+
+  settings:
+    lll:
+      line-length: 140
+      tab-width: 1
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      disabled-checks:
+        - ifElseChain
+        - hugeParam
+        - rangeValCopy
+    gosec:
+      excludes:
+        - G104    # duplicates errcheck
+        - G404    # weak random OK for non-crypto uses
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+        - name: unexported-return
+          disabled: true   # constructors returning *unexported are our pattern
+        # A rules list replaces revive's defaults, so the defaults we want are listed.
+        - name: var-naming
+        - name: error-return
+        - name: error-naming
+        - name: error-strings
+        - name: dot-imports
+        - name: blank-imports
+        - name: context-as-argument
+          arguments:
+            - allowTypesBefore: "*testing.T"
+        - name: context-keys-type
+        - name: increment-decrement
+        - name: range
+        - name: receiver-naming
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: redefines-builtin-id
+    forbidigo:
+      forbid:
+        - pattern: 'fmt\.Print(f|ln|)\('
+          msg: "use cmd.OutOrStdout() or slog for output"
+        - pattern: 'slog\.(Info|Warn|Error|Debug)Context\('
+          msg: "use an injected *slog.Logger, not the slog default"
+      exclude-godoc-examples: true
+      analyze-types: true
+    depguard:
+      rules:
+        migrator-purity:
+          list-mode: strict
+          files:
+            - "**/migrator/*.go"
+            - "!**/migrator/*_test.go"
+          allow:
+            - $gostd
+            - github.com/jackc/pgx/v5
+            - github.com/pressly/goose/v3
+            - altalune.id/oagent/pg
+        httpclient-purity:
+          list-mode: strict
+          files:
+            - "**/httpclient/*.go"
+            - "!**/httpclient/*_test.go"
+          allow:
+            - $gostd
+            - go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+        mcp-purity:
+          list-mode: strict
+          files:
+            - "**/mcp/*.go"
+            - "!**/internal/mcp/*.go"
+            - "!**/mcp/*_test.go"
+          allow:
+            - $gostd
+            - github.com/modelcontextprotocol/go-sdk
+            - github.com/google/jsonschema-go
+            - altalune.id/oagent/apperror
+        scheduler-purity:
+          list-mode: strict
+          files:
+            - "**/scheduler/*.go"
+            - "!**/scheduler/*_test.go"
+          allow:
+            - $gostd
+            - github.com/robfig/cron/v3
+            - go.opentelemetry.io/otel
+            - altalune.id/oagent/reqid
+        domain-purity:
+          list-mode: strict
+          files:
+            - "**/internal/{agent,apikey,auth,install,legal,org,project,user,webhook}/{agent,apikey,auth,install,legal,org,project,user,webhook}.go"
+            - "**/internal/{agent,apikey,auth,install,legal,org,project,user,webhook}/{store,errors}.go"
+            # org/member and org/invite are excluded: they share role and error types with their parent domain.
+          allow:
+            - $gostd
+            - github.com/google/uuid
+            - google.golang.org/protobuf/types/known/timestamppb
+            - altalune.id/oagent/apperror
+            - altalune.id/oagent/gen/go
+            - altalune.id/oagent/internal/kernel/events
+            - altalune.id/oagent/nanoid
+            - altalune.id/oagent/scope
+            - altalune.id/oagent/slug
+        pgx-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!$test"
+            - "!**/pg/**"
+            - "!**/internal/kernel/db/**"
+            - "!**/migrator/**"
+            - "!**/internal/testutil/pgtest/**"
+          deny:
+            - pkg: github.com/jackc/pgx
+              desc: "only pg, internal/kernel/db, migrator and pgtest import the Postgres driver"
+        config-boundary:
+          list-mode: lax
+          files:
+            - "**/internal/kernel/**"
+            - "**/pg/**"
+            - "**/nats/**"
+            - "**/redis/**"
+          deny:
+            - pkg: "altalune.id/oagent/config$"
+              desc: "kernel features and connections take their own Config; boot maps config into it"
+        nats-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/nats/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/testutil/natstest/**"
+          deny:
+            - pkg: github.com/nats-io
+              desc: "only the nats connection, the queue/nats driver, boot and natstest import NATS"
+        redis-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/redis/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/testutil/redistest/**"
+          deny:
+            - pkg: github.com/redis/go-redis
+              desc: "only the redis connection, the ratelimit/redis driver, boot and redistest import go-redis"
+        internal-driver-boundary:
+          list-mode: lax
+          files:
+            - "**/internal/**"
+            - "!$test"
+            - "!**/internal/kernel/db/**"
+            - "!**/internal/kernel/queue/nats/**"
+            - "!**/internal/kernel/ratelimit/redis/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/testutil/{pgtest,natstest,redistest}/**"
+          deny:
+            - pkg: github.com/jackc/pgx
+              desc: "inside internal/, only kernel/db imports the Postgres driver"
+            - pkg: github.com/nats-io
+              desc: "inside internal/, only the queue/nats driver and boot import NATS"
+            - pkg: github.com/redis/go-redis
+              desc: "inside internal/, only the ratelimit/redis driver and boot import go-redis"
+        application-purity:
+          list-mode: lax
+          files:
+            - "**/internal/*/service.go"
+            - "**/internal/*/*/service.go"
+          deny:
+            - pkg: "database/sql"
+              desc: "services reach the database through their Store and db.Transactor"
+            - pkg: "net/http"
+              desc: "services do not speak HTTP; surfaces (controlplane, web, mcp) do"
+        domain-boundary:
+          list-mode: lax
+          files:
+            - "**/internal/{agent,apikey,auth,install,legal,org,project,user,webhook}/**"
+            - "!**/*_test.go"
+          deny:
+            - pkg: "altalune.id/oagent/internal/cli"
+              desc: "domains never import the CLI shell"
+            - pkg: "altalune.id/oagent/internal/boot"
+              desc: "domains never import boot"
+            - pkg: "altalune.id/oagent/internal/controlplane"
+              desc: "domains never import controlplane"
+            - pkg: "altalune.id/oagent/internal/web$"
+              desc: "domains import only internal/web/layout"
+            - pkg: "altalune.id/oagent/internal/web/middleware"
+              desc: "domains import only internal/web/layout"
+            - pkg: "altalune.id/oagent/internal/web/console"
+              desc: "domains import only internal/web/layout"
+            - pkg: "altalune.id/oagent/internal/web/assets"
+              desc: "domains import only internal/web/layout"
+            - pkg: "altalune.id/oagent/pg$"
+              desc: "domains reach Postgres through internal/kernel/db, never the connection"
+            - pkg: "altalune.id/oagent/nats$"
+              desc: "domains reach NATS through internal/kernel/queue, never the connection"
+            - pkg: "altalune.id/oagent/redis$"
+              desc: "domains never use the Redis connection; a feature's driver does"
+        kernel-boundary:
+          list-mode: lax
+          files:
+            - "**/internal/kernel/**"
+          deny:
+            - pkg: "altalune.id/oagent/internal/agent"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/apikey"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/auth"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/install"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/legal"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/org"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/project"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/user"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/webhook"
+              desc: "kernel must not import domain packages"
+            - pkg: "altalune.id/oagent/internal/controlplane"
+              desc: "kernel must not import surfaces"
+            - pkg: "altalune.id/oagent/internal/web"
+              desc: "kernel must not import surfaces"
+            - pkg: "altalune.id/oagent/internal/mcp"
+              desc: "kernel must not import surfaces"
+            - pkg: "altalune.id/oagent/internal/cli"
+              desc: "kernel must not import surfaces"
+            - pkg: "altalune.id/oagent/internal/boot"
+              desc: "kernel must not import boot"
+        root-boundary:
+          list-mode: lax
+          files:
+            - "**/apperror/**"
+            - "**/config/**"
+            - "**/httpclient/**"
+            - "**/httpserver/**"
+            - "**/mailer/**"
+            - "**/mcp/**"
+            - "**/migrator/**"
+            - "**/nanoid/**"
+            - "**/nats/**"
+            - "**/password/**"
+            - "**/pg/**"
+            - "**/redis/**"
+            - "**/reqid/**"
+            - "**/scheduler/**"
+            - "**/scope/**"
+            - "**/sealer/**"
+            - "**/slug/**"
+            - "**/telemetry/**"
+            - "**/version/**"
+            - "**/worker/**"
+            - "!**/internal/**"
+          deny:
+            - pkg: "altalune.id/oagent/internal"
+              desc: "root-level shared packages must NOT depend on any internal/ package (import inversion)"
+
+  exclusions:
+    generated: strict
+    warn-unused: false
+    rules:
+      - path: version/version\.go
+        linters:
+          - gochecknoglobals
+      - path: httpclient/safe\.go
+        linters:
+          - gochecknoglobals
+      - path: gen/
+        linters:
+          - all
+      - path: _templ\.go
+        linters:
+          - all
+      - path: cmd/gen-config-example/
+        linters:
+          - lll
+      # A root package's tests may use the shared container helpers.
+      - path: _test\.go
+        text: internal/testutil/(pgtest|natstest|redistest)
+        linters:
+          - depguard
+      - path: _test\.go
+        linters:
+          - lll
+          - errcheck
+          - gochecknoglobals
+          - gocritic
+          - gosec
+          - prealloc
+          - unparam
+
+formatters:
+  enable:
+    - gofmt
+    - gci
+  settings:
+    gci:
+      # stdlib, then third-party, then this module; each group sorted
+      sections:
+        - standard
+        - default
+        - localmodule
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

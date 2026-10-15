@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package org.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "oagent/v1/rules.proto";
+
+option go_package = "altalune.id/oagent/gen/go/org/v1;orgv1";
+
+// OrgService manages organizations. Every id is a public id.
+service OrgService {
+  rpc CreateOrg(CreateOrgRequest) returns (CreateOrgResponse) {
+    option (mcp.v1.tool) = {
+      name: "org_create"
+      description: "Create an organization, minting a slug when one is not supplied."
+      mutation: true
+      destructive: false
+      ui: "app"
+    };
+  }
+  rpc GetOrg(GetOrgRequest) returns (GetOrgResponse) {
+    option (mcp.v1.tool) = {
+      name: "org_get"
+      description: "Get an organization by id."
+      required: ["id"]
+      ui: "app"
+    };
+  }
+  rpc ListOrgs(ListOrgsRequest) returns (ListOrgsResponse) {
+    option (mcp.v1.tool) = {
+      name: "org_list"
+      description: "List organizations, ordered by creation time."
+      ui: "app"
+    };
+  }
+  rpc UpdateOrg(UpdateOrgRequest) returns (UpdateOrgResponse);
+}
+
+message Org {
+  reserved 2;
+  reserved "public_id";
+  string id = 1;
+  string slug = 3;
+  string name = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateOrgRequest {
+  string slug = 1 [
+    (buf.validate.field).string.(oagent.v1.slug) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.name) = true
+  ];
+}
+
+message CreateOrgResponse {
+  Org org = 1;
+}
+
+message GetOrgRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+}
+
+message GetOrgResponse {
+  Org org = 1;
+}
+
+message ListOrgsRequest {}
+
+message ListOrgsResponse {
+  repeated Org orgs = 1;
+}
+
+message UpdateOrgRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.public_id) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.name) = true
+  ];
+  string slug = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(oagent.v1.slug) = true
+  ];
+}
+
+message UpdateOrgResponse {
+  Org org = 1;
+}

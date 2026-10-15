@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "buf/validate/validate.proto";
+import "mcp/v1/annotations.proto";
+
+option go_package = "altalune.id/oagent/gen/go/auth/v1;authv1";
+
+service AuthService {
+  // Whoami describes the credential the request was made with.
+  rpc Whoami(WhoamiRequest) returns (WhoamiResponse) {
+    option (mcp.v1.tool) = {
+      name: "auth_whoami"
+      description: "Who this MCP client acts as: user or key, active org, permissions."
+      ui: "app"
+    };
+  }
+
+  // UpdateProfile sets the signed-in person's name; an empty name falls back to the email in the console.
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse) {}
+
+  // ChangePassword checks the current password, sets a new one and signs out every other session.
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
+
+  // SignOutEverywhere ends every session of the signed-in person, this one included.
+  rpc SignOutEverywhere(SignOutEverywhereRequest) returns (SignOutEverywhereResponse) {}
+}
+
+message WhoamiRequest {}
+
+// Every id is a public id.
+message WhoamiResponse {
+  // local, basic, apikey or system.
+  string source = 1;
+  string user_id = 2;
+  string email = 3;
+  string name = 4;
+  string avatar_url = 5;
+  reserved 6;
+  reserved "key_id";
+  // Set for API keys: the last 4 characters of the key's secret.
+  string key_hint = 13;
+  // Personal keys: the person the key acts for.
+  string owner_id = 7;
+  string active_org_id = 8;
+  string active_org_slug = 9;
+  string active_project_id = 10;
+  // Effective permissions after roles, key scopes and grants are intersected.
+  repeated string permissions = 11;
+  bool operator = 12;
+}
+
+message UpdateProfileRequest {
+  // At most 200 characters; surrounding spaces are trimmed.
+  string name = 1 [
+    (buf.validate.field).cel = {id: "user.name.max_len.200", expression: "this.trim().size() <= 200 ? '' : 'must be at most 200 characters'"}
+  ];
+}
+
+message UpdateProfileResponse {
+  // The person's public id.
+  string user_id = 1;
+  string name = 2;
+}
+
+message ChangePasswordRequest {
+  string current_password = 1 [
+    (buf.validate.field).required = true
+  ];
+  string new_password = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 12,
+    (buf.validate.field).string.max_len = 256
+  ];
+}
+
+message ChangePasswordResponse {}
+
+message SignOutEverywhereRequest {}
+
+message SignOutEverywhereResponse {
+  // Always true: this session ended too, so the client signs in again.
+  bool signed_out = 1;
+}
