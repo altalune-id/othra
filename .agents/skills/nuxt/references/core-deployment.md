@@ -5,7 +5,7 @@ description: Shipping a client-only Nuxt app as static files embedded in a Go bi
 
 # Deployment (static SPA)
 
-othra's console is never deployed as a Nuxt server. `nuxt generate` with `ssr: false` writes a static SPA shell plus assets, and the Go binary embeds and serves them.
+Othra's console is never deployed as a Nuxt server. `nuxt generate` with `ssr: false` writes a static SPA shell plus assets, and the Go binary embeds and serves them.
 
 ## Build
 
@@ -22,11 +22,11 @@ This runs `pnpm --filter @othra/console generate`, empties `internal/web/console
 nuxt generate
 ```
 
-Output goes to `.output/public/`. With `ssr: false`, every route gets the same `index.html` shell and the client router takes over. othra clears the prerender route list (`hooks: { 'prerender:routes': ({ routes }) => routes.clear() }`) so generation does not crawl pages that need a signed-in API.
+Output goes to `.output/public/`. With `ssr: false`, every route gets the same `index.html` shell and the client router takes over. Othra clears the prerender route list (`hooks: { 'prerender:routes': ({ routes }) => routes.clear() }`) so generation does not crawl pages that need a signed-in API.
 
 ## Runtime Config in a Static Build
 
-`runtimeConfig.public` values are baked into `index.html` at generate time; there is no Nuxt server to read `NUXT_PUBLIC_*` at request time. othra leaves them empty (`apiUrl: ''`, `appVersion: ''`) and the Go handler (`internal/web/console/console.go`) rewrites them, the `/_nuxt/` asset prefix and `baseURL` in `index.html` per request. Add a new per-deployment value the same way: an empty default in `nuxt.config.ts` plus a rewrite in the Go handler.
+`runtimeConfig.public` values are baked into `index.html` at generate time; there is no Nuxt server to read `NUXT_PUBLIC_*` at request time. Othra leaves them empty (`apiUrl: ''`, `appVersion: ''`) and the Go handler (`internal/web/console/console.go`) rewrites them, the `/_nuxt/` asset prefix and `baseURL` in `index.html` per request. Add a new per-deployment value the same way: an empty default in `nuxt.config.ts` plus a rewrite in the Go handler.
 
 ## Serving Rules
 
@@ -34,7 +34,7 @@ The Go handler serves an existing file as it is and answers any other console pa
 
 ## Dev Server
 
-`nuxt dev` (port 8280 in othra) proxies `/api` to the Go server on `localhost:5150` through `nitro.devProxy`. That proxy exists only in development.
+`nuxt dev` (port 8280 in Othra) proxies `/api` to the Go server on `localhost:5150` through `nitro.devProxy`. That proxy exists only in development.
 
 <!--
 Source references:

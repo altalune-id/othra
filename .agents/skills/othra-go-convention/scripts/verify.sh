@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs othra's gates in order and says what each failure usually means.
+# Runs Othra's gates in order and says what each failure usually means.
 #
 #   verify.sh                 regenerates code, then runs every unit gate
 #   verify.sh --check         read-only: never writes a file (use during review)

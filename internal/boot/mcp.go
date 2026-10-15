@@ -53,7 +53,7 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *roo
 	if cfg.AppsUI {
 		srv.AddUIResource(rootmcp.UIResource{
 			URI:           mcpui.ResourceURI,
-			Name:          "othra app",
+			Name:          "Othra app",
 			MIMEType:      rootmcp.MIMEApp,
 			Body:          mcpui.Document(),
 			PrefersBorder: new(bool),

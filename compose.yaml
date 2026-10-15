@@ -32,7 +32,7 @@ services:
       retries: 10
 
   # One account per app, like the shared Altalune NATS (docker/nats/nats-server.conf); passwords at least 16 characters.
-  # TODO: run ghcr.io/altalune-id/nats once it has a version tag; it already has the OTHRA account.
+  # TODO: run ghcr.io/altalune-id/nats once it has a version tag and an OTHRA account.
   nats:
     image: nats:2.15.0-alpine3.22
     restart: unless-stopped
@@ -91,7 +91,7 @@ services:
       OTHRA_HTTP_STATE_SECRET: "6f1c0a3e2b9d4f7a8c5e1d0b3a6f9c2e4d7b0a1c3e5f7a9b2d4c6e8f0a1b3c5d"
       OTHRA_SECRETS_ENCRYPTION_KEY: "0d2f4b6a8c1e3f5a7b9d2c4e6f8a0b1c3d5e7f9a2b4c6d8e0f1a3b5c7d9e2f4a"
       OTHRA_MAIL_DRIVER: smtp
-      OTHRA_MAIL_FROM: "othra <noreply@othra.local>"
+      OTHRA_MAIL_FROM: "Othra <noreply@othra.local>"
       OTHRA_MAIL_SMTP_HOST: mailpit
       OTHRA_MAIL_SMTP_PORT: "1025"
       OTHRA_MAIL_SMTP_TLS: "none"

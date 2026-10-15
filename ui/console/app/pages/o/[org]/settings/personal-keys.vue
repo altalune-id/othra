@@ -44,7 +44,7 @@ const labels = computed(() => ({
 
 await personal.load();
 
-useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('apikeys.personal_title')} · othra` });
+useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('apikeys.personal_title')} · Othra` });
 </script>
 
 <template>

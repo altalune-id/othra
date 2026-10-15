@@ -7,7 +7,7 @@ description: Nuxt project folder structure, conventions, and file organization
 
 Nuxt uses a conventions-based directory structure. Understanding it is key to effective development.
 
-> **Directory layout:** The default `srcDir` is `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root. othra's console has no `server/` directory: the Go binary is the backend.
+> **Directory layout:** The default `srcDir` is `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root. Othra's console has no `server/` directory: the Go binary is the backend.
 
 ## Standard Project Structure
 
@@ -58,7 +58,7 @@ export default defineNuxtConfig({
 | `~~` / `@@` | `<rootDir>` (project root) |
 | `#shared` | `<rootDir>/shared` |
 
-Because `~` points at `app/`, reference root-level files with `~~` — e.g. `~~/gen/org/v1/org_pb` for othra's generated Connect code.
+Because `~` points at `app/`, reference root-level files with `~~` — e.g. `~~/gen/org/v1/org_pb` for Othra's generated Connect code.
 
 ### `app/components/`
 
@@ -188,7 +188,7 @@ plugins/
 
 ### `shared/` Directory
 
-Code that must not depend on Vue or Nitro (Nuxt 3.14+). othra shares code with Go-generated sources through its own aliases instead (`@shared/scope`, `@shared/apperror`).
+Code that must not depend on Vue or Nitro (Nuxt 3.14+). Othra shares code with Go-generated sources through its own aliases instead (`@shared/scope`, `@shared/apperror`).
 
 ```
 shared/

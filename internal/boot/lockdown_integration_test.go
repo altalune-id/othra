@@ -216,14 +216,14 @@ func TestLockdown_BasicMode(t *testing.T) {
 
 	rec := l.do(http.MethodGet, "/console/", nil, "")
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"))
+	assert.Equal(t, `Basic realm="Othra"`, rec.Header().Get("WWW-Authenticate"))
 
 	rec = l.do(http.MethodGet, "/console/", http.Header{"Authorization": {basicAuth("ops", "basic-password")}}, "")
 	assert.Equal(t, http.StatusOK, rec.Code)
 
 	rec = l.do(http.MethodPost, "/api/org.v1.OrgService/ListOrgs", connectJSON(), `{}`)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"))
+	assert.Equal(t, `Basic realm="Othra"`, rec.Header().Get("WWW-Authenticate"))
 
 	h := connectJSON()
 	h.Set("Authorization", basicAuth("ops", "basic-password"))

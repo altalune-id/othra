@@ -3,7 +3,7 @@
 SET client_min_messages = warning;
 
 -- Run by provision.sh inside the application database, in one transaction.
--- @@PREFIX@@ is the role prefix and @@SCHEMA@@ the schema othra uses (postgres.schema).
+-- @@PREFIX@@ is the role prefix and @@SCHEMA@@ the schema Othra uses (postgres.schema).
 
 DO $$
 DECLARE

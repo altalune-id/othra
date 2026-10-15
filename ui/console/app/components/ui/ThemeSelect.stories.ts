@@ -9,7 +9,7 @@ const meta = {
     label: 'Theme',
     open: true,
     families: [
-      { id: 'othra', label: 'othra', theme: 'othra-light' },
+      { id: 'othra', label: 'Othra', theme: 'othra-light' },
       { id: 'bumblebee', label: 'Bumblebee', theme: 'bumblebee-light' },
       { id: 'retro', label: 'Retro', theme: 'retro-light' },
       { id: 'coffee', label: 'Coffee', theme: 'coffee-dark' },

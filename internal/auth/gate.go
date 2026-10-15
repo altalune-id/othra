@@ -9,7 +9,7 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-const basicChallenge = `Basic realm="othra"`
+const basicChallenge = `Basic realm="Othra"`
 
 // BasicSignIn checks the shared basic-mode credentials; *Service implements it.
 type BasicSignIn interface {

@@ -46,7 +46,7 @@ func TestService_ChangePassword(t *testing.T) {
 		assert.Equal(t, want, ok, sid)
 	}
 	require.Len(t, f.mail.sent, 1)
-	assert.Equal(t, "Your othra password was changed", f.mail.sent[0].Subject)
+	assert.Equal(t, "Your Othra password was changed", f.mail.sent[0].Subject)
 	assert.Equal(t, "ada@example.com", f.mail.sent[0].To)
 }
 

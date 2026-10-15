@@ -5,7 +5,7 @@ description: Vite production builds for single-page and single-entry bundles, an
 
 # Build
 
-othra builds two kinds of Vite output. Neither is a published npm library, and nothing is server-rendered.
+Othra builds two kinds of Vite output. Neither is a published npm library, and nothing is server-rendered.
 
 ## Single-file SPA (ui/mcp)
 

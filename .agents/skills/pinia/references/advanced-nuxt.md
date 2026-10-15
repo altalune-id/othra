@@ -5,7 +5,7 @@ description: Using Pinia with Nuxt 4 in a client-only SPA (ssr false) - auto-imp
 
 # Nuxt Integration (SPA)
 
-This page covers `@pinia/nuxt` in a Nuxt 4 app built with `ssr: false`, such as othra's `ui/console`. There is no server render, so there is no state serialization or hydration to think about.
+This page covers `@pinia/nuxt` in a Nuxt 4 app built with `ssr: false`, such as Othra's `ui/console`. There is no server render, so there is no state serialization or hydration to think about.
 
 ## Configuration
 
@@ -27,7 +27,7 @@ Since Pinia v4, `@vue/devtools-api` is a required peer dependency of `pinia`.
 - `usePinia()` - get the pinia instance
 - `acceptHMRUpdate()` - HMR support
 
-The module can also auto-import every store in `app/stores/`. othra turns directory scanning off (`imports: { scan: false }` in `nuxt.config.ts`), so stores are imported explicitly where they are used:
+The module can also auto-import every store in `app/stores/`. Othra turns directory scanning off (`imports: { scan: false }` in `nuxt.config.ts`), so stores are imported explicitly where they are used:
 
 ```vue
 <script setup lang="ts">

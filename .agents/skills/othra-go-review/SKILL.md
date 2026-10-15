@@ -1,14 +1,14 @@
 ---
 name: othra-go-review
-description: Use when reviewing a change in othra (altalune.id/othra) — a checkpoint during a plan, a re-review after fixes, a final pass before the user commits, or a pull request — or when asked whether code follows othra's conventions (public ids, permission table, reach, protovalidate rules, unit of work, layering, comment discipline) or is maintainable and free of duplication.
+description: Use when reviewing a change in Othra (altalune.id/othra) — a checkpoint during a plan, a re-review after fixes, a final pass before the user commits, or a pull request — or when asked whether code follows Othra's conventions (public ids, permission table, reach, protovalidate rules, unit of work, layering, comment discipline) or is maintainable and free of duplication.
 license: Proprietary
 metadata:
   pairs-with: othra-go-convention (how to build it); this skill checks it
 ---
 
-# Reviewing othra changes
+# Reviewing Othra changes
 
-A review answers two questions about every change: **does it follow othra's conventions**, and **when it changes
+A review answers two questions about every change: **does it follow Othra's conventions**, and **when it changes
 next time, is that one edit in one place?** Findings are reported and ranked; nothing is fixed until the user picks.
 
 ## 1. Pick the scope

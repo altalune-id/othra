@@ -5,7 +5,7 @@ description: useState composable and shared state in Nuxt, with Pinia for domain
 
 # State Management
 
-Nuxt provides `useState` for keyed reactive state shared across components. In othra, small UI state (such as the theme) uses `useState`; domain data lives in Pinia setup stores.
+Nuxt provides `useState` for keyed reactive state shared across components. In Othra, small UI state (such as the theme) uses `useState`; domain data lives in Pinia setup stores.
 
 ## useState
 
@@ -149,7 +149,7 @@ export function useDefaultLocale(fallback = 'en-US') {
 
 ## State Serialization
 
-With SSR, `useState` values are serialized to JSON. othra has no SSR, but keep values plain anyway; avoid:
+With SSR, `useState` values are serialized to JSON. Othra has no SSR, but keep values plain anyway; avoid:
 
 - Functions
 - Classes

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DefaultURL is the hosted othra API used when nothing else is configured.
+// DefaultURL is the hosted Othra API used when nothing else is configured.
 const DefaultURL = "https://othra.altalune.id"
 
 // NOTE: precedence is --url > OTHRA_URL > the profile's URL > config http.baseURL > DefaultURL.

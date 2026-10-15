@@ -1,6 +1,6 @@
 # Add a webhook event
 
-Use this when a tenant's endpoints should hear that something happened in a domain. A webhook payload is a public contract: receivers parse it, so it only ever grows. Work that only othra itself needs done later is a [worker](worker.md) or a queue job, not an event.
+Use this when a tenant's endpoints should hear that something happened in a domain. A webhook payload is a public contract: receivers parse it, so it only ever grows. Work that only Othra itself needs done later is a [worker](worker.md) or a queue job, not an event.
 
 How it flows: the domain service saves its change and calls its event port **in the same unit of work**. `webhook.Service.Enqueue` finds the active endpoints subscribed to the type, builds one signed envelope and writes one `outbox_entries` row per endpoint in that transaction. The `outbox.dispatch` worker later claims due rows per org and `webhook.Deliverer` POSTs them.
 

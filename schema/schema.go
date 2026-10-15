@@ -1,4 +1,4 @@
-// Package schema embeds the othra migrations and wires them to migrator.
+// Package schema embeds the Othra migrations and wires them to migrator.
 package schema
 
 import (

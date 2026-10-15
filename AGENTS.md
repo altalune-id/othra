@@ -1,8 +1,8 @@
 # AGENTS.md
 
-Rules for anyone changing othra, people and coding agents alike. `CLAUDE.md` is a link to this file.
+Rules for anyone changing Othra, people and coding agents alike. `CLAUDE.md` is a link to this file.
 
-othra is one Go binary (module `altalune.id/othra`) that serves an API (Connect RPC), an MCP server, a CLI and a web console. The UI lives in the pnpm workspace `ui/*` and is embedded into the binary.
+Othra is one Go binary (module `altalune.id/othra`) that serves an API (Connect RPC), an MCP server, a CLI and a web console. The UI lives in the pnpm workspace `ui/*` and is embedded into the binary.
 
 Setup: see [README.md](README.md). Architecture: [docs/architecture](docs/architecture/README.md).
 
@@ -39,7 +39,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 
 - Import direction: `cmd` → `internal/cli` → `internal/boot` → `internal/controlplane` → domains → `internal/kernel/*`.
 - Domains never import `internal/cli`, `internal/boot`, `internal/controlplane` or `internal/web` (only `internal/web/layout`).
-- Root packages (`apperror`, `config`, `mailer`, `worker` and others) never import `internal/`. The connections are root packages too, generic libraries with no othra knowledge: `pg`, `nats`, `redis` open, health-check and close one backend each, return the real client (`*sql.DB`, `*nats.Conn`, the go-redis client) and never wrap its API.
+- Root packages (`apperror`, `config`, `mailer`, `worker` and others) never import `internal/`. The connections are root packages too, generic libraries with no Othra knowledge: `pg`, `nats`, `redis` open, health-check and close one backend each, return the real client (`*sql.DB`, `*nats.Conn`, the go-redis client) and never wrap its API.
 - Features that services use live in `internal/kernel/<feature>`. A feature that may have several backends picks one with a `driver` key and keeps each in a sub-package (`queue/nats`, `ratelimit/memory`, `ratelimit/redis`). A feature that must commit with domain data (`outbox`, `mailqueue`, `session`) keeps its Postgres store in-package.
 - Kernel features and connections never import `config`: one that needs settings takes its own `Config` (in its `config.go`), and boot maps the app config into it. Boot opens a connection only when a feature selects it.
 - Only `pg`, `internal/kernel/db`, `migrator` and `pgtest` import the Postgres driver; domains use `db.IsUniqueViolation`, `db.IsForeignKeyViolation` and `db.ViolatedConstraint`. Domains never import `pg`, `nats` or `redis` (depguard).

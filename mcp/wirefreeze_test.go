@@ -88,7 +88,7 @@ func wireFreezeUIServer(t *testing.T) *mcp.Server {
 	srv := wireFreezeServer(t, mcp.WithUI(true))
 	srv.AddUIResource(mcp.UIResource{
 		URI:           "ui://othra/app",
-		Name:          "othra app",
+		Name:          "Othra app",
 		Body:          testUIBody,
 		PrefersBorder: new(bool),
 	})

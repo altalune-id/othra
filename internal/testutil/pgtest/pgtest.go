@@ -93,7 +93,7 @@ func (h *Handle) OpenDB(t *testing.T) *sql.DB {
 	return sqlDB
 }
 
-// Migrated returns a database whose own schema has every othra migration applied, and that schema's name.
+// Migrated returns a database whose own schema has every Othra migration applied, and that schema's name.
 func Migrated(t *testing.T) (sqlDB *sql.DB, schemaName string) {
 	t.Helper()
 	h := New(t)

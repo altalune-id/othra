@@ -65,7 +65,7 @@ func TestOpenAPI_BasicAuth(t *testing.T) {
 	require.NoError(t, err)
 	_ = resp.Body.Close()
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-	assert.Contains(t, resp.Header.Get("WWW-Authenticate"), `Basic realm="othra openapi"`)
+	assert.Contains(t, resp.Header.Get("WWW-Authenticate"), `Basic realm="Othra OpenAPI"`)
 
 	for _, creds := range []string{basicHeader("docs", "s3cret")} {
 		req, _ := http.NewRequest(http.MethodGet, ts.URL+"/api/openapi.yaml", nil)

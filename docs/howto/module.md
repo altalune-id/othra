@@ -1,6 +1,6 @@
 # Add a domain module
 
-Use this when othra needs a new bounded context: a new aggregate with its own table, rules and surfaces, in a new package under `internal/`. To add behaviour to a domain that already exists, use [service-method.md](service-method.md) and [store-method.md](store-method.md). A second aggregate that belongs to an existing context is a subdomain in a child directory, like `internal/org/member` and `internal/org/invite`.
+Use this when Othra needs a new bounded context: a new aggregate with its own table, rules and surfaces, in a new package under `internal/`. To add behaviour to a domain that already exists, use [service-method.md](service-method.md) and [store-method.md](store-method.md). A second aggregate that belongs to an existing context is a subdomain in a child directory, like `internal/org/member` and `internal/org/invite`.
 
 ## Plan
 

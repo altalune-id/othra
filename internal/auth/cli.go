@@ -53,7 +53,7 @@ type SessionClientFn func(cmd *cobra.Command, url, session string) (authv1connec
 func NewCmd(profiles CLIProfiles, clientFn ClientFn, sessionClientFn SessionClientFn) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "auth",
-		Short:   "Sign in to an othra server (login, logout, whoami)",
+		Short:   "Sign in to an Othra server (login, logout, whoami)",
 		GroupID: "auth",
 	}
 	cmd.AddCommand(

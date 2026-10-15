@@ -1,6 +1,6 @@
 ---
 title: Privacy Policy
-updated: 2026-10-11
+updated: 2026-10-15
 ---
 
 This policy explains what the operator of this instance collects, why, and what they do with it.
@@ -8,7 +8,7 @@ This policy explains what the operator of this instance collects, why, and what 
 ## 1. What is collected
 
 - Account details you provide, such as your email address and display name.
-- Content you enter into the Service, such as projects, agents and webhooks.
+- Content you enter into the Service, such as projects and webhooks.
 - Basic technical logs (timestamps, request paths, source IP) needed to operate and secure the instance.
 
 ## 2. Why it is collected

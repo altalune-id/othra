@@ -113,7 +113,7 @@ func TestService_CreateQueuesTheLinkAndStoresOnlyTheHash(t *testing.T) {
 	m := f.mail.sent[0]
 	assert.Equal(t, "bob@x.io", m.To)
 	assert.Equal(t, "othra@example.com", m.From)
-	assert.Equal(t, "Olga invited you to Acme Corp on othra", m.Subject)
+	assert.Equal(t, "Olga invited you to Acme Corp on Othra", m.Subject)
 	assert.Contains(t, m.TextBody, c.Link)
 	assert.Contains(t, m.HTMLBody, c.Link)
 	assert.Contains(t, m.TextBody, "as Admin")

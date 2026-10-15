@@ -9,7 +9,7 @@ import (
 func newVersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "version",
-		Short:   "Print othra version info",
+		Short:   "Print Othra version info",
 		GroupID: "meta",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {

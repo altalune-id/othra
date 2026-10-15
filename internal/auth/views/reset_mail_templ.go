@@ -44,7 +44,7 @@ func ResetHTML(link string, expires string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<p style=\"margin:0 0 12px;\">Someone asked to reset the password of your othra account.</p><p style=\"margin:0 0 20px;\"><a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<p style=\"margin:0 0 12px;\">Someone asked to reset the password of your Othra account.</p><p style=\"margin:0 0 20px;\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -131,7 +131,7 @@ func ChangedHTML(signIn string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<p style=\"margin:0 0 12px;\">The password of your othra account was changed, and you were signed out of your other sessions.</p><p style=\"margin:0 0 20px;\"><a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<p style=\"margin:0 0 12px;\">The password of your Othra account was changed, and you were signed out of your other sessions.</p><p style=\"margin:0 0 20px;\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

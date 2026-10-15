@@ -43,7 +43,7 @@ onMounted(async () => {
 <template>
   <component :is="view" v-if="state === 'ready'" :data="data" />
   <main v-else class="card">
-    <header><span class="dot" /><strong>othra</strong></header>
+    <header><span class="dot" /><strong>Othra</strong></header>
     <p v-if="state === 'connecting'" class="muted">
       Connecting…
     </p>

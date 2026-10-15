@@ -1,4 +1,4 @@
-// Command othra builds, manages and integrates custom AI agents. See `othra --help`.
+// Command othra runs the Othra identity provider. See `othra --help`.
 package main
 
 import (

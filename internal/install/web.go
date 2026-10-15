@@ -167,7 +167,7 @@ func (h *Web) retry(req Request, msg string) views.InstallData {
 
 func (h *Web) render(w http.ResponseWriter, r *http.Request, status int, v views.InstallData) {
 	v.Consent = h.o.Consent
-	h.o.Kit.Render(w, r, status, views.Install(h.o.Kit.Layout("Set up othra"), v))
+	h.o.Kit.Render(w, r, status, views.Install(h.o.Kit.Layout("Set up Othra"), v))
 }
 
 func (h *Web) locked(w http.ResponseWriter, r *http.Request) {

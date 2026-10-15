@@ -102,7 +102,7 @@ Output is created in `.output/` directory.
 npx nuxt generate
 ```
 
-Creates static files for static hosting. othra uses this (`pnpm ui:console` or `make ui-console`); see [core-deployment](core-deployment.md).
+Creates static files for static hosting. Othra uses this (`pnpm ui:console` or `make ui-console`); see [core-deployment](core-deployment.md).
 
 ### Preview Production Build
 

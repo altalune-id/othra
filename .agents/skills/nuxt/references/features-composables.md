@@ -197,7 +197,7 @@ const price = formatCurrency(99.99)
 
 ## Shared Utilities (`shared/`)
 
-Code that must not import Vue or Nitro (Nuxt 3.14+). Only `shared/utils/` and `shared/types/` top-level files are auto-imported. othra does not use `shared/`; Go-shared code comes in through the `@shared/*` aliases.
+Code that must not import Vue or Nitro (Nuxt 3.14+). Only `shared/utils/` and `shared/types/` top-level files are auto-imported. Othra does not use `shared/`; Go-shared code comes in through the `@shared/*` aliases.
 
 ```ts
 // shared/utils/capitalize.ts

@@ -246,7 +246,7 @@ func topSegment(yaml string) string {
 }
 
 func envHeader() string {
-	return `# othra — auto-generated from config struct tags.
+	return `# Othra — auto-generated from config struct tags.
 # DO NOT edit by hand. Run ` + "`go run ./cmd/gen-config-example`" + ` to regenerate.
 #
 # Awareness markers on each field (in [brackets] above the env var):
@@ -295,7 +295,7 @@ func envRuntimePreamble() string {
 }
 
 func yamlHeader() string {
-	return `# othra — auto-generated from config struct tags.
+	return `# Othra — auto-generated from config struct tags.
 # DO NOT edit by hand. Run ` + "`go run ./cmd/gen-config-example --format=yaml`" + ` to regenerate.
 #
 # Copy to config.yml, uncomment what you need to set, and the app picks it up.

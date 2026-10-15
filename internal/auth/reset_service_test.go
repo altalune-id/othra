@@ -135,7 +135,7 @@ func newResetFixture(t *testing.T) *resetFixture {
 		now: time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC)}
 	f.svc = NewResets(ResetDeps{
 		Store: f.store, Transactor: fakes.Transactor{}, Users: resetUsers{f.users}, Passwords: f.passwords,
-		Sessions: f.sessions, Mail: f.mail, From: "othra <noreply@example.com>", BaseURL: "https://othra.example.com/app",
+		Sessions: f.sessions, Mail: f.mail, From: "Othra <noreply@example.com>", BaseURL: "https://othra.example.com/app",
 	}).WithClock(func() time.Time { return f.now })
 	return f
 }
@@ -156,8 +156,8 @@ func TestResets_RequestKnownEmailQueuesOneLink(t *testing.T) {
 	require.Len(t, f.mail.sent, 1)
 	m := f.mail.sent[0]
 	assert.Equal(t, "ada@example.com", m.To)
-	assert.Equal(t, "othra <noreply@example.com>", m.From)
-	assert.Equal(t, "Reset your othra password", m.Subject)
+	assert.Equal(t, "Othra <noreply@example.com>", m.From)
+	assert.Equal(t, "Reset your Othra password", m.Subject)
 	raw := linkToken(t, m)
 	assert.Contains(t, m.HTMLBody, "/reset-password/"+raw)
 	assert.Contains(t, m.TextBody, "13 October 2026, 10:00 UTC")
@@ -282,7 +282,7 @@ func TestResets_CompleteSetsThePasswordEndsEverySessionAndTellsThePerson(t *test
 	require.Len(t, f.mail.sent, 2)
 	changed := f.mail.sent[1]
 	assert.Equal(t, "ada@example.com", changed.To)
-	assert.Equal(t, "Your othra password was changed", changed.Subject)
+	assert.Equal(t, "Your Othra password was changed", changed.Subject)
 	assert.Contains(t, changed.TextBody, "https://othra.example.com/app/login")
 
 	err = f.svc.Complete(ctx, r.PublicID, "another new passphrase")

@@ -1,4 +1,4 @@
-// Package apiclient is the Connect client the CLI uses to reach a remote othra; it imports no domain package.
+// Package apiclient is the Connect client the CLI uses to reach a remote Othra; it imports no domain package.
 package apiclient
 
 import (
@@ -29,7 +29,7 @@ type Credential struct {
 	Session string
 }
 
-// Client bundles the Connect clients the CLI uses to reach a remote othra.
+// Client bundles the Connect clients the CLI uses to reach a remote Othra.
 type Client struct {
 	Org      orgv1connect.OrgServiceClient
 	Projects projectv1connect.ProjectServiceClient

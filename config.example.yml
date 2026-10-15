@@ -19,6 +19,6 @@ mail:
 #   baseURL: https://othra.example.com
 # mail:
 #   driver: smtp            # or resend, with resend.apiKey
-#   from: othra <noreply@example.com>
+#   from: Othra <noreply@example.com>
 #   smtp:
 #     host: ""

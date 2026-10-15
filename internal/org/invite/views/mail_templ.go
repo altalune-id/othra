@@ -70,7 +70,7 @@ func InviteHTML(org string, inviter string, role string, link string, expires st
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " on othra as ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " on Othra as ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

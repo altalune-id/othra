@@ -73,7 +73,7 @@ func NewRootCmd(bootServer ServerBootFn, bootClient ClientBootFn) *cobra.Command
 
 	root := &cobra.Command{
 		Use:           "othra",
-		Short:         "othra — build, manage and integrate custom AI agents",
+		Short:         "othra — run and manage the Othra identity provider",
 		Version:       version.String(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -83,7 +83,7 @@ func NewRootCmd(bootServer ServerBootFn, bootClient ClientBootFn) *cobra.Command
 	p.StringVarP(&configPath, "config", "c", "", "config file (yaml); default search: $XDG_CONFIG_HOME/othra, /etc/othra, cwd")
 	p.StringVar(&logLevel, "log-level", "info", "log level: debug|info|warn|error")
 	p.StringVar(&logFormat, "log-format", "text", "log format: json|text")
-	p.String("url", "", "remote othra base URL (also: OTHRA_URL)")
+	p.String("url", "", "remote Othra base URL (also: OTHRA_URL)")
 	p.String("token", "", "bearer token (also: OTHRA_TOKEN)")
 	p.String("token-file", "", "read the bearer token from a file")
 	p.String("profile", "", "signed-in profile to use (also: OTHRA_PROFILE; default \"default\")")

@@ -18,7 +18,7 @@ const stats = computed<StatItem[]>(() => [
   { label: t('stat.members'), value: 1 },
 ]);
 
-useHead({ title: () => `${org.value?.name ?? t('org.title')} · othra` });
+useHead({ title: () => `${org.value?.name ?? t('org.title')} · Othra` });
 </script>
 
 <template>

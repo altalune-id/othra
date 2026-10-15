@@ -13,7 +13,7 @@ Data fetching patterns for a client-only (`ssr: false`) Nuxt app.
 
 | Scenario | Use |
 |----------|-----|
-| othra API (Connect RPC) | Store action calling `useNuxtApp().$xxxClient` |
+| Othra API (Connect RPC) | Store action calling `useNuxtApp().$xxxClient` |
 | Component initial data (non-RPC) | `useFetch` or `useAsyncData` |
 | User interactions (clicks, forms) | `$fetch` |
 | Third-party SDK/API | `useAsyncData` with custom function |

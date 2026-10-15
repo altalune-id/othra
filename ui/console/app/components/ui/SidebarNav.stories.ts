@@ -29,6 +29,6 @@ export const WithFooter: Story = {
   render: args => ({
     components: { SidebarNav },
     setup: () => ({ args }),
-    template: '<div class="flex h-64"><SidebarNav v-bind="args"><template #footer>othra v0.1.0-dev</template></SidebarNav></div>',
+    template: '<div class="flex h-64"><SidebarNav v-bind="args"><template #footer>Othra v0.1.0-dev</template></SidebarNav></div>',
   }),
 };

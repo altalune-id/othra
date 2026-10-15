@@ -1,13 +1,13 @@
-# othra
+# Othra
 
-othra is a self-hosted platform for AI agents. It is one Go binary that serves:
+Othra is Altalune's identity provider, on its way to a full OAuth 2.1 / OpenID Connect authorization server with multi-tenant orgs and projects. It is one Go binary that serves:
 
 - an API (Connect RPC)
 - an MCP server
 - a CLI
 - a web console
 
-It already covers orgs, projects, members, API keys and webhooks. The agent runtime and most product features are still to come.
+Today it is the platform base: orgs, projects, members, invites, API keys, webhooks and an admin console, with an API, a CLI and MCP admin tools. Sign-in for apps (OAuth clients, tokens, hosted login) is not built yet.
 
 ## Requirements
 
@@ -78,7 +78,7 @@ MIG_PW=gen SVC_PW=gen scripts/db/provision.sh
 
 ## Run with Docker
 
-You don't need Go or Node to run othra. The image holds the same binary with the UI embedded.
+You don't need Go or Node to run Othra. The image holds the same binary with the UI embedded.
 
 ```sh
 docker build -t othra .
@@ -96,7 +96,7 @@ docker run --rm -p 5150:5150 \
 ### Queue (NATS)
 
 The queue is off unless `queue.enabled` is true; `queue.driver` picks what carries it (`nats`, the only driver).
-`nats.*` is only the connection, and othra opens it only when a feature uses it. othra connects as user `othra` in
+`nats.*` is only the connection, and Othra opens it only when a feature uses it. Othra connects as user `othra` in
 its own account, `OTHRA`, as on the shared Altalune NATS ([altalune-id/nats](https://github.com/altalune-id/nats)).
 Every app uses the same stream names, so the account is what keeps apps apart: never share one between apps.
 
@@ -110,7 +110,7 @@ OTHRA_NATS_PASSWORD=...   # the server's OTHRA_NATS_PASSWORD, at least 16 charac
 The credentials may also go in the URL (`nats://othra:<password>@host:4222`). `nats.token` is for a NATS server
 without accounts; set it or the user and password, not both. Deploy the server on private networking only, with a
 volume at `/data` (see the shared server's README). Locally, `docker compose up -d` runs NATS with the accounts in
-`docker/nats/nats-server.conf` (`OTHRA` and `OTHER`, dev passwords of 16 characters or more). To run othra on
+`docker/nats/nats-server.conf` (`OTHRA` and `OTHER`, dev passwords of 16 characters or more). To run Othra on
 the host against it: `OTHRA_NATS_URL=nats://localhost:4222`, `OTHRA_NATS_USER=othra` and
 `OTHRA_NATS_PASSWORD=othra-dev-nats-password` (the compose default).
 

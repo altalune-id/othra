@@ -1,9 +1,9 @@
 ---
 title: Terms of Service
-updated: 2026-10-11
+updated: 2026-10-15
 ---
 
-By using this oagent instance ("the Service"), you agree to the terms below.
+By using this Othra instance ("the Service"), you agree to the terms below.
 
 ## 1. Acceptance
 

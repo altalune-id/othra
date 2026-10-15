@@ -1,6 +1,6 @@
 ---
 name: vitest
-description: Vitest 5 unit testing for othra's ui/* packages. Use when writing or fixing a *.test.ts next to a console store, composable, component helper or lib file, mocking a Connect client or Nuxt global with vi, raising coverage to meet the ui/console thresholds, or editing a vitest.config.ts or the shared @othra/vitest-config presets.
+description: Vitest 5 unit testing for Othra's ui/* packages. Use when writing or fixing a *.test.ts next to a console store, composable, component helper or lib file, mocking a Connect client or Nuxt global with vi, raising coverage to meet the ui/console thresholds, or editing a vitest.config.ts or the shared @othra/vitest-config presets.
 metadata:
   version: "2026.9.25"
   source: Adapted from antfu/skills@feb0f3a (MIT), generated from https://github.com/vitest-dev/vitest
@@ -8,7 +8,7 @@ metadata:
 
 # Vitest
 
-## In othra
+## In Othra
 
 - Vitest 5 and `@vitest/coverage-v8` come from the workspace `catalog:`; every package extends a preset from `ui/vitest-config` (`node` for pure TS, `browser` for happy-dom).
 - `globals: false`: import `describe`, `it`, `expect`, `vi`, `beforeEach` from `'vitest'` in every file.

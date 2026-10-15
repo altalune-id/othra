@@ -13,7 +13,7 @@ func newServeCmd(bootServer ServerBootFn) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "serve",
-		Short:   "Run the othra HTTP server and workers",
+		Short:   "Run the Othra HTTP server and workers",
 		GroupID: "runtime",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {

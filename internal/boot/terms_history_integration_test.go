@@ -43,7 +43,7 @@ func TestTermsHistory_RecordsEveryAcceptance(t *testing.T) {
 	}
 	require.NoError(t, rows.Err())
 	assert.Equal(t, [][4]string{
-		{"join", "terms", "2026-10-11", "privacy"},
-		{"welcome", "terms", "2026-10-11", "privacy"},
+		{"join", "terms", "2026-10-15", "privacy"},
+		{"welcome", "terms", "2026-10-15", "privacy"},
 	}, got)
 }

@@ -227,9 +227,9 @@ mail queue and the sessions keep their tables there. `postgres.*` is the connect
 
 ## Redis
 
-othra has one Redis connection, `redis.*`, and opens it **only when a feature selects it**. Each
+Othra has one Redis connection, `redis.*`, and opens it **only when a feature selects it**. Each
 feature picks its driver in its own block; today only `rateLimit.driver: redis` does (with a rate
-limit group on). With the default config othra never connects to Redis; a `redis.url` that no
+limit group on). With the default config Othra never connects to Redis; a `redis.url` that no
 feature uses is ignored with one INFO line.
 
 - **Config:** `redis.url` (secret; `redis://[user:password@]host:port[/db]`, or `rediss://` for
@@ -255,15 +255,15 @@ feature uses is ignored with one INFO line.
   rate limits, `cache:` later). On a Redis shared by several deployments or environments, give
   each its own prefix (`othra:prod:`, `othra:staging:`) or its own database number in the URL
   (`redis://host:6379/2`). Never share a prefix between deployments that should not share limits.
-  othra never runs `FLUSHDB`, `KEYS` or `SCAN` over the instance.
+  Othra never runs `FLUSHDB`, `KEYS` or `SCAN` over the instance.
 - **Cache (later):** a cache gets its own `cache.*` block with `cache.store: memory | redis`,
   reuses this connection and puts its keys under `<prefix>cache:`.
 
 ## NATS
 
-othra has one NATS connection, `nats.*`, and opens it **only when a feature selects it**. Today
+Othra has one NATS connection, `nats.*`, and opens it **only when a feature selects it**. Today
 only the queue does (`queue.enabled: true` with `queue.driver: nats`, the default driver). With the
-default config othra never connects to NATS; a `nats.url` that no feature uses is ignored with one
+default config Othra never connects to NATS; a `nats.url` that no feature uses is ignored with one
 INFO line.
 
 - **Config:** `nats.url` (secret; `nats://[user:password@]host:4222`, several comma-separated, or
@@ -308,7 +308,7 @@ listener (`k.Queue.Listener`, which starts at the stream's next message) wheneve
 
 ## Rate limits
 
-othra's own rate limiter is **off by default**: many deployments limit at the edge (a CDN, nginx,
+Othra's own rate limiter is **off by default**: many deployments limit at the edge (a CDN, nginx,
 an API gateway). Each group has its own switch and all groups share one store. The only group now is
 `auth` (`rateLimit.auth.enabled`). With every group off, no store and no janitor exist and every
 group gets `ratelimit.Disabled()`, which allows every call.
@@ -343,12 +343,12 @@ group gets `ratelimit.Disabled()`, which allows every call.
   right. Each trusted proxy appends the address it saw, so entries further left are whatever the
   client sent. IPv6 is keyed by its /64. If the header has fewer than n entries, or that entry is
   not an IP, `RemoteAddr` is used, never an entry further left.
-  - `0` (default): no proxy, othra faces the internet.
+  - `0` (default): no proxy, Othra faces the internet.
   - `1`: one proxy, e.g. Cloudflare only, or nginx only (`proxy_add_x_forwarded_for`).
   - `2`: two proxies, e.g. Cloudflare in front of nginx.
 
   **The origin must accept traffic only from the trusted proxies** (a firewall, or Cloudflare's
-  IP ranges only); a client that reaches othra directly can write any `X-Forwarded-For` it likes.
+  IP ranges only); a client that reaches Othra directly can write any `X-Forwarded-For` it likes.
   With the setting too low behind proxies, every client shares a proxy IP, so the per-IP limits
   (60 sign-ins per 15 minutes) apply to the whole site.
 

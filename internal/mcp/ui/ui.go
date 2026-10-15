@@ -15,8 +15,8 @@ var assets embed.FS
 
 const fallback = `<!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8" /><title>othra</title></head>
-  <body><p>othra MCP app not built. Run: make ui-mcp</p></body>
+  <head><meta charset="utf-8" /><title>Othra</title></head>
+  <body><p>Othra MCP app not built. Run: make ui-mcp</p></body>
 </html>
 `
 

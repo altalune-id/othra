@@ -53,7 +53,7 @@ async function save() {
   }
 }
 
-useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('settings.title')} · othra` });
+useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('settings.title')} · Othra` });
 </script>
 
 <template>

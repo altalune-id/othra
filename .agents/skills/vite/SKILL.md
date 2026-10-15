@@ -1,6 +1,6 @@
 ---
 name: vite
-description: Vite 8 (Rolldown) config, plugin API, asset handling and builds for othra's ui/* packages. Use when editing ui/mcp/vite.config.ts or ui/web/vite.config.ts, adding a Vite plugin, using import.meta.glob/import.meta.env or ?raw/?url imports, changing build output that the Go binary embeds, or migrating config from Rollup/esbuild options to Rolldown/Oxc.
+description: Vite 8 (Rolldown) config, plugin API, asset handling and builds for Othra's ui/* packages. Use when editing ui/mcp/vite.config.ts or ui/web/vite.config.ts, adding a Vite plugin, using import.meta.glob/import.meta.env or ?raw/?url imports, changing build output that the Go binary embeds, or migrating config from Rollup/esbuild options to Rolldown/Oxc.
 metadata:
   version: "2026.9.25"
   source: Adapted from antfu/skills@feb0f3a (MIT), generated from https://github.com/vitejs/vite
@@ -8,7 +8,7 @@ metadata:
 
 # Vite
 
-## In othra
+## In Othra
 
 - Vite 8 (Rolldown + Oxc) comes from the pnpm 10 workspace `catalog:` in `pnpm-workspace.yaml`; reference it as `"vite": "catalog:"`, never a pinned copy per package.
 - `ui/mcp` is a Vite + Vue single-file SPA (`vite-plugin-singlefile`, `unplugin-auto-import` for Vue APIs); `pnpm ui:mcp` builds it.
@@ -39,7 +39,7 @@ Vite is a frontend build tool with a fast dev server (native ESM + HMR) and opti
 
 | Topic | Description | Reference |
 |-------|-------------|-----------|
-| Build | othra's single-file SPA and single-entry builds, JavaScript API | [build](references/build.md) |
+| Build | Othra's single-file SPA and single-entry builds, JavaScript API | [build](references/build.md) |
 
 ## Advanced
 
@@ -57,7 +57,7 @@ vite build        # Production build
 vite preview      # Preview production build
 ```
 
-In othra run them through the package scripts, for example `pnpm --filter @othra/mcp-ui build`.
+In Othra run them through the package scripts, for example `pnpm --filter @othra/mcp-ui build`.
 
 ### Common Config
 

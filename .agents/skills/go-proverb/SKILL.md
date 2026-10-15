@@ -141,7 +141,7 @@ and programmer bugs, and do not let a panic cross a package boundary.
 
 In review, flag: `panic` on bad input, missing config at run time or a failed request.
 
-## Applying them in othra
+## Applying them in Othra
 
 - **Small interfaces at the consumer (4).** Each domain declares the ports it
   needs in its own `ports.go` (for example `internal/agent/ports.go`). Keep

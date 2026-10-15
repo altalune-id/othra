@@ -19,7 +19,7 @@ type NATSConfig struct {
 	ConnectTimeout time.Duration `yaml:"connectTimeout" mapstructure:"connectTimeout" validate:"gte=0"`
 }
 
-// NATSFeatures lists the settings that select NATS; empty means othra never connects to it.
+// NATSFeatures lists the settings that select NATS; empty means Othra never connects to it.
 func (c *Config) NATSFeatures() []string {
 	var out []string
 	if c.Queue.Enabled && c.Queue.Driver == QueueDriverNATS {

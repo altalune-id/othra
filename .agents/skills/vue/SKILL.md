@@ -1,6 +1,6 @@
 ---
 name: vue
-description: Vue 3.5 Composition API with <script setup lang="ts"> for othra's ui/console and ui/mcp. Use when writing or changing a .vue component or composable, declaring props/emits/v-model with defineProps/defineEmits/defineModel, choosing ref vs computed vs watch, or using Transition/Teleport/KeepAlive/custom directives.
+description: Vue 3.5 Composition API with <script setup lang="ts"> for Othra's ui/console and ui/mcp. Use when writing or changing a .vue component or composable, declaring props/emits/v-model with defineProps/defineEmits/defineModel, choosing ref vs computed vs watch, or using Transition/Teleport/KeepAlive/custom directives.
 metadata:
   version: "2026.9.25"
   source: Adapted from antfu/skills@feb0f3a (MIT), generated from https://github.com/vuejs/docs (CC BY 4.0)
@@ -8,7 +8,7 @@ metadata:
 
 # Vue
 
-## In othra
+## In Othra
 
 - Vue 3.5 (from the workspace `catalog:`) in `ui/console` (Nuxt 4 SPA, `ssr: false`) and `ui/mcp` (Vite single-file app). No SSR anywhere.
 - Vue APIs (`ref`, `computed`, `watch`, ...) are auto-imported in both apps; shared `components/ui/*` files import them from `'vue'` explicitly. Follow the neighbouring files.
@@ -16,7 +16,7 @@ metadata:
 - Styling is Tailwind CSS 4 + daisyUI 5 classes in the template (`btn`, `dropdown`, `menu`); not UnoCSS. Visible text comes from `@nuxtjs/i18n` (`useI18n().t`), never hard-coded.
 - Shared building blocks live in `app/components/ui/` and have Storybook 10 stories; reuse them before writing new markup.
 - Show and pass public ids, never UUIDs; slugs only in route paths.
-- Examples in `references/` use upstream style (no semicolons); write new code in othra's lint style (see the eslint-config skill). See docs/howto/console-page.md.
+- Examples in `references/` use upstream style (no semicolons); write new code in Othra's lint style (see the eslint-config skill). See docs/howto/console-page.md.
 
 > Based on Vue 3.5, generated at 2026-09-25. Always use Composition API with `<script setup lang="ts">`.
 
@@ -45,7 +45,7 @@ metadata:
 
 ### Component Template
 
-Written in othra's lint style (semicolons, commas in inline object types, braces on their own lines):
+Written in Othra's lint style (semicolons, commas in inline object types, braces on their own lines):
 
 ```vue
 <script setup lang="ts">

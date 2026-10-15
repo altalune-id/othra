@@ -1,6 +1,6 @@
 # Architecture
 
-othra is a self-hosted platform for AI agents. One Go binary (`othra`, module `altalune.id/othra`) serves every surface from one set of domain services and one Postgres database.
+Othra is Altalune's OAuth 2.1 and OpenID Connect identity provider. This milestone is the platform base: orgs, projects, members, API keys, webhooks, the admin console, CLI and MCP. One Go binary (`othra`, module `altalune.id/othra`) serves every surface from one set of domain services and one Postgres database.
 
 For step-by-step changes, see the recipes in [docs/howto](../howto/README.md).
 

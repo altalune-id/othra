@@ -1,6 +1,6 @@
 ---
 name: daisyui
-description: daisyUI 5 component classes, semantic colors and themes on Tailwind CSS 4, as used in othra. Use when writing or changing markup in the console (Vue components and pages under ui/console/app) or the sign-in pages (internal/**/*.templ), choosing a daisyUI component (btn, card, modal, dropdown, drawer, menu, table, fieldset, input, toggle and others), using semantic colors such as primary, base-100 or base-content, or adding or changing a theme in ui/theme.css.
+description: daisyUI 5 component classes, semantic colors and themes on Tailwind CSS 4, as used in Othra. Use when writing or changing markup in the console (Vue components and pages under ui/console/app) or the sign-in pages (internal/**/*.templ), choosing a daisyUI component (btn, card, modal, dropdown, drawer, menu, table, fieldset, input, toggle and others), using semantic colors such as primary, base-100 or base-content, or adding or changing a theme in ui/theme.css.
 license: MIT
 metadata:
   version: "5.7.x"
@@ -10,7 +10,7 @@ metadata:
 # daisyUI 5
 daisyUI 5 is a CSS library for Tailwind CSS 4. It supplies class names for common UI components, semantic colors, and themes.
 
-## In othra
+## In Othra
 
 - daisyUI 5 is installed in two packages, pinned in the `pnpm-workspace.yaml` catalog: the console (`ui/console`, Tailwind 4 through `@tailwindcss/vite`, CSS in `app/assets/css/main.css`) and the sign-in pages (`ui/web/app.css`, which scans `internal/**/*.templ`; run `make web-css` after adding classes). The MCP view (`ui/mcp`) does not use Tailwind or daisyUI. You do not need references/install.md unless a new package needs daisyUI.
 - Built-in themes are off (`@plugin "daisyui" { themes: false; }`). Every theme is a light and dark pair in `ui/theme.css` (`othra-light`/`othra-dark`, `bumblebee-light`/`bumblebee-dark` and so on), registered as a family in `ui/console/app/components/layout/useTheme.ts`. The console sets `data-theme` on `<html>`; the sign-in pages use `othra-light`. To add a theme: add both modes with `@plugin "daisyui/theme"`, add the dark one to the `dark` custom variant at the top of `ui/theme.css`, and register the family. Do not change themes through the plugin options in references/config.md.

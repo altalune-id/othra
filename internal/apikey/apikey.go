@@ -1,4 +1,4 @@
-// Package apikey mints and manages the machine credentials clients present to othra.
+// Package apikey mints and manages the machine credentials clients present to Othra.
 package apikey
 
 import (
@@ -16,7 +16,7 @@ import (
 	"altalune.id/othra/scope"
 )
 
-// DefaultPrefix marks an othra key when no prefix is configured.
+// DefaultPrefix marks an Othra key when no prefix is configured.
 const DefaultPrefix = "othra_"
 
 const (

@@ -11,7 +11,7 @@ func TestDocument(t *testing.T) {
 	doc := Document()
 
 	assert.Contains(t, doc, "<!doctype html>")
-	assert.Contains(t, doc, "othra")
+	assert.Contains(t, doc, "Othra")
 	assert.Equal(t, "ui://othra/app", ResourceURI)
 }
 

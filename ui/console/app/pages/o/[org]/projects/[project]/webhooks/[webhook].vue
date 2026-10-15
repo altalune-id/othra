@@ -165,7 +165,7 @@ const prettyPayload = computed(() => {
 });
 
 await load();
-useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('webhooks.deliveries')} · othra` });
+useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('webhooks.deliveries')} · Othra` });
 </script>
 
 <template>

@@ -36,7 +36,7 @@ export default defineNuxtConfig({
 })
 ```
 
-othra uses one build hook: `'prerender:routes'` clears the route list so `nuxt generate` emits only the SPA shell.
+Othra uses one build hook: `'prerender:routes'` clears the route list so `nuxt generate` emits only the SPA shell.
 
 ### In Modules
 

@@ -35,7 +35,7 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss() as any] },
   app: {
     head: {
-      title: 'othra',
+      title: 'Othra',
       htmlAttrs: { lang: 'en' },
       link: [{ key: 'icon', rel: 'icon', href: 'data:,' }],
     },

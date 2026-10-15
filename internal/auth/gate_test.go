@@ -69,7 +69,7 @@ func TestConsoleGate_BasicMode(t *testing.T) {
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, req)
 		assert.Equal(t, http.StatusUnauthorized, rec.Code, name)
-		assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"), name)
+		assert.Equal(t, `Basic realm="Othra"`, rec.Header().Get("WWW-Authenticate"), name)
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/console/", nil)
@@ -92,7 +92,7 @@ func TestBasicChallenge(t *testing.T) {
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/org.v1.OrgService/ListOrgs", nil))
 	assert.False(t, reached)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"))
+	assert.Equal(t, `Basic realm="Othra"`, rec.Header().Get("WWW-Authenticate"))
 	assert.JSONEq(t, `{"code":"unauthenticated","message":"Sign in required"}`, rec.Body.String())
 
 	for name, set := range map[string]func(*http.Request){

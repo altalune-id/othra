@@ -61,7 +61,7 @@ func TestService_PublishStoresTheBuiltInVersions(t *testing.T) {
 	svc, store, _ := historyFixture(t)
 	require.NoError(t, svc.Publish(context.Background()))
 	require.Len(t, store.snapshots, 2)
-	terms := store.snapshots["terms@2026-10-11"]
+	terms := store.snapshots["terms@2026-10-15"]
 	assert.Equal(t, "Terms of Service", terms.Title)
 	assert.Contains(t, terms.Body, "## 1.")
 	assert.Len(t, terms.SHA256, 64)
@@ -69,19 +69,19 @@ func TestService_PublishStoresTheBuiltInVersions(t *testing.T) {
 
 	again, store2, _ := historyFixture(t)
 	earlier := time.Date(2026, 10, 12, 0, 0, 0, 0, time.UTC)
-	store2.snapshots["terms@2026-10-11"] = Snapshot{ID: uuid.New(), Slug: "terms", Version: "2026-10-11", SHA256: terms.SHA256, PublishedAt: earlier}
+	store2.snapshots["terms@2026-10-15"] = Snapshot{ID: uuid.New(), Slug: "terms", Version: "2026-10-15", SHA256: terms.SHA256, PublishedAt: earlier}
 	require.NoError(t, again.Publish(context.Background()))
 	assert.Equal(t, time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC), again.TermsUpdatedAt(), "the newer of the two")
 }
 
 func TestService_PublishRefusesChangedText(t *testing.T) {
 	svc, store, _ := historyFixture(t)
-	store.snapshots["privacy@2026-10-11"] = Snapshot{ID: uuid.New(), Slug: "privacy", Version: "2026-10-11", SHA256: "other"}
+	store.snapshots["privacy@2026-10-15"] = Snapshot{ID: uuid.New(), Slug: "privacy", Version: "2026-10-15", SHA256: "other"}
 	err := svc.Publish(context.Background())
 	var changed *VersionChangedError
 	require.True(t, errors.As(err, &changed), "got %v", err)
 	assert.Equal(t, "privacy", changed.Slug)
-	assert.Contains(t, err.Error(), "2026-10-11")
+	assert.Contains(t, err.Error(), "2026-10-15")
 }
 
 func TestService_PublishSkipsExternalTermsAndFailures(t *testing.T) {
@@ -107,8 +107,8 @@ func TestService_AcceptRecordsTheVersions(t *testing.T) {
 	require.Len(t, store.acceptances, 1)
 	a := store.acceptances[0]
 	assert.Equal(t, u.ID, a.UserID)
-	assert.Equal(t, store.snapshots["terms@2026-10-11"].ID, a.TermsDocumentID)
-	assert.Equal(t, store.snapshots["privacy@2026-10-11"].ID, a.PrivacyDocumentID)
+	assert.Equal(t, store.snapshots["terms@2026-10-15"].ID, a.TermsDocumentID)
+	assert.Equal(t, store.snapshots["privacy@2026-10-15"].ID, a.PrivacyDocumentID)
 	assert.Equal(t, SourceJoin, a.Source)
 	assert.Equal(t, at, a.AcceptedAt)
 	assert.Len(t, a.PublicID, 21)

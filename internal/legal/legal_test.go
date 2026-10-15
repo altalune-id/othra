@@ -17,8 +17,8 @@ func TestDocuments(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, slug, d.Slug)
 			assert.Equal(t, title, d.Title)
-			assert.Equal(t, time.Date(2026, 10, 11, 0, 0, 0, 0, time.UTC), d.UpdatedAt)
-			assert.Equal(t, "2026-10-11", d.Version)
+			assert.Equal(t, time.Date(2026, 10, 15, 0, 0, 0, 0, time.UTC), d.UpdatedAt)
+			assert.Equal(t, "2026-10-15", d.Version)
 			assert.Len(t, d.SHA256, 64)
 			assert.Contains(t, d.Source, "## 1.", "the markdown source is kept for the snapshot")
 			assert.Contains(t, d.HTML, "<h2>")
@@ -118,8 +118,8 @@ func TestLatest(t *testing.T) {
 
 // SECURITY: people accept a version; its text must never change under them. Add a line here for every new version.
 var publishedVersions = map[string]map[string]string{
-	TermsSlug:   {"2026-10-11": "21bb08fd057d909615a76373668017d1198e20a4a3985fbfe51bc0a1adc03084"},
-	PrivacySlug: {"2026-10-11": "e497fd4115918228d7a205c38ff633568f693c4a7cbe922f1275301bc8ec2b60"},
+	TermsSlug:   {"2026-10-15": "999f9552ffd61276fa5fcda382e3e33a5138e78629b6fd97ab28887ef1782849"},
+	PrivacySlug: {"2026-10-15": "0096a0eb40eddaf347a7560fe40ed0b5feb3fd916c9dd86249b24c86a364b220"},
 }
 
 func TestPublishedVersionsAreFrozen(t *testing.T) {

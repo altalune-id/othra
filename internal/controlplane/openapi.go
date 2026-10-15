@@ -220,7 +220,7 @@ func openAPIGuard(auth *BasicAuth) func(http.Handler) http.Handler {
 			userOK := subtle.ConstantTimeCompare([]byte(u), []byte(want.User)) == 1
 			passOK := subtle.ConstantTimeCompare([]byte(p), []byte(want.Password)) == 1
 			if !ok || !userOK || !passOK {
-				w.Header().Set("WWW-Authenticate", `Basic realm="othra openapi"`)
+				w.Header().Set("WWW-Authenticate", `Basic realm="Othra OpenAPI"`)
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}

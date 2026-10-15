@@ -1,4 +1,4 @@
-// Package user models the people who sign in to othra.
+// Package user models the people who sign in to Othra.
 package user
 
 import (

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Creates the othra database and its roles on any Postgres; safe to re-run, and a re-run sets the passwords it is given.
+# Creates the Othra database and its roles on any Postgres; safe to re-run, and a re-run sets the passwords it is given.
 #
 # Roles: <PREFIX>_owner (NOLOGIN, owns the schema and tables), <PREFIX>_migrator (LOGIN, runs
 # migrations as the owner), <PREFIX>_service (LOGIN, reads and writes rows for the running app).
@@ -8,7 +8,7 @@
 #   ADMIN_URL         admin connection URL without /<db>, e.g. postgres://postgres:pw@localhost:5432?sslmode=disable
 #   DB_NAME           application database (default othra)
 #   PREFIX            role prefix (default othra)
-#   SCHEMA            schema othra uses, postgres.schema (default public)
+#   SCHEMA            schema Othra uses, postgres.schema (default public)
 #   ADMIN_DB          database used for CREATE DATABASE (default postgres; neondb on Neon)
 #   MIG_PW, SVC_PW    migrator and service passwords (16+ characters, no ' or \); "gen" generates one
 #   CREDENTIALS_FILE  where generated passwords are written, mode 0600 (default ./othra-db-credentials.env)

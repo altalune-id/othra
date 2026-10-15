@@ -15,7 +15,7 @@ import (
 const (
 	testStateSecret   = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 	testEncryptionKey = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-	testMailFrom      = "othra <noreply@example.com>"
+	testMailFrom      = "Othra <noreply@example.com>"
 )
 
 func setRequiredEnv(t *testing.T) {

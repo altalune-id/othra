@@ -44,7 +44,7 @@ const sessionLabels = computed(() => ({
 
 await profile.load();
 
-useHead({ title: () => `${t('profile.title')} · othra` });
+useHead({ title: () => `${t('profile.title')} · Othra` });
 </script>
 
 <template>

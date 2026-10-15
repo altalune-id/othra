@@ -44,7 +44,7 @@ async function destroy(id: string) {
   }
 }
 
-useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('nav.agents')} · othra` });
+useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('nav.agents')} · Othra` });
 </script>
 
 <template>

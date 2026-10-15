@@ -1,2 +1,2 @@
-// Package entity holds go-jet table bindings for the othra schema.
+// Package entity holds go-jet table bindings for the Othra schema.
 package entity
