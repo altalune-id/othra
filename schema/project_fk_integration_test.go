@@ -14,8 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"altalune.id/othra/internal/testutil/pgtest"
-	"altalune.id/othra/migrator"
-	"altalune.id/othra/schema"
 )
 
 type twoOrgs struct {
@@ -37,7 +35,7 @@ func seedTwoOrgs(t *testing.T, db *sql.DB) twoOrgs {
 		require.NoError(t, err)
 	}
 	_, err := db.ExecContext(ctx, `INSERT INTO webhook_endpoints (id, public_id, org_id, project_id, url, event_types, secret_primary, active, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, 'https://e.com', 'agent.created', '\x01', true, now(), now())`, s.endpointA, "w"+s.endpointA.String()[:8], s.orgA, s.prjA)
+		VALUES ($1, $2, $3, $4, 'https://e.com', 'invite.created', '\x01', true, now(), now())`, s.endpointA, "w"+s.endpointA.String()[:8], s.orgA, s.prjA)
 	require.NoError(t, err)
 	return s
 }
@@ -51,12 +49,10 @@ func inserts(s twoOrgs) map[string]func(ctx context.Context, db *sql.DB, org, pr
 		}
 	}
 	return map[string]func(ctx context.Context, db *sql.DB, org, prj uuid.UUID) error{
-		"agents": exec(`INSERT INTO agents (id, public_id, org_id, project_id, slug, name, created_at, updated_at)
-			VALUES ($1, $4, $2, $3, $4, 'A', now(), now())`),
 		"webhook_endpoints": exec(`INSERT INTO webhook_endpoints (id, public_id, org_id, project_id, url, event_types, secret_primary, active, created_at, updated_at)
-			VALUES ($1, $4, $2, $3, 'https://e.com', 'agent.created', '\x01', true, now(), now())`),
+			VALUES ($1, $4, $2, $3, 'https://e.com', 'invite.created', '\x01', true, now(), now())`),
 		"webhook_deliveries": exec(`INSERT INTO webhook_deliveries (id, org_id, project_id, endpoint_id, delivery_id, event_id, event_type, attempt, duration_ms, error, created_at)
-			VALUES ($1, $2, $3, $5, $1, $1, 'agent.created', 1, 1, $4, now())`, s.endpointA),
+			VALUES ($1, $2, $3, $5, $1, $1, 'invite.created', 1, 1, $4, now())`, s.endpointA),
 		"outbox_entries": exec(`INSERT INTO outbox_entries (id, event_id, org_id, project_id, target, payload, next_attempt_at, last_error, created_at, public_id, event_public_id)
 			VALUES ($1, $1, $2, $3, 'webhook', '\x01', now(), $4, now(), gen_random_uuid()::text, 'e')`),
 		"api_keys": exec(`INSERT INTO api_keys (id, org_id, project_id, kind, name, secret_hash, secret_hint, created_at)
@@ -105,27 +101,6 @@ func TestProjectFK_DeletingAProjectStillCascades(t *testing.T) {
 		require.NoError(t, db.QueryRowContext(t.Context(), `SELECT count(*) FROM `+table+` WHERE project_id = $1`, s.prjA).Scan(&n))
 		assert.Zero(t, n, table)
 	}
-}
-
-func TestProjectFK_MigrationRefusesExistingCrossOrgRows(t *testing.T) {
-	h := pgtest.New(t)
-	db := h.OpenDB(t)
-	cfg := migrator.Config{Schema: h.Schema}
-	ctx := t.Context()
-	require.NoError(t, schema.MigrateUp(ctx, db, cfg))
-	require.NoError(t, schema.MigrateDownTo(ctx, db, cfg, 11))
-
-	s := seedTwoOrgs(t, db)
-	require.NoError(t, inserts(s)["agents"](ctx, db, s.orgA, s.prjB), "version 11 still allows it")
-
-	err := schema.MigrateUp(ctx, db, cfg)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "agents")
-	assert.Contains(t, err.Error(), "project from another org")
-
-	var n int
-	require.NoError(t, db.QueryRowContext(ctx, `SELECT count(*) FROM agents`).Scan(&n))
-	assert.Equal(t, 1, n, "the bad row is left for a person to fix")
 }
 
 func TestProjectFK_OneCompositeKeyPerTable(t *testing.T) {

@@ -13,7 +13,7 @@ Use this when you add or change a table, column, constraint or index. Migrations
 
 ## Build
 
-1. **`schema/migrations/NNN_<name>.sql`** (three digits, snake_case). Every name is templated: `{{.Schema}}.{{.TablePrefix}}<table>` for tables, `{{.TablePrefix}}<table>_<what>` for constraints and indexes. Copy the shape of `017_password_resets.sql`:
+1. **`schema/migrations/NNN_<name>.sql`** (three digits, snake_case). Every name is templated: `{{.Schema}}.{{.TablePrefix}}<table>` for tables, `{{.TablePrefix}}<table>_<what>` for constraints and indexes. Copy the shape of `012_password_resets.sql`:
 
    ```sql
    -- +goose Up
@@ -68,9 +68,9 @@ Use this when you add or change a table, column, constraint or index. Migrations
 
 ## Reference code
 
-- [schema/migrations/017_password_resets.sql](../../schema/migrations/017_password_resets.sql): a plain new table with a partial index
-- [schema/migrations/014_invites.sql](../../schema/migrations/014_invites.sql): checks, a named constraint and a partial unique index
-- [schema/migrations/016_public_ids.sql](../../schema/migrations/016_public_ids.sql): adding `NOT NULL` columns with no backfill
+- [schema/migrations/012_password_resets.sql](../../schema/migrations/012_password_resets.sql): a plain new table with a partial index
+- [schema/migrations/010_invites.sql](../../schema/migrations/010_invites.sql): checks, a named constraint and a partial unique index
+- [schema/migrations/004_api_keys.sql](../../schema/migrations/004_api_keys.sql): a table in its final shape, with composite foreign keys and partial unique indexes
 - [schema/schema.go](../../schema/schema.go): `New`, `MigrateUp`, `MigrationsFS`
 - [migrator/config.go](../../migrator/config.go): `Config` (`Schema`, `TablePrefix`, `Role`)
 - [schema/entity/password_resets.go](../../schema/entity/password_resets.go): `NewPasswordResets`

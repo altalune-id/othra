@@ -8,8 +8,14 @@ CREATE TABLE {{.Schema}}.{{.TablePrefix}}orgs (
   name                TEXT NOT NULL,
   created_by          UUID,
   created_at          TIMESTAMPTZ NOT NULL,
-  updated_at          TIMESTAMPTZ NOT NULL
+  updated_at          TIMESTAMPTZ NOT NULL,
+  is_system           BOOLEAN NOT NULL DEFAULT false,
+  CONSTRAINT {{.TablePrefix}}orgs_created_by_fkey FOREIGN KEY (created_by) REFERENCES {{.Schema}}.{{.TablePrefix}}users (id) ON DELETE SET NULL
 );
+
+CREATE UNIQUE INDEX {{.TablePrefix}}orgs_one_system
+  ON {{.Schema}}.{{.TablePrefix}}orgs (is_system)
+  WHERE is_system;
 
 -- +goose StatementEnd
 

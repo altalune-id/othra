@@ -32,7 +32,7 @@ func TestNew_TargetVersion(t *testing.T) {
 }
 
 func TestMigrationsFS(t *testing.T) {
-	_, err := fs.ReadFile(MigrationsFS(), "001_init.sql")
+	_, err := fs.ReadFile(MigrationsFS(), "001_users.sql")
 	require.NoError(t, err)
 }
 

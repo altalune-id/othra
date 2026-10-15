@@ -5,7 +5,7 @@ CREATE TABLE {{.Schema}}.{{.TablePrefix}}outbox_entries (
   id                  UUID PRIMARY KEY,
   event_id            UUID NOT NULL,
   org_id              UUID NOT NULL REFERENCES {{.Schema}}.{{.TablePrefix}}orgs (id) ON DELETE CASCADE,
-  project_id          UUID NOT NULL REFERENCES {{.Schema}}.{{.TablePrefix}}projects (id) ON DELETE CASCADE,
+  project_id          UUID NOT NULL,
   target              TEXT NOT NULL,
   payload             BYTEA NOT NULL,
   attempt             INTEGER NOT NULL DEFAULT 0,
@@ -14,8 +14,12 @@ CREATE TABLE {{.Schema}}.{{.TablePrefix}}outbox_entries (
   last_error          TEXT NOT NULL DEFAULT '',
   created_at          TIMESTAMPTZ NOT NULL,
   delivered_at        TIMESTAMPTZ,
+  public_id           TEXT NOT NULL,
+  event_public_id     TEXT NOT NULL,
   -- NOTE: scoped by org, not global, so one tenant's enqueue cannot block another's.
-  CONSTRAINT {{.TablePrefix}}outbox_entries_org_event_target_key UNIQUE (org_id, event_id, target)
+  CONSTRAINT {{.TablePrefix}}outbox_entries_org_event_target_key UNIQUE (org_id, event_id, target),
+  CONSTRAINT {{.TablePrefix}}outbox_entries_public_id_key UNIQUE (public_id),
+  CONSTRAINT {{.TablePrefix}}outbox_entries_org_project_fkey FOREIGN KEY (org_id, project_id) REFERENCES {{.Schema}}.{{.TablePrefix}}projects (org_id, id) ON DELETE CASCADE
 );
 
 CREATE INDEX {{.TablePrefix}}outbox_entries_due_idx
