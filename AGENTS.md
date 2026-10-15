@@ -100,13 +100,15 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 
 ## Agent skills
 
-Skills in `.agents/skills/` (each linked from `.claude/skills/`) are committed and carry the same conventions. The linters skip them:
+Skills in `.agents/skills/` (each linked from `.claude/skills/`) and agents in `.agents/agents/` (each linked from `.claude/agents/`) are committed and carry the same conventions. The linters skip them:
 
-- `othra-go-convention`: build a change the othra way.
+- `othra-go-convention`: build a change the Othra way.
 - `othra-go-review`: review a change; it runs the gates.
 - `go`, `go-concurrency`, `go-proverb`, `comment-discipline`: Go and comment style.
 - `vue`, `pinia`, `vite`, `vitest`, `nuxt`, `eslint-config`: the console and the UI toolchain.
 - `daisyui`: daisyUI 5 classes, colors and themes for the console and the sign-in pages.
 - `cobra-viper`, `go-release`, `go-spec-reviewer`: CLI and config, releases, spec review.
+- `oauth-spec-checklist`: OAuth 2.1, OIDC, RFC 9700 and MCP authorization dimensions with a scoring rubric and an RFC section index.
+- Agent `oauth-reviewer`: an independent, read-only OAuth / OIDC conformance review against the Othra profile; it loads `oauth-spec-checklist`.
 
-A new skill goes in `.agents/skills/<name>/` with a `.claude/skills/<name>` link, in the same commit.
+A new skill or agent goes in `.agents/{skills,agents}/<name>` with a `.claude/{skills,agents}/<name>` link, in the same commit.
