@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/password"
+	"altalune.id/othra/password"
 )
 
 func valid(t *testing.T, err error) {
@@ -148,8 +148,8 @@ func TestValidate_EveryRule(t *testing.T) {
 
 func TestValidate_DefaultsWithDevelopmentConsole(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_ENV", "development")
-	t.Setenv("OAGENT_MAIL_DRIVER", "console")
+	t.Setenv("OTHRA_ENV", "development")
+	t.Setenv("OTHRA_MAIL_DRIVER", "console")
 	_, err := Load(missingPath(t))
 	require.NoError(t, err)
 }

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"altalune.id/oagent/internal/web/assets"
+	"altalune.id/othra/internal/web/assets"
 )
 
 //go:embed all:public

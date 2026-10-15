@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/migrator"
+	"altalune.id/othra/migrator"
 )
 
 func TestNew_TargetVersion(t *testing.T) {

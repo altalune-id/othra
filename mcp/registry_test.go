@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"altalune.id/oagent/mcp"
+	"altalune.id/othra/mcp"
 )
 
 func TestRegistryHandlerForReturnsTheRegisteredHandler(t *testing.T) {

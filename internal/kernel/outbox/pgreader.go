@@ -7,8 +7,8 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/tenant"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
 )
 
 // ByID returns the entry id of target within the caller's org, or *NotFoundError.

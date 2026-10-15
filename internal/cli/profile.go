@@ -8,26 +8,26 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/auth"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/auth"
 )
 
 const defaultProfile = "default"
 
-// NOTE: precedence is --profile > OAGENT_PROFILE > "default".
+// NOTE: precedence is --profile > OTHRA_PROFILE > "default".
 func profileName(cmd *cobra.Command) string {
 	if f := cmd.Root().PersistentFlags().Lookup("profile"); f != nil && f.Changed {
 		if v := strings.TrimSpace(f.Value.String()); v != "" {
 			return v
 		}
 	}
-	if v := strings.TrimSpace(os.Getenv("OAGENT_PROFILE")); v != "" {
+	if v := strings.TrimSpace(os.Getenv("OTHRA_PROFILE")); v != "" {
 		return v
 	}
 	return defaultProfile
 }
 
-// SECURITY: precedence is --token > --token-file > OAGENT_TOKEN > the profile's session, sent only to its own URL while valid.
+// SECURITY: precedence is --token > --token-file > OTHRA_TOKEN > the profile's session, sent only to its own URL while valid.
 func resolveCredential(cmd *cobra.Command, url string, p *profile, now time.Time) (apiclient.Credential, error) {
 	token, err := resolveToken(cmd)
 	if err != nil {

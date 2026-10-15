@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/oagent/internal/web/layout"
+import "altalune.id/othra/internal/web/layout"
 
 // InviteHTML is the invite email: who invites whom to which org and role, and the link.
 func InviteHTML(org string, inviter string, role string, link string, expires string) templ.Component {
@@ -70,14 +70,14 @@ func InviteHTML(org string, inviter string, role string, link string, expires st
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " on oagent as ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " on othra as ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(role)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `org/invite/views/mail.templ`, Line: 8, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `org/invite/views/mail.templ`, Line: 8, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {

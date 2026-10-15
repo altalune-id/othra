@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	slugpkg "altalune.id/oagent/slug"
+	"altalune.id/othra/apperror"
+	slugpkg "altalune.id/othra/slug"
 )
 
 // Service is the project application service: the driving port surfaces call.

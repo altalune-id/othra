@@ -5,7 +5,7 @@ description: useState composable and shared state in Nuxt, with Pinia for domain
 
 # State Management
 
-Nuxt provides `useState` for keyed reactive state shared across components. In oagent, small UI state (such as the theme) uses `useState`; domain data lives in Pinia setup stores.
+Nuxt provides `useState` for keyed reactive state shared across components. In othra, small UI state (such as the theme) uses `useState`; domain data lives in Pinia setup stores.
 
 ## useState
 
@@ -75,7 +75,7 @@ export const globalState = ref({ user: null })
 ### ✅ Use useState Instead
 
 ```ts
-// ✅ Keyed, shared state (oagent uses this for the theme in useTheme.ts)
+// ✅ Keyed, shared state (othra uses this for the theme in useTheme.ts)
 export const useGlobalState = () => useState('global', () => ({ user: null }))
 ```
 
@@ -96,7 +96,7 @@ clearNuxtState()
 
 ## With Pinia
 
-For domain state, use Pinia setup stores (oagent has `@pinia/nuxt` installed; see the pinia skill):
+For domain state, use Pinia setup stores (othra has `@pinia/nuxt` installed; see the pinia skill):
 
 ```ts
 // app/stores/user.ts
@@ -149,7 +149,7 @@ export function useDefaultLocale(fallback = 'en-US') {
 
 ## State Serialization
 
-With SSR, `useState` values are serialized to JSON. oagent has no SSR, but keep values plain anyway; avoid:
+With SSR, `useState` values are serialized to JSON. othra has no SSR, but keep values plain anyway; avoid:
 
 - Functions
 - Classes

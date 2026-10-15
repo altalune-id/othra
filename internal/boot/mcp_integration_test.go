@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/apikey"
+	"altalune.id/othra/internal/apikey"
 )
 
 func (f *apiFixture) mcpCall(t *testing.T, bearer, body string) (int, http.Header, []byte) {
@@ -73,7 +73,7 @@ func TestMCP_WhoamiWithAKey(t *testing.T) {
 
 func TestMCP_BadKeyIs401(t *testing.T) {
 	f := newAPIFixture(t)
-	status, header, body := f.mcpCall(t, "oagent_nope", `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
+	status, header, body := f.mcpCall(t, "othra_nope", `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
 	assert.Equal(t, http.StatusUnauthorized, status)
 	assert.Equal(t, "Bearer", header.Get("WWW-Authenticate"))
 	assert.Contains(t, string(body), `"code":"GEN002"`)

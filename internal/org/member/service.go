@@ -9,12 +9,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/org/member/views"
-	"altalune.id/oagent/mailer"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/org/member/views"
+	"altalune.id/othra/mailer"
+	"altalune.id/othra/scope"
 )
 
 var errNoDirectory = errors.New("member: no directory wired")

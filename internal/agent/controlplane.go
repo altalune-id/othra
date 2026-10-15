@@ -6,9 +6,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	"altalune.id/oagent/internal/kernel/authz"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	"altalune.id/othra/internal/kernel/authz"
 )
 
 // AgentService implements agent.v1.AgentService; every id it takes and returns is a public id.

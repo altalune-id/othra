@@ -56,7 +56,7 @@ type PostgresHealthConfig struct {
 	Timeout  time.Duration `yaml:"timeout"  mapstructure:"timeout"  validate:"gte=0"`
 }
 
-// PostgresFeatures lists the settings that select Postgres; empty means oagent never connects to it.
+// PostgresFeatures lists the settings that select Postgres; empty means othra never connects to it.
 func (c *Config) PostgresFeatures() []string {
 	var out []string
 	if c.DB.Driver == DBDriverPostgres {

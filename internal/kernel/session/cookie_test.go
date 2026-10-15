@@ -60,14 +60,14 @@ func TestBadCookieError_Message(t *testing.T) {
 func TestWriteCookie(t *testing.T) {
 	rec := httptest.NewRecorder()
 	exp := time.Date(2026, 10, 12, 0, 0, 0, 0, time.UTC)
-	WriteCookie(rec, CookieOptions{Path: "/oagent", Secure: true}, "sid|mac", exp)
+	WriteCookie(rec, CookieOptions{Path: "/othra", Secure: true}, "sid|mac", exp)
 
 	cs := rec.Result().Cookies()
 	require.Len(t, cs, 1)
 	c := cs[0]
 	assert.Equal(t, CookieName, c.Name)
 	assert.Equal(t, "sid|mac", c.Value)
-	assert.Equal(t, "/oagent", c.Path)
+	assert.Equal(t, "/othra", c.Path)
 	assert.True(t, c.HttpOnly)
 	assert.True(t, c.Secure)
 	assert.Equal(t, http.SameSiteLaxMode, c.SameSite)
@@ -82,12 +82,12 @@ func TestWriteCookie_EmptyPathIsRoot(t *testing.T) {
 
 func TestClearCookie(t *testing.T) {
 	rec := httptest.NewRecorder()
-	ClearCookie(rec, CookieOptions{Path: "/oagent"})
+	ClearCookie(rec, CookieOptions{Path: "/othra"})
 	c := rec.Result().Cookies()[0]
 	assert.Equal(t, CookieName, c.Name)
 	assert.Empty(t, c.Value)
 	assert.Equal(t, -1, c.MaxAge)
-	assert.Equal(t, "/oagent", c.Path)
+	assert.Equal(t, "/othra", c.Path)
 	assert.True(t, c.HttpOnly)
 }
 

@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/testutil/fakes"
+	"altalune.id/othra/apperror"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func newOrgServiceClient(t *testing.T, store org.Store) orgv1connect.OrgServiceClient {

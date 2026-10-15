@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/org/member"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/org/member"
 )
 
 func (f *memberFixture) service() *member.Service {

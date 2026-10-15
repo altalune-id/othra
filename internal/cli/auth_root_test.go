@@ -18,25 +18,25 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/permission"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/config"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/permission"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web/layout"
 )
 
 const (
 	testEmail    = "ada@example.com"
 	testPassword = "correct horse battery"
-	testKey      = "oagent_good"
+	testKey      = "othra_good"
 )
 
 type fakeSignIn struct {
@@ -105,7 +105,7 @@ func newTestServer(t *testing.T) *testServer {
 		Refs:     ids,
 	}, nil, controlplane.Options{Authn: authn.InterceptorOptions{
 		Chain:        authn.Chain{storeAuthn{store: ts.store}},
-		KeyPrefix:    "oagent_",
+		KeyPrefix:    "othra_",
 		CookieSecret: ts.secret,
 		Permissions:  permission.Table(),
 	}}).Handler("")
@@ -133,8 +133,8 @@ func cliEnv(t *testing.T) string {
 	t.Chdir(dir)
 	t.Setenv("XDG_CONFIG_HOME", dir)
 	clearCLIEnv(t)
-	path := filepath.Join(dir, "home", ".oagent", "session.json")
-	t.Setenv("OAGENT_CLI_SESSION_FILE", path)
+	path := filepath.Join(dir, "home", ".othra", "session.json")
+	t.Setenv("OTHRA_CLI_SESSION_FILE", path)
 	return path
 }
 
@@ -158,7 +158,7 @@ func login(t *testing.T, srv *testServer, profileName string) profile {
 	t.Helper()
 	_, _, err := runCLI(t, testPassword+"\n", "auth", "login", "--url", srv.URL, "--profile", profileName, "--email", testEmail, "--password-stdin")
 	require.NoError(t, err)
-	f, err := loadSessionFile(os.Getenv("OAGENT_CLI_SESSION_FILE"))
+	f, err := loadSessionFile(os.Getenv("OTHRA_CLI_SESSION_FILE"))
 	require.NoError(t, err)
 	return f.Profiles[profileName]
 }
@@ -236,8 +236,8 @@ func TestAuthProfiles_StayApart(t *testing.T) {
 func TestProfileSession_NotSentToAnotherServer(t *testing.T) {
 	for name, redirect := range map[string]func(t *testing.T, url string) []string{
 		"--url": func(_ *testing.T, url string) []string { return []string{"--url", url} },
-		"OAGENT_URL": func(t *testing.T, url string) []string {
-			t.Setenv("OAGENT_URL", url)
+		"OTHRA_URL": func(t *testing.T, url string) []string {
+			t.Setenv("OTHRA_URL", url)
 			return nil
 		},
 	} {

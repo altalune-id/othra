@@ -7,10 +7,10 @@ import (
 
 	natsgo "github.com/nats-io/nats.go"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/queue"
-	natsqueue "altalune.id/oagent/internal/kernel/queue/nats"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/queue"
+	natsqueue "altalune.id/othra/internal/kernel/queue/nats"
 )
 
 //nolint:gochecknoglobals // test seam.

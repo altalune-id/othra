@@ -12,8 +12,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"altalune.id/oagent/httpclient"
-	"altalune.id/oagent/mailer"
+	"altalune.id/othra/httpclient"
+	"altalune.id/othra/mailer"
 )
 
 type resendCall struct {

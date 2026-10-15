@@ -72,7 +72,7 @@ describe('usePersonalKeys', () => {
     expect(req).toMatchObject({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', kind: 'personal', name: 'Laptop', scopes: ['agent:read'], allProjects: true, projectIds: [] });
     expect(timestampDate(req.expiresAt)).toEqual(new Date(now.getTime() + 24 * 3600_000));
     expect(useAPIKeysStore().items.map(k => k.secretHint)).toEqual(['cccc']);
-    expect(keys.created.value).toEqual({ plaintext: 'oak_new', snippet: mcpSnippet('oagent', 'https://console.test/base/mcp', 'oak_new') });
+    expect(keys.created.value).toEqual({ plaintext: 'oak_new', snippet: mcpSnippet('othra', 'https://console.test/base/mcp', 'oak_new') });
     expect(keys.busy.value).toBe(false);
     keys.dismiss();
     expect(keys.created.value).toBeNull();

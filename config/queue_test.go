@@ -15,9 +15,9 @@ func TestLoad_QueueDefaults(t *testing.T) {
 
 func TestLoad_QueueFromEnv(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_QUEUE_ENABLED", "true")
-	t.Setenv("OAGENT_QUEUE_DRIVER", "nats")
-	t.Setenv("OAGENT_NATS_URL", "nats://127.0.0.1:4222")
+	t.Setenv("OTHRA_QUEUE_ENABLED", "true")
+	t.Setenv("OTHRA_QUEUE_DRIVER", "nats")
+	t.Setenv("OTHRA_NATS_URL", "nats://127.0.0.1:4222")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.True(t, c.Queue.Enabled)

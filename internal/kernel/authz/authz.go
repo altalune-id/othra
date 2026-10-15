@@ -4,8 +4,8 @@ package authz
 import (
 	"context"
 
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/scope"
 )
 
 // AnyAuthenticated marks a procedure every signed-in credential may call.

@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"time"
 
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/legal/views"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/legal/views"
+	"altalune.id/othra/internal/web/layout"
 )
 
 // WebOpts configures the legal pages; /welcome exists only with RequireAcceptance, an acceptor and Sessions.

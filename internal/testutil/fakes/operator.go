@@ -5,12 +5,12 @@ import (
 
 	"connectrpc.com/connect"
 
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // OperatorToken is the bearer token OperatorAuthn accepts.
-const OperatorToken = "oagent_test_operator" //nolint:gosec // G101: a fixed test token, not a credential.
+const OperatorToken = "othra_test_operator" //nolint:gosec // G101: a fixed test token, not a credential.
 
 // OperatorContext returns ctx acting as the system operator, which reaches every org.
 func OperatorContext(ctx context.Context) context.Context {

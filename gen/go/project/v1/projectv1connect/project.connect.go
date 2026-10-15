@@ -5,7 +5,7 @@
 package projectv1connect
 
 import (
-	v1 "altalune.id/oagent/gen/go/project/v1"
+	v1 "altalune.id/othra/gen/go/project/v1"
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"

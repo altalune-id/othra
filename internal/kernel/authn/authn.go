@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // Authenticator turns a credential into a Principal; it refuses kinds it does not handle.

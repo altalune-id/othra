@@ -10,10 +10,10 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/schema/entity"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/schema/entity"
+	"altalune.id/othra/sealer"
 )
 
 const deleteExpiredBatch = 500

@@ -1,6 +1,6 @@
 # Add a store method
 
-Use this when a service needs a database verb its `Store` does not have. The `Store` is the driven port the domain owns, in `<domain>/store.go`. oagent has one driver, Postgres, built with go-jet. A new verb is three edits plus tests: the interface, the Postgres code and the fake. For the service side, see [service-method.md](service-method.md). For a new table or column, see [migration.md](migration.md).
+Use this when a service needs a database verb its `Store` does not have. The `Store` is the driven port the domain owns, in `<domain>/store.go`. othra has one driver, Postgres, built with go-jet. A new verb is three edits plus tests: the interface, the Postgres code and the fake. For the service side, see [service-method.md](service-method.md). For a new table or column, see [migration.md](migration.md).
 
 ## Plan
 

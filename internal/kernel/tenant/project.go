@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
+	"altalune.id/othra/apperror"
 )
 
 // ProjectResolver finds the org a project belongs to.

@@ -2,7 +2,7 @@
 import { App } from '@modelcontextprotocol/ext-apps';
 import { resolveView } from './views';
 
-const app = new App({ name: 'oagent', version: '0.1.0' });
+const app = new App({ name: 'othra', version: '0.1.0' });
 provide('mcpApp', app);
 
 const input = ref<Record<string, unknown>>({});
@@ -43,7 +43,7 @@ onMounted(async () => {
 <template>
   <component :is="view" v-if="state === 'ready'" :data="data" />
   <main v-else class="card">
-    <header><span class="dot" /><strong>oagent</strong></header>
+    <header><span class="dot" /><strong>othra</strong></header>
     <p v-if="state === 'connecting'" class="muted">
       Connecting…
     </p>

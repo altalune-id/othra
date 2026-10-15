@@ -231,7 +231,7 @@ Render content outside component tree:
 </template>
 ```
 
-With SSR you would wrap it in `<ClientOnly>`; with `ssr: false` (oagent) a plain Teleport is enough. The SSR form:
+With SSR you would wrap it in `<ClientOnly>`; with `ssr: false` (othra) a plain Teleport is enough. The SSR form:
 
 ```vue
 <template>

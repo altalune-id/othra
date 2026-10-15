@@ -18,13 +18,13 @@ The request chain on `/api` is: authn and the permission check (`internal/permis
 
 ## Build
 
-1. **Proto.** Add the `rpc` and its `XxxRequest` / `XxxResponse` to `api/<domain>/v1/<domain>.proto`. Put a rule on every request field. Use the shared rules from `api/oagent/v1/rules.proto` (`public_id`, `name`, `email`, `slug`) and pair them with `required` when the field must be set:
+1. **Proto.** Add the `rpc` and its `XxxRequest` / `XxxResponse` to `api/<domain>/v1/<domain>.proto`. Put a rule on every request field. Use the shared rules from `api/othra/v1/rules.proto` (`public_id`, `name`, `email`, `slug`) and pair them with `required` when the field must be set:
 
    ```proto
    message GetAgentRequest {
      string id = 1 [
        (buf.validate.field).required = true,
-       (buf.validate.field).string.(oagent.v1.public_id) = true
+       (buf.validate.field).string.(othra.v1.public_id) = true
      ];
    }
    ```
@@ -99,7 +99,7 @@ The request chain on `/api` is: authn and the permission check (`internal/permis
 ## Reference code
 
 - [api/agent/v1/agent.proto](../../api/agent/v1/agent.proto): `AgentService`, `CreateAgentRequest`
-- [api/oagent/v1/rules.proto](../../api/oagent/v1/rules.proto): `public_id`, `name`, `email`, `slug`
+- [api/othra/v1/rules.proto](../../api/othra/v1/rules.proto): `public_id`, `name`, `email`, `slug`
 - [internal/agent/controlplane.go](../../internal/agent/controlplane.go): `AgentService`, `reachable`, `project`, `toProto`
 - [internal/permission/permission.go](../../internal/permission/permission.go): `Table`, `For`
 - [internal/kernel/authz/reach.go](../../internal/kernel/authz/reach.go): `ReachProject`, `ReachResource`

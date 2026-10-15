@@ -14,7 +14,7 @@ import (
 const idBytes = 32
 
 // CookieName is the browser session cookie; its value is Sign(stateSecret, sid).
-const CookieName = "oagent_sid"
+const CookieName = "othra_sid"
 
 // CookieOptions are the deployment-wide attributes of the session cookie.
 type CookieOptions struct {

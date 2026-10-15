@@ -5,7 +5,7 @@ Use this when you add or change a table, column, constraint or index. Migrations
 ## Plan
 
 - [ ] **One migration per change**, at the next number. Never edit a migration that already shipped on `main`.
-- [ ] **Fresh DB.** Nothing runs oagent in production yet and the DB is reset when the schema breaks. Write the plain DDL: no backfill `UPDATE`, no `RAISE EXCEPTION` data guard, no SQL id generator. Add `NOT NULL` columns directly and say in the hand-over that the DB must be reset.
+- [ ] **Fresh DB.** Nothing runs othra in production yet and the DB is reset when the schema breaks. Write the plain DDL: no backfill `UPDATE`, no `RAISE EXCEPTION` data guard, no SQL id generator. Add `NOT NULL` columns directly and say in the hand-over that the DB must be reset.
 - [ ] **Ids.** `id UUID PRIMARY KEY` and, for any row a surface shows, `public_id TEXT NOT NULL UNIQUE`. Both come from Go (the aggregate's constructor sets `uuid.New()` and a `nanoid.New(21)` public id), never a column default. See [public-ids.md](public-ids.md).
 - [ ] **Tenant columns.** A project-scoped row carries `org_id` and `project_id` and a composite FK `(org_id, project_id) → projects (org_id, id) ON DELETE CASCADE`, so its project always belongs to its org. An org-scoped row carries `org_id` with `ON DELETE CASCADE`.
 - [ ] **Constraints in SQL.** Uniqueness, shape checks and partial unique indexes live in the table, not only in Go.

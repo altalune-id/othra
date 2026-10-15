@@ -23,5 +23,5 @@ export const WithFieldErrors: Story = {
 };
 
 export const Sent: Story = {
-  args: { sentLink: 'https://oagent.example.com/invite/Zx3kq9-yT2mWb7nLp0aRvE5sQ1uC8dHf', sentMessage: 'We also emailed cy@example.com.' },
+  args: { sentLink: 'https://othra.example.com/invite/Zx3kq9-yT2mWb7nLp0aRvE5sQ1uC8dHf', sentMessage: 'We also emailed cy@example.com.' },
 };

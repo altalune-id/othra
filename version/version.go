@@ -36,7 +36,7 @@ func Get() Info {
 }
 
 func String() string {
-	return "oagent " + Default() + " (commit " + Commit + ", built " + BuildTime + ")"
+	return "othra " + Default() + " (commit " + Commit + ", built " + BuildTime + ")"
 }
 
 // Triple returns MAJOR, MINOR, PATCH of Default(), or zeros when unparseable.

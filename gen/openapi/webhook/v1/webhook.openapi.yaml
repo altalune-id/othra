@@ -561,12 +561,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         url:
           type: string
           title: url
@@ -609,17 +609,17 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: DeleteWebhookRequest
       required:
         - orgId
@@ -637,17 +637,17 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: GetWebhookRequest
       required:
         - orgId
@@ -669,17 +669,17 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         limit:
           type: integer
           title: limit
@@ -707,22 +707,22 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         deliveryId:
           type: string
           title: delivery_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: ListWebhookDeliveryAttemptsRequest
       required:
         - orgId
@@ -747,12 +747,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: ListWebhooksRequest
       required:
         - orgId
@@ -775,17 +775,17 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: PingWebhookRequest
       required:
         - orgId
@@ -803,17 +803,17 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: RetryFailedWebhookDeliveriesRequest
       required:
         - orgId
@@ -836,22 +836,22 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         deliveryId:
           type: string
           title: delivery_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: RetryWebhookDeliveryRequest
       required:
         - orgId
@@ -870,17 +870,17 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: RotateWebhookSecretRequest
       required:
         - orgId
@@ -902,17 +902,17 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         projectId:
           type: string
           title: project_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         id:
           type: string
           title: id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         url:
           type: string
           title: url

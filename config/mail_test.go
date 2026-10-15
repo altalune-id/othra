@@ -10,9 +10,9 @@ import (
 
 func TestLoad_MailDefaults(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_ENV", "development")
-	t.Setenv("OAGENT_MAIL_DRIVER", "")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_ENV", "development")
+	t.Setenv("OTHRA_MAIL_DRIVER", "")
 
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
@@ -24,8 +24,8 @@ func TestLoad_MailDefaults(t *testing.T) {
 
 func TestLoad_MailFromEnv(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_MAIL_DRIVER", "resend")
-	t.Setenv("OAGENT_MAIL_RESEND_API_KEY", "re_test")
+	t.Setenv("OTHRA_MAIL_DRIVER", "resend")
+	t.Setenv("OTHRA_MAIL_RESEND_API_KEY", "re_test")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.Equal(t, MailDriverResend, c.Mail.Driver)
@@ -163,7 +163,7 @@ func TestValidate_Mail(t *testing.T) {
 
 func TestLoad_ConsoleMailRefusedInProduction(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_MAIL_DRIVER", "console")
+	t.Setenv("OTHRA_MAIL_DRIVER", "console")
 	_, err := Load(missingPath(t))
 	invalidSetting("mail.driver")(t, err)
 }

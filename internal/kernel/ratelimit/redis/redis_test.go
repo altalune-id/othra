@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/ratelimit"
-	"altalune.id/oagent/internal/kernel/ratelimit/ratelimittest"
-	ratelimitredis "altalune.id/oagent/internal/kernel/ratelimit/redis"
+	"altalune.id/othra/internal/kernel/ratelimit"
+	"altalune.id/othra/internal/kernel/ratelimit/ratelimittest"
+	ratelimitredis "altalune.id/othra/internal/kernel/ratelimit/redis"
 )
 
 func closedClient(t *testing.T) *goredis.Client {
@@ -22,7 +22,7 @@ func closedClient(t *testing.T) *goredis.Client {
 
 // Review Focus 3: a Redis that fails is an error, never an allowed call, so auth fails closed.
 func TestStore_ClosedClientIsAnError(t *testing.T) {
-	s := ratelimitredis.New(closedClient(t), "oagent:rl:")
+	s := ratelimitredis.New(closedClient(t), "othra:rl:")
 	res, err := s.Allow(t.Context(), "k", ratelimittest.Rule())
 	require.Error(t, err)
 	assert.ErrorIs(t, err, goredis.ErrClosed)
@@ -34,13 +34,13 @@ func TestStore_ClosedClientIsAnError(t *testing.T) {
 }
 
 func TestStore_InvalidRuleNeverReachesRedis(t *testing.T) {
-	s := ratelimitredis.New(closedClient(t), "oagent:rl:")
+	s := ratelimitredis.New(closedClient(t), "othra:rl:")
 	_, err := s.Allow(t.Context(), "k", ratelimit.Rule{Name: "bad"})
 	assert.True(t, ratelimit.IsInvalidRuleError(err), "got %v", err)
 }
 
 func TestStore_RejectsSubMillisecondInterval(t *testing.T) {
-	s := ratelimitredis.New(closedClient(t), "oagent:rl:")
+	s := ratelimitredis.New(closedClient(t), "othra:rl:")
 	_, err := s.Allow(t.Context(), "k", ratelimit.Rule{Name: "fast", Rate: 5000, Per: time.Second, Burst: 1})
 	assert.True(t, ratelimit.IsInvalidRuleError(err), "got %v", err)
 }

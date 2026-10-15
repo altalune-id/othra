@@ -40,8 +40,8 @@ export const JustCreated: Story = {
   args: {
     keys: [{ rowKey: 'key-1', name: 'laptop', scopes: ['agent:read'], secretHint: 'uAuE' }],
     created: {
-      plaintext: 'oagent_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE',
-      snippet: mcpSnippet('oagent', 'https://oagent.example.com/mcp', 'oagent_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE'),
+      plaintext: 'othra_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE',
+      snippet: mcpSnippet('othra', 'https://othra.example.com/mcp', 'othra_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE'),
     },
   },
   render,

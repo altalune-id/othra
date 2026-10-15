@@ -8,8 +8,8 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/schema/entity"
 )
 
 // LockEmail takes a transaction-scoped advisory lock on orgID and email.

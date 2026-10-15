@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 
-	"altalune.id/oagent/pg"
+	"altalune.id/othra/pg"
 )
 
 // Open opens a two-session migrator *sql.DB (lock + goose/upgrades) and applies SET ROLE when cfg.Role is set.

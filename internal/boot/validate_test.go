@@ -16,14 +16,14 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"altalune.id/oagent/config"
-	apperrorv1 "altalune.id/oagent/gen/go/apperror/v1"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/testutil/cptest"
-	"altalune.id/oagent/internal/testutil/fakes"
-	rootmcp "altalune.id/oagent/mcp"
+	"altalune.id/othra/config"
+	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/testutil/cptest"
+	"altalune.id/othra/internal/testutil/fakes"
+	rootmcp "altalune.id/othra/mcp"
 )
 
 type refusal struct {

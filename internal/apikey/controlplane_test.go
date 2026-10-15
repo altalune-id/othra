@@ -13,12 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	apikeyv1 "altalune.id/oagent/gen/go/apikey/v1"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/testutil/fakes"
+	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func newAPIKeyClient(t *testing.T, store apikey.Store, refs *fakes.PublicIDs) apikeyv1connect.APIKeyServiceClient {

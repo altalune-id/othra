@@ -11,12 +11,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/nanoid"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/nanoid"
+	"altalune.id/othra/sealer"
 )
 
 // Envelope is the JSON body every delivery of one event carries; it is the public wire contract.

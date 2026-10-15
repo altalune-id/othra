@@ -18,10 +18,10 @@ func TestLoad_RateLimitDefaults(t *testing.T) {
 
 func TestLoad_RateLimitFromEnv(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_RATE_LIMIT_AUTH_ENABLED", "true")
-	t.Setenv("OAGENT_RATE_LIMIT_MAX_KEYS", "500")
-	t.Setenv("OAGENT_RATE_LIMIT_DRIVER", "memory")
-	t.Setenv("OAGENT_HTTP_TRUSTED_PROXY_HOPS", "2")
+	t.Setenv("OTHRA_RATE_LIMIT_AUTH_ENABLED", "true")
+	t.Setenv("OTHRA_RATE_LIMIT_MAX_KEYS", "500")
+	t.Setenv("OTHRA_RATE_LIMIT_DRIVER", "memory")
+	t.Setenv("OTHRA_HTTP_TRUSTED_PROXY_HOPS", "2")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.True(t, c.RateLimit.Auth.Enabled)

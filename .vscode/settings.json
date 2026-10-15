@@ -37,7 +37,7 @@
   },
   "gopls": {
     "buildFlags": ["-tags=integration"],
-    "formatting.local": "altalune.id/oagent"
+    "formatting.local": "altalune.id/othra"
   },
   "[go]": {
     "editor.tabSize": 4,

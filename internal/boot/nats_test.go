@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/testutil/natstest"
-	natsconn "altalune.id/oagent/nats"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/testutil/natstest"
+	natsconn "altalune.id/othra/nats"
 )
 
 const (
@@ -24,14 +24,14 @@ const (
 )
 
 func natsTestConfig(url string) config.NATSConfig {
-	return config.NATSConfig{URL: url, Name: "oagent", ConnectTimeout: 300 * time.Millisecond}
+	return config.NATSConfig{URL: url, Name: "othra", ConnectTimeout: 300 * time.Millisecond}
 }
 
 func natsFeatureConfig() config.Config {
 	return config.Config{
 		Postgres: config.PostgresConfig{DSN: "x"},
 		Queue:    config.QueueConfig{Enabled: true, Driver: config.QueueDriverNATS},
-		NATS:     natsTestConfig("nats://oagent:" + natsTestPassword + "@127.0.0.1:1"),
+		NATS:     natsTestConfig("nats://othra:" + natsTestPassword + "@127.0.0.1:1"),
 	}
 }
 
@@ -78,7 +78,7 @@ func TestBuildNATS_UnusedNeverConnects(t *testing.T) {
 	assert.Zero(t, *calls)
 	assert.Empty(t, logs.String(), "no url, nothing to say")
 
-	cfg := config.Config{Queue: config.QueueConfig{Driver: config.QueueDriverNATS}, NATS: natsTestConfig("nats://oagent:" + natsTestPassword + "@nats.internal:4222")}
+	cfg := config.Config{Queue: config.QueueConfig{Driver: config.QueueDriverNATS}, NATS: natsTestConfig("nats://othra:" + natsTestPassword + "@nats.internal:4222")}
 	nc, nh, err = buildNATS(t.Context(), k, cfg, log)
 	require.NoError(t, err)
 	assert.Nil(t, nc, "the nats driver with the queue off needs no connection")

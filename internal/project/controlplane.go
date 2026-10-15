@@ -6,9 +6,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	projectv1 "altalune.id/oagent/gen/go/project/v1"
-	projectv1connect "altalune.id/oagent/gen/go/project/v1/projectv1connect"
-	"altalune.id/oagent/internal/kernel/authz"
+	projectv1 "altalune.id/othra/gen/go/project/v1"
+	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	"altalune.id/othra/internal/kernel/authz"
 )
 
 // ProjectService implements project.v1.ProjectService; every id it takes and returns is a public id.

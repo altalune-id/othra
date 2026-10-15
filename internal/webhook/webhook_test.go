@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/events"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/events"
 )
 
 func TestNew(t *testing.T) {

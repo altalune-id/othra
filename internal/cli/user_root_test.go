@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/boot"
-	"altalune.id/oagent/internal/cli"
-	"altalune.id/oagent/internal/user"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/boot"
+	"altalune.id/othra/internal/cli"
+	"altalune.id/othra/internal/user"
 )
 
 type passwordApp struct {

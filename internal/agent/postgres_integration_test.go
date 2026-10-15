@@ -15,12 +15,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/nanoid"
 )
 
 type pgFixture struct {

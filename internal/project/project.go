@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	projectv1 "altalune.id/oagent/gen/go/project/v1"
-	"altalune.id/oagent/nanoid"
+	projectv1 "altalune.id/othra/gen/go/project/v1"
+	"altalune.id/othra/nanoid"
 )
 
 const (

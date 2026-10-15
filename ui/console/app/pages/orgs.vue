@@ -10,7 +10,7 @@ const ui = useUIStore();
 
 await orgs.ensureLoaded();
 
-useHead({ title: () => `${t('org.all')} · oagent` });
+useHead({ title: () => `${t('org.all')} · othra` });
 </script>
 
 <template>

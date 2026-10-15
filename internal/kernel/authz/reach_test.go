@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 func TestReach(t *testing.T) {

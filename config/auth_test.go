@@ -9,34 +9,34 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/password"
+	"altalune.id/othra/password"
 )
 
 const (
 	testStateSecret   = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 	testEncryptionKey = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-	testMailFrom      = "oagent <noreply@example.com>"
+	testMailFrom      = "othra <noreply@example.com>"
 )
 
 func setRequiredEnv(t *testing.T) {
 	t.Helper()
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
 	setSecretEnv(t)
 }
 
 func setSecretEnv(t *testing.T) {
 	t.Helper()
-	t.Setenv("OAGENT_HTTP_STATE_SECRET", testStateSecret)
-	t.Setenv("OAGENT_SECRETS_ENCRYPTION_KEY", testEncryptionKey)
+	t.Setenv("OTHRA_HTTP_STATE_SECRET", testStateSecret)
+	t.Setenv("OTHRA_SECRETS_ENCRYPTION_KEY", testEncryptionKey)
 	setMailEnv(t)
 }
 
 func setMailEnv(t *testing.T) {
 	t.Helper()
-	t.Setenv("OAGENT_MAIL_DRIVER", "smtp")
-	t.Setenv("OAGENT_MAIL_FROM", testMailFrom)
-	t.Setenv("OAGENT_MAIL_SMTP_HOST", "smtp.example.com")
-	t.Setenv("OAGENT_HTTP_BASE_URL", "https://oagent.example.com")
+	t.Setenv("OTHRA_MAIL_DRIVER", "smtp")
+	t.Setenv("OTHRA_MAIL_FROM", testMailFrom)
+	t.Setenv("OTHRA_MAIL_SMTP_HOST", "smtp.example.com")
+	t.Setenv("OTHRA_HTTP_BASE_URL", "https://othra.example.com")
 }
 
 func validConfig(t *testing.T) *Config {

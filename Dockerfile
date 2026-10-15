@@ -55,10 +55,10 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM gcr.io/distroless/static:nonroot AS runtime
 
-COPY --from=build /src/bin/oagent /oagent
+COPY --from=build /src/bin/othra /othra
 
 USER 65532:65532
 EXPOSE 5150
 
-ENTRYPOINT ["/oagent"]
+ENTRYPOINT ["/othra"]
 CMD ["serve"]

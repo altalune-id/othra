@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/oagent/internal/web/layout"
+import "altalune.id/othra/internal/web/layout"
 
 // ForgotData is the "forgot password" form's state.
 type ForgotData struct {

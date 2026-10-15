@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	apikeyv1 "altalune.id/oagent/gen/go/apikey/v1"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	"altalune.id/oagent/internal/render"
+	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	"altalune.id/othra/internal/render"
 )
 
 // ClientFn returns the APIKey Connect client for a command; the caller resolves URL and token.

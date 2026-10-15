@@ -12,7 +12,7 @@ import (
 func TestCrossOriginProtection_APIAndPagesNotMCP(t *testing.T) {
 	ok := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusTeapot) })
 	cop := http.NewCrossOriginProtection()
-	require.NoError(t, cop.AddTrustedOrigin("https://oagent.example.com"))
+	require.NoError(t, cop.AddTrustedOrigin("https://othra.example.com"))
 	srv := NewServer(ServerOpts{APIHandler: ok, MCPHandler: ok, Routes: []Registrar{loginRoute{ok}}, CrossOrigin: cop})
 
 	post := func(path string, headers map[string]string) int {
@@ -31,7 +31,7 @@ func TestCrossOriginProtection_APIAndPagesNotMCP(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, post(path, map[string]string{"Origin": "https://evil.example"}), path)
 		assert.Equal(t, http.StatusTeapot, post(path, nil), path+": no browser headers (CLI) pass")
 		assert.Equal(t, http.StatusTeapot, post(path, map[string]string{"Sec-Fetch-Site": "same-origin"}), path)
-		assert.Equal(t, http.StatusTeapot, post(path, map[string]string{"Origin": "https://oagent.example.com"}), path+": baseURL origin is trusted")
+		assert.Equal(t, http.StatusTeapot, post(path, map[string]string{"Origin": "https://othra.example.com"}), path+": baseURL origin is trusted")
 	}
 	assert.Equal(t, http.StatusTeapot, post("/mcp", crossSite), "/mcp is not wrapped")
 }

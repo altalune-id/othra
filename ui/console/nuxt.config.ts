@@ -20,7 +20,7 @@ export default defineNuxtConfig({
     ],
     detectBrowserLanguage: {
       useCookie: true,
-      cookieKey: 'oagent_lang',
+      cookieKey: 'othra_lang',
       redirectOn: 'root',
       fallbackLocale: 'en-US',
     },
@@ -35,7 +35,7 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss() as any] },
   app: {
     head: {
-      title: 'oagent',
+      title: 'othra',
       htmlAttrs: { lang: 'en' },
       link: [{ key: 'icon', rel: 'icon', href: 'data:,' }],
     },

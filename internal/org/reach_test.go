@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/testutil/fakes"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func mustOrg(t *testing.T, slug string) *org.Org {

@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/cli"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/testutil/cptest"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/cli"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/testutil/cptest"
 )
 
 func remoteCommands() map[string][]string {
@@ -35,7 +35,7 @@ func remoteCommands() map[string][]string {
 
 func runRemote(t *testing.T, args []string, clientFn cli.ClientBootFn) error {
 	t.Helper()
-	t.Setenv("OAGENT_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
+	t.Setenv("OTHRA_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
 	root := cli.NewRootCmd(nil, clientFn)
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)

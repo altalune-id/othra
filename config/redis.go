@@ -31,7 +31,7 @@ func NormalizeRedisKeyPrefix(p string) string {
 	return p + ":"
 }
 
-// RedisFeatures lists the settings that select Redis; empty means oagent never connects to it.
+// RedisFeatures lists the settings that select Redis; empty means othra never connects to it.
 func (c *Config) RedisFeatures() []string {
 	var out []string
 	if c.RateLimit.Driver == RateLimitDriverRedis && c.RateLimit.AnyEnabled() {

@@ -18,14 +18,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/scope"
 )
 
 type pgFixture struct {
@@ -618,7 +618,7 @@ func TestPostgres_BySecretHashLoadsGrants(t *testing.T) {
 	assert.ElementsMatch(t, []uuid.UUID{p1, p2}, got.ProjectIDs)
 	assert.Equal(t, []string{"agent:read"}, got.Scopes)
 
-	_, err = f.store.BySecretHash(t.Context(), sha256.Sum256([]byte("oagent_unknown")))
+	_, err = f.store.BySecretHash(t.Context(), sha256.Sum256([]byte("othra_unknown")))
 	assert.True(t, apikey.IsNotFoundError(err), "got %v", err)
 }
 

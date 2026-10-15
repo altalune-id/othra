@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/capabilities"
-	"altalune.id/oagent/internal/legal"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/capabilities"
+	"altalune.id/othra/internal/legal"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web/layout"
 )
 
 func TestHTTPConfig(t *testing.T) {
@@ -90,11 +90,11 @@ func TestAPIChain(t *testing.T) {
 }
 
 func TestBuildCrossOrigin(t *testing.T) {
-	cop, err := buildCrossOrigin("https://oagent.example.com/app")
+	cop, err := buildCrossOrigin("https://othra.example.com/app")
 	require.NoError(t, err)
 	req := httptest.NewRequest(http.MethodPost, "/api/x", nil)
 	req.Host = "internal:8080"
-	req.Header.Set("Origin", "https://oagent.example.com")
+	req.Header.Set("Origin", "https://othra.example.com")
 	assert.NoError(t, cop.Check(req))
 	req.Header.Set("Origin", "https://evil.example")
 	assert.Error(t, cop.Check(req))

@@ -14,17 +14,17 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/db"
-	redisconn "altalune.id/oagent/redis"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/db"
+	redisconn "altalune.id/othra/redis"
 )
 
 const redisTestPassword = "hunter2-redis-secret"
 
 func redisTestConfig(url string) config.RedisConfig {
 	return config.RedisConfig{
-		URL: url, KeyPrefix: "oagent:", MaxConnections: 10, MaxIdleTime: 5 * time.Minute,
+		URL: url, KeyPrefix: "othra:", MaxConnections: 10, MaxIdleTime: 5 * time.Minute,
 		ConnectTimeout: 300 * time.Millisecond, ReadTimeout: time.Second, WriteTimeout: time.Second,
 	}
 }

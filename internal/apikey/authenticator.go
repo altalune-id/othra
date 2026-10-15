@@ -9,11 +9,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/scope"
 )
 
 // Authenticator verifies an API key and builds its Principal.

@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/boot"
-	"altalune.id/oagent/internal/cli"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/user"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/boot"
+	"altalune.id/othra/internal/cli"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/user"
 )
 
 type memberAddApp struct {
@@ -71,7 +71,7 @@ func TestMemberAdd_BootsWithoutWorkers(t *testing.T) {
 }
 
 func TestMemberAdd_ValidatesServerConfig(t *testing.T) {
-	t.Setenv("OAGENT_POSTGRES_DSN", "")
+	t.Setenv("OTHRA_POSTGRES_DSN", "")
 	_, _, booted, err := runMemberAdd(t, &memberAddApp{}, "--email", "ada@example.com", "--org-id", "V1StGXR8Z5jdHi6BmyT2a")
 
 	require.Error(t, err, "member add is an operator command: it needs the server config, not --url")

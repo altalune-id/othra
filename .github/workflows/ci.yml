@@ -162,7 +162,7 @@ jobs:
       - name: Build the embedded UI (sign-in assets, MCP views, console)
         run: make ui
       - name: Storybook
-        run: pnpm --filter @oagent/console build-storybook --quiet
+        run: pnpm --filter @othra/console build-storybook --quiet
 
   # Stage 3: the image builds (no push).
   docker:

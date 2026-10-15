@@ -5,9 +5,9 @@
 package projectv1mcp
 
 import (
-	v1 "altalune.id/oagent/gen/go/project/v1"
-	projectv1connect "altalune.id/oagent/gen/go/project/v1/projectv1connect"
-	mcp "altalune.id/oagent/mcp"
+	v1 "altalune.id/othra/gen/go/project/v1"
+	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	mcp "altalune.id/othra/mcp"
 	connect "connectrpc.com/connect"
 	context "context"
 	json "encoding/json"
@@ -39,7 +39,7 @@ func RegisterProjectServiceTools(reg *mcp.Registry, h projectv1connect.ProjectSe
 		Scopes:      permissionsFor(projectv1connect.ProjectServiceCreateProjectProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"slug":{"type":"string","maxLength":64,"pattern":"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"},"name":{"type":"string","minLength":1,"maxLength":200}},"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -69,7 +69,7 @@ func RegisterProjectServiceTools(reg *mcp.Registry, h projectv1connect.ProjectSe
 		Scopes:      permissionsFor(projectv1connect.ProjectServiceGetProjectProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"id":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["id"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -99,7 +99,7 @@ func RegisterProjectServiceTools(reg *mcp.Registry, h projectv1connect.ProjectSe
 		Scopes:      permissionsFor(projectv1connect.ProjectServiceListProjectsProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["orgId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

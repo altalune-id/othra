@@ -16,12 +16,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/render"
+	"altalune.id/othra/apperror"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/render"
 )
 
 type memProfiles struct {
@@ -34,7 +34,7 @@ func (m *memProfiles) Target(*cobra.Command) (string, string, error) {
 	if m.url != "" {
 		return "dev", m.url, nil
 	}
-	return "dev", "http://oagent.test", nil
+	return "dev", "http://othra.test", nil
 }
 
 func (m *memProfiles) Current(*cobra.Command) (string, *auth.CLISession, error) {
@@ -117,7 +117,7 @@ func runAuth(t *testing.T, profiles *memProfiles, fromProfile bool, args ...stri
 }
 
 func TestWhoami_RefreshesOnlyTheProfileItUsed(t *testing.T) {
-	profiles := &memProfiles{s: &auth.CLISession{URL: "http://oagent.test", Session: "sid"}}
+	profiles := &memProfiles{s: &auth.CLISession{URL: "http://othra.test", Session: "sid"}}
 
 	runAuth(t, profiles, false, "whoami")
 	assert.Zero(t, profiles.saved, "a token credential leaves the profile alone")

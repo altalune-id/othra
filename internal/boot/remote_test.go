@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	"altalune.id/oagent/internal/apiclient"
+	"altalune.id/othra/config"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	"altalune.id/othra/internal/apiclient"
 )
 
 func TestBootRemote(t *testing.T) {
@@ -25,7 +25,7 @@ func TestBootRemote(t *testing.T) {
 
 	cfg := config.Config{Env: config.EnvDevelopment}
 	log := testLogger()
-	r, err := BootRemote(t.Context(), cfg, log, srv.URL+"/", apiclient.Credential{Token: "oagent_tok"})
+	r, err := BootRemote(t.Context(), cfg, log, srv.URL+"/", apiclient.Credential{Token: "othra_tok"})
 	require.NoError(t, err)
 	assert.Equal(t, cfg, *r.Cfg)
 	assert.Same(t, log, r.Log)
@@ -33,5 +33,5 @@ func TestBootRemote(t *testing.T) {
 	_, err = r.Conn.Auth.Whoami(t.Context(), connect.NewRequest(&authv1.WhoamiRequest{}))
 	require.NoError(t, err)
 	assert.Equal(t, "/api/auth.v1.AuthService/Whoami", gotPath)
-	assert.Equal(t, "Bearer oagent_tok", gotAuth)
+	assert.Equal(t, "Bearer othra_tok", gotAuth)
 }

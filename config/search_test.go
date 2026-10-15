@@ -20,7 +20,7 @@ func writeConfig(t *testing.T, dir, name, body string) string {
 
 func TestFindConfigFile_XDG(t *testing.T) {
 	xdg := t.TempDir()
-	want := writeConfig(t, filepath.Join(xdg, "oagent"), "config.yaml", "postgres:\n  dsn: postgres://xdg/db\n")
+	want := writeConfig(t, filepath.Join(xdg, "othra"), "config.yaml", "postgres:\n  dsn: postgres://xdg/db\n")
 	t.Setenv("XDG_CONFIG_HOME", xdg)
 	t.Chdir(t.TempDir())
 
@@ -44,13 +44,13 @@ func TestConfigCandidates_Priority(t *testing.T) {
 	cands := configCandidates()
 
 	require.NotEmpty(t, cands)
-	assert.Equal(t, filepath.Join(xdg, "oagent", "config.yaml"), cands[0])
+	assert.Equal(t, filepath.Join(xdg, "othra", "config.yaml"), cands[0])
 }
 
 func TestLoad_SearchPath(t *testing.T) {
 	setSecretEnv(t)
 	xdg := t.TempDir()
-	writeConfig(t, filepath.Join(xdg, "oagent"), "config.yaml", "postgres:\n  dsn: postgres://search/db\n")
+	writeConfig(t, filepath.Join(xdg, "othra"), "config.yaml", "postgres:\n  dsn: postgres://search/db\n")
 	t.Setenv("XDG_CONFIG_HOME", xdg)
 	t.Chdir(t.TempDir())
 
@@ -62,8 +62,8 @@ func TestLoad_SearchPath(t *testing.T) {
 
 func TestLoader_BindFlag_OverridesEnv(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_MODE", "cloud")
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://env/db")
+	t.Setenv("OTHRA_MODE", "cloud")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://env/db")
 
 	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
 	fs.String("mode", "", "")

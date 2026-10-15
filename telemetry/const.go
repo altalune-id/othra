@@ -1,6 +1,6 @@
 package telemetry
 
 const (
-	serviceName = "oagent"
-	scope       = "altalune.id/oagent"
+	serviceName = "othra"
+	scope       = "altalune.id/othra"
 )

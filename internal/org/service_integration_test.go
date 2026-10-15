@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/org"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/org"
 )
 
 func TestService_CreateWithAFailedHookLeavesNoOrg(t *testing.T) {

@@ -12,15 +12,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/cli"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/cptest"
-	"altalune.id/oagent/internal/testutil/fakes"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/cli"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/cptest"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 // Exercises the real root tree for a remote command: config (no validation), client boot, org.ClientFn.
@@ -30,7 +30,7 @@ func TestRoot_OrgGet_Remote(t *testing.T) {
 	ts := httptest.NewServer(srv.Handler(""))
 	t.Cleanup(ts.Close)
 
-	t.Setenv("OAGENT_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
+	t.Setenv("OTHRA_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
 	clientFn := func(context.Context, config.Config, *slog.Logger, string, apiclient.Credential) (*apiclient.Client, error) {
 		return apiclient.New(ts.URL, cptest.OperatorCredential()), nil
 	}
@@ -58,7 +58,7 @@ func TestRoot_ProjectGet_Remote(t *testing.T) {
 	ts := httptest.NewServer(srv.Handler(""))
 	t.Cleanup(ts.Close)
 
-	t.Setenv("OAGENT_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
+	t.Setenv("OTHRA_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
 	clientFn := func(context.Context, config.Config, *slog.Logger, string, apiclient.Credential) (*apiclient.Client, error) {
 		return apiclient.New(ts.URL, cptest.OperatorCredential()), nil
 	}
@@ -101,7 +101,7 @@ func TestRoot_AgentGet_Remote(t *testing.T) {
 	ts := httptest.NewServer(srv.Handler(""))
 	t.Cleanup(ts.Close)
 
-	t.Setenv("OAGENT_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
+	t.Setenv("OTHRA_CLI_SESSION_FILE", filepath.Join(t.TempDir(), "session.json"))
 	clientFn := func(context.Context, config.Config, *slog.Logger, string, apiclient.Credential) (*apiclient.Client, error) {
 		return apiclient.New(ts.URL, cptest.OperatorCredential()), nil
 	}

@@ -1,6 +1,6 @@
 # Add a config key
 
-Use this when an operator needs a new setting. The loader reads defaults, then a YAML file, then `OAGENT_*` env vars. Only `internal/boot`, `internal/cli`, `internal/kernel/capabilities` and the config tools import `config`: a domain never reads a key itself, boot hands it the value.
+Use this when an operator needs a new setting. The loader reads defaults, then a YAML file, then `OTHRA_*` env vars. Only `internal/boot`, `internal/cli`, `internal/kernel/capabilities` and the config tools import `config`: a domain never reads a key itself, boot hands it the value.
 
 ## Plan
 
@@ -25,7 +25,7 @@ Use this when an operator needs a new setting. The loader reads defaults, then a
    A long tag line takes `//nolint:lll // struct tags are single-line`, as on `Config.Mode`.
 
 2. **Default** in `setDefaults` (`config/loader.go`): `v.SetDefault("rateLimit.maxKeys", 100_000)`. Durations are Go duration strings (`"5s"`).
-3. **Env var.** Nothing to register. `bindEnv` (`config/env.go`) walks the struct: prefix `OAGENT`, `.` and `-` become `_`, camelCase splits, all upper case. `rateLimit.maxKeys` is `OAGENT_RATE_LIMIT_MAX_KEYS`. `config.EnvVar(key)` returns the name.
+3. **Env var.** Nothing to register. `bindEnv` (`config/env.go`) walks the struct: prefix `OTHRA`, `.` and `-` become `_`, camelCase splits, all upper case. `rateLimit.maxKeys` is `OTHRA_RATE_LIMIT_MAX_KEYS`. `config.EnvVar(key)` returns the name.
 4. **Single-field rule** as a tag: `required`, `oneof=memory redis`, `gte=0`, `omitempty,url`, `datetime=2006-01-02`, or the custom tags `mail_address` and `secret` registered in `newValidator` (`config/validate.go`). A new parse check is a new custom tag there, plus its reason in `tagReason`.
 5. **Cross-field rule** as a method `func (c *Config) validate<Block>() error`, appended to the list in `Config.Validate` (`config/config.go`). It returns the shared error types, named by the YAML key, and never the value:
 

@@ -6,7 +6,7 @@
       }
     },
     "mimeType": "text/html;profile=mcp-app",
-    "name": "oagent app",
-    "uri": "ui://oagent/app"
+    "name": "othra app",
+    "uri": "ui://othra/app"
   }
 ]

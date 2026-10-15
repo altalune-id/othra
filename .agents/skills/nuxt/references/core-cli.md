@@ -102,7 +102,7 @@ Output is created in `.output/` directory.
 npx nuxt generate
 ```
 
-Creates static files for static hosting. oagent uses this (`pnpm ui:console` or `make ui-console`); see [core-deployment](core-deployment.md).
+Creates static files for static hosting. othra uses this (`pnpm ui:console` or `make ui-console`); see [core-deployment](core-deployment.md).
 
 ### Preview Production Build
 
@@ -200,7 +200,7 @@ pnpm dev  # or npx nuxt dev
 ### Production Deployment
 
 ```bash
-# oagent: generate the SPA and copy it for go:embed
+# othra: generate the SPA and copy it for go:embed
 make ui-console
 ```
 

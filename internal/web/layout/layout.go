@@ -9,7 +9,7 @@ import (
 
 	"github.com/a-h/templ"
 
-	"altalune.id/oagent/apperror"
+	"altalune.id/othra/apperror"
 )
 
 // LayoutData is what every page component receives.

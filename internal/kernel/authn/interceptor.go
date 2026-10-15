@@ -7,9 +7,9 @@ import (
 
 	"connectrpc.com/connect"
 
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/reqid"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/reqid"
 )
 
 // PermissionTable maps a Connect procedure to the permissions it needs; the caller must hold all of them.

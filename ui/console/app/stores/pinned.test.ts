@@ -14,7 +14,7 @@ describe('usePinnedStore', () => {
   });
 
   function saved() {
-    return JSON.parse(storage.data.get('oagent_pinned') ?? 'null');
+    return JSON.parse(storage.data.get('othra_pinned') ?? 'null');
   }
 
   it('starts empty with nothing saved', () => {
@@ -24,20 +24,20 @@ describe('usePinnedStore', () => {
   });
 
   it('reads the saved pins', () => {
-    storage.data.set('oagent_pinned', JSON.stringify({ org: 'acme', projects: { acme: 'web' } }));
+    storage.data.set('othra_pinned', JSON.stringify({ org: 'acme', projects: { acme: 'web' } }));
     const pinned = usePinnedStore();
     expect(pinned.orgSlug).toBe('acme');
     expect(pinned.projectFor('acme')).toBe('web');
   });
 
   it('ignores saved pins without fields', () => {
-    storage.data.set('oagent_pinned', JSON.stringify({}));
+    storage.data.set('othra_pinned', JSON.stringify({}));
     const pinned = usePinnedStore();
     expect(pinned.orgSlug).toBe('');
   });
 
   it('ignores corrupt saved pins', () => {
-    storage.data.set('oagent_pinned', '{not json');
+    storage.data.set('othra_pinned', '{not json');
     const pinned = usePinnedStore();
     expect(pinned.orgSlug).toBe('');
     expect(pinned.projectFor('acme')).toBe('');

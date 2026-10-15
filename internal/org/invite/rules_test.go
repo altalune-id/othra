@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/scope"
 )
 
 func person(role member.Role) member.Actor {

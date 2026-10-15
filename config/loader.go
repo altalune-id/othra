@@ -28,12 +28,12 @@ func WithRequireFile() Option { return func(o *loadOptions) { o.requireFile = tr
 // WithoutValidation skips Validate, for CLI commands that do not boot the server (e.g. remote admin).
 func WithoutValidation() Option { return func(o *loadOptions) { o.skipValidation = true } }
 
-// Loader accumulates config sources (defaults, OAGENT_* env, bound flags) and decodes them.
+// Loader accumulates config sources (defaults, OTHRA_* env, bound flags) and decodes them.
 type Loader struct {
 	v *viper.Viper
 }
 
-// NewLoader returns a Loader seeded with defaults and OAGENT_* env bindings.
+// NewLoader returns a Loader seeded with defaults and OTHRA_* env bindings.
 func NewLoader() *Loader {
 	v := viper.NewWithOptions(viper.KeyDelimiter("."))
 	setDefaults(v)
@@ -100,7 +100,7 @@ func (l *Loader) Load(path string, opts ...Option) (*Config, error) {
 	return &cfg, nil
 }
 
-// Load resolves defaults <- file <- OAGENT_* env <- bound flags. An empty path searches standard locations.
+// Load resolves defaults <- file <- OTHRA_* env <- bound flags. An empty path searches standard locations.
 func Load(path string, opts ...Option) (*Config, error) {
 	return NewLoader().Load(path, opts...)
 }
@@ -119,7 +119,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("mcp.enabled", false)
 	v.SetDefault("auth.mode", string(AuthModeLocal))
 	v.SetDefault("auth.sessionTTL", "24h")
-	v.SetDefault("cli.sessionFile", "~/.oagent/session.json")
+	v.SetDefault("cli.sessionFile", "~/.othra/session.json")
 	v.SetDefault("mail.driver", string(MailDriverConsole))
 	v.SetDefault("mail.smtp.port", 587)
 	v.SetDefault("mail.smtp.tls", string(MailTLSStartTLS))
@@ -128,14 +128,14 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("rateLimit.maxKeys", 100_000)
 	v.SetDefault("rateLimit.auth.enabled", false)
 	v.SetDefault("http.trustedProxyHops", 0)
-	v.SetDefault("redis.keyPrefix", "oagent:")
+	v.SetDefault("redis.keyPrefix", "othra:")
 	v.SetDefault("redis.maxConnections", 10)
 	v.SetDefault("redis.minIdleConnections", 0)
 	v.SetDefault("redis.maxIdleTime", "5m")
 	v.SetDefault("redis.connectTimeout", "5s")
 	v.SetDefault("redis.readTimeout", "3s")
 	v.SetDefault("redis.writeTimeout", "3s")
-	v.SetDefault("nats.name", "oagent")
+	v.SetDefault("nats.name", "othra")
 	v.SetDefault("nats.connectTimeout", "10s")
 	v.SetDefault("db.driver", string(DBDriverPostgres))
 	v.SetDefault("db.autoMigrate", true)
@@ -165,7 +165,7 @@ func configCandidates() []string {
 		out = append(out, filepath.Join(dir, "config.yaml"), filepath.Join(dir, "config.yml"))
 	}
 	if runtime.GOOS != "windows" {
-		out = append(out, "/etc/oagent/config.yaml", "/etc/oagent/config.yml")
+		out = append(out, "/etc/othra/config.yaml", "/etc/othra/config.yml")
 	}
 	if wd, err := os.Getwd(); err == nil {
 		out = append(out, filepath.Join(wd, "config.yaml"), filepath.Join(wd, "config.yml"))
@@ -175,10 +175,10 @@ func configCandidates() []string {
 
 func userConfigDir() string {
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-		return filepath.Join(xdg, "oagent")
+		return filepath.Join(xdg, "othra")
 	}
 	if home, err := os.UserHomeDir(); err == nil {
-		return filepath.Join(home, ".config", "oagent")
+		return filepath.Join(home, ".config", "othra")
 	}
 	return ""
 }

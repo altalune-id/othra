@@ -2,7 +2,7 @@
 
 Use this to let an MCP host (Claude, an IDE, an agent) call an RPC. A tool and a Connect RPC are one call reached two ways: the tool is generated from an annotated rpc and calls the same `controlplane.go` handler. It has no code of its own. So the RPC comes first: [rpc.md](rpc.md).
 
-Two transports serve the same registry: `/mcp` over HTTP (an API key or Basic auth, no cookie) and `oagent mcp` over stdio, which runs as the `session.System()` operator.
+Two transports serve the same registry: `/mcp` over HTTP (an API key or Basic auth, no cookie) and `othra mcp` over stdio, which runs as the `session.System()` operator.
 
 ## Plan
 

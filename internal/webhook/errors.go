@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/events"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/events"
 )
 
 // NotFoundError reports that no endpoint matched the lookup.

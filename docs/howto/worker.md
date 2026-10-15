@@ -1,6 +1,6 @@
 # Add a background worker or job
 
-Use this when work must run outside a request: a polling loop, a periodic job, or a queue handler. Everything long-running is a `worker.Worker` registered on the one `Supervisor` that `Boot` builds; `App.Run` runs them all under one errgroup until SIGINT or SIGTERM cancels the context (`cmd/oagent/main.go`).
+Use this when work must run outside a request: a polling loop, a periodic job, or a queue handler. Everything long-running is a `worker.Worker` registered on the one `Supervisor` that `Boot` builds; `App.Run` runs them all under one errgroup until SIGINT or SIGTERM cancels the context (`cmd/othra/main.go`).
 
 Pick the shape first:
 

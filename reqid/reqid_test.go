@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/nanoid"
-	"altalune.id/oagent/reqid"
+	"altalune.id/othra/nanoid"
+	"altalune.id/othra/reqid"
 )
 
 func TestNew(t *testing.T) {

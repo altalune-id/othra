@@ -7,11 +7,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/kernel/tenant"
-	slugpkg "altalune.id/oagent/slug"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/tenant"
+	slugpkg "altalune.id/othra/slug"
 )
 
 // Service is the agent application service: the driving port surfaces call.

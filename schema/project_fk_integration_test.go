@@ -13,9 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/migrator"
-	"altalune.id/oagent/schema"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/migrator"
+	"altalune.id/othra/schema"
 )
 
 type twoOrgs struct {

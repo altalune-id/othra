@@ -19,13 +19,13 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"altalune.id/oagent/apperror"
-	apperrorv1 "altalune.id/oagent/gen/go/apperror/v1"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/apperror"
+	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // NOTE: testdata/rule_reasons.json is the one reason table; the console tests its reasonOf against it too.
@@ -209,7 +209,7 @@ func TestAPI_RefusesAnInvalidRequestWithItsViolations(t *testing.T) {
 func TestAPI_AuthenticatesBeforeValidating(t *testing.T) {
 	url := authServer(t, session.Principal{})
 	_, err := orgv1connect.NewOrgServiceClient(http.DefaultClient, url).
-		CreateOrg(context.Background(), bearer(connect.NewRequest(&orgv1.CreateOrgRequest{Name: strings.Repeat("a", 201)}), "oagent_bad"))
+		CreateOrg(context.Background(), bearer(connect.NewRequest(&orgv1.CreateOrgRequest{Name: strings.Repeat("a", 201)}), "othra_bad"))
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
 	assert.Empty(t, detailOf(t, err).GetViolations())
 }
@@ -218,7 +218,7 @@ func TestAPI_ChecksPermissionBeforeValidating(t *testing.T) {
 	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"agent:read"}}
 	url := authServer(t, p)
 	_, err := orgv1connect.NewOrgServiceClient(http.DefaultClient, url).
-		CreateOrg(context.Background(), bearer(connect.NewRequest(&orgv1.CreateOrgRequest{Name: strings.Repeat("a", 201)}), "oagent_good"))
+		CreateOrg(context.Background(), bearer(connect.NewRequest(&orgv1.CreateOrgRequest{Name: strings.Repeat("a", 201)}), "othra_good"))
 	assert.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
 	assert.Empty(t, detailOf(t, err).GetViolations())
 }
@@ -233,7 +233,7 @@ func TestAPI_PersonOnlyRefusesAKeyBeforeValidating(t *testing.T) {
 	p := session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New(), ActiveOrgID: uuid.New(), AllProjects: true, Scopes: []string{"agent:read"}}
 	url := authServer(t, p)
 	_, err := authv1connect.NewAuthServiceClient(http.DefaultClient, url).
-		ChangePassword(context.Background(), bearer(connect.NewRequest(&authv1.ChangePasswordRequest{}), "oagent_good"))
+		ChangePassword(context.Background(), bearer(connect.NewRequest(&authv1.ChangePasswordRequest{}), "othra_good"))
 	assert.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
 	assert.Empty(t, detailOf(t, err).GetViolations())
 }

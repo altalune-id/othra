@@ -1,1 +1,1 @@
-export { default } from '@oagent/vitest-config/node';
+export { default } from '@othra/vitest-config/node';

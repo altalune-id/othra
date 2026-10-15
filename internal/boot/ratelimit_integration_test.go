@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/testutil/redistest"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/testutil/redistest"
 )
 
 func loginServer(t *testing.T, rl config.RateLimitConfig) http.Handler {

@@ -2,7 +2,7 @@
   {
     "_meta": {
       "ui": {
-        "resourceUri": "ui://oagent/app"
+        "resourceUri": "ui://othra/app"
       }
     },
     "annotations": {

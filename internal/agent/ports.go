@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/events"
 )
 
 // Publisher fans a domain event out to its subscribers; the webhook module implements it.

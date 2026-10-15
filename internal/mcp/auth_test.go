@@ -14,16 +14,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/permission"
-	rootmcp "altalune.id/oagent/mcp"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/permission"
+	rootmcp "altalune.id/othra/mcp"
+	"altalune.id/othra/scope"
 )
 
-const goodKey = "oagent_good"
+const goodKey = "othra_good"
 
 type chainStub struct {
 	calls int
@@ -69,7 +69,7 @@ func keyPrincipal() session.Principal {
 
 func TestAuthenticate_NoCredentialOptionalPassesAnonymous(t *testing.T) {
 	var s seen
-	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "oagent_"}, &s), nil)
+	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "othra_"}, &s), nil)
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.True(t, s.called)
 	assert.Empty(t, s.p.Source)
@@ -77,7 +77,7 @@ func TestAuthenticate_NoCredentialOptionalPassesAnonymous(t *testing.T) {
 
 func TestAuthenticate_NoCredentialRequiredIs401(t *testing.T) {
 	var s seen
-	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "oagent_", Required: true}, &s), nil)
+	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "othra_", Required: true}, &s), nil)
 	assert.False(t, s.called)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	assert.Equal(t, "Bearer", rec.Header().Get("WWW-Authenticate"))
@@ -91,7 +91,7 @@ func TestAuthenticate_NoCredentialRequiredIs401(t *testing.T) {
 
 func TestAuthenticate_EveryFailureIsTheSame401(t *testing.T) {
 	failures := map[string]http.Header{
-		"bad key":          {"Authorization": {"Bearer oagent_bad"}},
+		"bad key":          {"Authorization": {"Bearer othra_bad"}},
 		"malformed bearer": {"Authorization": {"Bearer not-a-key"}},
 		"unknown scheme":   {"Authorization": {"Token abc"}},
 		"bad basic":        {"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte("op:nope"))}},
@@ -100,7 +100,7 @@ func TestAuthenticate_EveryFailureIsTheSame401(t *testing.T) {
 	var bodies []string
 	for name, h := range failures {
 		var s seen
-		rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "oagent_"}, &s), h)
+		rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "othra_"}, &s), h)
 		assert.False(t, s.called, name)
 		assert.Equal(t, http.StatusUnauthorized, rec.Code, name)
 		assert.Equal(t, "Bearer", rec.Header().Get("WWW-Authenticate"), name)
@@ -118,19 +118,19 @@ func TestAuthenticate_CookieIsIgnored(t *testing.T) {
 	stub := &chainStub{p: session.Principal{Source: session.SourceLocal, UserID: uuid.New()}}
 
 	var s seen
-	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{stub}, KeyPrefix: "oagent_"}, &s), http.Header{"Cookie": {cookie}})
+	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{stub}, KeyPrefix: "othra_"}, &s), http.Header{"Cookie": {cookie}})
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Empty(t, s.p.Source, "a cookie alone is no credential")
 	assert.Zero(t, stub.calls)
 
-	rec = call(guarded(t, AuthOptions{Chain: authn.Chain{stub}, KeyPrefix: "oagent_", Required: true}, &s), http.Header{"Cookie": {cookie}})
+	rec = call(guarded(t, AuthOptions{Chain: authn.Chain{stub}, KeyPrefix: "othra_", Required: true}, &s), http.Header{"Cookie": {cookie}})
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
 func TestAuthenticate_ValidKeyPutsThePrincipal(t *testing.T) {
 	p := keyPrincipal()
 	var s seen
-	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{p: p}}, KeyPrefix: "oagent_", Required: true}, &s),
+	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{p: p}}, KeyPrefix: "othra_", Required: true}, &s),
 		http.Header{"Authorization": {"Bearer " + goodKey}})
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, p.KeyID, s.p.KeyID)
@@ -139,14 +139,14 @@ func TestAuthenticate_ValidKeyPutsThePrincipal(t *testing.T) {
 func TestAuthenticate_BasicPutsTheOperator(t *testing.T) {
 	var s seen
 	h := http.Header{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte("op:pw"))}}
-	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "oagent_"}, &s), h)
+	rec := call(guarded(t, AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "othra_"}, &s), h)
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.True(t, s.p.Operator)
 }
 
 func TestAuthenticate_ResourceMetadataInTheChallenge(t *testing.T) {
 	var s seen
-	o := AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "oagent_", Required: true, ResourceMetadataURL: "https://a.example/.well-known/oauth-protected-resource/mcp"}
+	o := AuthOptions{Chain: authn.Chain{&chainStub{}}, KeyPrefix: "othra_", Required: true, ResourceMetadataURL: "https://a.example/.well-known/oauth-protected-resource/mcp"}
 	rec := call(guarded(t, o, &s), nil)
 	assert.Equal(t, `Bearer resource_metadata="https://a.example/.well-known/oauth-protected-resource/mcp"`, rec.Header().Get("WWW-Authenticate"))
 }

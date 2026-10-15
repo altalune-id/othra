@@ -5,9 +5,9 @@
 package orgv1mcp
 
 import (
-	v1 "altalune.id/oagent/gen/go/org/v1"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	mcp "altalune.id/oagent/mcp"
+	v1 "altalune.id/othra/gen/go/org/v1"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	mcp "altalune.id/othra/mcp"
 	connect "connectrpc.com/connect"
 	context "context"
 	json "encoding/json"
@@ -39,7 +39,7 @@ func RegisterOrgServiceTools(reg *mcp.Registry, h orgv1connect.OrgServiceHandler
 		Scopes:      permissionsFor(orgv1connect.OrgServiceCreateOrgProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"slug":{"type":"string","maxLength":64,"pattern":"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"},"name":{"type":"string","minLength":1,"maxLength":200}},"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -69,7 +69,7 @@ func RegisterOrgServiceTools(reg *mcp.Registry, h orgv1connect.OrgServiceHandler
 		Scopes:      permissionsFor(orgv1connect.OrgServiceGetOrgProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"id":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["id"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -99,7 +99,7 @@ func RegisterOrgServiceTools(reg *mcp.Registry, h orgv1connect.OrgServiceHandler
 		Scopes:      permissionsFor(orgv1connect.OrgServiceListOrgsProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{},"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

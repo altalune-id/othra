@@ -7,8 +7,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/render"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/render"
 )
 
 // RenderError writes err to the command's stderr in the selected output format.
@@ -36,7 +36,7 @@ func errorPayload(msg, code string) map[string]string {
 	return m
 }
 
-const unauthenticatedHint = "not signed in or credential rejected; run `oagent auth login` or pass --token"
+const unauthenticatedHint = "not signed in or credential rejected; run `othra auth login` or pass --token"
 
 func errorInfo(err error) (msg, code string) {
 	if ae, ok := apperror.AsAppError(err); ok {
@@ -63,7 +63,7 @@ type ProfileHostMismatchError struct {
 }
 
 func (e *ProfileHostMismatchError) Error() string {
-	return fmt.Sprintf("profile %s is signed in to %s, not %s; run `oagent auth login --url %s --profile %s`",
+	return fmt.Sprintf("profile %s is signed in to %s, not %s; run `othra auth login --url %s --profile %s`",
 		e.Profile, e.ProfileURL, e.URL, e.URL, e.Profile)
 }
 
@@ -82,7 +82,7 @@ func IsProfileHostMismatchError(err error) bool {
 type SessionExpiredError struct{ Profile string }
 
 func (e *SessionExpiredError) Error() string {
-	return fmt.Sprintf("session for profile %s expired; run `oagent auth login --profile %s`", e.Profile, e.Profile)
+	return fmt.Sprintf("session for profile %s expired; run `othra auth login --profile %s`", e.Profile, e.Profile)
 }
 
 // ToAppError maps the expiry to Unauthenticated.

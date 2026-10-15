@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // Kind names the form of a Credential.

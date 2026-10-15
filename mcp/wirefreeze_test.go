@@ -9,7 +9,7 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"altalune.id/oagent/mcp"
+	"altalune.id/othra/mcp"
 )
 
 //nolint:gochecknoglobals // a -update flag for golden files has to be package level.
@@ -51,7 +51,7 @@ func wireFreezeServer(t *testing.T, opts ...mcp.Option) *mcp.Server {
 		Name:        "blog_list",
 		Description: "List a project's blog posts.",
 		Scopes:      []string{"posts:read"},
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: map[string]any{
 			"type":       "object",
 			"properties": map[string]any{"projectId": map[string]any{"type": "string"}},
@@ -68,7 +68,7 @@ func wireFreezeServer(t *testing.T, opts ...mcp.Option) *mcp.Server {
 	}, nil)
 
 	return mcp.NewServer(append(opts,
-		mcp.WithImplementation("oagent", "wirefreeze"),
+		mcp.WithImplementation("othra", "wirefreeze"),
 		mcp.WithRegistry(reg),
 		mcp.WithScopes(scopesFromContext),
 	)...)
@@ -87,8 +87,8 @@ func wireFreezeUIServer(t *testing.T) *mcp.Server {
 
 	srv := wireFreezeServer(t, mcp.WithUI(true))
 	srv.AddUIResource(mcp.UIResource{
-		URI:           "ui://oagent/app",
-		Name:          "oagent app",
+		URI:           "ui://othra/app",
+		Name:          "othra app",
 		Body:          testUIBody,
 		PrefersBorder: new(bool),
 	})
@@ -112,7 +112,7 @@ func TestResourcesListWireIsFrozen(t *testing.T) {
 }
 
 func TestResourcesReadWireIsFrozen(t *testing.T) {
-	res, err := connect(t, wireFreezeUIServer(t)).ReadResource(t.Context(), &sdkmcp.ReadResourceParams{URI: "ui://oagent/app"})
+	res, err := connect(t, wireFreezeUIServer(t)).ReadResource(t.Context(), &sdkmcp.ReadResourceParams{URI: "ui://othra/app"})
 	if err != nil {
 		t.Fatalf("read resource: %v", err)
 	}

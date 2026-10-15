@@ -5,7 +5,7 @@
 package memberv1connect
 
 import (
-	v1 "altalune.id/oagent/gen/go/member/v1"
+	v1 "altalune.id/othra/gen/go/member/v1"
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"

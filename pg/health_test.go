@@ -10,8 +10,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/pg"
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/pg"
+	"altalune.id/othra/worker"
 )
 
 func testHealthLogger() *slog.Logger { return slog.New(slog.NewTextHandler(io.Discard, nil)) }

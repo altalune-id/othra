@@ -15,17 +15,17 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"altalune.id/oagent/apperror"
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	apikeyv1 "altalune.id/oagent/gen/go/apikey/v1"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	invitev1 "altalune.id/oagent/gen/go/invite/v1"
-	memberv1 "altalune.id/oagent/gen/go/member/v1"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	projectv1 "altalune.id/oagent/gen/go/project/v1"
-	webhookv1 "altalune.id/oagent/gen/go/webhook/v1"
-	"altalune.id/oagent/internal/permission"
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/apperror"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	memberv1 "altalune.id/othra/gen/go/member/v1"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	projectv1 "altalune.id/othra/gen/go/project/v1"
+	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
+	"altalune.id/othra/internal/permission"
+	"altalune.id/othra/nanoid"
 )
 
 //nolint:gochecknoglobals // a fixed allowlist.
@@ -281,7 +281,7 @@ func TestRequestRules_ParamsCarryTheLimit(t *testing.T) {
 	}
 }
 
-// SECURITY: oagent.public_id must accept every id nanoid mints, or a real record could never be named.
+// SECURITY: othra.public_id must accept every id nanoid mints, or a real record could never be named.
 func TestPublicIDRule_AcceptsEveryMintedID(t *testing.T) {
 	v := newTestValidator(t)
 	for range 2000 {

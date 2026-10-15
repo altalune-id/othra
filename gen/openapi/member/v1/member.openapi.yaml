@@ -316,7 +316,7 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: LeaveOrgRequest
       required:
         - orgId
@@ -332,7 +332,7 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: ListMembersRequest
       required:
         - orgId
@@ -375,12 +375,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         userId:
           type: string
           title: user_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: RemoveMemberRequest
       required:
         - orgId
@@ -397,12 +397,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         userId:
           type: string
           title: user_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         role:
           type: string
           title: role

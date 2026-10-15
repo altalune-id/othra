@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/sealer"
 )
 
 type fakeStore struct {

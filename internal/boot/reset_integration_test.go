@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/mailer"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/mailer"
 )
 
 func claimMail(t *testing.T, svcs *Services) []mailer.Message {
@@ -50,7 +50,7 @@ func formPost(path string, v url.Values) *http.Request {
 func TestPasswordReset_EndToEnd(t *testing.T) {
 	cfg := devLocalConfig()
 	cfg.HTTP.StateSecret = strings.Repeat("s", 40)
-	cfg.HTTP.BaseURL = "https://oagent.example.com"
+	cfg.HTTP.BaseURL = "https://othra.example.com"
 	cfg.Secrets.EncryptionKey = testKeyHex
 	cfg.Auth.SessionTTL = 24 * time.Hour
 	cfg.Auth.Genesis = config.GenesisConfig{Email: "root@example.com", Password: "genesis-password"}
@@ -75,9 +75,9 @@ func TestPasswordReset_EndToEnd(t *testing.T) {
 	assert.Equal(t, rec.Body.String(), unknown.Body.String())
 	mail := claimMail(t, svcs)
 	require.Len(t, mail, 1, "one email, for the known address only")
-	i := strings.Index(mail[0].TextBody, "https://oagent.example.com/reset-password/")
+	i := strings.Index(mail[0].TextBody, "https://othra.example.com/reset-password/")
 	require.GreaterOrEqual(t, i, 0)
-	link := strings.Fields(mail[0].TextBody[i+len("https://oagent.example.com"):])[0]
+	link := strings.Fields(mail[0].TextBody[i+len("https://othra.example.com"):])[0]
 
 	gated := serve(h, httptest.NewRequest(http.MethodGet, "/somewhere", nil), old)
 	require.Equal(t, http.StatusSeeOther, gated.Code, "this person owes the terms, so the gate is on")
@@ -96,7 +96,7 @@ func TestPasswordReset_EndToEnd(t *testing.T) {
 	assert.False(t, ok, "the old session is gone")
 	changed := claimMail(t, svcs)
 	require.Len(t, changed, 1)
-	assert.Equal(t, "Your oagent password was changed", changed[0].Subject)
+	assert.Equal(t, "Your othra password was changed", changed[0].Subject)
 
 	_, err = svcs.Auth.LoginLocal(ctx, auth.Credentials{Email: "root@example.com", Password: "a brand new passphrase"})
 	require.NoError(t, err, "the new password signs in")

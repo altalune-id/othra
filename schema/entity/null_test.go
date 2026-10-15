@@ -8,7 +8,7 @@ import (
 	jetpg "github.com/go-jet/jet/v2/postgres"
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/schema/entity"
 )
 
 func TestNullHelpersCarryTheColumnType(t *testing.T) {

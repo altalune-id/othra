@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/webhook"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/webhook"
+	"altalune.id/othra/sealer"
 )
 
 func testUnexpected() apperror.UnexpectedFunc { return apperror.NewReporter(nil, false).Unexpected }

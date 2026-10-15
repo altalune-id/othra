@@ -25,14 +25,14 @@ func TestLoad_DBAndPostgresDefaults(t *testing.T) {
 
 func TestLoad_PostgresFromEnv(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_POSTGRES_SCHEMA", "auth")
-	t.Setenv("OAGENT_POSTGRES_TABLE_PREFIX", "t_")
-	t.Setenv("OAGENT_POSTGRES_ROLE", "app")
-	t.Setenv("OAGENT_POSTGRES_READER_DSN", "postgres://replica/db")
-	t.Setenv("OAGENT_POSTGRES_MIGRATOR_DSN", "postgres://owner/db")
-	t.Setenv("OAGENT_POSTGRES_MIGRATOR_ROLE", "owner")
-	t.Setenv("OAGENT_POSTGRES_HEALTH_INTERVAL", "10s")
-	t.Setenv("OAGENT_DB_AUTO_MIGRATE", "false")
+	t.Setenv("OTHRA_POSTGRES_SCHEMA", "auth")
+	t.Setenv("OTHRA_POSTGRES_TABLE_PREFIX", "t_")
+	t.Setenv("OTHRA_POSTGRES_ROLE", "app")
+	t.Setenv("OTHRA_POSTGRES_READER_DSN", "postgres://replica/db")
+	t.Setenv("OTHRA_POSTGRES_MIGRATOR_DSN", "postgres://owner/db")
+	t.Setenv("OTHRA_POSTGRES_MIGRATOR_ROLE", "owner")
+	t.Setenv("OTHRA_POSTGRES_HEALTH_INTERVAL", "10s")
+	t.Setenv("OTHRA_DB_AUTO_MIGRATE", "false")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.Equal(t, "auth", c.Postgres.Schema)
@@ -87,9 +87,9 @@ func TestValidate_Postgres(t *testing.T) {
 
 func TestLoad_DBFromFile(t *testing.T) {
 	setRequiredEnv(t)
-	path := filepath.Join(t.TempDir(), "oagent.yaml")
+	path := filepath.Join(t.TempDir(), "othra.yaml")
 	require.NoError(t, os.WriteFile(path, []byte("db:\n  driver: postgres\n  autoMigrate: false\n"), 0o600))
-	t.Setenv("OAGENT_DB_DRIVER", "postgres")
+	t.Setenv("OTHRA_DB_DRIVER", "postgres")
 	c, err := Load(path)
 	require.NoError(t, err)
 	assert.False(t, c.DB.AutoMigrate)
@@ -111,8 +111,8 @@ func TestWalkEnvKeys_PostgresAwareness(t *testing.T) {
 		require.True(t, ok, key)
 		assert.ElementsMatch(t, want, k.Awareness, key)
 	}
-	assert.Equal(t, "OAGENT_POSTGRES_DSN", byYAML["postgres.dsn"].Key)
-	assert.Equal(t, "OAGENT_DB_DRIVER", byYAML["db.driver"].Key)
+	assert.Equal(t, "OTHRA_POSTGRES_DSN", byYAML["postgres.dsn"].Key)
+	assert.Equal(t, "OTHRA_DB_DRIVER", byYAML["db.driver"].Key)
 	assert.Equal(t, "postgres", byYAML["db.driver"].FormatDefault())
 	for _, gone := range []string{"db.dsn", "db.schema", "db.tablePrefix", "db.migrator.dsn", "rateLimit.store"} {
 		assert.NotContains(t, byYAML, gone)

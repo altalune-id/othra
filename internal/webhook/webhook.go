@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/nanoid"
 )
 
 // MaxEndpointsPerProject bounds the fan-out of one event.
@@ -26,11 +26,11 @@ const MaxDescriptionRunes = 200
 
 // Delivery header names a receiver reads.
 const (
-	HeaderEventID    = "X-Oagent-Event-Id"
-	HeaderEventType  = "X-Oagent-Event-Type"
-	HeaderDeliveryID = "X-Oagent-Delivery-Id"
-	HeaderTimestamp  = "X-Oagent-Timestamp"
-	HeaderSignature  = "X-Oagent-Signature"
+	HeaderEventID    = "X-Othra-Event-Id"
+	HeaderEventType  = "X-Othra-Event-Type"
+	HeaderDeliveryID = "X-Othra-Delivery-Id"
+	HeaderTimestamp  = "X-Othra-Timestamp"
+	HeaderSignature  = "X-Othra-Signature"
 )
 
 // Endpoint is the aggregate root: one tenant URL subscribed to a set of event types.

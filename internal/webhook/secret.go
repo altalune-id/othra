@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/sealer"
 )
 
 const (

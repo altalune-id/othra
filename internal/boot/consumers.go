@@ -1,8 +1,8 @@
 package boot
 
 import (
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel/queue"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel/queue"
 )
 
 func consumerOff(o *options, cfg config.Config) string {

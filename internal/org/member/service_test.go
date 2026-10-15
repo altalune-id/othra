@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/mailer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/mailer"
 )
 
 func newService(store member.Store) *member.Service {
@@ -393,7 +393,7 @@ func (e *effectCalls) Enqueue(_ context.Context, m mailer.Message) (uuid.UUID, e
 func (e *effectCalls) effects() member.Effects {
 	return member.Effects{
 		Sessions: e, Keys: e, People: e, Orgs: e, Mail: e,
-		From: "team@example.com", BaseURL: "https://oagent.example.com/base",
+		From: "team@example.com", BaseURL: "https://othra.example.com/base",
 	}
 }
 
@@ -455,8 +455,8 @@ func TestService_RoleChangeNotifiesAndDemotionEndsSessions(t *testing.T) {
 			require.Len(t, e.mail, 1)
 			m := e.mail[0]
 			assert.Equal(t, tc.subject, m.Subject)
-			assert.Contains(t, m.TextBody, "https://oagent.example.com/base/console/")
-			assert.Contains(t, m.HTMLBody, `href="https://oagent.example.com/base/console/"`)
+			assert.Contains(t, m.TextBody, "https://othra.example.com/base/console/")
+			assert.Contains(t, m.HTMLBody, `href="https://othra.example.com/base/console/"`)
 		})
 	}
 }

@@ -4,9 +4,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	"altalune.id/oagent/internal/render"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	"altalune.id/othra/internal/render"
 )
 
 // ClientFn returns the Agent Connect client for a command; the caller resolves URL and token.

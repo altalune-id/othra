@@ -34,7 +34,7 @@ const (
 
 //nolint:gochecknoglobals // computed once, read-only afterwards.
 var dummyHash = sync.OnceValue(func() string {
-	h, err := Hash("oagent-dummy-password")
+	h, err := Hash("othra-dummy-password")
 	if err != nil {
 		return ""
 	}

@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/user"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/user"
 )
 
 type recordedProfiles struct {

@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	natsconn "altalune.id/oagent/nats"
-	"altalune.id/oagent/pg"
-	redisconn "altalune.id/oagent/redis"
+	natsconn "altalune.id/othra/nats"
+	"altalune.id/othra/pg"
+	redisconn "altalune.id/othra/redis"
 )
 
 func TestReadinessChecks(t *testing.T) {

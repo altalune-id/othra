@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/testutil/fakes"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 type reported struct{ errs []error }
@@ -100,7 +100,7 @@ func TestAuthenticator_WrongShapeSkipsStore(t *testing.T) {
 
 	for name, c := range map[string]authn.Credential{
 		"wrong prefix": {Kind: authn.KindAPIKey, Token: "other_abc"},
-		"session":      {Kind: authn.KindSession, Token: "oagent_abc"},
+		"session":      {Kind: authn.KindSession, Token: "othra_abc"},
 		"basic":        {Kind: authn.KindBasic, User: "u", Password: "p"},
 	} {
 		t.Run(name, func(t *testing.T) {

@@ -6,11 +6,11 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org/member"
-	rootmcp "altalune.id/oagent/mcp"
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org/member"
+	rootmcp "altalune.id/othra/mcp"
+	"altalune.id/othra/worker"
 )
 
 // App is the wired runtime graph.

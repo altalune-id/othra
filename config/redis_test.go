@@ -12,7 +12,7 @@ import (
 func TestLoad_RedisDefaults(t *testing.T) {
 	c := validConfig(t)
 	assert.Empty(t, c.Redis.URL)
-	assert.Equal(t, "oagent:", c.Redis.KeyPrefix)
+	assert.Equal(t, "othra:", c.Redis.KeyPrefix)
 	assert.Equal(t, 10, c.Redis.MaxConnections)
 	assert.Zero(t, c.Redis.MinIdleConnections)
 	assert.Equal(t, 5*time.Minute, c.Redis.MaxIdleTime)
@@ -24,29 +24,29 @@ func TestLoad_RedisDefaults(t *testing.T) {
 
 func TestLoad_RedisFromEnv(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_REDIS_URL", "redis://:pw@localhost:6379/2")
-	t.Setenv("OAGENT_REDIS_KEY_PREFIX", "oagent:prod")
-	t.Setenv("OAGENT_REDIS_MAX_CONNECTIONS", "20")
-	t.Setenv("OAGENT_REDIS_READ_TIMEOUT", "500ms")
+	t.Setenv("OTHRA_REDIS_URL", "redis://:pw@localhost:6379/2")
+	t.Setenv("OTHRA_REDIS_KEY_PREFIX", "othra:prod")
+	t.Setenv("OTHRA_REDIS_MAX_CONNECTIONS", "20")
+	t.Setenv("OTHRA_REDIS_READ_TIMEOUT", "500ms")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.Equal(t, "redis://:pw@localhost:6379/2", c.Redis.URL)
-	assert.Equal(t, "oagent:prod:", c.Redis.KeyPrefix, "a trailing colon is added")
+	assert.Equal(t, "othra:prod:", c.Redis.KeyPrefix, "a trailing colon is added")
 	assert.Equal(t, 20, c.Redis.MaxConnections)
 	assert.Equal(t, 500*time.Millisecond, c.Redis.ReadTimeout)
 }
 
 func TestLoad_RedisPrefixKeepsTrailingColon(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_REDIS_KEY_PREFIX", "oagent:staging:")
+	t.Setenv("OTHRA_REDIS_KEY_PREFIX", "othra:staging:")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
-	assert.Equal(t, "oagent:staging:", c.Redis.KeyPrefix)
+	assert.Equal(t, "othra:staging:", c.Redis.KeyPrefix)
 }
 
 func TestNormalizeRedisKeyPrefix(t *testing.T) {
-	assert.Equal(t, "oagent:", NormalizeRedisKeyPrefix("oagent"))
-	assert.Equal(t, "oagent:", NormalizeRedisKeyPrefix("oagent:"))
+	assert.Equal(t, "othra:", NormalizeRedisKeyPrefix("othra"))
+	assert.Equal(t, "othra:", NormalizeRedisKeyPrefix("othra:"))
 	assert.Empty(t, NormalizeRedisKeyPrefix(""), "empty stays empty so validation rejects it")
 }
 
@@ -100,7 +100,7 @@ func TestValidate_Redis(t *testing.T) {
 			check:  invalidSetting("redis.keyPrefix"),
 		},
 		"prefix with a wildcard": {
-			mutate: func(c *Config) { useRedis(c); c.Redis.KeyPrefix = "oagent*:" },
+			mutate: func(c *Config) { useRedis(c); c.Redis.KeyPrefix = "othra*:" },
 			check:  invalidSetting("redis.keyPrefix"),
 		},
 		"prefix too long": {

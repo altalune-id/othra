@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/oagent/internal/auth/views"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/mailer"
-	"altalune.id/oagent/password"
+	"altalune.id/othra/internal/auth/views"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/mailer"
+	"altalune.id/othra/password"
 )
 
 const mailTime = "2 January 2006, 15:04 UTC"

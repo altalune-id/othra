@@ -4,26 +4,26 @@ import (
 	"log/slog"
 	"net/http"
 
-	"altalune.id/oagent/config"
-	agentv1mcp "altalune.id/oagent/gen/go/agent/v1/agentv1mcp"
-	authv1mcp "altalune.id/oagent/gen/go/auth/v1/authv1mcp"
-	invitev1mcp "altalune.id/oagent/gen/go/invite/v1/invitev1mcp"
-	memberv1mcp "altalune.id/oagent/gen/go/member/v1/memberv1mcp"
-	orgv1mcp "altalune.id/oagent/gen/go/org/v1/orgv1mcp"
-	projectv1mcp "altalune.id/oagent/gen/go/project/v1/projectv1mcp"
-	webhookv1mcp "altalune.id/oagent/gen/go/webhook/v1/webhookv1mcp"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/auth"
-	mcpinternal "altalune.id/oagent/internal/mcp"
-	mcpui "altalune.id/oagent/internal/mcp/ui"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/permission"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/webhook"
-	rootmcp "altalune.id/oagent/mcp"
-	"altalune.id/oagent/version"
+	"altalune.id/othra/config"
+	agentv1mcp "altalune.id/othra/gen/go/agent/v1/agentv1mcp"
+	authv1mcp "altalune.id/othra/gen/go/auth/v1/authv1mcp"
+	invitev1mcp "altalune.id/othra/gen/go/invite/v1/invitev1mcp"
+	memberv1mcp "altalune.id/othra/gen/go/member/v1/memberv1mcp"
+	orgv1mcp "altalune.id/othra/gen/go/org/v1/orgv1mcp"
+	projectv1mcp "altalune.id/othra/gen/go/project/v1/projectv1mcp"
+	webhookv1mcp "altalune.id/othra/gen/go/webhook/v1/webhookv1mcp"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/auth"
+	mcpinternal "altalune.id/othra/internal/mcp"
+	mcpui "altalune.id/othra/internal/mcp/ui"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/permission"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/webhook"
+	rootmcp "altalune.id/othra/mcp"
+	"altalune.id/othra/version"
 )
 
 // NOTE: nil when mcp.enabled is off.
@@ -43,7 +43,7 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *roo
 	authv1mcp.RegisterAuthServiceTools(registry, auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users), permission.For, validate)
 
 	srv := rootmcp.NewServer(
-		rootmcp.WithImplementation("oagent", version.Default()),
+		rootmcp.WithImplementation("othra", version.Default()),
 		rootmcp.WithRegistry(registry),
 		rootmcp.WithScopes(mcpinternal.ScopesFromContext),
 		rootmcp.WithErrorMapper(mcpinternal.ErrorPayload),
@@ -53,7 +53,7 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *roo
 	if cfg.AppsUI {
 		srv.AddUIResource(rootmcp.UIResource{
 			URI:           mcpui.ResourceURI,
-			Name:          "oagent app",
+			Name:          "othra app",
 			MIMEType:      rootmcp.MIMEApp,
 			Body:          mcpui.Document(),
 			PrefersBorder: new(bool),

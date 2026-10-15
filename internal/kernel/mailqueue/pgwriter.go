@@ -10,10 +10,10 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/mailer"
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/mailer"
+	"altalune.id/othra/schema/entity"
 )
 
 // Enqueue seals m and stores it pending; it joins the transaction on ctx when there is one.

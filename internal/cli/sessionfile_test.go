@@ -57,6 +57,6 @@ func TestSessionFile_CorruptNamesThePath(t *testing.T) {
 func TestExpandHome(t *testing.T) {
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(home, ".oagent", "session.json"), expandHome("~/.oagent/session.json"))
+	assert.Equal(t, filepath.Join(home, ".othra", "session.json"), expandHome("~/.othra/session.json"))
 	assert.Equal(t, "/abs/session.json", expandHome("/abs/session.json"))
 }

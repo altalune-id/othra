@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/db"
 )
 
 func userRowColumns() []string {

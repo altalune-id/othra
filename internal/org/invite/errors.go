@@ -3,11 +3,11 @@ package invite
 import (
 	"errors"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/password"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/password"
 )
 
 // Reason is why an invite can't be used, sent to clients as meta.reason.

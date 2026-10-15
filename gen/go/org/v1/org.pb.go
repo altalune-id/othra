@@ -7,8 +7,8 @@
 package orgv1
 
 import (
-	_ "altalune.id/oagent/gen/go/mcp/v1"
-	_ "altalune.id/oagent/gen/go/oagent/v1"
+	_ "altalune.id/othra/gen/go/mcp/v1"
+	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -473,7 +473,7 @@ var File_org_v1_org_proto protoreflect.FileDescriptor
 
 const file_org_v1_org_proto_rawDesc = "" +
 	"\n" +
-	"\x10org/v1/org.proto\x12\x06org.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x15oagent/v1/rules.proto\"\xc4\x01\n" +
+	"\x10org/v1/org.proto\x12\x06org.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xc4\x01\n" +
 	"\x03Org\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12\x12\n" +
@@ -509,9 +509,9 @@ const file_org_v1_org_proto_rawDesc = "" +
 	"\aorg_get\x12\x1aGet an organization by id.\x1a\x02id*\x03app\x12\x81\x01\n" +
 	"\bListOrgs\x12\x17.org.v1.ListOrgsRequest\x1a\x18.org.v1.ListOrgsResponse\"B\xca\xf3\x18>\n" +
 	"\borg_list\x12-List organizations, ordered by creation time.*\x03app\x12@\n" +
-	"\tUpdateOrg\x12\x18.org.v1.UpdateOrgRequest\x1a\x19.org.v1.UpdateOrgResponseBw\n" +
+	"\tUpdateOrg\x12\x18.org.v1.UpdateOrgRequest\x1a\x19.org.v1.UpdateOrgResponseBv\n" +
 	"\n" +
-	"com.org.v1B\bOrgProtoP\x01Z&altalune.id/oagent/gen/go/org/v1;orgv1\xa2\x02\x03OXX\xaa\x02\x06Org.V1\xca\x02\x06Org\\V1\xe2\x02\x12Org\\V1\\GPBMetadata\xea\x02\aOrg::V1b\x06proto3"
+	"com.org.v1B\bOrgProtoP\x01Z%altalune.id/othra/gen/go/org/v1;orgv1\xa2\x02\x03OXX\xaa\x02\x06Org.V1\xca\x02\x06Org\\V1\xe2\x02\x12Org\\V1\\GPBMetadata\xea\x02\aOrg::V1b\x06proto3"
 
 var (
 	file_org_v1_org_proto_rawDescOnce sync.Once

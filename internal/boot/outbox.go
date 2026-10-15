@@ -5,11 +5,11 @@ import (
 	"log/slog"
 	"time"
 
-	"altalune.id/oagent/httpclient"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/webhook"
+	"altalune.id/othra/httpclient"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/webhook"
 )
 
 const webhookDeliveryTimeout = 10 * time.Second

@@ -11,28 +11,28 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	invitev1connect "altalune.id/oagent/gen/go/invite/v1/invitev1connect"
-	memberv1connect "altalune.id/oagent/gen/go/member/v1/memberv1connect"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	projectv1connect "altalune.id/oagent/gen/go/project/v1/projectv1connect"
-	webhookv1connect "altalune.id/oagent/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/webhook"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/webhook"
 )
 
 func cliRoot(c *apiclient.Client) *cobra.Command {
-	root := &cobra.Command{Use: "oagent", SilenceUsage: true, SilenceErrors: true}
+	root := &cobra.Command{Use: "othra", SilenceUsage: true, SilenceErrors: true}
 	root.PersistentFlags().String("output", "", "")
 	for _, g := range []string{"tenancy", "domain", "auth"} {
 		root.AddGroup(&cobra.Group{ID: g, Title: g})

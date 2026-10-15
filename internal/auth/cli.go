@@ -13,20 +13,20 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	"altalune.id/oagent/apperror"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	"altalune.id/oagent/httpclient"
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/prompt"
-	"altalune.id/oagent/internal/render"
+	"altalune.id/othra/apperror"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	"altalune.id/othra/httpclient"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/prompt"
+	"altalune.id/othra/internal/render"
 )
 
 // CLISession is a signed-in CLI profile: the server, the session value and who it acts as.
 type CLISession struct {
 	URL       string
-	Session   string // SECURITY: the signed oagent_sid value; never printed
+	Session   string // SECURITY: the signed othra_sid value; never printed
 	ExpiresAt time.Time
 	Principal CLIPrincipal
 }
@@ -53,7 +53,7 @@ type SessionClientFn func(cmd *cobra.Command, url, session string) (authv1connec
 func NewCmd(profiles CLIProfiles, clientFn ClientFn, sessionClientFn SessionClientFn) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "auth",
-		Short:   "Sign in to an oagent server (login, logout, whoami)",
+		Short:   "Sign in to an othra server (login, logout, whoami)",
 		GroupID: "auth",
 	}
 	cmd.AddCommand(

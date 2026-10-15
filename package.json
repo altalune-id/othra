@@ -1,5 +1,5 @@
 {
-  "name": "oagent",
+  "name": "othra",
   "private": true,
   "packageManager": "pnpm@10.34.6",
   "engines": {
@@ -9,8 +9,8 @@
     "prepare": "husky",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "ui:mcp": "pnpm --filter @oagent/mcp-ui build",
-    "ui:console": "pnpm --filter @oagent/console generate",
+    "ui:mcp": "pnpm --filter @othra/mcp-ui build",
+    "ui:console": "pnpm --filter @othra/console generate",
     "ui:test": "pnpm -r --if-present test"
   },
   "devDependencies": {

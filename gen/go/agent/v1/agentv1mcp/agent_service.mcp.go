@@ -5,9 +5,9 @@
 package agentv1mcp
 
 import (
-	v1 "altalune.id/oagent/gen/go/agent/v1"
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	mcp "altalune.id/oagent/mcp"
+	v1 "altalune.id/othra/gen/go/agent/v1"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	mcp "altalune.id/othra/mcp"
 	connect "connectrpc.com/connect"
 	context "context"
 	json "encoding/json"
@@ -45,7 +45,7 @@ func RegisterAgentServiceTools(reg *mcp.Registry, h agentv1connect.AgentServiceH
 		Scopes:      permissionsFor(agentv1connect.AgentServiceCreateAgentProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"slug":{"type":"string","maxLength":64,"pattern":"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"},"name":{"type":"string","minLength":1,"maxLength":200},"description":{"type":"string","maxLength":2000}},"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -75,7 +75,7 @@ func RegisterAgentServiceTools(reg *mcp.Registry, h agentv1connect.AgentServiceH
 		Scopes:      permissionsFor(agentv1connect.AgentServiceGetAgentProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"id":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["id"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -105,7 +105,7 @@ func RegisterAgentServiceTools(reg *mcp.Registry, h agentv1connect.AgentServiceH
 		Scopes:      permissionsFor(agentv1connect.AgentServiceListAgentsProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -135,7 +135,7 @@ func RegisterAgentServiceTools(reg *mcp.Registry, h agentv1connect.AgentServiceH
 		Scopes:      permissionsFor(agentv1connect.AgentServiceUpdateAgentProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"id":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"name":{"type":"string","minLength":1,"maxLength":200},"description":{"type":"string","maxLength":2000}},"required":["id","name"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -165,7 +165,7 @@ func RegisterAgentServiceTools(reg *mcp.Registry, h agentv1connect.AgentServiceH
 		Scopes:      permissionsFor(agentv1connect.AgentServiceDeleteAgentProcedure),
 		Mutation:    true,
 		Destructive: true,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"id":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["id"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

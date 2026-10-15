@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/scope"
 )
 
 func TestErrors(t *testing.T) {

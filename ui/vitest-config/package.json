@@ -1,5 +1,5 @@
 {
-  "name": "@oagent/vitest-config",
+  "name": "@othra/vitest-config",
   "type": "module",
   "version": "0.1.0",
   "private": true,

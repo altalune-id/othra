@@ -7,10 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/scope"
 )
 
 const mintAttempts = 5

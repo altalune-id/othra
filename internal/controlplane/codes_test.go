@@ -6,7 +6,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/apperror"
+	"altalune.id/othra/apperror"
 )
 
 func TestConnectCodeOf(t *testing.T) {

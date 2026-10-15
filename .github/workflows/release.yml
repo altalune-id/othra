@@ -50,4 +50,4 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: dist/oagent_*.tar.gz
+          subject-path: dist/othra_*.tar.gz

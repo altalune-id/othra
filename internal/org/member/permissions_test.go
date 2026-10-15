@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/scope"
 )
 
 func TestBuiltinPermissions(t *testing.T) {

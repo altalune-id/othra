@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/web"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/web"
+	"altalune.id/othra/internal/web/layout"
 )
 
 type basicStub struct{}
@@ -61,7 +61,7 @@ func TestConsoleGate_BasicMode(t *testing.T) {
 	var seen session.Principal
 	h := ConsoleGate("", basicStub{})(consoleSeen(&seen))
 
-	for name, header := range map[string]string{"none": "", "wrong": basicHeader("op", "nope"), "bearer": "Bearer oagent_x"} {
+	for name, header := range map[string]string{"none": "", "wrong": basicHeader("op", "nope"), "bearer": "Bearer othra_x"} {
 		req := httptest.NewRequest(http.MethodGet, "/console/", nil)
 		if header != "" {
 			req.Header.Set("Authorization", header)
@@ -69,7 +69,7 @@ func TestConsoleGate_BasicMode(t *testing.T) {
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, req)
 		assert.Equal(t, http.StatusUnauthorized, rec.Code, name)
-		assert.Equal(t, `Basic realm="oagent"`, rec.Header().Get("WWW-Authenticate"), name)
+		assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"), name)
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/console/", nil)
@@ -92,7 +92,7 @@ func TestBasicChallenge(t *testing.T) {
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/org.v1.OrgService/ListOrgs", nil))
 	assert.False(t, reached)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	assert.Equal(t, `Basic realm="oagent"`, rec.Header().Get("WWW-Authenticate"))
+	assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"))
 	assert.JSONEq(t, `{"code":"unauthenticated","message":"Sign in required"}`, rec.Body.String())
 
 	for name, set := range map[string]func(*http.Request){

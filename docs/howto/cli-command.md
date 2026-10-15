@@ -49,7 +49,7 @@ A domain's command tree is its `internal/<domain>/cli.go`. `internal/cli` is onl
 
    Required flags use `cmd.MarkFlagRequired`. Return errors unchanged: the root prints them and `ExitCodeFor` (`internal/cli/exit.go`) maps the code's kind to the exit code (invalid 2, not found 3, already exists 4, unauthenticated 5, else 1).
 
-2. **Remote, new domain only: wire it** in `NewRootCmd` (`internal/cli/root.go`): a `<domain>ClientFn(bootClient)` adapter that returns the field of `apiclient.Client`, `markClientTree(cmd)`, and `root.AddCommand`. Add the client to `internal/apiclient/client.go` if missing. `connectClient` already resolves the URL (`--url` > `OAGENT_URL` > profile > `http.baseURL` > default) and the credential (`--token` > `--token-file` > `OAGENT_TOKEN` > the profile's session).
+2. **Remote, new domain only: wire it** in `NewRootCmd` (`internal/cli/root.go`): a `<domain>ClientFn(bootClient)` adapter that returns the field of `apiclient.Client`, `markClientTree(cmd)`, and `root.AddCommand`. Add the client to `internal/apiclient/client.go` if missing. `connectClient` already resolves the URL (`--url` > `OTHRA_URL` > profile > `http.baseURL` > default) and the credential (`--token` > `--token-file` > `OTHRA_TOKEN` > the profile's session).
 
 3. **Operator: three pieces.**
    - The domain's `cli.go` declares a function type and the command; it never sees the `App`:

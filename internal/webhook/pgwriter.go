@@ -9,9 +9,9 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/schema/entity"
 )
 
 // Save upserts e, writing its secrets only on insert.

@@ -15,11 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/nanoid"
 )
 
 type fixture struct {

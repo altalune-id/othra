@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/kernel/capabilities"
+	"altalune.id/othra/internal/kernel/capabilities"
 )
 
 func TestFrom(t *testing.T) {

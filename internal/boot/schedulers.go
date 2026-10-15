@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/scheduler"
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/scheduler"
+	"altalune.id/othra/worker"
 )
 
 func schedulerOff(o *options, cfg config.Config) string {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"altalune.id/oagent/apperror"
+	"altalune.id/othra/apperror"
 )
 
 // NotFoundError reports a missing user.

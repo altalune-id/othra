@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 
-	"altalune.id/oagent/internal/web/assets"
+	"altalune.id/othra/internal/web/assets"
 )
 
 //go:embed all:static

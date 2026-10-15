@@ -7,8 +7,8 @@
 package agentv1
 
 import (
-	_ "altalune.id/oagent/gen/go/mcp/v1"
-	_ "altalune.id/oagent/gen/go/oagent/v1"
+	_ "altalune.id/othra/gen/go/mcp/v1"
+	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -609,7 +609,7 @@ var File_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
-	"\x14agent/v1/agent.proto\x12\bagent.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x15oagent/v1/rules.proto\"\x9e\x02\n" +
+	"\x14agent/v1/agent.proto\x12\bagent.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\x9e\x02\n" +
 	"\x05Agent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
 	"\x06org_id\x18\x03 \x01(\tR\x05orgId\x12\x1d\n" +
@@ -664,9 +664,9 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\vUpdateAgent\x12\x1c.agent.v1.UpdateAgentRequest\x1a\x1d.agent.v1.UpdateAgentResponse\"L\xca\xf3\x18H\n" +
 	"\fagent_update\x12'Update an agent's name and description.\x1a\x02id\x1a\x04name \x01*\x03app\x12\x83\x01\n" +
 	"\vDeleteAgent\x12\x1c.agent.v1.DeleteAgentRequest\x1a\x1d.agent.v1.DeleteAgentResponse\"7\xca\xf3\x183\n" +
-	"\fagent_delete\x12\x16Delete an agent by id.\x1a\x02id \x01*\x03app0\x01B\x87\x01\n" +
+	"\fagent_delete\x12\x16Delete an agent by id.\x1a\x02id \x01*\x03app0\x01B\x86\x01\n" +
 	"\fcom.agent.v1B\n" +
-	"AgentProtoP\x01Z*altalune.id/oagent/gen/go/agent/v1;agentv1\xa2\x02\x03AXX\xaa\x02\bAgent.V1\xca\x02\bAgent\\V1\xe2\x02\x14Agent\\V1\\GPBMetadata\xea\x02\tAgent::V1b\x06proto3"
+	"AgentProtoP\x01Z)altalune.id/othra/gen/go/agent/v1;agentv1\xa2\x02\x03AXX\xaa\x02\bAgent.V1\xca\x02\bAgent\\V1\xe2\x02\x14Agent\\V1\\GPBMetadata\xea\x02\tAgent::V1b\x06proto3"
 
 var (
 	file_agent_v1_agent_proto_rawDescOnce sync.Once

@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/events"
 )
 
 func TestSave(t *testing.T) {

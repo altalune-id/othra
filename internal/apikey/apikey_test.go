@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/scope"
 )
 
 func future() *time.Time {
@@ -18,11 +18,11 @@ func future() *time.Time {
 }
 
 func TestScheme_MintProject(t *testing.T) {
-	k, plaintext, err := NewScheme("oagent_").MintProject(uuid.New(), uuid.New(), "ci", []string{scope.AgentRead}, nil, future(), time.Now().UTC())
+	k, plaintext, err := NewScheme("othra_").MintProject(uuid.New(), uuid.New(), "ci", []string{scope.AgentRead}, nil, future(), time.Now().UTC())
 	require.NoError(t, err)
 	assert.Equal(t, KindProject, k.Kind)
 	assert.NotEqual(t, uuid.Nil, k.ProjectID)
-	assert.True(t, strings.HasPrefix(plaintext, "oagent_"))
+	assert.True(t, strings.HasPrefix(plaintext, "othra_"))
 	assert.True(t, k.Matches(plaintext))
 	assert.False(t, k.Matches(plaintext+"x"))
 	assert.Len(t, k.SecretHash, 32)

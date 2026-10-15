@@ -10,13 +10,13 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/install"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/capabilities"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/install"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/capabilities"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/sealer"
 )
 
 const generatedStateSecretLen = 32

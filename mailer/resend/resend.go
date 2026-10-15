@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/oagent/httpclient"
-	"altalune.id/oagent/mailer"
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/httpclient"
+	"altalune.id/othra/mailer"
+	"altalune.id/othra/nanoid"
 )
 
 // Driver defaults. https://resend.com/docs/api-reference/emails/send-email
@@ -26,7 +26,7 @@ const (
 )
 
 const (
-	userAgent      = "oagent-mailer-resend/1"
+	userAgent      = "othra-mailer-resend/1"
 	bodyLimit      = 64 << 10
 	sendTimeout    = 10 * time.Second
 	idempotencyLen = 24

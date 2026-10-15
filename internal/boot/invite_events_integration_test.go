@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
 )
 
 var uuidShape = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)

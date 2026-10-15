@@ -1,6 +1,6 @@
 # Add a webhook event
 
-Use this when a tenant's endpoints should hear that something happened in a domain. A webhook payload is a public contract: receivers parse it, so it only ever grows. Work that only oagent itself needs done later is a [worker](worker.md) or a queue job, not an event.
+Use this when a tenant's endpoints should hear that something happened in a domain. A webhook payload is a public contract: receivers parse it, so it only ever grows. Work that only othra itself needs done later is a [worker](worker.md) or a queue job, not an event.
 
 How it flows: the domain service saves its change and calls its event port **in the same unit of work**. `webhook.Service.Enqueue` finds the active endpoints subscribed to the type, builds one signed envelope and writes one `outbox_entries` row per endpoint in that transaction. The `outbox.dispatch` worker later claims due rows per org and `webhook.Deliverer` POSTs them.
 
@@ -67,8 +67,8 @@ How it flows: the domain service saves its change and calls its event port **in 
 ## Delivery facts you rely on
 
 - Envelope: `id` (event public id), `type`, `api_version` (`v1`), `created_at`, `tenant` (`org_id`, `project_id` public ids, `project_slug`), `data`.
-- Headers: `X-Oagent-Event-Id`, `X-Oagent-Event-Type`, `X-Oagent-Delivery-Id`, `X-Oagent-Timestamp`, `X-Oagent-Signature` (`v1=` HMAC-SHA256 over `timestamp + "." + body`; several during a secret rotation). `examples/webhook-pong` verifies them.
-- At least once: a repeat of the same event and target is ignored at enqueue, a claim leases for `outbox.ClaimLease` (5 min), and `outbox.MaxAttempts` (8) moves a row to failed, which the console, `oagent webhook retry-failed` and the `webhook_retry_failed` MCP tool can requeue.
+- Headers: `X-Othra-Event-Id`, `X-Othra-Event-Type`, `X-Othra-Delivery-Id`, `X-Othra-Timestamp`, `X-Othra-Signature` (`v1=` HMAC-SHA256 over `timestamp + "." + body`; several during a secret rotation). `examples/webhook-pong` verifies them.
+- At least once: a repeat of the same event and target is ignored at enqueue, a claim leases for `outbox.ClaimLease` (5 min), and `outbox.MaxAttempts` (8) moves a row to failed, which the console, `othra webhook retry-failed` and the `webhook_retry_failed` MCP tool can requeue.
 
 ## Review
 

@@ -2,7 +2,7 @@ export const usePinnedStore = defineStore('pinned', () => {
   const orgSlug = ref('');
   const projects = ref<Record<string, string>>({});
 
-  const STORAGE_KEY = 'oagent_pinned';
+  const STORAGE_KEY = 'othra_pinned';
 
   function read() {
     if (!import.meta.client) {

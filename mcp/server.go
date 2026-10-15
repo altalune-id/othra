@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultName    = "oagent"
+	defaultName    = "othra"
 	defaultVersion = "0.0.0"
 )
 

@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/kernel/session/sessiontest"
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/session/sessiontest"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/sealer"
 )
 
 type withUsers struct {

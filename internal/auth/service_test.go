@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/password"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/password"
 )
 
 type fakeUsers struct {
@@ -123,7 +123,7 @@ func newFixture(t *testing.T, basic BasicCredentials) *fixture {
 		Users: f.users, Members: f.members, Orgs: f.orgs, Projects: f.projects,
 		Sessions: f.sessions, Passwords: f.passwords, Basic: basic,
 		Profiles: fakeProfiles{f.users}, Transactor: fakes.Transactor{}, Mail: f.mail,
-		From: "noreply@example.com", BaseURL: "https://oagent.example.com",
+		From: "noreply@example.com", BaseURL: "https://othra.example.com",
 	})
 	verify, dummy := f.svc.verify, f.svc.verifyDummy
 	f.svc.verify = func(hash, plain string) error { f.verifies++; return verify(hash, plain) }

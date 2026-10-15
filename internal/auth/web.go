@@ -13,17 +13,17 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/auth/views"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/auth/views"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web/layout"
 )
 
 const loginFailed = "Invalid email or password"
 
 const (
-	resetCookieName = "oagent_reset"
+	resetCookieName = "othra_reset"
 	resetDone       = "Your password was changed. Sign in with the new one."
 	resetIncomplete = "This reset link is incomplete. Open the link from your email again."
 )

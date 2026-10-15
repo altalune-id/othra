@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/mailer"
+	"altalune.id/othra/mailer"
 )
 
 func TestSend(t *testing.T) {

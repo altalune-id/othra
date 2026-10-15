@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/user"
+	"altalune.id/othra/internal/user"
 )
 
 // UserStore is an in-memory user.Store keyed by id with email uniqueness; Err, when set, fails every call.

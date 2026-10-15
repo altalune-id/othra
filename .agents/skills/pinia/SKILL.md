@@ -1,6 +1,6 @@
 ---
 name: pinia
-description: Pinia 4 setup stores for oagent's Nuxt console. Use when adding or changing a store in ui/console/app/stores, wiring a store to a Connect client, sharing state between pages or stores, using storeToRefs, writing a store test, or adding a Pinia plugin.
+description: Pinia 4 setup stores for othra's Nuxt console. Use when adding or changing a store in ui/console/app/stores, wiring a store to a Connect client, sharing state between pages or stores, using storeToRefs, writing a store test, or adding a Pinia plugin.
 metadata:
   version: "2026.9.25"
   source: Adapted from antfu/skills@feb0f3a (MIT), generated from https://github.com/vuejs/pinia
@@ -8,7 +8,7 @@ metadata:
 
 # Pinia
 
-## In oagent
+## In othra
 
 - `ui/console` uses Pinia 4 through `@pinia/nuxt` in a Nuxt 4 SPA (`ssr: false`): no server state, no hydration.
 - Write setup stores only: `defineStore('orgs', () => { ... })` with `ref`/`computed` and plain functions; one store per file in `app/stores/`.
@@ -18,7 +18,7 @@ metadata:
 - Test each store next to it (`orgs.test.ts`) with `setActivePinia(createPinia())` and mocked clients from `test/nuxt-globals.ts`; `@pinia/testing` is not installed.
 - See docs/howto/console-page.md for how a console page, its store and its tests fit together.
 
-Pinia is the official state management library for Vue, designed to be intuitive and type-safe. It supports Options API and setup (Composition API) stores, with first-class TypeScript support and devtools integration. oagent uses setup stores.
+Pinia is the official state management library for Vue, designed to be intuitive and type-safe. It supports Options API and setup (Composition API) stores, with first-class TypeScript support and devtools integration. othra uses setup stores.
 
 > The skill is based on Pinia v4.0.3, generated at 2026-09-25.
 
@@ -59,7 +59,7 @@ Pinia is the official state management library for Vue, designed to be intuitive
 
 ## Key Recommendations
 
-- **Use Setup Stores** (oagent uses no option stores)
+- **Use Setup Stores** (othra uses no option stores)
 - **Use `storeToRefs()`** when destructuring state/getters to preserve reactivity
 - **Actions can be destructured directly** - they're bound to the store
 - **Call stores inside functions** not at module scope

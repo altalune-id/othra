@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/nanoid"
 )
 
 // ResetTTL is how long a password reset link works.

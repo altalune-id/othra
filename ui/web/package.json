@@ -1,5 +1,5 @@
 {
-  "name": "@oagent/web",
+  "name": "@othra/web",
   "type": "module",
   "private": true,
   "engines": {
@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@oagent/vitest-config": "workspace:*",
+    "@othra/vitest-config": "workspace:*",
     "@tailwindcss/cli": "4.3.3",
     "@vitest/coverage-v8": "catalog:",
     "daisyui": "catalog:",

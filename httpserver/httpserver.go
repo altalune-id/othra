@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/worker"
 )
 
 //nolint:gochecknoglobals // test seam.

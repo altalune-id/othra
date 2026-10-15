@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"log/slog"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/mailqueue"
-	"altalune.id/oagent/mailer"
-	"altalune.id/oagent/mailer/console"
-	"altalune.id/oagent/mailer/resend"
-	"altalune.id/oagent/mailer/smtp"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/mailqueue"
+	"altalune.id/othra/mailer"
+	"altalune.id/othra/mailer/console"
+	"altalune.id/othra/mailer/resend"
+	"altalune.id/othra/mailer/smtp"
+	"altalune.id/othra/sealer"
 )
 
 func buildMailer(cfg config.Config) (mailer.Mailer, error) {

@@ -11,18 +11,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/legal"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/password"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/legal"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/password"
 )
 
-const baseURL = "https://oagent.example.com/"
+const baseURL = "https://othra.example.com/"
 
 type fixture struct {
 	t       *testing.T
@@ -50,7 +50,7 @@ func newFixture(t *testing.T) *fixture {
 	f.users = user.NewService(fakes.NewUserStore(), apperror.NewReporter(nil, false).Unexpected)
 	f.svc = invite.NewService(invite.Deps{
 		Store: f.store, Transactor: fakes.Transactor{}, Members: f.members, Mail: f.mail, Users: f.users, Terms: legal.NewService(f.users), Events: f.events,
-		Orgs: orgNames{f.org: "Acme  Corp"}, People: directory{people: f.people, users: f.users}, From: "oagent@example.com", BaseURL: baseURL,
+		Orgs: orgNames{f.org: "Acme  Corp"}, People: directory{people: f.people, users: f.users}, From: "othra@example.com", BaseURL: baseURL,
 		Unexpected: apperror.NewReporter(nil, false).Unexpected,
 	}).WithClock(func() time.Time { return f.clock })
 	f.owner = f.person(member.RoleOwner, "olga@example.com", "Olga")
@@ -83,7 +83,7 @@ func (f *fixture) create(email string, role member.Role) *invite.Created {
 
 func rawToken(t *testing.T, link string) string {
 	t.Helper()
-	raw, ok := strings.CutPrefix(link, "https://oagent.example.com/invite/")
+	raw, ok := strings.CutPrefix(link, "https://othra.example.com/invite/")
 	require.True(t, ok, "link %q", link)
 	return raw
 }
@@ -112,8 +112,8 @@ func TestService_CreateQueuesTheLinkAndStoresOnlyTheHash(t *testing.T) {
 	require.Equal(t, 1, f.mail.count())
 	m := f.mail.sent[0]
 	assert.Equal(t, "bob@x.io", m.To)
-	assert.Equal(t, "oagent@example.com", m.From)
-	assert.Equal(t, "Olga invited you to Acme Corp on oagent", m.Subject)
+	assert.Equal(t, "othra@example.com", m.From)
+	assert.Equal(t, "Olga invited you to Acme Corp on othra", m.Subject)
 	assert.Contains(t, m.TextBody, c.Link)
 	assert.Contains(t, m.HTMLBody, c.Link)
 	assert.Contains(t, m.TextBody, "as Admin")

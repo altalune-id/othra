@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"altalune.id/oagent/password"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/password"
+	"altalune.id/othra/sealer"
 )
 
 const (

@@ -7,13 +7,13 @@ description: Patterns and best practices for efficient data fetching in Nuxt
 
 Data fetching patterns for a client-only (`ssr: false`) Nuxt app.
 
-> **In oagent:** RPC data goes through Connect clients inside Pinia store actions (see the pinia skill), not through `useFetch`. The patterns below apply to the rare non-RPC fetch, and the ideas (parallel requests, lazy loading, explicit keys, error states) apply to store actions too.
+> **In othra:** RPC data goes through Connect clients inside Pinia store actions (see the pinia skill), not through `useFetch`. The patterns below apply to the rare non-RPC fetch, and the ideas (parallel requests, lazy loading, explicit keys, error states) apply to store actions too.
 
 ## Choose the Right Tool
 
 | Scenario | Use |
 |----------|-----|
-| oagent API (Connect RPC) | Store action calling `useNuxtApp().$xxxClient` |
+| othra API (Connect RPC) | Store action calling `useNuxtApp().$xxxClient` |
 | Component initial data (non-RPC) | `useFetch` or `useAsyncData` |
 | User interactions (clicks, forms) | `$fetch` |
 | Third-party SDK/API | `useAsyncData` with custom function |

@@ -1,4 +1,4 @@
-module altalune.id/oagent
+module altalune.id/othra
 
 go 1.26.9
 
@@ -156,10 +156,10 @@ require (
 )
 
 tool (
-	altalune.id/oagent/cmd/comment-lint
-	altalune.id/oagent/cmd/gen-apperror
-	altalune.id/oagent/cmd/gen-config-example
-	altalune.id/oagent/cmd/gen-scope
-	altalune.id/oagent/cmd/protoc-gen-mcp
+	altalune.id/othra/cmd/comment-lint
+	altalune.id/othra/cmd/gen-apperror
+	altalune.id/othra/cmd/gen-config-example
+	altalune.id/othra/cmd/gen-scope
+	altalune.id/othra/cmd/protoc-gen-mcp
 	github.com/a-h/templ/cmd/templ
 )

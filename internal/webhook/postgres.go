@@ -1,8 +1,8 @@
 package webhook
 
 import (
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/schema/entity"
 )
 
 type postgresStore struct {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"altalune.id/oagent/internal/boot"
+	"altalune.id/othra/internal/boot"
 )
 
 func newServeCmd(bootServer ServerBootFn) *cobra.Command {
@@ -13,7 +13,7 @@ func newServeCmd(bootServer ServerBootFn) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "serve",
-		Short:   "Run the oagent HTTP server and workers",
+		Short:   "Run the othra HTTP server and workers",
 		GroupID: "runtime",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -32,7 +32,7 @@ func newServeCmd(bootServer ServerBootFn) *cobra.Command {
 			}
 			defer func() { _ = app.Close(context.WithoutCancel(cmd.Context())) }()
 
-			cmd.Printf("oagent: listening on %s (basePath=%q, mode=%s)\n",
+			cmd.Printf("othra: listening on %s (basePath=%q, mode=%s)\n",
 				rt.cfg.HTTP.Addr, rt.cfg.HTTP.BasePath, rt.cfg.Mode)
 			return app.Run(cmd.Context())
 		},

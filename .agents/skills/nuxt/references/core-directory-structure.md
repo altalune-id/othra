@@ -7,7 +7,7 @@ description: Nuxt project folder structure, conventions, and file organization
 
 Nuxt uses a conventions-based directory structure. Understanding it is key to effective development.
 
-> **Directory layout:** The default `srcDir` is `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root. oagent's console has no `server/` directory: the Go binary is the backend.
+> **Directory layout:** The default `srcDir` is `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root. othra's console has no `server/` directory: the Go binary is the backend.
 
 ## Standard Project Structure
 
@@ -58,13 +58,13 @@ export default defineNuxtConfig({
 | `~~` / `@@` | `<rootDir>` (project root) |
 | `#shared` | `<rootDir>/shared` |
 
-Because `~` points at `app/`, reference root-level files with `~~` — e.g. `~~/gen/org/v1/org_pb` for oagent's generated Connect code.
+Because `~` points at `app/`, reference root-level files with `~~` — e.g. `~~/gen/org/v1/org_pb` for othra's generated Connect code.
 
 ### `app/components/`
 
 Vue components auto-imported by name (by default):
 
-> **In oagent:** `components: { dirs: [] }` turns this off. Import every component explicitly: `import AppButton from '~/components/ui/AppButton.vue';`. Only module components such as `<Icon>` and Nuxt built-ins (`<NuxtLink>`, `<NuxtPage>`) are global.
+> **In othra:** `components: { dirs: [] }` turns this off. Import every component explicitly: `import AppButton from '~/components/ui/AppButton.vue';`. Only module components such as `<Icon>` and Nuxt built-ins (`<NuxtLink>`, `<NuxtPage>`) are global.
 
 ```
 components/
@@ -92,7 +92,7 @@ components/
 
 Vue composables auto-imported (top-level files only, by default):
 
-> **In oagent:** `imports: { scan: false }` turns scanning off. Import your composables explicitly (`import { useErrorMessage } from '~/composables/useErrorMessage';`); Vue, Nuxt and module APIs stay auto-imported.
+> **In othra:** `imports: { scan: false }` turns scanning off. Import your composables explicitly (`import { useErrorMessage } from '~/composables/useErrorMessage';`); Vue, Nuxt and module APIs stay auto-imported.
 
 ```
 composables/
@@ -188,7 +188,7 @@ plugins/
 
 ### `shared/` Directory
 
-Code that must not depend on Vue or Nitro (Nuxt 3.14+). oagent shares code with Go-generated sources through its own aliases instead (`@shared/scope`, `@shared/apperror`).
+Code that must not depend on Vue or Nitro (Nuxt 3.14+). othra shares code with Go-generated sources through its own aliases instead (`@shared/scope`, `@shared/apperror`).
 
 ```
 shared/

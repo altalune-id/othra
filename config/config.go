@@ -1,4 +1,4 @@
-// Package config loads runtime configuration from defaults, a YAML file and OAGENT_* env vars.
+// Package config loads runtime configuration from defaults, a YAML file and OTHRA_* env vars.
 package config
 
 import "time"
@@ -26,7 +26,7 @@ type Config struct {
 	NATS       NATSConfig       `yaml:"nats"       mapstructure:"nats"`
 }
 
-// CLIConfig configures the oagent CLI; SessionFile may start with "~/", expanded when used.
+// CLIConfig configures the othra CLI; SessionFile may start with "~/", expanded when used.
 type CLIConfig struct {
 	SessionFile string `yaml:"sessionFile" mapstructure:"sessionFile"`
 }
@@ -68,7 +68,7 @@ type HTTPConfig struct {
 	BaseURL      string `yaml:"baseURL"      mapstructure:"baseURL"      validate:"omitempty,url"`
 	CookieSecure bool   `yaml:"cookieSecure" mapstructure:"cookieSecure"`
 	StateSecret  string `yaml:"stateSecret"  mapstructure:"stateSecret"  awareness:"secret" validate:"omitempty,secret"`
-	// TrustedProxyHops is how many proxies that append to X-Forwarded-For sit in front of oagent; 0 keys on RemoteAddr.
+	// TrustedProxyHops is how many proxies that append to X-Forwarded-For sit in front of othra; 0 keys on RemoteAddr.
 	TrustedProxyHops int `yaml:"trustedProxyHops" mapstructure:"trustedProxyHops" validate:"gte=0"`
 }
 

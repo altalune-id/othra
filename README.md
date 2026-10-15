@@ -1,6 +1,6 @@
-# oagent
+# othra
 
-oagent is a self-hosted platform for AI agents. It is one Go binary that serves:
+othra is a self-hosted platform for AI agents. It is one Go binary that serves:
 
 - an API (Connect RPC)
 - an MCP server
@@ -21,7 +21,7 @@ It already covers orgs, projects, members, API keys and webhooks. The agent runt
 1. Clone the repo and install the JavaScript dependencies. This also installs the git hooks.
 
    ```sh
-   git clone <repo-url> oagent && cd oagent
+   git clone <repo-url> othra && cd othra
    corepack enable
    pnpm install
    ```
@@ -39,7 +39,7 @@ It already covers orgs, projects, members, API keys and webhooks. The agent runt
    docker compose up -d
    ```
 
-4. Create your config. Point both DSNs at the compose Postgres (`postgres://postgres:postgres@localhost:5432/oagent?sslmode=disable`) and generate the two secrets with `openssl rand -hex 32`.
+4. Create your config. Point both DSNs at the compose Postgres (`postgres://postgres:postgres@localhost:5432/othra?sslmode=disable`) and generate the two secrets with `openssl rand -hex 32`.
 
    ```sh
    cp config.example.yml config.yml
@@ -61,11 +61,11 @@ It already covers orgs, projects, members, API keys and webhooks. The agent runt
 `scripts/db/provision.sh` creates the database and three roles on any Postgres (self-hosted, RDS, Neon and others).
 It is safe to re-run, and a re-run sets the passwords you pass.
 
-| Role              | Purpose                                             |
-| ----------------- | --------------------------------------------------- |
-| `oagent_owner`    | owns the schema and tables; nobody logs in as it    |
-| `oagent_migrator` | runs migrations as the owner                        |
-| `oagent_service`  | used by the running app; reads and writes rows only |
+| Role             | Purpose                                             |
+| ---------------- | --------------------------------------------------- |
+| `othra_owner`    | owns the schema and tables; nobody logs in as it    |
+| `othra_migrator` | runs migrations as the owner                        |
+| `othra_service`  | used by the running app; reads and writes rows only |
 
 ```sh
 ADMIN_URL='postgres://admin:...@db.example.com:5432?sslmode=require' \
@@ -73,46 +73,46 @@ MIG_PW=gen SVC_PW=gen scripts/db/provision.sh
 ```
 
 - Run it without the variables to be asked for each value.
-- `gen` creates a password and writes it to `oagent-db-credentials.env` (mode 0600). Passwords are never printed.
+- `gen` creates a password and writes it to `othra-db-credentials.env` (mode 0600). Passwords are never printed.
 - The script prints the matching `postgres.dsn`, `postgres.migrator.dsn`, `postgres.migrator.role` and `postgres.schema` settings.
 
 ## Run with Docker
 
-You don't need Go or Node to run oagent. The image holds the same binary with the UI embedded.
+You don't need Go or Node to run othra. The image holds the same binary with the UI embedded.
 
 ```sh
-docker build -t oagent .
+docker build -t othra .
 docker run --rm -p 5150:5150 \
-  -e OAGENT_POSTGRES_DSN=postgres://... \
-  -e OAGENT_POSTGRES_MIGRATOR_DSN=postgres://... \
-  -e OAGENT_HTTP_STATE_SECRET=$(openssl rand -hex 32) \
-  -e OAGENT_SECRETS_ENCRYPTION_KEY=$(openssl rand -hex 32) \
-  oagent
+  -e OTHRA_POSTGRES_DSN=postgres://... \
+  -e OTHRA_POSTGRES_MIGRATOR_DSN=postgres://... \
+  -e OTHRA_HTTP_STATE_SECRET=$(openssl rand -hex 32) \
+  -e OTHRA_SECRETS_ENCRYPTION_KEY=$(openssl rand -hex 32) \
+  othra
 ```
 
-- The image runs `serve` by default. Pass any other command after the image name, for example `docker run --rm oagent version`.
+- The image runs `serve` by default. Pass any other command after the image name, for example `docker run --rm othra version`.
 - To run the whole stack in containers: `docker compose --profile app up -d --build`.
 
 ### Queue (NATS)
 
 The queue is off unless `queue.enabled` is true; `queue.driver` picks what carries it (`nats`, the only driver).
-`nats.*` is only the connection, and oagent opens it only when a feature uses it. oagent connects as user `oagent` in
-its own account, `OAGENT`, as on the shared Altalune NATS ([altalune-id/nats](https://github.com/altalune-id/nats)).
+`nats.*` is only the connection, and othra opens it only when a feature uses it. othra connects as user `othra` in
+its own account, `OTHRA`, as on the shared Altalune NATS ([altalune-id/nats](https://github.com/altalune-id/nats)).
 Every app uses the same stream names, so the account is what keeps apps apart: never share one between apps.
 
 ```sh
-OAGENT_QUEUE_ENABLED=true
-OAGENT_NATS_URL=nats://<nats-service>.railway.internal:4222
-OAGENT_NATS_USER=oagent
-OAGENT_NATS_PASSWORD=...   # the server's OAGENT_NATS_PASSWORD, at least 16 characters
+OTHRA_QUEUE_ENABLED=true
+OTHRA_NATS_URL=nats://<nats-service>.railway.internal:4222
+OTHRA_NATS_USER=othra
+OTHRA_NATS_PASSWORD=...   # the server's OTHRA_NATS_PASSWORD, at least 16 characters
 ```
 
-The credentials may also go in the URL (`nats://oagent:<password>@host:4222`). `nats.token` is for a NATS server
+The credentials may also go in the URL (`nats://othra:<password>@host:4222`). `nats.token` is for a NATS server
 without accounts; set it or the user and password, not both. Deploy the server on private networking only, with a
 volume at `/data` (see the shared server's README). Locally, `docker compose up -d` runs NATS with the accounts in
-`docker/nats/nats-server.conf` (`OAGENT` and `OTHER`, dev passwords of 16 characters or more). To run oagent on
-the host against it: `OAGENT_NATS_URL=nats://localhost:4222`, `OAGENT_NATS_USER=oagent` and
-`OAGENT_NATS_PASSWORD=oagent-dev-nats-password` (the compose default).
+`docker/nats/nats-server.conf` (`OTHRA` and `OTHER`, dev passwords of 16 characters or more). To run othra on
+the host against it: `OTHRA_NATS_URL=nats://localhost:4222`, `OTHRA_NATS_USER=othra` and
+`OTHRA_NATS_PASSWORD=othra-dev-nats-password` (the compose default).
 
 ## Everyday commands
 

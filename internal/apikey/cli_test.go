@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/testutil/cptest"
-	"altalune.id/oagent/internal/testutil/fakes"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/testutil/cptest"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func apiKeyClient(t *testing.T, refs *fakes.PublicIDs, store apikey.Store) apikeyv1connect.APIKeyServiceClient {

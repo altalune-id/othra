@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"altalune.id/oagent/internal/tool/commentlint"
+	"altalune.id/othra/internal/tool/commentlint"
 )
 
 func main() {

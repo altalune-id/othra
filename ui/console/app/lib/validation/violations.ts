@@ -8,7 +8,7 @@ import { createValidator } from '@bufbuild/protovalidate';
 import { ConnectError } from '@connectrpc/connect';
 import { ErrorDetailSchema } from '../../../gen/apperror/v1/error_pb';
 import { field as fieldRules } from '../../../gen/buf/validate/validate_pb';
-import { file_oagent_v1_rules } from '../../../gen/oagent/v1/rules_pb';
+import { file_othra_v1_rules } from '../../../gen/othra/v1/rules_pb';
 
 // FieldIssue is why one request field was refused, as the server's violations say it: never the value.
 export interface FieldIssue {
@@ -19,7 +19,7 @@ export interface FieldIssue {
 // FieldIssues holds the first issue of each refused field, keyed by its proto path (name, scopes[0]).
 export type FieldIssues = Record<string, FieldIssue>;
 
-const validator = createValidator({ registry: createRegistry(file_oagent_v1_rules) });
+const validator = createValidator({ registry: createRegistry(file_othra_v1_rules) });
 
 const formatRules = new Set([
   'len',
@@ -46,7 +46,7 @@ const formatRules = new Set([
   'public_id',
 ]);
 
-// reasonOf maps a protovalidate rule id onto the server's reason; a trailing number (oagent.name.max_len.200) is the param.
+// reasonOf maps a protovalidate rule id onto the server's reason; a trailing number (othra.name.max_len.200) is the param.
 export function reasonOf(ruleId: string): FieldIssue {
   const parts = ruleId.split('.');
   const last = parts.at(-1) ?? '';

@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/testutil/pgtest"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/testutil/pgtest"
 )
 
 func loginDB(t *testing.T, dsn string) *sql.DB {

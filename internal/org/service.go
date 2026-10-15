@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	slugpkg "altalune.id/oagent/slug"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	slugpkg "altalune.id/othra/slug"
 )
 
 const systemSlug = "default"

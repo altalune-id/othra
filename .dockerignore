@@ -27,14 +27,14 @@ coverage.*
 config.yml
 .env
 .env.local
-oagent-db-credentials.env
+othra-db-credentials.env
 .agents/
 .claude/
 .superpowers/
 .playwright-mcp/
 docs/
 AUTH*.md
-OAGENT-NOTES.md
+OTHRA-NOTES.md
 *_BACKLOG.md
 .mcp.json
 

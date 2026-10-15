@@ -8,13 +8,13 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"altalune.id/oagent/apperror"
-	apikeyv1 "altalune.id/oagent/gen/go/apikey/v1"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/scope"
 )
 
 // APIKeyService implements apikey.v1.APIKeyService; ids are public ids and a key is named by its hint.

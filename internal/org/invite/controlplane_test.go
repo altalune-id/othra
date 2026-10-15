@@ -17,17 +17,17 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"altalune.id/oagent/apperror"
-	apperrorv1 "altalune.id/oagent/gen/go/apperror/v1"
-	invitev1 "altalune.id/oagent/gen/go/invite/v1"
-	invitev1connect "altalune.id/oagent/gen/go/invite/v1/invitev1connect"
-	invitev1mcp "altalune.id/oagent/gen/go/invite/v1/invitev1mcp"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
-	rootmcp "altalune.id/oagent/mcp"
+	"altalune.id/othra/apperror"
+	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
+	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	invitev1mcp "altalune.id/othra/gen/go/invite/v1/invitev1mcp"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
+	rootmcp "altalune.id/othra/mcp"
 )
 
 const orgPublicID = "acmePublicId000000001"
@@ -130,7 +130,7 @@ func TestInviteService_Flow(t *testing.T) {
 	assert.Equal(t, "pending", inv.GetStatus())
 	assert.Equal(t, "Olga", inv.GetInvitedByName())
 	assert.Equal(t, f.clock.Add(invite.TTL), inv.GetExpiresAt().AsTime())
-	assert.Contains(t, created.Msg.GetLink(), "https://oagent.example.com/invite/")
+	assert.Contains(t, created.Msg.GetLink(), "https://othra.example.com/invite/")
 
 	resent, err := c.ResendInvite(ctx, connect.NewRequest(&invitev1.ResendInviteRequest{OrgId: orgPublicID, InviteId: inv.GetId()}))
 	require.NoError(t, err)

@@ -8,17 +8,17 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/ratelimit"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org/invite/views"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/ratelimit"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org/invite/views"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web/layout"
 )
 
-const cookieName = "oagent_invite"
+const cookieName = "othra_invite"
 
 // MethodPassword is the sign-in method for a local account with a password.
 const MethodPassword = "password"

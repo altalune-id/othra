@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
 )
 
 const testKeyHex = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
@@ -118,8 +118,8 @@ func TestInstallURL(t *testing.T) {
 	}{
 		"default port":      {config.HTTPConfig{Addr: ":5150"}, "http://localhost:5150/install?token=tok"},
 		"host and port":     {config.HTTPConfig{Addr: "0.0.0.0:8080", BasePath: "/app"}, "http://localhost:8080/app/install?token=tok"},
-		"base url":          {config.HTTPConfig{Addr: ":5150", BaseURL: "https://oagent.example.com/"}, "https://oagent.example.com/install?token=tok"},
-		"base url and path": {config.HTTPConfig{Addr: ":5150", BaseURL: "https://example.com", BasePath: "/oagent"}, "https://example.com/oagent/install?token=tok"},
+		"base url":          {config.HTTPConfig{Addr: ":5150", BaseURL: "https://othra.example.com/"}, "https://othra.example.com/install?token=tok"},
+		"base url and path": {config.HTTPConfig{Addr: ":5150", BaseURL: "https://example.com", BasePath: "/othra"}, "https://example.com/othra/install?token=tok"},
 	} {
 		t.Run(name, func(t *testing.T) { assert.Equal(t, tc.want, installURL(tc.http, "tok")) })
 	}
@@ -133,7 +133,7 @@ func TestPublicBase(t *testing.T) {
 		"default port":      {config.HTTPConfig{Addr: ":5150"}, "http://localhost:5150"},
 		"no port":           {config.HTTPConfig{}, "http://localhost"},
 		"base path":         {config.HTTPConfig{Addr: "0.0.0.0:8080", BasePath: "/app/"}, "http://localhost:8080/app"},
-		"base url and path": {config.HTTPConfig{Addr: ":5150", BaseURL: "https://example.com/", BasePath: "/oagent"}, "https://example.com/oagent"},
+		"base url and path": {config.HTTPConfig{Addr: ":5150", BaseURL: "https://example.com/", BasePath: "/othra"}, "https://example.com/othra"},
 	} {
 		t.Run(name, func(t *testing.T) { assert.Equal(t, tc.want, publicBase(tc.http)) })
 	}

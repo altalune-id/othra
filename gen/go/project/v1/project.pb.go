@@ -7,8 +7,8 @@
 package projectv1
 
 import (
-	_ "altalune.id/oagent/gen/go/mcp/v1"
-	_ "altalune.id/oagent/gen/go/oagent/v1"
+	_ "altalune.id/othra/gen/go/mcp/v1"
+	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -498,7 +498,7 @@ var File_project_v1_project_proto protoreflect.FileDescriptor
 const file_project_v1_project_proto_rawDesc = "" +
 	"\n" +
 	"\x18project/v1/project.proto\x12\n" +
-	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x15oagent/v1/rules.proto\"\xdf\x01\n" +
+	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xdf\x01\n" +
 	"\aProject\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
 	"\x06org_id\x18\x03 \x01(\tR\x05orgId\x12\x12\n" +
@@ -536,8 +536,8 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\vproject_get\x12\x14Get a project by id.\x1a\x02id*\x03app\x12\x95\x01\n" +
 	"\fListProjects\x12\x1f.project.v1.ListProjectsRequest\x1a .project.v1.ListProjectsResponse\"B\xca\xf3\x18>\n" +
 	"\fproject_list\x12!List projects in an organization.\x1a\x06org_id*\x03app\x12T\n" +
-	"\rUpdateProject\x12 .project.v1.UpdateProjectRequest\x1a!.project.v1.UpdateProjectResponseB\x97\x01\n" +
-	"\x0ecom.project.v1B\fProjectProtoP\x01Z.altalune.id/oagent/gen/go/project/v1;projectv1\xa2\x02\x03PXX\xaa\x02\n" +
+	"\rUpdateProject\x12 .project.v1.UpdateProjectRequest\x1a!.project.v1.UpdateProjectResponseB\x96\x01\n" +
+	"\x0ecom.project.v1B\fProjectProtoP\x01Z-altalune.id/othra/gen/go/project/v1;projectv1\xa2\x02\x03PXX\xaa\x02\n" +
 	"Project.V1\xca\x02\n" +
 	"Project\\V1\xe2\x02\x16Project\\V1\\GPBMetadata\xea\x02\vProject::V1b\x06proto3"
 

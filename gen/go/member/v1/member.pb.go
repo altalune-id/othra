@@ -7,8 +7,8 @@
 package memberv1
 
 import (
-	_ "altalune.id/oagent/gen/go/mcp/v1"
-	_ "altalune.id/oagent/gen/go/oagent/v1"
+	_ "altalune.id/othra/gen/go/mcp/v1"
+	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -467,7 +467,7 @@ var File_member_v1_member_proto protoreflect.FileDescriptor
 
 const file_member_v1_member_proto_rawDesc = "" +
 	"\n" +
-	"\x16member/v1/member.proto\x12\tmember.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x15oagent/v1/rules.proto\"\x98\x01\n" +
+	"\x16member/v1/member.proto\x12\tmember.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\x98\x01\n" +
 	"\x06Member\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -496,8 +496,8 @@ const file_member_v1_member_proto_rawDesc = "" +
 	"\vmember_list\x125List the members of an organization with their roles.\x1a\x06org_id*\x03app:\fList members\x12R\n" +
 	"\rSetMemberRole\x12\x1f.member.v1.SetMemberRoleRequest\x1a .member.v1.SetMemberRoleResponse\x12O\n" +
 	"\fRemoveMember\x12\x1e.member.v1.RemoveMemberRequest\x1a\x1f.member.v1.RemoveMemberResponse\x12C\n" +
-	"\bLeaveOrg\x12\x1a.member.v1.LeaveOrgRequest\x1a\x1b.member.v1.LeaveOrgResponseB\x8f\x01\n" +
-	"\rcom.member.v1B\vMemberProtoP\x01Z,altalune.id/oagent/gen/go/member/v1;memberv1\xa2\x02\x03MXX\xaa\x02\tMember.V1\xca\x02\tMember\\V1\xe2\x02\x15Member\\V1\\GPBMetadata\xea\x02\n" +
+	"\bLeaveOrg\x12\x1a.member.v1.LeaveOrgRequest\x1a\x1b.member.v1.LeaveOrgResponseB\x8e\x01\n" +
+	"\rcom.member.v1B\vMemberProtoP\x01Z+altalune.id/othra/gen/go/member/v1;memberv1\xa2\x02\x03MXX\xaa\x02\tMember.V1\xca\x02\tMember\\V1\xe2\x02\x15Member\\V1\\GPBMetadata\xea\x02\n" +
 	"Member::V1b\x06proto3"
 
 var (

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // ReachOrg reports whether the caller in ctx may read inside orgID. SECURITY: no Principal reaches nothing; stdio runs as System().

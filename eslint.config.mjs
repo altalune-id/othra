@@ -2,7 +2,7 @@ import antfu from '@antfu/eslint-config';
 
 // One config for every JS/TS/Vue/JSON/Markdown/CSS file in the repo; ui/console adds the Nuxt rules on top
 // (ui/console/eslint.config.mjs). YAML belongs to yamllint, so antfu's yaml support is off.
-export function oagent() {
+export function othra() {
   return antfu(
     {
       type: 'app',
@@ -36,7 +36,7 @@ export function oagent() {
         '.claude/**',
         '.playwright-mcp/**',
         'AUTH*.md',
-        'OAGENT-NOTES.md',
+        'OTHRA-NOTES.md',
         '*_BACKLOG.md',
       ],
     },
@@ -81,4 +81,4 @@ export function oagent() {
   );
 }
 
-export default oagent();
+export default othra();

@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/ratelimit"
-	"altalune.id/oagent/internal/kernel/ratelimit/memory"
-	ratelimitredis "altalune.id/oagent/internal/kernel/ratelimit/redis"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/ratelimit"
+	"altalune.id/othra/internal/kernel/ratelimit/memory"
+	ratelimitredis "altalune.id/othra/internal/kernel/ratelimit/redis"
 )
 
 func TestBuildLimiters_OffByDefault(t *testing.T) {

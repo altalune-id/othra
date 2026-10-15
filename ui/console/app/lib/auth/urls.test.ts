@@ -9,7 +9,7 @@ describe('siblingURL', () => {
     ['/api/', '/login'],
     ['/app/api', '/app/login'],
     ['/app/api/', '/app/login'],
-    ['https://oagent.example.com/app/api', 'https://oagent.example.com/app/login'],
+    ['https://othra.example.com/app/api', 'https://othra.example.com/app/login'],
   ])('%s → %s', (apiUrl, want) => {
     expect(siblingURL(apiUrl, '/login')).toBe(want);
   });
@@ -33,7 +33,7 @@ describe('loginURL', () => {
 
 describe('mcpURL', () => {
   it('is absolute and next to the API', () => {
-    expect(mcpURL('/app/api', 'https://oagent.example.com')).toBe('https://oagent.example.com/app/mcp');
+    expect(mcpURL('/app/api', 'https://othra.example.com')).toBe('https://othra.example.com/app/mcp');
     expect(mcpURL('', 'http://localhost:5150')).toBe('http://localhost:5150/mcp');
   });
 });
@@ -42,7 +42,7 @@ describe('staticURL', () => {
   it.each([
     ['', '/static/favicon.ico'],
     ['/app/api', '/app/static/favicon.ico'],
-    ['https://oagent.example.com/app/api/', 'https://oagent.example.com/app/static/favicon.ico'],
+    ['https://othra.example.com/app/api/', 'https://othra.example.com/app/static/favicon.ico'],
   ])('%s → %s', (apiUrl, want) => {
     expect(staticURL(apiUrl, 'favicon.ico')).toBe(want);
   });

@@ -7,7 +7,7 @@ description: Configuring @antfu/eslint-config 9 - options, Vue support, formatte
 
 Handles both linting and formatting (no Prettier needed). Auto-detects TypeScript and Vue.
 
-**Upstream default style**: single quotes, no semicolons, sorted imports, dangling commas. oagent overrides it to use semicolons (`stylistic.semi: true`) and adds the rules described in the skill's SKILL.md.
+**Upstream default style**: single quotes, no semicolons, sorted imports, dangling commas. othra overrides it to use semicolons (`stylistic.semi: true`) and adds the rules described in the skill's SKILL.md.
 
 ## Configuration Options
 
@@ -25,14 +25,14 @@ export default antfu({
   stylistic: {
     indent: 2,        // 2, 4, or 'tab'
     quotes: 'single', // or 'double'
-    semi: true,       // oagent: semicolons on
+    semi: true,       // othra: semicolons on
   },
 
   // Framework support (auto-detected, but can be explicit)
   typescript: true,
   vue: true,
 
-  // Disable specific language support (oagent: YAML is linted by yamllint)
+  // Disable specific language support (othra: YAML is linted by yamllint)
   yaml: false,
 })
 ```
@@ -41,7 +41,7 @@ export default antfu({
 
 ### Vue
 
-oagent enables `vue: true`. Vue accessibility is available but not enabled:
+othra enables `vue: true`. Vue accessibility is available but not enabled:
 
 ```js
 export default antfu({
@@ -168,7 +168,7 @@ export default antfu()
 
 ## VS Code Settings
 
-oagent's `.vscode/settings.json` already turns off Prettier and format-on-save and runs `source.fixAll.eslint` on save. The upstream recommendation, for reference:
+othra's `.vscode/settings.json` already turns off Prettier and format-on-save and runs `source.fixAll.eslint` on save. The upstream recommendation, for reference:
 
 ```jsonc
 {

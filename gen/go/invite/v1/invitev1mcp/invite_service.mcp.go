@@ -5,9 +5,9 @@
 package invitev1mcp
 
 import (
-	v1 "altalune.id/oagent/gen/go/invite/v1"
-	invitev1connect "altalune.id/oagent/gen/go/invite/v1/invitev1connect"
-	mcp "altalune.id/oagent/mcp"
+	v1 "altalune.id/othra/gen/go/invite/v1"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	mcp "altalune.id/othra/mcp"
 	connect "connectrpc.com/connect"
 	context "context"
 	json "encoding/json"
@@ -40,7 +40,7 @@ func RegisterInviteServiceTools(reg *mcp.Registry, h invitev1connect.InviteServi
 		Scopes:      permissionsFor(invitev1connect.InviteServiceDraftInviteProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"email":{"type":"string","minLength":1,"maxLength":254}},"required":["orgId","email"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -71,7 +71,7 @@ func RegisterInviteServiceTools(reg *mcp.Registry, h invitev1connect.InviteServi
 		Scopes:      permissionsFor(invitev1connect.InviteServiceConfirmDraftInviteProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		AppOnly:     true,
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"inviteId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["orgId","inviteId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
@@ -103,7 +103,7 @@ func RegisterInviteServiceTools(reg *mcp.Registry, h invitev1connect.InviteServi
 		Scopes:      permissionsFor(invitev1connect.InviteServiceDiscardDraftInviteProcedure),
 		Mutation:    true,
 		Destructive: true,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		AppOnly:     true,
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"inviteId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["orgId","inviteId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {

@@ -11,16 +11,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/sealer"
 )
 
 func TestBuildSealer(t *testing.T) {
@@ -175,7 +175,7 @@ func TestMemberEffects(t *testing.T) {
 		MailQueue: buildMailQueue(db.Pool{}, config.Config{}, buildSealer(config.SecretsConfig{})),
 	}
 	cfg := config.Config{
-		HTTP: config.HTTPConfig{BaseURL: "https://oagent.example.com/", BasePath: "/app"},
+		HTTP: config.HTTPConfig{BaseURL: "https://othra.example.com/", BasePath: "/app"},
 		Mail: config.MailConfig{From: "team@example.com"},
 	}
 
@@ -186,5 +186,5 @@ func TestMemberEffects(t *testing.T) {
 	assert.Equal(t, memberPeople{users: svcs.Users}, e.People)
 	assert.Equal(t, memberOrgs{orgs: svcs.Orgs}, e.Orgs)
 	assert.Equal(t, "team@example.com", e.From)
-	assert.Equal(t, "https://oagent.example.com/app", e.BaseURL)
+	assert.Equal(t, "https://othra.example.com/app", e.BaseURL)
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/web"
+	"altalune.id/othra/internal/web"
 )
 
 type flag struct{ ready bool }

@@ -12,27 +12,27 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/permission"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/user"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/permission"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/user"
 )
 
 type keyAuthn struct{ p session.Principal }
 
 func (k keyAuthn) Authenticate(_ context.Context, c authn.Credential) (session.Principal, error) {
-	if c.Kind != authn.KindAPIKey || c.Token != "oagent_good" {
+	if c.Kind != authn.KindAPIKey || c.Token != "othra_good" {
 		return session.Principal{}, &authn.UnauthorizedError{}
 	}
 	return k.p, nil
@@ -53,7 +53,7 @@ func authServerWith(t *testing.T, refs *fakes.PublicIDs, p session.Principal) st
 		Refs:     refs,
 	}, nil, Options{Authn: authn.InterceptorOptions{
 		Chain:       authn.Chain{keyAuthn{p: p}},
-		KeyPrefix:   "oagent_",
+		KeyPrefix:   "othra_",
 		Permissions: permission.Table(),
 	}})
 	ts := httptest.NewServer(srv.Handler(""))
@@ -76,7 +76,7 @@ func TestAPI_NoCredentialStillWorks(t *testing.T) {
 func TestAPI_BadCredentialIs401(t *testing.T) {
 	url := authServer(t, session.Principal{})
 	_, err := orgv1connect.NewOrgServiceClient(http.DefaultClient, url).
-		ListOrgs(context.Background(), bearer(connect.NewRequest(&orgv1.ListOrgsRequest{}), "oagent_bad"))
+		ListOrgs(context.Background(), bearer(connect.NewRequest(&orgv1.ListOrgsRequest{}), "othra_bad"))
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
 }
 
@@ -86,7 +86,7 @@ func TestAPI_KeyWithoutPermissionIs403(t *testing.T) {
 	url := authServerWith(t, refs, p)
 	_, err := agentv1connect.NewAgentServiceClient(http.DefaultClient, url).CreateAgent(context.Background(), bearer(connect.NewRequest(&agentv1.CreateAgentRequest{
 		OrgId: refs.Org(p.ActiveOrgID), ProjectId: refs.Project(uuid.New(), p.ActiveOrgID), Slug: "bot", Name: "Bot",
-	}), "oagent_good"))
+	}), "othra_good"))
 	assert.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
 }
 
@@ -95,7 +95,7 @@ func TestAPI_WhoamiWithKey(t *testing.T) {
 	url := authServer(t, p)
 	c := authv1connect.NewAuthServiceClient(http.DefaultClient, url)
 
-	resp, err := c.Whoami(context.Background(), bearer(connect.NewRequest(&authv1.WhoamiRequest{}), "oagent_good"))
+	resp, err := c.Whoami(context.Background(), bearer(connect.NewRequest(&authv1.WhoamiRequest{}), "othra_good"))
 	require.NoError(t, err)
 	assert.Equal(t, "a1b2", resp.Msg.GetKeyHint())
 

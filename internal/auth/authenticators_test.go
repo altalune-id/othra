@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org/member"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org/member"
 )
 
 func TestSessionAuthenticator_RebuildsAuthority(t *testing.T) {
@@ -39,7 +39,7 @@ func TestSessionAuthenticator_Refuses(t *testing.T) {
 
 	for name, c := range map[string]authn.Credential{
 		"unknown sid": {Kind: authn.KindSession, Token: "missing"},
-		"api key":     {Kind: authn.KindAPIKey, Token: "oagent_x"},
+		"api key":     {Kind: authn.KindAPIKey, Token: "othra_x"},
 		"basic":       {Kind: authn.KindBasic, User: "a", Password: "b"},
 	} {
 		t.Run(name, func(t *testing.T) {

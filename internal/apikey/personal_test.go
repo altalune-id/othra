@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/scope"
 )
 
 type roleKey struct{ org, user uuid.UUID }

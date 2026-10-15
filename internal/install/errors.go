@@ -3,7 +3,7 @@ package install
 import (
 	"errors"
 
-	"altalune.id/oagent/apperror"
+	"altalune.id/othra/apperror"
 )
 
 // AlreadyInstalledError signals an install attempt after the system org already has an owner.

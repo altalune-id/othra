@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/fakes"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func testUnexpected() apperror.UnexpectedFunc {

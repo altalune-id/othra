@@ -3,8 +3,8 @@ package member
 import (
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/scope"
 )
 
 // Requester is who asks for a change before their permissions are known: a person (Operator marks staff) or a non-person operator.

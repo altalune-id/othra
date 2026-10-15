@@ -17,14 +17,14 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/nanoid"
 )
 
 const (
 	envURL     = "TEST_REDIS_URL"
 	envCI      = "CI"
 	image      = "redis:7-alpine"
-	labelOwner = "id.altalune.oagent.redistest"
+	labelOwner = "id.altalune.othra.redistest"
 	staleAfter = 30 * time.Minute
 	prefixLen  = 12
 )
@@ -149,5 +149,5 @@ func uniquePrefix(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("redistest: nanoid: %v", err)
 	}
-	return "oagenttest:" + strings.ToLower(strings.NewReplacer("-", "", "_", "").Replace(id)) + ":"
+	return "othratest:" + strings.ToLower(strings.NewReplacer("-", "", "_", "").Replace(id)) + ":"
 }

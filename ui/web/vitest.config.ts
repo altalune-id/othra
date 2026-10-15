@@ -1,4 +1,4 @@
-import base from '@oagent/vitest-config/browser';
+import base from '@othra/vitest-config/browser';
 import { defineConfig, mergeConfig } from 'vitest/config';
 
 export default mergeConfig(base, defineConfig({

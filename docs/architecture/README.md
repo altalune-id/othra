@@ -1,19 +1,19 @@
 # Architecture
 
-oagent is a self-hosted platform for AI agents. One Go binary (`oagent`, module `altalune.id/oagent`) serves every surface from one set of domain services and one Postgres database.
+othra is a self-hosted platform for AI agents. One Go binary (`othra`, module `altalune.id/othra`) serves every surface from one set of domain services and one Postgres database.
 
 For step-by-step changes, see the recipes in [docs/howto](../howto/README.md).
 
 ## Surfaces
 
-| Surface           | Where                                  | Code                                                                  |
-| ----------------- | -------------------------------------- | --------------------------------------------------------------------- |
-| API               | `/api` (Connect RPC, OpenAPI docs)     | `internal/controlplane`, protos in `api/`                             |
-| MCP server        | `/mcp` (HTTP) and `oagent mcp` (stdio) | generated tools over the Connect handlers, `internal/mcp`, root `mcp` |
-| CLI               | `oagent ...`                           | `internal/cli` (shell) + each domain's `cli.go`                       |
-| Web console       | `/console`                             | Nuxt SPA in `ui/console`, embedded by `internal/web/console`          |
-| Pre-sign-in pages | `/login`, `/install`, `/invite`, ...   | each domain's `web.go` + templ in `<domain>/views`                    |
-| Probes            | `/healthz`, `/readyz`                  | `internal/health`                                                     |
+| Surface           | Where                                 | Code                                                                  |
+| ----------------- | ------------------------------------- | --------------------------------------------------------------------- |
+| API               | `/api` (Connect RPC, OpenAPI docs)    | `internal/controlplane`, protos in `api/`                             |
+| MCP server        | `/mcp` (HTTP) and `othra mcp` (stdio) | generated tools over the Connect handlers, `internal/mcp`, root `mcp` |
+| CLI               | `othra ...`                           | `internal/cli` (shell) + each domain's `cli.go`                       |
+| Web console       | `/console`                            | Nuxt SPA in `ui/console`, embedded by `internal/web/console`          |
+| Pre-sign-in pages | `/login`, `/install`, `/invite`, ...  | each domain's `web.go` + templ in `<domain>/views`                    |
+| Probes            | `/healthz`, `/readyz`                 | `internal/health`                                                     |
 
 Every signed-in surface (API, MCP, console) reaches a domain through the `controlplane` handlers, which hold the permission and reach checks. Only pre-sign-in pages, operator commands that boot the `App`, and workers call services directly.
 
@@ -21,7 +21,7 @@ Every signed-in surface (API, MCP, console) reaches a domain through the `contro
 
 ```mermaid
 flowchart TB
-  CMD["cmd/oagent"] --> CLI["internal/cli<br/>root command, flags, config"]
+  CMD["cmd/othra"] --> CLI["internal/cli<br/>root command, flags, config"]
   CLI --> BOOT["internal/boot<br/>composition root"]
   BOOT --> CP["internal/controlplane<br/>Connect handlers, permission, validation"]
   BOOT --> WEB["internal/web<br/>mux, static, gates (no domain)"]
@@ -86,7 +86,7 @@ The pnpm workspace `ui/*` builds assets that the binary embeds. The builds are n
 | `ui/mcp`     | MCP Apps view                  | `make ui-mcp`     | `internal/mcp/ui/assets`      |
 | `ui/web`     | Tailwind CSS + password script | `make web`        | `internal/web/static`         |
 
-`make ui` builds all three. `ui/scripts/compress.mts` (package `@oagent/scripts`) then writes a `.br` and `.gz` next to each console and sign-in text file over 1 KiB. See [console-page.md](../howto/console-page.md) and [web-page.md](../howto/web-page.md).
+`make ui` builds all three. `ui/scripts/compress.mts` (package `@othra/scripts`) then writes a `.br` and `.gz` next to each console and sign-in text file over 1 KiB. See [console-page.md](../howto/console-page.md) and [web-page.md](../howto/web-page.md).
 
 ## Data
 

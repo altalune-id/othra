@@ -5,7 +5,7 @@
 package invitev1connect
 
 import (
-	v1 "altalune.id/oagent/gen/go/invite/v1"
+	v1 "altalune.id/othra/gen/go/invite/v1"
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"

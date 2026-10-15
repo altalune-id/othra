@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import base from '@oagent/vitest-config/node';
+import base from '@othra/vitest-config/node';
 import { defineConfig, mergeConfig } from 'vitest/config';
 
 export default mergeConfig(base, defineConfig({

@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/apperror"
-	rootmcp "altalune.id/oagent/mcp"
-	"altalune.id/oagent/reqid"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/apperror"
+	rootmcp "altalune.id/othra/mcp"
+	"altalune.id/othra/reqid"
+	"altalune.id/othra/scope"
 )
 
 func TestErrorPayload_App(t *testing.T) {

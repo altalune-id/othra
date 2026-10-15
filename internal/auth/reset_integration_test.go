@@ -15,16 +15,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/mailqueue"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/mailer"
-	"altalune.id/oagent/password"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/mailqueue"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/mailer"
+	"altalune.id/othra/password"
+	"altalune.id/othra/sealer"
 )
 
 type resetDB struct {
@@ -73,7 +73,7 @@ func newResetDB(t *testing.T) *resetDB {
 	d.mail = &failingMail{next: d.queue}
 	d.resets = auth.NewResets(auth.ResetDeps{
 		Store: d.store, Transactor: db.NewTransactor(pool), Users: d.users, Passwords: d.users,
-		Sessions: d.sessions, Mail: d.mail, From: "noreply@example.com", BaseURL: "https://oagent.example.com",
+		Sessions: d.sessions, Mail: d.mail, From: "noreply@example.com", BaseURL: "https://othra.example.com",
 	}).WithClock(func() time.Time { return time.Now().Add(d.ahead) })
 	d.person, err = d.users.Create(t.Context(), user.CreateRequest{Email: "ada@example.com", Name: "Ada", Password: "the old passphrase"})
 	require.NoError(t, err)
@@ -215,7 +215,7 @@ func TestChangePassword_IsOneUnitOfWork(t *testing.T) {
 	ctx := t.Context()
 	svc := auth.NewService(auth.Deps{
 		Users: d.users, Passwords: d.users, Sessions: d.sessions, Profiles: d.users,
-		Transactor: db.NewTransactor(d.pool), Mail: d.mail, From: "noreply@example.com", BaseURL: "https://oagent.example.com",
+		Transactor: db.NewTransactor(d.pool), Mail: d.mail, From: "noreply@example.com", BaseURL: "https://othra.example.com",
 	})
 	p := session.Principal{UserID: d.person.ID, Source: session.SourceLocal}
 	for _, sid := range []string{"this", "other"} {

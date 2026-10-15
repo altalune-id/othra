@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
 )
 
 // NotFoundError reports that the user is not a member of the org.

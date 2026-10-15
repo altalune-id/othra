@@ -46,7 +46,7 @@ export function usePersonalKeys(orgId: string) {
       if (res.key) {
         keys.add(toAPIKey(res.key));
       }
-      created.value = { plaintext: res.plaintext, snippet: mcpSnippet('oagent', mcpURL(apiUrl, window.location.origin), res.plaintext) };
+      created.value = { plaintext: res.plaintext, snippet: mcpSnippet('othra', mcpURL(apiUrl, window.location.origin), res.plaintext) };
     } catch (e) {
       error.value = errorMessage(e, 'error.create_apikey');
     } finally {

@@ -20,8 +20,8 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/permission"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/permission"
 )
 
 var uuidShaped = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)

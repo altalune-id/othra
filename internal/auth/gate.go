@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/web/layout"
 )
 
-const basicChallenge = `Basic realm="oagent"`
+const basicChallenge = `Basic realm="othra"`
 
 // BasicSignIn checks the shared basic-mode credentials; *Service implements it.
 type BasicSignIn interface {

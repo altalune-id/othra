@@ -1,6 +1,6 @@
 package member
 
-import "altalune.id/oagent/scope"
+import "altalune.id/othra/scope"
 
 // BuiltinPermissions returns the permissions r grants inside its org.
 func BuiltinPermissions(r Role) []string {

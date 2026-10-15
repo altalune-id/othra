@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"altalune.id/oagent/apperror"
+	"altalune.id/othra/apperror"
 )
 
 // NotFoundError signals a missing api key row.

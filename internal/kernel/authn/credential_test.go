@@ -7,12 +7,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 var testSecret = []byte("0123456789abcdef0123456789abcdef")
 
-const testPrefix = "oagent_"
+const testPrefix = "othra_"
 
 func basic(user, pass string) string {
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(user+":"+pass))
@@ -28,9 +28,9 @@ func TestFromHeader(t *testing.T) {
 	}{
 		"nothing":                   {"", "", Credential{}, false},
 		"other cookie only":         {"", "a=b", Credential{}, false},
-		"bearer key":                {"Bearer oagent_abc", "", Credential{Kind: KindAPIKey, Token: "oagent_abc"}, true},
-		"lowercase bearer":          {"bearer oagent_abc", "", Credential{Kind: KindAPIKey, Token: "oagent_abc"}, true},
-		"bearer extra spaces":       {"Bearer   oagent_abc  ", "", Credential{Kind: KindAPIKey, Token: "oagent_abc"}, true},
+		"bearer key":                {"Bearer othra_abc", "", Credential{Kind: KindAPIKey, Token: "othra_abc"}, true},
+		"lowercase bearer":          {"bearer othra_abc", "", Credential{Kind: KindAPIKey, Token: "othra_abc"}, true},
+		"bearer extra spaces":       {"Bearer   othra_abc  ", "", Credential{Kind: KindAPIKey, Token: "othra_abc"}, true},
 		"bearer without prefix":     {"Bearer eyJ.abc.def", "", Credential{}, true},
 		"bearer empty":              {"Bearer ", "", Credential{}, true},
 		"unknown scheme":            {"Digest abc", "", Credential{}, true},
@@ -40,7 +40,7 @@ func TestFromHeader(t *testing.T) {
 		"basic no colon":            {"Basic " + base64.StdEncoding.EncodeToString([]byte("admin")), "", Credential{}, true},
 		"cookie good":               {"", goodCookie, Credential{Kind: KindSession, Token: "sid-1"}, true},
 		"cookie tampered":           {"", goodCookie + "x", Credential{}, true},
-		"header beats cookie":       {"Bearer oagent_abc", goodCookie, Credential{Kind: KindAPIKey, Token: "oagent_abc"}, true},
+		"header beats cookie":       {"Bearer othra_abc", goodCookie, Credential{Kind: KindAPIKey, Token: "othra_abc"}, true},
 		"bad header ignores cookie": {"Bearer nope", goodCookie, Credential{}, true},
 	}
 	for name, tc := range cases {

@@ -4,7 +4,7 @@ import SecretField from './SecretField.vue';
 const meta = {
   title: 'UI/SecretField',
   component: SecretField,
-  args: { value: 'oagent_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE', label: 'Copy' },
+  args: { value: 'othra_Q0QeIWMvn5Tf84kAq2gaFarjbHX2PQA__J-NsdUqAuE', label: 'Copy' },
 } satisfies Meta<typeof SecretField>;
 
 export default meta;

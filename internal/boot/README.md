@@ -33,8 +33,8 @@ flowchart TD
 ```
 
 `App.Run` starts the supervisor (`serve`). `App.RunMCP` serves MCP over stdio
-instead (`oagent mcp`). `App.SetPassword` (`oagent user set-password`) and
-`App.AddMember` (`oagent member add`) are operator actions, booted with the
+instead (`othra mcp`). `App.SetPassword` (`othra user set-password`) and
+`App.AddMember` (`othra member add`) are operator actions, booted with the
 install URL, scheduler and consumer off.
 `BootRemote` (`remote.go`) is the CLI side: config, a logger and a Connect
 client (`internal/apiclient`) to a running server, with no database.
@@ -46,14 +46,14 @@ service. Every service writes through its own store.
 
 ```mermaid
 flowchart TD
-    CLI["oagent CLI"] -- Connect client --> API
+    CLI["othra CLI"] -- Connect client --> API
     CLI -- "auth login / logout" --> WEB
     API["/api"] --> G1[InstallGate] --> C1[CrossOrigin] --> B1["BasicChallenge (basic mode)"] --> I1["RequestID, OTel, Wrap"] --> I2["authn + permission"] --> I3[tenantFromPrincipal] --> V1["validate (proto rules)"] --> DC
     WEB["web routes"] --> G2[InstallGate] --> C2[CrossOrigin] --> S2[Session] --> W2[WelcomeGate] --> DW
     CON["/console"] --> G3[InstallGate] --> S3[Session] --> W3[WelcomeGate] --> CG3["ConsoleGate: /login redirect or Basic challenge"] --> SPA[console SPA]
     SPA -. calls .-> API
     MCPH["/mcp HTTP"] --> G4[InstallGate] --> A4["mcp.Authenticate: key or Basic, no cookie"] --> T4["tool scope check"] --> V4["validate (proto rules)"] --> DC
-    MCPS["oagent mcp stdio"] --> SYS["session.System() Principal"] --> T4
+    MCPS["othra mcp stdio"] --> SYS["session.System() Principal"] --> T4
     LB["/healthz, /readyz"] --> HW["health web.go (no gate, session or CSRF)"] --> HS["health service.go"] --> DBH["db-health monitor"]
     HS -. "when Redis is used" .-> RDH["redis-health monitor"]
     HS -. "when NATS is used" .-> NAH["nats-health monitor"]
@@ -66,14 +66,14 @@ flowchart TD
 - **Public ids:** every id on a surface (Connect, MCP, CLI, console calls, `/login`'s JSON, webhook bodies and headers) is the 21-character `public_id`; UUIDs never leave the server and slugs appear only in URL paths. Each `controlplane.go` turns an incoming public id into its id once, through the `publicIDs` adapter (`publicids.go`, passed as `controlplane.Services.Refs` and to the MCP tools), and maps every outgoing id back. A malformed or UUID-shaped id is refused by the request rules (`GEN004`, `invalid_format`) before any lookup; an unknown or another org's well-formed id answers the same not-found. Members are named by the user's public id; API keys have none and are named by their hint within the org. `publicid_integration_test.go` fails if any RPC answers with a UUID.
 - **Reach:** after the permission check, each `controlplane.go` checks that the caller reaches the org, project or resource (`kernel/authz.Reach*`). Out of reach answers 404.
 - **MCP:** tools are generated from the same Connect services, so MCP and `/api` share one handler per RPC.
-- **Request validation:** requests are validated against their proto rules (`buf.validate`, shared rules in `api/oagent/v1/rules.proto`) before handlers run, on `/api` and MCP. `Boot` builds one `controlplane.Validator` (`Services.Validator`); the `/api` interceptor runs it after authn, the permission check and the tenant, and every generated MCP tool runs it right after decoding its input. A refusal is `GEN004` with the first field in `meta` and every field in `violations` (field, reason, param), never the value. The rules check shape only; services still enforce every domain rule. Slugs (`oagent.slug`) and the new password's length repeat the domain's limits so clients see them first; the domain still checks them, plus reserved slugs, uniqueness and the rest of the password policy. A permission check that depends on the request itself (the key kind on `CreateAPIKey`, org-wide webhook events, membership of the org a request names) runs in the handler, after validation, so a caller who lacks it and sends a malformed request sees which fields are malformed (the public request shape, no data) before the 403.
+- **Request validation:** requests are validated against their proto rules (`buf.validate`, shared rules in `api/othra/v1/rules.proto`) before handlers run, on `/api` and MCP. `Boot` builds one `controlplane.Validator` (`Services.Validator`); the `/api` interceptor runs it after authn, the permission check and the tenant, and every generated MCP tool runs it right after decoding its input. A refusal is `GEN004` with the first field in `meta` and every field in `violations` (field, reason, param), never the value. The rules check shape only; services still enforce every domain rule. Slugs (`othra.slug`) and the new password's length repeat the domain's limits so clients see them first; the domain still checks them, plus reserved slugs, uniqueness and the rest of the password policy. A permission check that depends on the request itself (the key kind on `CreateAPIKey`, org-wide webhook events, membership of the org a request names) runs in the handler, after validation, so a caller who lacks it and sends a malformed request sees which fields are malformed (the public request shape, no data) before the 403.
 - **Credentials required:** `requireCredentials` (`http.go`) makes `/api` and `/mcp` answer 401 and the console redirect to `/login?return_to=…` (local) or send a Basic challenge (basic mode) when no credential is sent. `/login`, `/logout`, `/forgot-password`, `/reset-password`, `/install`, `/invite`, `/welcome`, `/terms`, `/privacy`, `/static`, `/healthz` and `/readyz` stay open. A request with no Principal reaches nothing (`kernel/authz`).
-- **Security headers:** every response except `/mcp` gets `X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin` (`web.NewServer`, `middleware.SecurityHeaders`); a handler may override one (token pages send `no-referrer`, the API docs page its own CSP). `/mcp` is left alone because MCP hosts frame its views. HSTS is not set by oagent: set it at the TLS edge (Cloudflare, nginx).
+- **Security headers:** every response except `/mcp` gets `X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin` (`web.NewServer`, `middleware.SecurityHeaders`); a handler may override one (token pages send `no-referrer`, the API docs page its own CSP). `/mcp` is left alone because MCP hosts frame its views. HSTS is not set by othra: set it at the TLS edge (Cloudflare, nginx).
 - **Embedded assets:** the console (`/console`, `internal/web/console`) and the sign-in assets (`/static`, `internal/web/static.go`) are served from memory by `internal/web/assets`. Every file has a strong `ETag` (a hash of its bytes, computed once at startup) and `If-None-Match` answers `304`. Console files under `_nuxt/` have hashed names and get `Cache-Control: public, max-age=31536000, immutable`, except the build manifest `_nuxt/builds/latest.json` (`no-cache`); other console files and `/static` files get `public, max-age=3600`. `index.html`, also served for every client route, is rebased once per handler (base path, `apiUrl`, `appVersion`), sent `no-cache` with the `ETag` of the rebased bytes, and gzipped in memory once. `make ui` writes `.br` and `.gz` next to each text asset (`ui/scripts/compress.mts`); a request whose `Accept-Encoding` allows it gets brotli, else gzip, with `Vary: Accept-Encoding` and an `ETag` per encoding. A `Range` request or a client without `Accept-Encoding` gets the plain file, a `.br` or `.gz` name answers 404, and a directory falls back to `index.html` (console) or 404 (`/static`).
 - **Permissions:** `internal/permission` is the one table of the permissions each RPC needs (all of them; a missing or empty entry is denied). `authz.AnyAuthenticated` admits any signed-in caller; `authz.PersonOnly` admits only a signed-in person (profile, password, sign out everywhere, leave org), so a key is refused before its request is validated. The `/api` interceptor reads it, and every generated MCP tool takes its RPC's entry (`permission.For` in `mcp.go`).
 - **App-only tools:** a tool marked `app_only` carries `_meta.ui.visibility: ["app"]`, so a host that honours MCP Apps offers it to the MCP view, not the model; with `mcp.appsUI` off it is not registered at all. A drafted invite is sent only through one (`member_invite_confirm`) or the console; on a host that ignores the visibility the model can call it too.
 - **MCP scopes:** `tools/list` and `tools/call` both check every one of the tool's permissions against those the caller holds (`mcpinternal.ScopesFromContext`). No Principal holds none.
-- **stdio:** `oagent mcp` runs as `session.System()`, an operator, never as "no Principal".
+- **stdio:** `othra mcp` runs as `session.System()`, an operator, never as "no Principal".
 - **Who calls services directly:** any signed-in surface (Connect, MCP, a signed-in web page) calls the `controlplane` handlers, never a service, because the handlers hold the permission and reach checks; services check domain rules only. Only pre-sign-in pages (login, install, invite landing), operator commands that boot the `App`, and workers call services directly. `reach_integration_test.go` calls every RPC from another org, and with a key limited to another project of the same org (only `GetOrg`, `ListOrgs` and `ListProjects` answer; the list holds only what the key reaches).
 
 ## Domains and their surfaces
@@ -212,8 +212,8 @@ mail queue and the sessions keep their tables there. `postgres.*` is the connect
   retry (`postgres.connectTimeout` 5s, `postgres.connectBackoff` 250ms), `postgres.reader.*` (a
   replica; empty `postgres.reader.dsn` reads from the writer), `postgres.migrator.{dsn,role}` (the
   credential migrations run on; empty uses `postgres.dsn`) and `postgres.health.{interval,timeout}`
-  (30s, 2s). `db.autoMigrate` (default true) migrates at start. Env: `OAGENT_POSTGRES_DSN`,
-  `OAGENT_POSTGRES_MIGRATOR_DSN`, `OAGENT_DB_DRIVER`, `OAGENT_DB_AUTO_MIGRATE`, …
+  (30s, 2s). `db.autoMigrate` (default true) migrates at start. Env: `OTHRA_POSTGRES_DSN`,
+  `OTHRA_POSTGRES_MIGRATOR_DSN`, `OTHRA_DB_DRIVER`, `OTHRA_DB_AUTO_MIGRATE`, …
 - **Connection:** the root package `pg` (`pg.Open`) opens a `*sql.DB` with the role, retries the
   ping with backoff within `postgres.connectTimeout`, and applies the pool. No error or log carries
   a password. `db.go` here maps `postgres.*` to one `pg.Config` for the writer and one for the
@@ -227,16 +227,16 @@ mail queue and the sessions keep their tables there. `postgres.*` is the connect
 
 ## Redis
 
-oagent has one Redis connection, `redis.*`, and opens it **only when a feature selects it**. Each
+othra has one Redis connection, `redis.*`, and opens it **only when a feature selects it**. Each
 feature picks its driver in its own block; today only `rateLimit.driver: redis` does (with a rate
-limit group on). With the default config oagent never connects to Redis; a `redis.url` that no
+limit group on). With the default config othra never connects to Redis; a `redis.url` that no
 feature uses is ignored with one INFO line.
 
 - **Config:** `redis.url` (secret; `redis://[user:password@]host:port[/db]`, or `rediss://` for
-  TLS), `redis.keyPrefix` (default `oagent:`), `redis.maxConnections` (10),
+  TLS), `redis.keyPrefix` (default `othra:`), `redis.maxConnections` (10),
   `redis.minIdleConnections` (0), `redis.maxIdleTime` (5m), `redis.connectTimeout` (5s),
-  `redis.readTimeout` (3s), `redis.writeTimeout` (3s). Env: `OAGENT_REDIS_URL`,
-  `OAGENT_REDIS_KEY_PREFIX`, … A feature on `redis` with no `redis.url`, or a URL that is not
+  `redis.readTimeout` (3s), `redis.writeTimeout` (3s). Env: `OTHRA_REDIS_URL`,
+  `OTHRA_REDIS_KEY_PREFIX`, … A feature on `redis` with no `redis.url`, or a URL that is not
   `redis://` or `rediss://`, is a config error. Single-node URLs only. Needs Redis 5 or newer
   (tested on 7): the rate-limit script reads `TIME` before it writes.
 - **Connection:** the root package `redis` (`redis.Open`) parses the URL, sets the pool and
@@ -253,24 +253,24 @@ feature uses is ignored with one INFO line.
 - **Key prefix (shared Redis):** every key starts with `redis.keyPrefix` (letters, digits and
   `. _ : -`, 1-64 characters; a trailing `:` is added), then a namespace per feature (`rl:` for
   rate limits, `cache:` later). On a Redis shared by several deployments or environments, give
-  each its own prefix (`oagent:prod:`, `oagent:staging:`) or its own database number in the URL
+  each its own prefix (`othra:prod:`, `othra:staging:`) or its own database number in the URL
   (`redis://host:6379/2`). Never share a prefix between deployments that should not share limits.
-  oagent never runs `FLUSHDB`, `KEYS` or `SCAN` over the instance.
+  othra never runs `FLUSHDB`, `KEYS` or `SCAN` over the instance.
 - **Cache (later):** a cache gets its own `cache.*` block with `cache.store: memory | redis`,
   reuses this connection and puts its keys under `<prefix>cache:`.
 
 ## NATS
 
-oagent has one NATS connection, `nats.*`, and opens it **only when a feature selects it**. Today
+othra has one NATS connection, `nats.*`, and opens it **only when a feature selects it**. Today
 only the queue does (`queue.enabled: true` with `queue.driver: nats`, the default driver). With the
-default config oagent never connects to NATS; a `nats.url` that no feature uses is ignored with one
+default config othra never connects to NATS; a `nats.url` that no feature uses is ignored with one
 INFO line.
 
 - **Config:** `nats.url` (secret; `nats://[user:password@]host:4222`, several comma-separated, or
   `tls://`, `ws://`, `wss://`), `nats.user` and `nats.password` (secret, at least 16 characters) for
   one account, or `nats.token` (secret) for a server without accounts, not both; `nats.name` (the
-  client name in NATS monitoring, default `oagent`), `nats.connectTimeout` (10s). Env:
-  `OAGENT_NATS_URL`, `OAGENT_NATS_USER`, `OAGENT_NATS_PASSWORD`, … The rules apply only while a
+  client name in NATS monitoring, default `othra`), `nats.connectTimeout` (10s). Env:
+  `OTHRA_NATS_URL`, `OTHRA_NATS_USER`, `OTHRA_NATS_PASSWORD`, … The rules apply only while a
   feature uses NATS; then a missing `nats.url` or one that is not a NATS URL is a config error.
 - **Connection:** the root package `nats` (`nats.Open`) dials until `nats.connectTimeout` (backoff
   250 ms to 2 s, 2 s per dial) and reconnects forever after that. Everything it reports goes to
@@ -286,7 +286,7 @@ INFO line.
   boot closes it); the closer drains once, and a second `Close` returns the first result. The `nats-health` worker checks the connection every 5 s; while it is not
   connected (reconnecting or closed), `/readyz` answers 503. It never stops the process.
 - **Shared server:** one NATS server can serve every app, with one account per app (the
-  `OAGENT` account, user `oagent`, as on `github.com/altalune-id/nats`). Accounts isolate apps,
+  `OTHRA` account, user `othra`, as on `github.com/altalune-id/nats`). Accounts isolate apps,
   since every app uses the same stream names; never share an account between apps.
 
 ## Queue
@@ -308,7 +308,7 @@ listener (`k.Queue.Listener`, which starts at the stream's next message) wheneve
 
 ## Rate limits
 
-oagent's own rate limiter is **off by default**: many deployments limit at the edge (a CDN, nginx,
+othra's own rate limiter is **off by default**: many deployments limit at the edge (a CDN, nginx,
 an API gateway). Each group has its own switch and all groups share one store. The only group now is
 `auth` (`rateLimit.auth.enabled`). With every group off, no store and no janitor exist and every
 group gets `ratelimit.Disabled()`, which allows every call.
@@ -339,16 +339,16 @@ group gets `ratelimit.Disabled()`, which allows every call.
   `POST /forgot-password` counts 20 an hour per IP and 3 an hour per email; opening a reset link,
   its form and setting the password count 20 an hour per IP.
 - **Client IP:** `layout.ClientIP` keys on `RemoteAddr`, or, when `http.trustedProxyHops` (env
-  `OAGENT_HTTP_TRUSTED_PROXY_HOPS`) is n >= 1, on the n-th `X-Forwarded-For` entry counted from the
+  `OTHRA_HTTP_TRUSTED_PROXY_HOPS`) is n >= 1, on the n-th `X-Forwarded-For` entry counted from the
   right. Each trusted proxy appends the address it saw, so entries further left are whatever the
   client sent. IPv6 is keyed by its /64. If the header has fewer than n entries, or that entry is
   not an IP, `RemoteAddr` is used, never an entry further left.
-  - `0` (default): no proxy, oagent faces the internet.
+  - `0` (default): no proxy, othra faces the internet.
   - `1`: one proxy, e.g. Cloudflare only, or nginx only (`proxy_add_x_forwarded_for`).
   - `2`: two proxies, e.g. Cloudflare in front of nginx.
 
   **The origin must accept traffic only from the trusted proxies** (a firewall, or Cloudflare's
-  IP ranges only); a client that reaches oagent directly can write any `X-Forwarded-For` it likes.
+  IP ranges only); a client that reaches othra directly can write any `X-Forwarded-For` it likes.
   With the setting too low behind proxies, every client shares a proxy IP, so the per-IP limits
   (60 sign-ins per 15 minutes) apply to the whole site.
 

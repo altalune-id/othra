@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/user"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/user"
 )
 
 type orgByID map[uuid.UUID]*org.Org

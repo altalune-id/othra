@@ -18,13 +18,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/health"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/session"
-	mcpinternal "altalune.id/oagent/internal/mcp"
-	"altalune.id/oagent/internal/permission"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/health"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
+	mcpinternal "altalune.id/othra/internal/mcp"
+	"altalune.id/othra/internal/permission"
 )
 
 type lockdown struct {
@@ -216,14 +216,14 @@ func TestLockdown_BasicMode(t *testing.T) {
 
 	rec := l.do(http.MethodGet, "/console/", nil, "")
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	assert.Equal(t, `Basic realm="oagent"`, rec.Header().Get("WWW-Authenticate"))
+	assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"))
 
 	rec = l.do(http.MethodGet, "/console/", http.Header{"Authorization": {basicAuth("ops", "basic-password")}}, "")
 	assert.Equal(t, http.StatusOK, rec.Code)
 
 	rec = l.do(http.MethodPost, "/api/org.v1.OrgService/ListOrgs", connectJSON(), `{}`)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	assert.Equal(t, `Basic realm="oagent"`, rec.Header().Get("WWW-Authenticate"))
+	assert.Equal(t, `Basic realm="othra"`, rec.Header().Get("WWW-Authenticate"))
 
 	h := connectJSON()
 	h.Set("Authorization", basicAuth("ops", "basic-password"))

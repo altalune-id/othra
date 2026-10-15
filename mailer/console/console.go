@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"altalune.id/oagent/mailer"
+	"altalune.id/othra/mailer"
 )
 
 var _ mailer.Mailer = (*Sender)(nil)

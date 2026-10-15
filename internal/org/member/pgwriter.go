@@ -8,7 +8,7 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/db"
 )
 
 var errLockOutsideTx = errors.New("member.postgres: a row lock needs a transaction")

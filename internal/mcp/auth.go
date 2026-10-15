@@ -11,13 +11,13 @@ import (
 	"net/http"
 	"slices"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/permission"
-	rootmcp "altalune.id/oagent/mcp"
-	"altalune.id/oagent/reqid"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/permission"
+	rootmcp "altalune.id/othra/mcp"
+	"altalune.id/othra/reqid"
 )
 
 const signInRequired = "Sign in required"

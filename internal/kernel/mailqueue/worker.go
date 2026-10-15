@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/mailer"
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/mailer"
+	"altalune.id/othra/worker"
 )
 
 var _ worker.Worker = (*Worker)(nil)

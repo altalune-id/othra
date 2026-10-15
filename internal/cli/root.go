@@ -11,29 +11,29 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/config"
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	invitev1connect "altalune.id/oagent/gen/go/invite/v1/invitev1connect"
-	memberv1connect "altalune.id/oagent/gen/go/member/v1/memberv1connect"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	projectv1connect "altalune.id/oagent/gen/go/project/v1/projectv1connect"
-	webhookv1connect "altalune.id/oagent/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/boot"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/webhook"
-	"altalune.id/oagent/reqid"
-	"altalune.id/oagent/version"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/config"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/boot"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/webhook"
+	"altalune.id/othra/reqid"
+	"altalune.id/othra/version"
 )
 
 // App is the running server the serve, mcp, user and member add commands drive.
@@ -58,9 +58,9 @@ type ctxKey int
 const ctxKeyRuntime ctxKey = iota + 1
 
 // NOTE: commands carrying this annotation load config without validation, so they need no DB.
-const clientAnnotation = "oagent/client"
+const clientAnnotation = "othra/client"
 
-const operatorAnnotation = "oagent/operator"
+const operatorAnnotation = "othra/operator"
 
 type runtime struct {
 	cfg *config.Config
@@ -72,22 +72,22 @@ func NewRootCmd(bootServer ServerBootFn, bootClient ClientBootFn) *cobra.Command
 	var configPath, logLevel, logFormat string
 
 	root := &cobra.Command{
-		Use:           "oagent",
-		Short:         "oagent — build, manage and integrate custom AI agents",
+		Use:           "othra",
+		Short:         "othra — build, manage and integrate custom AI agents",
 		Version:       version.String(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
 	p := root.PersistentFlags()
-	p.StringVarP(&configPath, "config", "c", "", "config file (yaml); default search: $XDG_CONFIG_HOME/oagent, /etc/oagent, cwd")
+	p.StringVarP(&configPath, "config", "c", "", "config file (yaml); default search: $XDG_CONFIG_HOME/othra, /etc/othra, cwd")
 	p.StringVar(&logLevel, "log-level", "info", "log level: debug|info|warn|error")
 	p.StringVar(&logFormat, "log-format", "text", "log format: json|text")
-	p.String("url", "", "remote oagent base URL (also: OAGENT_URL)")
-	p.String("token", "", "bearer token (also: OAGENT_TOKEN)")
+	p.String("url", "", "remote othra base URL (also: OTHRA_URL)")
+	p.String("token", "", "bearer token (also: OTHRA_TOKEN)")
 	p.String("token-file", "", "read the bearer token from a file")
-	p.String("profile", "", "signed-in profile to use (also: OAGENT_PROFILE; default \"default\")")
-	p.String("output", "", "output format: text|json|ndjson (also: OAGENT_OUTPUT)")
+	p.String("profile", "", "signed-in profile to use (also: OTHRA_PROFILE; default \"default\")")
+	p.String("output", "", "output format: text|json|ndjson (also: OTHRA_OUTPUT)")
 	registerConfigFlags(p)
 
 	root.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {

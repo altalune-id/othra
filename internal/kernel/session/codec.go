@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/sealer"
 )
 
 // SECURITY: the payload carries identity and a future IdP token, so it is sealed and bound to its sid as additional data.

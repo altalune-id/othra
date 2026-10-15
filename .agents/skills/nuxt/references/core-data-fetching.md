@@ -7,7 +7,7 @@ description: useFetch, useAsyncData, and $fetch in a client-only Nuxt app
 
 Nuxt provides `useFetch`, `useAsyncData` and `$fetch`. With `ssr: false` they all run in the browser only; there is no server render and no hydration payload.
 
-> **In oagent:** console data comes from typed Connect clients (`useNuxtApp().$orgClient` and friends, created in `app/plugins/connect.client.ts`) called from Pinia store actions. Do not call `/api` with `$fetch` or `useFetch` for RPCs. Use these composables only for a non-RPC resource, and keep the result in the page or a store.
+> **In othra:** console data comes from typed Connect clients (`useNuxtApp().$orgClient` and friends, created in `app/plugins/connect.client.ts`) called from Pinia store actions. Do not call `/api` with `$fetch` or `useFetch` for RPCs. Use these composables only for a non-RPC resource, and keep the result in the page or a store.
 
 ## Overview
 

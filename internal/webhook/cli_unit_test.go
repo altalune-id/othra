@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 
-	webhookv1 "altalune.id/oagent/gen/go/webhook/v1"
+	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 )
 
 func TestWebhookColumnsAndRow(t *testing.T) {
@@ -17,8 +17,8 @@ func TestWebhookColumnsAndRow(t *testing.T) {
 }
 
 func TestIsJSON(t *testing.T) {
-	t.Setenv("OAGENT_OUTPUT", "text")
+	t.Setenv("OTHRA_OUTPUT", "text")
 	assert.False(t, isJSON(&cobra.Command{}))
-	t.Setenv("OAGENT_OUTPUT", "json")
+	t.Setenv("OTHRA_OUTPUT", "json")
 	assert.True(t, isJSON(&cobra.Command{}))
 }

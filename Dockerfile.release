@@ -4,10 +4,10 @@
 FROM gcr.io/distroless/static:nonroot
 ARG TARGETPLATFORM
 
-COPY ${TARGETPLATFORM}/oagent /oagent
+COPY ${TARGETPLATFORM}/othra /othra
 
 USER 65532:65532
 EXPOSE 5150
 
-ENTRYPOINT ["/oagent"]
+ENTRYPOINT ["/othra"]
 CMD ["serve"]

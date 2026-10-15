@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/testutil/fakes"
-	"altalune.id/oagent/internal/web"
-	"altalune.id/oagent/internal/web/layout"
-	"altalune.id/oagent/internal/web/middleware"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/testutil/fakes"
+	"altalune.id/othra/internal/web"
+	"altalune.id/othra/internal/web/layout"
+	"altalune.id/othra/internal/web/middleware"
 )
 
 type resetWeb struct {
@@ -61,7 +61,7 @@ func (f *resetWeb) open(t *testing.T) (*http.Cookie, string) {
 	raw := linkToken(t, f.mail.sent[len(f.mail.sent)-1])
 	rec := f.do(httptest.NewRequest(http.MethodGet, "/reset-password/"+raw, nil))
 	require.Equal(t, http.StatusSeeOther, rec.Code, rec.Body.String())
-	ck := cookieNamed(rec, "oagent_reset")
+	ck := cookieNamed(rec, "othra_reset")
 	require.NotNil(t, ck)
 	return ck, raw
 }
@@ -157,7 +157,7 @@ func TestResetWeb_LinkSetsACookieAndLeavesTheURL(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, rec.Code)
 	assert.Equal(t, "/reset-password", rec.Header().Get("Location"))
 	assert.Equal(t, "no-referrer", rec.Header().Get("Referrer-Policy"))
-	ck := cookieNamed(rec, "oagent_reset")
+	ck := cookieNamed(rec, "othra_reset")
 	require.NotNil(t, ck)
 	assert.True(t, ck.HttpOnly)
 	assert.True(t, ck.Secure)
@@ -194,7 +194,7 @@ func TestResetWeb_DeadLinks(t *testing.T) {
 			}
 			rec := f.do(httptest.NewRequest(http.MethodGet, path, nil))
 			assert.Equal(t, http.StatusGone, rec.Code)
-			c := cookieNamed(rec, "oagent_reset")
+			c := cookieNamed(rec, "othra_reset")
 			assert.True(t, c == nil || c.MaxAge < 0, "no reset cookie")
 			if name == "unknown" {
 				assert.Contains(t, rec.Body.String(), "This reset link is not valid.")
@@ -229,7 +229,7 @@ func TestResetWeb_SetPassword(t *testing.T) {
 	rec := f.do(form("/reset-password", url.Values{"password": {"a brand new passphrase"}}), ck)
 	require.Equal(t, http.StatusSeeOther, rec.Code, rec.Body.String())
 	assert.Equal(t, "/login?reset=done", rec.Header().Get("Location"))
-	cleared := cookieNamed(rec, "oagent_reset")
+	cleared := cookieNamed(rec, "othra_reset")
 	require.NotNil(t, cleared)
 	assert.Negative(t, cleared.MaxAge)
 	sid := cookieNamed(rec, session.CookieName)

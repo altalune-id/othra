@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
+	"altalune.id/othra/apperror"
 )
 
 func TestLayoutDataHref(t *testing.T) {
@@ -90,8 +90,8 @@ func TestLayoutTemplate(t *testing.T) {
 	out := buf.String()
 
 	assert.Contains(t, out, "<!doctype html>")
-	assert.Contains(t, out, `<html lang="id" data-theme="oagent-light">`)
-	assert.Contains(t, out, "<title>Home &lt;x&gt; · oagent</title>")
+	assert.Contains(t, out, `<html lang="id" data-theme="othra-light">`)
+	assert.Contains(t, out, "<title>Home &lt;x&gt; · othra</title>")
 	assert.Contains(t, out, `href="/app/static/favicon.ico"`)
 	assert.Contains(t, out, `href="/app/static/favicon-32x32.png"`)
 	assert.Contains(t, out, `href="/app/static/apple-touch-icon.png"`)
@@ -117,7 +117,7 @@ func TestCardTemplate(t *testing.T) {
 func TestErrorTemplate(t *testing.T) {
 	out := renderString(t, Error(LayoutData{BasePath: "/app", Title: "Oops"}, "Try <again>"))
 
-	assert.Contains(t, out, "<title>Oops · oagent</title>")
+	assert.Contains(t, out, "<title>Oops · othra</title>")
 	assert.Contains(t, out, `<h1 class="card-title text-2xl">Oops</h1>`)
 	assert.Contains(t, out, "<p>Try &lt;again&gt;</p>")
 	assert.Contains(t, out, `href="/app/console/"`)

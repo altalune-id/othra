@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/oagent/internal/web/layout"
+import "altalune.id/othra/internal/web/layout"
 
 // ResetData is the "choose a new password" form's state; the password is never echoed back.
 type ResetData struct {

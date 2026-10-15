@@ -19,7 +19,7 @@ type sessionFile struct {
 
 type profile struct {
 	URL       string        `json:"url"`
-	Session   string        `json:"session"` // SECURITY: the signed oagent_sid value; never printed
+	Session   string        `json:"session"` // SECURITY: the signed othra_sid value; never printed
 	ExpiresAt time.Time     `json:"expiresAt"`
 	Principal principalView `json:"principal"`
 }

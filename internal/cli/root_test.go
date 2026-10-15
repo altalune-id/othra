@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/boot"
-	"altalune.id/oagent/internal/cli"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/reqid"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/boot"
+	"altalune.id/othra/internal/cli"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/reqid"
 )
 
 type fakeApp struct{ runErr error }
@@ -32,13 +32,13 @@ func (f fakeApp) AddMember(context.Context, string, string, member.Role) (*membe
 
 func setServeEnv(t *testing.T) {
 	t.Helper()
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_HTTP_STATE_SECRET", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-	t.Setenv("OAGENT_SECRETS_ENCRYPTION_KEY", "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210")
-	t.Setenv("OAGENT_MAIL_DRIVER", "smtp")
-	t.Setenv("OAGENT_MAIL_FROM", "noreply@example.com")
-	t.Setenv("OAGENT_MAIL_SMTP_HOST", "smtp.example.com")
-	t.Setenv("OAGENT_HTTP_BASE_URL", "https://oagent.example.com")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_HTTP_STATE_SECRET", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+	t.Setenv("OTHRA_SECRETS_ENCRYPTION_KEY", "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210")
+	t.Setenv("OTHRA_MAIL_DRIVER", "smtp")
+	t.Setenv("OTHRA_MAIL_FROM", "noreply@example.com")
+	t.Setenv("OTHRA_MAIL_SMTP_HOST", "smtp.example.com")
+	t.Setenv("OTHRA_HTTP_BASE_URL", "https://othra.example.com")
 }
 
 func runRoot(t *testing.T, bootFn cli.ServerBootFn, args ...string) (*bytes.Buffer, error) {
@@ -54,7 +54,7 @@ func runRoot(t *testing.T, bootFn cli.ServerBootFn, args ...string) (*bytes.Buff
 func TestVersion(t *testing.T) {
 	buf, err := runRoot(t, nil, "version")
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "oagent")
+	assert.Contains(t, buf.String(), "othra")
 }
 
 func TestServe_InvokesBoot(t *testing.T) {
@@ -99,7 +99,7 @@ func TestServe_BootError(t *testing.T) {
 }
 
 func TestServe_ConfigError(t *testing.T) {
-	t.Setenv("OAGENT_POSTGRES_DSN", "")
+	t.Setenv("OTHRA_POSTGRES_DSN", "")
 	noop := func(context.Context, config.Config, *slog.Logger, ...boot.Option) (cli.App, error) {
 		return fakeApp{}, nil
 	}
@@ -154,8 +154,8 @@ func TestServe_ConfigFileMissing(t *testing.T) {
 
 func TestServe_FlagOverridesConfig(t *testing.T) {
 	setServeEnv(t)
-	t.Setenv("OAGENT_MODE", "cloud")
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://env/db")
+	t.Setenv("OTHRA_MODE", "cloud")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://env/db")
 	var gotCfg config.Config
 	bootFn := func(_ context.Context, cfg config.Config, _ *slog.Logger, _ ...boot.Option) (cli.App, error) {
 		gotCfg = cfg
@@ -172,7 +172,7 @@ func TestServe_FlagOverridesConfig(t *testing.T) {
 
 func TestServe_NATSURLFlagOverridesConfig(t *testing.T) {
 	setServeEnv(t)
-	t.Setenv("OAGENT_NATS_URL", "nats://env:4222")
+	t.Setenv("OTHRA_NATS_URL", "nats://env:4222")
 	var gotCfg config.Config
 	bootFn := func(_ context.Context, cfg config.Config, _ *slog.Logger, _ ...boot.Option) (cli.App, error) {
 		gotCfg = cfg

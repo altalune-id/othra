@@ -18,10 +18,10 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/queue"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/queue"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/worker"
 )
 
 // AckWait is how long JetStream waits for an ack before it redelivers.

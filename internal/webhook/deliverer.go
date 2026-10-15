@@ -14,10 +14,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/sealer"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 	headerUserAgent   = "User-Agent"
 
 	contentTypeJSON = "application/json"
-	userAgent       = "Oagent-Webhooks/1"
+	userAgent       = "Othra-Webhooks/1"
 
 	attemptSaveTimeout = 5 * time.Second
 )

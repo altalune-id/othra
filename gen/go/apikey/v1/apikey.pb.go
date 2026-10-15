@@ -7,7 +7,7 @@
 package apikeyv1
 
 import (
-	_ "altalune.id/oagent/gen/go/oagent/v1"
+	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -510,7 +510,7 @@ var File_apikey_v1_apikey_proto protoreflect.FileDescriptor
 
 const file_apikey_v1_apikey_proto_rawDesc = "" +
 	"\n" +
-	"\x16apikey/v1/apikey.proto\x12\tapikey.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15oagent/v1/rules.proto\"\xff\x03\n" +
+	"\x16apikey/v1/apikey.proto\x12\tapikey.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x14othra/v1/rules.proto\"\xff\x03\n" +
 	"\x06APIKey\x12\x15\n" +
 	"\x06org_id\x18\x02 \x01(\tR\x05orgId\x12\x1d\n" +
 	"\n" +
@@ -563,8 +563,8 @@ const file_apikey_v1_apikey_proto_rawDesc = "" +
 	"\rAPIKeyService\x12O\n" +
 	"\fCreateAPIKey\x12\x1e.apikey.v1.CreateAPIKeyRequest\x1a\x1f.apikey.v1.CreateAPIKeyResponse\x12L\n" +
 	"\vListAPIKeys\x12\x1d.apikey.v1.ListAPIKeysRequest\x1a\x1e.apikey.v1.ListAPIKeysResponse\x12O\n" +
-	"\fRevokeAPIKey\x12\x1e.apikey.v1.RevokeAPIKeyRequest\x1a\x1f.apikey.v1.RevokeAPIKeyResponseB\x8f\x01\n" +
-	"\rcom.apikey.v1B\vApikeyProtoP\x01Z,altalune.id/oagent/gen/go/apikey/v1;apikeyv1\xa2\x02\x03AXX\xaa\x02\tApikey.V1\xca\x02\tApikey\\V1\xe2\x02\x15Apikey\\V1\\GPBMetadata\xea\x02\n" +
+	"\fRevokeAPIKey\x12\x1e.apikey.v1.RevokeAPIKeyRequest\x1a\x1f.apikey.v1.RevokeAPIKeyResponseB\x8e\x01\n" +
+	"\rcom.apikey.v1B\vApikeyProtoP\x01Z+altalune.id/othra/gen/go/apikey/v1;apikeyv1\xa2\x02\x03AXX\xaa\x02\tApikey.V1\xca\x02\tApikey\\V1\xe2\x02\x15Apikey\\V1\\GPBMetadata\xea\x02\n" +
 	"Apikey::V1b\x06proto3"
 
 var (

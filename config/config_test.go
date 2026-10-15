@@ -17,7 +17,7 @@ func missingPath(t *testing.T) string {
 
 func TestLoad_Defaults(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
 
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
@@ -36,8 +36,8 @@ func TestLoad_Defaults(t *testing.T) {
 
 func TestLoad_BasePathOverride(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_HTTP_BASE_PATH", "/app")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_HTTP_BASE_PATH", "/app")
 
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
@@ -46,14 +46,14 @@ func TestLoad_BasePathOverride(t *testing.T) {
 
 func TestLoad_ModeAndEnvOverride(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_MODE", "cloud")
-	t.Setenv("OAGENT_ENV", "production")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_MODE", "cloud")
+	t.Setenv("OTHRA_ENV", "production")
 
 	_, err := Load(missingPath(t))
 	assert.True(t, IsCloudRequiresOIDCError(err), "cloud must refuse to boot until OIDC (P3); got %v", err)
 
-	t.Setenv("OAGENT_MODE", "selfhosted")
+	t.Setenv("OTHRA_MODE", "selfhosted")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.Equal(t, ModeSelfhosted, c.Mode)
@@ -61,16 +61,16 @@ func TestLoad_ModeAndEnvOverride(t *testing.T) {
 }
 
 func TestLoad_InvalidMode(t *testing.T) {
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_MODE", "bogus")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_MODE", "bogus")
 
 	_, err := Load(missingPath(t))
 	assert.Error(t, err)
 }
 
 func TestLoad_InvalidEnv(t *testing.T) {
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_ENV", "bogus")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_ENV", "bogus")
 
 	_, err := Load(missingPath(t))
 	assert.Error(t, err)
@@ -78,8 +78,8 @@ func TestLoad_InvalidEnv(t *testing.T) {
 
 func TestLoad_AutoMigrateOverride(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_DB_AUTO_MIGRATE", "false")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_DB_AUTO_MIGRATE", "false")
 
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestLoad_AutoMigrateOverride(t *testing.T) {
 
 func TestLoad_DefaultPath(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
 
 	c, err := Load("")
 	require.NoError(t, err)
@@ -96,15 +96,15 @@ func TestLoad_DefaultPath(t *testing.T) {
 }
 
 func TestLoad_InvalidTelemetry(t *testing.T) {
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_TELEMETRY_OTLP_PROTOCOL", "bogus")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_TELEMETRY_OTLP_PROTOCOL", "bogus")
 
 	_, err := Load(missingPath(t))
 	assert.Error(t, err)
 }
 
 func TestLoad_MissingDSN(t *testing.T) {
-	t.Setenv("OAGENT_POSTGRES_DSN", "")
+	t.Setenv("OTHRA_POSTGRES_DSN", "")
 
 	_, err := Load(missingPath(t))
 	assert.Error(t, err)
@@ -112,10 +112,10 @@ func TestLoad_MissingDSN(t *testing.T) {
 
 func TestLoad_EnvOverride(t *testing.T) {
 	setSecretEnv(t)
-	t.Setenv("OAGENT_POSTGRES_DSN", "postgres://localhost/db")
-	t.Setenv("OAGENT_POSTGRES_SCHEMA", "auth")
-	t.Setenv("OAGENT_POSTGRES_TABLE_PREFIX", "t_")
-	t.Setenv("OAGENT_TELEMETRY_TRACING_ENABLED", "true")
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	t.Setenv("OTHRA_POSTGRES_SCHEMA", "auth")
+	t.Setenv("OTHRA_POSTGRES_TABLE_PREFIX", "t_")
+	t.Setenv("OTHRA_TELEMETRY_TRACING_ENABLED", "true")
 
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
@@ -126,9 +126,9 @@ func TestLoad_EnvOverride(t *testing.T) {
 
 func TestLoad_File(t *testing.T) {
 	setSecretEnv(t)
-	path := filepath.Join(t.TempDir(), "oagent.yaml")
+	path := filepath.Join(t.TempDir(), "othra.yaml")
 	require.NoError(t, os.WriteFile(path, []byte("postgres:\n  dsn: postgres://file/db\n  tablePrefix: f_\n"), 0o600))
-	t.Setenv("OAGENT_POSTGRES_DSN", "") // no env override; take the file value
+	t.Setenv("OTHRA_POSTGRES_DSN", "") // no env override; take the file value
 
 	c, err := Load(path)
 	require.NoError(t, err)

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
+	"altalune.id/othra/config"
 )
 
 func TestGenerated_MatchesConfig(t *testing.T) {
@@ -32,10 +32,10 @@ func TestGenerate_SplitsBootstrapFromRuntime(t *testing.T) {
 	bootstrap, runtime, ok := strings.Cut(out, "RUNTIME — safe to change via env + restart\n# ═")
 	require.True(t, ok)
 
-	assert.Contains(t, bootstrap, "# [bootstrap] postgres.schema\nOAGENT_POSTGRES_SCHEMA=")
-	assert.NotContains(t, runtime, "OAGENT_POSTGRES_SCHEMA=")
+	assert.Contains(t, bootstrap, "# [bootstrap] postgres.schema\nOTHRA_POSTGRES_SCHEMA=")
+	assert.NotContains(t, runtime, "OTHRA_POSTGRES_SCHEMA=")
 	assert.Contains(t, runtime, "\n# ─── cli ───\n")
-	assert.Contains(t, runtime, "OAGENT_CLI_SESSION_FILE=~/.oagent/session.json\n")
+	assert.Contains(t, runtime, "OTHRA_CLI_SESSION_FILE=~/.othra/session.json\n")
 }
 
 func TestGenerate_OmitsSecretValues(t *testing.T) {
@@ -78,12 +78,12 @@ func TestWriteYAMLTree(t *testing.T) {
 		{Key: "X_SERVER_ADDR", YAML: "server.addr", Default: ":8080"},
 		{Key: "X_SERVER", YAML: "server", Default: "on"},
 		{Key: "X_SERVER_KEY", YAML: "server.key", Awareness: []string{"secret"}, Default: "hunter2"},
-		{Key: "X_APP_NAME", YAML: "app.name", Awareness: []string{"bootstrap"}, Default: "oagent"},
+		{Key: "X_APP_NAME", YAML: "app.name", Awareness: []string{"bootstrap"}, Default: "othra"},
 	})
 	assert.Equal(t, `
 app:
   # [bootstrap] env: X_APP_NAME
-  name: oagent
+  name: othra
 
 server:
   # env: X_SERVER
@@ -115,8 +115,8 @@ func TestYAMLScalar(t *testing.T) {
 func TestNormalizeDefault(t *testing.T) {
 	t.Setenv("HOME", "/home/tester")
 	assert.Empty(t, normalizeDefault(""))
-	assert.Equal(t, "~/.oagent/session.json", normalizeDefault("/home/tester/.oagent/session.json"))
-	assert.Equal(t, "/var/lib/oagent", normalizeDefault("/var/lib/oagent"))
+	assert.Equal(t, "~/.othra/session.json", normalizeDefault("/home/tester/.othra/session.json"))
+	assert.Equal(t, "/var/lib/othra", normalizeDefault("/var/lib/othra"))
 
 	t.Setenv("HOME", "")
 	assert.Equal(t, "/home/tester/x", normalizeDefault("/home/tester/x"))

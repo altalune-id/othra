@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/ratelimit"
-	"altalune.id/oagent/internal/kernel/ratelimit/memory"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/ratelimit"
+	"altalune.id/othra/internal/kernel/ratelimit/memory"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
 )
 
 type downLimiter struct{}
@@ -30,7 +30,7 @@ func (downLimiter) Reset(context.Context, string) error { return nil }
 func memLimits() auth.Limits { return auth.Limits{Limiter: memory.New(10_000)} }
 
 func linkPath(c *invite.Created) string {
-	return strings.TrimPrefix(c.Link, "https://oagent.example.com")
+	return strings.TrimPrefix(c.Link, "https://othra.example.com")
 }
 
 func TestRules(t *testing.T) {
@@ -51,7 +51,7 @@ func TestWeb_LandingLimitedPerIP(t *testing.T) {
 	assert.NotEmpty(t, rec.Header().Get("Retry-After"))
 	assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"))
 	assert.Contains(t, rec.Body.String(), "Too many attempts.")
-	assert.Nil(t, cookieNamed(rec, "oagent_invite"), "a limited link sets nothing")
+	assert.Nil(t, cookieNamed(rec, "othra_invite"), "a limited link sets nothing")
 	assert.Equal(t, http.StatusTooManyRequests, f.get("/invite", ck).Code)
 }
 
@@ -82,7 +82,7 @@ func TestWeb_BrokenLimiterFailsClosed(t *testing.T) {
 	rec := f.get(linkPath(c))
 	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 	assert.Contains(t, rec.Body.String(), "temporarily unavailable")
-	assert.Nil(t, cookieNamed(rec, "oagent_invite"))
+	assert.Nil(t, cookieNamed(rec, "othra_invite"))
 	assert.Equal(t, http.StatusServiceUnavailable, f.post("/invite/join", joinForm("Bob", "a sturdy passphrase")).Code)
 }
 

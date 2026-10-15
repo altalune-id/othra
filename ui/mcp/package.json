@@ -1,5 +1,5 @@
 {
-  "name": "@oagent/mcp-ui",
+  "name": "@othra/mcp-ui",
   "type": "module",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "vue": "catalog:"
   },
   "devDependencies": {
-    "@oagent/vitest-config": "workspace:*",
+    "@othra/vitest-config": "workspace:*",
     "@vitejs/plugin-vue": "catalog:",
     "typescript": "catalog:",
     "unplugin-auto-import": "^21.1.0",

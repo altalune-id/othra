@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/testutil/natstest"
+	"altalune.id/othra/internal/testutil/natstest"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 )
 
 func testConfig(url string) Config {
-	return Config{URL: url, Name: "oagent", ConnectTimeout: 300 * time.Millisecond}
+	return Config{URL: url, Name: "othra", ConnectTimeout: 300 * time.Millisecond}
 }
 
 func discard() *slog.Logger { return slog.New(slog.DiscardHandler) }
@@ -60,9 +60,9 @@ func assertNoSecrets(t *testing.T, s string) {
 // Review Focus 3: a refused connection names the host, never the URL credentials, the token or the password.
 func TestOpen_RefusedHasNoCredentials(t *testing.T) {
 	for name, c := range map[string]Config{
-		"url credentials": testConfig("nats://oagent:" + testPassword + "@127.0.0.1:1"),
+		"url credentials": testConfig("nats://othra:" + testPassword + "@127.0.0.1:1"),
 		"token":           {URL: "nats://127.0.0.1:1", Token: testToken, ConnectTimeout: 300 * time.Millisecond},
-		"password":        {URL: "nats://127.0.0.1:1", User: "oagent", Password: testPassword, ConnectTimeout: 300 * time.Millisecond},
+		"password":        {URL: "nats://127.0.0.1:1", User: "othra", Password: testPassword, ConnectTimeout: 300 * time.Millisecond},
 	} {
 		t.Run(name, func(t *testing.T) {
 			log, logs := bufferLogger()
@@ -76,7 +76,7 @@ func TestOpen_RefusedHasNoCredentials(t *testing.T) {
 }
 
 func TestOpen_BadURLIsNotEchoed(t *testing.T) {
-	_, err := Open(t.Context(), testConfig("nats://oagent:"+testPassword+"@nats internal:4222"), discard())
+	_, err := Open(t.Context(), testConfig("nats://othra:"+testPassword+"@nats internal:4222"), discard())
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "nats.url")
 	assertNoSecrets(t, err.Error())
@@ -97,7 +97,7 @@ func TestOpen_WrongPasswordIsRefusedWithoutEcho(t *testing.T) {
 func TestOpen_AccountUserWithClientName(t *testing.T) {
 	ns := natstest.StartAccounts(t)
 	c := testConfig(ns.ClientURL())
-	c.User, c.Password, c.Name = natstest.UserA, natstest.PasswordA, "oagent-test"
+	c.User, c.Password, c.Name = natstest.UserA, natstest.PasswordA, "othra-test"
 
 	nc, err := Open(t.Context(), c, discard())
 	require.NoError(t, err)
@@ -106,7 +106,7 @@ func TestOpen_AccountUserWithClientName(t *testing.T) {
 	connz, err := ns.Connz(&server.ConnzOptions{Username: true})
 	require.NoError(t, err)
 	require.Len(t, connz.Conns, 1)
-	assert.Equal(t, "oagent-test", connz.Conns[0].Name)
+	assert.Equal(t, "othra-test", connz.Conns[0].Name)
 	assert.Equal(t, natstest.UserA, connz.Conns[0].AuthorizedUser)
 }
 
@@ -201,7 +201,7 @@ func TestCloser_ClosedTwiceIsFine(t *testing.T) {
 
 func TestRedact_RemovesEverySecret(t *testing.T) {
 	c := Config{
-		URL:      "nats://a.internal:4222,nats://oagent:" + testPassword + "x@b.internal:4222",
+		URL:      "nats://a.internal:4222,nats://othra:" + testPassword + "x@b.internal:4222",
 		Token:    testToken,
 		Password: testPassword,
 	}
@@ -225,7 +225,7 @@ func TestOpen_AsyncErrorsGoToTheLogRedacted(t *testing.T) {
 	require.NoError(t, opts.ProcessConfigString(`
 listen: "127.0.0.1:-1"
 authorization {
-  users: [{ user: oagent, password: "`+testPassword+`", permissions: { publish: { deny: "deny.>" } } }]
+  users: [{ user: othra, password: "`+testPassword+`", permissions: { publish: { deny: "deny.>" } } }]
 }
 `))
 	opts.NoLog, opts.NoSigs = true, true
@@ -237,7 +237,7 @@ authorization {
 
 	logs := &lockedBuffer{}
 	c := testConfig("nats://" + ns.Addr().String())
-	c.User, c.Password = "oagent", testPassword
+	c.User, c.Password = "othra", testPassword
 	nc, err := Open(t.Context(), c, slog.New(slog.NewTextHandler(logs, nil)))
 	require.NoError(t, err)
 	t.Cleanup(nc.Close)
@@ -276,7 +276,7 @@ func TestOpen_ReconnectFailureIsLoggedWithoutCredentials(t *testing.T) {
 
 func TestEvents_ReconnectFailuresWarnOncePerOutage(t *testing.T) {
 	logs := &lockedBuffer{}
-	c := Config{URL: "nats://oagent:" + testPassword + "@a.internal:4222", Password: testPassword}
+	c := Config{URL: "nats://othra:" + testPassword + "@a.internal:4222", Password: testPassword}
 	e := &events{c: c, log: slog.New(slog.NewTextHandler(logs, &slog.HandlerOptions{Level: slog.LevelDebug}))}
 	failed := errors.New("dial " + testPassword + ": connection refused")
 

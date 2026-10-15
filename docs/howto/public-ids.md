@@ -30,7 +30,7 @@ Use this whenever an identifier crosses a surface: a new RPC field, MCP tool arg
    ```proto
    string project_id = 2 [
      (buf.validate.field).required = true,
-     (buf.validate.field).string.(oagent.v1.public_id) = true
+     (buf.validate.field).string.(othra.v1.public_id) = true
    ];
    ```
 
@@ -65,7 +65,7 @@ Use this whenever an identifier crosses a surface: a new RPC field, MCP tool arg
 
 - [ ] No UUID in any response, tool result, CLI output (text or JSON), webhook body or header, or error meta.
 - [ ] No slug used as a lookup key outside URL paths.
-- [ ] Every id field in the proto has `(oagent.v1.public_id) = true`.
+- [ ] Every id field in the proto has `(othra.v1.public_id) = true`.
 - [ ] Each incoming id is resolved once, in `controlplane.go`; services and stores take UUIDs.
 - [ ] Unknown, foreign, UUID and garbage ids give the same answer (not found, or `InvalidArgument` for a bad shape).
 - [ ] A new RPC is in `permission.Table()`, so the boot reach tests call it. A new service's `id` field is mapped in `reachIDs.serviceID` and seeded in `seedReach` (`internal/boot/reach_integration_test.go`).
@@ -88,7 +88,7 @@ The tests that guard the rule:
 ## Reference code
 
 - Generator: [nanoid/nanoid.go](../../nanoid/nanoid.go) (`New`, `IsValid`)
-- Proto rule: [api/oagent/v1/rules.proto](../../api/oagent/v1/rules.proto) (`public_id`), used in [api/agent/v1/agent.proto](../../api/agent/v1/agent.proto)
+- Proto rule: [api/othra/v1/rules.proto](../../api/othra/v1/rules.proto) (`public_id`), used in [api/agent/v1/agent.proto](../../api/agent/v1/agent.proto)
 - Aggregate: [internal/agent/agent.go](../../internal/agent/agent.go) (`New`, `agentToProto`)
 - Port: [internal/agent/ports.go](../../internal/agent/ports.go) (`Refs`)
 - Edge: [internal/agent/controlplane.go](../../internal/agent/controlplane.go) (`reachable`, `project`, `toProto`)

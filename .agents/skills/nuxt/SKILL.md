@@ -1,6 +1,6 @@
 ---
 name: nuxt
-description: Nuxt 4 client-only SPA (ssr false) for oagent's ui/console. Use when adding or changing a console page, layout, route or plugin under ui/console/app, editing ui/console/nuxt.config.ts (modules, runtimeConfig, aliases, i18n, devProxy), using Nuxt composables such as useRoute, navigateTo, useHead, useState or useRuntimeConfig, or building the console with nuxt generate for the Go binary.
+description: Nuxt 4 client-only SPA (ssr false) for othra's ui/console. Use when adding or changing a console page, layout, route or plugin under ui/console/app, editing ui/console/nuxt.config.ts (modules, runtimeConfig, aliases, i18n, devProxy), using Nuxt composables such as useRoute, navigateTo, useHead, useState or useRuntimeConfig, or building the console with nuxt generate for the Go binary.
 metadata:
   version: "2026.9.25"
   source: Adapted from antfu/skills@feb0f3a (MIT), generated from https://github.com/nuxt/nuxt
@@ -8,7 +8,7 @@ metadata:
 
 # Nuxt
 
-## In oagent
+## In othra
 
 - `ui/console` is a Nuxt 4 SPA: `ssr: false`, built with `nuxt generate` and embedded into the Go binary (`make ui-console`). There is no Nuxt server, no `server/` directory and no server routes; the Go binary is the backend.
 - Data comes from typed Connect clients provided by `app/plugins/connect.client.ts` and called from Pinia setup stores, not from `useFetch` against `/api`.
@@ -18,7 +18,7 @@ metadata:
 - `runtimeConfig.public` (`apiUrl`, `appVersion`) stays empty at build time; the Go handler fills it in per request.
 - See docs/howto/console-page.md for adding a page end to end.
 
-> Based on Nuxt 4.x docs (https://nuxt.com/docs/4.x). oagent pins `nuxt@^4.5`. Upstream material for Nuxt 5, Nitro v3, server routes, SSR and hybrid rendering was removed because the console is client-only.
+> Based on Nuxt 4.x docs (https://nuxt.com/docs/4.x). othra pins `nuxt@^4.5`. Upstream material for Nuxt 5, Nitro v3, server routes, SSR and hybrid rendering was removed because the console is client-only.
 
 > **Directory layout:** the `srcDir` is `app/` — Vue app code (`app.vue`, `components/`, `composables/`, `pages/`, `layouts/`, `plugins/`, `stores/`) lives under `app/`, while `nuxt.config.ts`, `i18n/`, `test/` and generated `gen/` stay at the package root. The `~`/`@` aliases point at `app/`; use `~~`/`@@` for the root.
 

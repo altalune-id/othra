@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	projectv1 "altalune.id/oagent/gen/go/project/v1"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/fakes"
+	projectv1 "altalune.id/othra/gen/go/project/v1"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func mustProject(t *testing.T, orgID uuid.UUID) *project.Project {

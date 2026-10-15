@@ -14,30 +14,30 @@ const natsTestPassword = "secret-pw-at-least-16"
 func TestLoad_NATSDefaults(t *testing.T) {
 	c := validConfig(t)
 	assert.Empty(t, c.NATS.URL)
-	assert.Equal(t, "oagent", c.NATS.Name)
+	assert.Equal(t, "othra", c.NATS.Name)
 	assert.Equal(t, 10*time.Second, c.NATS.ConnectTimeout)
 	assert.Empty(t, c.NATSFeatures(), "nothing uses NATS by default")
 }
 
 func TestLoad_NATSFromEnv(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_NATS_URL", "nats://nats.internal:4222")
-	t.Setenv("OAGENT_NATS_USER", "oagent")
-	t.Setenv("OAGENT_NATS_PASSWORD", natsTestPassword)
-	t.Setenv("OAGENT_NATS_NAME", "oagent-eu")
-	t.Setenv("OAGENT_NATS_CONNECT_TIMEOUT", "3s")
+	t.Setenv("OTHRA_NATS_URL", "nats://nats.internal:4222")
+	t.Setenv("OTHRA_NATS_USER", "othra")
+	t.Setenv("OTHRA_NATS_PASSWORD", natsTestPassword)
+	t.Setenv("OTHRA_NATS_NAME", "othra-eu")
+	t.Setenv("OTHRA_NATS_CONNECT_TIMEOUT", "3s")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.Equal(t, "nats://nats.internal:4222", c.NATS.URL)
-	assert.Equal(t, "oagent", c.NATS.User)
+	assert.Equal(t, "othra", c.NATS.User)
 	assert.Equal(t, natsTestPassword, c.NATS.Password)
-	assert.Equal(t, "oagent-eu", c.NATS.Name)
+	assert.Equal(t, "othra-eu", c.NATS.Name)
 	assert.Equal(t, 3*time.Second, c.NATS.ConnectTimeout)
 }
 
 func TestLoad_NATSTokenFromEnv(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("OAGENT_NATS_TOKEN", "a-token")
+	t.Setenv("OTHRA_NATS_TOKEN", "a-token")
 	c, err := Load(missingPath(t))
 	require.NoError(t, err)
 	assert.Equal(t, "a-token", c.NATS.Token)
@@ -66,7 +66,7 @@ func TestValidate_NATS(t *testing.T) {
 			mutate: func(c *Config) {
 				c.NATS.URL = "http://nope"
 				c.NATS.Token = "t"
-				c.NATS.User = "oagent"
+				c.NATS.User = "othra"
 				c.NATS.Password = "short"
 			},
 			check: ok,
@@ -79,7 +79,7 @@ func TestValidate_NATS(t *testing.T) {
 			check:  ok,
 		},
 		"credentials in the url ok": {
-			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "nats://oagent:" + natsTestPassword + "@nats.internal:4222" },
+			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "nats://othra:" + natsTestPassword + "@nats.internal:4222" },
 			check:  ok,
 		},
 		"used without a url names the feature": {
@@ -90,32 +90,32 @@ func TestValidate_NATS(t *testing.T) {
 			},
 		},
 		"wrong scheme": {
-			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "http://oagent:" + natsTestPassword + "@nats.internal:4222" },
+			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "http://othra:" + natsTestPassword + "@nats.internal:4222" },
 			check:  natsURLError,
 		},
 		"no host": {
-			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "nats://oagent:" + natsTestPassword + "@" },
+			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "nats://othra:" + natsTestPassword + "@" },
 			check:  natsURLError,
 		},
 		"unparsable": {
-			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "nats://oagent:" + natsTestPassword + "@nats internal:4222" },
+			mutate: func(c *Config) { useNATS(c); c.NATS.URL = "nats://othra:" + natsTestPassword + "@nats internal:4222" },
 			check:  natsURLError,
 		},
 		"one bad server among several": {
 			mutate: func(c *Config) {
 				useNATS(c)
-				c.NATS.URL = "nats://a.internal:4222,nats://oagent:" + natsTestPassword + "@"
+				c.NATS.URL = "nats://a.internal:4222,nats://othra:" + natsTestPassword + "@"
 			},
 			check: natsURLError,
 		},
 		"token ok":   {mutate: func(c *Config) { useNATS(c); c.NATS.Token = "t" }, check: ok},
-		"account ok": {mutate: func(c *Config) { useNATS(c); c.NATS.User, c.NATS.Password = "oagent", natsTestPassword }, check: ok},
+		"account ok": {mutate: func(c *Config) { useNATS(c); c.NATS.User, c.NATS.Password = "othra", natsTestPassword }, check: ok},
 		"password of 16 ok": {
-			mutate: func(c *Config) { useNATS(c); c.NATS.User, c.NATS.Password = "oagent", strings.Repeat("p", 16) },
+			mutate: func(c *Config) { useNATS(c); c.NATS.User, c.NATS.Password = "othra", strings.Repeat("p", 16) },
 			check:  ok,
 		},
 		"password of 15": {
-			mutate: func(c *Config) { useNATS(c); c.NATS.User, c.NATS.Password = "oagent", strings.Repeat("p", 15) },
+			mutate: func(c *Config) { useNATS(c); c.NATS.User, c.NATS.Password = "othra", strings.Repeat("p", 15) },
 			check: func(t *testing.T, err error) {
 				invalidSetting("nats.password")(t, err)
 				assert.NotContains(t, err.Error(), "ppp", "the password is not echoed")
@@ -125,7 +125,7 @@ func TestValidate_NATS(t *testing.T) {
 			mutate: func(c *Config) {
 				useNATS(c)
 				c.NATS.Token = "t"
-				c.NATS.User, c.NATS.Password = "oagent", natsTestPassword
+				c.NATS.User, c.NATS.Password = "othra", natsTestPassword
 			},
 			check: invalidSetting("nats.token"),
 		},
@@ -134,7 +134,7 @@ func TestValidate_NATS(t *testing.T) {
 			check:  invalidSetting("nats.token"),
 		},
 		"user without password": {
-			mutate: func(c *Config) { useNATS(c); c.NATS.User = "oagent" },
+			mutate: func(c *Config) { useNATS(c); c.NATS.User = "othra" },
 			check:  missingSetting("nats.user, nats.password"),
 		},
 		"password without user": {

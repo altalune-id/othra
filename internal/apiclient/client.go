@@ -1,4 +1,4 @@
-// Package apiclient is the Connect client the CLI uses to reach a remote oagent; it imports no domain package.
+// Package apiclient is the Connect client the CLI uses to reach a remote othra; it imports no domain package.
 package apiclient
 
 import (
@@ -8,16 +8,16 @@ import (
 
 	"connectrpc.com/connect"
 
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	invitev1connect "altalune.id/oagent/gen/go/invite/v1/invitev1connect"
-	memberv1connect "altalune.id/oagent/gen/go/member/v1/memberv1connect"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	projectv1connect "altalune.id/oagent/gen/go/project/v1/projectv1connect"
-	webhookv1connect "altalune.id/oagent/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/oagent/httpclient"
-	"altalune.id/oagent/internal/kernel/session"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
+	"altalune.id/othra/httpclient"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // DefaultTimeout bounds every remote CLI request.
@@ -29,7 +29,7 @@ type Credential struct {
 	Session string
 }
 
-// Client bundles the Connect clients the CLI uses to reach a remote oagent.
+// Client bundles the Connect clients the CLI uses to reach a remote othra.
 type Client struct {
 	Org      orgv1connect.OrgServiceClient
 	Projects projectv1connect.ProjectServiceClient

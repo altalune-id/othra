@@ -10,13 +10,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/password"
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/password"
+	"altalune.id/othra/scope"
 )
 
 // Service signs people in, checks basic credentials and rebuilds authority.

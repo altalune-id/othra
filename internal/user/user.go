@@ -1,4 +1,4 @@
-// Package user models the people who sign in to oagent.
+// Package user models the people who sign in to othra.
 package user
 
 import (
@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/nanoid"
 )
 
 const (

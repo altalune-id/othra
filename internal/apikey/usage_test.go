@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/testutil/fakes"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func TestUsageWorker_KeepsLatestAndFlushesOnTick(t *testing.T) {

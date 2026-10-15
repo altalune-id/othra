@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/schema/entity"
 )
 
 func TestAgentRow_ToAgent(t *testing.T) {

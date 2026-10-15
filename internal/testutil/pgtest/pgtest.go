@@ -20,16 +20,16 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"altalune.id/oagent/migrator"
-	"altalune.id/oagent/nanoid"
-	"altalune.id/oagent/schema"
+	"altalune.id/othra/migrator"
+	"altalune.id/othra/nanoid"
+	"altalune.id/othra/schema"
 )
 
 const (
 	envDSN       = "TEST_PG_DSN"
 	envCI        = "CI"
 	image        = "postgres:17-alpine"
-	labelOwner   = "id.altalune.oagent.pgtest"
+	labelOwner   = "id.altalune.othra.pgtest"
 	staleAfter   = 30 * time.Minute
 	schemaPrefix = "pgt_"
 	schemaLen    = 16
@@ -93,7 +93,7 @@ func (h *Handle) OpenDB(t *testing.T) *sql.DB {
 	return sqlDB
 }
 
-// Migrated returns a database whose own schema has every oagent migration applied, and that schema's name.
+// Migrated returns a database whose own schema has every othra migration applied, and that schema's name.
 func Migrated(t *testing.T) (sqlDB *sql.DB, schemaName string) {
 	t.Helper()
 	h := New(t)
@@ -111,9 +111,9 @@ func startContainer(t *testing.T) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	c, err := postgres.Run(ctx, image,
-		postgres.WithDatabase("oagent_test"),
-		postgres.WithUsername("oagent"),
-		postgres.WithPassword("oagent"),
+		postgres.WithDatabase("othra_test"),
+		postgres.WithUsername("othra"),
+		postgres.WithPassword("othra"),
 		testcontainers.WithLabels(map[string]string{labelOwner: "true"}),
 		// NOTE: Docker Desktop proxies the port after the log line; without the port wait the first connect can fail.
 		testcontainers.WithWaitStrategy(

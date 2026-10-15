@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-jet/jet/v2/postgres"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/schema/entity"
 )
 
 // Save upserts a project by id, bumping updated_at.

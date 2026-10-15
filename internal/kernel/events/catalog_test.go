@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/events"
 )
 
 func TestCatalog(t *testing.T) {

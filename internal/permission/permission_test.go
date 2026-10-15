@@ -7,16 +7,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	apikeyv1 "altalune.id/oagent/gen/go/apikey/v1"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	invitev1 "altalune.id/oagent/gen/go/invite/v1"
-	memberv1 "altalune.id/oagent/gen/go/member/v1"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	projectv1 "altalune.id/oagent/gen/go/project/v1"
-	webhookv1 "altalune.id/oagent/gen/go/webhook/v1"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/scope"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	memberv1 "altalune.id/othra/gen/go/member/v1"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	projectv1 "altalune.id/othra/gen/go/project/v1"
+	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/scope"
 )
 
 func allProcedures() []string {

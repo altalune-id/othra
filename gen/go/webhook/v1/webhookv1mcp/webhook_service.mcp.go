@@ -5,9 +5,9 @@
 package webhookv1mcp
 
 import (
-	v1 "altalune.id/oagent/gen/go/webhook/v1"
-	webhookv1connect "altalune.id/oagent/gen/go/webhook/v1/webhookv1connect"
-	mcp "altalune.id/oagent/mcp"
+	v1 "altalune.id/othra/gen/go/webhook/v1"
+	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
+	mcp "altalune.id/othra/mcp"
 	connect "connectrpc.com/connect"
 	context "context"
 	json "encoding/json"
@@ -42,7 +42,7 @@ func RegisterWebhookServiceTools(reg *mcp.Registry, h webhookv1connect.WebhookSe
 		Scopes:      permissionsFor(webhookv1connect.WebhookServiceCreateWebhookProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"url":{"type":"string","minLength":1,"maxLength":2048},"description":{"type":"string","maxLength":200},"eventTypes":{"type":"array","items":{"type":"string","pattern":"^[a-z]+([.][a-z_]+)+$"},"minItems":1}},"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -72,7 +72,7 @@ func RegisterWebhookServiceTools(reg *mcp.Registry, h webhookv1connect.WebhookSe
 		Scopes:      permissionsFor(webhookv1connect.WebhookServiceListWebhooksProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["orgId","projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -102,7 +102,7 @@ func RegisterWebhookServiceTools(reg *mcp.Registry, h webhookv1connect.WebhookSe
 		Scopes:      permissionsFor(webhookv1connect.WebhookServiceListWebhookDeliveriesProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"id":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"limit":{"type":"integer"}},"required":["orgId","projectId","id"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -132,7 +132,7 @@ func RegisterWebhookServiceTools(reg *mcp.Registry, h webhookv1connect.WebhookSe
 		Scopes:      permissionsFor(webhookv1connect.WebhookServiceRetryFailedWebhookDeliveriesProcedure),
 		Mutation:    true,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"id":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["orgId","projectId","id"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

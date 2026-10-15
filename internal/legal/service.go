@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/nanoid"
 )
 
 const publicIDLen = 21

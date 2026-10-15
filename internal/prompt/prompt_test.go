@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/prompt"
+	"altalune.id/othra/internal/prompt"
 )
 
 func answers(given ...string) (func(string) (string, error), *[]string) {

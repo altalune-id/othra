@@ -21,16 +21,16 @@ describe('useTheme', () => {
   it('defaults to the first family in its default mode', () => {
     const theme = useTheme();
     theme.init();
-    expect(theme.family.value.id).toBe('oagent');
+    expect(theme.family.value.id).toBe('othra');
     expect(theme.mode.value).toBe('light');
     expect(theme.supportsMode.value).toBe(true);
     expect(theme.families).toBe(themeFamilies);
-    expect(applied()).toBe('oagent-light');
-    expect(JSON.parse(storage.data.get('oagent_theme')!)).toEqual({ family: 'oagent', mode: 'light' });
+    expect(applied()).toBe('othra-light');
+    expect(JSON.parse(storage.data.get('othra_theme')!)).toEqual({ family: 'othra', mode: 'light' });
   });
 
   it('restores a saved family and mode', () => {
-    storage.data.set('oagent_theme', JSON.stringify({ family: 'retro', mode: 'dark' }));
+    storage.data.set('othra_theme', JSON.stringify({ family: 'retro', mode: 'dark' }));
     const theme = useTheme();
     theme.init();
     expect(theme.family.value.id).toBe('retro');
@@ -39,25 +39,25 @@ describe('useTheme', () => {
   });
 
   it('uses the family default for a saved mode it lacks or no mode', () => {
-    storage.data.set('oagent_theme', JSON.stringify({ family: 'night', mode: 'light' }));
+    storage.data.set('othra_theme', JSON.stringify({ family: 'night', mode: 'light' }));
     const theme = useTheme();
     theme.init();
     expect(theme.mode.value).toBe('dark');
-    storage.data.set('oagent_theme', JSON.stringify({ family: 'pastel' }));
+    storage.data.set('othra_theme', JSON.stringify({ family: 'pastel' }));
     theme.init();
     expect(theme.mode.value).toBe('light');
     expect(applied()).toBe('pastel-light');
   });
 
   it('ignores an unknown saved family and corrupt storage', () => {
-    storage.data.set('oagent_theme', JSON.stringify({ family: 'gone', mode: 'dark' }));
+    storage.data.set('othra_theme', JSON.stringify({ family: 'gone', mode: 'dark' }));
     const theme = useTheme();
     theme.init();
-    expect(theme.family.value.id).toBe('oagent');
-    storage.data.set('oagent_theme', '{bad');
+    expect(theme.family.value.id).toBe('othra');
+    storage.data.set('othra_theme', '{bad');
     theme.init();
     expect(theme.mode.value).toBe('light');
-    expect(applied()).toBe('oagent-light');
+    expect(applied()).toBe('othra-light');
   });
 
   it('switches family and mode, ignoring unknown values', () => {

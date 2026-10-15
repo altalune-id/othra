@@ -4,9 +4,9 @@ package apikey.v1;
 
 import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
-import "oagent/v1/rules.proto";
+import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/oagent/gen/go/apikey/v1;apikeyv1";
+option go_package = "altalune.id/othra/gen/go/apikey/v1;apikeyv1";
 
 // APIKeyService mints, lists and revokes API keys. Every id is a public id.
 service APIKeyService {
@@ -38,10 +38,10 @@ message APIKey {
 message CreateAPIKeyRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   string project_id = 2 [
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   // project, org or personal; personal needs a signed-in person and never exceeds their role.
   string kind = 3 [
@@ -57,11 +57,11 @@ message CreateAPIKeyRequest {
     (buf.validate.field).repeated.items.string.pattern = "^[a-z]+:(read|write)$"
   ];
   repeated string project_ids = 6 [
-    (buf.validate.field).repeated.items.string.(oagent.v1.public_id) = true
+    (buf.validate.field).repeated.items.string.(othra.v1.public_id) = true
   ];
   bool all_projects = 7;
   repeated string resource_ids = 8 [
-    (buf.validate.field).repeated.items.string.(oagent.v1.public_id) = true
+    (buf.validate.field).repeated.items.string.(othra.v1.public_id) = true
   ];
   // Required: when the key stops working, in the future and at most one year away.
   google.protobuf.Timestamp expires_at = 9 [
@@ -78,7 +78,7 @@ message CreateAPIKeyResponse {
 message ListAPIKeysRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
 }
 
@@ -91,7 +91,7 @@ message RevokeAPIKeyRequest {
   reserved "id";
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   // The last 4 characters of the key's secret, as secret_hint shows them.
   string hint = 3 [

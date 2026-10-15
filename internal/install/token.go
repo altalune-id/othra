@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/nanoid"
 )
 
 const tokenLen = 32

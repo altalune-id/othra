@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/auth"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/auth"
 )
 
 // Review Focus 5: a password reset ends every session of that user.

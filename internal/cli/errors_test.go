@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	apperrorv1 "altalune.id/oagent/gen/go/apperror/v1"
+	"altalune.id/othra/apperror"
+	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
 )
 
 func renderRoot(t *testing.T, format string) (*cobra.Command, *bytes.Buffer) {
@@ -65,6 +65,6 @@ func TestRenderError_UnauthenticatedHint(t *testing.T) {
 
 	root, buf := renderRoot(t, "text")
 	RenderError(root, cerr)
-	assert.Contains(t, buf.String(), "not signed in or credential rejected; run `oagent auth login` or pass --token (GEN002)")
+	assert.Contains(t, buf.String(), "not signed in or credential rejected; run `othra auth login` or pass --token (GEN002)")
 	assert.Equal(t, ExitUnauth, ExitCodeFor(cerr))
 }

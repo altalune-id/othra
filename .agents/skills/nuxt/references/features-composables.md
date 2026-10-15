@@ -7,7 +7,7 @@ description: Auto-imported Vue APIs, Nuxt composables, and custom utilities
 
 Nuxt automatically imports Vue APIs, Nuxt composables, and your custom composables/utilities.
 
-> **In oagent:** `imports: { scan: false }` keeps the Vue, Nuxt and module auto-imports (`ref`, `useRoute`, `useI18n`, `defineStore`, ...) but stops scanning `composables/` and `utils/`. Import your own composables from their file.
+> **In othra:** `imports: { scan: false }` keeps the Vue, Nuxt and module auto-imports (`ref`, `useRoute`, `useI18n`, `defineStore`, ...) but stops scanning `composables/` and `utils/`. Import your own composables from their file.
 
 ## Built-in Auto-imports
 
@@ -197,7 +197,7 @@ const price = formatCurrency(99.99)
 
 ## Shared Utilities (`shared/`)
 
-Code that must not import Vue or Nitro (Nuxt 3.14+). Only `shared/utils/` and `shared/types/` top-level files are auto-imported. oagent does not use `shared/`; Go-shared code comes in through the `@shared/*` aliases.
+Code that must not import Vue or Nitro (Nuxt 3.14+). Only `shared/utils/` and `shared/types/` top-level files are auto-imported. othra does not use `shared/`; Go-shared code comes in through the `@shared/*` aliases.
 
 ```ts
 // shared/utils/capitalize.ts

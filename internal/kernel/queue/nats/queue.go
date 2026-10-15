@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/attribute"
 
-	"altalune.id/oagent/internal/kernel/tenant"
+	"altalune.id/othra/internal/kernel/tenant"
 )
 
 const (

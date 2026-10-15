@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/ratelimit"
-	"altalune.id/oagent/internal/testutil/redistest"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/ratelimit"
+	"altalune.id/othra/internal/testutil/redistest"
 )
 
 func TestBoot_RedisFeatureOpensTheRealServer(t *testing.T) {

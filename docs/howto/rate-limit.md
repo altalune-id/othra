@@ -1,6 +1,6 @@
 # Rate-limit an action
 
-Use this when an action needs oagent's own limiter: a form that can be brute-forced or used to spam mail. oagent's limiter is **off by default**, because many deployments limit at the edge (a CDN, nginx, an API gateway). Each **group** of limits has its own switch, and every group shares one store. The only group today is `auth` (sign-in, password reset, invite pages); it is applied on pre-sign-in web forms only.
+Use this when an action needs othra's own limiter: a form that can be brute-forced or used to spam mail. othra's limiter is **off by default**, because many deployments limit at the edge (a CDN, nginx, an API gateway). Each **group** of limits has its own switch, and every group shares one store. The only group today is `auth` (sign-in, password reset, invite pages); it is applied on pre-sign-in web forms only.
 
 The `internal/kernel/ratelimit` feature is generic: a `Rule` (GCRA: `Rate` calls per `Per`, `Burst` at once), a key, and a `Limiter` with `Allow` and `Reset`. Drivers, picked by `rateLimit.driver`: `ratelimit/memory` (per server, bounded, with a janitor worker) and `ratelimit/redis` (one Lua script over the shared Redis connection, so every server counts against one limit).
 
@@ -15,7 +15,7 @@ The `internal/kernel/ratelimit` feature is generic: a `Rule` (GCRA: `Rate` calls
 
 ## Build: a limit in the auth group
 
-1. **Rule** as an exported func next to the surface that uses it (a func, not a var: `gochecknoglobals`). The name is kebab-case `<action>-<subject>` and unique across oagent, because it namespaces the store key (`<redis.keyPrefix>rl:<rule>:<subject>`):
+1. **Rule** as an exported func next to the surface that uses it (a func, not a var: `gochecknoglobals`). The name is kebab-case `<action>-<subject>` and unique across othra, because it namespaces the store key (`<redis.keyPrefix>rl:<rule>:<subject>`):
 
    ```go
    // SubmitRule limits joining and accepting per client IP: 20 an hour.

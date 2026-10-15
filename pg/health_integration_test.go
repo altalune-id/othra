@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/pg"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/pg"
 )
 
 func TestHealthMonitor_ProbesASingleHandleOnce(t *testing.T) {

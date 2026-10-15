@@ -1,10 +1,10 @@
 package boot
 
 import (
-	"altalune.id/oagent/internal/health"
-	natsconn "altalune.id/oagent/nats"
-	"altalune.id/oagent/pg"
-	redisconn "altalune.id/oagent/redis"
+	"altalune.id/othra/internal/health"
+	natsconn "altalune.id/othra/nats"
+	"altalune.id/othra/pg"
+	redisconn "altalune.id/othra/redis"
 )
 
 var _ health.Check = (*pg.HealthMonitor)(nil)

@@ -25,6 +25,6 @@
   {"name": "turkish dotted I in password", "password": "İSTANBUL-is-big-2026", "name_hint": "Istanbul", "reasons": ["contains_name"], "score": 0},
   {"name": "hyphenated name", "password": "maryjane-2026x", "name_hint": "Mary-Jane", "reasons": ["contains_name"], "score": 0},
   {"name": "dotted email", "password": "smith-loves-tea", "email": "john.smith@x.com", "reasons": ["contains_email"], "score": 0},
-  {"name": "plus-tagged email", "password": "alice-is-here-2026", "email": "alice+oagent@example.com", "reasons": ["contains_email"], "score": 0},
+  {"name": "plus-tagged email", "password": "alice-is-here-2026", "email": "alice+othra@example.com", "reasons": ["contains_email"], "score": 0},
   {"name": "short email parts ignored", "password": "bob-and-ann-go-out", "email": "bob.ann@x.io", "reasons": [], "score": 3}
 ]

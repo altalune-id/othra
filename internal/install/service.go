@@ -7,16 +7,16 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/legal"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/user"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/legal"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/user"
 )
 
 const (
-	lockName       = "oagent.install"
+	lockName       = "othra.install"
 	defaultOrgName = "Default"
 )
 

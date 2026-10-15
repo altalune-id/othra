@@ -15,16 +15,16 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
 
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	invitev1 "altalune.id/oagent/gen/go/invite/v1"
-	memberv1 "altalune.id/oagent/gen/go/member/v1"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	projectv1 "altalune.id/oagent/gen/go/project/v1"
-	webhookv1 "altalune.id/oagent/gen/go/webhook/v1"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	memberv1 "altalune.id/othra/gen/go/member/v1"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	projectv1 "altalune.id/othra/gen/go/project/v1"
+	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 )
 
-const committedParameter = "paths=source_relative,ui_prefix=ui://oagent"
+const committedParameter = "paths=source_relative,ui_prefix=ui://othra"
 
 func committedFiles() []protoreflect.FileDescriptor {
 	return []protoreflect.FileDescriptor{

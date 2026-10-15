@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/db"
 )
 
 func TestRow_ToKey(t *testing.T) {

@@ -13,7 +13,7 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/pressly/goose/v3/database"
 
-	"altalune.id/oagent/pg"
+	"altalune.id/othra/pg"
 )
 
 // Migrator runs migrations from an fs.FS.

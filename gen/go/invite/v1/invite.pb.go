@@ -7,8 +7,8 @@
 package invitev1
 
 import (
-	_ "altalune.id/oagent/gen/go/mcp/v1"
-	_ "altalune.id/oagent/gen/go/oagent/v1"
+	_ "altalune.id/othra/gen/go/mcp/v1"
+	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -827,7 +827,7 @@ var File_invite_v1_invite_proto protoreflect.FileDescriptor
 
 const file_invite_v1_invite_proto_rawDesc = "" +
 	"\n" +
-	"\x16invite/v1/invite.proto\x12\tinvite.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x15oagent/v1/rules.proto\"\xf8\x01\n" +
+	"\x16invite/v1/invite.proto\x12\tinvite.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xf8\x01\n" +
 	"\x06Invite\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -886,8 +886,8 @@ const file_invite_v1_invite_proto_rawDesc = "" +
 	"\x12ConfirmDraftInvite\x12$.invite.v1.ConfirmDraftInviteRequest\x1a%.invite.v1.ConfirmDraftInviteResponse\"\x8e\x01\xca\xf3\x18\x89\x01\n" +
 	"\x15member_invite_confirm\x12ASend a drafted invite. Only the person in the view can call this.\x1a\x06org_id\x1a\tinvite_id \x01*\x03app:\x11Confirm an invite@\x01\x12\xf9\x01\n" +
 	"\x12DiscardDraftInvite\x12$.invite.v1.DiscardDraftInviteRequest\x1a%.invite.v1.DiscardDraftInviteResponse\"\x95\x01\xca\xf3\x18\x90\x01\n" +
-	"\x15member_invite_discard\x12ADrop a drafted invite. Only the person in the view can call this.\x1a\x06org_id\x1a\tinvite_id \x01*\x03app0\x01:\x16Discard a draft invite@\x01B\x8f\x01\n" +
-	"\rcom.invite.v1B\vInviteProtoP\x01Z,altalune.id/oagent/gen/go/invite/v1;invitev1\xa2\x02\x03IXX\xaa\x02\tInvite.V1\xca\x02\tInvite\\V1\xe2\x02\x15Invite\\V1\\GPBMetadata\xea\x02\n" +
+	"\x15member_invite_discard\x12ADrop a drafted invite. Only the person in the view can call this.\x1a\x06org_id\x1a\tinvite_id \x01*\x03app0\x01:\x16Discard a draft invite@\x01B\x8e\x01\n" +
+	"\rcom.invite.v1B\vInviteProtoP\x01Z+altalune.id/othra/gen/go/invite/v1;invitev1\xa2\x02\x03IXX\xaa\x02\tInvite.V1\xca\x02\tInvite\\V1\xe2\x02\x15Invite\\V1\\GPBMetadata\xea\x02\n" +
 	"Invite::V1b\x06proto3"
 
 var (

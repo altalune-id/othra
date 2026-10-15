@@ -14,13 +14,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/web"
-	"altalune.id/oagent/internal/web/layout"
-	"altalune.id/oagent/internal/web/middleware"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web"
+	"altalune.id/othra/internal/web/layout"
+	"altalune.id/othra/internal/web/middleware"
 )
 
 var termsUpdated = NewService(nil).TermsUpdatedAt()

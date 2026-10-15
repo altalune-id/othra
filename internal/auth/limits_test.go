@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/ratelimit"
-	"altalune.id/oagent/internal/kernel/ratelimit/memory"
-	"altalune.id/oagent/internal/kernel/ratelimit/ratelimittest"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/ratelimit"
+	"altalune.id/othra/internal/kernel/ratelimit/memory"
+	"altalune.id/othra/internal/kernel/ratelimit/ratelimittest"
+	"altalune.id/othra/internal/web/layout"
 )
 
 type brokenLimiter struct{ calls int }

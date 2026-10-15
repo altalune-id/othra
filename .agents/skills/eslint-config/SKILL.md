@@ -1,6 +1,6 @@
 ---
 name: eslint-config
-description: oagent's ESLint setup (@antfu/eslint-config 9 on ESLint 10, one root eslint.config.mjs, @nuxt/eslint in ui/console) and the JS/TS coding style it enforces. Use when `pnpm lint` or the lint-staged pre-commit hook fails, when fixing a style/*, curly, vue/* or pnpm/* lint error, when adding an ignore or rule override, when a file type is not linted as expected, or when writing new TS/Vue code that must pass lint on the first try.
+description: othra's ESLint setup (@antfu/eslint-config 9 on ESLint 10, one root eslint.config.mjs, @nuxt/eslint in ui/console) and the JS/TS coding style it enforces. Use when `pnpm lint` or the lint-staged pre-commit hook fails, when fixing a style/*, curly, vue/* or pnpm/* lint error, when adding an ignore or rule override, when a file type is not linted as expected, or when writing new TS/Vue code that must pass lint on the first try.
 metadata:
   version: "2026.09.30"
   source: Adapted from antfu/skills@feb0f3a (MIT), generated from https://github.com/antfu/eslint-config
@@ -8,10 +8,10 @@ metadata:
 
 # ESLint config
 
-## In oagent
+## In othra
 
-- One root `eslint.config.mjs` exports `oagent()`, built on `@antfu/eslint-config` 9 with ESLint 10. It lints every JS/TS/Vue/JSON/Markdown/CSS file in the repo.
-- `ui/console/eslint.config.mjs` wraps it: `withNuxt(oagent())` adds the `@nuxt/eslint` rules (`eslint: { config: { standalone: false } }` in `nuxt.config.ts`). It needs `.nuxt/` (run `nuxt prepare`, done by `postinstall`).
+- One root `eslint.config.mjs` exports `othra()`, built on `@antfu/eslint-config` 9 with ESLint 10. It lints every JS/TS/Vue/JSON/Markdown/CSS file in the repo.
+- `ui/console/eslint.config.mjs` wraps it: `withNuxt(othra())` adds the `@nuxt/eslint` rules (`eslint: { config: { standalone: false } }` in `nuxt.config.ts`). It needs `.nuxt/` (run `nuxt prepare`, done by `postinstall`).
 - YAML is not ESLint's job (`yaml: false`); yamllint checks it. Go, shell, Dockerfiles and protos have their own linters (see lint-staged in the root `package.json`).
 - Commands: `pnpm lint` (`eslint .`), `pnpm lint:fix` (`eslint . --fix`), `make lint-js`. The husky pre-commit hook runs `lint-staged`, which runs `eslint --fix --no-warn-ignored` on staged files.
 - pnpm 10 workspace: `pnpm/json-enforce-catalog` is off, because the `catalog:` holds only versions shared by several `ui/*` packages.
@@ -19,7 +19,7 @@ metadata:
 
 ## What the config enforces
 
-The `oagent()` factory in the root `eslint.config.mjs`:
+The `othra()` factory in the root `eslint.config.mjs`:
 
 ```js
 antfu(
@@ -69,12 +69,12 @@ Style that follows from it:
 - Do not silence a rule with `eslint-disable` to get past a failure. If a rule truly does not fit a file group, add a scoped override in `eslint.config.mjs` with a one-line reason comment.
 - New generated or vendored output goes into `ignores` in the root config, not into per-file disables.
 - Use the renamed prefixes in overrides and disables: `ts/`, `style/`, `import/`, `node/`, `test/` (see the reference).
-- Do not add Prettier, a second ESLint config, or `antislop`/UnoCSS integrations; they are not part of oagent's setup.
+- Do not add Prettier, a second ESLint config, or `antislop`/UnoCSS integrations; they are not part of othra's setup.
 
 ## Coding practices
 
 - **Single responsibility**: each file has one clear purpose; split a file when it handles too many concerns.
-- **Explicit imports**: oagent narrows Nuxt auto-imports (`components.dirs: []`, `imports.scan: false`); import components, stores and own composables from their files. Use the aliases already configured (`~`, `~~`, `@shared/*`); do not invent new ones.
+- **Explicit imports**: othra narrows Nuxt auto-imports (`components.dirs: []`, `imports.scan: false`); import components, stores and own composables from their files. Use the aliases already configured (`~`, `~~`, `@shared/*`); do not invent new ones.
 - **TypeScript**: extract complex inline types into a named `type` or `interface`; declare return types on exported functions when inference is not obvious.
 - **Comments**: explain why, not what; follow the comment-discipline skill.
 - **Tests (Vitest)**: `foo.ts` gets `foo.test.ts` in the same folder; use `describe`/`it` (not `test`), as the existing tests do.

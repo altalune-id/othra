@@ -10,9 +10,9 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/schema/entity"
 )
 
 // Enqueue records a pending entry, ignoring a repeat of an (EventID, Target) already queued.

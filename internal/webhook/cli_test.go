@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	webhookv1 "altalune.id/oagent/gen/go/webhook/v1"
-	webhookv1connect "altalune.id/oagent/gen/go/webhook/v1/webhookv1connect"
+	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
+	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
 )
 
 type fakeClient struct{ err error }
@@ -112,7 +112,7 @@ func runCmd(t *testing.T, client *fakeClient, args ...string) error {
 }
 
 func TestCLICommands(t *testing.T) {
-	t.Setenv("OAGENT_OUTPUT", "text")
+	t.Setenv("OTHRA_OUTPUT", "text")
 	c := &fakeClient{}
 	require.NoError(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.created"))
 	require.NoError(t, runCmd(t, c, "get", "w1", "--org-id", "o", "--project-id", "p"))
@@ -128,7 +128,7 @@ func TestCLICommands(t *testing.T) {
 }
 
 func TestCLIJSON(t *testing.T) {
-	t.Setenv("OAGENT_OUTPUT", "json")
+	t.Setenv("OTHRA_OUTPUT", "json")
 	c := &fakeClient{}
 	require.NoError(t, runCmd(t, c, "create", "--org-id", "o", "--project-id", "p", "--endpoint-url", "https://e.com", "--event", "agent.created"))
 	require.NoError(t, runCmd(t, c, "get", "w1", "--org-id", "o", "--project-id", "p"))

@@ -1,4 +1,4 @@
-// Package schema embeds the oagent migrations and wires them to migrator.
+// Package schema embeds the othra migrations and wires them to migrator.
 package schema
 
 import (
@@ -7,7 +7,7 @@ import (
 	"embed"
 	"io/fs"
 
-	"altalune.id/oagent/migrator"
+	"altalune.id/othra/migrator"
 )
 
 //go:embed migrations

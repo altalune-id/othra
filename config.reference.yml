@@ -1,8 +1,8 @@
-# oagent — auto-generated from config struct tags.
+# othra — auto-generated from config struct tags.
 # DO NOT edit by hand. Run `go run ./cmd/gen-config-example --format=yaml` to regenerate.
 #
 # Copy to config.yml, uncomment what you need to set, and the app picks it up.
-# Every field maps to an env var (shown as `env: OAGENT_*` in the per-field comment).
+# Every field maps to an env var (shown as `env: OTHRA_*` in the per-field comment).
 # Env vars override YAML.
 #
 # Awareness markers (in [brackets] on the per-field comment):
@@ -12,237 +12,237 @@
 
 api:
   openapi:
-    # [secret] env: OAGENT_API_OPENAPI_BASIC_AUTH_PASSWORD
+    # [secret] env: OTHRA_API_OPENAPI_BASIC_AUTH_PASSWORD
     basicAuthPassword: ""
-    # env: OAGENT_API_OPENAPI_BASIC_AUTH_USER
+    # env: OTHRA_API_OPENAPI_BASIC_AUTH_USER
     basicAuthUser: ""
-    # env: OAGENT_API_OPENAPI_ENABLED
+    # env: OTHRA_API_OPENAPI_ENABLED
     enabled: true
-    # env: OAGENT_API_OPENAPI_REQUIRE_BASIC_AUTH
+    # env: OTHRA_API_OPENAPI_REQUIRE_BASIC_AUTH
     requireBasicAuth: true
 
 auth:
   basic:
-    # [secret] env: OAGENT_AUTH_BASIC_PASSWORD
+    # [secret] env: OTHRA_AUTH_BASIC_PASSWORD
     password: ""
-    # env: OAGENT_AUTH_BASIC_USER
+    # env: OTHRA_AUTH_BASIC_USER
     user: ""
   genesis:
-    # env: OAGENT_AUTH_GENESIS_EMAIL
+    # env: OTHRA_AUTH_GENESIS_EMAIL
     email: ""
-    # [secret] env: OAGENT_AUTH_GENESIS_PASSWORD
+    # [secret] env: OTHRA_AUTH_GENESIS_PASSWORD
     password: ""
-  # env: OAGENT_AUTH_MODE
+  # env: OTHRA_AUTH_MODE
   mode: local
-  # env: OAGENT_AUTH_SESSION_TTL
+  # env: OTHRA_AUTH_SESSION_TTL
   sessionTTL: 24h
 
 cli:
-  # env: OAGENT_CLI_SESSION_FILE
-  sessionFile: ~/.oagent/session.json
+  # env: OTHRA_CLI_SESSION_FILE
+  sessionFile: ~/.othra/session.json
 
 compliance:
-  # env: OAGENT_COMPLIANCE_PRIVACY_URL
+  # env: OTHRA_COMPLIANCE_PRIVACY_URL
   privacyURL: ""
-  # env: OAGENT_COMPLIANCE_REQUIRE_ACCEPTANCE
+  # env: OTHRA_COMPLIANCE_REQUIRE_ACCEPTANCE
   requireAcceptance: ""
-  # env: OAGENT_COMPLIANCE_TERMS_URL
+  # env: OTHRA_COMPLIANCE_TERMS_URL
   termsURL: ""
-  # env: OAGENT_COMPLIANCE_TERMS_UPDATED_AT
+  # env: OTHRA_COMPLIANCE_TERMS_UPDATED_AT
   termsUpdatedAt: ""
 
 db:
-  # env: OAGENT_DB_AUTO_MIGRATE
+  # env: OTHRA_DB_AUTO_MIGRATE
   autoMigrate: true
-  # env: OAGENT_DB_DRIVER
+  # env: OTHRA_DB_DRIVER
   driver: postgres
 
-# [required, bootstrap] env: OAGENT_ENV
+# [required, bootstrap] env: OTHRA_ENV
 env: production
 
 http:
-  # [required] env: OAGENT_HTTP_ADDR
+  # [required] env: OTHRA_HTTP_ADDR
   addr: ":5150"
-  # env: OAGENT_HTTP_BASE_PATH
+  # env: OTHRA_HTTP_BASE_PATH
   basePath: ""
-  # env: OAGENT_HTTP_BASE_URL
+  # env: OTHRA_HTTP_BASE_URL
   baseURL: ""
-  # env: OAGENT_HTTP_COOKIE_SECURE
+  # env: OTHRA_HTTP_COOKIE_SECURE
   cookieSecure: true
-  # [secret] env: OAGENT_HTTP_STATE_SECRET
+  # [secret] env: OTHRA_HTTP_STATE_SECRET
   stateSecret: ""
-  # env: OAGENT_HTTP_TRUSTED_PROXY_HOPS
+  # env: OTHRA_HTTP_TRUSTED_PROXY_HOPS
   trustedProxyHops: 0
 
 install:
-  # [secret] env: OAGENT_INSTALL_TOKEN
+  # [secret] env: OTHRA_INSTALL_TOKEN
   token: ""
 
 mail:
-  # env: OAGENT_MAIL_DRIVER
+  # env: OTHRA_MAIL_DRIVER
   driver: console
-  # env: OAGENT_MAIL_FROM
+  # env: OTHRA_MAIL_FROM
   from: ""
   resend:
-    # [secret] env: OAGENT_MAIL_RESEND_API_KEY
+    # [secret] env: OTHRA_MAIL_RESEND_API_KEY
     apiKey: ""
   smtp:
-    # env: OAGENT_MAIL_SMTP_HOST
+    # env: OTHRA_MAIL_SMTP_HOST
     host: ""
-    # [secret] env: OAGENT_MAIL_SMTP_PASSWORD
+    # [secret] env: OTHRA_MAIL_SMTP_PASSWORD
     password: ""
-    # env: OAGENT_MAIL_SMTP_PORT
+    # env: OTHRA_MAIL_SMTP_PORT
     port: 587
-    # env: OAGENT_MAIL_SMTP_TIMEOUT
+    # env: OTHRA_MAIL_SMTP_TIMEOUT
     timeout: 10s
-    # env: OAGENT_MAIL_SMTP_TLS
+    # env: OTHRA_MAIL_SMTP_TLS
     tls: starttls
-    # env: OAGENT_MAIL_SMTP_USERNAME
+    # env: OTHRA_MAIL_SMTP_USERNAME
     username: ""
 
 mcp:
-  # env: OAGENT_MCP_APPS_UI
+  # env: OTHRA_MCP_APPS_UI
   appsUI: ""
-  # env: OAGENT_MCP_AUDIENCE
+  # env: OTHRA_MCP_AUDIENCE
   audience: ""
-  # env: OAGENT_MCP_AUDIENCE_OVERRIDE
+  # env: OTHRA_MCP_AUDIENCE_OVERRIDE
   audienceOverride: ""
-  # env: OAGENT_MCP_CHALLENGE_PREFIX
+  # env: OTHRA_MCP_CHALLENGE_PREFIX
   challengePrefix: ""
-  # env: OAGENT_MCP_CHALLENGE_TOKEN
+  # env: OTHRA_MCP_CHALLENGE_TOKEN
   challengeToken: ""
-  # env: OAGENT_MCP_ENABLED
+  # env: OTHRA_MCP_ENABLED
   enabled: false
 
-# [required, bootstrap] env: OAGENT_MODE
+# [required, bootstrap] env: OTHRA_MODE
 mode: selfhosted
 
 nats:
-  # env: OAGENT_NATS_CONNECT_TIMEOUT
+  # env: OTHRA_NATS_CONNECT_TIMEOUT
   connectTimeout: 10s
-  # env: OAGENT_NATS_NAME
-  name: oagent
-  # [secret] env: OAGENT_NATS_PASSWORD
+  # env: OTHRA_NATS_NAME
+  name: othra
+  # [secret] env: OTHRA_NATS_PASSWORD
   password: ""
-  # [secret] env: OAGENT_NATS_TOKEN
+  # [secret] env: OTHRA_NATS_TOKEN
   token: ""
-  # [secret] env: OAGENT_NATS_URL
+  # [secret] env: OTHRA_NATS_URL
   url: ""
-  # env: OAGENT_NATS_USER
+  # env: OTHRA_NATS_USER
   user: ""
 
 postgres:
-  # env: OAGENT_POSTGRES_CONN_MAX_IDLE_TIME
+  # env: OTHRA_POSTGRES_CONN_MAX_IDLE_TIME
   connMaxIdleTime: ""
-  # env: OAGENT_POSTGRES_CONN_MAX_LIFETIME
+  # env: OTHRA_POSTGRES_CONN_MAX_LIFETIME
   connMaxLifetime: ""
-  # env: OAGENT_POSTGRES_CONNECT_BACKOFF
+  # env: OTHRA_POSTGRES_CONNECT_BACKOFF
   connectBackoff: 250ms
-  # env: OAGENT_POSTGRES_CONNECT_TIMEOUT
+  # env: OTHRA_POSTGRES_CONNECT_TIMEOUT
   connectTimeout: 5s
-  # [required, secret] env: OAGENT_POSTGRES_DSN
+  # [required, secret] env: OTHRA_POSTGRES_DSN
   dsn: ""
   health:
-    # env: OAGENT_POSTGRES_HEALTH_INTERVAL
+    # env: OTHRA_POSTGRES_HEALTH_INTERVAL
     interval: 30s
-    # env: OAGENT_POSTGRES_HEALTH_TIMEOUT
+    # env: OTHRA_POSTGRES_HEALTH_TIMEOUT
     timeout: 2s
-  # env: OAGENT_POSTGRES_MAX_IDLE_CONNS
+  # env: OTHRA_POSTGRES_MAX_IDLE_CONNS
   maxIdleConns: ""
-  # env: OAGENT_POSTGRES_MAX_OPEN_CONNS
+  # env: OTHRA_POSTGRES_MAX_OPEN_CONNS
   maxOpenConns: ""
   migrator:
-    # [secret] env: OAGENT_POSTGRES_MIGRATOR_DSN
+    # [secret] env: OTHRA_POSTGRES_MIGRATOR_DSN
     dsn: ""
-    # env: OAGENT_POSTGRES_MIGRATOR_ROLE
+    # env: OTHRA_POSTGRES_MIGRATOR_ROLE
     role: ""
   reader:
-    # env: OAGENT_POSTGRES_READER_CONN_MAX_IDLE_TIME
+    # env: OTHRA_POSTGRES_READER_CONN_MAX_IDLE_TIME
     connMaxIdleTime: ""
-    # env: OAGENT_POSTGRES_READER_CONN_MAX_LIFETIME
+    # env: OTHRA_POSTGRES_READER_CONN_MAX_LIFETIME
     connMaxLifetime: ""
-    # [secret] env: OAGENT_POSTGRES_READER_DSN
+    # [secret] env: OTHRA_POSTGRES_READER_DSN
     dsn: ""
-    # env: OAGENT_POSTGRES_READER_MAX_IDLE_CONNS
+    # env: OTHRA_POSTGRES_READER_MAX_IDLE_CONNS
     maxIdleConns: ""
-    # env: OAGENT_POSTGRES_READER_MAX_OPEN_CONNS
+    # env: OTHRA_POSTGRES_READER_MAX_OPEN_CONNS
     maxOpenConns: ""
-    # env: OAGENT_POSTGRES_READER_ROLE
+    # env: OTHRA_POSTGRES_READER_ROLE
     role: ""
-  # env: OAGENT_POSTGRES_ROLE
+  # env: OTHRA_POSTGRES_ROLE
   role: ""
-  # [bootstrap] env: OAGENT_POSTGRES_SCHEMA
+  # [bootstrap] env: OTHRA_POSTGRES_SCHEMA
   schema: public
-  # [bootstrap] env: OAGENT_POSTGRES_TABLE_PREFIX
+  # [bootstrap] env: OTHRA_POSTGRES_TABLE_PREFIX
   tablePrefix: ""
 
 queue:
-  # env: OAGENT_QUEUE_DRIVER
+  # env: OTHRA_QUEUE_DRIVER
   driver: nats
-  # env: OAGENT_QUEUE_ENABLED
+  # env: OTHRA_QUEUE_ENABLED
   enabled: false
 
 rateLimit:
   auth:
-    # env: OAGENT_RATE_LIMIT_AUTH_ENABLED
+    # env: OTHRA_RATE_LIMIT_AUTH_ENABLED
     enabled: false
-  # env: OAGENT_RATE_LIMIT_DRIVER
+  # env: OTHRA_RATE_LIMIT_DRIVER
   driver: memory
-  # env: OAGENT_RATE_LIMIT_MAX_KEYS
+  # env: OTHRA_RATE_LIMIT_MAX_KEYS
   maxKeys: 100000
 
 redis:
-  # env: OAGENT_REDIS_CONNECT_TIMEOUT
+  # env: OTHRA_REDIS_CONNECT_TIMEOUT
   connectTimeout: 5s
-  # env: OAGENT_REDIS_KEY_PREFIX
-  keyPrefix: "oagent:"
-  # env: OAGENT_REDIS_MAX_CONNECTIONS
+  # env: OTHRA_REDIS_KEY_PREFIX
+  keyPrefix: "othra:"
+  # env: OTHRA_REDIS_MAX_CONNECTIONS
   maxConnections: 10
-  # env: OAGENT_REDIS_MAX_IDLE_TIME
+  # env: OTHRA_REDIS_MAX_IDLE_TIME
   maxIdleTime: 5m
-  # env: OAGENT_REDIS_MIN_IDLE_CONNECTIONS
+  # env: OTHRA_REDIS_MIN_IDLE_CONNECTIONS
   minIdleConnections: 0
-  # env: OAGENT_REDIS_READ_TIMEOUT
+  # env: OTHRA_REDIS_READ_TIMEOUT
   readTimeout: 3s
-  # [secret] env: OAGENT_REDIS_URL
+  # [secret] env: OTHRA_REDIS_URL
   url: ""
-  # env: OAGENT_REDIS_WRITE_TIMEOUT
+  # env: OTHRA_REDIS_WRITE_TIMEOUT
   writeTimeout: 3s
 
 scheduler:
-  # env: OAGENT_SCHEDULER_ENABLED
+  # env: OTHRA_SCHEDULER_ENABLED
   enabled: true
-  # env: OAGENT_SCHEDULER_SHUTDOWN_GRACE
+  # env: OTHRA_SCHEDULER_SHUTDOWN_GRACE
   shutdownGrace: 30s
 
 secrets:
-  # env: OAGENT_SECRETS_ENCRYPTION_KEY
+  # env: OTHRA_SECRETS_ENCRYPTION_KEY
   encryptionKey: ""
 
 telemetry:
   metrics:
-    # env: OAGENT_TELEMETRY_METRICS_ENABLED
+    # env: OTHRA_TELEMETRY_METRICS_ENABLED
     enabled: ""
-    # env: OAGENT_TELEMETRY_METRICS_EXPORT_INTERVAL
+    # env: OTHRA_TELEMETRY_METRICS_EXPORT_INTERVAL
     exportInterval: 30s
     prometheus:
-      # env: OAGENT_TELEMETRY_METRICS_PROMETHEUS_ADDR
+      # env: OTHRA_TELEMETRY_METRICS_PROMETHEUS_ADDR
       addr: ":9090"
-      # env: OAGENT_TELEMETRY_METRICS_PROMETHEUS_ENABLED
+      # env: OTHRA_TELEMETRY_METRICS_PROMETHEUS_ENABLED
       enabled: ""
-      # env: OAGENT_TELEMETRY_METRICS_PROMETHEUS_PATH
+      # env: OTHRA_TELEMETRY_METRICS_PROMETHEUS_PATH
       path: /metrics
   otlp:
-    # env: OAGENT_TELEMETRY_OTLP_ENDPOINT
+    # env: OTHRA_TELEMETRY_OTLP_ENDPOINT
     endpoint: ""
-    # env: OAGENT_TELEMETRY_OTLP_HEADERS
+    # env: OTHRA_TELEMETRY_OTLP_HEADERS
     headers: ""
-    # env: OAGENT_TELEMETRY_OTLP_INSECURE
+    # env: OTHRA_TELEMETRY_OTLP_INSECURE
     insecure: ""
-    # env: OAGENT_TELEMETRY_OTLP_PROTOCOL
+    # env: OTHRA_TELEMETRY_OTLP_PROTOCOL
     protocol: ""
   tracing:
-    # env: OAGENT_TELEMETRY_TRACING_ENABLED
+    # env: OTHRA_TELEMETRY_TRACING_ENABLED
     enabled: ""
-    # env: OAGENT_TELEMETRY_TRACING_SAMPLE_RATIO
+    # env: OTHRA_TELEMETRY_TRACING_SAMPLE_RATIO
     sampleRatio: ""

@@ -15,16 +15,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	invitev1 "altalune.id/oagent/gen/go/invite/v1"
-	invitev1connect "altalune.id/oagent/gen/go/invite/v1/invitev1connect"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/prompt"
+	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/prompt"
 )
 
 const (
 	cliOrg    = "acmePublicId000000001"
 	cliInvite = "invitePublicId0000001"
-	cliLink   = "https://oagent.example.com/invite/raw-token"
+	cliLink   = "https://othra.example.com/invite/raw-token"
 )
 
 type fakeInviteClient struct {

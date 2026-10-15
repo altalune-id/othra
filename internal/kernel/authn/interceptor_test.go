@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/internal/kernel/session"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 const (
@@ -110,14 +110,14 @@ func TestInterceptor(t *testing.T) {
 		{"nothing, required", true, "", procRead, &fakeAuthn{p: reader}, connect.CodeUnauthenticated, false},
 		{"malformed, optional", false, "Bearer nope", procRead, &fakeAuthn{p: reader}, connect.CodeUnauthenticated, false},
 		{"malformed, required", true, "Bearer nope", procRead, &fakeAuthn{p: reader}, connect.CodeUnauthenticated, false},
-		{"rejected, optional", false, "Bearer oagent_x", procRead, &fakeAuthn{err: errors.New("revoked")}, connect.CodeUnauthenticated, false},
-		{"rejected, required", true, "Bearer oagent_x", procRead, &fakeAuthn{err: errors.New("revoked")}, connect.CodeUnauthenticated, false},
-		{"unmapped, optional", false, "Bearer oagent_x", procUnmapped, &fakeAuthn{p: reader}, connect.CodePermissionDenied, false},
-		{"unmapped, required", true, "Bearer oagent_x", procUnmapped, &fakeAuthn{p: reader}, connect.CodePermissionDenied, false},
-		{"not allowed, optional", false, "Bearer oagent_x", procRead, &fakeAuthn{p: writerOnly}, connect.CodePermissionDenied, false},
-		{"not allowed, required", true, "Bearer oagent_x", procRead, &fakeAuthn{p: writerOnly}, connect.CodePermissionDenied, false},
-		{"allowed, optional", false, "Bearer oagent_x", procRead, &fakeAuthn{p: reader}, 0, true},
-		{"allowed, required", true, "Bearer oagent_x", procRead, &fakeAuthn{p: reader}, 0, true},
+		{"rejected, optional", false, "Bearer othra_x", procRead, &fakeAuthn{err: errors.New("revoked")}, connect.CodeUnauthenticated, false},
+		{"rejected, required", true, "Bearer othra_x", procRead, &fakeAuthn{err: errors.New("revoked")}, connect.CodeUnauthenticated, false},
+		{"unmapped, optional", false, "Bearer othra_x", procUnmapped, &fakeAuthn{p: reader}, connect.CodePermissionDenied, false},
+		{"unmapped, required", true, "Bearer othra_x", procUnmapped, &fakeAuthn{p: reader}, connect.CodePermissionDenied, false},
+		{"not allowed, optional", false, "Bearer othra_x", procRead, &fakeAuthn{p: writerOnly}, connect.CodePermissionDenied, false},
+		{"not allowed, required", true, "Bearer othra_x", procRead, &fakeAuthn{p: writerOnly}, connect.CodePermissionDenied, false},
+		{"allowed, optional", false, "Bearer othra_x", procRead, &fakeAuthn{p: reader}, 0, true},
+		{"allowed, required", true, "Bearer othra_x", procRead, &fakeAuthn{p: reader}, 0, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -151,7 +151,7 @@ func TestInterceptor_PrincipalInContext(t *testing.T) {
 		Permissions: PermissionTable{procRead: {"agent:read"}},
 	}, s)
 
-	require.NoError(t, call(t, srv, procRead, "Bearer oagent_x"))
+	require.NoError(t, call(t, srv, procRead, "Bearer othra_x"))
 	assert.Equal(t, want, s.p)
 }
 
@@ -171,7 +171,7 @@ func TestInterceptor_AnyAuthenticated(t *testing.T) {
 		Permissions: PermissionTable{procRead: {authz.AnyAuthenticated}},
 	}, s)
 
-	require.NoError(t, call(t, srv, procRead, "Bearer oagent_x"))
+	require.NoError(t, call(t, srv, procRead, "Bearer othra_x"))
 	assert.True(t, s.called)
 }
 
@@ -197,7 +197,7 @@ func TestInterceptor_AllOf(t *testing.T) {
 			p := session.Principal{Source: session.SourceLocal, Scopes: tc.scopes}
 			srv := serve(t, InterceptorOptions{Chain: Chain{&fakeAuthn{p: p}}, KeyPrefix: testPrefix, Permissions: table}, s)
 
-			err := call(t, srv, tc.proc, "Bearer oagent_x")
+			err := call(t, srv, tc.proc, "Bearer othra_x")
 			assert.Equal(t, tc.reached, s.called)
 			if tc.reached {
 				require.NoError(t, err)
@@ -229,6 +229,6 @@ func TestInterceptor_SessionIDInContext(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "sid-1", s.sid)
 
-	require.NoError(t, call(t, srv, procRead, "Bearer oagent_x"))
+	require.NoError(t, call(t, srv, procRead, "Bearer othra_x"))
 	assert.Empty(t, s.sid, "a key carries no session id")
 }

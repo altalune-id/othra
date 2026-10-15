@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/schema/entity"
+	"altalune.id/othra/schema/entity"
 )
 
 type binding struct {

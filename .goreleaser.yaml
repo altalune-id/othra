@@ -1,6 +1,6 @@
 version: 2
 
-project_name: oagent
+project_name: othra
 
 before:
   hooks:
@@ -10,9 +10,9 @@ before:
 report_sizes: true
 
 builds:
-  - id: oagent
-    main: ./cmd/oagent
-    binary: oagent
+  - id: othra
+    main: ./cmd/othra
+    binary: othra
     mod_timestamp: "{{ .CommitTimestamp }}"
     env:
       - CGO_ENABLED=0
@@ -26,9 +26,9 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X altalune.id/oagent/version.Version={{ .Version }}
-      - -X altalune.id/oagent/version.Commit={{ .ShortCommit }}
-      - -X altalune.id/oagent/version.BuildTime={{ .Date }}
+      - -X altalune.id/othra/version.Version={{ .Version }}
+      - -X altalune.id/othra/version.Commit={{ .ShortCommit }}
+      - -X altalune.id/othra/version.BuildTime={{ .Date }}
 
 archives:
   - id: default
@@ -58,10 +58,10 @@ signs:
     artifacts: checksum
 
 dockers_v2:
-  - id: oagent
+  - id: othra
     dockerfile: Dockerfile.release
     images:
-      - "ghcr.io/{{ .Env.GHCR_OWNER }}/oagent"
+      - "ghcr.io/{{ .Env.GHCR_OWNER }}/othra"
     tags:
       - "{{ .Version }}"
       - "{{ if not .Prerelease }}latest{{ end }}"

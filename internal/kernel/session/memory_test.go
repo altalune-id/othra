@@ -3,8 +3,8 @@ package session_test
 import (
 	"testing"
 
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/kernel/session/sessiontest"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/session/sessiontest"
 )
 
 func TestMemoryStore_Contract(t *testing.T) {

@@ -12,7 +12,7 @@ import (
 
 func TestSignedCookie(t *testing.T) {
 	now := time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC)
-	c := SignedCookie{Name: "oagent_reset", Path: "/reset-password", Secret: []byte("0123456789abcdef0123456789abcdef"), Secure: true,
+	c := SignedCookie{Name: "othra_reset", Path: "/reset-password", Secret: []byte("0123456789abcdef0123456789abcdef"), Secure: true,
 		Now: func() time.Time { return now }}
 
 	rec := httptest.NewRecorder()
@@ -20,7 +20,7 @@ func TestSignedCookie(t *testing.T) {
 	set := rec.Result().Cookies()
 	require.Len(t, set, 1)
 	got := set[0]
-	assert.Equal(t, "oagent_reset", got.Name)
+	assert.Equal(t, "othra_reset", got.Name)
 	assert.Equal(t, "/reset-password", got.Path)
 	assert.Equal(t, 3600, got.MaxAge)
 	assert.True(t, got.HttpOnly)
@@ -34,14 +34,14 @@ func TestSignedCookie(t *testing.T) {
 	assert.Equal(t, "pub|123", v)
 
 	other := c
-	other.Name = "oagent_invite"
+	other.Name = "othra_invite"
 	swapped := httptest.NewRequest(http.MethodGet, "/", nil)
-	swapped.AddCookie(&http.Cookie{Name: "oagent_invite", Value: got.Value})
+	swapped.AddCookie(&http.Cookie{Name: "othra_invite", Value: got.Value})
 	_, ok = other.Get(swapped)
 	assert.False(t, ok, "a value signed for one cookie is refused by another")
 
 	tampered := httptest.NewRequest(http.MethodGet, "/", nil)
-	tampered.AddCookie(&http.Cookie{Name: "oagent_reset", Value: "x" + got.Value})
+	tampered.AddCookie(&http.Cookie{Name: "othra_reset", Value: "x" + got.Value})
 	_, ok = c.Get(tampered)
 	assert.False(t, ok)
 	_, ok = c.Get(httptest.NewRequest(http.MethodGet, "/", nil))
@@ -54,7 +54,7 @@ func TestSignedCookie(t *testing.T) {
 	rec = httptest.NewRecorder()
 	c.Clear(rec)
 	cleared := rec.Result().Cookies()[0]
-	assert.Equal(t, "oagent_reset", cleared.Name)
+	assert.Equal(t, "othra_reset", cleared.Name)
 	assert.Equal(t, "/reset-password", cleared.Path)
 	assert.Negative(t, cleared.MaxAge)
 

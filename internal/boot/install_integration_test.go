@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
 )
 
 func TestInstallRequired(t *testing.T) {
@@ -65,7 +65,7 @@ func TestInstall_EndToEnd(t *testing.T) {
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	var setup *http.Cookie
 	for _, c := range rec.Result().Cookies() {
-		if c.Name == "oagent_setup" {
+		if c.Name == "othra_setup" {
 			setup = c
 		}
 	}

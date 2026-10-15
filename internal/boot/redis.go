@@ -9,10 +9,10 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/health"
-	"altalune.id/oagent/internal/kernel"
-	redisconn "altalune.id/oagent/redis"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/health"
+	"altalune.id/othra/internal/kernel"
+	redisconn "altalune.id/othra/redis"
 )
 
 type redisOpener func(context.Context, redisconn.Config, trace.TracerProvider) (goredis.UniversalClient, error)

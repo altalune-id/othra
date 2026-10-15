@@ -1,4 +1,4 @@
-// Package apikey mints and manages the machine credentials clients present to oagent.
+// Package apikey mints and manages the machine credentials clients present to othra.
 package apikey
 
 import (
@@ -13,11 +13,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/scope"
+	"altalune.id/othra/scope"
 )
 
-// DefaultPrefix marks an oagent key when no prefix is configured.
-const DefaultPrefix = "oagent_"
+// DefaultPrefix marks an othra key when no prefix is configured.
+const DefaultPrefix = "othra_"
 
 const (
 	secretBytes   = 32

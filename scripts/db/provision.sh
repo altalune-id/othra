@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Creates the oagent database and its roles on any Postgres; safe to re-run, and a re-run sets the passwords it is given.
+# Creates the othra database and its roles on any Postgres; safe to re-run, and a re-run sets the passwords it is given.
 #
 # Roles: <PREFIX>_owner (NOLOGIN, owns the schema and tables), <PREFIX>_migrator (LOGIN, runs
 # migrations as the owner), <PREFIX>_service (LOGIN, reads and writes rows for the running app).
 #
 # Env (asked for interactively when missing):
 #   ADMIN_URL         admin connection URL without /<db>, e.g. postgres://postgres:pw@localhost:5432?sslmode=disable
-#   DB_NAME           application database (default oagent)
-#   PREFIX            role prefix (default oagent)
-#   SCHEMA            schema oagent uses, postgres.schema (default public)
+#   DB_NAME           application database (default othra)
+#   PREFIX            role prefix (default othra)
+#   SCHEMA            schema othra uses, postgres.schema (default public)
 #   ADMIN_DB          database used for CREATE DATABASE (default postgres; neondb on Neon)
 #   MIG_PW, SVC_PW    migrator and service passwords (16+ characters, no ' or \); "gen" generates one
-#   CREDENTIALS_FILE  where generated passwords are written, mode 0600 (default ./oagent-db-credentials.env)
+#   CREDENTIALS_FILE  where generated passwords are written, mode 0600 (default ./othra-db-credentials.env)
 #   PSQL              psql binary (default psql)
 set -euo pipefail
 
@@ -20,7 +20,7 @@ PSQL="${PSQL:-psql}"
 
 is_tty() { [[ -t 0 && -t 2 ]]; }
 
-# with_db "postgres://host:5432/neondb?sslmode=disable" oagent → postgres://host:5432/oagent?sslmode=disable
+# with_db "postgres://host:5432/neondb?sslmode=disable" othra → postgres://host:5432/othra?sslmode=disable
 with_db() {
   local url="$1" db="$2" base query=""
   base="${url%%\?*}"
@@ -85,7 +85,7 @@ SCHEMA="${SCHEMA-}"
 ADMIN_DB="${ADMIN_DB-}"
 MIG_PW="${MIG_PW-}"
 SVC_PW="${SVC_PW-}"
-CREDENTIALS_FILE="${CREDENTIALS_FILE:-./oagent-db-credentials.env}"
+CREDENTIALS_FILE="${CREDENTIALS_FILE:-./othra-db-credentials.env}"
 
 interactive=false
 if [[ -z "$ADMIN_URL" || -z "$MIG_PW" || -z "$SVC_PW" ]]; then
@@ -94,19 +94,19 @@ if [[ -z "$ADMIN_URL" || -z "$MIG_PW" || -z "$SVC_PW" ]]; then
     exit 1
   fi
   interactive=true
-  echo "oagent database provisioning"
+  echo "othra database provisioning"
 fi
 
 if [[ -z "$ADMIN_URL" ]]; then
   ask_line "ADMIN_URL (admin user, no /<db>)" "" ADMIN_URL
 fi
 if $interactive; then
-  [[ -n "$DB_NAME" ]] || ask_line "DB_NAME" oagent DB_NAME
-  [[ -n "$PREFIX" ]] || ask_line "PREFIX (role prefix)" oagent PREFIX
+  [[ -n "$DB_NAME" ]] || ask_line "DB_NAME" othra DB_NAME
+  [[ -n "$PREFIX" ]] || ask_line "PREFIX (role prefix)" othra PREFIX
   [[ -n "$SCHEMA" ]] || ask_line "SCHEMA (postgres.schema)" public SCHEMA
 fi
-DB_NAME="${DB_NAME:-oagent}"
-PREFIX="${PREFIX:-oagent}"
+DB_NAME="${DB_NAME:-othra}"
+PREFIX="${PREFIX:-othra}"
 SCHEMA="${SCHEMA:-public}"
 if [[ -z "$ADMIN_DB" ]]; then
   ADMIN_DB=postgres
@@ -186,10 +186,10 @@ host="$(redact "$ADMIN_URL" | sed -E 's#^[a-z]+://([^@]*@)?##')"
 cat <<EOF
 ==> done
 
-Point oagent at it (passwords are the ones you set):
+Point othra at it (passwords are the ones you set):
   postgres.dsn:            postgres://${PREFIX}_service:<SVC_PW>@${host}/${DB_NAME}
   postgres.migrator.dsn:   postgres://${PREFIX}_migrator:<MIG_PW>@${host}/${DB_NAME}
   postgres.migrator.role:  ${PREFIX}_owner
   postgres.schema:         ${SCHEMA}
-Keep the URL's query string (sslmode and so on). oagent migrates on start (db.autoMigrate).
+Keep the URL's query string (sslmode and so on). othra migrates on start (db.autoMigrate).
 EOF

@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-jet/jet/v2/postgres"
 
-	"altalune.id/oagent/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/db"
 )
 
 // Publish inserts s at the database time unless its slug and version exist, then reads back the stored row.

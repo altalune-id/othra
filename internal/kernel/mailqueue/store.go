@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/mailer"
+	"altalune.id/othra/mailer"
 )
 
 // Queue is the port domains use to send mail.

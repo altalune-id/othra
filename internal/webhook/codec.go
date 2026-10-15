@@ -7,10 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/internal/kernel/tenant"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/internal/kernel/tenant"
 )
 
 func prepareAttempt(tc tenant.Context, a Attempt) (Attempt, error) {

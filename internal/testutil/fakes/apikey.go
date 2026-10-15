@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/apikey"
+	"altalune.id/othra/internal/apikey"
 )
 
 // APIKeyStore is an apikey.Store test double: reads return Key/Keys or Err, writes record their input.

@@ -21,7 +21,7 @@ export const Manager: Story = {};
 
 export const ReadOnly: Story = { args: { canManage: false } };
 
-export const ResentLink: Story = { args: { rowLink: { id: '2MPkgPSKGTZpjjYvbdNZd', link: 'https://oagent.example.com/invite/Zx3kq9-yT2mWb7nLp0aRvE5sQ1uC8dHf' } } };
+export const ResentLink: Story = { args: { rowLink: { id: '2MPkgPSKGTZpjjYvbdNZd', link: 'https://othra.example.com/invite/Zx3kq9-yT2mWb7nLp0aRvE5sQ1uC8dHf' } } };
 
 export const ConfirmRevoke: Story = { args: { confirming: { id: '2MPkgPSKGTZpjjYvbdNZd' }, confirmMessage: 'Revoke the invite for cy@example.com? The link stops working.' } };
 

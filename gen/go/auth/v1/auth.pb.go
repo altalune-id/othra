@@ -7,7 +7,7 @@
 package authv1
 
 import (
-	_ "altalune.id/oagent/gen/go/mcp/v1"
+	_ "altalune.id/othra/gen/go/mcp/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -504,8 +504,8 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\vauth_whoami\x12BWho this MCP client acts as: user or key, active org, permissions.*\x03app\x12P\n" +
 	"\rUpdateProfile\x12\x1d.auth.v1.UpdateProfileRequest\x1a\x1e.auth.v1.UpdateProfileResponse\"\x00\x12S\n" +
 	"\x0eChangePassword\x12\x1e.auth.v1.ChangePasswordRequest\x1a\x1f.auth.v1.ChangePasswordResponse\"\x00\x12\\\n" +
-	"\x11SignOutEverywhere\x12!.auth.v1.SignOutEverywhereRequest\x1a\".auth.v1.SignOutEverywhereResponse\"\x00B\x7f\n" +
-	"\vcom.auth.v1B\tAuthProtoP\x01Z(altalune.id/oagent/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
+	"\x11SignOutEverywhere\x12!.auth.v1.SignOutEverywhereRequest\x1a\".auth.v1.SignOutEverywhereResponse\"\x00B~\n" +
+	"\vcom.auth.v1B\tAuthProtoP\x01Z'altalune.id/othra/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
 	file_auth_v1_auth_proto_rawDescOnce sync.Once

@@ -20,10 +20,10 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/queue"
-	"altalune.id/oagent/internal/kernel/tenant"
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/queue"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/worker"
 )
 
 const (
@@ -296,12 +296,12 @@ func TestConsumer_ExhaustedGoesToDLQ(t *testing.T) {
 
 	d := waitDLQ(t, e.client)
 	assert.Equal(t, int32(5), calls.Load())
-	assert.Equal(t, "exhausted", d.Header.Get("Oagent-Dlq-Reason"))
-	assert.Equal(t, "boom", d.Header.Get("Oagent-Dlq-Error"))
-	assert.Equal(t, "5", d.Header.Get("Oagent-Dlq-Attempts"))
-	assert.Equal(t, "1", d.Header.Get("Oagent-Dlq-Stream-Seq"))
+	assert.Equal(t, "exhausted", d.Header.Get("Othra-Dlq-Reason"))
+	assert.Equal(t, "boom", d.Header.Get("Othra-Dlq-Error"))
+	assert.Equal(t, "5", d.Header.Get("Othra-Dlq-Attempts"))
+	assert.Equal(t, "1", d.Header.Get("Othra-Dlq-Stream-Seq"))
 	assert.Equal(t, sent.Header.Get("Nats-Msg-Id"), d.Header.Get("Nats-Msg-Id"))
-	assert.Equal(t, "test.run", d.Header.Get("Oagent-Job"))
+	assert.Equal(t, "test.run", d.Header.Get("Othra-Job"))
 	assert.Equal(t, sent.Data, d.Data)
 	require.Eventually(t, func() bool { return streamMsgs(t, e.client, streamWork) == 0 }, waitFor, tick)
 	require.Eventually(t, func() bool { return len(e.rec.messages()) == 1 }, waitFor, tick)
@@ -321,9 +321,9 @@ func TestConsumer_PermanentGoesToDLQAtOnce(t *testing.T) {
 
 	d := waitDLQ(t, e.client)
 	assert.Equal(t, int32(1), calls.Load())
-	assert.Equal(t, "permanent", d.Header.Get("Oagent-Dlq-Reason"))
-	assert.Contains(t, d.Header.Get("Oagent-Dlq-Error"), "bad payload")
-	assert.Equal(t, "1", d.Header.Get("Oagent-Dlq-Attempts"))
+	assert.Equal(t, "permanent", d.Header.Get("Othra-Dlq-Reason"))
+	assert.Contains(t, d.Header.Get("Othra-Dlq-Error"), "bad payload")
+	assert.Equal(t, "1", d.Header.Get("Othra-Dlq-Attempts"))
 }
 
 func TestConsumer_PanicIsRetried(t *testing.T) {
@@ -376,10 +376,10 @@ func TestConsumer_MalformedOrgHeaderIsPermanent(t *testing.T) {
 	e := newConsumerEnv(t, o)
 	msg := natsgo.NewMsg("jobs.test.run.v1")
 	msg.Data = []byte(`{}`)
-	msg.Header.Set("Oagent-Job", "test.run")
-	msg.Header.Set("Oagent-Job-Version", "1")
-	msg.Header.Set("Oagent-Created-At", time.Now().UTC().Format(time.RFC3339Nano))
-	msg.Header.Set("Oagent-Org-Id", "not-a-uuid")
+	msg.Header.Set("Othra-Job", "test.run")
+	msg.Header.Set("Othra-Job-Version", "1")
+	msg.Header.Set("Othra-Created-At", time.Now().UTC().Format(time.RFC3339Nano))
+	msg.Header.Set("Othra-Org-Id", "not-a-uuid")
 	_, err := e.client.js.PublishMsg(t.Context(), msg, jetstream.WithMsgID(uuid.NewString()))
 	require.NoError(t, err)
 
@@ -391,8 +391,8 @@ func TestConsumer_MalformedOrgHeaderIsPermanent(t *testing.T) {
 	runWorker(t, cons)
 
 	d := waitDLQ(t, e.client)
-	assert.Equal(t, "permanent", d.Header.Get("Oagent-Dlq-Reason"))
-	assert.Contains(t, d.Header.Get("Oagent-Dlq-Error"), "Oagent-Org-Id")
+	assert.Equal(t, "permanent", d.Header.Get("Othra-Dlq-Reason"))
+	assert.Contains(t, d.Header.Get("Othra-Dlq-Error"), "Othra-Org-Id")
 	assert.Equal(t, int32(0), calls.Load())
 	require.Eventually(t, func() bool {
 		for _, s := range sr.Ended() {
@@ -429,8 +429,8 @@ func TestConsumer_DLQPublishFailureRetriesWithoutHandler(t *testing.T) {
 	require.NoError(t, ensureStreams(t.Context(), e.client.js))
 	d := waitDLQ(t, e.client)
 	assert.Equal(t, int32(5), calls.Load())
-	assert.Equal(t, "exhausted", d.Header.Get("Oagent-Dlq-Reason"))
-	assert.Equal(t, "6", d.Header.Get("Oagent-Dlq-Attempts"))
+	assert.Equal(t, "exhausted", d.Header.Get("Othra-Dlq-Reason"))
+	assert.Equal(t, "6", d.Header.Get("Othra-Dlq-Attempts"))
 	require.Eventually(t, func() bool { return streamMsgs(t, e.client, streamWork) == 0 }, waitFor, tick)
 
 	got := collectMetrics(t, reader)
@@ -477,10 +477,10 @@ func TestConsumer_PermanentRedeliveredAfterDLQFailureRunsHandlerAgain(t *testing
 
 	d := waitDLQ(t, e.client)
 	assert.Equal(t, int32(2), calls.Load(), "the handler must run again on redelivery, not skip straight to the DLQ")
-	assert.Equal(t, "permanent", d.Header.Get("Oagent-Dlq-Reason"))
-	assert.Contains(t, d.Header.Get("Oagent-Dlq-Error"), "permanent cause 2")
-	assert.NotContains(t, d.Header.Get("Oagent-Dlq-Error"), "cause 1")
-	assert.Equal(t, "2", d.Header.Get("Oagent-Dlq-Attempts"))
+	assert.Equal(t, "permanent", d.Header.Get("Othra-Dlq-Reason"))
+	assert.Contains(t, d.Header.Get("Othra-Dlq-Error"), "permanent cause 2")
+	assert.NotContains(t, d.Header.Get("Othra-Dlq-Error"), "cause 1")
+	assert.Equal(t, "2", d.Header.Get("Othra-Dlq-Attempts"))
 }
 
 func TestConsumer_PastCapOnArrivalSkipsHandler(t *testing.T) {
@@ -511,9 +511,9 @@ func TestConsumer_PastCapOnArrivalSkipsHandler(t *testing.T) {
 
 	d := waitDLQ(t, e.client)
 	assert.Equal(t, int32(0), calls.Load())
-	assert.Equal(t, "exhausted", d.Header.Get("Oagent-Dlq-Reason"))
-	assert.Equal(t, "6", d.Header.Get("Oagent-Dlq-Attempts"))
-	assert.Equal(t, "outcome unknown: redelivered past the attempt cap", d.Header.Get("Oagent-Dlq-Error"))
+	assert.Equal(t, "exhausted", d.Header.Get("Othra-Dlq-Reason"))
+	assert.Equal(t, "6", d.Header.Get("Othra-Dlq-Attempts"))
+	assert.Equal(t, "outcome unknown: redelivered past the attempt cap", d.Header.Get("Othra-Dlq-Error"))
 }
 
 func TestConsumer_ConsumeSpanIsChildOfPublish(t *testing.T) {

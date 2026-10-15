@@ -1,6 +1,6 @@
 # schema
 
-Postgres migrations for oagent, run by the app-agnostic `migrator` package
+Postgres migrations for othra, run by the app-agnostic `migrator` package
 (goose). Files are templates: `{{.Schema}}`, `{{.TablePrefix}}`, `{{.Role}}`.
 `Config.Schema` defaults to `public`; a non-empty `Config.Role` runs `SET ROLE`
 on the migration connection.

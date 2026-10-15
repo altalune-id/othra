@@ -1,4 +1,4 @@
-// Command webhook-pong is a localhost webhook receiver that verifies X-Oagent-Signature and answers 200 PONG!!!.
+// Command webhook-pong is a localhost webhook receiver that verifies X-Othra-Signature and answers 200 PONG!!!.
 package main
 
 import (
@@ -25,7 +25,7 @@ const (
 func main() {
 	var addr, secret string
 	flag.StringVar(&addr, "addr", envOr("ADDR", "127.0.0.1:9099"), "listen address")
-	flag.StringVar(&secret, "secret", os.Getenv("OAGENT_WEBHOOK_SECRET"), "signing secret; when set, invalid signatures are rejected 401")
+	flag.StringVar(&secret, "secret", os.Getenv("OTHRA_WEBHOOK_SECRET"), "signing secret; when set, invalid signatures are rejected 401")
 	flag.Parse()
 
 	if secret == "" {
@@ -59,7 +59,7 @@ func handler(secret string) http.HandlerFunc {
 }
 
 func verify(secret string, h http.Header, body []byte, now time.Time) bool {
-	ts := h.Get("X-Oagent-Timestamp")
+	ts := h.Get("X-Othra-Timestamp")
 	sec, err := strconv.ParseInt(ts, 10, 64)
 	if err != nil {
 		return false
@@ -71,7 +71,7 @@ func verify(secret string, h http.Header, body []byte, now time.Time) bool {
 	mac.Write([]byte(ts + "."))
 	mac.Write(body)
 	want := []byte(signatureScheme + hex.EncodeToString(mac.Sum(nil)))
-	for got := range strings.FieldsSeq(h.Get("X-Oagent-Signature")) {
+	for got := range strings.FieldsSeq(h.Get("X-Othra-Signature")) {
 		if hmac.Equal([]byte(got), want) {
 			return true
 		}
@@ -83,14 +83,14 @@ func logDelivery(r *http.Request, body []byte) {
 	log.Printf("--- %s %s ---", r.Method, r.URL.Path) //nolint:gosec // G706: echoes the raw delivery for inspection
 	for _, h := range []string{
 		"Content-Type", "User-Agent",
-		"X-Oagent-Event-Type", "X-Oagent-Event-Id", "X-Oagent-Delivery-Id", "X-Oagent-Timestamp",
+		"X-Othra-Event-Type", "X-Othra-Event-Id", "X-Othra-Delivery-Id", "X-Othra-Timestamp",
 	} {
 		if v := r.Header.Get(h); v != "" {
 			log.Printf("  %s: %q", h, v) //nolint:gosec // G706
 		}
 	}
-	if sig := r.Header.Get("X-Oagent-Signature"); sig != "" {
-		log.Print("  X-Oagent-Signature: (present)")
+	if sig := r.Header.Get("X-Othra-Signature"); sig != "" {
+		log.Print("  X-Othra-Signature: (present)")
 	}
 	if len(body) > 0 {
 		log.Printf("  body: %s", body) //nolint:gosec // G706

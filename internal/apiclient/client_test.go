@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
 )
 
 func headerRecorder(t *testing.T) (string, *http.Header) {
@@ -31,9 +31,9 @@ func TestNew_Credential(t *testing.T) {
 		wantAuthz  string
 		wantCookie string
 	}{
-		{name: "token is a bearer", cred: Credential{Token: "oagent_k"}, wantAuthz: "Bearer oagent_k"},
-		{name: "session is the cookie", cred: Credential{Session: "sid.sig"}, wantCookie: "oagent_sid=sid.sig"},
-		{name: "token wins over session", cred: Credential{Token: "oagent_k", Session: "sid.sig"}, wantAuthz: "Bearer oagent_k"},
+		{name: "token is a bearer", cred: Credential{Token: "othra_k"}, wantAuthz: "Bearer othra_k"},
+		{name: "session is the cookie", cred: Credential{Session: "sid.sig"}, wantCookie: "othra_sid=sid.sig"},
+		{name: "token wins over session", cred: Credential{Token: "othra_k", Session: "sid.sig"}, wantAuthz: "Bearer othra_k"},
 		{name: "none sends nothing", cred: Credential{}},
 	}
 	for _, tt := range tests {

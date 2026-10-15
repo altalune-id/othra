@@ -6,9 +6,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	"altalune.id/oagent/internal/kernel/authz"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	"altalune.id/othra/internal/kernel/authz"
 )
 
 // OrgService implements org.v1.OrgService.

@@ -7,8 +7,8 @@
 package webhookv1
 
 import (
-	_ "altalune.id/oagent/gen/go/mcp/v1"
-	_ "altalune.id/oagent/gen/go/oagent/v1"
+	_ "altalune.id/othra/gen/go/mcp/v1"
+	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -1590,7 +1590,7 @@ var File_webhook_v1_webhook_proto protoreflect.FileDescriptor
 const file_webhook_v1_webhook_proto_rawDesc = "" +
 	"\n" +
 	"\x18webhook/v1/webhook.proto\x12\n" +
-	"webhook.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x15oagent/v1/rules.proto\"\xc3\x02\n" +
+	"webhook.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xc3\x02\n" +
 	"\aWebhook\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
 	"\x06org_id\x18\x02 \x01(\tR\x05orgId\x12\x1d\n" +
@@ -1748,8 +1748,8 @@ const file_webhook_v1_webhook_proto_rawDesc = "" +
 	"\x14RetryWebhookDelivery\x12'.webhook.v1.RetryWebhookDeliveryRequest\x1a(.webhook.v1.RetryWebhookDeliveryResponse\x12\xf2\x01\n" +
 	"\x1cRetryFailedWebhookDeliveries\x12/.webhook.v1.RetryFailedWebhookDeliveriesRequest\x1a0.webhook.v1.RetryFailedWebhookDeliveriesResponse\"o\xca\xf3\x18k\n" +
 	"\x14webhook_retry_failed\x124Requeue every failed delivery of a webhook endpoint.\x1a\x06org_id\x1a\n" +
-	"project_id\x1a\x02id \x01*\x03appB\x97\x01\n" +
-	"\x0ecom.webhook.v1B\fWebhookProtoP\x01Z.altalune.id/oagent/gen/go/webhook/v1;webhookv1\xa2\x02\x03WXX\xaa\x02\n" +
+	"project_id\x1a\x02id \x01*\x03appB\x96\x01\n" +
+	"\x0ecom.webhook.v1B\fWebhookProtoP\x01Z-altalune.id/othra/gen/go/webhook/v1;webhookv1\xa2\x02\x03WXX\xaa\x02\n" +
 	"Webhook.V1\xca\x02\n" +
 	"Webhook\\V1\xe2\x02\x16Webhook\\V1\\GPBMetadata\xea\x02\vWebhook::V1b\x06proto3"
 

@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/migrator"
-	"altalune.id/oagent/schema"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/migrator"
+	"altalune.id/othra/schema"
 )
 
 func TestSystemOrg_LoadAndUnique(t *testing.T) {

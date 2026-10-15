@@ -5,9 +5,9 @@
 package memberv1mcp
 
 import (
-	v1 "altalune.id/oagent/gen/go/member/v1"
-	memberv1connect "altalune.id/oagent/gen/go/member/v1/memberv1connect"
-	mcp "altalune.id/oagent/mcp"
+	v1 "altalune.id/othra/gen/go/member/v1"
+	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
+	mcp "altalune.id/othra/mcp"
 	connect "connectrpc.com/connect"
 	context "context"
 	json "encoding/json"
@@ -34,7 +34,7 @@ func RegisterMemberServiceTools(reg *mcp.Registry, h memberv1connect.MemberServi
 		Scopes:      permissionsFor(memberv1connect.MemberServiceListMembersProcedure),
 		Mutation:    false,
 		Destructive: false,
-		UI:          "ui://oagent/app",
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"orgId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["orgId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

@@ -5,9 +5,9 @@ package invite.v1;
 import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
-import "oagent/v1/rules.proto";
+import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/oagent/gen/go/invite/v1;invitev1";
+option go_package = "altalune.id/othra/gen/go/invite/v1;invitev1";
 
 // InviteService invites people into an organization by email. Every id is a public id.
 service InviteService {
@@ -69,11 +69,11 @@ message CreateInviteRequest {
   // The organization's public id.
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   string email = 2 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.email) = true
+    (buf.validate.field).string.(othra.v1.email) = true
   ];
   // owner, admin or member; you can only invite to a role whose permissions you hold.
   string role = 3 [
@@ -91,11 +91,11 @@ message CreateInviteResponse {
 message ResendInviteRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   string invite_id = 2 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
 }
 
@@ -108,11 +108,11 @@ message ResendInviteResponse {
 message RevokeInviteRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   string invite_id = 2 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
 }
 
@@ -121,7 +121,7 @@ message RevokeInviteResponse {}
 message ListInvitesRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
 }
 
@@ -135,11 +135,11 @@ message ListInvitesResponse {
 message DraftInviteRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   string email = 2 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.email) = true
+    (buf.validate.field).string.(othra.v1.email) = true
   ];
 }
 
@@ -153,11 +153,11 @@ message DraftInviteResponse {
 message ConfirmDraftInviteRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   string invite_id = 2 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
 }
 
@@ -170,11 +170,11 @@ message ConfirmDraftInviteResponse {
 message DiscardDraftInviteRequest {
   string org_id = 1 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
   string invite_id = 2 [
     (buf.validate.field).required = true,
-    (buf.validate.field).string.(oagent.v1.public_id) = true
+    (buf.validate.field).string.(othra.v1.public_id) = true
   ];
 }
 

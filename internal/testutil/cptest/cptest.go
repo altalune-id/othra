@@ -2,18 +2,18 @@
 package cptest
 
 import (
-	"altalune.id/oagent/internal/apiclient"
-	"altalune.id/oagent/internal/controlplane"
-	"altalune.id/oagent/internal/kernel/authn"
-	"altalune.id/oagent/internal/permission"
-	"altalune.id/oagent/internal/testutil/fakes"
+	"altalune.id/othra/internal/apiclient"
+	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/permission"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 // OperatorOptions makes a controlplane server accept fakes.OperatorToken as the system operator.
 func OperatorOptions() controlplane.Options {
 	return controlplane.Options{Authn: authn.InterceptorOptions{
 		Chain:       authn.Chain{fakes.OperatorAuthn{}},
-		KeyPrefix:   "oagent_",
+		KeyPrefix:   "othra_",
 		Permissions: permission.Table(),
 	}}
 }

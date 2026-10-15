@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/apiclient"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/apiclient"
 )
 
 // Remote is the CLI-side graph used by remote admin commands: config, logger and a Connect client, no DB.

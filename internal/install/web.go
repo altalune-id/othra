@@ -11,16 +11,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/install/views"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/web/layout"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/install/views"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web/layout"
 )
 
 const (
-	setupCookieName = "oagent_setup"
+	setupCookieName = "othra_setup"
 	setupCookieTTL  = 30 * time.Minute
 )
 
@@ -167,7 +167,7 @@ func (h *Web) retry(req Request, msg string) views.InstallData {
 
 func (h *Web) render(w http.ResponseWriter, r *http.Request, status int, v views.InstallData) {
 	v.Consent = h.o.Consent
-	h.o.Kit.Render(w, r, status, views.Install(h.o.Kit.Layout("Set up oagent"), v))
+	h.o.Kit.Render(w, r, status, views.Install(h.o.Kit.Layout("Set up othra"), v))
 }
 
 func (h *Web) locked(w http.ResponseWriter, r *http.Request) {
@@ -215,6 +215,6 @@ func validSetup(secret []byte, token Token, raw string, now time.Time) bool {
 }
 
 func tokenTag(token Token) string {
-	sum := sha256.Sum256([]byte("oagent.setup:" + token.Value()))
+	sum := sha256.Sum256([]byte("othra.setup:" + token.Value()))
 	return base64.RawURLEncoding.EncodeToString(sum[:16])
 }

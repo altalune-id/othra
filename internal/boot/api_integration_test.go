@@ -17,31 +17,31 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/config"
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	apikeyv1 "altalune.id/oagent/gen/go/apikey/v1"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	apperrorv1 "altalune.id/oagent/gen/go/apperror/v1"
-	authv1 "altalune.id/oagent/gen/go/auth/v1"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	memberv1 "altalune.id/oagent/gen/go/member/v1"
-	memberv1connect "altalune.id/oagent/gen/go/member/v1/memberv1connect"
-	orgv1 "altalune.id/oagent/gen/go/org/v1"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	webhookv1 "altalune.id/oagent/gen/go/webhook/v1"
-	webhookv1connect "altalune.id/oagent/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/apikey"
-	"altalune.id/oagent/internal/kernel"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/project"
-	"altalune.id/oagent/internal/testutil/pgtest"
-	"altalune.id/oagent/internal/user"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/config"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
+	authv1 "altalune.id/othra/gen/go/auth/v1"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	memberv1 "altalune.id/othra/gen/go/member/v1"
+	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
+	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/apikey"
+	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/internal/user"
 )
 
 type apiFixture struct {
@@ -153,7 +153,7 @@ func TestAPI_WhoamiForEveryCredential(t *testing.T) {
 	_, err = f.whoami(t, "", "")
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
 
-	_, err = f.whoami(t, "Authorization", "Bearer oagent_nope")
+	_, err = f.whoami(t, "Authorization", "Bearer othra_nope")
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
 }
 

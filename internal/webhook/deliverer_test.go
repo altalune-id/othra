@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/kernel/outbox"
-	"altalune.id/oagent/sealer"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/outbox"
+	"altalune.id/othra/sealer"
 )
 
 func sealedEndpoint(t *testing.T, sl sealer.Sealer, org, project uuid.UUID, secret string) *Endpoint {

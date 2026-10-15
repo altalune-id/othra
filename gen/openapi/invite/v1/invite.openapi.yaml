@@ -421,12 +421,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         inviteId:
           type: string
           title: invite_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: ConfirmDraftInviteRequest
       required:
         - orgId
@@ -448,13 +448,13 @@ components:
           title: org_id
           description: |
             The organization's public id.
-            oagent.public_id = true
+            othra.public_id = true
         email:
           type: string
           title: email
           description: |
-            oagent.email.format = true
-            oagent.email.max_len.254 = true
+            othra.email.format = true
+            othra.email.max_len.254 = true
         role:
           type: string
           title: role
@@ -488,12 +488,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         inviteId:
           type: string
           title: invite_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: DiscardDraftInviteRequest
       required:
         - orgId
@@ -510,13 +510,13 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         email:
           type: string
           title: email
           description: |
-            oagent.email.format = true
-            oagent.email.max_len.254 = true
+            othra.email.format = true
+            othra.email.max_len.254 = true
       title: DraftInviteRequest
       required:
         - orgId
@@ -573,7 +573,7 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: ListInvitesRequest
       required:
         - orgId
@@ -602,12 +602,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         inviteId:
           type: string
           title: invite_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: ResendInviteRequest
       required:
         - orgId
@@ -632,12 +632,12 @@ components:
           type: string
           title: org_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
         inviteId:
           type: string
           title: invite_id
           description: |
-            oagent.public_id = true
+            othra.public_id = true
       title: RevokeInviteRequest
       required:
         - orgId

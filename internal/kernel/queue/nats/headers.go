@@ -9,23 +9,23 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/propagation"
 
-	"altalune.id/oagent/internal/kernel/tenant"
+	"altalune.id/othra/internal/kernel/tenant"
 )
 
 const (
 	headerMsgID            = jetstream.MsgIDHeader
-	headerJob              = "Oagent-Job"
-	headerJobVersion       = "Oagent-Job-Version"
-	headerBroadcast        = "Oagent-Broadcast"
-	headerBroadcastVersion = "Oagent-Broadcast-Version"
-	headerCreatedAt        = "Oagent-Created-At"
-	headerOrgID            = "Oagent-Org-Id"
-	headerProjectID        = "Oagent-Project-Id"
-	headerUserID           = "Oagent-User-Id"
-	headerDlqReason        = "Oagent-Dlq-Reason"
-	headerDlqError         = "Oagent-Dlq-Error"
-	headerDlqAttempts      = "Oagent-Dlq-Attempts"
-	headerDlqStreamSeq     = "Oagent-Dlq-Stream-Seq"
+	headerJob              = "Othra-Job"
+	headerJobVersion       = "Othra-Job-Version"
+	headerBroadcast        = "Othra-Broadcast"
+	headerBroadcastVersion = "Othra-Broadcast-Version"
+	headerCreatedAt        = "Othra-Created-At"
+	headerOrgID            = "Othra-Org-Id"
+	headerProjectID        = "Othra-Project-Id"
+	headerUserID           = "Othra-User-Id"
+	headerDlqReason        = "Othra-Dlq-Reason"
+	headerDlqError         = "Othra-Dlq-Error"
+	headerDlqAttempts      = "Othra-Dlq-Attempts"
+	headerDlqStreamSeq     = "Othra-Dlq-Stream-Seq"
 )
 
 type natsCarrier natsgo.Header

@@ -21,7 +21,7 @@ const (
 	SourceSystem Source = "system"
 )
 
-// System is the Principal of a trusted local process: `oagent mcp` over stdio, run by whoever holds the DB DSN.
+// System is the Principal of a trusted local process: `othra mcp` over stdio, run by whoever holds the DB DSN.
 func System() Principal {
 	return Principal{Source: SourceSystem, Name: "stdio", Operator: true}
 }

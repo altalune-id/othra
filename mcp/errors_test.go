@@ -13,7 +13,7 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"altalune.id/oagent/mcp"
+	"altalune.id/othra/mcp"
 )
 
 // NOTE: mirrors the append-only registry shape in internal/apperror/codes.go.

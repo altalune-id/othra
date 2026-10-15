@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/testutil/fakes"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func mustAgent(t *testing.T, orgID, projectID uuid.UUID) *agent.Agent {

@@ -41,11 +41,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ghcr.io/${{ github.repository_owner }}/oagent:edge
-            ghcr.io/${{ github.repository_owner }}/oagent:${{ steps.meta.outputs.sha }}
+            ghcr.io/${{ github.repository_owner }}/othra:edge
+            ghcr.io/${{ github.repository_owner }}/othra:${{ steps.meta.outputs.sha }}
           # NOTE: image.source links the GHCR package to this repository.
           labels: |
-            org.opencontainers.image.title=oagent
+            org.opencontainers.image.title=othra
             org.opencontainers.image.version=edge-${{ steps.meta.outputs.sha }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}

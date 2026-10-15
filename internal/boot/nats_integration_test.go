@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/config"
-	"altalune.id/oagent/internal/kernel/db"
-	natsqueue "altalune.id/oagent/internal/kernel/queue/nats"
-	"altalune.id/oagent/internal/testutil/natstest"
+	"altalune.id/othra/config"
+	"altalune.id/othra/internal/kernel/db"
+	natsqueue "altalune.id/othra/internal/kernel/queue/nats"
+	"altalune.id/othra/internal/testutil/natstest"
 )
 
 func TestBoot_QueueOnNATSAccount(t *testing.T) {
@@ -42,9 +42,9 @@ func TestBoot_QueueOnNATSAccount(t *testing.T) {
 	js, err := jetstream.New(other)
 	require.NoError(t, err)
 	_, err = js.Stream(t.Context(), "WORK")
-	require.ErrorIs(t, err, jetstream.ErrStreamNotFound, "oagent's streams live in its own account")
+	require.ErrorIs(t, err, jetstream.ErrStreamNotFound, "othra's streams live in its own account")
 
 	require.Equal(t, 2, ns.NumClients())
 	require.NoError(t, app.Close(context.Background()))
-	assert.Eventually(t, func() bool { return ns.NumClients() == 1 }, 5*time.Second, 10*time.Millisecond, "closing the app drains oagent's connection")
+	assert.Eventually(t, func() bool { return ns.NumClients() == 1 }, 5*time.Second, 10*time.Millisecond, "closing the app drains othra's connection")
 }

@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	agentv1 "altalune.id/oagent/gen/go/agent/v1"
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	"altalune.id/oagent/internal/agent"
-	"altalune.id/oagent/internal/testutil/fakes"
+	agentv1 "altalune.id/othra/gen/go/agent/v1"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	"altalune.id/othra/internal/agent"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func newAgentServiceClient(t *testing.T, store agent.Store, refs agent.Refs) agentv1connect.AgentServiceClient {

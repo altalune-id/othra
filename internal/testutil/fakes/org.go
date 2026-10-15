@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/org"
+	"altalune.id/othra/internal/org"
 )
 
 // OrgStore is an org.Store test double. ByID/BySlug/List return Org/Orgs (or Err); Save records the org and returns SaveFn/Err.

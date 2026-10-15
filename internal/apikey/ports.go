@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/org/member"
+	"altalune.id/othra/internal/org/member"
 )
 
 // Projects resolves an organization's project ids so a grant can only name its own projects.

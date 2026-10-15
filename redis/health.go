@@ -8,7 +8,7 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/worker"
 )
 
 const probeEvery = 5 * time.Second

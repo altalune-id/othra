@@ -2,14 +2,14 @@ GOTOOLCHAIN ?= auto
 GO := env -u GOROOT -u GOVERSION GOTOOLCHAIN=$(GOTOOLCHAIN) go
 BUF ?= pnpm exec buf
 
-BIN     := bin/oagent
+BIN     := bin/othra
 VERSION := $(shell cat version/VERSION 2>/dev/null || echo dev)
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD   := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w \
-	-X altalune.id/oagent/version.Version=$(VERSION) \
-	-X altalune.id/oagent/version.Commit=$(COMMIT) \
-	-X altalune.id/oagent/version.BuildTime=$(BUILD)
+	-X altalune.id/othra/version.Version=$(VERSION) \
+	-X altalune.id/othra/version.Commit=$(COMMIT) \
+	-X altalune.id/othra/version.BuildTime=$(BUILD)
 
 .DEFAULT_GOAL := help
 
@@ -18,20 +18,20 @@ help: ## list targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  make %-16s %s\n", $$1, $$2}'
 
 .PHONY: build
-build: ## build the oagent binary into bin/
-	CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(BIN) ./cmd/oagent
+build: ## build the othra binary into bin/
+	CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(BIN) ./cmd/othra
 
 .PHONY: webhook-pong
 webhook-pong: ## build the webhook-pong example into bin/
 	CGO_ENABLED=0 $(GO) build -trimpath -o bin/webhook-pong ./examples/webhook-pong
 
 .PHONY: install
-install: ## install oagent into GOBIN/GOPATH/bin
-	CGO_ENABLED=0 $(GO) install -trimpath -ldflags "$(LDFLAGS)" ./cmd/oagent
+install: ## install othra into GOBIN/GOPATH/bin
+	CGO_ENABLED=0 $(GO) install -trimpath -ldflags "$(LDFLAGS)" ./cmd/othra
 
 .PHONY: run
-run: ## run the oagent serve command
-	$(GO) run ./cmd/oagent serve
+run: ## run the othra serve command
+	$(GO) run ./cmd/othra serve
 
 .PHONY: config-examples
 config-examples: ## regenerate .env.reference and config.reference.yml from struct tags
@@ -66,18 +66,18 @@ templ: ## generate templ components
 
 .PHONY: web-css
 web-css: ## compile internal/web/static/app.css
-	pnpm --filter @oagent/web build
+	pnpm --filter @othra/web build
 
 .PHONY: web-js
 web-js: ## build internal/web/static/password.js
-	pnpm --filter @oagent/web build:js
+	pnpm --filter @othra/web build:js
 
 .PHONY: web
 web: web-css web-js ## build the templ pages' CSS and JS
 
 .PHONY: ui-mcp
 ui-mcp: ## build the MCP App (Vue) and embed it
-	pnpm --filter @oagent/mcp-ui build
+	pnpm --filter @othra/mcp-ui build
 	cp ui/mcp/dist/index.html internal/mcp/ui/assets/app.html
 
 .PHONY: ui-test
@@ -86,7 +86,7 @@ ui-test: ## run every ui/* package's tests
 
 .PHONY: ui-console
 ui-console: ## build the console SPA and embed it
-	pnpm --filter @oagent/console generate
+	pnpm --filter @othra/console generate
 	@mkdir -p internal/web/console/public
 	@find internal/web/console/public -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
 	@cp -R ui/console/.output/public/. internal/web/console/public/
@@ -96,7 +96,7 @@ ui-console: ## build the console SPA and embed it
 ui: web ui-mcp ui-console ## build all embedded web assets
 
 .PHONY: build-all
-build-all: ui ## build embedded web assets, then the oagent binary
+build-all: ui ## build embedded web assets, then the othra binary
 	@$(MAKE) build
 
 GOLANGCI_VERSION ?= v2.14.0
@@ -154,7 +154,7 @@ test-all: test test-integration ## unit + integration tests
 
 COVER_MIN ?= 85
 # generated code, templ views, test helpers and main wiring
-COVER_SKIP ?= /gen(/|$$)|/views$$|/testutil/|/sessiontest$$|/ratelimittest$$|/examples/|/cmd/oagent$$
+COVER_SKIP ?= /gen(/|$$)|/views$$|/testutil/|/sessiontest$$|/ratelimittest$$|/examples/|/cmd/othra$$
 
 .PHONY: cover
 cover: ## unit + integration coverage; fails when a package is under COVER_MIN percent

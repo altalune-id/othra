@@ -15,8 +15,8 @@ func TestLoad_ComplianceDefaults(t *testing.T) {
 }
 
 func TestLoad_ComplianceFromEnv(t *testing.T) {
-	t.Setenv("OAGENT_COMPLIANCE_TERMS_URL", "https://example.com/terms")
-	t.Setenv("OAGENT_COMPLIANCE_PRIVACY_URL", "https://example.com/privacy")
+	t.Setenv("OTHRA_COMPLIANCE_TERMS_URL", "https://example.com/terms")
+	t.Setenv("OTHRA_COMPLIANCE_PRIVACY_URL", "https://example.com/privacy")
 	c := validConfig(t)
 	assert.Equal(t, "https://example.com/terms", c.Compliance.TermsURL)
 	assert.Equal(t, "https://example.com/privacy", c.Compliance.PrivacyURL)
@@ -34,7 +34,7 @@ func TestValidate_ComplianceURLs(t *testing.T) {
 
 func TestLoad_RequireAcceptance(t *testing.T) {
 	assert.False(t, validConfig(t).Compliance.RequireAcceptance)
-	t.Setenv("OAGENT_COMPLIANCE_REQUIRE_ACCEPTANCE", "true")
+	t.Setenv("OTHRA_COMPLIANCE_REQUIRE_ACCEPTANCE", "true")
 	assert.True(t, validConfig(t).Compliance.RequireAcceptance)
 }
 
@@ -58,6 +58,6 @@ func TestValidate_TermsUpdatedAt(t *testing.T) {
 }
 
 func TestLoad_TermsUpdatedAtFromEnv(t *testing.T) {
-	t.Setenv("OAGENT_COMPLIANCE_TERMS_UPDATED_AT", "2026-09-30")
+	t.Setenv("OTHRA_COMPLIANCE_TERMS_UPDATED_AT", "2026-09-30")
 	assert.Equal(t, "2026-09-30", validConfig(t).Compliance.TermsUpdatedAt)
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/project"
+	"altalune.id/othra/internal/project"
 )
 
 // ProjectStore is a project.Store test double that returns its configured values or Err.

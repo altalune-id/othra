@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"altalune.id/oagent/worker"
+	"altalune.id/othra/worker"
 )
 
 var _ Queue = disabled{}

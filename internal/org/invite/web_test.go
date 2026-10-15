@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/oagent/internal/auth"
-	"altalune.id/oagent/internal/kernel/session"
-	"altalune.id/oagent/internal/org/invite"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/internal/web"
-	"altalune.id/oagent/internal/web/layout"
-	"altalune.id/oagent/internal/web/middleware"
+	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org/invite"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web"
+	"altalune.id/othra/internal/web/layout"
+	"altalune.id/othra/internal/web/middleware"
 )
 
 var webSecret = []byte("0123456789abcdef0123456789abcdef")
@@ -107,7 +107,7 @@ func (f *webFixture) open(t *testing.T, c *invite.Created) *http.Cookie {
 	t.Helper()
 	rec := f.get(strings.TrimPrefix(c.Link, strings.TrimSuffix(baseURL, "/")))
 	require.Equal(t, http.StatusSeeOther, rec.Code, rec.Body.String())
-	ck := cookieNamed(rec, "oagent_invite")
+	ck := cookieNamed(rec, "othra_invite")
 	require.NotNil(t, ck)
 	return ck
 }
@@ -147,12 +147,12 @@ func TestWeb_LinkSetsTheCookieAndLeavesTheURL(t *testing.T) {
 	f := newWebFixture(t, false)
 	c := f.create("bob@x.io", member.RoleMember)
 	writes := f.store.Writes
-	rec := f.get(strings.TrimPrefix(c.Link, "https://oagent.example.com"))
+	rec := f.get(strings.TrimPrefix(c.Link, "https://othra.example.com"))
 
 	assert.Equal(t, http.StatusSeeOther, rec.Code)
 	assert.Equal(t, "/invite", rec.Header().Get("Location"))
 	assert.Equal(t, "no-referrer", rec.Header().Get("Referrer-Policy"))
-	ck := cookieNamed(rec, "oagent_invite")
+	ck := cookieNamed(rec, "othra_invite")
 	require.NotNil(t, ck)
 	assert.True(t, ck.HttpOnly)
 	assert.True(t, ck.Secure)
@@ -179,15 +179,15 @@ func TestWeb_DeadLinks(t *testing.T) {
 		want string
 	}{
 		"unknown": {"/invite/nope", "This invite link is not valid."},
-		"used":    {strings.TrimPrefix(used.Link, "https://oagent.example.com"), "This invite was already accepted."},
-		"revoked": {strings.TrimPrefix(revoked.Link, "https://oagent.example.com"), "This invite was cancelled."},
+		"used":    {strings.TrimPrefix(used.Link, "https://othra.example.com"), "This invite was already accepted."},
+		"revoked": {strings.TrimPrefix(revoked.Link, "https://othra.example.com"), "This invite was cancelled."},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			rec := f.get(tc.path)
 			assert.Equal(t, http.StatusGone, rec.Code)
 			assert.Contains(t, rec.Body.String(), tc.want)
-			ck := cookieNamed(rec, "oagent_invite")
+			ck := cookieNamed(rec, "othra_invite")
 			assert.True(t, ck == nil || ck.MaxAge < 0, "no invite cookie")
 			if name == "used" {
 				assert.Contains(t, rec.Body.String(), `href="/login"`, "signed out: a way in")
@@ -197,14 +197,14 @@ func TestWeb_DeadLinks(t *testing.T) {
 		})
 	}
 	f.clock = f.clock.Add(invite.TTL)
-	rec := f.get(strings.TrimPrefix(expired.Link, "https://oagent.example.com"))
+	rec := f.get(strings.TrimPrefix(expired.Link, "https://othra.example.com"))
 	assert.Equal(t, http.StatusGone, rec.Code)
 	assert.Contains(t, rec.Body.String(), "This invite has expired.")
 }
 
 func TestWeb_NoCookie(t *testing.T) {
 	f := newWebFixture(t, false)
-	for _, ck := range []*http.Cookie{nil, {Name: "oagent_invite", Value: "forged"}} {
+	for _, ck := range []*http.Cookie{nil, {Name: "othra_invite", Value: "forged"}} {
 		rec := f.get("/invite", ck)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 		assert.Contains(t, rec.Body.String(), "This invite link is incomplete. Open the link from your email again.")
@@ -231,7 +231,7 @@ func TestWeb_NewPersonJoinsInOneStep(t *testing.T) {
 	require.Equal(t, http.StatusSeeOther, rec.Code, rec.Body.String())
 	assert.Equal(t, "/console/o/acme", rec.Header().Get("Location"))
 	assert.NotNil(t, cookieNamed(rec, session.CookieName), "signed in")
-	gone := cookieNamed(rec, "oagent_invite")
+	gone := cookieNamed(rec, "othra_invite")
 	require.NotNil(t, gone)
 	assert.Negative(t, gone.MaxAge, "the invite cookie is cleared")
 
@@ -388,14 +388,14 @@ func TestWeb_SignedInAsAnotherEmail(t *testing.T) {
 	cleared := cookieNamed(rec, session.CookieName)
 	require.NotNil(t, cleared)
 	assert.Negative(t, cleared.MaxAge)
-	assert.Nil(t, cookieNamed(rec, "oagent_invite"), "the invite cookie stays")
+	assert.Nil(t, cookieNamed(rec, "othra_invite"), "the invite cookie stays")
 }
 
 func TestWeb_DraftsNeverRender(t *testing.T) {
 	f := newWebFixture(t, false)
 	d, err := f.svc.Draft(f.ctx, f.owner, f.org, "dina@x.io")
 	require.NoError(t, err)
-	ck := &http.Cookie{Name: "oagent_invite", Value: session.Sign(webSecret, "oagent_invite="+d.PublicID+"|"+strconv.FormatInt(d.ExpiresAt.Unix(), 10))}
+	ck := &http.Cookie{Name: "othra_invite", Value: session.Sign(webSecret, "othra_invite="+d.PublicID+"|"+strconv.FormatInt(d.ExpiresAt.Unix(), 10))}
 	rec := f.get("/invite", ck)
 	assert.Equal(t, http.StatusGone, rec.Code)
 	assert.Contains(t, rec.Body.String(), "This invite link is not valid.")
@@ -431,7 +431,7 @@ func TestWeb_ExpiredWhileTheCookieLives(t *testing.T) {
 	rec := f.get("/invite", ck)
 	assert.Equal(t, http.StatusGone, rec.Code)
 	assert.Contains(t, rec.Body.String(), "This invite has expired.")
-	gone := cookieNamed(rec, "oagent_invite")
+	gone := cookieNamed(rec, "othra_invite")
 	require.NotNil(t, gone)
 	assert.Negative(t, gone.MaxAge, "a definitive failure clears the cookie")
 }
@@ -440,7 +440,7 @@ func TestWeb_GetsNeverWrite(t *testing.T) {
 	f := newWebFixture(t, false)
 	c := f.create("bob@x.io", member.RoleMember)
 	writes := f.store.Writes
-	link := strings.TrimPrefix(c.Link, "https://oagent.example.com")
+	link := strings.TrimPrefix(c.Link, "https://othra.example.com")
 	ck := f.open(t, c)
 	f.get(link)
 	for range 5 {

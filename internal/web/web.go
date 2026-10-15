@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/web/layout"
-	"altalune.id/oagent/internal/web/middleware"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/web/layout"
+	"altalune.id/othra/internal/web/middleware"
 )
 
 // Registrar mounts a domain's server-rendered routes; each domain's web.go implements it.

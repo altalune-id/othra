@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/oagent/internal/kernel/queue"
+	"altalune.id/othra/internal/kernel/queue"
 )
 
 func TestJob_Names(t *testing.T) {

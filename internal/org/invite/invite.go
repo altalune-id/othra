@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/nanoid"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/nanoid"
 )
 
 const publicIDLen = 21

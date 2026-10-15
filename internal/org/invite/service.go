@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/oagent/apperror"
-	"altalune.id/oagent/internal/kernel/db"
-	"altalune.id/oagent/internal/kernel/events"
-	"altalune.id/oagent/internal/legal"
-	"altalune.id/oagent/internal/org/invite/views"
-	"altalune.id/oagent/internal/org/member"
-	"altalune.id/oagent/internal/user"
-	"altalune.id/oagent/mailer"
+	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/legal"
+	"altalune.id/othra/internal/org/invite/views"
+	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/user"
+	"altalune.id/othra/mailer"
 )
 
 // Deps are what the invite service needs.

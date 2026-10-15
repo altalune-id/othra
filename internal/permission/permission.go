@@ -2,16 +2,16 @@
 package permission
 
 import (
-	agentv1connect "altalune.id/oagent/gen/go/agent/v1/agentv1connect"
-	apikeyv1connect "altalune.id/oagent/gen/go/apikey/v1/apikeyv1connect"
-	authv1connect "altalune.id/oagent/gen/go/auth/v1/authv1connect"
-	invitev1connect "altalune.id/oagent/gen/go/invite/v1/invitev1connect"
-	memberv1connect "altalune.id/oagent/gen/go/member/v1/memberv1connect"
-	orgv1connect "altalune.id/oagent/gen/go/org/v1/orgv1connect"
-	projectv1connect "altalune.id/oagent/gen/go/project/v1/projectv1connect"
-	webhookv1connect "altalune.id/oagent/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/oagent/internal/kernel/authz"
-	"altalune.id/oagent/scope"
+	agentv1connect "altalune.id/othra/gen/go/agent/v1/agentv1connect"
+	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
+	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
+	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/scope"
 )
 
 // Table maps every procedure to the permissions its caller must hold, all of them. SECURITY: a missing or empty entry is denied.
