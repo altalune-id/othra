@@ -1,123 +1,170 @@
 import { create } from '@bufbuild/protobuf';
-import { timestampDate } from '@bufbuild/protobuf/wkt';
+import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { createPinia, setActivePinia } from 'pinia';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAPIKeysStore } from '~/stores/apiKeys';
-import { useAuthStore } from '~/stores/auth';
 import { APIKeySchema } from '../../../../gen/apikey/v1/apikey_pb';
-import { connectError, runtimeConfig, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
-import { mcpSnippet } from './mcpSnippet';
-import { usePersonalKeys } from './usePersonalKeys';
+import { connectError, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
+import { createdKeyState, usePersonalKeys } from './usePersonalKeys';
 
-const now = new Date('2026-10-01T00:00:00Z');
-const personalPB = create(APIKeySchema, { secretHint: 'aaaa', kind: 'personal', name: 'Mine', scopes: ['webhook:read', 'mystery:do'] });
-const orgPB = create(APIKeySchema, { secretHint: 'bbbb', kind: 'org', name: 'CI', scopes: ['webhook:read'] });
-const form = { name: 'Laptop', scopes: ['webhook:read'], expiresInHours: 24, allProjects: true, projectIds: ['x6MH9WPWjktMwCBKHy4pF'] };
+const acme = { id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme' };
+const globex = { id: 'YeDxg2kMYznPJJG3wVmjj', slug: 'globex', name: 'Globex' };
+
+function key(orgId: string, hint: string, extra: Record<string, unknown> = {}) {
+  return create(APIKeySchema, { orgId, secretHint: hint, kind: 'personal', name: hint, scopes: ['webhook:read'], ...extra });
+}
+const at = (iso: string) => timestampFromDate(new Date(iso));
 
 describe('usePersonalKeys', () => {
-  let client: Record<string, ReturnType<typeof vi.fn>>;
+  let listAPIKeys: ReturnType<typeof vi.fn>;
+  let revokeAPIKey: ReturnType<typeof vi.fn>;
+  let listOrgs: ReturnType<typeof vi.fn>;
   let whoami: ReturnType<typeof vi.fn>;
-  let listProjects: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
-    vi.useFakeTimers();
-    vi.setSystemTime(now);
-    vi.stubGlobal('window', { location: { origin: 'https://console.test' } });
-    client = {
-      listAPIKeys: vi.fn().mockResolvedValue({ keys: [personalPB, orgPB] }),
-      createAPIKey: vi.fn().mockResolvedValue({ key: create(APIKeySchema, { secretHint: 'cccc', kind: 'personal', name: 'Laptop' }), plaintext: 'oak_new' }),
-      revokeAPIKey: vi.fn().mockResolvedValue({}),
-    };
-    whoami = vi.fn().mockResolvedValue({ source: 'local', permissions: ['webhook:*', 'member:write'] });
-    listProjects = vi.fn().mockResolvedValue({ projects: [{ id: 'x6MH9WPWjktMwCBKHy4pF', orgId: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'web', name: 'Web' }, { id: 'KdrF3t3FHtppBPmMgj4sy', orgId: 'YeDxg2kMYznPJJG3wVmjj', slug: 'x', name: 'X' }] });
-    setClient('$apiKeyClient', client);
+    whoami = vi.fn().mockResolvedValue({ source: 'local', userId: 'u1', activeOrgId: acme.id, permissions: ['*'] });
+    listOrgs = vi.fn().mockResolvedValue({ orgs: [acme, globex] });
+    listAPIKeys = vi.fn(async ({ orgId }: { orgId: string }) => ({
+      keys: orgId === acme.id
+        ? [key(acme.id, 'aaaa', { createdAt: at('2026-09-01T00:00:00Z') }), key(acme.id, 'oorg', { kind: 'org' })]
+        : [key(globex.id, 'gggg')],
+    }));
+    revokeAPIKey = vi.fn().mockResolvedValue({});
     setClient('$authClient', { whoami });
-    setClient('$projectClient', { listProjects });
+    setClient('$orgClient', { listOrgs });
+    setClient('$apiKeyClient', { listAPIKeys, revokeAPIKey });
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('loads the viewer, the keys and the projects', async () => {
-    const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
-    expect(keys.signedIn.value).toBe(false);
-    expect(keys.mintable.value).toEqual([]);
+  it('lists the viewer\'s personal keys across every org, with the org name', async () => {
+    const keys = usePersonalKeys();
+    expect(keys.loaded.value).toBe(false);
     await keys.load();
-    expect(client.listAPIKeys).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a' });
-    expect(listProjects).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a' });
-    expect(keys.signedIn.value).toBe(true);
-    expect(keys.mine.value.map(k => [k.secretHint, k.scopes])).toEqual([['aaaa', ['scope.webhook_read', 'mystery:do']]]);
-    expect(keys.mintable.value).toEqual([
-      { name: 'webhook:read', label: 'scope.webhook_read' },
-      { name: 'webhook:write', label: 'scope.webhook_write' },
+    expect(listAPIKeys).toHaveBeenCalledWith({ orgId: acme.id });
+    expect(listAPIKeys).toHaveBeenCalledWith({ orgId: globex.id });
+    expect(keys.rows.value.map(r => [r.orgName, r.secretHint, r.scopeLabels])).toEqual([
+      ['Acme', 'aaaa', ['scope.webhook_read']],
+      ['Globex', 'gggg', ['scope.webhook_read']],
     ]);
-    expect(keys.orgProjects.value).toEqual([{ id: 'x6MH9WPWjktMwCBKHy4pF', name: 'Web' }]);
+    expect(keys.loaded.value).toBe(true);
+    expect(keys.oneOrg.value).toBe(false);
+    expect(keys.failed.value).toEqual([]);
   });
 
-  it('is not signed in for a non-local source', async () => {
+  it('keeps its own state and leaves the org settings store alone', async () => {
+    const keys = usePersonalKeys();
+    await keys.load();
+    expect(useAPIKeysStore().items).toEqual([]);
+  });
+
+  it('sorts by org name, then live before revoked, then newest first', async () => {
+    listOrgs.mockResolvedValue({ orgs: [globex, acme] });
+    listAPIKeys.mockImplementation(async ({ orgId }: { orgId: string }) => ({
+      keys: orgId === acme.id
+        ? [
+            key(acme.id, 'old1', { createdAt: at('2026-01-01T00:00:00Z') }),
+            key(acme.id, 'rev1', { createdAt: at('2026-09-01T00:00:00Z'), revokedAt: at('2026-09-02T00:00:00Z') }),
+            key(acme.id, 'new1', { createdAt: at('2026-08-01T00:00:00Z') }),
+            key(acme.id, 'nod1'),
+          ]
+        : [key(globex.id, 'gggg')],
+    }));
+    const keys = usePersonalKeys();
+    await keys.load();
+    expect(keys.rows.value.map(r => r.secretHint)).toEqual(['new1', 'old1', 'nod1', 'rev1', 'gggg']);
+  });
+
+  it('shows the keys of the orgs that loaded and names the ones that failed, then retries one', async () => {
+    listAPIKeys.mockImplementation(async ({ orgId }: { orgId: string }) => {
+      if (orgId === globex.id) {
+        throw connectError('GEN900');
+      }
+      return { keys: [key(acme.id, 'aaaa')] };
+    });
+    const keys = usePersonalKeys();
+    await keys.load();
+    expect(keys.rows.value.map(r => r.secretHint)).toEqual(['aaaa']);
+    expect(keys.failed.value).toEqual([{ id: globex.id, name: 'Globex' }]);
+
+    listAPIKeys.mockImplementation(async () => ({ keys: [key(globex.id, 'gggg')] }));
+    await keys.retry(globex.id);
+    expect(keys.failed.value).toEqual([]);
+    expect(keys.rows.value.map(r => r.secretHint)).toEqual(['aaaa', 'gggg']);
+  });
+
+  it('names an org once when its retry fails again, and treats a missing list as empty', async () => {
+    listAPIKeys.mockImplementation(async ({ orgId }: { orgId: string }) => {
+      if (orgId === globex.id) {
+        throw new Error('down');
+      }
+      return {};
+    });
+    const keys = usePersonalKeys();
+    await keys.load();
+    await keys.retry(globex.id);
+    expect(keys.failed.value).toEqual([{ id: globex.id, name: 'Globex' }]);
+    expect(keys.rows.value).toEqual([]);
+  });
+
+  it('revokes in an org whose keys never loaded without inventing rows', async () => {
+    listAPIKeys.mockRejectedValue(new Error('down'));
+    const keys = usePersonalKeys();
+    await keys.load();
+    await keys.revoke(globex.id, 'gone');
+    expect(revokeAPIKey).toHaveBeenCalledWith({ orgId: globex.id, hint: 'gone' });
+    expect(keys.rows.value).toEqual([]);
+  });
+
+  it('reports one org and hides the org column then', async () => {
+    listOrgs.mockResolvedValue({ orgs: [acme] });
+    const keys = usePersonalKeys();
+    await keys.load();
+    expect(keys.oneOrg.value).toBe(true);
+    expect(listAPIKeys).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads nothing for a caller who is not a signed-in person', async () => {
     whoami.mockResolvedValue({ source: 'apikey', permissions: [] });
-    const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
+    const keys = usePersonalKeys();
     await keys.load();
     expect(keys.signedIn.value).toBe(false);
+    expect(listAPIKeys).not.toHaveBeenCalled();
+    expect(keys.rows.value).toEqual([]);
+    expect(keys.loaded.value).toBe(true);
   });
 
-  it('creates a key for all projects and builds the MCP snippet', async () => {
-    runtimeConfig.public.apiUrl = '/base/api';
-    const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
-    await keys.create(form);
-    const req = client.createAPIKey!.mock.calls[0]![0];
-    expect(req).toMatchObject({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', kind: 'personal', name: 'Laptop', scopes: ['webhook:read'], allProjects: true, projectIds: [] });
-    expect(timestampDate(req.expiresAt)).toEqual(new Date(now.getTime() + 24 * 3600_000));
-    expect(useAPIKeysStore().items.map(k => k.secretHint)).toEqual(['cccc']);
-    expect(keys.created.value).toEqual({ plaintext: 'oak_new', snippet: mcpSnippet('othra', 'https://console.test/base/mcp', 'oak_new') });
-    expect(keys.busy.value).toBe(false);
-    keys.dismiss();
-    expect(keys.created.value).toBeNull();
-  });
-
-  it('sends chosen projects and skips the store when no key comes back', async () => {
-    client.createAPIKey!.mockResolvedValue({ plaintext: 'oak_x' });
-    const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
-    await keys.create({ ...form, allProjects: false, projectIds: ['x6MH9WPWjktMwCBKHy4pF', 'KdrF3t3FHtppBPmMgj4sy'] });
-    expect(client.createAPIKey!.mock.calls[0]![0]).toMatchObject({ allProjects: false, projectIds: ['x6MH9WPWjktMwCBKHy4pF', 'KdrF3t3FHtppBPmMgj4sy'] });
-    expect(useAPIKeysStore().items).toEqual([]);
-    expect(keys.created.value?.plaintext).toBe('oak_x');
-  });
-
-  it('shows create errors', async () => {
-    setKnownKeys('apperror.GEN007');
-    client.createAPIKey!.mockRejectedValueOnce(connectError('GEN007', { permission: 'webhook:write' })).mockRejectedValueOnce(new Error('boom'));
-    const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
-    await keys.create(form);
-    expect(keys.error.value).toEqual({ message: 'apperror.GEN007|{"permission":"scope.webhook_write"}', reference: 'error.ref|{"id":"req-1"}' });
-    expect(keys.created.value).toBeNull();
-    await keys.create(form);
-    expect(keys.error.value).toEqual({ message: 'error.create_apikey' });
-    expect(keys.busy.value).toBe(false);
-  });
-
-  it('revokes a key by its hint', async () => {
-    const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
+  it('revokes a key in its own org, by hint', async () => {
+    listAPIKeys.mockImplementation(async ({ orgId }: { orgId: string }) => ({ keys: [key(orgId, 'same')] }));
+    const keys = usePersonalKeys();
     await keys.load();
-    await keys.revoke('aaaa');
-    expect(client.revokeAPIKey).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', hint: 'aaaa' });
-    expect(useAPIKeysStore().items.find(k => k.secretHint === 'aaaa')?.revokedAt).toEqual(now);
+    await keys.revoke(globex.id, 'same');
+    expect(revokeAPIKey).toHaveBeenCalledWith({ orgId: globex.id, hint: 'same' });
+    const byOrg = Object.fromEntries(keys.rows.value.map(r => [r.orgId, r.revokedAt]));
+    expect(byOrg[acme.id]).toBeUndefined();
+    expect(byOrg[globex.id]).toBeInstanceOf(Date);
     expect(keys.error.value).toBeNull();
   });
 
-  it('shows revoke errors and keeps the key active', async () => {
+  it('shows revoke errors and keeps the key live', async () => {
     setKnownKeys('apperror.GEN900');
-    client.revokeAPIKey!.mockRejectedValueOnce(connectError('GEN900')).mockRejectedValueOnce(new Error('boom'));
-    const keys = usePersonalKeys('V3StGXR8Z5jdHj6BmyT2a');
+    revokeAPIKey.mockRejectedValueOnce(connectError('GEN900')).mockRejectedValueOnce(new Error('boom'));
+    const keys = usePersonalKeys();
     await keys.load();
-    await keys.revoke('aaaa');
+    await keys.revoke(acme.id, 'aaaa');
     expect(keys.error.value).toEqual({ message: 'apperror.GEN900', reference: 'error.ref|{"id":"req-1"}' });
-    await keys.revoke('aaaa');
+    await keys.revoke(acme.id, 'aaaa');
     expect(keys.error.value).toEqual({ message: 'error.revoke_apikey' });
-    expect(useAPIKeysStore().items.find(k => k.secretHint === 'aaaa')?.revokedAt).toBeUndefined();
-    expect(useAuthStore().me).not.toBeNull();
+    expect(keys.rows.value.find(r => r.secretHint === 'aaaa')?.revokedAt).toBeUndefined();
+  });
+
+  it('shows the one-time secret handed over by the create page until it is dismissed', async () => {
+    const keys = usePersonalKeys();
+    expect(keys.created.value).toBeNull();
+    createdKeyState().value = { plaintext: 'othra_new', snippet: '{}' };
+    expect(keys.created.value).toEqual({ plaintext: 'othra_new', snippet: '{}' });
+    keys.dismiss();
+    expect(keys.created.value).toBeNull();
+    expect(createdKeyState().value).toBeNull();
   });
 });

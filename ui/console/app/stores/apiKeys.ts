@@ -5,6 +5,7 @@ import { useErrorMessage } from '~/composables/useErrorMessage';
 
 export interface APIKey {
   rowKey: string;
+  orgId: string;
   kind: string;
   name: string;
   scopes: string[];
@@ -12,8 +13,10 @@ export interface APIKey {
   projectIds: string[];
   allProjects: boolean;
   secretHint: string;
+  createdAt?: Date;
   expiresAt?: Date;
   revokedAt?: Date;
+  lastUsedAt?: Date;
 }
 
 let rows = 0;
@@ -21,6 +24,7 @@ let rows = 0;
 export function toAPIKey(k: APIKeyPB): APIKey {
   return {
     rowKey: `key-${++rows}`,
+    orgId: k.orgId,
     kind: k.kind,
     name: k.name,
     scopes: [...k.scopes],
@@ -28,8 +32,10 @@ export function toAPIKey(k: APIKeyPB): APIKey {
     projectIds: [...k.projectIds],
     allProjects: k.allProjects,
     secretHint: k.secretHint,
+    createdAt: k.createdAt ? timestampDate(k.createdAt) : undefined,
     expiresAt: k.expiresAt ? timestampDate(k.expiresAt) : undefined,
     revokedAt: k.revokedAt ? timestampDate(k.revokedAt) : undefined,
+    lastUsedAt: k.lastUsedAt ? timestampDate(k.lastUsedAt) : undefined,
   };
 }
 
@@ -37,6 +43,7 @@ export const useAPIKeysStore = defineStore('apiKeys', () => {
   const items = ref<APIKey[]>([]);
   const loading = ref(false);
   const error = ref<ShownError | null>(null);
+  const shared = computed(() => items.value.filter(k => k.kind !== 'personal'));
 
   const { $apiKeyClient: client } = useNuxtApp();
   const errorMessage = useErrorMessage();
@@ -97,5 +104,5 @@ export const useAPIKeysStore = defineStore('apiKeys', () => {
     return run;
   }
 
-  return { items, loading, error, add, markRevoked, load, ensureLoaded };
+  return { items, shared, loading, error, add, markRevoked, load, ensureLoaded };
 });

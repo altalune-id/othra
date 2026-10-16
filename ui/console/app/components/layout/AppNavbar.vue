@@ -14,7 +14,8 @@ const route = useRoute();
 const { t } = useI18n();
 const ui = useUIStore();
 
-const hasNav = computed(() => !!route.params.org);
+const inAccount = computed(() => route.path.startsWith('/account'));
+const hasNav = computed(() => !!route.params.org || inAccount.value);
 
 const auth = useAuthStore();
 const { apiUrl } = useRuntimeConfig().public;
@@ -27,6 +28,7 @@ const userLabels = computed(() => ({
   apikey: t('auth.source_apikey'),
   basic: t('auth.source_basic'),
   profile: t('profile.title'),
+  apiKeys: t('apikeys.personal_title'),
 }));
 onMounted(() => auth.load());
 </script>
@@ -48,7 +50,7 @@ onMounted(() => auth.load());
         Othra
       </NuxtLink>
     </template>
-    <OrgSelector @focusin="ui.navOpen = false" />
+    <OrgSelector v-if="!inAccount" @focusin="ui.navOpen = false" />
     <ProjectSelector @focusin="ui.navOpen = false" />
     <template #end>
       <LanguageSwitcher @focusin="ui.navOpen = false" />

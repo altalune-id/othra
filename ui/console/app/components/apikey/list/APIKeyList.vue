@@ -15,13 +15,7 @@ const { $apiKeyClient: client } = useNuxtApp();
 await keys.ensureLoaded(orgId);
 
 function kindLabel(kind: string): string {
-  if (kind === 'org') {
-    return t('apikeys.kind_org');
-  }
-  if (kind === 'personal') {
-    return t('apikeys.kind_personal');
-  }
-  return t('apikeys.kind_project');
+  return kind === 'org' ? t('apikeys.kind_org') : t('apikeys.kind_project');
 }
 
 async function revoke(hint: string) {
@@ -36,7 +30,7 @@ async function revoke(hint: string) {
 
 <template>
   <ErrorText v-if="keys.error" :error="keys.error" />
-  <p v-else-if="keys.items.length === 0" class="text-sm text-base-content/60">
+  <p v-else-if="keys.shared.length === 0" class="text-sm text-base-content/60">
     {{ t('apikeys.empty') }}
   </p>
   <div v-else class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
@@ -52,13 +46,13 @@ async function revoke(hint: string) {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="k in keys.items" :key="k.rowKey" class="hover:bg-base-200">
+        <tr v-for="k in keys.shared" :key="k.rowKey" class="hover:bg-base-200">
           <td>{{ k.name }}</td>
           <td>{{ kindLabel(k.kind) }}</td>
           <td class="text-base-content/60">
             {{ k.scopes.map(scopeLabel).join(', ') }}
           </td>
-          <td class="text-base-content/60">
+          <td class="font-mono text-xs text-base-content/60">
             …{{ k.secretHint }}
           </td>
           <td>

@@ -19,16 +19,18 @@ export interface UserMenuLabels {
   apikey: string;
   basic: string;
   profile: string;
+  apiKeys: string;
 }
 
-const { me, logoutUrl, profileUrl = '/profile', labels = {
+const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys', labels = {
   signOut: 'Sign out',
   signedInAs: 'Signed in as',
   operator: 'Operator',
   apikey: 'API key',
   basic: 'Basic auth',
   profile: 'Profile',
-} } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, labels?: UserMenuLabels }>();
+  apiKeys: 'My API keys',
+} } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, apiKeysUrl?: string, labels?: UserMenuLabels }>();
 
 const display = computed(() => me?.name || me?.email || (me?.source === 'apikey' ? labels.apikey : ''));
 const isPerson = computed(() => me?.source === 'local' && !!me.userId);
@@ -64,6 +66,10 @@ const sourceBadge = computed(() => {
       <NuxtLink v-if="isPerson" :to="profileUrl" class="btn btn-ghost btn-sm btn-block mt-3 justify-start gap-2">
         <Icon name="lucide:user-round" size="16" />
         {{ labels.profile }}
+      </NuxtLink>
+      <NuxtLink v-if="isPerson" :to="apiKeysUrl" class="btn btn-ghost btn-sm btn-block mt-1 justify-start gap-2">
+        <Icon name="lucide:key-round" size="16" />
+        {{ labels.apiKeys }}
       </NuxtLink>
       <form v-if="me.source === 'local'" method="post" :action="logoutUrl" :class="isPerson ? 'mt-1' : 'mt-3'">
         <button type="submit" class="btn btn-sm btn-block justify-start gap-2">
