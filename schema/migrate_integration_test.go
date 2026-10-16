@@ -39,6 +39,10 @@ func TestMigrations_UpDownUp(t *testing.T) {
 	}
 	require.NoError(t, rows.Err())
 	assert.Empty(t, left, "Down must drop everything Up created")
+	var fns int
+	require.NoError(t, sqlDB.QueryRowContext(ctx,
+		`SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = $1`, h.Schema).Scan(&fns))
+	assert.Zero(t, fns, "Down must drop every function Up created")
 
 	require.NoError(t, schema.MigrateUp(ctx, sqlDB, cfg), "Up must work again after a full Down")
 }

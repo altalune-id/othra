@@ -249,6 +249,23 @@ Rules the diagram can't show. Names omit `{{.TablePrefix}}`.
 | `password_resets`                                                       | `token_hash` unique, `password_resets_user_idx` (`WHERE used_at IS NULL`)                       | tokens are found by their hash; a new request deletes the person's unused tokens                                                           |
 | `sessions`                                                              | `sessions_expires_idx`, `sessions_user_idx`                                                     | sweep of expired rows; delete all sessions of a user                                                                                       |
 
+## Lookup functions
+
+`013_tenant_lookups.sql` holds the `SECURITY DEFINER` functions for reads that must run before a tenant scope
+exists, or across every org. Each one runs as the owner with `search_path = <schema>, pg_catalog, pg_temp`,
+returns public columns only (never a hash), and is closed to `PUBLIC`; the service role gets `EXECUTE` through
+the owner's default privileges. `lookups_integration_test.go` checks all of this.
+
+| Function                                | Returns                                        | Used by                                                |
+| --------------------------------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| `list_org_ids()`                        | every org id and creation time                 | the outbox dispatcher, which then runs each org scoped |
+| `resolve_system_org()`                  | the system org                                 | sign-in refresh, install                               |
+| `resolve_org_by_slug(text)`             | one org                                        | slug routes and the system slug check                  |
+| `resolve_org_by_public_id(text)`        | one org                                        | public id resolution on every surface                  |
+| `list_orgs_for_user(uuid)`              | the orgs a person is a member of               | `ListOrgs` for a person                                |
+| `resolve_invite_by_token_hash(text)`    | one invite, without `token_hash`               | the invite landing page and join                       |
+| `resolve_api_key_by_secret_hash(bytea)` | one API key and its projects, without the hash | API key authentication                                 |
+
 ## External migrations
 
 Run another tool's migrations after ours on the same DB:

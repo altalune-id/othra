@@ -69,7 +69,7 @@ func (a *Authenticator) Authenticate(ctx context.Context, c authn.Credential) (s
 		}
 	}
 	if a.usage != nil {
-		a.usage.Record(k.ID, now)
+		a.usage.Record(k.OrgID, k.ID, now)
 	}
 	return p, nil
 }

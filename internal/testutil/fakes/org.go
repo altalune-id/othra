@@ -73,3 +73,20 @@ func (f *OrgStore) List(context.Context) ([]*org.Org, error) {
 	}
 	return f.Orgs, nil
 }
+
+// ListForUser implements org.Store; it returns Orgs.
+func (f *OrgStore) ListForUser(context.Context, uuid.UUID) ([]*org.Org, error) {
+	return f.List(context.Background())
+}
+
+// IDs implements org.Store; it returns the ids of Orgs.
+func (f *OrgStore) IDs(context.Context) ([]uuid.UUID, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	out := make([]uuid.UUID, 0, len(f.Orgs))
+	for _, o := range f.Orgs {
+		out = append(out, o.ID)
+	}
+	return out, nil
+}

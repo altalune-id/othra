@@ -9,6 +9,7 @@ import (
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // OrgService implements org.v1.OrgService.
@@ -52,7 +53,7 @@ func (s *OrgService) ListOrgs(
 	ctx context.Context,
 	_ *connect.Request[orgv1.ListOrgsRequest],
 ) (*connect.Response[orgv1.ListOrgsResponse], error) {
-	orgs, err := s.orgs.List(ctx)
+	orgs, err := s.listable(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,4 +95,11 @@ func (s *OrgService) reachable(ctx context.Context, publicID string, reach func(
 		return nil, &NotFoundError{}
 	}
 	return o, nil
+}
+
+func (s *OrgService) listable(ctx context.Context) ([]*Org, error) {
+	if p := session.PrincipalFrom(ctx); p.IsPerson() && !p.Operator {
+		return s.orgs.ListForUser(ctx, p.UserID)
+	}
+	return s.orgs.List(ctx)
 }

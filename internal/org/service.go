@@ -160,6 +160,24 @@ func (s *Service) List(ctx context.Context) ([]*Org, error) {
 	return orgs, nil
 }
 
+// ListForUser returns the orgs userID is a member of, oldest first.
+func (s *Service) ListForUser(ctx context.Context, userID uuid.UUID) ([]*Org, error) {
+	orgs, err := s.store.ListForUser(ctx, userID)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "org: list for user", err)
+	}
+	return orgs, nil
+}
+
+// IDs returns every org id, oldest first, for work that then runs each org scoped.
+func (s *Service) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	ids, err := s.store.IDs(ctx)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "org: ids", err)
+	}
+	return ids, nil
+}
+
 // Update changes an org's display name and slug.
 func (s *Service) Update(ctx context.Context, id uuid.UUID, name, slug string) (*Org, error) {
 	o, err := s.store.ByID(ctx, id)

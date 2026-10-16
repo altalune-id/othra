@@ -5,6 +5,7 @@ package invite_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
@@ -376,4 +378,25 @@ func TestPostgresInvite_ReinviteVersusAccept(t *testing.T) {
 			assert.Nil(t, fresh.AcceptedAt, "the new invite is live")
 		}
 	}
+}
+
+// SECURITY: the token lookup never returns the hash, so saving what it returns must fail loudly instead of clearing the token.
+func TestPostgresInvite_SavingATokenLoadedInviteFails(t *testing.T) {
+	f := newPGFixture(t)
+	c := f.invite("tok-"+uuid.NewString()[:8]+"@example.com", member.RoleMember)
+	raw := c.Link[strings.LastIndex(c.Link, "/")+1:]
+
+	inv, err := f.svc.Lookup(f.ctx, raw)
+	require.NoError(t, err)
+	assert.Equal(t, c.Invite.ID, inv.ID)
+	assert.Empty(t, inv.TokenHash, "the definer returns no hash")
+
+	scoped := tenant.Into(f.ctx, tenant.Context{OrgID: inv.OrgID})
+	err = db.NewTransactor(f.pool).RunInTx(scoped, func(ctx context.Context) error { return f.store.Update(ctx, inv) })
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invites_token_or_draft")
+
+	again, err := f.svc.Lookup(f.ctx, raw)
+	require.NoError(t, err, "the stored token survives")
+	assert.Equal(t, c.Invite.ID, again.ID)
 }

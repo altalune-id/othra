@@ -21,6 +21,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/pgtest"
@@ -632,15 +633,19 @@ func TestPostgres_TouchLastUsedNeverMovesBack(t *testing.T) {
 	later := time.Now().UTC().Truncate(time.Microsecond)
 	earlier := later.Add(-time.Hour)
 
-	require.NoError(t, f.store.TouchLastUsed(t.Context(), map[uuid.UUID]time.Time{k.ID: later}))
-	require.NoError(t, f.store.TouchLastUsed(t.Context(), map[uuid.UUID]time.Time{k.ID: earlier}))
+	scoped := tenant.Into(t.Context(), tenant.Context{OrgID: orgID})
+	require.NoError(t, f.store.TouchLastUsed(scoped, map[uuid.UUID]time.Time{k.ID: later}))
+	require.NoError(t, f.store.TouchLastUsed(scoped, map[uuid.UUID]time.Time{k.ID: earlier}))
+	require.NoError(t, f.store.TouchLastUsed(tenant.Into(t.Context(), tenant.Context{OrgID: uuid.New()}), map[uuid.UUID]time.Time{k.ID: later.Add(time.Hour)}),
+		"another org's scope touches nothing")
 
 	got, err := f.store.ByID(t.Context(), k.ID)
 	require.NoError(t, err)
 	require.NotNil(t, got.LastUsedAt)
 	assert.True(t, later.Equal(*got.LastUsedAt), "got %v want %v", got.LastUsedAt, later)
 
-	require.NoError(t, f.store.TouchLastUsed(t.Context(), map[uuid.UUID]time.Time{}))
+	require.NoError(t, f.store.TouchLastUsed(scoped, map[uuid.UUID]time.Time{}))
+	assert.True(t, tenant.IsMissingError(f.store.TouchLastUsed(t.Context(), map[uuid.UUID]time.Time{k.ID: later})), "an unscoped flush is refused")
 }
 
 func (f *pgFixture) seedUser(t *testing.T) uuid.UUID {
@@ -824,4 +829,25 @@ func pgUUIDs(ids ...uuid.UUID) string {
 		s[i] = id.String()
 	}
 	return "{" + strings.Join(s, ",") + "}"
+}
+
+// SECURITY: the hash lookup never returns the hash, and saving the key it returns must not overwrite the stored one.
+func TestPostgres_SavingAHashLoadedKeyKeepsItsSecret(t *testing.T) {
+	f := newPgFixture(t)
+	orgID, projectID := f.seedScope(t)
+	k, plaintext, err := apikey.NewScheme("").MintProject(orgID, projectID, "bot", []string{"webhook:read"}, nil, expiry(), time.Now().UTC())
+	require.NoError(t, err)
+	require.NoError(t, f.store.Save(t.Context(), k))
+	hash := sha256.Sum256([]byte(plaintext))
+
+	loaded, err := f.store.BySecretHash(t.Context(), hash)
+	require.NoError(t, err)
+	assert.Equal(t, [32]byte{}, loaded.SecretHash, "the definer returns no hash")
+	assert.Equal(t, k.SecretHint, loaded.SecretHint)
+
+	loaded.Name = "renamed"
+	require.NoError(t, f.store.Save(tenant.Into(t.Context(), tenant.Context{OrgID: orgID}), loaded))
+	again, err := f.store.BySecretHash(t.Context(), hash)
+	require.NoError(t, err, "the stored hash survives the save")
+	assert.Equal(t, "renamed", again.Name)
 }
