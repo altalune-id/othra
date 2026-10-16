@@ -156,8 +156,16 @@ flowchart TD
 **Unit of work:** a use case owns its transaction; stores never begin one. `buildServices` makes one
 `db.NewTransactor(k.Pool)` and hands it to every service that writes more than one row (`org`,
 `org/member`, `org/invite`, `install`, `legal`, the password resets in `auth`). A store joins the transaction on `ctx`
-(`db.Reader`, `db.Writer`, `db.InTx`) or runs alone; a nested `RunInTx` joins the outer one.
-`kernel/db`'s guard test fails if any other package begins a transaction.
+(`db.Read`, `db.Write`, `db.InTx`) or opens its own: `db.Read` a read-only one on the reader, the others one on the
+writer. Every statement therefore runs in a transaction, and a nested `RunInTx` joins the outer one.
+
+**Tenant scope:** the transaction that `kernel/db` opens starts with one
+`set_config('app.current_org_id' | 'app.current_project_id' | 'app.current_user_id', …, true)` from `tenant.Peek(ctx)`
+(an absent id is `''`). The settings are transaction-local, so they never outlive the transaction on a pooled
+connection; nothing sets session state. Joining a unit of work scoped to one org from a context scoped to another fails
+with `db.ErrTenantMismatch`; otherwise the outermost transaction's scope stays in force. `kernel/db`'s guard tests fail if any other package begins a transaction,
+reads `pool.R`/`pool.W` (boot excepted: it hands `pool.W` to the session store and the health monitor) or sets session
+state (`SET`, `RESET`, `set_config`; the migrator's `SET ROLE` excepted).
 
 `org → project` is the after-create hook that adds the default project, in the org's unit of work:
 if it fails, the org is not created.
@@ -200,8 +208,9 @@ is snapshotted and no history is kept (a known limit); the gate then uses
 `db.driver` (`postgres`, the default and only driver) is the feature: the stores, the outbox, the
 mail queue and the sessions keep their tables there. `postgres.*` is the connection.
 
-- **Config:** `postgres.dsn` (secret, required), `postgres.role` (`SET ROLE` on every new
-  connection), `postgres.schema` (default `public`) and `postgres.tablePrefix` (both bootstrap: the
+- **Config:** `postgres.dsn` (secret, required), `postgres.role` (the role the DSN must log in as;
+  `pg.Open` refuses any other `session_user` and never runs `SET ROLE`, which a transaction pooler would
+  leak), `postgres.schema` (default `public`) and `postgres.tablePrefix` (both bootstrap: the
   stores and the templated migrations use them), the pool (`postgres.maxOpenConns`,
   `postgres.maxIdleConns`, `postgres.connMaxLifetime`, `postgres.connMaxIdleTime`), the connect
   retry (`postgres.connectTimeout` 5s, `postgres.connectBackoff` 250ms), `postgres.reader.*` (a
@@ -209,8 +218,8 @@ mail queue and the sessions keep their tables there. `postgres.*` is the connect
   credential migrations run on; empty uses `postgres.dsn`) and `postgres.health.{interval,timeout}`
   (30s, 2s). `db.autoMigrate` (default true) migrates at start. Env: `OTHRA_POSTGRES_DSN`,
   `OTHRA_POSTGRES_MIGRATOR_DSN`, `OTHRA_DB_DRIVER`, `OTHRA_DB_AUTO_MIGRATE`, …
-- **Connection:** the root package `pg` (`pg.Open`) opens a `*sql.DB` with the role, retries the
-  ping with backoff within `postgres.connectTimeout`, and applies the pool. No error or log carries
+- **Connection:** the root package `pg` (`pg.Open`) opens a `*sql.DB`, retries the ping with backoff
+  within `postgres.connectTimeout`, checks the login role, and applies the pool. No error or log carries
   a password. `db.go` here maps `postgres.*` to one `pg.Config` for the writer and one for the
   reader, and builds `db.Pool{W, R}`; the reader aliases the writer when it has no DSN.
 - **Migrations:** `migrate` opens `postgres.migrator.dsn` (or `postgres.dsn`) with
