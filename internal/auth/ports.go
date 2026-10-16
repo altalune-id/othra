@@ -26,9 +26,10 @@ type MemberReader interface {
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]*member.Membership, error)
 }
 
-// SystemOrgReader returns the deployment's system org.
-type SystemOrgReader interface {
+// OrgReader loads the deployment's system org and an org by id.
+type OrgReader interface {
 	System(ctx context.Context) (*org.Org, error)
+	Get(ctx context.Context, id uuid.UUID) (*org.Org, error)
 }
 
 // ProjectLister lists an org's projects, oldest first.
@@ -36,9 +37,10 @@ type ProjectLister interface {
 	List(ctx context.Context, orgID uuid.UUID) ([]*project.Project, error)
 }
 
-// OrgGetter loads an org by id and says whether this deployment lets callers create orgs.
+// OrgGetter loads an org by id or public id and says whether this deployment lets callers create orgs.
 type OrgGetter interface {
 	Get(ctx context.Context, id uuid.UUID) (*org.Org, error)
+	ByPublicID(ctx context.Context, publicID string) (*org.Org, error)
 	CreationAllowed() bool
 }
 
@@ -84,7 +86,7 @@ type ProfileWriter interface {
 type Deps struct {
 	Users      UserReader
 	Members    MemberReader
-	Orgs       SystemOrgReader
+	Orgs       OrgReader
 	Projects   ProjectLister
 	Sessions   session.Store
 	Passwords  PasswordSetter

@@ -59,9 +59,7 @@ func (s *OrgService) ListOrgs(
 	}
 	out := make([]*orgv1.Org, 0, len(orgs))
 	for _, o := range orgs {
-		if authz.ReachOrg(ctx, o.ID) {
-			out = append(out, orgToProto(o))
-		}
+		out = append(out, orgToProto(o))
 	}
 	return connect.NewResponse(&orgv1.ListOrgsResponse{Orgs: out}), nil
 }
@@ -97,6 +95,7 @@ func (s *OrgService) reachable(ctx context.Context, publicID string, reach func(
 	return o, nil
 }
 
+// SECURITY: a person lists exactly the orgs they belong to (they switch between them); anyone else lists the orgs they reach.
 func (s *OrgService) listable(ctx context.Context) ([]*Org, error) {
 	p := session.PrincipalFrom(ctx)
 	switch {
@@ -105,5 +104,15 @@ func (s *OrgService) listable(ctx context.Context) ([]*Org, error) {
 	case p.IsPerson():
 		return s.orgs.ListForUser(ctx, p.UserID)
 	}
-	return s.orgs.List(ctx)
+	all, err := s.orgs.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	reached := all[:0:0]
+	for _, o := range all {
+		if authz.ReachOrg(ctx, o.ID) {
+			reached = append(reached, o)
+		}
+	}
+	return reached, nil
 }

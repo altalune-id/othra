@@ -70,7 +70,7 @@ func TestOrgReach_OwnOrgAndTrustedCallers(t *testing.T) {
 }
 
 func TestOrgReach_ListOrgs(t *testing.T) {
-	orgA, orgB := mustOrg(t, "org-a"), mustOrg(t, "org-b")
+	orgA, orgB, orgC := mustOrg(t, "org-a"), mustOrg(t, "org-b"), mustOrg(t, "org-c")
 	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Orgs: []*org.Org{orgA, orgB}}, fakes.Transactor{}, nil))
 	ids := func(ctx context.Context) []string {
 		resp, err := cp.ListOrgs(ctx, connect.NewRequest(&orgv1.ListOrgsRequest{}))
@@ -84,8 +84,14 @@ func TestOrgReach_ListOrgs(t *testing.T) {
 	assert.Empty(t, ids(context.Background()), "no principal sees nothing")
 	assert.Len(t, ids(fakes.OperatorContext(context.Background())), 2, "system sees all")
 	assert.Len(t, ids(session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceBasic, Operator: true})), 2, "operator sees all")
-	assert.Equal(t, []string{orgA.PublicID}, ids(session.PrincipalInto(context.Background(),
-		session.Principal{Source: session.SourceLocal, UserID: uuid.New(), ActiveOrgID: orgA.ID})), "person sees the active org")
+	person := uuid.New()
+	cp = org.NewControlPlane(org.NewService(&fakes.OrgStore{
+		Orgs:    []*org.Org{orgA, orgB, orgC},
+		ForUser: map[uuid.UUID][]*org.Org{person: {orgA, orgC}},
+	}, fakes.Transactor{}, nil))
+	assert.Equal(t, []string{orgA.PublicID, orgC.PublicID}, ids(session.PrincipalInto(context.Background(),
+		session.Principal{Source: session.SourceLocal, UserID: person, ActiveOrgID: orgA.ID})),
+		"a person sees every org they belong to, and nothing else")
 	assert.Equal(t, []string{orgB.PublicID}, ids(session.PrincipalInto(context.Background(),
 		session.Principal{Source: session.SourceAPIKey, ActiveOrgID: orgB.ID})), "key sees its org")
 }

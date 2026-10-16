@@ -10,11 +10,12 @@ import (
 
 // OrgStore is an org.Store test double. ByID/BySlug/List return Org/Orgs (or Err); Save records the org and returns SaveFn/Err.
 type OrgStore struct {
-	Err    error
-	Org    *org.Org
-	Orgs   []*org.Org
-	SaveFn func(*org.Org) error
-	Saved  *org.Org
+	Err     error
+	Org     *org.Org
+	Orgs    []*org.Org
+	ForUser map[uuid.UUID][]*org.Org
+	SaveFn  func(*org.Org) error
+	Saved   *org.Org
 }
 
 var _ org.Store = (*OrgStore)(nil)
@@ -79,8 +80,11 @@ func (f *OrgStore) List(context.Context) ([]*org.Org, error) {
 	return f.Orgs, nil
 }
 
-// ListForUser implements org.Store; it returns Orgs.
-func (f *OrgStore) ListForUser(context.Context, uuid.UUID) ([]*org.Org, error) {
+// ListForUser implements org.Store; it returns ForUser[userID] when ForUser is set, else Orgs.
+func (f *OrgStore) ListForUser(_ context.Context, userID uuid.UUID) ([]*org.Org, error) {
+	if f.ForUser != nil && f.Err == nil {
+		return f.ForUser[userID], nil
+	}
 	return f.List(context.Background())
 }
 

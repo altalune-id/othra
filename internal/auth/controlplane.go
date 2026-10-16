@@ -21,6 +21,7 @@ type Profiles interface {
 	UpdateProfile(ctx context.Context, userID uuid.UUID, name string) (*user.User, error)
 	ChangePassword(ctx context.Context, userID uuid.UUID, keepSID, current, next string) error
 	SignOutEverywhere(ctx context.Context, userID uuid.UUID) error
+	SetActiveOrg(ctx context.Context, sid string, p session.Principal, orgID uuid.UUID) (session.Principal, error)
 }
 
 // AuthService implements auth.v1.AuthService; every id it returns is a public id.
@@ -89,6 +90,34 @@ func (s *AuthService) SignOutEverywhere(
 		return nil, err
 	}
 	return connect.NewResponse(&authv1.SignOutEverywhereResponse{SignedOut: true}), nil
+}
+
+// SetActiveOrg makes an org the person belongs to the active one of this session and returns the new Whoami.
+func (s *AuthService) SetActiveOrg(
+	ctx context.Context,
+	req *connect.Request[authv1.SetActiveOrgRequest],
+) (*connect.Response[authv1.SetActiveOrgResponse], error) {
+	p, err := person(ctx)
+	if err != nil {
+		return nil, err
+	}
+	sid, ok := session.SIDFrom(ctx)
+	if !ok {
+		return nil, &authn.UnauthorizedError{}
+	}
+	o, err := s.orgs.ByPublicID(ctx, req.Msg.GetOrgId())
+	if err != nil {
+		return nil, err
+	}
+	next, err := s.profiles.SetActiveOrg(ctx, sid, p, o.ID)
+	if err != nil {
+		return nil, err
+	}
+	me, err := s.Whoami(session.PrincipalInto(ctx, next), connect.NewRequest(&authv1.WhoamiRequest{}))
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&authv1.SetActiveOrgResponse{Me: me.Msg}), nil
 }
 
 // SECURITY: keys, basic auth and the system principal never change a person's account.

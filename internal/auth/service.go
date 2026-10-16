@@ -21,10 +21,11 @@ import (
 
 // Service signs people in, checks basic credentials and rebuilds authority.
 type Service struct {
-	deps        Deps
-	verify      func(hash, plain string) error
-	verifyDummy func(plain string)
-	now         func() time.Time
+	deps            Deps
+	verify          func(hash, plain string) error
+	verifyDummy     func(plain string)
+	now             func() time.Time
+	operatorSupport bool
 }
 
 // NewService builds a Service over deps.
@@ -35,6 +36,33 @@ func NewService(deps Deps) *Service {
 		verifyDummy: password.VerifyDummy,
 		now:         func() time.Time { return time.Now().UTC() },
 	}
+}
+
+// WithOperatorOrgSupport lets operators (staff) make an org they do not belong to their active one, as cloud support does.
+func (s *Service) WithOperatorOrgSupport(on bool) *Service {
+	s.operatorSupport = on
+	return s
+}
+
+// SetActiveOrg makes orgID the active org of the person's session sid and returns the refreshed Principal.
+func (s *Service) SetActiveOrg(ctx context.Context, sid string, p session.Principal, orgID uuid.UUID) (session.Principal, error) {
+	// SECURITY: an org the person does not belong to answers the same *org.NotFoundError as an unknown one.
+	if !p.IsPerson() || orgID == uuid.Nil {
+		return session.Principal{}, &org.NotFoundError{}
+	}
+	next := withoutAuthority(p)
+	next.ActiveOrgID = orgID
+	refreshed, err := s.refreshPerson(ctx, next)
+	if err != nil {
+		return session.Principal{}, err
+	}
+	if refreshed.ActiveOrgID != orgID {
+		return session.Principal{}, &org.NotFoundError{}
+	}
+	if err := s.deps.Sessions.Update(ctx, sid, refreshed); err != nil {
+		return session.Principal{}, err
+	}
+	return refreshed, nil
 }
 
 // LoginLocal checks an email and password and returns the signed-in Principal. Every failure is an *InvalidCredentialsError.
@@ -174,15 +202,32 @@ func (s *Service) refreshPerson(ctx context.Context, p session.Principal) (sessi
 		p.ActiveOrgID, p.ActiveProjectID, p.Scopes = uuid.Nil, uuid.Nil, []string{scope.OrgRead}
 		return p, nil
 	}
-	active := ms[0]
-	if i := slices.IndexFunc(ms, func(m *member.Membership) bool { return m.OrgID == p.ActiveOrgID }); i >= 0 {
-		active = ms[i]
-	}
 	if p.Operator, err = s.managesSystemOrg(ctx, ms); err != nil {
 		return session.Principal{}, err
 	}
+	i := slices.IndexFunc(ms, func(m *member.Membership) bool { return m.OrgID == p.ActiveOrgID })
+	if i < 0 && p.ActiveOrgID != uuid.Nil && p.Operator && s.operatorSupport {
+		return s.withSupportOrg(ctx, p, ms[0])
+	}
+	active := ms[0]
+	if i >= 0 {
+		active = ms[i]
+	}
 	p.Scopes = member.BuiltinPermissions(active.Role)
 	return s.withActiveOrg(ctx, p, active.OrgID)
+}
+
+// SECURITY: staff support acts as an admin in an org it does not belong to; a vanished org falls back to their first membership.
+func (s *Service) withSupportOrg(ctx context.Context, p session.Principal, fallback *member.Membership) (session.Principal, error) {
+	if _, err := s.deps.Orgs.Get(ctx, p.ActiveOrgID); err != nil {
+		if !org.IsNotFoundError(err) {
+			return session.Principal{}, err
+		}
+		p.Scopes = member.BuiltinPermissions(fallback.Role)
+		return s.withActiveOrg(ctx, p, fallback.OrgID)
+	}
+	p.Scopes = member.BuiltinPermissions(member.RoleAdmin)
+	return s.withActiveOrg(ctx, p, p.ActiveOrgID)
 }
 
 func (s *Service) refreshBasic(ctx context.Context, p session.Principal) (session.Principal, error) {

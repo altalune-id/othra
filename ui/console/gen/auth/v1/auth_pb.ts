@@ -6,13 +6,14 @@ import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegen
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb.js";
 import { file_mcp_v1_annotations } from "../../mcp/v1/annotations_pb.js";
+import { file_othra_v1_rules } from "../../othra/v1/rules_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file auth/v1/auth.proto.
  */
 export const file_auth_v1_auth: GenFile = /*@__PURE__*/
-  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiDwoNV2hvYW1pUmVxdWVzdCKcAgoOV2hvYW1pUmVzcG9uc2USDgoGc291cmNlGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDQoFZW1haWwYAyABKAkSDAoEbmFtZRgEIAEoCRISCgphdmF0YXJfdXJsGAUgASgJEhAKCGtleV9oaW50GA0gASgJEhAKCG93bmVyX2lkGAcgASgJEhUKDWFjdGl2ZV9vcmdfaWQYCCABKAkSFwoPYWN0aXZlX29yZ19zbHVnGAkgASgJEhkKEWFjdGl2ZV9wcm9qZWN0X2lkGAogASgJEhMKC3Blcm1pc3Npb25zGAsgAygJEhAKCG9wZXJhdG9yGAwgASgIEhQKDG9yZ19jcmVhdGlvbhgOIAEoCEoECAYQB1IGa2V5X2lkIoYBChRVcGRhdGVQcm9maWxlUmVxdWVzdBJuCgRuYW1lGAEgASgJQmC6SF26AVoKFXVzZXIubmFtZS5tYXhfbGVuLjIwMBpBdGhpcy50cmltKCkuc2l6ZSgpIDw9IDIwMCA/ICcnIDogJ211c3QgYmUgYXQgbW9zdCAyMDAgY2hhcmFjdGVycyciNgoVVXBkYXRlUHJvZmlsZVJlc3BvbnNlEg8KB3VzZXJfaWQYASABKAkSDAoEbmFtZRgCIAEoCSJeChVDaGFuZ2VQYXNzd29yZFJlcXVlc3QSIAoQY3VycmVudF9wYXNzd29yZBgBIAEoCUIGukgDyAEBEiMKDG5ld19wYXNzd29yZBgCIAEoCUINukgKyAEBcgUQDBiAAiIYChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlIhoKGFNpZ25PdXRFdmVyeXdoZXJlUmVxdWVzdCIvChlTaWduT3V0RXZlcnl3aGVyZVJlc3BvbnNlEhIKCnNpZ25lZF9vdXQYASABKAgyqgMKC0F1dGhTZXJ2aWNlEpUBCgZXaG9hbWkSFi5hdXRoLnYxLldob2FtaVJlcXVlc3QaFy5hdXRoLnYxLldob2FtaVJlc3BvbnNlIlrK8xhWCgthdXRoX3dob2FtaRJCV2hvIHRoaXMgTUNQIGNsaWVudCBhY3RzIGFzOiB1c2VyIG9yIGtleSwgYWN0aXZlIG9yZywgcGVybWlzc2lvbnMuKgNhcHASUAoNVXBkYXRlUHJvZmlsZRIdLmF1dGgudjEuVXBkYXRlUHJvZmlsZVJlcXVlc3QaHi5hdXRoLnYxLlVwZGF0ZVByb2ZpbGVSZXNwb25zZSIAElMKDkNoYW5nZVBhc3N3b3JkEh4uYXV0aC52MS5DaGFuZ2VQYXNzd29yZFJlcXVlc3QaHy5hdXRoLnYxLkNoYW5nZVBhc3N3b3JkUmVzcG9uc2UiABJcChFTaWduT3V0RXZlcnl3aGVyZRIhLmF1dGgudjEuU2lnbk91dEV2ZXJ5d2hlcmVSZXF1ZXN0GiIuYXV0aC52MS5TaWduT3V0RXZlcnl3aGVyZVJlc3BvbnNlIgBCfgoLY29tLmF1dGgudjFCCUF1dGhQcm90b1ABWidhbHRhbHVuZS5pZC9vdGhyYS9nZW4vZ28vYXV0aC92MTthdXRodjGiAgNBWFiqAgdBdXRoLlYxygIHQXV0aFxWMeICE0F1dGhcVjFcR1BCTWV0YWRhdGHqAghBdXRoOjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_mcp_v1_annotations]);
+  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiDwoNV2hvYW1pUmVxdWVzdCKcAgoOV2hvYW1pUmVzcG9uc2USDgoGc291cmNlGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDQoFZW1haWwYAyABKAkSDAoEbmFtZRgEIAEoCRISCgphdmF0YXJfdXJsGAUgASgJEhAKCGtleV9oaW50GA0gASgJEhAKCG93bmVyX2lkGAcgASgJEhUKDWFjdGl2ZV9vcmdfaWQYCCABKAkSFwoPYWN0aXZlX29yZ19zbHVnGAkgASgJEhkKEWFjdGl2ZV9wcm9qZWN0X2lkGAogASgJEhMKC3Blcm1pc3Npb25zGAsgAygJEhAKCG9wZXJhdG9yGAwgASgIEhQKDG9yZ19jcmVhdGlvbhgOIAEoCEoECAYQB1IGa2V5X2lkIoYBChRVcGRhdGVQcm9maWxlUmVxdWVzdBJuCgRuYW1lGAEgASgJQmC6SF26AVoKFXVzZXIubmFtZS5tYXhfbGVuLjIwMBpBdGhpcy50cmltKCkuc2l6ZSgpIDw9IDIwMCA/ICcnIDogJ211c3QgYmUgYXQgbW9zdCAyMDAgY2hhcmFjdGVycyciNgoVVXBkYXRlUHJvZmlsZVJlc3BvbnNlEg8KB3VzZXJfaWQYASABKAkSDAoEbmFtZRgCIAEoCSJeChVDaGFuZ2VQYXNzd29yZFJlcXVlc3QSIAoQY3VycmVudF9wYXNzd29yZBgBIAEoCUIGukgDyAEBEiMKDG5ld19wYXNzd29yZBgCIAEoCUINukgKyAEBcgUQDBiAAiIYChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlIhoKGFNpZ25PdXRFdmVyeXdoZXJlUmVxdWVzdCIvChlTaWduT3V0RXZlcnl3aGVyZVJlc3BvbnNlEhIKCnNpZ25lZF9vdXQYASABKAgiMAoTU2V0QWN0aXZlT3JnUmVxdWVzdBIZCgZvcmdfaWQYASABKAlCCbpIBnIEiOQyASI7ChRTZXRBY3RpdmVPcmdSZXNwb25zZRIjCgJtZRgBIAEoCzIXLmF1dGgudjEuV2hvYW1pUmVzcG9uc2Uy+QMKC0F1dGhTZXJ2aWNlEpUBCgZXaG9hbWkSFi5hdXRoLnYxLldob2FtaVJlcXVlc3QaFy5hdXRoLnYxLldob2FtaVJlc3BvbnNlIlrK8xhWCgthdXRoX3dob2FtaRJCV2hvIHRoaXMgTUNQIGNsaWVudCBhY3RzIGFzOiB1c2VyIG9yIGtleSwgYWN0aXZlIG9yZywgcGVybWlzc2lvbnMuKgNhcHASUAoNVXBkYXRlUHJvZmlsZRIdLmF1dGgudjEuVXBkYXRlUHJvZmlsZVJlcXVlc3QaHi5hdXRoLnYxLlVwZGF0ZVByb2ZpbGVSZXNwb25zZSIAElMKDkNoYW5nZVBhc3N3b3JkEh4uYXV0aC52MS5DaGFuZ2VQYXNzd29yZFJlcXVlc3QaHy5hdXRoLnYxLkNoYW5nZVBhc3N3b3JkUmVzcG9uc2UiABJcChFTaWduT3V0RXZlcnl3aGVyZRIhLmF1dGgudjEuU2lnbk91dEV2ZXJ5d2hlcmVSZXF1ZXN0GiIuYXV0aC52MS5TaWduT3V0RXZlcnl3aGVyZVJlc3BvbnNlIgASTQoMU2V0QWN0aXZlT3JnEhwuYXV0aC52MS5TZXRBY3RpdmVPcmdSZXF1ZXN0Gh0uYXV0aC52MS5TZXRBY3RpdmVPcmdSZXNwb25zZSIAQn4KC2NvbS5hdXRoLnYxQglBdXRoUHJvdG9QAVonYWx0YWx1bmUuaWQvb3RocmEvZ2VuL2dvL2F1dGgvdjE7YXV0aHYxogIDQVhYqgIHQXV0aC5WMcoCB0F1dGhcVjHiAhNBdXRoXFYxXEdQQk1ldGFkYXRh6gIIQXV0aDo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_mcp_v1_annotations, file_othra_v1_rules]);
 
 /**
  * @generated from message auth.v1.WhoamiRequest
@@ -227,6 +228,44 @@ export const SignOutEverywhereResponseSchema: GenMessage<SignOutEverywhereRespon
   messageDesc(file_auth_v1_auth, 7);
 
 /**
+ * @generated from message auth.v1.SetActiveOrgRequest
+ */
+export type SetActiveOrgRequest = Message<"auth.v1.SetActiveOrgRequest"> & {
+  /**
+   * Public id of an organization the person belongs to; any other answers not found.
+   *
+   * @generated from field: string org_id = 1;
+   */
+  orgId: string;
+};
+
+/**
+ * Describes the message auth.v1.SetActiveOrgRequest.
+ * Use `create(SetActiveOrgRequestSchema)` to create a new message.
+ */
+export const SetActiveOrgRequestSchema: GenMessage<SetActiveOrgRequest> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 8);
+
+/**
+ * @generated from message auth.v1.SetActiveOrgResponse
+ */
+export type SetActiveOrgResponse = Message<"auth.v1.SetActiveOrgResponse"> & {
+  /**
+   * The session after the switch, as Whoami describes it.
+   *
+   * @generated from field: auth.v1.WhoamiResponse me = 1;
+   */
+  me?: WhoamiResponse;
+};
+
+/**
+ * Describes the message auth.v1.SetActiveOrgResponse.
+ * Use `create(SetActiveOrgResponseSchema)` to create a new message.
+ */
+export const SetActiveOrgResponseSchema: GenMessage<SetActiveOrgResponse> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 9);
+
+/**
  * @generated from service auth.v1.AuthService
  */
 export const AuthService: GenService<{
@@ -269,6 +308,16 @@ export const AuthService: GenService<{
     methodKind: "unary";
     input: typeof SignOutEverywhereRequestSchema;
     output: typeof SignOutEverywhereResponseSchema;
+  },
+  /**
+   * SetActiveOrg makes an organization the signed-in person belongs to the active one of this session.
+   *
+   * @generated from rpc auth.v1.AuthService.SetActiveOrg
+   */
+  setActiveOrg: {
+    methodKind: "unary";
+    input: typeof SetActiveOrgRequestSchema;
+    output: typeof SetActiveOrgResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_auth_v1_auth, 0);

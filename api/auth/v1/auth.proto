@@ -4,6 +4,7 @@ package auth.v1;
 
 import "buf/validate/validate.proto";
 import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
 
 option go_package = "altalune.id/othra/gen/go/auth/v1;authv1";
 
@@ -25,6 +26,9 @@ service AuthService {
 
   // SignOutEverywhere ends every session of the signed-in person, this one included.
   rpc SignOutEverywhere(SignOutEverywhereRequest) returns (SignOutEverywhereResponse) {}
+
+  // SetActiveOrg makes an organization the signed-in person belongs to the active one of this session.
+  rpc SetActiveOrg(SetActiveOrgRequest) returns (SetActiveOrgResponse) {}
 }
 
 message WhoamiRequest {}
@@ -84,4 +88,14 @@ message SignOutEverywhereRequest {}
 message SignOutEverywhereResponse {
   // Always true: this session ended too, so the client signs in again.
   bool signed_out = 1;
+}
+
+message SetActiveOrgRequest {
+  // Public id of an organization the person belongs to; any other answers not found.
+  string org_id = 1 [(buf.validate.field).string.(othra.v1.public_id) = true];
+}
+
+message SetActiveOrgResponse {
+  // The session after the switch, as Whoami describes it.
+  WhoamiResponse me = 1;
 }

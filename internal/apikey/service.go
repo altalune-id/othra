@@ -230,13 +230,37 @@ func (s *Service) revoke(ctx context.Context, orgID uuid.UUID, k *APIKey, viewer
 // RevokeByHint revokes orgID's live key whose secret ends with hint (a leading … as shown is ignored), under the same rules as Revoke.
 func (s *Service) RevokeByHint(ctx context.Context, orgID uuid.UUID, hint string, viewer uuid.UUID, manage bool) error {
 	ctx = tenant.WithOrg(ctx, orgID)
-	hint = strings.TrimSpace(hint)
-	hint = strings.TrimPrefix(strings.TrimPrefix(hint, "…"), "...")
-	k, err := s.store.ByHint(ctx, orgID, hint)
+	k, err := s.store.ByHint(ctx, orgID, normalizeHint(hint))
 	if err != nil {
 		return s.errOrReport(ctx, "apikey: revoke", err)
 	}
 	return s.revoke(ctx, orgID, k, viewer, manage)
+}
+
+// RevokeOwnByHint revokes viewer's own live personal key in orgID by hint; any other key is not found.
+func (s *Service) RevokeOwnByHint(ctx context.Context, orgID uuid.UUID, hint string, viewer uuid.UUID) error {
+	ctx = tenant.WithOrg(ctx, orgID)
+	k, err := s.store.ByHint(ctx, orgID, normalizeHint(hint))
+	if err != nil {
+		return s.errOrReport(ctx, "apikey: revoke", err)
+	}
+	if k.Kind != KindPersonal || k.CreatedBy != viewer {
+		return &NotFoundError{ID: k.ID.String()}
+	}
+	return s.revoke(ctx, orgID, k, viewer, false)
+}
+
+// IsMember reports whether userID belongs to orgID; without an owner-role port nobody does.
+func (s *Service) IsMember(ctx context.Context, orgID, userID uuid.UUID) (bool, error) {
+	if s.owners == nil {
+		return false, nil
+	}
+	_, ok, err := s.owners.Role(ctx, orgID, userID)
+	return ok, err
+}
+
+func normalizeHint(hint string) string {
+	return strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(hint), "…"), "...")
 }
 
 // RevokePersonalOf revokes every live personal key userID owns in orgID; it joins the transaction on ctx.

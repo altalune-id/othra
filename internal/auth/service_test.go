@@ -77,7 +77,17 @@ func (f *fakeMembers) ListByUser(_ context.Context, userID uuid.UUID) ([]*member
 	return f.byUser[userID], nil
 }
 
-type fakeOrgs struct{ system *org.Org }
+type fakeOrgs struct {
+	system *org.Org
+	byID   map[uuid.UUID]*org.Org
+}
+
+func (f *fakeOrgs) Get(_ context.Context, id uuid.UUID) (*org.Org, error) {
+	if o, ok := f.byID[id]; ok {
+		return o, nil
+	}
+	return nil, &org.NotFoundError{}
+}
 
 func (f *fakeOrgs) System(context.Context) (*org.Org, error) {
 	if f.system == nil {
@@ -152,6 +162,10 @@ func (f *fixture) addOrg(t *testing.T, system bool) *org.Org {
 		o.IsSystem = true
 		f.orgs.system = o
 	}
+	if f.orgs.byID == nil {
+		f.orgs.byID = map[uuid.UUID]*org.Org{}
+	}
+	f.orgs.byID[o.ID] = o
 	return o
 }
 

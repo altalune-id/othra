@@ -115,7 +115,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Mail:       mailQueue,
 		From:       cfg.Mail.From,
 		BaseURL:    publicBase(cfg.HTTP),
-	})
+	}).WithOperatorOrgSupport(caps.OperatorOrgSupport)
 	installer := install.NewService(uow, users, orgs, members, projects)
 
 	svcs := &Services{

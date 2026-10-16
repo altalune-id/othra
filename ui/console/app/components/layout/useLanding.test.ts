@@ -50,4 +50,30 @@ describe('useLanding', () => {
     expect(await useLanding().resolve('beta')).toBe('/o/beta');
     expect(await useLanding().resolve('nope')).toBe('/o/acme');
   });
+
+  it('lands on the active org when nothing is pinned', async () => {
+    withOrgs(acme, beta);
+    listProjects.mockResolvedValue({ projects: [] });
+    setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', activeOrgSlug: 'beta' }), setActiveOrg: vi.fn() });
+    expect(await useLanding().resolve()).toBe('/o/beta');
+    expect(listProjects).toHaveBeenCalledWith({ orgId: beta.id });
+  });
+
+  it('switches the session to the org before it loads that org\'s projects', async () => {
+    withOrgs(acme, beta);
+    const calls: string[] = [];
+    listProjects.mockImplementation(async () => {
+      calls.push('listProjects');
+      return { projects: [] };
+    });
+    setClient('$authClient', {
+      whoami: vi.fn().mockResolvedValue({ source: 'local', activeOrgSlug: 'acme' }),
+      setActiveOrg: vi.fn(async () => {
+        calls.push('setActiveOrg');
+        return { me: { source: 'local', activeOrgSlug: 'beta' } };
+      }),
+    });
+    expect(await useLanding().resolve('beta')).toBe('/o/beta');
+    expect(calls).toEqual(['setActiveOrg', 'listProjects']);
+  });
 });

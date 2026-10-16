@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/scope"
 )
 
@@ -35,7 +36,15 @@ func (s *APIKeyService) CreateAPIKey(
 	ctx context.Context,
 	req *connect.Request[apikeyv1.CreateAPIKeyRequest],
 ) (*connect.Response[apikeyv1.CreateAPIKeyResponse], error) {
-	orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+	kind := Kind(req.Msg.GetKind())
+	p := session.PrincipalFrom(ctx)
+	var orgID uuid.UUID
+	var err error
+	if kind == KindPersonal && p.IsPerson() {
+		ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId())
+	} else {
+		orgID, err = s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +78,6 @@ func (s *APIKeyService) CreateAPIKey(
 		t := ts.AsTime()
 		expiresAt = &t
 	}
-	kind := Kind(req.Msg.GetKind())
-	p := session.PrincipalFrom(ctx)
 	switch {
 	case kind == KindPersonal && !p.IsPerson():
 		return nil, &authn.UnauthorizedError{}
@@ -108,11 +115,16 @@ func (s *APIKeyService) ListAPIKeys(
 	ctx context.Context,
 	req *connect.Request[apikeyv1.ListAPIKeysRequest],
 ) (*connect.Response[apikeyv1.ListAPIKeysResponse], error) {
+	p := session.PrincipalFrom(ctx)
 	orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachWholeOrg)
+	ownOnly := false
+	if IsNotFoundError(err) && p.IsPerson() {
+		ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId())
+		ownOnly = true
+	}
 	if err != nil {
 		return nil, err
 	}
-	p := session.PrincipalFrom(ctx)
 	keys, err := s.keys.List(ctx, orgID, p.UserID)
 	if err != nil {
 		return nil, err
@@ -120,6 +132,9 @@ func (s *APIKeyService) ListAPIKeys(
 	out := make([]*apikeyv1.APIKey, 0, len(keys))
 	for _, k := range keys {
 		if p.Source == session.SourceAPIKey && k.Kind == KindPersonal {
+			continue
+		}
+		if ownOnly && (k.Kind != KindPersonal || k.CreatedBy != p.UserID) {
 			continue
 		}
 		pk, err := s.toProto(ctx, k, req.Msg.GetOrgId())
@@ -136,11 +151,20 @@ func (s *APIKeyService) RevokeAPIKey(
 	ctx context.Context,
 	req *connect.Request[apikeyv1.RevokeAPIKeyRequest],
 ) (*connect.Response[apikeyv1.RevokeAPIKeyResponse], error) {
+	p := session.PrincipalFrom(ctx)
 	orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+	if IsNotFoundError(err) && p.IsPerson() {
+		if ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId()); err != nil {
+			return nil, err
+		}
+		if err := s.keys.RevokeOwnByHint(ctx, orgID, req.Msg.GetHint(), p.UserID); err != nil {
+			return nil, err
+		}
+		return connect.NewResponse(&apikeyv1.RevokeAPIKeyResponse{}), nil
+	}
 	if err != nil {
 		return nil, err
 	}
-	p := session.PrincipalFrom(ctx)
 	manage := manages(p)
 	if !manage && !p.IsPerson() {
 		return nil, &authz.ForbiddenError{Permission: scope.ApikeyWrite}
@@ -154,6 +178,26 @@ func (s *APIKeyService) RevokeAPIKey(
 // SECURITY: a member manages only their own personal keys; other keys need apikey:write. No Principal (pre-lockdown) manages all.
 func manages(p session.Principal) bool {
 	return p.Source == "" || authz.Allowed(p, scope.ApikeyWrite)
+}
+
+// SECURITY: a person handles their own personal keys in any org they belong to, checked on every call; any other org is not found.
+func (s *APIKeyService) memberOrg(ctx context.Context, publicID string) (context.Context, uuid.UUID, error) {
+	p := session.PrincipalFrom(ctx)
+	id, ok, err := s.refs.OrgID(ctx, publicID)
+	if err != nil {
+		return ctx, uuid.Nil, err
+	}
+	if !ok || !p.IsPerson() {
+		return ctx, uuid.Nil, &NotFoundError{}
+	}
+	member, err := s.keys.IsMember(ctx, id, p.UserID)
+	if err != nil {
+		return ctx, uuid.Nil, err
+	}
+	if !member {
+		return ctx, uuid.Nil, &NotFoundError{}
+	}
+	return tenant.WithOrg(ctx, id), id, nil
 }
 
 // SECURITY: an unknown org and an org out of reach answer the same not-found.

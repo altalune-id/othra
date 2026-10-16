@@ -2,12 +2,13 @@ import type { ShownError } from '~/lib/apperror/message';
 import { useScopeLabel } from '~/composables/useScopeLabel';
 import { describeError, toShown } from '~/lib/apperror/message';
 
-// One place that wires the i18n functions and scope labels into describeError.
+// One place that wires the i18n functions and scope labels into describeError; stores call it outside setup, so it uses the global i18n, not useI18n.
 export function useErrorMessage() {
-  const { t, te } = useI18n();
+  const { $i18n } = useNuxtApp();
   const scope = useScopeLabel();
   return (err: unknown, fallbackKey: string): ShownError => {
-    const view = describeError(err, (key, params) => t(key, params ?? {}), key => te(key), t(fallbackKey), { scope });
+    const t = (key: string, params?: Record<string, unknown>) => $i18n.t(key, params ?? {});
+    const view = describeError(err, t, key => $i18n.te(key), t(fallbackKey), { scope });
     return toShown(view, id => t('error.ref', { id }));
   };
 }

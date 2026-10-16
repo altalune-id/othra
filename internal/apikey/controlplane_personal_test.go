@@ -164,7 +164,8 @@ func TestAPIKeyService_Revoke_OthersPersonalKey(t *testing.T) {
 	assert.Nil(t, store.Saved)
 }
 
-func TestAPIKeyService_ReachIsTheActiveOrg(t *testing.T) {
+// SECURITY: outside the active org a person reaches only their own personal keys; org and project keys stay with the active org.
+func TestAPIKeyService_OrgKeysStayInTheActiveOrg(t *testing.T) {
 	orgA, orgB, me := uuid.New(), uuid.New(), uuid.New()
 	refs := fakes.NewPublicIDs()
 	refs.Org(orgA)
@@ -176,13 +177,15 @@ func TestAPIKeyService_ReachIsTheActiveOrg(t *testing.T) {
 	owners.set(orgB, me, member.RoleOwner)
 	c := newPersonalClient(t, refs, store, owners, person(me, orgA))
 
-	for _, org := range []string{pubB, orgB.String()} {
-		_, err = c.ListAPIKeys(context.Background(), connect.NewRequest(&apikeyv1.ListAPIKeysRequest{OrgId: org}))
-		assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err), org)
-	}
+	_, err = c.ListAPIKeys(context.Background(), connect.NewRequest(&apikeyv1.ListAPIKeysRequest{OrgId: orgB.String()}))
+	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err), "a uuid is never an org id")
+	list, err := c.ListAPIKeys(context.Background(), connect.NewRequest(&apikeyv1.ListAPIKeysRequest{OrgId: pubB}))
+	require.NoError(t, err)
+	assert.Empty(t, list.Msg.GetKeys(), "the org's key is not listed outside the active org")
 	_, err = c.RevokeAPIKey(context.Background(), connect.NewRequest(&apikeyv1.RevokeAPIKeyRequest{OrgId: pubB, Hint: machine.SecretHint}))
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err))
-	_, err = c.CreateAPIKey(context.Background(), personalCreate(pubB))
+	assert.Nil(t, machine.RevokedAt)
+	_, err = c.CreateAPIKey(context.Background(), orgCreate(pubB))
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err))
 	assert.Nil(t, store.Saved)
 }

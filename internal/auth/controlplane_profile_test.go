@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -42,6 +43,10 @@ func (r *recordedProfiles) ChangePassword(_ context.Context, _ uuid.UUID, keepSI
 func (r *recordedProfiles) SignOutEverywhere(_ context.Context, userID uuid.UUID) error {
 	r.signedOut = userID
 	return r.err
+}
+
+func (r *recordedProfiles) SetActiveOrg(context.Context, string, session.Principal, uuid.UUID) (session.Principal, error) {
+	return session.Principal{}, errors.New("recordedProfiles does not switch orgs")
 }
 
 func profileCtx(p session.Principal, sid string) context.Context {

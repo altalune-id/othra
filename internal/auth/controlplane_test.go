@@ -32,6 +32,15 @@ func (m orgByID) Get(_ context.Context, id uuid.UUID) (*org.Org, error) {
 
 func (orgByID) CreationAllowed() bool { return false }
 
+func (m orgByID) ByPublicID(_ context.Context, publicID string) (*org.Org, error) {
+	for _, o := range m {
+		if o.PublicID == publicID {
+			return o, nil
+		}
+	}
+	return nil, &org.NotFoundError{}
+}
+
 type creatingOrgs struct{ orgByID }
 
 func (creatingOrgs) CreationAllowed() bool { return true }
@@ -195,6 +204,10 @@ func (brokenOrgs) Get(context.Context, uuid.UUID) (*org.Org, error) {
 }
 
 func (brokenOrgs) CreationAllowed() bool { return false }
+
+func (brokenOrgs) ByPublicID(context.Context, string) (*org.Org, error) {
+	return nil, errors.New("db down")
+}
 
 type brokenProjects struct{}
 
