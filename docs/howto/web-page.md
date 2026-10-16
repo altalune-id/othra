@@ -111,6 +111,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
 ## Review
 
 - [ ] The page is pre-sign-in. Nothing signed-in was added as templ.
+- [ ] The page sets no cache header of its own: every route on this mux answers `Cache-Control: no-store` (`middleware.NoStore`, `TestPreSignInRoutesAreNeverCached`).
 - [ ] The view lives in `internal/<domain>/views`, has an `XxxData` input and imports only `internal/web/layout`.
 - [ ] `internal/web` imports no domain; the domain imports no `internal/web` other than `layout`.
 - [ ] Every route uses `Kit.Path`; every link `d.Href`; every asset `d.Static`.
