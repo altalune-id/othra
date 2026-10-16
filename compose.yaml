@@ -3,6 +3,8 @@ name: othra
 # Local dependencies: `docker compose up -d`. The app itself runs with `make run`, or in a container with
 # `docker compose --profile app up -d --build`. Host ports can be moved with the *_PORT variables.
 services:
+  # First start runs scripts/db/provision.sh: othra_owner, othra_migrator and othra_service with dev-only passwords.
+  # postgres/postgres is the superuser for psql; the app never uses it. Alone: `podman compose up -d postgres`.
   postgres:
     image: postgres:18.6-alpine
     restart: unless-stopped
@@ -10,10 +12,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: othra
+      OTHRA_DB_MIGRATOR_PASSWORD: "${OTHRA_DB_MIGRATOR_PASSWORD:-othra-dev-migrator-password}"
+      OTHRA_DB_SERVICE_PASSWORD: "${OTHRA_DB_SERVICE_PASSWORD:-othra-dev-service-password}"
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./scripts/db:/othra/scripts/db:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d othra"]
       interval: 5s
@@ -85,8 +91,11 @@ services:
       OTHRA_ENV: development
       OTHRA_HTTP_ADDR: ":5150"
       OTHRA_HTTP_BASE_URL: "http://localhost:${OTHRA_PORT:-5150}"
-      OTHRA_POSTGRES_DSN: "postgres://postgres:postgres@postgres:5432/othra?sslmode=disable"
-      OTHRA_POSTGRES_MIGRATOR_DSN: "postgres://postgres:postgres@postgres:5432/othra?sslmode=disable"
+      OTHRA_POSTGRES_DSN: "postgres://othra_service:${OTHRA_DB_SERVICE_PASSWORD:-othra-dev-service-password}\
+        @postgres:5432/othra?sslmode=disable"
+      OTHRA_POSTGRES_MIGRATOR_DSN: "postgres://othra_migrator:\
+        ${OTHRA_DB_MIGRATOR_PASSWORD:-othra-dev-migrator-password}@postgres:5432/othra?sslmode=disable"
+      OTHRA_POSTGRES_MIGRATOR_ROLE: othra_owner
       # dev-only values; generate real ones with: openssl rand -hex 32
       OTHRA_HTTP_STATE_SECRET: "6f1c0a3e2b9d4f7a8c5e1d0b3a6f9c2e4d7b0a1c3e5f7a9b2d4c6e8f0a1b3c5d"
       OTHRA_SECRETS_ENCRYPTION_KEY: "0d2f4b6a8c1e3f5a7b9d2c4e6f8a0b1c3d5e7f9a2b4c6d8e0f1a3b5c7d9e2f4a"

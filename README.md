@@ -33,13 +33,15 @@ Today it is the platform base: orgs, projects, members, invites, API keys, webho
    git config commit.template .gitmessage.txt
    ```
 
-3. Start Postgres, Redis, NATS and Mailpit.
+3. Start Postgres, Redis, NATS and Mailpit. On its first start the compose Postgres creates the Othra roles (see [Database roles](#database-roles)). To start only the database: `podman compose up -d postgres`.
 
    ```sh
    docker compose up -d
    ```
 
-4. Create your config. Point both DSNs at the compose Postgres (`postgres://postgres:postgres@localhost:5432/othra?sslmode=disable`) and generate the two secrets with `openssl rand -hex 32`.
+   A Postgres volume created before the roles existed is not provisioned again. Drop it once with `docker compose down -v` (this deletes the dev data), or run `scripts/db/provision.sh` against it.
+
+4. Create your config. `config.example.yml` already points at the compose Postgres as `othra_service` and `othra_migrator`; generate the two secrets with `openssl rand -hex 32`.
 
    ```sh
    cp config.example.yml config.yml
@@ -56,25 +58,29 @@ Today it is the platform base: orgs, projects, members, invites, API keys, webho
 
 6. Open the one-time install link printed in the log, create the first owner account, and you land in the console at `http://localhost:5150/console/`.
 
-## Provision a production database
+## Database roles
 
+Othra's tenant tables use Postgres row-level security, so the app connects as a role that cannot bypass it.
 `scripts/db/provision.sh` creates the database and three roles on any Postgres (self-hosted, RDS, Neon and others).
-It is safe to re-run, and a re-run sets the passwords you pass.
 
-| Role             | Purpose                                             |
-| ---------------- | --------------------------------------------------- |
-| `othra_owner`    | owns the schema and tables; nobody logs in as it    |
-| `othra_migrator` | runs migrations as the owner                        |
-| `othra_service`  | used by the running app; reads and writes rows only |
+| Role             | Attributes         | Used by                                              | Purpose                                                                                   |
+| ---------------- | ------------------ | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `othra_owner`    | NOLOGIN, BYPASSRLS | `postgres.migrator.role` (the migrator's `SET ROLE`) | owns the schema, the tables and the `SECURITY DEFINER` lookups; nobody logs in as it      |
+| `othra_migrator` | LOGIN, NOBYPASSRLS | `postgres.migrator.dsn`                              | runs migrations as the owner; use a direct (not pooled) connection                        |
+| `othra_service`  | LOGIN, NOBYPASSRLS | `postgres.dsn` (and `postgres.reader.dsn`)           | the running app; reads and writes rows under row-level security, owns nothing, no members |
 
 ```sh
 ADMIN_URL='postgres://admin:...@db.example.com:5432?sslmode=require' \
 MIG_PW=gen SVC_PW=gen scripts/db/provision.sh
 ```
 
-- Run it without the variables to be asked for each value.
+- The admin needs `CREATEROLE` and either `SUPERUSER` or `BYPASSRLS`, because it hands `BYPASSRLS` to `othra_owner`.
+- Run it without the variables to be asked for each value. It is safe to re-run, and a re-run sets the passwords you pass and repairs role attributes and grants.
 - `gen` creates a password and writes it to `othra-db-credentials.env` (mode 0600). Passwords are never printed.
-- The script prints the matching `postgres.dsn`, `postgres.migrator.dsn`, `postgres.migrator.role` and `postgres.schema` settings.
+- `SCHEMA` and `TABLE_PREFIX` must match `postgres.schema` and `postgres.tablePrefix`.
+- It ends by running `scripts/db/verify.template.sql`, which fails loudly on any drift; it prints the command to run that check again later.
+- Leave `postgres.role` empty: the app logs in as `othra_service` directly. Behind a transaction-mode pooler a `SET ROLE` would not stick.
+- Local dev: the compose Postgres runs the same script on its first start (`docker/postgres/init`), with dev-only passwords from `compose.yaml`.
 
 ## Run with Docker
 

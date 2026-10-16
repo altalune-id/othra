@@ -5,6 +5,17 @@ Postgres migrations for Othra, run by the app-agnostic `migrator` package
 `Config.Schema` defaults to `public`; a non-empty `Config.Role` runs `SET ROLE`
 on the migration connection.
 
+Roles (`scripts/db/provision.sh`): migrations run as `othra_migrator` with
+`SET ROLE othra_owner`, so `othra_owner` (NOLOGIN, BYPASSRLS) owns the schema,
+every table, sequence and function, and `goose_db_version`. The app logs in as
+`othra_service` (NOBYPASSRLS, no memberships, owns nothing), which gets
+`SELECT, INSERT, UPDATE, DELETE` on tables, `USAGE` on sequences and `EXECUTE`
+on functions through the owner's default privileges, read-only access to
+`goose_db_version`, and no `CREATE` or `TEMP`. Functions are never executable by
+`PUBLIC`. `scripts/db/verify.template.sql` checks all of this. Integration tests
+get the same split from `pgtest.MigratedRLS` (`othra_test_owner`,
+`othra_test_service`).
+
 ```mermaid
 erDiagram
     orgs ||--o{ projects : has
