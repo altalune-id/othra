@@ -2,17 +2,20 @@
 import type { EntityItem } from '~/components/ui/types';
 import { useLanding } from '~/components/layout/useLanding';
 import EntitySelect from '~/components/ui/EntitySelect.vue';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { usePinnedStore } from '~/stores/pinned';
 import { useUIStore } from '~/stores/ui';
 
 const orgs = useOrgsStore();
+const auth = useAuthStore();
 const pinned = usePinnedStore();
 const ui = useUIStore();
 const { resolve } = useLanding();
 const route = useRoute();
 const { t } = useI18n();
 
+const canCreate = computed(() => auth.me?.orgCreation === true);
 const current = computed(() => orgs.bySlug(route.params.org as string));
 const items = computed<EntityItem[]>(() =>
   orgs.items.map(org => ({ key: org.slug, label: org.name, active: org.slug === current.value?.slug, pinned: pinned.orgSlug === org.slug })),
@@ -70,7 +73,7 @@ function onCreate() {
           {{ t('org.all') }}
         </button>
       </li>
-      <li>
+      <li v-if="canCreate">
         <button type="button" @click="onCreate">
           <Icon name="lucide:plus" size="16" />
           {{ t('org.new') }}

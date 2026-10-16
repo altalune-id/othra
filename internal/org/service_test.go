@@ -235,3 +235,9 @@ func TestService_CreateSystem_ExplicitSlug(t *testing.T) {
 	assert.Equal(t, "acme", o.Slug)
 	assert.False(t, o.CreatedBy.Valid)
 }
+
+func TestService_CreationAllowed(t *testing.T) {
+	svc := org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, testUnexpected())
+	assert.True(t, svc.CreationAllowed(), "creation is allowed until WithCreation(false)")
+	assert.False(t, svc.WithCreation(false).CreationAllowed())
+}

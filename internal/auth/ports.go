@@ -36,9 +36,10 @@ type ProjectLister interface {
 	List(ctx context.Context, orgID uuid.UUID) ([]*project.Project, error)
 }
 
-// OrgGetter loads an org by id.
+// OrgGetter loads an org by id and says whether this deployment lets callers create orgs.
 type OrgGetter interface {
 	Get(ctx context.Context, id uuid.UUID) (*org.Org, error)
+	CreationAllowed() bool
 }
 
 // ProjectGetter loads a project by id.

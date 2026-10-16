@@ -34,6 +34,9 @@ func (s *Service) WithCreation(allowed bool) *Service {
 	return s
 }
 
+// CreationAllowed reports whether Create may add orgs on this deployment.
+func (s *Service) CreationAllowed() bool { return s.creationAllowed }
+
 // WithAfterCreate registers a hook run after an org is created (e.g. to seed a default project).
 func (s *Service) WithAfterCreate(hook func(ctx context.Context, o *Org) error) *Service {
 	s.afterCreate = hook

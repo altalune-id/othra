@@ -170,7 +170,8 @@ func (s *Service) refreshPerson(ctx context.Context, p session.Principal) (sessi
 		return session.Principal{}, err
 	}
 	if len(ms) == 0 {
-		p.ActiveOrgID, p.ActiveProjectID = uuid.Nil, uuid.Nil
+		// SECURITY: org:read only lets a person in no org list their own (zero) orgs; with no active org it reaches nothing.
+		p.ActiveOrgID, p.ActiveProjectID, p.Scopes = uuid.Nil, uuid.Nil, []string{scope.OrgRead}
 		return p, nil
 	}
 	active := ms[0]

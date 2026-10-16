@@ -49,6 +49,8 @@ message WhoamiResponse {
   // Effective permissions after roles, key scopes and grants are intersected.
   repeated string permissions = 11;
   bool operator = 12;
+  // Whether this deployment lets the caller create organizations (cloud only).
+  bool org_creation = 14;
 }
 
 message UpdateProfileRequest {

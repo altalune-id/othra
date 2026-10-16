@@ -253,6 +253,10 @@ components:
         operator:
           type: boolean
           title: operator
+        orgCreation:
+          type: boolean
+          title: org_creation
+          description: Whether this deployment lets the caller create organizations (cloud only).
       title: WhoamiResponse
       additionalProperties: false
       description: Every id is a public id.

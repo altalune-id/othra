@@ -120,6 +120,7 @@ func (s *AuthService) Whoami(
 		KeyHint:     p.KeyHint,
 		Permissions: p.Scopes,
 		Operator:    p.Operator,
+		OrgCreation: s.orgs.CreationAllowed(),
 	}
 	if p.UserID != uuid.Nil {
 		u, err := s.users.ByID(ctx, p.UserID)
