@@ -12,6 +12,7 @@ import (
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
@@ -21,8 +22,7 @@ import (
 
 func TestLoginLocal_AgainstPostgres(t *testing.T) {
 	ctx := t.Context()
-	sqlDB, schemaName := pgtest.Migrated(t)
-	pool := db.Pool{W: sqlDB, R: sqlDB}
+	pool, _, schemaName := pgtest.MigratedRLS(t)
 	unexpected := apperror.NewReporter(nil, false).Unexpected
 	orgStore := org.NewStore(pool, schemaName, "")
 	users := user.NewService(user.NewStore(pool, schemaName, ""), unexpected)
@@ -35,7 +35,7 @@ func TestLoginLocal_AgainstPostgres(t *testing.T) {
 	require.NoError(t, err)
 	sys, err := org.NewSystemOrg("default", "Default", owner.ID)
 	require.NoError(t, err)
-	require.NoError(t, orgStore.Save(ctx, sys))
+	require.NoError(t, orgStore.Save(tenant.Into(ctx, tenant.Context{OrgID: sys.ID}), sys))
 	_, err = members.Add(ctx, sys.ID, owner.ID, member.RoleOwner)
 	require.NoError(t, err)
 	defaultPrj, err := projects.Create(ctx, project.CreateRequest{OrgID: sys.ID, Slug: project.DefaultSlug, Name: project.DefaultName})

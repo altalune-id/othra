@@ -11,10 +11,13 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/google/uuid"
+
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/permission"
 	rootmcp "altalune.id/othra/mcp"
 	"altalune.id/othra/reqid"
@@ -57,7 +60,11 @@ func Authenticate(o AuthOptions) func(http.Handler) http.Handler {
 				writeUnauthorized(w, r, challenge)
 				return
 			}
-			next.ServeHTTP(w, r.WithContext(session.PrincipalInto(r.Context(), p)))
+			ctx := session.PrincipalInto(r.Context(), p)
+			if p.ActiveOrgID != uuid.Nil {
+				ctx = tenant.Into(ctx, tenant.Context{OrgID: p.ActiveOrgID, ProjectID: p.ActiveProjectID, UserID: p.UserID})
+			}
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

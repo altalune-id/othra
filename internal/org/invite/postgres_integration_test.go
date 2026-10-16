@@ -60,8 +60,7 @@ func (p userPeople) Contact(ctx context.Context, id uuid.UUID) (string, string, 
 
 func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
-	sqlDB, schema := pgtest.Migrated(t)
-	pool := db.Pool{W: sqlDB, R: sqlDB}
+	pool, _, schema := pgtest.MigratedRLS(t)
 	unexpected := apperror.NewReporter(nil, false).Unexpected
 	f := &pgFixture{
 		t: t, ctx: t.Context(), pool: pool, store: invite.NewStore(pool, schema, ""),
@@ -71,7 +70,7 @@ func newPGFixture(t *testing.T) *pgFixture {
 	f.members = member.NewService(memberStore, db.NewTransactor(pool), unexpected)
 	o, err := org.NewOrg("acme-"+uuid.NewString()[:8], "Acme", uuid.Nil)
 	require.NoError(t, err)
-	require.NoError(t, org.NewStore(pool, schema, "").Save(f.ctx, o))
+	require.NoError(t, org.NewStore(pool, schema, "").Save(tenant.Into(f.ctx, tenant.Context{OrgID: o.ID}), o))
 	f.org = o
 	f.owner = f.user("owner-" + uuid.NewString()[:8] + "@example.com")
 	_, err = f.members.Add(f.ctx, o.ID, f.owner.ID, member.RoleOwner)
@@ -136,8 +135,8 @@ func TestPostgresInvite_DoubleAccept(t *testing.T) {
 
 		outcomes := make([]invite.Outcome, 2)
 		errs := race(
-			func() (err error) { outcomes[0], err = f.svc.Accept(f.ctx, c.Invite.ID, bob.ID); return },
-			func() (err error) { outcomes[1], err = f.svc.Accept(f.ctx, c.Invite.ID, bob.ID); return },
+			func() (err error) { outcomes[0], err = f.svc.Accept(f.ctx, f.org.ID, c.Invite.ID, bob.ID); return },
+			func() (err error) { outcomes[1], err = f.svc.Accept(f.ctx, f.org.ID, c.Invite.ID, bob.ID); return },
 		)
 		joined, used := 0, 0
 		for i, err := range errs {
@@ -161,13 +160,13 @@ func TestPostgresInvite_DoubleAccept(t *testing.T) {
 func TestPostgresInvite_OwnerAcceptsAMemberInvite(t *testing.T) {
 	f := newPGFixture(t)
 	c := f.invite(f.owner.Email, member.RoleMember)
-	got, err := f.svc.Accept(f.ctx, c.Invite.ID, f.owner.ID)
+	got, err := f.svc.Accept(f.ctx, f.org.ID, c.Invite.ID, f.owner.ID)
 	require.NoError(t, err)
 	assert.Equal(t, invite.AlreadyMember, got)
 	m, err := f.members.Find(f.ctx, f.org.ID, f.owner.ID)
 	require.NoError(t, err)
 	assert.Equal(t, member.RoleOwner, m.Role)
-	stored, err := f.store.ByID(f.ctx, c.Invite.ID)
+	stored, err := f.store.ByID(tenant.Into(f.ctx, tenant.Context{OrgID: f.org.ID}), c.Invite.ID)
 	require.NoError(t, err)
 	require.NotNil(t, stored.AcceptedAt)
 	assert.Equal(t, f.owner.ID, stored.AcceptedBy)
@@ -179,10 +178,10 @@ func TestPostgresInvite_AcceptVersusRevoke(t *testing.T) {
 		bob := f.user("bob-" + uuid.NewString()[:8] + "@example.com")
 		c := f.invite(bob.Email, member.RoleMember)
 		errs := race(
-			func() error { _, err := f.svc.Accept(f.ctx, c.Invite.ID, bob.ID); return err },
+			func() error { _, err := f.svc.Accept(f.ctx, f.org.ID, c.Invite.ID, bob.ID); return err },
 			func() error { return f.svc.Revoke(f.ctx, member.Requester{UserID: f.owner.ID}, f.org.ID, c.Invite.ID) },
 		)
-		stored, err := f.store.ByID(f.ctx, c.Invite.ID)
+		stored, err := f.store.ByID(tenant.Into(f.ctx, tenant.Context{OrgID: f.org.ID}), c.Invite.ID)
 		require.NoError(t, err)
 		_, memberErr := f.members.Find(f.ctx, f.org.ID, bob.ID)
 		if errs[0] == nil {
@@ -208,7 +207,7 @@ func TestPostgresInvite_ReinviteAfterExpiry(t *testing.T) {
 	assert.Equal(t, first.Invite.ID, second.Invite.ID, "updated in place")
 
 	late := f.user("late@example.com")
-	got, err := f.svc.Accept(f.ctx, second.Invite.ID, late.ID)
+	got, err := f.svc.Accept(f.ctx, f.org.ID, second.Invite.ID, late.ID)
 	require.NoError(t, err)
 	assert.Equal(t, invite.Joined, got)
 
@@ -267,7 +266,7 @@ func TestPostgresInvite_DraftsAndListing(t *testing.T) {
 	got, err := f.svc.Lookup(f.ctx, c.Link[len(baseURL)+len("invite/"):])
 	require.NoError(t, err)
 	assert.Equal(t, d.ID, got.ID)
-	byPublic, err := f.svc.ByPublicID(f.ctx, d.PublicID)
+	byPublic, err := f.svc.ByPublicID(tenant.Into(f.ctx, tenant.Context{OrgID: f.org.ID}), d.PublicID)
 	require.NoError(t, err)
 	assert.Equal(t, d.ID, byPublic.ID)
 
@@ -311,7 +310,7 @@ func TestPostgresInvite_StoreErrors(t *testing.T) {
 func TestPostgresInvite_JoinIsOneTransaction(t *testing.T) {
 	f := newPGFixture(t)
 	c := f.invite("new@example.com", member.RoleAdmin)
-	id, err := f.svc.Join(f.ctx, c.Invite.ID, "New", "a sturdy passphrase", true)
+	id, err := f.svc.Join(f.ctx, f.org.ID, c.Invite.ID, "New", "a sturdy passphrase", true)
 	require.NoError(t, err)
 	u, err := f.users.ByID(f.ctx, id)
 	require.NoError(t, err)
@@ -322,7 +321,7 @@ func TestPostgresInvite_JoinIsOneTransaction(t *testing.T) {
 
 	late := f.invite("late@example.com", member.RoleMember)
 	f.advance(invite.TTL)
-	_, err = f.svc.Join(f.ctx, late.Invite.ID, "Late", "a sturdy passphrase", true)
+	_, err = f.svc.Join(f.ctx, f.org.ID, late.Invite.ID, "Late", "a sturdy passphrase", true)
 	assert.Equal(t, invite.ReasonExpired, invite.ReasonOf(err))
 	_, err = f.users.ByEmail(f.ctx, "late@example.com")
 	assert.True(t, user.IsNotFoundError(err), "a refused join writes nothing")
@@ -332,8 +331,14 @@ func TestPostgresInvite_ConcurrentJoinsMakeOneUser(t *testing.T) {
 	f := newPGFixture(t)
 	c := f.invite("twin@example.com", member.RoleMember)
 	errs := race(
-		func() error { _, err := f.svc.Join(f.ctx, c.Invite.ID, "A", "a sturdy passphrase", true); return err },
-		func() error { _, err := f.svc.Join(f.ctx, c.Invite.ID, "B", "a sturdy passphrase", true); return err },
+		func() error {
+			_, err := f.svc.Join(f.ctx, f.org.ID, c.Invite.ID, "A", "a sturdy passphrase", true)
+			return err
+		},
+		func() error {
+			_, err := f.svc.Join(f.ctx, f.org.ID, c.Invite.ID, "B", "a sturdy passphrase", true)
+			return err
+		},
 	)
 	ok := 0
 	for _, err := range errs {
@@ -359,21 +364,21 @@ func TestPostgresInvite_ReinviteVersusAccept(t *testing.T) {
 		invite.SetAfterLive(f.svc, func() { time.Sleep(150 * time.Millisecond) })
 		var again *invite.Created
 		errs := race(
-			func() error { _, err := f.svc.Accept(f.ctx, first.Invite.ID, bob.ID); return err },
+			func() error { _, err := f.svc.Accept(f.ctx, f.org.ID, first.Invite.ID, bob.ID); return err },
 			func() (err error) {
 				again, err = f.svc.Create(f.ctx, member.Requester{UserID: f.owner.ID}, f.org.ID, bob.Email, member.RoleAdmin)
 				return err
 			},
 		)
 		require.NoError(t, errors.Join(errs...))
-		accepted, err := f.store.ByID(f.ctx, first.Invite.ID)
+		accepted, err := f.store.ByID(tenant.Into(f.ctx, tenant.Context{OrgID: f.org.ID}), first.Invite.ID)
 		require.NoError(t, err)
 		require.NotNil(t, accepted.AcceptedAt)
 		m, err := f.members.Find(f.ctx, f.org.ID, bob.ID)
 		require.NoError(t, err)
 		assert.Equal(t, m.Role, accepted.Role, "an accepted invite is never rewritten after the accept")
 		if again.Invite.ID != first.Invite.ID {
-			fresh, err := f.store.ByID(f.ctx, again.Invite.ID)
+			fresh, err := f.store.ByID(tenant.Into(f.ctx, tenant.Context{OrgID: f.org.ID}), again.Invite.ID)
 			require.NoError(t, err)
 			assert.Nil(t, fresh.AcceptedAt, "the new invite is live")
 		}

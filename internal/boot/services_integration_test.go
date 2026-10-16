@@ -12,7 +12,6 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/pgtest"
@@ -40,9 +39,9 @@ func TestBuildServices_OrgCreateAddsTheDefaultProject(t *testing.T) {
 func TestBuildServices_AnOrgIsNotCreatedWithoutItsDefaultProject(t *testing.T) {
 	cfg := devLocalConfig()
 	cfg.Mode = config.ModeCloud
-	sqlDB, schemaName := pgtest.Migrated(t)
+	svc, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	cfg.Postgres.Schema = schemaName
-	svcs := buildServices(kernel.Kernel{Pool: db.Pool{W: sqlDB, R: sqlDB}, Reporter: apperror.NewReporter(nil, false)}, cfg)
+	svcs := buildServices(kernel.Kernel{Pool: svc, Reporter: apperror.NewReporter(nil, false)}, cfg)
 	ctx := t.Context()
 	_, err := sqlDB.ExecContext(ctx, `ALTER TABLE `+schemaName+`.projects ADD CONSTRAINT refuse_default CHECK (slug <> 'default')`)
 	require.NoError(t, err)

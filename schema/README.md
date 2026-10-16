@@ -249,6 +249,25 @@ Rules the diagram can't show. Names omit `{{.TablePrefix}}`.
 | `password_resets`                                                       | `token_hash` unique, `password_resets_user_idx` (`WHERE used_at IS NULL`)                       | tokens are found by their hash; a new request deletes the person's unused tokens                                                           |
 | `sessions`                                                              | `sessions_expires_idx`, `sessions_user_idx`                                                     | sweep of expired rows; delete all sessions of a user                                                                                       |
 
+## Row level security
+
+Every org-owned table has `ENABLE` and `FORCE ROW LEVEL SECURITY` and one `FOR ALL` policy with `USING` and
+`WITH CHECK`, created in the table's own migration. Policies read the scope only through the helpers
+`current_org_id()`, `current_project_id()` and `current_user_id()` in `002_orgs.sql`
+(`NULLIF(current_setting('app.current_…', true), '')::uuid`, so a missing scope means no rows, never a cast error).
+`tenant_policy_guard_test.go` fails on an inline `current_setting` or an org-owned table without its policy, and
+`rls_isolation_integration_test.go` proves each table as the service role.
+
+| Table                                                                                                              | Policy                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `projects`, `api_keys`, `api_key_projects`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries`, `invites` | `org_id = current_org_id()`                                                                          |
+| `memberships`                                                                                                      | read: `org_id = current_org_id() OR user_id = current_user_id()`; write: `org_id = current_org_id()` |
+| `orgs`                                                                                                             | read: `id = current_org_id()` or an org the user is a member of; write: `id = current_org_id()`      |
+
+The `orgs` policy reads `memberships`, so `002_orgs.sql` only enables and forces row level security on `orgs`, and
+`007_memberships.sql` creates its policy. `users`, `sessions`, `password_resets`, `terms_acceptances`, `mail_queue`,
+`legal_documents` and `goose_db_version` have no org and no row level security.
+
 ## Lookup functions
 
 `013_tenant_lookups.sql` holds the `SECURITY DEFINER` functions for reads that must run before a tenant scope

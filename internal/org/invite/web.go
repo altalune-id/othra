@@ -136,7 +136,7 @@ func (h *Web) postJoin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pass := r.PostFormValue("password")
-	_, err = h.o.Invites.Join(r.Context(), inv.ID, v.Name, pass, h.o.Consent.Required && accept)
+	_, err = h.o.Invites.Join(r.Context(), inv.OrgID, inv.ID, v.Name, pass, h.o.Consent.Required && accept)
 	switch {
 	case user.IsAlreadyExistsError(err):
 		v.State, v.LoginURL = views.StateSignIn, h.loginURL(inv.Email)
@@ -169,7 +169,7 @@ func (h *Web) postAccept(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, h.loginURL(inv.Email), http.StatusSeeOther)
 		return
 	}
-	_, err := h.o.Invites.Accept(r.Context(), inv.ID, p.UserID)
+	_, err := h.o.Invites.Accept(r.Context(), inv.OrgID, inv.ID, p.UserID)
 	switch {
 	case IsEmailMismatchError(err):
 		v, lerr := h.landing(r, inv)

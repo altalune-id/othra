@@ -58,8 +58,7 @@ func (f *failingMail) Enqueue(ctx context.Context, m mailer.Message) (uuid.UUID,
 
 func newResetDB(t *testing.T) *resetDB {
 	t.Helper()
-	sqlDB, schemaName := pgtest.Migrated(t)
-	pool := db.Pool{W: sqlDB, R: sqlDB}
+	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	unexpected := apperror.NewReporter(nil, false).Unexpected
 	sl, err := sealer.New(bytes.Repeat([]byte{7}, 32))
 	require.NoError(t, err)

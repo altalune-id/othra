@@ -98,7 +98,11 @@ func (s *OrgService) reachable(ctx context.Context, publicID string, reach func(
 }
 
 func (s *OrgService) listable(ctx context.Context) ([]*Org, error) {
-	if p := session.PrincipalFrom(ctx); p.IsPerson() && !p.Operator {
+	p := session.PrincipalFrom(ctx)
+	switch {
+	case p.Operator:
+		return s.orgs.ListAll(ctx)
+	case p.IsPerson():
 		return s.orgs.ListForUser(ctx, p.UserID)
 	}
 	return s.orgs.List(ctx)

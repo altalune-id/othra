@@ -32,7 +32,6 @@ import (
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/events"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/kernel/tenant"
@@ -60,9 +59,9 @@ func newAPIFixture(t *testing.T) *apiFixture {
 	cfg.Secrets.EncryptionKey = testKeyHex
 	cfg.Auth.SessionTTL = 24 * time.Hour
 	cfg.Auth.Genesis = config.GenesisConfig{Email: "root@example.com", Password: "genesis-password"}
-	sqlDB, schemaName := pgtest.Migrated(t)
+	svc, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	cfg.Postgres.Schema = schemaName
-	svcs := buildServices(kernel.Kernel{Pool: db.Pool{W: sqlDB, R: sqlDB}, Reporter: apperror.NewReporter(nil, false)}, cfg)
+	svcs := buildServices(kernel.Kernel{Pool: svc, Reporter: apperror.NewReporter(nil, false)}, cfg)
 	require.NoError(t, buildAuthSecrets(cfg, svcs, testLogger()))
 	svcs.Caps.EnvGenesis = true
 	require.NoError(t, firstBoot(t.Context(), cfg, svcs, testLogger(), false))
@@ -85,6 +84,11 @@ func newAPIFixture(t *testing.T) *apiFixture {
 	sys, err := svcs.Orgs.System(t.Context())
 	require.NoError(t, err)
 	return &apiFixture{db: sqlDB, svcs: svcs, url: ts.URL + "/api", mcpURL: ts.URL + "/mcp", owner: owner, orgID: sys.PublicID, sysID: sys.ID}
+}
+
+func (f *apiFixture) saveOrg(t *testing.T, o *org.Org) error {
+	t.Helper()
+	return f.svcs.OrgStore.Save(tenant.Into(t.Context(), tenant.Context{OrgID: o.ID}), o)
 }
 
 func (f *apiFixture) mint(t *testing.T, kind apikey.Kind, scopes ...string) string {
@@ -212,7 +216,7 @@ func TestAPI_CreateRefusesAnotherOrgsProject(t *testing.T) {
 	require.NoError(t, err)
 	other, err := org.NewOrg("other-org", "Other", uuid.Nil)
 	require.NoError(t, err)
-	require.NoError(t, f.svcs.OrgStore.Save(t.Context(), other))
+	require.NoError(t, f.saveOrg(t, other))
 	foreign, err := f.svcs.Projects.Create(t.Context(), project.CreateRequest{OrgID: other.ID, Slug: "theirs", Name: "Theirs"})
 	require.NoError(t, err)
 
@@ -414,7 +418,7 @@ func TestAPI_SystemOrgAdminFollowsMemberRules(t *testing.T) {
 
 	other, err := org.NewOrg("other-org", "Other", uuid.Nil)
 	require.NoError(t, err)
-	require.NoError(t, f.svcs.OrgStore.Save(ctx, other))
+	require.NoError(t, f.saveOrg(t, other))
 	_, err = f.svcs.Members.Add(ctx, other.ID, dave, member.RoleMember)
 	require.NoError(t, err)
 	_, err = c.SetMemberRole(ctx, withCookie(connect.NewRequest(&memberv1.SetMemberRoleRequest{

@@ -12,7 +12,6 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/pgtest"
@@ -20,9 +19,9 @@ import (
 
 func migratedServices(t *testing.T, cfg config.Config) (*Services, config.Config) {
 	t.Helper()
-	sqlDB, schemaName := pgtest.Migrated(t)
+	svc, _, schemaName := pgtest.MigratedRLS(t)
 	cfg.Postgres.Schema = schemaName
-	k := kernel.Kernel{Pool: db.Pool{W: sqlDB, R: sqlDB}, Reporter: apperror.NewReporter(nil, false)}
+	k := kernel.Kernel{Pool: svc, Reporter: apperror.NewReporter(nil, false)}
 	svcs := buildServices(k, cfg)
 	require.NoError(t, buildAuthSecrets(cfg, svcs, testLogger()))
 	return svcs, cfg
@@ -48,7 +47,7 @@ func TestFirstBoot_EnvGenesis(t *testing.T) {
 	owners, err := svcs.Members.CountOwners(ctx, sys.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 1, owners)
-	all, err := svcs.Orgs.List(ctx)
+	all, err := svcs.Orgs.IDs(ctx)
 	require.NoError(t, err)
 	assert.Len(t, all, 1)
 	_, err = svcs.Projects.BySlug(ctx, sys.ID, project.DefaultSlug)

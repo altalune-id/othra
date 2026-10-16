@@ -5,6 +5,7 @@ package boot
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"maps"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +24,10 @@ import (
 	"altalune.id/othra/internal/health"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/tenant"
 	mcpinternal "altalune.id/othra/internal/mcp"
+	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/permission"
 )
 
@@ -228,5 +232,42 @@ func TestLockdown_BasicMode(t *testing.T) {
 	h := connectJSON()
 	h.Set("Authorization", basicAuth("ops", "basic-password"))
 	rec = l.do(http.MethodPost, "/api/org.v1.OrgService/ListOrgs", h, `{}`)
+	assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+}
+
+// SECURITY: an operator lists every org under row level security through list_org_ids and one scoped read per org.
+func TestLockdown_BasicOperatorListsEveryOrg(t *testing.T) {
+	l := basicLockdown(t)
+	other, err := org.NewOrg("other-org", "Other", uuid.Nil)
+	require.NoError(t, err)
+	require.NoError(t, l.svcs.OrgStore.Save(tenant.Into(t.Context(), tenant.Context{OrgID: other.ID}), other))
+
+	h := connectJSON()
+	h.Set("Authorization", basicAuth("ops", "basic-password"))
+	rec := l.do(http.MethodPost, "/api/org.v1.OrgService/ListOrgs", h, `{}`)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var got struct {
+		Orgs []struct {
+			ID string `json:"id"`
+		} `json:"orgs"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
+	assert.Len(t, got.Orgs, 2)
+	assert.Contains(t, rec.Body.String(), other.PublicID)
+}
+
+// SECURITY: an operator acting on another org's invite reads it in that org's scope, so row level security does not hide it.
+func TestLockdown_BasicOperatorRevokesAnotherOrgsInvite(t *testing.T) {
+	l := basicLockdown(t)
+	other, err := org.NewOrg("other-org", "Other", uuid.Nil)
+	require.NoError(t, err)
+	require.NoError(t, l.svcs.OrgStore.Save(tenant.Into(t.Context(), tenant.Context{OrgID: other.ID}), other))
+	c, err := l.svcs.Invites.Create(t.Context(), member.Requester{Operator: true}, other.ID, "guest@example.com", member.RoleMember)
+	require.NoError(t, err)
+
+	h := connectJSON()
+	h.Set("Authorization", basicAuth("ops", "basic-password"))
+	rec := l.do(http.MethodPost, "/api/invite.v1.InviteService/RevokeInvite", h,
+		`{"orgId":"`+other.PublicID+`","inviteId":"`+c.Invite.PublicID+`"}`)
 	assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 }

@@ -3,17 +3,21 @@ package install
 import (
 	"cmp"
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/google/uuid"
 
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/user"
 )
+
+var errSystemOrgMoved = errors.New("install: the system org was created by another process")
 
 const (
 	lockName       = "othra.install"
@@ -62,12 +66,16 @@ func (s *Service) Required(ctx context.Context, basic bool) (bool, error) {
 
 // Install creates the first owner and claims or creates the system org and its default project, all in one transaction.
 func (s *Service) Install(ctx context.Context, r Request) (*user.User, error) {
+	sysID, err := s.systemOrgID(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var created *user.User
-	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+	err = s.uow.RunInTx(tenant.Into(ctx, tenant.Context{OrgID: sysID}), func(ctx context.Context) error {
 		if err := db.LockInTx(ctx, lockName); err != nil {
 			return err
 		}
-		sys, err := s.ownerlessSystemOrg(ctx)
+		sys, err := s.ownerlessSystemOrg(ctx, sysID)
 		if err != nil {
 			return err
 		}
@@ -82,7 +90,7 @@ func (s *Service) Install(ctx context.Context, r Request) (*user.User, error) {
 		}
 		if sys == nil {
 			name := cmp.Or(strings.TrimSpace(r.OrgName), defaultOrgName)
-			if sys, err = s.orgs.CreateSystem(ctx, org.CreateRequest{Name: name, CreatedBy: u.ID}); err != nil {
+			if sys, err = s.orgs.CreateSystem(ctx, org.CreateRequest{ID: sysID, Name: name, CreatedBy: u.ID}); err != nil {
 				return err
 			}
 		}
@@ -103,28 +111,58 @@ func (s *Service) Install(ctx context.Context, r Request) (*user.User, error) {
 
 // EnsureBasicSystemOrg creates the ownerless system org and its default project when missing.
 func (s *Service) EnsureBasicSystemOrg(ctx context.Context) error {
-	return s.uow.RunInTx(ctx, func(ctx context.Context) error {
+	err := s.ensureBasicSystemOrg(ctx)
+	if errors.Is(err, errSystemOrgMoved) {
+		err = s.ensureBasicSystemOrg(ctx)
+	}
+	return err
+}
+
+func (s *Service) ensureBasicSystemOrg(ctx context.Context) error {
+	sysID, err := s.systemOrgID(ctx)
+	if err != nil {
+		return err
+	}
+	return s.uow.RunInTx(tenant.Into(ctx, tenant.Context{OrgID: sysID}), func(ctx context.Context) error {
 		if err := db.LockInTx(ctx, lockName); err != nil {
 			return err
 		}
 		sys, err := s.orgs.System(ctx)
 		if org.IsNotFoundError(err) {
-			sys, err = s.orgs.CreateSystem(ctx, org.CreateRequest{Name: defaultOrgName})
+			sys, err = s.orgs.CreateSystem(ctx, org.CreateRequest{ID: sysID, Name: defaultOrgName})
 		}
 		if err != nil {
 			return err
+		}
+		if sys.ID != sysID {
+			return errSystemOrgMoved
 		}
 		return s.ensureDefaultProject(ctx, sys.ID)
 	})
 }
 
-func (s *Service) ownerlessSystemOrg(ctx context.Context) (*org.Org, error) {
+// SECURITY: the system org is scoped by its own id, chosen before the transaction opens; a new one gets a fresh id.
+func (s *Service) systemOrgID(ctx context.Context) (uuid.UUID, error) {
+	sys, err := s.orgs.System(ctx)
+	switch {
+	case org.IsNotFoundError(err):
+		return uuid.New(), nil
+	case err != nil:
+		return uuid.Nil, err
+	}
+	return sys.ID, nil
+}
+
+func (s *Service) ownerlessSystemOrg(ctx context.Context, scoped uuid.UUID) (*org.Org, error) {
 	sys, err := s.orgs.System(ctx)
 	if org.IsNotFoundError(err) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
+	}
+	if sys.ID != scoped {
+		return nil, &AlreadyInstalledError{}
 	}
 	owners, err := s.members.CountOwners(ctx, sys.ID)
 	if err != nil {

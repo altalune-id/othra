@@ -52,7 +52,7 @@ flowchart TD
     WEB["web routes"] --> G2[InstallGate] --> C2[CrossOrigin] --> S2[Session] --> W2[WelcomeGate] --> DW
     CON["/console"] --> G3[InstallGate] --> S3[Session] --> W3[WelcomeGate] --> CG3["ConsoleGate: /login redirect or Basic challenge"] --> SPA[console SPA]
     SPA -. calls .-> API
-    MCPH["/mcp HTTP"] --> G4[InstallGate] --> A4["mcp.Authenticate: key or Basic, no cookie"] --> T4["tool scope check"] --> V4["validate (proto rules)"] --> DC
+    MCPH["/mcp HTTP"] --> G4[InstallGate] --> A4["mcp.Authenticate: key or Basic, no cookie; tenant from the Principal"] --> T4["tool scope check"] --> V4["validate (proto rules)"] --> DC
     MCPS["othra mcp stdio"] --> SYS["session.System() Principal"] --> T4
     LB["/healthz, /readyz"] --> HW["health web.go (no gate, session or CSRF)"] --> HS["health service.go"] --> DBH["db-health monitor"]
     HS -. "when Redis is used" .-> RDH["redis-health monitor"]
@@ -166,6 +166,13 @@ connection; nothing sets session state. Joining a unit of work scoped to one org
 with `db.ErrTenantMismatch`; otherwise the outermost transaction's scope stays in force. `kernel/db`'s guard tests fail if any other package begins a transaction,
 reads `pool.R`/`pool.W` (boot excepted: it hands `pool.W` to the session store and the health monitor) or sets session
 state (`SET`, `RESET`, `set_config`; the migrator's `SET ROLE` excepted).
+
+**Where the scope comes from:** `/api` sets it from the Principal (`tenantFromPrincipal`), and `/mcp` does the same in
+`mcp.Authenticate`. Every service method that takes an org id starts with `tenant.WithOrg(ctx, orgID)`, so an operator
+acting on another org reads that org's rows; `member.ListByUser` adds `tenant.WithUser`. Creating an org (and install's
+system org) scopes to the new org's id before its transaction opens; an invite join or accept scopes to the invite's org.
+Workers enumerate orgs through `list_org_ids()` and run each org scoped. Row level security on the org-owned tables
+(`schema/README.md`) returns nothing to a query whose scope is missing.
 
 `org → project` is the after-create hook that adds the default project, in the org's unit of work:
 if it fails, the org is not created.

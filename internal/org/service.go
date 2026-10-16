@@ -8,6 +8,7 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
 	slugpkg "altalune.id/othra/slug"
 )
 
@@ -41,6 +42,7 @@ func (s *Service) WithAfterCreate(hook func(ctx context.Context, o *Org) error) 
 
 // CreateRequest is the input to Create.
 type CreateRequest struct {
+	ID        uuid.UUID
 	Slug      string
 	Name      string
 	CreatedBy uuid.UUID
@@ -57,7 +59,9 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*Org, error) {
 		if err != nil {
 			return nil, err
 		}
-		return o, s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		// SECURITY: orgs and their first rows are scoped by the new org's own id, never the caller's active org.
+		scoped := tenant.Into(ctx, tenant.Context{OrgID: o.ID, UserID: req.CreatedBy})
+		return o, s.uow.RunInTx(scoped, func(ctx context.Context) error {
 			if err := s.store.Save(ctx, o); err != nil {
 				return err
 			}
@@ -84,7 +88,7 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*Org, error) {
 	return o, nil
 }
 
-// CreateSystem persists the system org, skipping the creation gate and after-create hook; an empty slug becomes "default" if free.
+// CreateSystem persists the system org (req.ID when set) without the creation gate or hook; an empty slug becomes "default" if free.
 func (s *Service) CreateSystem(ctx context.Context, req CreateRequest) (*Org, error) {
 	slug, err := s.systemSlug(ctx, req.Slug)
 	if err != nil {
@@ -94,7 +98,10 @@ func (s *Service) CreateSystem(ctx context.Context, req CreateRequest) (*Org, er
 	if err != nil {
 		return nil, err
 	}
-	if err := s.store.Save(ctx, o); err != nil {
+	if req.ID != uuid.Nil {
+		o.ID = req.ID
+	}
+	if err := s.store.Save(tenant.WithOrg(ctx, o.ID), o); err != nil {
 		return nil, s.errOrReport(ctx, "org: create system", err)
 	}
 	return o, nil
@@ -117,6 +124,7 @@ func (s *Service) systemSlug(ctx context.Context, slug string) (string, error) {
 
 // Get loads an org by id.
 func (s *Service) Get(ctx context.Context, id uuid.UUID) (*Org, error) {
+	ctx = tenant.WithOrg(ctx, id)
 	o, err := s.store.ByID(ctx, id)
 	if err != nil {
 		return nil, s.errOrReport(ctx, "org: get", err)
@@ -169,6 +177,26 @@ func (s *Service) ListForUser(ctx context.Context, userID uuid.UUID) ([]*Org, er
 	return orgs, nil
 }
 
+// ListAll returns every org, oldest first, for an operator: it enumerates the ids, then reads each org in its own scope.
+func (s *Service) ListAll(ctx context.Context) ([]*Org, error) {
+	ids, err := s.IDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*Org, 0, len(ids))
+	for _, id := range ids {
+		o, err := s.Get(ctx, id)
+		if IsNotFoundError(err) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, o)
+	}
+	return out, nil
+}
+
 // IDs returns every org id, oldest first, for work that then runs each org scoped.
 func (s *Service) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	ids, err := s.store.IDs(ctx)
@@ -180,6 +208,7 @@ func (s *Service) IDs(ctx context.Context) ([]uuid.UUID, error) {
 
 // Update changes an org's display name and slug.
 func (s *Service) Update(ctx context.Context, id uuid.UUID, name, slug string) (*Org, error) {
+	ctx = tenant.WithOrg(ctx, id)
 	o, err := s.store.ByID(ctx, id)
 	if err != nil {
 		return nil, s.errOrReport(ctx, "org: update", err)

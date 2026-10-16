@@ -28,10 +28,15 @@ func (f *OrgStore) Save(_ context.Context, o *org.Org) error {
 	return f.Err
 }
 
-// ByID implements org.Store.
-func (f *OrgStore) ByID(context.Context, uuid.UUID) (*org.Org, error) {
+// ByID implements org.Store; it returns the org in Orgs with id, else Org.
+func (f *OrgStore) ByID(_ context.Context, id uuid.UUID) (*org.Org, error) {
 	if f.Err != nil {
 		return nil, f.Err
+	}
+	for _, o := range f.Orgs {
+		if o.ID == id {
+			return o, nil
+		}
 	}
 	return f.Org, nil
 }
