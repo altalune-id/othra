@@ -58,7 +58,7 @@ func (s *postgresStore) ListLive(ctx context.Context, orgID uuid.UUID) ([]*Invit
 		WHERE(t.OrgID.EQ(postgres.UUID(orgID)).AND(t.AcceptedAt.IS_NULL()).AND(t.RevokedAt.IS_NULL())).
 		ORDER_BY(t.CreatedAt.ASC(), t.Email.ASC())
 	var rows []listedRow
-	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
 		return nil, fmt.Errorf("invite.postgres: ListLive: %w", err)
 	}
 	out := make([]*Invite, 0, len(rows))
@@ -75,7 +75,7 @@ func (s *postgresStore) ListLive(ctx context.Context, orgID uuid.UUID) ([]*Invit
 
 func (s *postgresStore) one(ctx context.Context, op string, stmt postgres.Statement) (*Invite, error) {
 	var row inviteRow
-	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
 		if db.IsNoRows(err) {
 			return nil, &NotFoundError{}
 		}

@@ -69,7 +69,7 @@ func (s *postgresStore) List(ctx context.Context) ([]*Org, error) {
 
 // System loads the deployment's system org from the primary through the resolve_system_org definer, before any tenant scope exists.
 func (s *postgresStore) System(ctx context.Context) (*Org, error) {
-	orgs, err := s.scanOrgsWith(ctx, db.Write, "System", s.resolveSystemOrgStmt, nil)
+	orgs, err := s.scanOrgsWith(ctx, db.ReadPrimary, "System", s.resolveSystemOrgStmt, nil)
 	if err != nil {
 		return nil, err
 	}

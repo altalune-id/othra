@@ -45,6 +45,12 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		}
 	}
 
+	if err := guardRLS(ctx, pool, cfg, log); err != nil {
+		_ = pool.Close()
+		_ = shutdown(ctx)
+		return nil, err
+	}
+
 	k := kernel.Kernel{
 		Log:    log,
 		Pool:   pool,

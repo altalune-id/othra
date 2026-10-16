@@ -79,7 +79,8 @@ MIG_PW=gen SVC_PW=gen scripts/db/provision.sh
 - `gen` creates a password and writes it to `othra-db-credentials.env` (mode 0600). Passwords are never printed.
 - `SCHEMA` and `TABLE_PREFIX` must match `postgres.schema` and `postgres.tablePrefix`.
 - It ends by running `scripts/db/verify.template.sql`, which fails loudly on any drift; it prints the command to run that check again later.
-- Leave `postgres.role` empty: the app logs in as `othra_service` directly. Behind a transaction-mode pooler a `SET ROLE` would not stick.
+- The app logs in as `othra_service` directly; Othra never runs `SET ROLE` on the app pool, because behind a transaction-mode pooler it would not stick. `postgres.role` is optional: when set, it names the role the DSN must log in as, and boot refuses any other.
+- At boot, after migrating, Othra refuses to start if its role can bypass row-level security (superuser, BYPASSRLS, a table or schema owner, or a member of one) or if an org-owned table is not forced. In development only, `db.rls.allowBypass: true` turns the role check into a warning.
 - Local dev: the compose Postgres runs the same script on its first start (`docker/postgres/init`), with dev-only passwords from `compose.yaml`.
 
 ## Run with Docker

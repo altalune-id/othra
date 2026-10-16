@@ -224,3 +224,41 @@ func TestWrite_JoinsTheAmbientTransactionOrRefusesAnotherOrg(t *testing.T) {
 	require.ErrorIs(t, err, ErrTenantMismatch)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestReadPrimary_OwnsAReadOnlyTransactionOnTheWriter(t *testing.T) {
+	pool, wmock, rmock := mockPools(t)
+	ctx, tc := scoped()
+	wmock.ExpectBegin()
+	expectScope(wmock, tc)
+	wmock.ExpectQuery(`SELECT 1`).WillReturnRows(sqlmock.NewRows([]string{"x"}).AddRow(1))
+	wmock.ExpectCommit()
+
+	require.NoError(t, ReadPrimary(ctx, pool, func(q qrm.DB) error {
+		rows, err := q.QueryContext(ctx, `SELECT 1`)
+		if err != nil {
+			return err
+		}
+		return rows.Close()
+	}))
+	assert.NoError(t, wmock.ExpectationsWereMet())
+	assert.NoError(t, rmock.ExpectationsWereMet(), "ReadPrimary must not touch the reader")
+}
+
+func TestReadPrimary_JoinsTheAmbientTransactionOrRefusesAnotherOrg(t *testing.T) {
+	pool, mock := mockPool(t)
+	ctx, tc := scoped()
+	mock.ExpectBegin()
+	expectScope(mock, tc)
+	mock.ExpectRollback()
+
+	err := RunInTx(ctx, pool, func(ctx context.Context) error {
+		outer, _ := CurrentTx(ctx)
+		require.NoError(t, ReadPrimary(ctx, pool, func(q qrm.DB) error {
+			assert.Same(t, outer, q)
+			return nil
+		}))
+		return ReadPrimary(tenant.WithOrg(ctx, uuid.New()), pool, func(qrm.DB) error { return nil })
+	})
+	require.ErrorIs(t, err, ErrTenantMismatch)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

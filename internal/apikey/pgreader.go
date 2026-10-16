@@ -71,7 +71,7 @@ func (s *postgresStore) BySecretHash(ctx context.Context, hash [32]byte) (*APIKe
 	// SECURITY: reads the writer, so a revoked key is never stale; the definer never returns the hash, so SecretHash stays zero.
 	stmt := postgres.RawStatement(s.bySecret, postgres.RawArgs{"#hash": hash[:]})
 	var row apiKeyRow
-	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
 		if db.IsNoRows(err) {
 			return nil, &NotFoundError{}
 		}

@@ -16,8 +16,9 @@ flowchart TD
     A[setupTelemetry] --> B["openDB: db.driver postgres opens the writer and the optional reader"]
     B --> C{db.autoMigrate?}
     C -- yes --> D[migrate]
-    C -- no --> E
-    D --> E[kernel: log, pool, tracer, meter, reporter]
+    C -- no --> RG
+    D --> RG["guardRLS: refuse a pool that row-level security would not hold"]
+    RG --> E[kernel: log, pool, tracer, meter, reporter]
     E --> NA["buildNATS: opens NATS only when a feature selects it"]
     NA --> Q["buildQueue: queue.driver picks the driver, Disabled when queue.enabled is false"]
     Q --> RD["buildRedis: opens Redis only when a feature selects it"]
@@ -223,8 +224,10 @@ mail queue and the sessions keep their tables there. `postgres.*` is the connect
   retry (`postgres.connectTimeout` 5s, `postgres.connectBackoff` 250ms), `postgres.reader.*` (a
   replica; empty `postgres.reader.dsn` reads from the writer), `postgres.migrator.{dsn,role}` (the
   credential migrations run on; empty uses `postgres.dsn`) and `postgres.health.{interval,timeout}`
-  (30s, 2s). `db.autoMigrate` (default true) migrates at start. Env: `OTHRA_POSTGRES_DSN`,
-  `OTHRA_POSTGRES_MIGRATOR_DSN`, `OTHRA_DB_DRIVER`, `OTHRA_DB_AUTO_MIGRATE`, …
+  (30s, 2s). `db.autoMigrate` (default true) migrates at start. `db.rls.allowBypass` (default false,
+  bootstrap) lets a role that bypasses row-level security boot with a WARN; config refuses it when
+  `env` is production or `mode` is cloud. Env: `OTHRA_POSTGRES_DSN`, `OTHRA_POSTGRES_MIGRATOR_DSN`,
+  `OTHRA_DB_DRIVER`, `OTHRA_DB_AUTO_MIGRATE`, `OTHRA_DB_RLS_ALLOW_BYPASS`, …
 - **Connection:** the root package `pg` (`pg.Open`) opens a `*sql.DB`, retries the ping with backoff
   within `postgres.connectTimeout`, checks the login role, and applies the pool. No error or log carries
   a password. `db.go` here maps `postgres.*` to one `pg.Config` for the writer and one for the
@@ -232,6 +235,18 @@ mail queue and the sessions keep their tables there. `postgres.*` is the connect
 - **Migrations:** `migrate` opens `postgres.migrator.dsn` (or `postgres.dsn`) with
   `postgres.migrator.role` and runs every migration under the advisory lock
   `migrate:<postgres.tablePrefix>` (`pg.RunWithAdvisoryLock`), so concurrent instances migrate once.
+- **RLS guard:** after migrating, `guardRLS` (`db.go`) probes the writer and a distinct reader
+  (`pg.ProbeRLS`, catalog only) and `db.CheckRLS` refuses to start when:
+  1. `session_user` or `current_user` is, or is a member of (any path), a superuser, a BYPASSRLS role,
+     the schema owner or a table owner (only this one relaxes, to a WARN, under `db.rls.allowBypass`);
+  2. a table with `org_id` (or `orgs`) lacks `ENABLE`, `FORCE`, a policy that reads the tenant scope,
+     write coverage, or has a policy that does not read it;
+  3. a `SECURITY DEFINER` function is not owned by the schema owner or PUBLIC may execute it;
+  4. `row_security` is off.
+
+  The error names each reason and its fix. Tables come from the catalog, so a new org-owned table
+  that forgets its policy is refused without any list to update.
+
 - **Shutdown and readiness:** the kernel closes the pool on shutdown. The `db-health` worker
   (`pg.HealthMonitor`) pings the writer and a distinct reader every `postgres.health.interval`;
   while one does not answer, `/readyz` answers 503.

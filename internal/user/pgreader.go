@@ -22,7 +22,7 @@ func (s *postgresStore) ByEmail(ctx context.Context, email string) (*User, error
 	if err != nil {
 		return nil, &NotFoundError{}
 	}
-	return s.one(ctx, db.Write, "ByEmail", s.users.Email.EQ(postgres.String(e)))
+	return s.one(ctx, db.ReadPrimary, "ByEmail", s.users.Email.EQ(postgres.String(e)))
 }
 
 // ByPublicID loads a user by public id.

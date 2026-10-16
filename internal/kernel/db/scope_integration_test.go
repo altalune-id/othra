@@ -80,3 +80,22 @@ func TestRead_IsReadOnly(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "read-only transaction")
 }
+
+func TestReadPrimary_IsReadOnlyOnTheWriter(t *testing.T) {
+	w := singleConnPool(t)
+	r := singleConnPool(t)
+	pool := db.Pool{W: w.W, R: r.R}
+	_, err := w.W.ExecContext(t.Context(), `CREATE TABLE primary_probe (v int)`)
+	require.NoError(t, err)
+
+	require.NoError(t, db.ReadPrimary(t.Context(), pool, func(q qrm.DB) error {
+		_, err := q.ExecContext(t.Context(), `SELECT count(*) FROM primary_probe`)
+		return err
+	}), "ReadPrimary must run on the writer, where the table exists")
+	err = db.ReadPrimary(t.Context(), pool, func(q qrm.DB) error {
+		_, err := q.ExecContext(t.Context(), `INSERT INTO primary_probe VALUES (1)`)
+		return err
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "read-only transaction")
+}

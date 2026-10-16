@@ -7,7 +7,8 @@ Use this when a service needs a database verb its `Store` does not have. The `St
 - [ ] **Reader or Writer?** `Store` embeds `Reader` (reads, may use a replica) and `Writer` (writes). Put the verb on the right one.
 - [ ] **Name.** Verbs used today: `ByID`, `ByPublicID`, `BySlug`, `List`, `Save`, `Delete`, `Add`, `Find`. Reuse one before you invent one.
 - [ ] **Keys.** It takes UUIDs. `ByPublicID` exists for the edge only ([public-ids.md](public-ids.md)).
-- [ ] **Scope.** Which predicate confines the row? An explicit argument (`List(ctx, orgID)`), or the tenant on `ctx` (`tenant.From(ctx)`, as the webhook store does).
+- [ ] **Scope.** Which predicate confines the row? An explicit argument (`List(ctx, orgID)`), or the tenant on `ctx` (`tenant.From(ctx)`, as the webhook store does). Keep the predicate even on an org-owned table: row-level security is the backstop, not the filter, and it only lets rows through when the service put the org on `ctx` (`tenant.Into`/`tenant.WithOrg`) before the unit of work began.
+- [ ] **Before sign-in or across tenants?** A lookup that runs before the org is known (a token, a key hash, a slug) cannot read an org-owned table; it calls a `SECURITY DEFINER` function that returns public columns only ([migration.md](migration.md)), then reads anything secret in a normal scoped query.
 - [ ] **Failures.** No row → the domain's `*NotFoundError`. Unique violation → `*AlreadyExistsError`. Nothing else is typed.
 - [ ] **Order.** A list needs a stable order. Use a total order: a timestamp and then `id`. The `apikey`, `member` and `webhook` readers do this; the `project` and `org` `List` readers order by `created_at` only, so don't copy those.
 - [ ] **Text search.** No store does a `LIKE`/`ILIKE` or full-text search yet, so there is no reference for case, escaping or indexes. Ask before adding the first one.
@@ -26,7 +27,7 @@ Use this when a service needs a database verb its `Store` does not have. The `St
    }
    ```
 
-2. **Postgres.** Reads in `pgreader.go`, writes in `pgwriter.go`, both on `postgresStore` (`postgres.go`). Build with the go-jet builder and the `schema/entity` binding. Run reads on `db.Reader(ctx, s.pool)` and writes on `db.Writer(ctx, s.pool)`; both return the transaction on `ctx` when there is one:
+2. **Postgres.** Reads in `pgreader.go`, writes in `pgwriter.go`, both on `postgresStore` (`postgres.go`). Build with the go-jet builder and the `schema/entity` binding. Every statement runs in a transaction that carries the tenant scope: `db.Read(ctx, s.pool, fn)` for reads (a read-only transaction on the replica), `db.ReadPrimary` for reads that must see the latest commit (authentication, membership, invites, resets), `db.Write` for writes. Each joins the transaction on `ctx` when there is one. A `pgreader.go` never calls `db.Write`, `db.InTx` or `db.RunInTx` (`TestReadersNeverWrite`):
 
    ```go
    // ByPublicID loads a project by its public id.
@@ -36,7 +37,7 @@ Use this when a service needs a database verb its `Store` does not have. The `St
            WHERE(s.projects.PublicID.EQ(postgres.String(publicID))).
            LIMIT(1)
        var row projectRow
-       if err := stmt.QueryContext(ctx, db.Reader(ctx, s.pool), &row); err != nil {
+       if err := db.Read(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
            if db.IsNoRows(err) {
                return nil, &NotFoundError{ID: publicID}
            }
@@ -60,12 +61,12 @@ Use this when a service needs a database verb its `Store` does not have. The `St
 5. **Raw SQL** only where go-jet has no builder. Mark it with a `NOTE:` naming what jet could not express (see `apikey.NewStore`). Bind values as parameters; never concatenate user input.
 6. **Fake** in `internal/testutil/fakes/<domain>.go`. `var _ project.Store = (*ProjectStore)(nil)` turns a missing method into a compile error. Copy the real predicate; never filter more strictly than the store does.
 7. **Unit test** in `postgres_test.go` (package `<domain>`, `go-sqlmock`): the row mapping, not-found and the error paths (`TestStore_QueryErrors`).
-8. **Integration test** in `postgres_integration_test.go` (`//go:build integration`, `pgtest.Migrated(t)`), named `TestPostgres_<Behaviour>`: round trip, not found, constraints, order and scope, and that the verb joins a unit of work (`TestPostgres_KeyUnitOfWork` in `apikey`).
+8. **Integration test** in `postgres_integration_test.go` (`//go:build integration`, `pgtest.MigratedRLS(t)`: the service-role pool, so row-level security applies; seed other tenants through the admin handle), named `TestPostgres_<Behaviour>`: round trip, not found, constraints, order and scope, and that the verb joins a unit of work (`TestPostgres_KeyUnitOfWork` in `apikey`).
 9. **Gates.** `make check`, `make comment-check`, `make test-integration`, `make cover` (at least 85% for the package).
 
 ## Review
 
-- [ ] The store never begins a transaction. It uses `db.Reader`, `db.Writer` or `db.InTx` (`TestOnlyKernelDBBeginsTransactions` fails otherwise).
+- [ ] The store never begins a transaction or touches `pool.R`/`pool.W`. It uses `db.Read`, `db.ReadPrimary`, `db.Write` or `db.InTx` (`TestOnlyKernelDBBeginsTransactions` and `TestOnlyKernelDBTouchesThePoolHandles` fail otherwise); a `pgreader.go` only reads (`TestReadersNeverWrite`).
 - [ ] No driver error leaves the store untyped when it is expected: no row → `*NotFoundError`, unique violation → `*AlreadyExistsError`. Other errors are wrapped with the domain and the verb, like `"project.postgres: ByID: %w"`.
 - [ ] The query names its scope (org, project or tenant from `ctx`). An upsert's conflict clause is guarded by org.
 - [ ] A list orders by a total order.
@@ -81,8 +82,9 @@ Use this when a service needs a database verb its `Store` does not have. The `St
 - Writes: [internal/project/pgwriter.go](../../internal/project/pgwriter.go) (`Save`, `createdByExpr`), [internal/webhook/pgwriter.go](../../internal/webhook/pgwriter.go) (`Delete`)
 - Guarded upsert and tenant on `ctx`: [internal/webhook/pgwriter.go](../../internal/webhook/pgwriter.go) (`Save`), [internal/webhook/pgreader.go](../../internal/webhook/pgreader.go) (`ByPublicID`)
 - Total order: [internal/apikey/pgreader.go](../../internal/apikey/pgreader.go), [internal/org/member/pgreader.go](../../internal/org/member/pgreader.go)
-- Unit of work: [internal/kernel/db/uow.go](../../internal/kernel/db/uow.go) (`Reader`, `Writer`, `InTx`), [internal/kernel/db/errors.go](../../internal/kernel/db/errors.go) (`IsNoRows`, `IsUniqueViolation`, `IsForeignKeyViolation`, `ViolatedConstraint`)
-- Guard test: [internal/kernel/db/guard_test.go](../../internal/kernel/db/guard_test.go) (`TestOnlyKernelDBBeginsTransactions`)
+- Unit of work: [internal/kernel/db/db.go](../../internal/kernel/db/db.go) (`Read`, `ReadPrimary`, `Write`), [internal/kernel/db/uow.go](../../internal/kernel/db/uow.go) (`InTx`, the tenant scope), [internal/kernel/db/errors.go](../../internal/kernel/db/errors.go) (`IsNoRows`, `IsUniqueViolation`, `IsForeignKeyViolation`, `ViolatedConstraint`)
+- Guard tests: [internal/kernel/db/guard_test.go](../../internal/kernel/db/guard_test.go) (`TestOnlyKernelDBBeginsTransactions`, `TestOnlyKernelDBTouchesThePoolHandles`, `TestOnlyKernelDBSetsSessionState`, `TestReadersNeverWrite`)
+- Definer lookup: [internal/apikey/pgreader.go](../../internal/apikey/pgreader.go) (`BySecretHash`), [schema/migrations/013_tenant_lookups.sql](../../schema/migrations/013_tenant_lookups.sql)
 - Binding: [schema/entity/projects.go](../../schema/entity/projects.go) (`NewProjects`)
 - Fake: [internal/testutil/fakes/project.go](../../internal/testutil/fakes/project.go) (`ProjectStore`)
 - Tests: [internal/project/postgres_test.go](../../internal/project/postgres_test.go), [internal/project/postgres_integration_test.go](../../internal/project/postgres_integration_test.go)

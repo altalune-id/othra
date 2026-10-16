@@ -257,3 +257,43 @@ func sessionStateViolations(t *testing.T, path, rel string) []string {
 	})
 	return out
 }
+
+func TestReadersNeverWrite(t *testing.T) {
+	bad := walkGo(t, nil, func(t *testing.T, path, rel string) []string {
+		t.Helper()
+		if !strings.HasSuffix(path, "pgreader.go") {
+			return nil
+		}
+		return dbCalls(t, path, rel, "Write", "InTx", "RunInTx")
+	})
+	require.Empty(t, bad, "a pgreader reads with db.Read or db.ReadPrimary; writes belong in pgwriter")
+}
+
+func TestDBCallsFindsTheNamedFunctions(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "x_pgreader.go")
+	src := `package x
+
+import "altalune.id/othra/internal/kernel/db"
+
+func a() { _ = db.Write(nil, db.Pool{}, nil); _ = db.ReadPrimary(nil, db.Pool{}, nil); _ = db.InTx(nil, db.Pool{}, nil) }
+`
+	require.NoError(t, os.WriteFile(path, []byte(src), 0o600))
+	assert.Len(t, dbCalls(t, path, "x_pgreader.go", "Write", "InTx"), 2)
+}
+
+func dbCalls(t *testing.T, path, rel string, names ...string) []string {
+	t.Helper()
+	fset, f := parseGo(t, path)
+	var out []string
+	ast.Inspect(f, func(n ast.Node) bool {
+		sel, ok := n.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		if pkg, ok := sel.X.(*ast.Ident); ok && pkg.Name == "db" && slices.Contains(names, sel.Sel.Name) {
+			out = append(out, fmt.Sprintf("%s:%d: uses db.%s", rel, fset.Position(sel.Pos()).Line, sel.Sel.Name))
+		}
+		return true
+	})
+	return out
+}
