@@ -44,10 +44,16 @@ func (s *postgresStore) ByTokenHash(ctx context.Context, hash string) (*Invite, 
 	return s.one(ctx, "ByTokenHash", postgres.RawStatement(s.byTokenHash, postgres.RawArgs{"#hash": hash}))
 }
 
-// ByPublicID returns the invite with publicID.
+// ByPublicID returns the invite with publicID in the tenant scope on ctx.
 func (s *postgresStore) ByPublicID(ctx context.Context, publicID string) (*Invite, error) {
 	t := s.invites
 	return s.one(ctx, "ByPublicID", postgres.SELECT(t.AllColumns).FROM(t).WHERE(t.PublicID.EQ(postgres.String(publicID))))
+}
+
+// ResolveByPublicID returns the invite with publicID through a definer, before any tenant scope exists.
+func (s *postgresStore) ResolveByPublicID(ctx context.Context, publicID string) (*Invite, error) {
+	// SECURITY: the definer never returns the hash, so TokenHash is empty; never Save it, reload it by id in a scoped unit of work.
+	return s.one(ctx, "ResolveByPublicID", postgres.RawStatement(s.byPublicID, postgres.RawArgs{"#publicID": publicID}))
 }
 
 // ListLive returns orgID's live invites and drafts with the inviter's name, or their email when the name is empty.

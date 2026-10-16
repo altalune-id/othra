@@ -383,6 +383,16 @@ func TestService_ByPublicID(t *testing.T) {
 	assert.True(t, invite.IsNotFoundError(err))
 }
 
+func TestService_Landing(t *testing.T) {
+	f := newFixture(t)
+	c := f.create("bob@x.io", member.RoleMember)
+	got, err := f.svc.Landing(f.ctx, c.Invite.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, c.Invite.ID, got.ID)
+	_, err = f.svc.Landing(f.ctx, "nope")
+	assert.True(t, invite.IsNotFoundError(err))
+}
+
 func TestService_FailuresAreReported(t *testing.T) {
 	f := newFixture(t)
 	c := f.create("bob@x.io", member.RoleMember)

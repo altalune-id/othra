@@ -74,6 +74,19 @@ AS $$
   LIMIT 1;
 $$;
 
+-- SECURITY: resolves the invite named by the landing cookie before any tenant scope exists; the row names the org.
+CREATE FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_invite_by_public_id(p_public_id text)
+RETURNS TABLE (id uuid, public_id text, org_id uuid, email text, role text, draft boolean, invited_by uuid, expires_at timestamptz, accepted_at timestamptz, accepted_by uuid, revoked_at timestamptz, created_at timestamptz, updated_at timestamptz)
+LANGUAGE sql STABLE
+SECURITY DEFINER
+SET search_path = {{.Schema}}, pg_catalog, pg_temp
+AS $$
+  SELECT i.id, i.public_id, i.org_id, i.email, i.role, i.draft, i.invited_by, i.expires_at, i.accepted_at, i.accepted_by, i.revoked_at, i.created_at, i.updated_at
+  FROM {{.Schema}}.{{.TablePrefix}}invites i
+  WHERE i.public_id = p_public_id
+  LIMIT 1;
+$$;
+
 -- SECURITY: resolves a key by its secret hash before any tenant scope exists; the row names the org. The hash only matches, it is never returned.
 CREATE FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_api_key_by_secret_hash(p_hash bytea)
 RETURNS TABLE (id uuid, org_id uuid, project_id uuid, kind text, all_projects boolean, project_ids text, name text, secret_hint text, scopes text, resource_ids text, created_by uuid, created_at timestamptz, expires_at timestamptz, revoked_at timestamptz, last_used_at timestamptz)
@@ -98,6 +111,7 @@ REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_org_by_slug(text) FRO
 REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_org_by_public_id(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}list_orgs_for_user(uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_invite_by_token_hash(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_invite_by_public_id(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_api_key_by_secret_hash(bytea) FROM PUBLIC;
 
 -- +goose StatementEnd
@@ -106,6 +120,7 @@ REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_api_key_by_secret_has
 -- +goose StatementBegin
 
 DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_api_key_by_secret_hash(bytea);
+DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_invite_by_public_id(text);
 DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_invite_by_token_hash(text);
 DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}list_orgs_for_user(uuid);
 DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_org_by_public_id(text);

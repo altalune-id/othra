@@ -217,6 +217,15 @@ func (s *Service) ByPublicID(ctx context.Context, publicID string) (*Invite, err
 	return inv, nil
 }
 
+// Landing returns the invite with publicID for the pre-sign-in landing page, in any org; never save what it returns.
+func (s *Service) Landing(ctx context.Context, publicID string) (*Invite, error) {
+	inv, err := s.store.ResolveByPublicID(ctx, publicID)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "invite: landing", err)
+	}
+	return inv, nil
+}
+
 // Accept uses up orgID's invite inviteID for userID and adds them to the org; an existing member keeps their role.
 func (s *Service) Accept(ctx context.Context, orgID, inviteID, userID uuid.UUID) (Outcome, error) {
 	ctx = tenant.Into(ctx, tenant.Context{OrgID: orgID, UserID: userID})

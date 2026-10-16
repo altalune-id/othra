@@ -28,6 +28,7 @@ func lookups() map[string]lookup {
 		"resolve_org_by_public_id(text)":        {"resolve_org_by_public_id('x')", orgColumns},
 		"list_orgs_for_user(uuid)":              {"list_orgs_for_user('" + uuid.Nil.String() + "')", orgColumns},
 		"resolve_invite_by_token_hash(text)":    {"resolve_invite_by_token_hash('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
+		"resolve_invite_by_public_id(text)":     {"resolve_invite_by_public_id('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
 		"resolve_api_key_by_secret_hash(bytea)": {"resolve_api_key_by_secret_hash('\\x00'::bytea)", []string{"id", "org_id", "project_id", "kind", "all_projects", "project_ids", "name", "secret_hint", "scopes", "resource_ids", "created_by", "created_at", "expires_at", "revoked_at", "last_used_at"}},
 	}
 }
@@ -83,7 +84,8 @@ func TestLookups_ResolveTheMatchingRowOnly(t *testing.T) {
 	exec(`INSERT INTO `+s+`users (id, public_id, email, created_at, updated_at) VALUES ($1, 'u1', 'u@example.com', $2, $2)`, user, now)
 	exec(`INSERT INTO `+s+`orgs (id, public_id, slug, name, created_at, updated_at, is_system) VALUES ($1, 'osys', 'sys', 'Sys', $3, $3, true), ($2, 'oother', 'other', 'Other', $3, $3, false)`, sys, other, now)
 	exec(`INSERT INTO `+s+`memberships (id, public_id, org_id, user_id, role, created_at) VALUES ($1, 'm1', $2, $3, 'owner', $4)`, uuid.New(), other, user, now)
-	exec(`INSERT INTO `+s+`invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, 'i1', $2, 'a@example.com', 'member', 'tok', $3, $3, $3)`, uuid.New(), other, now.Add(time.Hour))
+	invite := uuid.New()
+	exec(`INSERT INTO `+s+`invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, 'i1', $2, 'a@example.com', 'member', 'tok', $3, $3, $3)`, invite, other, now.Add(time.Hour))
 	exec(`INSERT INTO `+s+`api_keys (id, org_id, kind, all_projects, name, secret_hash, secret_hint, created_at) VALUES ($1, $2, 'org', true, 'k', '\x01'::bytea, 'abcd', $3)`, uuid.New(), other, now)
 
 	ids := func(q string, args ...any) []uuid.UUID {
@@ -120,6 +122,8 @@ func TestLookups_ResolveTheMatchingRowOnly(t *testing.T) {
 	assert.Equal(t, other, inviteOrg)
 	assert.Equal(t, other, keyOrg)
 	assert.Empty(t, ids(`SELECT * FROM `+s+`resolve_invite_by_token_hash($1)`, "nope"))
+	assert.Equal(t, []uuid.UUID{invite}, ids(`SELECT * FROM `+s+`resolve_invite_by_public_id($1)`, "i1"))
+	assert.Empty(t, ids(`SELECT * FROM `+s+`resolve_invite_by_public_id($1)`, "nope"))
 	assert.Empty(t, ids(`SELECT * FROM `+s+`resolve_api_key_by_secret_hash($1)`, []byte{2}))
 }
 

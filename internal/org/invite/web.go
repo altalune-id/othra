@@ -242,7 +242,7 @@ func (h *Web) fromCookie(w http.ResponseWriter, r *http.Request) (*Invite, bool)
 		h.incomplete(w, r)
 		return nil, false
 	}
-	inv, err := h.o.Invites.ByPublicID(r.Context(), publicID)
+	inv, err := h.o.Invites.Landing(r.Context(), publicID)
 	if IsNotFoundError(err) {
 		err = &NotUsableError{Reason: ReasonNotFound}
 	}

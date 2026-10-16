@@ -405,3 +405,22 @@ func TestPostgresInvite_SavingATokenLoadedInviteFails(t *testing.T) {
 	require.NoError(t, err, "the stored token survives")
 	assert.Equal(t, c.Invite.ID, again.ID)
 }
+
+// SECURITY: the scoped read finds an invite only in its own org; the landing definer finds it before any scope exists.
+func TestPostgresInvite_ByPublicIDIsScopedAndResolveIsNot(t *testing.T) {
+	f := newPGFixture(t)
+	c := f.invite("scoped-"+uuid.NewString()[:8]+"@example.com", member.RoleMember)
+
+	_, err := f.store.ByPublicID(f.ctx, c.Invite.PublicID)
+	assert.True(t, invite.IsNotFoundError(err), "no scope sees nothing: %v", err)
+	_, err = f.store.ByPublicID(tenant.Into(f.ctx, tenant.Context{OrgID: uuid.New()}), c.Invite.PublicID)
+	assert.True(t, invite.IsNotFoundError(err), "another org's scope sees nothing: %v", err)
+	got, err := f.store.ByPublicID(tenant.Into(f.ctx, tenant.Context{OrgID: f.org.ID}), c.Invite.PublicID)
+	require.NoError(t, err)
+	assert.NotEmpty(t, got.TokenHash)
+
+	resolved, err := f.store.ResolveByPublicID(f.ctx, c.Invite.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, c.Invite.ID, resolved.ID)
+	assert.Empty(t, resolved.TokenHash, "the definer returns no hash")
+}

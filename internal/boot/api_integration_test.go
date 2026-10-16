@@ -24,6 +24,8 @@ import (
 	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
@@ -456,4 +458,21 @@ func TestAPI_KeyListSurvivesADeletedResource(t *testing.T) {
 	require.NoError(t, err, "a deleted resource must not break the org's key list")
 	require.Len(t, resp.Msg.GetKeys(), 1)
 	assert.Empty(t, resp.Msg.GetKeys()[0].GetResourceIds())
+}
+
+// SECURITY: a signed-in person who names their own org with another org's invite is refused by the scoped read, not only by the app's org check.
+func TestAPI_RevokeRefusesAnotherOrgsInvite(t *testing.T) {
+	f := newAPIFixture(t)
+	other, err := org.NewOrg("other-org", "Other", uuid.Nil)
+	require.NoError(t, err)
+	require.NoError(t, f.saveOrg(t, other))
+	c, err := f.svcs.Invites.Create(t.Context(), member.Requester{Operator: true}, other.ID, "guest@example.com", member.RoleMember)
+	require.NoError(t, err)
+
+	_, err = invitev1connect.NewInviteServiceClient(http.DefaultClient, f.url).RevokeInvite(context.Background(),
+		withCookie(connect.NewRequest(&invitev1.RevokeInviteRequest{OrgId: f.orgID, InviteId: c.Invite.PublicID}), f.ownerCookie(t)))
+	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err), "got %v", err)
+	still, err := f.svcs.Invites.Landing(t.Context(), c.Invite.PublicID)
+	require.NoError(t, err)
+	assert.Nil(t, still.RevokedAt, "the other org's invite is untouched")
 }
