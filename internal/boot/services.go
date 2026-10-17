@@ -82,7 +82,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 			_, err := projects.Create(ctx, project.CreateRequest{OrgID: o.ID, Slug: project.DefaultSlug, Name: project.DefaultName})
 			return err
 		})
-	projects.WithOrgSlugs(projectOrgSlugs{orgs: orgs}).WithIssuerBase(publicBase(cfg.HTTP))
+	projects.WithOrgSlugs(projectOrgSlugs{orgs: orgs}).WithIssuerBase(publicBase(cfg.HTTP)).WithStorage(files, uow)
 
 	sl := buildSealer(cfg.Secrets)
 	outboxStore := outbox.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
@@ -329,10 +329,11 @@ func (p projectOrgs) OrgOf(ctx context.Context, projectID uuid.UUID) (uuid.UUID,
 
 func capabilitiesConfig(cfg config.Config) capabilities.Config {
 	return capabilities.Config{
-		Selfhosted: cfg.Mode == config.ModeSelfhosted,
-		Cloud:      cfg.Mode == config.ModeCloud,
-		BasicAuth:  cfg.Auth.Mode == config.AuthModeBasic,
-		EnvGenesis: cfg.Auth.Genesis.Email != "",
+		Selfhosted:  cfg.Mode == config.ModeSelfhosted,
+		Cloud:       cfg.Mode == config.ModeCloud,
+		BasicAuth:   cfg.Auth.Mode == config.AuthModeBasic,
+		EnvGenesis:  cfg.Auth.Genesis.Email != "",
+		FileStorage: cfg.Storage.Driver != "",
 	}
 }
 

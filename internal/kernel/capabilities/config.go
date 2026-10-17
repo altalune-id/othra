@@ -7,4 +7,6 @@ type Config struct {
 	BasicAuth  bool
 	// EnvGenesis is true when the first operator comes from the environment.
 	EnvGenesis bool
+	// FileStorage is true when a storage driver is configured.
+	FileStorage bool
 }

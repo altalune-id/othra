@@ -49,8 +49,8 @@ func fillProbe(msg *dynamicpb.Message) {
 			}
 		case fd.Kind() == protoreflect.BoolKind && (fd.Name() == "all_projects" || fd.Name() == "active"):
 			msg.Set(fd, protoreflect.ValueOfBool(true))
-		case fd.Kind() == protoreflect.BytesKind && fd.Name() == "content":
-			msg.Set(fd, protoreflect.ValueOfBytes([]byte("\x89PNG\r\n\x1a\nprobe")))
+		case fd.Kind() == protoreflect.Uint32Kind && fd.Name() == "size_bytes":
+			msg.Set(fd, protoreflect.ValueOfUint32(1024))
 		case fd.Kind() == protoreflect.MessageKind && fd.Name() == "expires_at":
 			msg.Set(fd, protoreflect.ValueOfMessage(timestamppb.New(time.Now().Add(time.Hour)).ProtoReflect()))
 		}
@@ -60,6 +60,7 @@ func fillProbe(msg *dynamicpb.Message) {
 var probeStrings = map[protoreflect.Name]string{
 	"name": "Probe", "description": "probe", "url": "https://example.com/probe",
 	"email": "probe@example.com", "role": "member", "kind": "org", "issuer_handle": "probe-issuer",
+	"content_type": "image/png", "upload_id": "prbeprbeprbeprbeprbe2",
 }
 
 func (f *apiFixture) callForResponse(

@@ -645,4 +645,7 @@ func TestCapabilitiesConfig(t *testing.T) {
 		Mode: config.ModeSelfhosted, Auth: config.AuthConfig{Mode: config.AuthModeBasic},
 	}))
 	assert.Equal(t, capabilities.Config{Cloud: true}, capabilitiesConfig(config.Config{Mode: config.ModeCloud}))
+	assert.Equal(t, capabilities.Config{Cloud: true, FileStorage: true}, capabilitiesConfig(config.Config{
+		Mode: config.ModeCloud, Storage: config.StorageConfig{Driver: config.StorageDriverS3},
+	}))
 }

@@ -47,6 +47,8 @@ type Services struct {
 	Invites  *invite.Service
 	Auth     *auth.Service
 	Refs     Refs
+	// FileUploads is true when the deployment has file storage.
+	FileUploads bool
 }
 
 // Refs turns the public ids every surface carries into ids and back, for every domain's handler.
@@ -112,7 +114,7 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 		s.InviteSvc = invite.NewControlPlane(svcs.Invites, svcs.Refs)
 	}
 	if svcs.Orgs != nil && svcs.Projects != nil && svcs.Users != nil {
-		s.AuthSvc = auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users).WithProfiles(svcs.Auth)
+		s.AuthSvc = auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users).WithProfiles(svcs.Auth).WithFileUploads(svcs.FileUploads)
 	}
 	return s
 }

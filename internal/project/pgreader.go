@@ -77,29 +77,6 @@ func (s *postgresStore) List(ctx context.Context, orgID uuid.UUID) ([]*Project, 
 	return out, nil
 }
 
-// Logo returns the project's logo, or nil when it has none.
-func (s *postgresStore) Logo(ctx context.Context, projectID uuid.UUID) (*Logo, error) {
-	stmt := postgres.SELECT(s.logos.AllColumns).FROM(s.logos).WHERE(s.logos.ProjectID.EQ(postgres.UUID(projectID))).LIMIT(1)
-	var row struct {
-		ProjectID   uuid.UUID `alias:"project_logos.project_id"`
-		OrgID       uuid.UUID `alias:"project_logos.org_id"`
-		ContentType string    `alias:"project_logos.content_type"`
-		Content     []byte    `alias:"project_logos.content"`
-		SHA256      string    `alias:"project_logos.sha256"`
-		UpdatedAt   time.Time `alias:"project_logos.updated_at"`
-	}
-	if err := db.Read(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
-		if db.IsNoRows(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("project.postgres: Logo: %w", err)
-	}
-	return &Logo{
-		ProjectID: row.ProjectID, OrgID: row.OrgID, ContentType: row.ContentType, Content: row.Content,
-		SHA256: row.SHA256, UpdatedAt: row.UpdatedAt.UTC(),
-	}, nil
-}
-
 // IssuerHandleExists reports whether any org's project uses handle, through a definer.
 func (s *postgresStore) IssuerHandleExists(ctx context.Context, handle string) (bool, error) {
 	var row struct {
@@ -123,7 +100,7 @@ func (s *postgresStore) ResolveIssuer(ctx context.Context, handle string) (*Issu
 		DisplayName      string     `alias:"issuers.display_name"`
 		PrimaryColor     string     `alias:"issuers.primary_color"`
 		SupportEmail     string     `alias:"issuers.support_email"`
-		LogoUpdatedAt    *time.Time `alias:"issuers.logo_updated_at"`
+		LogoKey          *string    `alias:"issuers.logo_object_key"`
 		TermsURL         string     `alias:"issuers.terms_url"`
 		PrivacyURL       string     `alias:"issuers.privacy_url"`
 		TermsVersion     int32      `alias:"issuers.terms_version"`
@@ -140,7 +117,7 @@ func (s *postgresStore) ResolveIssuer(ctx context.Context, handle string) (*Issu
 	return &Issuer{
 		ProjectID: row.ProjectID, OrgID: row.OrgID, PublicID: row.PublicID, Handle: row.Handle, Name: row.Name,
 		DisplayName: row.DisplayName, PrimaryColor: row.PrimaryColor, SupportEmail: row.SupportEmail,
-		LogoUpdatedAt: utcPtr(row.LogoUpdatedAt), TermsURL: row.TermsURL, PrivacyURL: row.PrivacyURL,
+		LogoKey: derefString(row.LogoKey), TermsURL: row.TermsURL, PrivacyURL: row.PrivacyURL,
 		TermsVersion: row.TermsVersion, TermsPublishedAt: utcPtr(row.TermsPublishedAt), SignInEmailLink: row.SignInEmailLink,
 	}, nil
 }

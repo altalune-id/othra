@@ -19,8 +19,6 @@ type Reader interface {
 	ByPublicID(ctx context.Context, publicID string) (*Project, error)
 	BySlug(ctx context.Context, orgID uuid.UUID, slug string) (*Project, error)
 	List(ctx context.Context, orgID uuid.UUID) ([]*Project, error)
-	// Logo returns the project's logo, or nil when it has none.
-	Logo(ctx context.Context, projectID uuid.UUID) (*Logo, error)
 	// IssuerHandleExists reports whether any org's project uses handle.
 	IssuerHandleExists(ctx context.Context, handle string) (bool, error)
 	// ResolveIssuer finds the project behind handle before any tenant scope exists.
@@ -34,6 +32,6 @@ type Writer interface {
 	SetIssuerHandle(ctx context.Context, id uuid.UUID, handle string) error
 	// LockIssuerHandle freezes the handle of the project id at at; a locked handle keeps its first lock time.
 	LockIssuerHandle(ctx context.Context, id uuid.UUID, at time.Time) error
-	SaveLogo(ctx context.Context, l *Logo) error
-	DeleteLogo(ctx context.Context, projectID uuid.UUID) error
+	// SetLogoFile points the project id's logo at fileID, or at none when nil, and returns the file it pointed at before.
+	SetLogoFile(ctx context.Context, id uuid.UUID, fileID *uuid.UUID) (previous *uuid.UUID, err error)
 }

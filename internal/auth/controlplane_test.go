@@ -65,6 +65,11 @@ func (m userByID) ByID(_ context.Context, id uuid.UUID) (*user.User, error) {
 
 func whoamiClient(t *testing.T, orgs OrgGetter, projects ProjectGetter, users UserGetter, p session.Principal) authv1connect.AuthServiceClient {
 	t.Helper()
+	return authClient(t, NewControlPlane(orgs, projects, users), p)
+}
+
+func authClient(t *testing.T, svc *AuthService, p session.Principal) authv1connect.AuthServiceClient {
+	t.Helper()
 	inject := connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			if p.Source != "" {
@@ -77,7 +82,7 @@ func whoamiClient(t *testing.T, orgs OrgGetter, projects ProjectGetter, users Us
 			return resp, err
 		}
 	})
-	_, h := authv1connect.NewAuthServiceHandler(NewControlPlane(orgs, projects, users), connect.WithInterceptors(inject))
+	_, h := authv1connect.NewAuthServiceHandler(svc, connect.WithInterceptors(inject))
 	ts := httptest.NewServer(h)
 	t.Cleanup(ts.Close)
 	return authv1connect.NewAuthServiceClient(http.DefaultClient, ts.URL)
@@ -250,4 +255,16 @@ func TestWhoami_ReportsWhetherOrgsMayBeCreated(t *testing.T) {
 	got, err = whoami(t, whoamiClient(t, creatingOrgs{orgByID{}}, projectByID{}, userByID{}, p))
 	require.NoError(t, err)
 	assert.True(t, got.GetOrgCreation())
+}
+
+func TestWhoami_ReportsWhetherFilesMayBeUploaded(t *testing.T) {
+	p := session.Principal{Source: session.SourceLocal, Email: "ada@example.com"}
+
+	got, err := whoami(t, whoamiClient(t, orgByID{}, projectByID{}, userByID{}, p))
+	require.NoError(t, err)
+	assert.False(t, got.GetFileUploads(), "no file storage unless the deployment has one")
+
+	got, err = whoami(t, authClient(t, NewControlPlane(orgByID{}, projectByID{}, userByID{}).WithFileUploads(true), p))
+	require.NoError(t, err)
+	assert.True(t, got.GetFileUploads())
 }

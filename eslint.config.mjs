@@ -35,9 +35,6 @@ export function othra() {
         '.agents/**',
         '.claude/**',
         '.playwright-mcp/**',
-        'AUTH*.md',
-        'OTHRA-NOTES.md',
-        '*_BACKLOG.md',
       ],
     },
     {

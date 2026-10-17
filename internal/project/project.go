@@ -2,7 +2,6 @@
 package project
 
 import (
-	"bytes"
 	"math/rand/v2"
 	"net/url"
 	"regexp"
@@ -52,7 +51,8 @@ type Project struct {
 	DisplayName          string
 	PrimaryColor         string
 	SupportEmail         string
-	LogoUpdatedAt        *time.Time
+	LogoFileID           *uuid.UUID
+	LogoKey              string
 	TermsURL             string
 	PrivacyURL           string
 	TermsVersion         int32
@@ -61,16 +61,6 @@ type Project struct {
 	CreatedBy            uuid.NullUUID
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
-}
-
-// Logo is a project's uploaded logo.
-type Logo struct {
-	ProjectID   uuid.UUID
-	OrgID       uuid.UUID
-	ContentType string
-	Content     []byte
-	SHA256      string
-	UpdatedAt   time.Time
 }
 
 // Issuer is the public face of a project resolved by its handle before sign-in; it is never saved.
@@ -83,7 +73,7 @@ type Issuer struct {
 	DisplayName      string
 	PrimaryColor     string
 	SupportEmail     string
-	LogoUpdatedAt    *time.Time
+	LogoKey          string
 	TermsURL         string
 	PrivacyURL       string
 	TermsVersion     int32
@@ -282,22 +272,6 @@ func (p *Project) publishTerms(now time.Time) {
 	p.TermsPublishedAt = &at
 }
 
-// ValidateLogo reports the content type of a PNG, JPEG or WebP logo of at most 256 KB, judged by its bytes.
-func ValidateLogo(content []byte) (string, error) {
-	if len(content) == 0 || len(content) > logoMaxBytes {
-		return "", &InvalidLogoError{Reason: LogoSize}
-	}
-	switch {
-	case bytes.HasPrefix(content, []byte("\x89PNG\r\n\x1a\n")):
-		return "image/png", nil
-	case bytes.HasPrefix(content, []byte{0xFF, 0xD8, 0xFF}):
-		return "image/jpeg", nil
-	case len(content) >= 12 && bytes.Equal(content[:4], []byte("RIFF")) && bytes.Equal(content[8:12], []byte("WEBP")):
-		return "image/webp", nil
-	}
-	return "", &InvalidLogoError{Reason: LogoType}
-}
-
 func validateLink(field, link string) error {
 	if link == "" {
 		return nil
@@ -327,7 +301,8 @@ type projectRow struct {
 	DisplayName          string        `alias:"projects.display_name"`
 	PrimaryColor         string        `alias:"projects.primary_color"`
 	SupportEmail         string        `alias:"projects.support_email"`
-	LogoUpdatedAt        *time.Time    `alias:"projects.logo_updated_at"`
+	LogoFileID           *uuid.UUID    `alias:"projects.logo_file_id"`
+	LogoKey              *string       `alias:"projects.logo_object_key"`
 	TermsURL             string        `alias:"projects.terms_url"`
 	PrivacyURL           string        `alias:"projects.privacy_url"`
 	TermsVersion         int32         `alias:"projects.terms_version"`
@@ -342,10 +317,18 @@ func (r *projectRow) toProject() *Project {
 	return &Project{
 		ID: r.ID, PublicID: r.PublicID, OrgID: r.OrgID, Slug: r.Slug, Name: r.Name,
 		IssuerHandle: r.IssuerHandle, IssuerHandleLockedAt: utcPtr(r.IssuerHandleLockedAt),
-		DisplayName: r.DisplayName, PrimaryColor: r.PrimaryColor, SupportEmail: r.SupportEmail, LogoUpdatedAt: utcPtr(r.LogoUpdatedAt),
+		DisplayName: r.DisplayName, PrimaryColor: r.PrimaryColor, SupportEmail: r.SupportEmail,
+		LogoFileID: r.LogoFileID, LogoKey: derefString(r.LogoKey),
 		TermsURL: r.TermsURL, PrivacyURL: r.PrivacyURL, TermsVersion: r.TermsVersion, TermsPublishedAt: utcPtr(r.TermsPublishedAt),
 		SignInEmailLink: r.SignInEmailLink, CreatedBy: r.CreatedBy, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
+}
+
+func derefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func utcPtr(t *time.Time) *time.Time {
@@ -356,7 +339,7 @@ func utcPtr(t *time.Time) *time.Time {
 	return &u
 }
 
-func projectToProto(p *Project, orgPublicID, issuerURL string) *projectv1.Project {
+func projectToProto(p *Project, orgPublicID, issuerURL, logoURL string) *projectv1.Project {
 	return &projectv1.Project{
 		Id:                   p.PublicID,
 		OrgId:                orgPublicID,
@@ -371,13 +354,12 @@ func projectToProto(p *Project, orgPublicID, issuerURL string) *projectv1.Projec
 		DisplayName:          p.DisplayName,
 		PrimaryColor:         p.PrimaryColor,
 		SupportEmail:         p.SupportEmail,
-		HasLogo:              p.LogoUpdatedAt != nil,
-		LogoUpdatedAt:        timestampOrNil(p.LogoUpdatedAt),
 		TermsUrl:             p.TermsURL,
 		PrivacyUrl:           p.PrivacyURL,
 		TermsVersion:         p.TermsVersion,
 		TermsPublishedAt:     timestampOrNil(p.TermsPublishedAt),
 		SigninEmailLink:      p.SignInEmailLink,
+		LogoUrl:              logoURL,
 	}
 }
 

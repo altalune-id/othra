@@ -313,6 +313,10 @@ components:
           type: boolean
           title: org_creation
           description: Whether this deployment lets the caller create organizations (cloud only).
+        fileUploads:
+          type: boolean
+          title: file_uploads
+          description: Whether this deployment has file storage, so the caller can upload files such as a project logo.
       title: WhoamiResponse
       additionalProperties: false
       description: Every id is a public id.

@@ -5,6 +5,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	projectv1 "altalune.id/othra/gen/go/project/v1"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
@@ -42,7 +43,7 @@ func (s *ProjectService) CreateProject(
 	if err != nil {
 		return nil, err
 	}
-	pb := projectToProto(p, req.Msg.GetOrgId(), s.projects.IssuerURL(p.IssuerHandle))
+	pb := projectToProto(p, req.Msg.GetOrgId(), s.projects.IssuerURL(p.IssuerHandle), s.projects.LogoURL(p.LogoKey))
 	return connect.NewResponse(&projectv1.CreateProjectResponse{Project: pb}), nil
 }
 
@@ -78,7 +79,7 @@ func (s *ProjectService) ListProjects(
 	out := make([]*projectv1.Project, 0, len(projects))
 	for _, p := range projects {
 		if authz.ReachProject(ctx, p.OrgID, p.ID) {
-			out = append(out, projectToProto(p, req.Msg.GetOrgId(), s.projects.IssuerURL(p.IssuerHandle)))
+			out = append(out, projectToProto(p, req.Msg.GetOrgId(), s.projects.IssuerURL(p.IssuerHandle), s.projects.LogoURL(p.LogoKey)))
 		}
 	}
 	return connect.NewResponse(&projectv1.ListProjectsResponse{Projects: out}), nil
@@ -164,18 +165,40 @@ func (s *ProjectService) BumpTermsVersion(
 	}), nil
 }
 
-// UploadProjectLogo replaces a project's logo.
-func (s *ProjectService) UploadProjectLogo(
+// CreateProjectLogoUpload signs a direct upload of a new logo for a project.
+func (s *ProjectService) CreateProjectLogoUpload(
 	ctx context.Context,
-	req *connect.Request[projectv1.UploadProjectLogoRequest],
-) (*connect.Response[projectv1.UploadProjectLogoResponse], error) {
+	req *connect.Request[projectv1.CreateProjectLogoUploadRequest],
+) (*connect.Response[projectv1.CreateProjectLogoUploadResponse], error) {
+	p, err := s.reachable(ctx, req.Msg.GetId(), authz.ReachWholeProject)
+	if err != nil {
+		return nil, err
+	}
+	f, up, err := s.projects.CreateLogoUpload(ctx, p.ID, req.Msg.GetContentType(), int64(req.Msg.GetSizeBytes()))
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&projectv1.CreateProjectLogoUploadResponse{
+		UploadId:  f.PublicID,
+		Url:       up.URL,
+		Method:    up.Method,
+		Headers:   up.Headers,
+		ExpiresAt: timestamppb.New(up.ExpiresAt),
+	}), nil
+}
+
+// CompleteProjectLogoUpload makes a finished upload the project's logo.
+func (s *ProjectService) CompleteProjectLogoUpload(
+	ctx context.Context,
+	req *connect.Request[projectv1.CompleteProjectLogoUploadRequest],
+) (*connect.Response[projectv1.CompleteProjectLogoUploadResponse], error) {
 	out, err := s.update(ctx, req.Msg.GetId(), func(p *Project) (*Project, error) {
-		return s.projects.UploadLogo(ctx, p.ID, req.Msg.GetContent())
+		return s.projects.CompleteLogoUpload(ctx, p.ID, req.Msg.GetUploadId())
 	})
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&projectv1.UploadProjectLogoResponse{Project: out}), nil
+	return connect.NewResponse(&projectv1.CompleteProjectLogoUploadResponse{Project: out}), nil
 }
 
 // DeleteProjectLogo removes a project's logo.
@@ -190,26 +213,6 @@ func (s *ProjectService) DeleteProjectLogo(
 		return nil, err
 	}
 	return connect.NewResponse(&projectv1.DeleteProjectLogoResponse{Project: out}), nil
-}
-
-// GetProjectLogo returns a project's logo; a project without one answers an empty content type and content.
-func (s *ProjectService) GetProjectLogo(
-	ctx context.Context,
-	req *connect.Request[projectv1.GetProjectLogoRequest],
-) (*connect.Response[projectv1.GetProjectLogoResponse], error) {
-	p, err := s.reachable(ctx, req.Msg.GetId(), authz.ReachProject)
-	if err != nil {
-		return nil, err
-	}
-	l, err := s.projects.Logo(ctx, p.ID)
-	if err != nil {
-		return nil, err
-	}
-	out := &projectv1.GetProjectLogoResponse{}
-	if l != nil {
-		out.ContentType, out.Content = l.ContentType, l.Content
-	}
-	return connect.NewResponse(out), nil
 }
 
 // CheckIssuerHandle reports whether a handle is free in an org's new project, or in the project named by project_id.
@@ -284,5 +287,5 @@ func (s *ProjectService) toProto(ctx context.Context, p *Project) (*projectv1.Pr
 	if err != nil {
 		return nil, err
 	}
-	return projectToProto(p, orgPublicID, s.projects.IssuerURL(p.IssuerHandle)), nil
+	return projectToProto(p, orgPublicID, s.projects.IssuerURL(p.IssuerHandle), s.projects.LogoURL(p.LogoKey)), nil
 }

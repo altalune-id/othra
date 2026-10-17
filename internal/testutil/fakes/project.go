@@ -12,17 +12,16 @@ import (
 
 // ProjectStore is a project.Store test double that returns its configured values or Err.
 type ProjectStore struct {
-	Err           error
-	Project       *project.Project
-	Projects      []*project.Project
-	SaveFn        func(*project.Project) error
-	Saved         *project.Project
-	TakenHandles  []string
-	LogoContent   *project.Logo
-	Issuer        *project.Issuer
-	HandleSetErr  error
-	LockedAt      *time.Time
-	DeletedLogoOf uuid.UUID
+	Err          error
+	Project      *project.Project
+	Projects     []*project.Project
+	SaveFn       func(*project.Project) error
+	Saved        *project.Project
+	TakenHandles []string
+	Issuer       *project.Issuer
+	HandleSetErr error
+	LockedAt     *time.Time
+	LogoSetErr   error
 }
 
 var _ project.Store = (*ProjectStore)(nil)
@@ -73,14 +72,6 @@ func (f *ProjectStore) List(context.Context, uuid.UUID) ([]*project.Project, err
 	return f.Projects, nil
 }
 
-// Logo implements project.Store; it returns LogoContent.
-func (f *ProjectStore) Logo(context.Context, uuid.UUID) (*project.Logo, error) {
-	if f.Err != nil {
-		return nil, f.Err
-	}
-	return f.LogoContent, nil
-}
-
 // IssuerHandleExists implements project.Store; a handle in TakenHandles exists.
 func (f *ProjectStore) IssuerHandleExists(_ context.Context, handle string) (bool, error) {
 	if f.Err != nil {
@@ -117,18 +108,18 @@ func (f *ProjectStore) LockIssuerHandle(_ context.Context, _ uuid.UUID, at time.
 	return f.Err
 }
 
-// SaveLogo implements project.Store; it keeps the logo as LogoContent.
-func (f *ProjectStore) SaveLogo(_ context.Context, l *project.Logo) error {
-	if f.Err != nil {
-		return f.Err
+// SetLogoFile implements project.Store; it moves Project's logo file to fileID and returns the one it replaced.
+func (f *ProjectStore) SetLogoFile(_ context.Context, _ uuid.UUID, fileID *uuid.UUID) (*uuid.UUID, error) {
+	if f.LogoSetErr != nil {
+		return nil, f.LogoSetErr
 	}
-	f.LogoContent = l
-	return nil
-}
-
-// DeleteLogo implements project.Store and records the project id.
-func (f *ProjectStore) DeleteLogo(_ context.Context, projectID uuid.UUID) error {
-	f.DeletedLogoOf = projectID
-	f.LogoContent = nil
-	return f.Err
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	if f.Project == nil {
+		return nil, &project.NotFoundError{}
+	}
+	old := f.Project.LogoFileID
+	f.Project.LogoFileID = fileID
+	return old, nil
 }

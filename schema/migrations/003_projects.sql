@@ -39,29 +39,11 @@ CREATE POLICY {{.TablePrefix}}projects_tenant ON {{.Schema}}.{{.TablePrefix}}pro
   USING (org_id = {{.Schema}}.{{.TablePrefix}}current_org_id())
   WITH CHECK (org_id = {{.Schema}}.{{.TablePrefix}}current_org_id());
 
-CREATE TABLE {{.Schema}}.{{.TablePrefix}}project_logos (
-  project_id    UUID PRIMARY KEY,
-  org_id        UUID NOT NULL,
-  content_type  TEXT NOT NULL CHECK (content_type IN ('image/png', 'image/jpeg', 'image/webp')),
-  content       BYTEA NOT NULL CHECK (length(content) BETWEEN 1 AND 262144),
-  sha256        TEXT NOT NULL,
-  updated_at    TIMESTAMPTZ NOT NULL,
-  CONSTRAINT {{.TablePrefix}}project_logos_org_project_fkey FOREIGN KEY (org_id, project_id) REFERENCES {{.Schema}}.{{.TablePrefix}}projects (org_id, id) ON DELETE CASCADE
-);
-
-ALTER TABLE {{.Schema}}.{{.TablePrefix}}project_logos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE {{.Schema}}.{{.TablePrefix}}project_logos FORCE ROW LEVEL SECURITY;
-CREATE POLICY {{.TablePrefix}}project_logos_tenant ON {{.Schema}}.{{.TablePrefix}}project_logos
-  FOR ALL
-  USING (org_id = {{.Schema}}.{{.TablePrefix}}current_org_id())
-  WITH CHECK (org_id = {{.Schema}}.{{.TablePrefix}}current_org_id());
-
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TABLE IF EXISTS {{.Schema}}.{{.TablePrefix}}project_logos;
 DROP TABLE IF EXISTS {{.Schema}}.{{.TablePrefix}}projects;
 
 -- +goose StatementEnd

@@ -37,6 +37,10 @@ func TestFrom(t *testing.T) {
 			cfg:  capabilities.Config{},
 			want: capabilities.Capabilities{PersonalKeys: true},
 		},
+		"file storage": {
+			cfg:  capabilities.Config{Selfhosted: true, FileStorage: true},
+			want: capabilities.Capabilities{LocalLogin: true, PersonalKeys: true, FileUploads: true},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.want, capabilities.From(tc.cfg))

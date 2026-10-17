@@ -185,6 +185,9 @@ func TestRequestRules_Accept(t *testing.T) {
 		{"empty slug on create mints one", &orgv1.CreateOrgRequest{Name: "Acme"}},
 		{"shortest slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: "a-1"}},
 		{"longest slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: strings.Repeat("a", 64)}},
+		{"largest logo upload", &projectv1.CreateProjectLogoUploadRequest{Id: goodID, ContentType: strings.Repeat("t", 100), SizeBytes: 10 << 20}},
+		{"any declared type is the domain's", &projectv1.CreateProjectLogoUploadRequest{Id: goodID, ContentType: "image/gif", SizeBytes: 1}},
+		{"complete an upload", &projectv1.CompleteProjectLogoUploadRequest{Id: goodID, UploadId: goodID}},
 		{"reserved slug is the domain's", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme", Slug: "new"}},
 	}
 	for _, tt := range accepted {
@@ -238,6 +241,12 @@ func TestRequestRules_Refuse(t *testing.T) {
 		{"padded slug", &orgv1.CreateOrgRequest{Name: "Acme", Slug: " acme "}, "slug", apperror.FieldInvalidFormat},
 		{"2-character slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: "ab"}, "slug", apperror.FieldTooShort},
 		{"65-character slug", &projectv1.CreateProjectRequest{OrgId: goodID, Name: "Web", Slug: strings.Repeat("a", 65)}, "slug", apperror.FieldTooLong},
+		{"logo without a type", &projectv1.CreateProjectLogoUploadRequest{Id: goodID, SizeBytes: 1}, "content_type", apperror.FieldRequired},
+		{"101-character logo type", &projectv1.CreateProjectLogoUploadRequest{Id: goodID, ContentType: strings.Repeat("t", 101), SizeBytes: 1}, "content_type", apperror.FieldTooLong},
+		{"empty logo", &projectv1.CreateProjectLogoUploadRequest{Id: goodID, ContentType: "image/png"}, "size_bytes", apperror.FieldInvalid},
+		{"logo past the transport bound", &projectv1.CreateProjectLogoUploadRequest{Id: goodID, ContentType: "image/png", SizeBytes: 10<<20 + 1}, "size_bytes", apperror.FieldInvalid},
+		{"upload id", &projectv1.CompleteProjectLogoUploadRequest{Id: goodID, UploadId: "x"}, "upload_id", apperror.FieldInvalidFormat},
+		{"missing upload id", &projectv1.CompleteProjectLogoUploadRequest{Id: goodID}, "upload_id", apperror.FieldRequired},
 		{"missing slug on update", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme"}, "slug", apperror.FieldRequired},
 		{"delivery id", &webhookv1.RetryWebhookDeliveryRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, DeliveryId: "x"}, "delivery_id", apperror.FieldInvalidFormat},
 	}

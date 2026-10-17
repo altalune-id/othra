@@ -13,6 +13,7 @@ import (
 
 	projectv1 "altalune.id/othra/gen/go/project/v1"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	"altalune.id/othra/internal/kernel/storage"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/fakes"
 )
@@ -142,18 +143,9 @@ func TestProjectService_IssuerRPCs(t *testing.T) {
 	assert.Equal(t, int32(2), bumped.Msg.GetVersion())
 	assert.NotNil(t, bumped.Msg.GetPublishedAt())
 
-	png := append([]byte("\x89PNG\r\n\x1a\n"), 1, 2, 3)
-	_, err = c.UploadProjectLogo(ctx, connect.NewRequest(&projectv1.UploadProjectLogoRequest{Id: p.PublicID, Content: png}))
+	deleted, err := c.DeleteProjectLogo(ctx, connect.NewRequest(&projectv1.DeleteProjectLogoRequest{Id: p.PublicID}))
 	require.NoError(t, err)
-	logo, err := c.GetProjectLogo(ctx, connect.NewRequest(&projectv1.GetProjectLogoRequest{Id: p.PublicID}))
-	require.NoError(t, err)
-	assert.Equal(t, "image/png", logo.Msg.GetContentType())
-	assert.Equal(t, png, logo.Msg.GetContent())
-	_, err = c.DeleteProjectLogo(ctx, connect.NewRequest(&projectv1.DeleteProjectLogoRequest{Id: p.PublicID}))
-	require.NoError(t, err)
-	empty, err := c.GetProjectLogo(ctx, connect.NewRequest(&projectv1.GetProjectLogoRequest{Id: p.PublicID}))
-	require.NoError(t, err)
-	assert.Empty(t, empty.Msg.GetContent(), "no logo answers empty")
+	assert.Empty(t, deleted.Msg.GetProject().GetLogoUrl(), "no logo answers an empty URL")
 
 	for handle, want := range map[string]string{"free-one": "ok", "taken-one": "taken", "system": "reserved", "Bad": "invalid", "acme-web": "ok"} {
 		got, err := c.CheckIssuerHandle(ctx, connect.NewRequest(&projectv1.CheckIssuerHandleRequest{OrgId: orgPub, ProjectId: p.PublicID, IssuerHandle: handle}))
@@ -168,7 +160,15 @@ func TestProjectService_IssuerRPCs(t *testing.T) {
 			return err
 		},
 		func() error {
-			_, err := c.GetProjectLogo(ctx, connect.NewRequest(&projectv1.GetProjectLogoRequest{Id: "unknwnunknwnunknwnabc"}))
+			_, err := c.CreateProjectLogoUpload(ctx, connect.NewRequest(&projectv1.CreateProjectLogoUploadRequest{
+				Id: "unknwnunknwnunknwnabc", ContentType: "image/png", SizeBytes: 10,
+			}))
+			return err
+		},
+		func() error {
+			_, err := c.CompleteProjectLogoUpload(ctx, connect.NewRequest(&projectv1.CompleteProjectLogoUploadRequest{
+				Id: "unknwnunknwnunknwnabc", UploadId: "unknwnunknwnunknwnabc",
+			}))
 			return err
 		},
 		func() error {
@@ -182,4 +182,45 @@ func TestProjectService_IssuerRPCs(t *testing.T) {
 	} {
 		require.Error(t, call())
 	}
+}
+
+func TestProjectService_LogoUpload(t *testing.T) {
+	refs := fakes.NewPublicIDs()
+	orgID := uuid.New()
+	refs.Org(orgID)
+	p, err := project.NewProject(orgID, "web", "Web", uuid.New())
+	require.NoError(t, err)
+	store := &fakes.ProjectStore{Project: p}
+	files := &fakes.FileStorage{Files: map[string]*storage.File{}}
+	_, handler := projectv1connect.NewProjectServiceHandler(
+		project.NewControlPlane(project.NewService(store, nil).WithStorage(files, fakes.Transactor{}), refs),
+		connect.WithInterceptors(fakes.OperatorInterceptor()))
+	ts := httptest.NewServer(handler)
+	t.Cleanup(ts.Close)
+	c := projectv1connect.NewProjectServiceClient(http.DefaultClient, ts.URL)
+	ctx := context.Background()
+
+	up, err := c.CreateProjectLogoUpload(ctx, connect.NewRequest(&projectv1.CreateProjectLogoUploadRequest{
+		Id: p.PublicID, ContentType: "image/webp", SizeBytes: 2048,
+	}))
+	require.NoError(t, err)
+	assert.Equal(t, "upxdupxdupxdupxdupxd2", up.Msg.GetUploadId())
+	assert.Equal(t, "https://files.test/put", up.Msg.GetUrl())
+	assert.Equal(t, "PUT", up.Msg.GetMethod())
+	assert.Equal(t, map[string]string{"Content-Type": "image/webp"}, up.Msg.GetHeaders())
+	assert.NotNil(t, up.Msg.GetExpiresAt())
+	require.Len(t, files.Begun, 1)
+	assert.Equal(t, int64(2048), files.Begun[0].Size)
+
+	logo := &storage.File{ID: uuid.New(), PublicID: up.Msg.GetUploadId(), ObjectKey: "public/othra/projects/" + p.PublicID + "/logo/x.webp"}
+	files.Files[logo.PublicID] = logo
+	p.LogoKey = logo.ObjectKey
+	done, err := c.CompleteProjectLogoUpload(ctx, connect.NewRequest(&projectv1.CompleteProjectLogoUploadRequest{Id: p.PublicID, UploadId: logo.PublicID}))
+	require.NoError(t, err)
+	assert.Equal(t, "https://files.test/"+logo.ObjectKey, done.Msg.GetProject().GetLogoUrl())
+	assert.Equal(t, &logo.ID, store.Project.LogoFileID)
+
+	files.BeginErr = &storage.TooLargeError{Purpose: "logo", MaxBytes: 256 << 10}
+	_, err = c.CreateProjectLogoUpload(ctx, connect.NewRequest(&projectv1.CreateProjectLogoUploadRequest{Id: p.PublicID, ContentType: "image/png", SizeBytes: 300 << 10}))
+	require.Error(t, err)
 }

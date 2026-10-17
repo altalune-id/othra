@@ -24,6 +24,7 @@ type Projects struct {
 	TermsVersion         postgres.ColumnInteger
 	TermsPublishedAt     postgres.ColumnTimestampz
 	SignInEmailLink      postgres.ColumnBool
+	LogoFileID           postgres.ColumnString
 
 	AllColumns postgres.ColumnList
 }
@@ -52,9 +53,11 @@ func NewProjects(schema, tablePrefix string) *Projects {
 		termsVersion         = postgres.IntegerColumn("terms_version")
 		termsPublishedAt     = postgres.TimestampzColumn("terms_published_at")
 		signInEmailLink      = postgres.BoolColumn("signin_email_link")
+		logoFileID           = postgres.StringColumn("logo_file_id")
 		all                  = postgres.ColumnList{
 			id, publicID, orgID, slug, name, createdBy, createdAt, updatedAt, issuerHandle, issuerHandleLockedAt,
 			displayName, primaryColor, supportEmail, termsURL, privacyURL, termsVersion, termsPublishedAt, signInEmailLink,
+			logoFileID,
 		}
 	)
 	return &Projects{
@@ -77,6 +80,7 @@ func NewProjects(schema, tablePrefix string) *Projects {
 		TermsVersion:         termsVersion,
 		TermsPublishedAt:     termsPublishedAt,
 		SignInEmailLink:      signInEmailLink,
+		LogoFileID:           logoFileID,
 		AllColumns:           all,
 	}
 }

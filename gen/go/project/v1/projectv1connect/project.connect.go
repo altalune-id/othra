@@ -60,15 +60,15 @@ const (
 	// ProjectServiceCheckIssuerHandleProcedure is the fully-qualified name of the ProjectService's
 	// CheckIssuerHandle RPC.
 	ProjectServiceCheckIssuerHandleProcedure = "/project.v1.ProjectService/CheckIssuerHandle"
-	// ProjectServiceUploadProjectLogoProcedure is the fully-qualified name of the ProjectService's
-	// UploadProjectLogo RPC.
-	ProjectServiceUploadProjectLogoProcedure = "/project.v1.ProjectService/UploadProjectLogo"
+	// ProjectServiceCreateProjectLogoUploadProcedure is the fully-qualified name of the
+	// ProjectService's CreateProjectLogoUpload RPC.
+	ProjectServiceCreateProjectLogoUploadProcedure = "/project.v1.ProjectService/CreateProjectLogoUpload"
+	// ProjectServiceCompleteProjectLogoUploadProcedure is the fully-qualified name of the
+	// ProjectService's CompleteProjectLogoUpload RPC.
+	ProjectServiceCompleteProjectLogoUploadProcedure = "/project.v1.ProjectService/CompleteProjectLogoUpload"
 	// ProjectServiceDeleteProjectLogoProcedure is the fully-qualified name of the ProjectService's
 	// DeleteProjectLogo RPC.
 	ProjectServiceDeleteProjectLogoProcedure = "/project.v1.ProjectService/DeleteProjectLogo"
-	// ProjectServiceGetProjectLogoProcedure is the fully-qualified name of the ProjectService's
-	// GetProjectLogo RPC.
-	ProjectServiceGetProjectLogoProcedure = "/project.v1.ProjectService/GetProjectLogo"
 )
 
 // ProjectServiceClient is a client for the project.v1.ProjectService service.
@@ -82,9 +82,9 @@ type ProjectServiceClient interface {
 	UpdateProjectTerms(context.Context, *connect.Request[v1.UpdateProjectTermsRequest]) (*connect.Response[v1.UpdateProjectTermsResponse], error)
 	BumpTermsVersion(context.Context, *connect.Request[v1.BumpTermsVersionRequest]) (*connect.Response[v1.BumpTermsVersionResponse], error)
 	CheckIssuerHandle(context.Context, *connect.Request[v1.CheckIssuerHandleRequest]) (*connect.Response[v1.CheckIssuerHandleResponse], error)
-	UploadProjectLogo(context.Context, *connect.Request[v1.UploadProjectLogoRequest]) (*connect.Response[v1.UploadProjectLogoResponse], error)
+	CreateProjectLogoUpload(context.Context, *connect.Request[v1.CreateProjectLogoUploadRequest]) (*connect.Response[v1.CreateProjectLogoUploadResponse], error)
+	CompleteProjectLogoUpload(context.Context, *connect.Request[v1.CompleteProjectLogoUploadRequest]) (*connect.Response[v1.CompleteProjectLogoUploadResponse], error)
 	DeleteProjectLogo(context.Context, *connect.Request[v1.DeleteProjectLogoRequest]) (*connect.Response[v1.DeleteProjectLogoResponse], error)
-	GetProjectLogo(context.Context, *connect.Request[v1.GetProjectLogoRequest]) (*connect.Response[v1.GetProjectLogoResponse], error)
 }
 
 // NewProjectServiceClient constructs a client for the project.v1.ProjectService service. By
@@ -152,10 +152,16 @@ func NewProjectServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(projectServiceMethods.ByName("CheckIssuerHandle")),
 			connect.WithClientOptions(opts...),
 		),
-		uploadProjectLogo: connect.NewClient[v1.UploadProjectLogoRequest, v1.UploadProjectLogoResponse](
+		createProjectLogoUpload: connect.NewClient[v1.CreateProjectLogoUploadRequest, v1.CreateProjectLogoUploadResponse](
 			httpClient,
-			baseURL+ProjectServiceUploadProjectLogoProcedure,
-			connect.WithSchema(projectServiceMethods.ByName("UploadProjectLogo")),
+			baseURL+ProjectServiceCreateProjectLogoUploadProcedure,
+			connect.WithSchema(projectServiceMethods.ByName("CreateProjectLogoUpload")),
+			connect.WithClientOptions(opts...),
+		),
+		completeProjectLogoUpload: connect.NewClient[v1.CompleteProjectLogoUploadRequest, v1.CompleteProjectLogoUploadResponse](
+			httpClient,
+			baseURL+ProjectServiceCompleteProjectLogoUploadProcedure,
+			connect.WithSchema(projectServiceMethods.ByName("CompleteProjectLogoUpload")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteProjectLogo: connect.NewClient[v1.DeleteProjectLogoRequest, v1.DeleteProjectLogoResponse](
@@ -164,29 +170,23 @@ func NewProjectServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(projectServiceMethods.ByName("DeleteProjectLogo")),
 			connect.WithClientOptions(opts...),
 		),
-		getProjectLogo: connect.NewClient[v1.GetProjectLogoRequest, v1.GetProjectLogoResponse](
-			httpClient,
-			baseURL+ProjectServiceGetProjectLogoProcedure,
-			connect.WithSchema(projectServiceMethods.ByName("GetProjectLogo")),
-			connect.WithClientOptions(opts...),
-		),
 	}
 }
 
 // projectServiceClient implements ProjectServiceClient.
 type projectServiceClient struct {
-	createProject         *connect.Client[v1.CreateProjectRequest, v1.CreateProjectResponse]
-	getProject            *connect.Client[v1.GetProjectRequest, v1.GetProjectResponse]
-	listProjects          *connect.Client[v1.ListProjectsRequest, v1.ListProjectsResponse]
-	updateProject         *connect.Client[v1.UpdateProjectRequest, v1.UpdateProjectResponse]
-	updateProjectIssuer   *connect.Client[v1.UpdateProjectIssuerRequest, v1.UpdateProjectIssuerResponse]
-	updateProjectBranding *connect.Client[v1.UpdateProjectBrandingRequest, v1.UpdateProjectBrandingResponse]
-	updateProjectTerms    *connect.Client[v1.UpdateProjectTermsRequest, v1.UpdateProjectTermsResponse]
-	bumpTermsVersion      *connect.Client[v1.BumpTermsVersionRequest, v1.BumpTermsVersionResponse]
-	checkIssuerHandle     *connect.Client[v1.CheckIssuerHandleRequest, v1.CheckIssuerHandleResponse]
-	uploadProjectLogo     *connect.Client[v1.UploadProjectLogoRequest, v1.UploadProjectLogoResponse]
-	deleteProjectLogo     *connect.Client[v1.DeleteProjectLogoRequest, v1.DeleteProjectLogoResponse]
-	getProjectLogo        *connect.Client[v1.GetProjectLogoRequest, v1.GetProjectLogoResponse]
+	createProject             *connect.Client[v1.CreateProjectRequest, v1.CreateProjectResponse]
+	getProject                *connect.Client[v1.GetProjectRequest, v1.GetProjectResponse]
+	listProjects              *connect.Client[v1.ListProjectsRequest, v1.ListProjectsResponse]
+	updateProject             *connect.Client[v1.UpdateProjectRequest, v1.UpdateProjectResponse]
+	updateProjectIssuer       *connect.Client[v1.UpdateProjectIssuerRequest, v1.UpdateProjectIssuerResponse]
+	updateProjectBranding     *connect.Client[v1.UpdateProjectBrandingRequest, v1.UpdateProjectBrandingResponse]
+	updateProjectTerms        *connect.Client[v1.UpdateProjectTermsRequest, v1.UpdateProjectTermsResponse]
+	bumpTermsVersion          *connect.Client[v1.BumpTermsVersionRequest, v1.BumpTermsVersionResponse]
+	checkIssuerHandle         *connect.Client[v1.CheckIssuerHandleRequest, v1.CheckIssuerHandleResponse]
+	createProjectLogoUpload   *connect.Client[v1.CreateProjectLogoUploadRequest, v1.CreateProjectLogoUploadResponse]
+	completeProjectLogoUpload *connect.Client[v1.CompleteProjectLogoUploadRequest, v1.CompleteProjectLogoUploadResponse]
+	deleteProjectLogo         *connect.Client[v1.DeleteProjectLogoRequest, v1.DeleteProjectLogoResponse]
 }
 
 // CreateProject calls project.v1.ProjectService.CreateProject.
@@ -234,19 +234,19 @@ func (c *projectServiceClient) CheckIssuerHandle(ctx context.Context, req *conne
 	return c.checkIssuerHandle.CallUnary(ctx, req)
 }
 
-// UploadProjectLogo calls project.v1.ProjectService.UploadProjectLogo.
-func (c *projectServiceClient) UploadProjectLogo(ctx context.Context, req *connect.Request[v1.UploadProjectLogoRequest]) (*connect.Response[v1.UploadProjectLogoResponse], error) {
-	return c.uploadProjectLogo.CallUnary(ctx, req)
+// CreateProjectLogoUpload calls project.v1.ProjectService.CreateProjectLogoUpload.
+func (c *projectServiceClient) CreateProjectLogoUpload(ctx context.Context, req *connect.Request[v1.CreateProjectLogoUploadRequest]) (*connect.Response[v1.CreateProjectLogoUploadResponse], error) {
+	return c.createProjectLogoUpload.CallUnary(ctx, req)
+}
+
+// CompleteProjectLogoUpload calls project.v1.ProjectService.CompleteProjectLogoUpload.
+func (c *projectServiceClient) CompleteProjectLogoUpload(ctx context.Context, req *connect.Request[v1.CompleteProjectLogoUploadRequest]) (*connect.Response[v1.CompleteProjectLogoUploadResponse], error) {
+	return c.completeProjectLogoUpload.CallUnary(ctx, req)
 }
 
 // DeleteProjectLogo calls project.v1.ProjectService.DeleteProjectLogo.
 func (c *projectServiceClient) DeleteProjectLogo(ctx context.Context, req *connect.Request[v1.DeleteProjectLogoRequest]) (*connect.Response[v1.DeleteProjectLogoResponse], error) {
 	return c.deleteProjectLogo.CallUnary(ctx, req)
-}
-
-// GetProjectLogo calls project.v1.ProjectService.GetProjectLogo.
-func (c *projectServiceClient) GetProjectLogo(ctx context.Context, req *connect.Request[v1.GetProjectLogoRequest]) (*connect.Response[v1.GetProjectLogoResponse], error) {
-	return c.getProjectLogo.CallUnary(ctx, req)
 }
 
 // ProjectServiceHandler is an implementation of the project.v1.ProjectService service.
@@ -260,9 +260,9 @@ type ProjectServiceHandler interface {
 	UpdateProjectTerms(context.Context, *connect.Request[v1.UpdateProjectTermsRequest]) (*connect.Response[v1.UpdateProjectTermsResponse], error)
 	BumpTermsVersion(context.Context, *connect.Request[v1.BumpTermsVersionRequest]) (*connect.Response[v1.BumpTermsVersionResponse], error)
 	CheckIssuerHandle(context.Context, *connect.Request[v1.CheckIssuerHandleRequest]) (*connect.Response[v1.CheckIssuerHandleResponse], error)
-	UploadProjectLogo(context.Context, *connect.Request[v1.UploadProjectLogoRequest]) (*connect.Response[v1.UploadProjectLogoResponse], error)
+	CreateProjectLogoUpload(context.Context, *connect.Request[v1.CreateProjectLogoUploadRequest]) (*connect.Response[v1.CreateProjectLogoUploadResponse], error)
+	CompleteProjectLogoUpload(context.Context, *connect.Request[v1.CompleteProjectLogoUploadRequest]) (*connect.Response[v1.CompleteProjectLogoUploadResponse], error)
 	DeleteProjectLogo(context.Context, *connect.Request[v1.DeleteProjectLogoRequest]) (*connect.Response[v1.DeleteProjectLogoResponse], error)
-	GetProjectLogo(context.Context, *connect.Request[v1.GetProjectLogoRequest]) (*connect.Response[v1.GetProjectLogoResponse], error)
 }
 
 // NewProjectServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -326,22 +326,22 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 		connect.WithSchema(projectServiceMethods.ByName("CheckIssuerHandle")),
 		connect.WithHandlerOptions(opts...),
 	)
-	projectServiceUploadProjectLogoHandler := connect.NewUnaryHandler(
-		ProjectServiceUploadProjectLogoProcedure,
-		svc.UploadProjectLogo,
-		connect.WithSchema(projectServiceMethods.ByName("UploadProjectLogo")),
+	projectServiceCreateProjectLogoUploadHandler := connect.NewUnaryHandler(
+		ProjectServiceCreateProjectLogoUploadProcedure,
+		svc.CreateProjectLogoUpload,
+		connect.WithSchema(projectServiceMethods.ByName("CreateProjectLogoUpload")),
+		connect.WithHandlerOptions(opts...),
+	)
+	projectServiceCompleteProjectLogoUploadHandler := connect.NewUnaryHandler(
+		ProjectServiceCompleteProjectLogoUploadProcedure,
+		svc.CompleteProjectLogoUpload,
+		connect.WithSchema(projectServiceMethods.ByName("CompleteProjectLogoUpload")),
 		connect.WithHandlerOptions(opts...),
 	)
 	projectServiceDeleteProjectLogoHandler := connect.NewUnaryHandler(
 		ProjectServiceDeleteProjectLogoProcedure,
 		svc.DeleteProjectLogo,
 		connect.WithSchema(projectServiceMethods.ByName("DeleteProjectLogo")),
-		connect.WithHandlerOptions(opts...),
-	)
-	projectServiceGetProjectLogoHandler := connect.NewUnaryHandler(
-		ProjectServiceGetProjectLogoProcedure,
-		svc.GetProjectLogo,
-		connect.WithSchema(projectServiceMethods.ByName("GetProjectLogo")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/project.v1.ProjectService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -364,12 +364,12 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 			projectServiceBumpTermsVersionHandler.ServeHTTP(w, r)
 		case ProjectServiceCheckIssuerHandleProcedure:
 			projectServiceCheckIssuerHandleHandler.ServeHTTP(w, r)
-		case ProjectServiceUploadProjectLogoProcedure:
-			projectServiceUploadProjectLogoHandler.ServeHTTP(w, r)
+		case ProjectServiceCreateProjectLogoUploadProcedure:
+			projectServiceCreateProjectLogoUploadHandler.ServeHTTP(w, r)
+		case ProjectServiceCompleteProjectLogoUploadProcedure:
+			projectServiceCompleteProjectLogoUploadHandler.ServeHTTP(w, r)
 		case ProjectServiceDeleteProjectLogoProcedure:
 			projectServiceDeleteProjectLogoHandler.ServeHTTP(w, r)
-		case ProjectServiceGetProjectLogoProcedure:
-			projectServiceGetProjectLogoHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -415,14 +415,14 @@ func (UnimplementedProjectServiceHandler) CheckIssuerHandle(context.Context, *co
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.CheckIssuerHandle is not implemented"))
 }
 
-func (UnimplementedProjectServiceHandler) UploadProjectLogo(context.Context, *connect.Request[v1.UploadProjectLogoRequest]) (*connect.Response[v1.UploadProjectLogoResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.UploadProjectLogo is not implemented"))
+func (UnimplementedProjectServiceHandler) CreateProjectLogoUpload(context.Context, *connect.Request[v1.CreateProjectLogoUploadRequest]) (*connect.Response[v1.CreateProjectLogoUploadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.CreateProjectLogoUpload is not implemented"))
+}
+
+func (UnimplementedProjectServiceHandler) CompleteProjectLogoUpload(context.Context, *connect.Request[v1.CompleteProjectLogoUploadRequest]) (*connect.Response[v1.CompleteProjectLogoUploadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.CompleteProjectLogoUpload is not implemented"))
 }
 
 func (UnimplementedProjectServiceHandler) DeleteProjectLogo(context.Context, *connect.Request[v1.DeleteProjectLogoRequest]) (*connect.Response[v1.DeleteProjectLogoResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.DeleteProjectLogo is not implemented"))
-}
-
-func (UnimplementedProjectServiceHandler) GetProjectLogo(context.Context, *connect.Request[v1.GetProjectLogoRequest]) (*connect.Response[v1.GetProjectLogoResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.GetProjectLogo is not implemented"))
 }

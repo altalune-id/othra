@@ -55,6 +55,8 @@ message WhoamiResponse {
   bool operator = 12;
   // Whether this deployment lets the caller create organizations (cloud only).
   bool org_creation = 14;
+  // Whether this deployment has file storage, so the caller can upload files such as a project logo.
+  bool file_uploads = 15;
 }
 
 message UpdateProfileRequest {

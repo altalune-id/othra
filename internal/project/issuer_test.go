@@ -1,7 +1,6 @@
 package project
 
 import (
-	"bytes"
 	"errors"
 	"strings"
 	"testing"
@@ -152,31 +151,4 @@ func TestProject_BumpTermsVersion(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int32(2), v)
 	assert.True(t, p.TermsPublishedAt.Equal(now.Add(time.Minute)))
-}
-
-func TestValidateLogo(t *testing.T) {
-	png := append([]byte("\x89PNG\r\n\x1a\n"), make([]byte, 16)...)
-	jpeg := append([]byte{0xFF, 0xD8, 0xFF, 0xE0}, make([]byte, 16)...)
-	webp := append([]byte("RIFF\x00\x00\x00\x00WEBPVP8 "), make([]byte, 16)...)
-	for want, content := range map[string][]byte{"image/png": png, "image/jpeg": jpeg, "image/webp": webp} {
-		got, err := ValidateLogo(content)
-		require.NoError(t, err, want)
-		assert.Equal(t, want, got)
-	}
-	refused := map[string]struct {
-		content []byte
-		reason  LogoReason
-	}{
-		"svg":   {[]byte(`<svg xmlns="http://www.w3.org/2000/svg"></svg>`), LogoType},
-		"gif":   {[]byte("GIF89a......"), LogoType},
-		"text":  {[]byte("hello, logo"), LogoType},
-		"empty": {nil, LogoSize},
-		"large": {append(bytes.Clone(png), make([]byte, logoMaxBytes)...), LogoSize},
-	}
-	for name, c := range refused {
-		_, err := ValidateLogo(c.content)
-		var e *InvalidLogoError
-		require.True(t, errors.As(err, &e), "%s: %v", name, err)
-		assert.Equal(t, c.reason, e.Reason, name)
-	}
 }

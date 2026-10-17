@@ -10,6 +10,8 @@ type Capabilities struct {
 	PersonalKeys bool
 	// OperatorOrgSupport lets staff (an operator who is a person) manage, as an admin, the members of an org they do not belong to.
 	OperatorOrgSupport bool
+	// FileUploads lets surfaces offer uploads such as a project logo.
+	FileUploads bool
 }
 
 // From derives Capabilities from the deployment posture.
@@ -22,5 +24,6 @@ func From(c Config) Capabilities {
 		EnvGenesis:         local && c.EnvGenesis,
 		PersonalKeys:       !c.BasicAuth,
 		OperatorOrgSupport: c.Cloud,
+		FileUploads:        c.FileStorage,
 	}
 }

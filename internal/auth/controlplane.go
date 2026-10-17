@@ -26,10 +26,11 @@ type Profiles interface {
 
 // AuthService implements auth.v1.AuthService; every id it returns is a public id.
 type AuthService struct {
-	orgs     OrgGetter
-	projects ProjectGetter
-	users    UserGetter
-	profiles Profiles
+	orgs        OrgGetter
+	projects    ProjectGetter
+	users       UserGetter
+	profiles    Profiles
+	fileUploads bool
 }
 
 var _ authv1connect.AuthServiceHandler = (*AuthService)(nil)
@@ -42,6 +43,12 @@ func NewControlPlane(orgs OrgGetter, projects ProjectGetter, users UserGetter) *
 // WithProfiles serves the profile RPCs over p.
 func (s *AuthService) WithProfiles(p Profiles) *AuthService {
 	s.profiles = p
+	return s
+}
+
+// WithFileUploads reports on whoami whether this deployment accepts file uploads.
+func (s *AuthService) WithFileUploads(on bool) *AuthService {
+	s.fileUploads = on
 	return s
 }
 
@@ -150,6 +157,7 @@ func (s *AuthService) Whoami(
 		Permissions: p.Scopes,
 		Operator:    p.Operator,
 		OrgCreation: s.orgs.CreationAllowed(),
+		FileUploads: s.fileUploads,
 	}
 	if p.UserID != uuid.Nil {
 		u, err := s.users.ByID(ctx, p.UserID)

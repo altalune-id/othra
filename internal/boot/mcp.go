@@ -37,7 +37,8 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *roo
 	webhookv1mcp.RegisterWebhookServiceTools(registry, webhook.NewControlPlane(svcs.Webhooks, refs), permission.For, validate)
 	memberv1mcp.RegisterMemberServiceTools(registry, member.NewControlPlane(svcs.Members, refs), permission.For, validate)
 	invitev1mcp.RegisterInviteServiceTools(registry, invite.NewControlPlane(svcs.Invites, refs), permission.For, validate)
-	authv1mcp.RegisterAuthServiceTools(registry, auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users), permission.For, validate)
+	authSvc := auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users).WithFileUploads(svcs.Caps.FileUploads)
+	authv1mcp.RegisterAuthServiceTools(registry, authSvc, permission.For, validate)
 
 	srv := rootmcp.NewServer(
 		rootmcp.WithImplementation("othra", version.Default()),

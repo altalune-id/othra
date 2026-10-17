@@ -72,6 +72,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.CheckIssuerHandleResponse'
+  /project.v1.ProjectService/CompleteProjectLogoUpload:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: CompleteProjectLogoUpload
+      operationId: project.v1.ProjectService.CompleteProjectLogoUpload
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.CompleteProjectLogoUploadRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.CompleteProjectLogoUploadResponse'
   /project.v1.ProjectService/CreateProject:
     post:
       tags:
@@ -107,6 +142,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.CreateProjectResponse'
+  /project.v1.ProjectService/CreateProjectLogoUpload:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: CreateProjectLogoUpload
+      operationId: project.v1.ProjectService.CreateProjectLogoUpload
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.CreateProjectLogoUploadRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.CreateProjectLogoUploadResponse'
   /project.v1.ProjectService/DeleteProjectLogo:
     post:
       tags:
@@ -177,41 +247,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.GetProjectResponse'
-  /project.v1.ProjectService/GetProjectLogo:
-    post:
-      tags:
-        - project.v1.ProjectService
-      summary: GetProjectLogo
-      operationId: project.v1.ProjectService.GetProjectLogo
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/project.v1.GetProjectLogoRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/project.v1.GetProjectLogoResponse'
   /project.v1.ProjectService/ListProjects:
     post:
       tags:
@@ -387,41 +422,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.UpdateProjectTermsResponse'
-  /project.v1.ProjectService/UploadProjectLogo:
-    post:
-      tags:
-        - project.v1.ProjectService
-      summary: UploadProjectLogo
-      operationId: project.v1.ProjectService.UploadProjectLogo
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/project.v1.UploadProjectLogoRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/project.v1.UploadProjectLogoResponse'
 components:
   schemas:
     connect-protocol-version:
@@ -648,6 +648,89 @@ components:
           description: reason is one of ok, taken, reserved, invalid or locked.
       title: CheckIssuerHandleResponse
       additionalProperties: false
+    project.v1.CompleteProjectLogoUploadRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        uploadId:
+          type: string
+          title: upload_id
+          description: |
+            othra.public_id = true
+      title: CompleteProjectLogoUploadRequest
+      required:
+        - id
+        - uploadId
+      additionalProperties: false
+    project.v1.CompleteProjectLogoUploadResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: CompleteProjectLogoUploadResponse
+      additionalProperties: false
+    project.v1.CreateProjectLogoUploadRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        contentType:
+          type: string
+          title: content_type
+          maxLength: 100
+        sizeBytes:
+          exclusiveMinimum: 0
+          type: integer
+          title: size_bytes
+          maximum: 10485760
+      title: CreateProjectLogoUploadRequest
+      required:
+        - id
+        - contentType
+      additionalProperties: false
+    project.v1.CreateProjectLogoUploadResponse:
+      type: object
+      properties:
+        uploadId:
+          type: string
+          title: upload_id
+        url:
+          type: string
+          title: url
+        method:
+          type: string
+          title: method
+        headers:
+          type: object
+          title: headers
+          additionalProperties:
+            type: string
+            title: value
+          description: headers must be sent unchanged with the upload.
+        expiresAt:
+          title: expires_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: CreateProjectLogoUploadResponse
+      additionalProperties: false
+    project.v1.CreateProjectLogoUploadResponse.HeadersEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: HeadersEntry
+      additionalProperties: false
     project.v1.CreateProjectRequest:
       type: object
       properties:
@@ -708,30 +791,6 @@ components:
           title: project
           $ref: '#/components/schemas/project.v1.Project'
       title: DeleteProjectLogoResponse
-      additionalProperties: false
-    project.v1.GetProjectLogoRequest:
-      type: object
-      properties:
-        id:
-          type: string
-          title: id
-          description: |
-            othra.public_id = true
-      title: GetProjectLogoRequest
-      required:
-        - id
-      additionalProperties: false
-    project.v1.GetProjectLogoResponse:
-      type: object
-      properties:
-        contentType:
-          type: string
-          title: content_type
-        content:
-          type: string
-          title: content
-          format: byte
-      title: GetProjectLogoResponse
       additionalProperties: false
     project.v1.GetProjectRequest:
       type: object
@@ -818,12 +877,6 @@ components:
         supportEmail:
           type: string
           title: support_email
-        hasLogo:
-          type: boolean
-          title: has_logo
-        logoUpdatedAt:
-          title: logo_updated_at
-          $ref: '#/components/schemas/google.protobuf.Timestamp'
         termsUrl:
           type: string
           title: terms_url
@@ -840,6 +893,10 @@ components:
         signinEmailLink:
           type: boolean
           title: signin_email_link
+        logoUrl:
+          type: string
+          title: logo_url
+          description: logo_url is the public URL of the project's logo, empty when it has none.
       title: Project
       additionalProperties: false
     project.v1.UpdateProjectBrandingRequest:
@@ -972,32 +1029,6 @@ components:
           title: project
           $ref: '#/components/schemas/project.v1.Project'
       title: UpdateProjectTermsResponse
-      additionalProperties: false
-    project.v1.UploadProjectLogoRequest:
-      type: object
-      properties:
-        id:
-          type: string
-          title: id
-          description: |
-            othra.public_id = true
-        content:
-          type: string
-          title: content
-          maxLength: 262144
-          format: byte
-      title: UploadProjectLogoRequest
-      required:
-        - id
-        - content
-      additionalProperties: false
-    project.v1.UploadProjectLogoResponse:
-      type: object
-      properties:
-        project:
-          title: project
-          $ref: '#/components/schemas/project.v1.Project'
-      title: UploadProjectLogoResponse
       additionalProperties: false
 security: []
 tags:

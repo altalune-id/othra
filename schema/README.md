@@ -89,14 +89,6 @@ erDiagram
         timestamptz completed_at
         timestamptz expires_at "an unfinished upload is swept after it"
     }
-    project_logos {
-        uuid project_id PK, FK "(org_id, project_id) -> projects"
-        uuid org_id FK
-        text content_type "png, jpeg or webp"
-        bytea content "at most 256 KB"
-        text sha256
-        timestamptz updated_at
-    }
     api_keys {
         uuid id PK
         uuid org_id FK
@@ -265,7 +257,6 @@ Rules the diagram can't show. Names omit `{{.TablePrefix}}`.
 | `orgs`                                                                  | `orgs_one_system` (unique, `WHERE is_system`)                                                                                                          | at most one system org; it marks the instance as installed                                                                                 |
 | `projects`                                                              | `UNIQUE (org_id, slug)`, `projects_org_id_id_key UNIQUE (org_id, id)`                                                                                  | slug unique per org; the pair is the target of org-scoped FKs                                                                              |
 | `projects`                                                              | `projects_issuer_handle_key` (unique), `projects_issuer_handle_format`, `projects_primary_color_format`, `projects_terms_version_nonnegative` (checks) | one issuer URL per handle across every org; the store turns the unique violation into `PRJ005`                                             |
-| `project_logos`                                                         | `project_logos_org_project_fkey`, checks on `content_type` and the 256 KB size                                                                         | one logo per project, deleted with it                                                                                                      |
 | `api_keys`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries` | `<table>_org_project_fkey`: `(org_id, project_id) → projects (org_id, id)`, `ON DELETE CASCADE`                                                        | a row's project always belongs to the row's org; a NULL `project_id` (org and personal keys) is allowed                                    |
 | `api_keys`                                                              | `api_keys_kind_shape` (check)                                                                                                                          | `project` keys have a `project_id` and no `all_projects`; `org` and `personal` keys have no `project_id`                                   |
 | `api_keys`                                                              | `api_keys_created_by_fkey` (`ON DELETE SET NULL`)                                                                                                      | `created_by` is a real user; deleting the user keeps the key but clears the owner, and a personal key without an owner never authenticates |
@@ -301,11 +292,11 @@ Every org-owned table has `ENABLE` and `FORCE ROW LEVEL SECURITY` and one `FOR A
 `tenant_policy_guard_test.go` fails on an inline `current_setting` or an org-owned table without its policy, and
 `rls_isolation_integration_test.go` proves each table as the service role.
 
-| Table                                                                                                                                        | Policy                                                                                               |
-| -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `projects`, `project_logos`, `api_keys`, `api_key_projects`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries`, `invites`, `files` | `org_id = current_org_id()`                                                                          |
-| `memberships`                                                                                                                                | read: `org_id = current_org_id() OR user_id = current_user_id()`; write: `org_id = current_org_id()` |
-| `orgs`                                                                                                                                       | read: `id = current_org_id()` or an org the user is a member of; write: `id = current_org_id()`      |
+| Table                                                                                                                       | Policy                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `projects`, `api_keys`, `api_key_projects`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries`, `invites`, `files` | `org_id = current_org_id()`                                                                          |
+| `memberships`                                                                                                               | read: `org_id = current_org_id() OR user_id = current_user_id()`; write: `org_id = current_org_id()` |
+| `orgs`                                                                                                                      | read: `id = current_org_id()` or an org the user is a member of; write: `id = current_org_id()`      |
 
 The `orgs` policy reads `memberships`, so `002_orgs.sql` only enables and forces row level security on `orgs`, and
 `007_memberships.sql` creates its policy. `users`, `sessions`, `password_resets`, `terms_acceptances`, `mail_queue`,

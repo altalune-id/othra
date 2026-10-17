@@ -75,9 +75,6 @@ func rlsInserts() []rlsInsert {
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{tn.project, "p" + id()[:12], tn.org, "p" + id()[:12], now}
 		}},
-		{"project_logos", func(s string) string {
-			return `INSERT INTO ` + s + `.project_logos (project_id, org_id, content_type, content, sha256, updated_at) VALUES ($1, $2, 'image/png', '\x01', 'x', $3)`
-		}, func(tn rlsTenant, _ string) []any { return []any{tn.project, tn.org, now} }},
 		{"files", func(s string) string {
 			return `INSERT INTO ` + s + `.files (id, public_id, org_id, owner_kind, owner_id, purpose, visibility, object_key, content_type, size_bytes, status, created_at, expires_at) VALUES ($1, $2, $3, 'projects', $4, 'logo', 'public', $5, 'image/png', 1, 'pending', $6, $6)`
 		}, func(tn rlsTenant, _ string) []any {

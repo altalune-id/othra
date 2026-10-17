@@ -15,11 +15,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/storage"
+	"altalune.id/othra/internal/kernel/storage/memory"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/nanoid"
 )
 
 type projectFixture struct {
@@ -27,6 +31,7 @@ type projectFixture struct {
 	pool     db.Pool
 	orgs     org.Store
 	projects project.Store
+	files    storage.Store
 }
 
 func newProjectFixture(t *testing.T) *projectFixture {
@@ -37,6 +42,7 @@ func newProjectFixture(t *testing.T) *projectFixture {
 		pool:     pool,
 		orgs:     org.NewStore(pool, schemaName, ""),
 		projects: project.NewStore(pool, schemaName, ""),
+		files:    storage.NewStore(pool, schemaName, ""),
 	}
 }
 
@@ -460,43 +466,124 @@ func TestProjectStore_SettingsRoundTrip(t *testing.T) {
 	require.NotNil(t, got.TermsPublishedAt)
 	assert.True(t, got.TermsPublishedAt.Equal(now))
 	assert.True(t, got.SignInEmailLink)
-	assert.Nil(t, got.LogoUpdatedAt)
+	assert.Nil(t, got.LogoFileID)
+	assert.Empty(t, got.LogoKey)
 }
 
-func TestProjectStore_LogoRoundTripIsScoped(t *testing.T) {
+func (f *projectFixture) seedFile(t *testing.T, orgID uuid.UUID, p *project.Project, status storage.Status) *storage.File {
+	t.Helper()
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	publicID, err := nanoid.New(21)
+	require.NoError(t, err)
+	file := &storage.File{
+		ID: uuid.New(), PublicID: publicID, OrgID: orgID,
+		OwnerKind: storage.OwnerProjects, OwnerID: p.ID, Purpose: "logo", Visibility: storage.Public,
+		ContentType: "image/png", SizeBytes: 10, Status: status, CreatedAt: now, ExpiresAt: now.Add(time.Hour),
+	}
+	file.ObjectKey = "public/othra/projects/" + p.PublicID + "/logo/" + file.ID.String() + ".png"
+	require.NoError(t, f.files.Insert(f.in(orgID), file))
+	return file
+}
+
+func TestProjectStore_LogoFileIsScoped(t *testing.T) {
 	f := newProjectFixture(t)
 	orgA, orgB := f.seedOrg(t, "acme"), f.seedOrg(t, "globex")
 	p := newProject(t, orgA, "web", uuid.Nil)
 	require.NoError(t, f.projects.Save(f.in(orgA), p))
-	none, err := f.projects.Logo(f.in(orgA), p.ID)
-	require.NoError(t, err)
-	assert.Nil(t, none)
+	first := f.seedFile(t, orgA, p, storage.StatusReady)
+	second := f.seedFile(t, orgA, p, storage.StatusPending)
 
-	at := time.Now().UTC().Truncate(time.Microsecond)
-	logo := &project.Logo{ProjectID: p.ID, OrgID: orgA, ContentType: "image/png", Content: []byte("\x89PNG\r\n\x1a\n1"), SHA256: "abc", UpdatedAt: at}
-	require.NoError(t, f.projects.SaveLogo(f.in(orgA), logo))
-	logo.ContentType, logo.Content = "image/webp", []byte("RIFF0000WEBP")
-	require.NoError(t, f.projects.SaveLogo(f.in(orgA), logo))
+	previous, err := f.projects.SetLogoFile(f.in(orgA), p.ID, &first.ID)
+	require.NoError(t, err)
+	assert.Nil(t, previous, "the first logo replaces nothing")
+	got, err := f.projects.ByID(f.in(orgA), p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, &first.ID, got.LogoFileID)
+	assert.Equal(t, first.ObjectKey, got.LogoKey)
 
-	got, err := f.projects.Logo(f.in(orgA), p.ID)
+	previous, err = f.projects.SetLogoFile(f.in(orgA), p.ID, &second.ID)
 	require.NoError(t, err)
-	require.NotNil(t, got)
-	assert.Equal(t, "image/webp", got.ContentType, "a second upload replaces the first")
-	assert.Equal(t, []byte("RIFF0000WEBP"), got.Content)
-	withLogo, err := f.projects.ByID(f.in(orgA), p.ID)
+	assert.Equal(t, &first.ID, previous)
+	got, err = f.projects.ByID(f.in(orgA), p.ID)
 	require.NoError(t, err)
-	require.NotNil(t, withLogo.LogoUpdatedAt)
-	assert.True(t, withLogo.LogoUpdatedAt.Equal(at))
+	assert.Equal(t, &second.ID, got.LogoFileID)
+	assert.Empty(t, got.LogoKey, "a file that is not ready yet has no key")
 
-	hidden, err := f.projects.Logo(f.in(orgB), p.ID)
+	got.LogoFileID = nil
+	require.NoError(t, f.projects.Save(f.in(orgA), got))
+	kept, err := f.projects.ByID(f.in(orgA), p.ID)
 	require.NoError(t, err)
-	assert.Nil(t, hidden, "another org's scope sees no logo")
+	assert.Equal(t, &second.ID, kept.LogoFileID, "Save never changes the logo")
 
-	require.NoError(t, f.projects.DeleteLogo(f.in(orgA), p.ID))
-	require.NoError(t, f.projects.DeleteLogo(f.in(orgA), p.ID), "deleting twice is fine")
-	gone, err := f.projects.Logo(f.in(orgA), p.ID)
+	other := newProject(t, orgB, "web", uuid.Nil)
+	require.NoError(t, f.projects.Save(f.in(orgB), other))
+	foreign := f.seedFile(t, orgB, other, storage.StatusReady)
+	_, err = f.projects.SetLogoFile(f.in(orgA), p.ID, &foreign.ID)
+	assert.True(t, project.IsNotFoundError(err), "another org's file is refused: %v", err)
+	_, err = f.projects.SetLogoFile(f.in(orgB), p.ID, &foreign.ID)
+	assert.True(t, project.IsNotFoundError(err), "another org's scope sees no project: %v", err)
+
+	previous, err = f.projects.SetLogoFile(f.in(orgA), p.ID, nil)
 	require.NoError(t, err)
-	assert.Nil(t, gone)
+	assert.Equal(t, &second.ID, previous)
+	previous, err = f.projects.SetLogoFile(f.in(orgA), p.ID, nil)
+	require.NoError(t, err)
+	assert.Nil(t, previous, "clearing twice is fine")
+}
+
+func TestService_LogoUploadThroughStorage(t *testing.T) {
+	f := newProjectFixture(t)
+	orgID := f.seedOrg(t, "acme")
+	p := newProject(t, orgID, "web", uuid.Nil)
+	require.NoError(t, f.projects.Save(f.in(orgID), p))
+	driver := memory.New()
+	files := storage.NewService(driver, f.files, storage.Config{
+		App: "othra", PublicBaseURL: "https://files.test", UploadURLTTL: time.Minute, PendingTTL: time.Hour,
+	}, apperror.NewReporter(nil, false).Unexpected)
+	svc := project.NewService(f.projects, apperror.NewReporter(nil, false).Unexpected).WithStorage(files, db.NewTransactor(f.pool))
+	ctx := f.in(orgID)
+	png := append([]byte("\x89PNG\r\n\x1a\n"), make([]byte, 24)...)
+
+	upload := func() *storage.File {
+		file, up, err := svc.CreateLogoUpload(ctx, p.ID, "image/png", int64(len(png)))
+		require.NoError(t, err)
+		assert.Equal(t, "PUT", up.Method)
+		driver.Put(file.ObjectKey, "image/png", png)
+		return file
+	}
+	first := upload()
+	got, err := svc.CompleteLogoUpload(ctx, p.ID, first.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, first.ObjectKey, got.LogoKey)
+	assert.Equal(t, "https://files.test/"+first.ObjectKey, svc.LogoURL(got.LogoKey))
+	assert.Contains(t, first.ObjectKey, "public/othra/projects/"+p.PublicID+"/logo/")
+
+	second := upload()
+	got, err = svc.CompleteLogoUpload(ctx, p.ID, second.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, second.ObjectKey, got.LogoKey)
+	swept, err := files.Sweep(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 1, swept)
+	assert.False(t, driver.Has(first.ObjectKey), "the replaced logo is swept")
+	assert.True(t, driver.Has(second.ObjectKey))
+
+	_, _, err = svc.CreateLogoUpload(ctx, p.ID, "image/gif", 10)
+	var invalid *project.InvalidLogoError
+	require.ErrorAs(t, err, &invalid)
+	assert.Equal(t, project.LogoType, invalid.Reason)
+	_, _, err = svc.CreateLogoUpload(ctx, p.ID, "image/png", 256<<10+1)
+	require.ErrorAs(t, err, &invalid)
+	assert.Equal(t, project.LogoSize, invalid.Reason)
+	_, err = svc.CompleteLogoUpload(ctx, p.ID, "unknwnunknwnunknwnabc")
+	assert.True(t, storage.IsUploadNotFoundError(err))
+
+	got, err = svc.DeleteLogo(ctx, p.ID)
+	require.NoError(t, err)
+	assert.Empty(t, got.LogoKey)
+	_, err = files.Sweep(ctx)
+	require.NoError(t, err)
+	assert.False(t, driver.Has(second.ObjectKey), "a removed logo is swept")
 }
 
 // SECURITY: the issuer resolves before any tenant scope exists, and only by its exact handle.
@@ -516,6 +603,13 @@ func TestProjectStore_ResolveIssuer(t *testing.T) {
 	assert.Equal(t, "Acme", i.DisplayName)
 	assert.Equal(t, "help@acme.test", i.SupportEmail)
 	assert.True(t, i.SignInEmailLink)
+	assert.Empty(t, i.LogoKey)
+	logo := f.seedFile(t, orgID, p, storage.StatusReady)
+	_, err = f.projects.SetLogoFile(f.in(orgID), p.ID, &logo.ID)
+	require.NoError(t, err)
+	i, err = f.projects.ResolveIssuer(context.Background(), "acme-web")
+	require.NoError(t, err)
+	assert.Equal(t, logo.ObjectKey, i.LogoKey)
 	_, err = f.projects.ResolveIssuer(context.Background(), "ACME-WEB")
 	assert.True(t, project.IsNotFoundError(err), "handles are exact")
 }

@@ -28,7 +28,7 @@ func lookups() map[string]lookup {
 		"resolve_org_by_public_id(text)":         {"resolve_org_by_public_id('x')", orgColumns},
 		"list_orgs_for_user(uuid)":               {"list_orgs_for_user('" + uuid.Nil.String() + "')", orgColumns},
 		"resolve_invite_by_token_hash(text)":     {"resolve_invite_by_token_hash('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
-		"resolve_project_by_issuer_handle(text)": {"resolve_project_by_issuer_handle('x')", []string{"id", "public_id", "org_id", "issuer_handle", "name", "display_name", "primary_color", "support_email", "logo_updated_at", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link"}},
+		"resolve_project_by_issuer_handle(text)": {"resolve_project_by_issuer_handle('x')", []string{"id", "public_id", "org_id", "issuer_handle", "name", "display_name", "primary_color", "support_email", "logo_object_key", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link"}},
 		"issuer_handle_exists(text)":             {"issuer_handle_exists('x')", []string{"issuer_handle_exists"}},
 		"resolve_invite_by_public_id(text)":      {"resolve_invite_by_public_id('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
 		"resolve_api_key_by_secret_hash(bytea)":  {"resolve_api_key_by_secret_hash('\\x00'::bytea)", []string{"id", "org_id", "project_id", "kind", "all_projects", "project_ids", "name", "secret_hint", "scopes", "resource_ids", "created_by", "created_at", "expires_at", "revoked_at", "last_used_at"}},

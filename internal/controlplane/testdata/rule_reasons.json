@@ -58,6 +58,8 @@
   {"rule": "repeated.max_items", "reason": "too_many"},
   {"rule": "map.max_pairs", "reason": "too_many"},
   {"rule": "repeated.unique", "reason": "invalid"},
+  {"rule": "uint32.gt", "reason": "invalid"},
+  {"rule": "uint32.lte", "reason": "invalid"},
   {"rule": "something.new", "reason": "invalid"},
   {"rule": "", "reason": "invalid"}
 ]

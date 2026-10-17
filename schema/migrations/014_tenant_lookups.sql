@@ -89,13 +89,13 @@ $$;
 
 -- SECURITY: resolves an issuer before any tenant scope exists; the row names the org and project every later read is scoped to.
 CREATE FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_project_by_issuer_handle(p_handle text)
-RETURNS TABLE (id uuid, public_id text, org_id uuid, issuer_handle text, name text, display_name text, primary_color text, support_email text, logo_updated_at timestamptz, terms_url text, privacy_url text, terms_version integer, terms_published_at timestamptz, signin_email_link boolean)
+RETURNS TABLE (id uuid, public_id text, org_id uuid, issuer_handle text, name text, display_name text, primary_color text, support_email text, logo_object_key text, terms_url text, privacy_url text, terms_version integer, terms_published_at timestamptz, signin_email_link boolean)
 LANGUAGE sql STABLE
 SECURITY DEFINER
 SET search_path = {{.Schema}}, pg_catalog, pg_temp
 AS $$
   SELECT p.id, p.public_id, p.org_id, p.issuer_handle, p.name, p.display_name, p.primary_color, p.support_email,
-         (SELECT l.updated_at FROM {{.Schema}}.{{.TablePrefix}}project_logos l WHERE l.project_id = p.id),
+         (SELECT f.object_key FROM {{.Schema}}.{{.TablePrefix}}files f WHERE f.id = p.logo_file_id AND f.org_id = p.org_id AND f.status = 'ready'),
          p.terms_url, p.privacy_url, p.terms_version, p.terms_published_at, p.signin_email_link
   FROM {{.Schema}}.{{.TablePrefix}}projects p
   WHERE p.issuer_handle = p_handle

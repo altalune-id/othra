@@ -2,8 +2,6 @@ package project
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
@@ -11,6 +9,8 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/storage"
 	"altalune.id/othra/internal/kernel/tenant"
 	slugpkg "altalune.id/othra/slug"
 )
@@ -21,12 +21,20 @@ type Service struct {
 	unexpected apperror.UnexpectedFunc
 	orgSlugs   OrgSlugs
 	issuerBase string
+	files      FileStorage
+	tx         db.Transactor
 	now        func() time.Time
 }
 
-// NewService builds a Service over store.
+// NewService builds a Service over store, without file storage until WithStorage.
 func NewService(store Store, unexpected apperror.UnexpectedFunc) *Service {
-	return &Service{store: store, unexpected: unexpected, now: time.Now}
+	return &Service{store: store, unexpected: unexpected, files: noStorage{}, now: time.Now}
+}
+
+// WithStorage keeps project files such as the logo in files, attaching them in units of work run by tx.
+func (s *Service) WithStorage(files FileStorage, tx db.Transactor) *Service {
+	s.files, s.tx = files, tx
+	return s
 }
 
 // WithOrgSlugs names the org slugs a new project's default issuer handle is built from.
@@ -217,42 +225,106 @@ func (s *Service) BumpTermsVersion(ctx context.Context, id uuid.UUID) (*Project,
 	})
 }
 
-// UploadLogo replaces a project's logo with content, a PNG, JPEG or WebP of at most 256 KB.
-func (s *Service) UploadLogo(ctx context.Context, id uuid.UUID, content []byte) (*Project, error) {
-	contentType, err := ValidateLogo(content)
-	if err != nil {
-		return nil, err
+// LogoPurpose is where a project's logo lives in file storage: a public PNG, JPEG or WebP of at most 256 KB.
+func LogoPurpose() storage.Purpose {
+	return storage.Purpose{
+		Name: "logo", OwnerKind: storage.OwnerProjects, Visibility: storage.Public,
+		Types: []string{"image/png", "image/jpeg", "image/webp"}, MaxBytes: logoMaxBytes,
+	}
+}
+
+// LogoURL is the public address of a logo stored under key, or "" without one or without file storage.
+func (s *Service) LogoURL(key string) string {
+	if key == "" || !s.files.Enabled() {
+		return ""
+	}
+	return s.files.PublicURL(key)
+}
+
+// CreateLogoUpload checks a new logo's declared type and size and signs its direct upload to file storage.
+func (s *Service) CreateLogoUpload(
+	ctx context.Context, id uuid.UUID, contentType string, size int64,
+) (*storage.File, storage.Upload, error) {
+	if !s.files.Enabled() {
+		return nil, storage.Upload{}, &storage.NotConfiguredError{}
 	}
 	p, err := s.store.ByID(ctx, id)
 	if err != nil {
-		return nil, s.errOrReport(ctx, "project: upload logo", err)
+		return nil, storage.Upload{}, s.errOrReport(ctx, "project: create logo upload", err)
 	}
-	sum := sha256.Sum256(content)
-	logo := &Logo{
-		ProjectID: p.ID, OrgID: p.OrgID, ContentType: contentType, Content: content,
-		SHA256: hex.EncodeToString(sum[:]), UpdatedAt: s.now().UTC(),
+	f, up, err := s.files.BeginUpload(ctx, storage.BeginUploadInput{
+		Purpose: LogoPurpose(), Owner: logoOwner(p), ContentType: contentType, Size: size,
+	})
+	switch {
+	case storage.IsTypeNotAllowedError(err):
+		return nil, storage.Upload{}, &InvalidLogoError{Reason: LogoType}
+	case storage.IsTooLargeError(err):
+		return nil, storage.Upload{}, &InvalidLogoError{Reason: LogoSize}
+	case err != nil:
+		return nil, storage.Upload{}, err
 	}
-	if err := s.store.SaveLogo(ctx, logo); err != nil {
-		return nil, s.errOrReport(ctx, "project: upload logo", err)
-	}
-	return s.reload(ctx, "project: upload logo", p.ID)
+	return f, up, nil
 }
 
-// DeleteLogo removes a project's logo.
+// CompleteLogoUpload verifies a finished upload and makes it the project's logo; the logo it replaces goes to the sweep.
+func (s *Service) CompleteLogoUpload(ctx context.Context, id uuid.UUID, uploadID string) (*Project, error) {
+	if !s.files.Enabled() {
+		return nil, &storage.NotConfiguredError{}
+	}
+	p, err := s.store.ByID(ctx, id)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "project: complete logo upload", err)
+	}
+	f, err := s.files.Verify(ctx, uploadID, LogoPurpose(), logoOwner(p))
+	if err != nil {
+		return nil, err
+	}
+	err = s.tx.RunInTx(tenant.WithOrg(ctx, p.OrgID), func(ctx context.Context) error {
+		if err := s.files.MarkReady(ctx, f.ID); err != nil {
+			return err
+		}
+		return s.swapLogo(ctx, p.ID, &f.ID)
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "project: complete logo upload", err)
+	}
+	return s.reload(ctx, "project: complete logo upload", p.ID)
+}
+
+// DeleteLogo removes a project's logo and hands its file to the sweep.
 func (s *Service) DeleteLogo(ctx context.Context, id uuid.UUID) (*Project, error) {
-	if err := s.store.DeleteLogo(ctx, id); err != nil {
+	p, err := s.store.ByID(ctx, id)
+	if err != nil {
 		return nil, s.errOrReport(ctx, "project: delete logo", err)
 	}
-	return s.reload(ctx, "project: delete logo", id)
+	if p.LogoFileID == nil {
+		return p, nil
+	}
+	if !s.files.Enabled() {
+		return nil, &storage.NotConfiguredError{}
+	}
+	err = s.tx.RunInTx(tenant.WithOrg(ctx, p.OrgID), func(ctx context.Context) error {
+		return s.swapLogo(ctx, p.ID, nil)
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "project: delete logo", err)
+	}
+	return s.reload(ctx, "project: delete logo", p.ID)
 }
 
-// Logo returns a project's logo, or nil when it has none.
-func (s *Service) Logo(ctx context.Context, id uuid.UUID) (*Logo, error) {
-	l, err := s.store.Logo(ctx, id)
+func (s *Service) swapLogo(ctx context.Context, projectID uuid.UUID, fileID *uuid.UUID) error {
+	previous, err := s.store.SetLogoFile(ctx, projectID, fileID)
 	if err != nil {
-		return nil, s.errOrReport(ctx, "project: logo", err)
+		return err
 	}
-	return l, nil
+	if previous == nil || (fileID != nil && *previous == *fileID) {
+		return nil
+	}
+	return s.files.MarkDeleting(ctx, *previous)
+}
+
+func logoOwner(p *Project) storage.Owner {
+	return storage.Owner{OrgID: p.OrgID, ID: p.ID, PublicID: p.PublicID}
 }
 
 // The answers of CheckIssuerHandle.
@@ -320,8 +392,26 @@ func (s *Service) reload(ctx context.Context, op string, id uuid.UUID) (*Project
 }
 
 func (s *Service) errOrReport(ctx context.Context, message string, err error) error {
-	if IsExpectedError(err) {
+	if IsExpectedError(err) || storage.IsExpectedError(err) {
 		return err
 	}
 	return s.unexpected(ctx, message, err)
 }
+
+type noStorage struct{}
+
+func (noStorage) Enabled() bool { return false }
+
+func (noStorage) BeginUpload(context.Context, storage.BeginUploadInput) (*storage.File, storage.Upload, error) {
+	return nil, storage.Upload{}, &storage.NotConfiguredError{}
+}
+
+func (noStorage) Verify(context.Context, string, storage.Purpose, storage.Owner) (*storage.File, error) {
+	return nil, &storage.NotConfiguredError{}
+}
+
+func (noStorage) MarkReady(context.Context, uuid.UUID) error { return &storage.NotConfiguredError{} }
+
+func (noStorage) MarkDeleting(context.Context, uuid.UUID) error { return &storage.NotConfiguredError{} }
+
+func (noStorage) PublicURL(string) string { return "" }

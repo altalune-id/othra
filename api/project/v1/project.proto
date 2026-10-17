@@ -42,14 +42,14 @@ service ProjectService {
   rpc UpdateProjectTerms(UpdateProjectTermsRequest) returns (UpdateProjectTermsResponse);
   rpc BumpTermsVersion(BumpTermsVersionRequest) returns (BumpTermsVersionResponse);
   rpc CheckIssuerHandle(CheckIssuerHandleRequest) returns (CheckIssuerHandleResponse);
-  rpc UploadProjectLogo(UploadProjectLogoRequest) returns (UploadProjectLogoResponse);
+  rpc CreateProjectLogoUpload(CreateProjectLogoUploadRequest) returns (CreateProjectLogoUploadResponse);
+  rpc CompleteProjectLogoUpload(CompleteProjectLogoUploadRequest) returns (CompleteProjectLogoUploadResponse);
   rpc DeleteProjectLogo(DeleteProjectLogoRequest) returns (DeleteProjectLogoResponse);
-  rpc GetProjectLogo(GetProjectLogoRequest) returns (GetProjectLogoResponse);
 }
 
 message Project {
-  reserved 2;
-  reserved "public_id";
+  reserved 2, 15, 16;
+  reserved "public_id", "has_logo", "logo_updated_at";
   string id = 1;
   string org_id = 3;
   string slug = 4;
@@ -64,13 +64,13 @@ message Project {
   string display_name = 12;
   string primary_color = 13;
   string support_email = 14;
-  bool has_logo = 15;
-  google.protobuf.Timestamp logo_updated_at = 16;
   string terms_url = 17;
   string privacy_url = 18;
   int32 terms_version = 19;
   google.protobuf.Timestamp terms_published_at = 20;
   bool signin_email_link = 21;
+  // logo_url is the public URL of the project's logo, empty when it has none.
+  string logo_url = 22;
 }
 
 message CreateProjectRequest {
@@ -226,18 +226,42 @@ message CheckIssuerHandleResponse {
   string reason = 2;
 }
 
-message UploadProjectLogoRequest {
+message CreateProjectLogoUploadRequest {
   string id = 1 [
     (buf.validate.field).required = true,
     (buf.validate.field).string.(othra.v1.public_id) = true
   ];
-  bytes content = 2 [
+  string content_type = 2 [
     (buf.validate.field).required = true,
-    (buf.validate.field).bytes.max_len = 262144
+    (buf.validate.field).string.max_len = 100
+  ];
+  uint32 size_bytes = 3 [
+    (buf.validate.field).uint32.gt = 0,
+    (buf.validate.field).uint32.lte = 10485760
   ];
 }
 
-message UploadProjectLogoResponse {
+message CreateProjectLogoUploadResponse {
+  string upload_id = 1;
+  string url = 2;
+  string method = 3;
+  // headers must be sent unchanged with the upload.
+  map<string, string> headers = 4;
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+message CompleteProjectLogoUploadRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string upload_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message CompleteProjectLogoUploadResponse {
   Project project = 1;
 }
 
@@ -250,16 +274,4 @@ message DeleteProjectLogoRequest {
 
 message DeleteProjectLogoResponse {
   Project project = 1;
-}
-
-message GetProjectLogoRequest {
-  string id = 1 [
-    (buf.validate.field).required = true,
-    (buf.validate.field).string.(othra.v1.public_id) = true
-  ];
-}
-
-message GetProjectLogoResponse {
-  string content_type = 1;
-  bytes content = 2;
 }

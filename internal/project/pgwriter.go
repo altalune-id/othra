@@ -21,7 +21,7 @@ func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 		VALUES(
 			p.ID, p.PublicID, p.OrgID, p.Slug, p.Name, createdByExpr(p), p.CreatedAt.UTC(), now,
 			p.IssuerHandle, timeExpr(p.IssuerHandleLockedAt), p.DisplayName, p.PrimaryColor, p.SupportEmail,
-			p.TermsURL, p.PrivacyURL, p.TermsVersion, timeExpr(p.TermsPublishedAt), p.SignInEmailLink,
+			p.TermsURL, p.PrivacyURL, p.TermsVersion, timeExpr(p.TermsPublishedAt), p.SignInEmailLink, logoFileExpr(p.LogoFileID),
 		).
 		ON_CONFLICT(t.ID).
 		DO_UPDATE(postgres.SET(
@@ -83,31 +83,24 @@ func (s *postgresStore) LockIssuerHandle(ctx context.Context, id uuid.UUID, at t
 	return nil
 }
 
-// SaveLogo stores l as its project's only logo.
-func (s *postgresStore) SaveLogo(ctx context.Context, l *Logo) error {
-	t := s.logos
-	stmt := t.INSERT(t.AllColumns).
-		VALUES(l.ProjectID, l.OrgID, l.ContentType, l.Content, l.SHA256, l.UpdatedAt.UTC()).
-		ON_CONFLICT(t.ProjectID).
-		DO_UPDATE(postgres.SET(
-			t.ContentType.SET(postgres.String(l.ContentType)),
-			t.Content.SET(postgres.Bytea(l.Content)),
-			t.SHA256.SET(postgres.String(l.SHA256)),
-			t.UpdatedAt.SET(postgres.TimestampzT(l.UpdatedAt.UTC())),
-		))
-	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
-		return fmt.Errorf("project.postgres: SaveLogo: %w", err)
+// SetLogoFile points the project id's logo at fileID, or at none when nil, and returns the file it pointed at before.
+func (s *postgresStore) SetLogoFile(ctx context.Context, id uuid.UUID, fileID *uuid.UUID) (*uuid.UUID, error) {
+	file := uuid.NullUUID{}
+	if fileID != nil {
+		file = uuid.NullUUID{UUID: *fileID, Valid: true}
 	}
-	return nil
-}
-
-// DeleteLogo removes the project's logo; deleting a missing logo is not an error.
-func (s *postgresStore) DeleteLogo(ctx context.Context, projectID uuid.UUID) error {
-	stmt := s.logos.DELETE().WHERE(s.logos.ProjectID.EQ(postgres.UUID(projectID)))
-	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
-		return fmt.Errorf("project.postgres: DeleteLogo: %w", err)
+	var row struct {
+		Previous *uuid.UUID `alias:"logos.previous"`
 	}
-	return nil
+	stmt := postgres.RawStatement(s.setLogoFile, postgres.RawArgs{"#file": file, "#now": time.Now().UTC(), "#id": id})
+	err := db.Write(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) })
+	switch {
+	case db.IsNoRows(err), db.IsForeignKeyViolation(err):
+		return nil, &NotFoundError{ID: id.String()}
+	case err != nil:
+		return nil, fmt.Errorf("project.postgres: SetLogoFile: %w", err)
+	}
+	return row.Previous, nil
 }
 
 func (s *postgresStore) saveError(op string, p *Project, err error) error {
@@ -125,6 +118,13 @@ func createdByExpr(p *Project) postgres.Expression {
 		return postgres.UUID(p.CreatedBy.UUID)
 	}
 	return entity.NullUUID()
+}
+
+func logoFileExpr(id *uuid.UUID) postgres.Expression {
+	if id == nil {
+		return entity.NullUUID()
+	}
+	return postgres.UUID(*id)
 }
 
 func timeExpr(t *time.Time) postgres.TimestampzExpression {

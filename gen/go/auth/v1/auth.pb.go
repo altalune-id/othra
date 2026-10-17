@@ -80,7 +80,9 @@ type WhoamiResponse struct {
 	Permissions []string `protobuf:"bytes,11,rep,name=permissions,proto3" json:"permissions,omitempty"`
 	Operator    bool     `protobuf:"varint,12,opt,name=operator,proto3" json:"operator,omitempty"`
 	// Whether this deployment lets the caller create organizations (cloud only).
-	OrgCreation   bool `protobuf:"varint,14,opt,name=org_creation,json=orgCreation,proto3" json:"org_creation,omitempty"`
+	OrgCreation bool `protobuf:"varint,14,opt,name=org_creation,json=orgCreation,proto3" json:"org_creation,omitempty"`
+	// Whether this deployment has file storage, so the caller can upload files such as a project logo.
+	FileUploads   bool `protobuf:"varint,15,opt,name=file_uploads,json=fileUploads,proto3" json:"file_uploads,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -202,6 +204,13 @@ func (x *WhoamiResponse) GetOperator() bool {
 func (x *WhoamiResponse) GetOrgCreation() bool {
 	if x != nil {
 		return x.OrgCreation
+	}
+	return false
+}
+
+func (x *WhoamiResponse) GetFileUploads() bool {
+	if x != nil {
+		return x.FileUploads
 	}
 	return false
 }
@@ -568,7 +577,7 @@ var File_auth_v1_auth_proto protoreflect.FileDescriptor
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
 	"\x12auth/v1/auth.proto\x12\aauth.v1\x1a\x1bbuf/validate/validate.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\x0f\n" +
-	"\rWhoamiRequest\"\xa7\x03\n" +
+	"\rWhoamiRequest\"\xca\x03\n" +
 	"\x0eWhoamiResponse\x12\x16\n" +
 	"\x06source\x18\x01 \x01(\tR\x06source\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x14\n" +
@@ -584,7 +593,8 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	" \x01(\tR\x0factiveProjectId\x12 \n" +
 	"\vpermissions\x18\v \x03(\tR\vpermissions\x12\x1a\n" +
 	"\boperator\x18\f \x01(\bR\boperator\x12!\n" +
-	"\forg_creation\x18\x0e \x01(\bR\vorgCreationJ\x04\b\x06\x10\aR\x06key_id\"\x8c\x01\n" +
+	"\forg_creation\x18\x0e \x01(\bR\vorgCreation\x12!\n" +
+	"\ffile_uploads\x18\x0f \x01(\bR\vfileUploadsJ\x04\b\x06\x10\aR\x06key_id\"\x8c\x01\n" +
 	"\x14UpdateProfileRequest\x12t\n" +
 	"\x04name\x18\x01 \x01(\tB`\xbaH]\xba\x01Z\n" +
 	"\x15user.name.max_len.200\x1aAthis.trim().size() <= 200 ? '' : 'must be at most 200 characters'R\x04name\"D\n" +
