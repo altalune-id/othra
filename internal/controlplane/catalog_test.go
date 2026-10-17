@@ -77,6 +77,14 @@ func samples() []error {
 		errOf(project.NewProject(nobody, "a", "Web", nobody)),
 		errOf(project.NewProject(nobody, "Not_A_Slug", "Web", nobody)),
 		errOf(project.NewProject(nobody, "web", "", nobody)),
+		&project.IssuerHandleTakenError{Handle: "acme-web"},
+		&project.InvalidIssuerHandleError{Handle: "Acme", Reason: project.IssuerHandleFormat},
+		&project.InvalidIssuerHandleError{Handle: "ab", Reason: project.IssuerHandleLength},
+		&project.InvalidIssuerHandleError{Handle: "system", Reason: project.IssuerHandleReserved},
+		&project.IssuerHandleLockedError{},
+		&project.InvalidLogoError{Reason: project.LogoType},
+		&project.InvalidLogoError{Reason: project.LogoSize},
+		&project.TermsNotSetError{},
 
 		&apikey.NotFoundError{ID: "x"},
 		apikey.ValidateName(""),
@@ -267,6 +275,8 @@ func TestEchoedInputIsCapped(t *testing.T) {
 		&org.InvalidSlugError{Slug: long, Reason: org.SlugReserved},
 		&org.InvalidSlugError{Slug: long, Reason: "other"},
 		&project.InvalidSlugError{Slug: long, Reason: "other"},
+		&project.IssuerHandleTakenError{Handle: long},
+		&project.InvalidIssuerHandleError{Handle: long, Reason: project.IssuerHandleReserved},
 	} {
 		det, _ := wireDetail(t, err)
 		for k, v := range det.GetMeta() {

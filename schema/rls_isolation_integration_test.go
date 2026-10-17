@@ -71,10 +71,13 @@ func rlsInserts() []rlsInsert {
 			return `INSERT INTO ` + s + `.memberships (id, public_id, org_id, user_id, role, created_at) VALUES ($1, $2, $3, $4, 'owner', $5)`
 		}, func(tn rlsTenant, _ string) []any { return []any{uuid.New(), "m" + id()[:12], tn.org, tn.user, now} }},
 		{"projects", func(s string) string {
-			return `INSERT INTO ` + s + `.projects (id, public_id, org_id, slug, name, created_at, updated_at) VALUES ($1, $2, $3, $4, 'P', $5, $5)`
+			return `INSERT INTO ` + s + `.projects (id, public_id, org_id, slug, name, issuer_handle, created_at, updated_at) VALUES ($1, $2, $3, $4, 'P', $4, $5, $5)`
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{tn.project, "p" + id()[:12], tn.org, "p" + id()[:12], now}
 		}},
+		{"project_logos", func(s string) string {
+			return `INSERT INTO ` + s + `.project_logos (project_id, org_id, content_type, content, sha256, updated_at) VALUES ($1, $2, 'image/png', '\x01', 'x', $3)`
+		}, func(tn rlsTenant, _ string) []any { return []any{tn.project, tn.org, now} }},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
 		}, func(tn rlsTenant, _ string) []any {

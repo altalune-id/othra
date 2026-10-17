@@ -22,14 +22,16 @@ type lookup struct {
 func lookups() map[string]lookup {
 	orgColumns := []string{"id", "public_id", "slug", "name", "created_by", "created_at", "updated_at", "is_system"}
 	return map[string]lookup{
-		"list_org_ids()":                        {"list_org_ids()", []string{"id", "created_at"}},
-		"resolve_system_org()":                  {"resolve_system_org()", orgColumns},
-		"resolve_org_by_slug(text)":             {"resolve_org_by_slug('x')", orgColumns},
-		"resolve_org_by_public_id(text)":        {"resolve_org_by_public_id('x')", orgColumns},
-		"list_orgs_for_user(uuid)":              {"list_orgs_for_user('" + uuid.Nil.String() + "')", orgColumns},
-		"resolve_invite_by_token_hash(text)":    {"resolve_invite_by_token_hash('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
-		"resolve_invite_by_public_id(text)":     {"resolve_invite_by_public_id('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
-		"resolve_api_key_by_secret_hash(bytea)": {"resolve_api_key_by_secret_hash('\\x00'::bytea)", []string{"id", "org_id", "project_id", "kind", "all_projects", "project_ids", "name", "secret_hint", "scopes", "resource_ids", "created_by", "created_at", "expires_at", "revoked_at", "last_used_at"}},
+		"list_org_ids()":                         {"list_org_ids()", []string{"id", "created_at"}},
+		"resolve_system_org()":                   {"resolve_system_org()", orgColumns},
+		"resolve_org_by_slug(text)":              {"resolve_org_by_slug('x')", orgColumns},
+		"resolve_org_by_public_id(text)":         {"resolve_org_by_public_id('x')", orgColumns},
+		"list_orgs_for_user(uuid)":               {"list_orgs_for_user('" + uuid.Nil.String() + "')", orgColumns},
+		"resolve_invite_by_token_hash(text)":     {"resolve_invite_by_token_hash('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
+		"resolve_project_by_issuer_handle(text)": {"resolve_project_by_issuer_handle('x')", []string{"id", "public_id", "org_id", "issuer_handle", "name", "display_name", "primary_color", "support_email", "logo_updated_at", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link"}},
+		"issuer_handle_exists(text)":             {"issuer_handle_exists('x')", []string{"issuer_handle_exists"}},
+		"resolve_invite_by_public_id(text)":      {"resolve_invite_by_public_id('x')", []string{"id", "public_id", "org_id", "email", "role", "draft", "invited_by", "expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at"}},
+		"resolve_api_key_by_secret_hash(bytea)":  {"resolve_api_key_by_secret_hash('\\x00'::bytea)", []string{"id", "org_id", "project_id", "kind", "all_projects", "project_ids", "name", "secret_hint", "scopes", "resource_ids", "created_by", "created_at", "expires_at", "revoked_at", "last_used_at"}},
 	}
 }
 
@@ -84,6 +86,8 @@ func TestLookups_ResolveTheMatchingRowOnly(t *testing.T) {
 	exec(`INSERT INTO `+s+`users (id, public_id, email, created_at, updated_at) VALUES ($1, 'u1', 'u@example.com', $2, $2)`, user, now)
 	exec(`INSERT INTO `+s+`orgs (id, public_id, slug, name, created_at, updated_at, is_system) VALUES ($1, 'osys', 'sys', 'Sys', $3, $3, true), ($2, 'oother', 'other', 'Other', $3, $3, false)`, sys, other, now)
 	exec(`INSERT INTO `+s+`memberships (id, public_id, org_id, user_id, role, created_at) VALUES ($1, 'm1', $2, $3, 'owner', $4)`, uuid.New(), other, user, now)
+	project := uuid.New()
+	exec(`INSERT INTO `+s+`projects (id, public_id, org_id, slug, name, issuer_handle, created_at, updated_at) VALUES ($1, 'p1', $2, 'web', 'Web', 'other-web', $3, $3)`, project, other, now)
 	invite := uuid.New()
 	exec(`INSERT INTO `+s+`invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, 'i1', $2, 'a@example.com', 'member', 'tok', $3, $3, $3)`, invite, other, now.Add(time.Hour))
 	exec(`INSERT INTO `+s+`api_keys (id, org_id, kind, all_projects, name, secret_hash, secret_hint, created_at) VALUES ($1, $2, 'org', true, 'k', '\x01'::bytea, 'abcd', $3)`, uuid.New(), other, now)
@@ -124,6 +128,12 @@ func TestLookups_ResolveTheMatchingRowOnly(t *testing.T) {
 	assert.Empty(t, ids(`SELECT * FROM `+s+`resolve_invite_by_token_hash($1)`, "nope"))
 	assert.Equal(t, []uuid.UUID{invite}, ids(`SELECT * FROM `+s+`resolve_invite_by_public_id($1)`, "i1"))
 	assert.Empty(t, ids(`SELECT * FROM `+s+`resolve_invite_by_public_id($1)`, "nope"))
+	assert.Equal(t, []uuid.UUID{project}, ids(`SELECT * FROM `+s+`resolve_project_by_issuer_handle($1)`, "other-web"))
+	assert.Empty(t, ids(`SELECT * FROM `+s+`resolve_project_by_issuer_handle($1)`, "nope"))
+	var exists, missing bool
+	require.NoError(t, sqlDB.QueryRowContext(ctx, `SELECT `+s+`issuer_handle_exists($1), `+s+`issuer_handle_exists($2)`, "other-web", "nope").Scan(&exists, &missing))
+	assert.True(t, exists)
+	assert.False(t, missing)
 	assert.Empty(t, ids(`SELECT * FROM `+s+`resolve_api_key_by_secret_hash($1)`, []byte{2}))
 }
 

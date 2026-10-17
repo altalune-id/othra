@@ -2,6 +2,76 @@ openapi: 3.1.0
 info:
   title: project.v1
 paths:
+  /project.v1.ProjectService/BumpTermsVersion:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: BumpTermsVersion
+      operationId: project.v1.ProjectService.BumpTermsVersion
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.BumpTermsVersionRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.BumpTermsVersionResponse'
+  /project.v1.ProjectService/CheckIssuerHandle:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: CheckIssuerHandle
+      operationId: project.v1.ProjectService.CheckIssuerHandle
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.CheckIssuerHandleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.CheckIssuerHandleResponse'
   /project.v1.ProjectService/CreateProject:
     post:
       tags:
@@ -37,6 +107,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.CreateProjectResponse'
+  /project.v1.ProjectService/DeleteProjectLogo:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: DeleteProjectLogo
+      operationId: project.v1.ProjectService.DeleteProjectLogo
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.DeleteProjectLogoRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.DeleteProjectLogoResponse'
   /project.v1.ProjectService/GetProject:
     post:
       tags:
@@ -72,6 +177,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.GetProjectResponse'
+  /project.v1.ProjectService/GetProjectLogo:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: GetProjectLogo
+      operationId: project.v1.ProjectService.GetProjectLogo
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.GetProjectLogoRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.GetProjectLogoResponse'
   /project.v1.ProjectService/ListProjects:
     post:
       tags:
@@ -142,6 +282,146 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.UpdateProjectResponse'
+  /project.v1.ProjectService/UpdateProjectBranding:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectBranding
+      operationId: project.v1.ProjectService.UpdateProjectBranding
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectBrandingRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectBrandingResponse'
+  /project.v1.ProjectService/UpdateProjectIssuer:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectIssuer
+      operationId: project.v1.ProjectService.UpdateProjectIssuer
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectIssuerRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectIssuerResponse'
+  /project.v1.ProjectService/UpdateProjectTerms:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectTerms
+      operationId: project.v1.ProjectService.UpdateProjectTerms
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectTermsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectTermsResponse'
+  /project.v1.ProjectService/UploadProjectLogo:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UploadProjectLogo
+      operationId: project.v1.ProjectService.UploadProjectLogo
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UploadProjectLogoRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UploadProjectLogoResponse'
 components:
   schemas:
     connect-protocol-version:
@@ -309,6 +589,65 @@ components:
          the Joda Time's [`ISODateTimeFormat.dateTime()`](
          http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
          ) to obtain a formatter capable of generating timestamps in this format.
+    project.v1.BumpTermsVersionRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+      title: BumpTermsVersionRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.BumpTermsVersionResponse:
+      type: object
+      properties:
+        version:
+          type: integer
+          title: version
+          format: int32
+        publishedAt:
+          title: published_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: BumpTermsVersionResponse
+      additionalProperties: false
+    project.v1.CheckIssuerHandleRequest:
+      type: object
+      properties:
+        orgId:
+          type: string
+          title: org_id
+          description: |
+            othra.public_id = true
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            project_id names the project being edited, so its own handle counts as available.
+            othra.public_id = true
+        issuerHandle:
+          type: string
+          title: issuer_handle
+          maxLength: 64
+      title: CheckIssuerHandleRequest
+      required:
+        - orgId
+        - issuerHandle
+      additionalProperties: false
+    project.v1.CheckIssuerHandleResponse:
+      type: object
+      properties:
+        available:
+          type: boolean
+          title: available
+        reason:
+          type: string
+          title: reason
+          description: reason is one of ok, taken, reserved, invalid or locked.
+      title: CheckIssuerHandleResponse
+      additionalProperties: false
     project.v1.CreateProjectRequest:
       type: object
       properties:
@@ -330,6 +669,13 @@ components:
           description: |
             othra.name.blank = true
             othra.name.max_len.200 = true
+        issuerHandle:
+          type: string
+          title: issuer_handle
+          description: |
+            project.issuer_handle.format
+            project.issuer_handle.max_len.40
+            project.issuer_handle.min_len.3
       title: CreateProjectRequest
       required:
         - orgId
@@ -342,6 +688,50 @@ components:
           title: project
           $ref: '#/components/schemas/project.v1.Project'
       title: CreateProjectResponse
+      additionalProperties: false
+    project.v1.DeleteProjectLogoRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+      title: DeleteProjectLogoRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.DeleteProjectLogoResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: DeleteProjectLogoResponse
+      additionalProperties: false
+    project.v1.GetProjectLogoRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+      title: GetProjectLogoRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.GetProjectLogoResponse:
+      type: object
+      properties:
+        contentType:
+          type: string
+          title: content_type
+        content:
+          type: string
+          title: content
+          format: byte
+      title: GetProjectLogoResponse
       additionalProperties: false
     project.v1.GetProjectRequest:
       type: object
@@ -406,7 +796,115 @@ components:
         updatedAt:
           title: updated_at
           $ref: '#/components/schemas/google.protobuf.Timestamp'
+        issuerHandle:
+          type: string
+          title: issuer_handle
+        issuerUrl:
+          type: string
+          title: issuer_url
+          description: issuer_url is the project's exact OAuth issuer, https://<host>/p/<issuer_handle>.
+        issuerHandleLocked:
+          type: boolean
+          title: issuer_handle_locked
+        issuerHandleLockedAt:
+          title: issuer_handle_locked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        displayName:
+          type: string
+          title: display_name
+        primaryColor:
+          type: string
+          title: primary_color
+        supportEmail:
+          type: string
+          title: support_email
+        hasLogo:
+          type: boolean
+          title: has_logo
+        logoUpdatedAt:
+          title: logo_updated_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        termsUrl:
+          type: string
+          title: terms_url
+        privacyUrl:
+          type: string
+          title: privacy_url
+        termsVersion:
+          type: integer
+          title: terms_version
+          format: int32
+        termsPublishedAt:
+          title: terms_published_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        signinEmailLink:
+          type: boolean
+          title: signin_email_link
       title: Project
+      additionalProperties: false
+    project.v1.UpdateProjectBrandingRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        displayName:
+          type: string
+          title: display_name
+          description: |
+            project.display_name.max_len.60
+        primaryColor:
+          type: string
+          title: primary_color
+          description: |
+            project.primary_color.format
+        supportEmail:
+          type: string
+          title: support_email
+          description: |
+            othra.email.format = true
+            othra.email.max_len.254 = true
+      title: UpdateProjectBrandingRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.UpdateProjectBrandingResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectBrandingResponse
+      additionalProperties: false
+    project.v1.UpdateProjectIssuerRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        issuerHandle:
+          type: string
+          title: issuer_handle
+          description: |
+            project.issuer_handle.format
+            project.issuer_handle.max_len.40
+            project.issuer_handle.min_len.3
+      title: UpdateProjectIssuerRequest
+      required:
+        - id
+        - issuerHandle
+      additionalProperties: false
+    project.v1.UpdateProjectIssuerResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectIssuerResponse
       additionalProperties: false
     project.v1.UpdateProjectRequest:
       type: object
@@ -442,6 +940,64 @@ components:
           title: project
           $ref: '#/components/schemas/project.v1.Project'
       title: UpdateProjectResponse
+      additionalProperties: false
+    project.v1.UpdateProjectTermsRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        termsUrl:
+          type: string
+          title: terms_url
+          description: |
+            project.url.format
+            project.url.max_len.2048
+        privacyUrl:
+          type: string
+          title: privacy_url
+          description: |
+            project.url.format
+            project.url.max_len.2048
+      title: UpdateProjectTermsRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.UpdateProjectTermsResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectTermsResponse
+      additionalProperties: false
+    project.v1.UploadProjectLogoRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        content:
+          type: string
+          title: content
+          maxLength: 262144
+          format: byte
+      title: UploadProjectLogoRequest
+      required:
+        - id
+        - content
+      additionalProperties: false
+    project.v1.UploadProjectLogoResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UploadProjectLogoResponse
       additionalProperties: false
 security: []
 tags:

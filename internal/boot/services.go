@@ -79,6 +79,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 			_, err := projects.Create(ctx, project.CreateRequest{OrgID: o.ID, Slug: project.DefaultSlug, Name: project.DefaultName})
 			return err
 		})
+	projects.WithOrgSlugs(projectOrgSlugs{orgs: orgs}).WithIssuerBase(publicBase(cfg.HTTP))
 
 	sl := buildSealer(cfg.Secrets)
 	outboxStore := outbox.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
@@ -329,4 +330,14 @@ func capabilitiesConfig(cfg config.Config) capabilities.Config {
 		BasicAuth:  cfg.Auth.Mode == config.AuthModeBasic,
 		EnvGenesis: cfg.Auth.Genesis.Email != "",
 	}
+}
+
+type projectOrgSlugs struct{ orgs *org.Service }
+
+func (p projectOrgSlugs) Slug(ctx context.Context, orgID uuid.UUID) (string, error) {
+	o, err := p.orgs.Get(ctx, orgID)
+	if err != nil {
+		return "", err
+	}
+	return o.Slug, nil
 }

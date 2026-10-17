@@ -55,8 +55,26 @@ erDiagram
         uuid org_id FK
         text slug "unique per org"
         text name
+        text issuer_handle UK "global; the issuer URL /p/<handle>"
+        timestamptz issuer_handle_locked_at "set by the first OAuth client"
+        text display_name
+        text primary_color "#rrggbb or empty"
+        text support_email
+        text terms_url "empty turns the end-user terms gate off"
+        text privacy_url
+        int terms_version "0 until the first terms link"
+        timestamptz terms_published_at
+        bool signin_email_link
         uuid created_by
         timestamptz created_at
+        timestamptz updated_at
+    }
+    project_logos {
+        uuid project_id PK, FK "(org_id, project_id) -> projects"
+        uuid org_id FK
+        text content_type "png, jpeg or webp"
+        bytea content "at most 256 KB"
+        text sha256
         timestamptz updated_at
     }
     api_keys {
@@ -222,32 +240,34 @@ Every foreign key to `orgs`, `projects`, `api_keys`, `webhook_endpoints` and
 
 Rules the diagram can't show. Names omit `{{.TablePrefix}}`.
 
-| Table                                                                   | Constraint / index                                                                              | Rule                                                                                                                                       |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `orgs`                                                                  | `orgs_one_system` (unique, `WHERE is_system`)                                                   | at most one system org; it marks the instance as installed                                                                                 |
-| `projects`                                                              | `UNIQUE (org_id, slug)`, `projects_org_id_id_key UNIQUE (org_id, id)`                           | slug unique per org; the pair is the target of org-scoped FKs                                                                              |
-| `api_keys`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries` | `<table>_org_project_fkey`: `(org_id, project_id) → projects (org_id, id)`, `ON DELETE CASCADE` | a row's project always belongs to the row's org; a NULL `project_id` (org and personal keys) is allowed                                    |
-| `api_keys`                                                              | `api_keys_kind_shape` (check)                                                                   | `project` keys have a `project_id` and no `all_projects`; `org` and `personal` keys have no `project_id`                                   |
-| `api_keys`                                                              | `api_keys_created_by_fkey` (`ON DELETE SET NULL`)                                               | `created_by` is a real user; deleting the user keeps the key but clears the owner, and a personal key without an owner never authenticates |
-| `api_keys`                                                              | `api_keys_personal_idx` (`WHERE kind = 'personal'`)                                             | lists one person's personal keys in an org                                                                                                 |
-| `api_keys`                                                              | `api_keys_secret_hash_key` (unique)                                                             | keys are found by the hash of their secret                                                                                                 |
-| `api_keys`                                                              | `api_keys_live_hint_key` (unique `(org_id, secret_hint)`, `WHERE revoked_at IS NULL`)           | a live key is named by its hint within its org; minting tries a new secret when the hint is taken; revoked keys may share one              |
-| `api_key_projects`                                                      | FKs on `(org_id, key_id)` and `(org_id, project_id)`                                            | a key can only be granted projects of its own org                                                                                          |
-| `outbox_entries`                                                        | `UNIQUE (org_id, event_id, target)`, status check                                               | one entry per event and target, per org                                                                                                    |
-| `outbox_entries`                                                        | `outbox_entries_public_id_key` (unique)                                                         | a delivery is found by its public id; all entries of one event share `event_public_id`                                                     |
-| `webhook_endpoints`                                                     | `webhook_endpoints_secondary_nonempty` (check)                                                  | the secondary secret is NULL or non-empty                                                                                                  |
-| `users`                                                                 | `users_email_normalized` (check), `email` unique                                                | email is stored trimmed and lowercase                                                                                                      |
-| `users`                                                                 | `users_idp_pair` (check), `users_idp_idx` (unique, `WHERE idp_issuer IS NOT NULL`)              | issuer and subject are set together and identify one user                                                                                  |
-| `memberships`                                                           | `UNIQUE (org_id, user_id)`, role check                                                          | one membership per person per org                                                                                                          |
-| `invites`                                                               | `invites_live_idx` (unique, `WHERE accepted_at IS NULL AND revoked_at IS NULL`)                 | one live invite per org and email; a re-invite updates that row                                                                            |
-| `invites`                                                               | `invites_token_or_draft` (check), `token_hash` unique                                           | every invite but a draft has a token; tokens are found by their hash                                                                       |
-| `invites`                                                               | `email` check                                                                                   | email is stored trimmed and lowercase                                                                                                      |
-| `legal_documents`                                                       | `legal_documents_slug_version_key` (unique)                                                     | one snapshot per document version; built-in documents only (a custom terms or privacy URL keeps no history)                                |
-| `terms_acceptances`                                                     | `terms_acceptances_user_idx`                                                                    | one person's acceptances, oldest first                                                                                                     |
-| `mail_queue`                                                            | `mail_queue_settled_erased`, `mail_queue_pending_payload` (checks)                              | a pending row holds its payload; a sent or failed row holds none                                                                           |
-| `mail_queue`                                                            | `mail_queue_due_idx` (`WHERE status = 'pending'`)                                               | the worker's claim of due mail                                                                                                             |
-| `password_resets`                                                       | `token_hash` unique, `password_resets_user_idx` (`WHERE used_at IS NULL`)                       | tokens are found by their hash; a new request deletes the person's unused tokens                                                           |
-| `sessions`                                                              | `sessions_expires_idx`, `sessions_user_idx`                                                     | sweep of expired rows; delete all sessions of a user                                                                                       |
+| Table                                                                   | Constraint / index                                                                                                                                     | Rule                                                                                                                                       |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `orgs`                                                                  | `orgs_one_system` (unique, `WHERE is_system`)                                                                                                          | at most one system org; it marks the instance as installed                                                                                 |
+| `projects`                                                              | `UNIQUE (org_id, slug)`, `projects_org_id_id_key UNIQUE (org_id, id)`                                                                                  | slug unique per org; the pair is the target of org-scoped FKs                                                                              |
+| `projects`                                                              | `projects_issuer_handle_key` (unique), `projects_issuer_handle_format`, `projects_primary_color_format`, `projects_terms_version_nonnegative` (checks) | one issuer URL per handle across every org; the store turns the unique violation into `PRJ005`                                             |
+| `project_logos`                                                         | `project_logos_org_project_fkey`, checks on `content_type` and the 256 KB size                                                                         | one logo per project, deleted with it                                                                                                      |
+| `api_keys`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries` | `<table>_org_project_fkey`: `(org_id, project_id) → projects (org_id, id)`, `ON DELETE CASCADE`                                                        | a row's project always belongs to the row's org; a NULL `project_id` (org and personal keys) is allowed                                    |
+| `api_keys`                                                              | `api_keys_kind_shape` (check)                                                                                                                          | `project` keys have a `project_id` and no `all_projects`; `org` and `personal` keys have no `project_id`                                   |
+| `api_keys`                                                              | `api_keys_created_by_fkey` (`ON DELETE SET NULL`)                                                                                                      | `created_by` is a real user; deleting the user keeps the key but clears the owner, and a personal key without an owner never authenticates |
+| `api_keys`                                                              | `api_keys_personal_idx` (`WHERE kind = 'personal'`)                                                                                                    | lists one person's personal keys in an org                                                                                                 |
+| `api_keys`                                                              | `api_keys_secret_hash_key` (unique)                                                                                                                    | keys are found by the hash of their secret                                                                                                 |
+| `api_keys`                                                              | `api_keys_live_hint_key` (unique `(org_id, secret_hint)`, `WHERE revoked_at IS NULL`)                                                                  | a live key is named by its hint within its org; minting tries a new secret when the hint is taken; revoked keys may share one              |
+| `api_key_projects`                                                      | FKs on `(org_id, key_id)` and `(org_id, project_id)`                                                                                                   | a key can only be granted projects of its own org                                                                                          |
+| `outbox_entries`                                                        | `UNIQUE (org_id, event_id, target)`, status check                                                                                                      | one entry per event and target, per org                                                                                                    |
+| `outbox_entries`                                                        | `outbox_entries_public_id_key` (unique)                                                                                                                | a delivery is found by its public id; all entries of one event share `event_public_id`                                                     |
+| `webhook_endpoints`                                                     | `webhook_endpoints_secondary_nonempty` (check)                                                                                                         | the secondary secret is NULL or non-empty                                                                                                  |
+| `users`                                                                 | `users_email_normalized` (check), `email` unique                                                                                                       | email is stored trimmed and lowercase                                                                                                      |
+| `users`                                                                 | `users_idp_pair` (check), `users_idp_idx` (unique, `WHERE idp_issuer IS NOT NULL`)                                                                     | issuer and subject are set together and identify one user                                                                                  |
+| `memberships`                                                           | `UNIQUE (org_id, user_id)`, role check                                                                                                                 | one membership per person per org                                                                                                          |
+| `invites`                                                               | `invites_live_idx` (unique, `WHERE accepted_at IS NULL AND revoked_at IS NULL`)                                                                        | one live invite per org and email; a re-invite updates that row                                                                            |
+| `invites`                                                               | `invites_token_or_draft` (check), `token_hash` unique                                                                                                  | every invite but a draft has a token; tokens are found by their hash                                                                       |
+| `invites`                                                               | `email` check                                                                                                                                          | email is stored trimmed and lowercase                                                                                                      |
+| `legal_documents`                                                       | `legal_documents_slug_version_key` (unique)                                                                                                            | one snapshot per document version; built-in documents only (a custom terms or privacy URL keeps no history)                                |
+| `terms_acceptances`                                                     | `terms_acceptances_user_idx`                                                                                                                           | one person's acceptances, oldest first                                                                                                     |
+| `mail_queue`                                                            | `mail_queue_settled_erased`, `mail_queue_pending_payload` (checks)                                                                                     | a pending row holds its payload; a sent or failed row holds none                                                                           |
+| `mail_queue`                                                            | `mail_queue_due_idx` (`WHERE status = 'pending'`)                                                                                                      | the worker's claim of due mail                                                                                                             |
+| `password_resets`                                                       | `token_hash` unique, `password_resets_user_idx` (`WHERE used_at IS NULL`)                                                                              | tokens are found by their hash; a new request deletes the person's unused tokens                                                           |
+| `sessions`                                                              | `sessions_expires_idx`, `sessions_user_idx`                                                                                                            | sweep of expired rows; delete all sessions of a user                                                                                       |
 
 ## Row level security
 
@@ -258,11 +278,11 @@ Every org-owned table has `ENABLE` and `FORCE ROW LEVEL SECURITY` and one `FOR A
 `tenant_policy_guard_test.go` fails on an inline `current_setting` or an org-owned table without its policy, and
 `rls_isolation_integration_test.go` proves each table as the service role.
 
-| Table                                                                                                              | Policy                                                                                               |
-| ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `projects`, `api_keys`, `api_key_projects`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries`, `invites` | `org_id = current_org_id()`                                                                          |
-| `memberships`                                                                                                      | read: `org_id = current_org_id() OR user_id = current_user_id()`; write: `org_id = current_org_id()` |
-| `orgs`                                                                                                             | read: `id = current_org_id()` or an org the user is a member of; write: `id = current_org_id()`      |
+| Table                                                                                                                               | Policy                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `projects`, `project_logos`, `api_keys`, `api_key_projects`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries`, `invites` | `org_id = current_org_id()`                                                                          |
+| `memberships`                                                                                                                       | read: `org_id = current_org_id() OR user_id = current_user_id()`; write: `org_id = current_org_id()` |
+| `orgs`                                                                                                                              | read: `id = current_org_id()` or an org the user is a member of; write: `id = current_org_id()`      |
 
 The `orgs` policy reads `memberships`, so `002_orgs.sql` only enables and forces row level security on `orgs`, and
 `007_memberships.sql` creates its policy. `users`, `sessions`, `password_resets`, `terms_acceptances`, `mail_queue`,
@@ -275,15 +295,17 @@ exists, or across every org. Each one runs as the owner with `search_path = <sch
 returns public columns only (never a hash), and is closed to `PUBLIC`; the service role gets `EXECUTE` through
 the owner's default privileges. `lookups_integration_test.go` checks all of this.
 
-| Function                                | Returns                                        | Used by                                                |
-| --------------------------------------- | ---------------------------------------------- | ------------------------------------------------------ |
-| `list_org_ids()`                        | every org id and creation time                 | the outbox dispatcher, which then runs each org scoped |
-| `resolve_system_org()`                  | the system org                                 | sign-in refresh, install                               |
-| `resolve_org_by_slug(text)`             | one org                                        | slug routes and the system slug check                  |
-| `resolve_org_by_public_id(text)`        | one org                                        | public id resolution on every surface                  |
-| `list_orgs_for_user(uuid)`              | the orgs a person is a member of               | `ListOrgs` for a person                                |
-| `resolve_invite_by_token_hash(text)`    | one invite, without `token_hash`               | the invite landing page and join                       |
-| `resolve_api_key_by_secret_hash(bytea)` | one API key and its projects, without the hash | API key authentication                                 |
+| Function                                 | Returns                                                                | Used by                                                |
+| ---------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------ |
+| `list_org_ids()`                         | every org id and creation time                                         | the outbox dispatcher, which then runs each org scoped |
+| `resolve_system_org()`                   | the system org                                                         | sign-in refresh, install                               |
+| `resolve_org_by_slug(text)`              | one org                                                                | slug routes and the system slug check                  |
+| `resolve_org_by_public_id(text)`         | one org                                                                | public id resolution on every surface                  |
+| `list_orgs_for_user(uuid)`               | the orgs a person is a member of                                       | `ListOrgs` for a person                                |
+| `resolve_invite_by_token_hash(text)`     | one invite, without `token_hash`                                       | the invite landing page and join                       |
+| `resolve_api_key_by_secret_hash(bytea)`  | one API key and its projects, without the hash                         | API key authentication                                 |
+| `resolve_project_by_issuer_handle(text)` | one project's issuer: ids, handle, branding, terms and sign-in setting | issuer resolution before sign-in (M2 discovery)        |
+| `issuer_handle_exists(text)`             | whether any org uses a handle                                          | the issuer handle availability check                   |
 
 ## External migrations
 

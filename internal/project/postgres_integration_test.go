@@ -385,3 +385,137 @@ func pgCode(err error) string {
 	}
 	return ""
 }
+
+func (f *projectFixture) in(orgID uuid.UUID) context.Context {
+	return tenant.Into(context.Background(), tenant.Context{OrgID: orgID})
+}
+
+// SECURITY: an issuer handle is one exact issuer URL, so it is unique across every org.
+func TestProjectStore_IssuerHandleIsGlobal(t *testing.T) {
+	f := newProjectFixture(t)
+	orgA, orgB := f.seedOrg(t, "acme"), f.seedOrg(t, "globex")
+	a := newProject(t, orgA, "web", uuid.Nil)
+	a.IssuerHandle = "shared-web"
+	require.NoError(t, f.projects.Save(f.in(orgA), a))
+	b := newProject(t, orgB, "web", uuid.Nil)
+	b.IssuerHandle = "shared-web"
+	err := f.projects.Save(f.in(orgB), b)
+	assert.True(t, project.IsIssuerHandleTakenError(err), "got %v", err)
+
+	b.IssuerHandle = "globex-web"
+	require.NoError(t, f.projects.Save(f.in(orgB), b))
+	assert.True(t, project.IsIssuerHandleTakenError(f.projects.SetIssuerHandle(f.in(orgB), b.ID, "shared-web")))
+
+	exists, err := f.projects.IssuerHandleExists(f.in(orgB), "shared-web")
+	require.NoError(t, err)
+	assert.True(t, exists, "another org's handle counts")
+	exists, err = f.projects.IssuerHandleExists(context.Background(), "free-handle")
+	require.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func TestProjectStore_SetAndLockIssuerHandle(t *testing.T) {
+	f := newProjectFixture(t)
+	orgID := f.seedOrg(t, "acme")
+	p := newProject(t, orgID, "web", uuid.Nil)
+	require.NoError(t, f.projects.Save(f.in(orgID), p))
+
+	require.NoError(t, f.projects.SetIssuerHandle(f.in(orgID), p.ID, "acme-web"))
+	first := time.Now().UTC().Truncate(time.Microsecond)
+	require.NoError(t, f.projects.LockIssuerHandle(f.in(orgID), p.ID, first))
+	require.NoError(t, f.projects.LockIssuerHandle(f.in(orgID), p.ID, first.Add(time.Hour)))
+	got, err := f.projects.ByID(f.in(orgID), p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "acme-web", got.IssuerHandle)
+	require.NotNil(t, got.IssuerHandleLockedAt)
+	assert.True(t, got.IssuerHandleLockedAt.Equal(first), "a lock keeps its first time")
+
+	assert.True(t, project.IsIssuerHandleLockedError(f.projects.SetIssuerHandle(f.in(orgID), p.ID, "acme-other")))
+	assert.True(t, project.IsNotFoundError(f.projects.SetIssuerHandle(f.in(orgID), uuid.New(), "acme-other")))
+	got.IssuerHandle = "acme-sneaky"
+	require.NoError(t, f.projects.Save(f.in(orgID), got))
+	again, err := f.projects.ByID(f.in(orgID), p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "acme-web", again.IssuerHandle, "Save never changes the handle")
+}
+
+func TestProjectStore_SettingsRoundTrip(t *testing.T) {
+	f := newProjectFixture(t)
+	orgID := f.seedOrg(t, "acme")
+	p := newProject(t, orgID, "web", uuid.Nil)
+	require.NoError(t, f.projects.Save(f.in(orgID), p))
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	require.NoError(t, p.UpdateBranding("Acme Web", "#4F46E5", "help@acme.test"))
+	require.NoError(t, p.UpdateTerms("https://acme.test/terms", "https://acme.test/privacy", now))
+	require.NoError(t, f.projects.Save(f.in(orgID), p))
+
+	got, err := f.projects.ByID(f.in(orgID), p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "Acme Web", got.DisplayName)
+	assert.Equal(t, "#4F46E5", got.PrimaryColor)
+	assert.Equal(t, "help@acme.test", got.SupportEmail)
+	assert.Equal(t, "https://acme.test/terms", got.TermsURL)
+	assert.Equal(t, "https://acme.test/privacy", got.PrivacyURL)
+	assert.Equal(t, int32(1), got.TermsVersion)
+	require.NotNil(t, got.TermsPublishedAt)
+	assert.True(t, got.TermsPublishedAt.Equal(now))
+	assert.True(t, got.SignInEmailLink)
+	assert.Nil(t, got.LogoUpdatedAt)
+}
+
+func TestProjectStore_LogoRoundTripIsScoped(t *testing.T) {
+	f := newProjectFixture(t)
+	orgA, orgB := f.seedOrg(t, "acme"), f.seedOrg(t, "globex")
+	p := newProject(t, orgA, "web", uuid.Nil)
+	require.NoError(t, f.projects.Save(f.in(orgA), p))
+	none, err := f.projects.Logo(f.in(orgA), p.ID)
+	require.NoError(t, err)
+	assert.Nil(t, none)
+
+	at := time.Now().UTC().Truncate(time.Microsecond)
+	logo := &project.Logo{ProjectID: p.ID, OrgID: orgA, ContentType: "image/png", Content: []byte("\x89PNG\r\n\x1a\n1"), SHA256: "abc", UpdatedAt: at}
+	require.NoError(t, f.projects.SaveLogo(f.in(orgA), logo))
+	logo.ContentType, logo.Content = "image/webp", []byte("RIFF0000WEBP")
+	require.NoError(t, f.projects.SaveLogo(f.in(orgA), logo))
+
+	got, err := f.projects.Logo(f.in(orgA), p.ID)
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	assert.Equal(t, "image/webp", got.ContentType, "a second upload replaces the first")
+	assert.Equal(t, []byte("RIFF0000WEBP"), got.Content)
+	withLogo, err := f.projects.ByID(f.in(orgA), p.ID)
+	require.NoError(t, err)
+	require.NotNil(t, withLogo.LogoUpdatedAt)
+	assert.True(t, withLogo.LogoUpdatedAt.Equal(at))
+
+	hidden, err := f.projects.Logo(f.in(orgB), p.ID)
+	require.NoError(t, err)
+	assert.Nil(t, hidden, "another org's scope sees no logo")
+
+	require.NoError(t, f.projects.DeleteLogo(f.in(orgA), p.ID))
+	require.NoError(t, f.projects.DeleteLogo(f.in(orgA), p.ID), "deleting twice is fine")
+	gone, err := f.projects.Logo(f.in(orgA), p.ID)
+	require.NoError(t, err)
+	assert.Nil(t, gone)
+}
+
+// SECURITY: the issuer resolves before any tenant scope exists, and only by its exact handle.
+func TestProjectStore_ResolveIssuer(t *testing.T) {
+	f := newProjectFixture(t)
+	orgID := f.seedOrg(t, "acme")
+	p := newProject(t, orgID, "web", uuid.Nil)
+	p.IssuerHandle = "acme-web"
+	require.NoError(t, p.UpdateBranding("Acme", "", "help@acme.test"))
+	require.NoError(t, f.projects.Save(f.in(orgID), p))
+
+	i, err := f.projects.ResolveIssuer(context.Background(), "acme-web")
+	require.NoError(t, err)
+	assert.Equal(t, p.ID, i.ProjectID)
+	assert.Equal(t, orgID, i.OrgID)
+	assert.Equal(t, p.PublicID, i.PublicID)
+	assert.Equal(t, "Acme", i.DisplayName)
+	assert.Equal(t, "help@acme.test", i.SupportEmail)
+	assert.True(t, i.SignInEmailLink)
+	_, err = f.projects.ResolveIssuer(context.Background(), "ACME-WEB")
+	assert.True(t, project.IsNotFoundError(err), "handles are exact")
+}

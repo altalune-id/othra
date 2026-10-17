@@ -63,3 +63,35 @@ func TestValidateSlugReasons(t *testing.T) {
 		(&InvalidNameError{Reason: NameLength}).ToAppError().Meta())
 	assert.Equal(t, map[string]string{"slug": "taken"}, (&AlreadyExistsError{Slug: "taken"}).ToAppError().Meta())
 }
+
+func TestIssuerErrors(t *testing.T) {
+	cases := []struct {
+		err    error
+		is     func(error) bool
+		code   apperror.Code
+		meta   map[string]string
+		reason string
+	}{
+		{&IssuerHandleTakenError{Handle: "acme-web"}, IsIssuerHandleTakenError, apperror.CodeProjectIssuerHandleTaken, map[string]string{"issuer_handle": "acme-web"}, ""},
+		{&InvalidIssuerHandleError{Handle: "system", Reason: IssuerHandleReserved}, IsInvalidIssuerHandleError, apperror.CodeProjectInvalidIssuerHandle,
+			map[string]string{"issuer_handle": "system", "min": "3", "max": "40"}, "reserved"},
+		{&IssuerHandleLockedError{}, IsIssuerHandleLockedError, apperror.CodeProjectIssuerHandleLocked, nil, ""},
+		{&InvalidLogoError{Reason: LogoSize}, IsInvalidLogoError, apperror.CodeProjectInvalidLogo, map[string]string{"max": "256"}, "size"},
+		{&TermsNotSetError{}, IsTermsNotSetError, apperror.CodeProjectTermsNotSet, nil, ""},
+	}
+	for _, c := range cases {
+		assert.NotEmpty(t, c.err.Error())
+		assert.True(t, c.is(c.err))
+		assert.False(t, c.is(errors.New("x")))
+		assert.True(t, IsExpectedError(c.err))
+		ae, ok := apperror.AsAppError(c.err)
+		require.True(t, ok)
+		assert.Equal(t, c.code, ae.Code())
+		for k, v := range c.meta {
+			assert.Equal(t, v, ae.Meta()[k], k)
+		}
+		if c.reason != "" {
+			assert.Equal(t, c.reason, ae.Meta()["reason"])
+		}
+	}
+}

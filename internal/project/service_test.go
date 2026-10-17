@@ -171,3 +171,124 @@ func TestService_ByPublicID(t *testing.T) {
 	_, isApp := apperror.AsAppError(err)
 	assert.True(t, isApp)
 }
+
+type orgSlugs map[uuid.UUID]string
+
+func (o orgSlugs) Slug(_ context.Context, id uuid.UUID) (string, error) {
+	if s, ok := o[id]; ok {
+		return s, nil
+	}
+	return "", errors.New("unknown org")
+}
+
+func TestService_Create_DefaultIssuerHandle(t *testing.T) {
+	orgID := uuid.New()
+	store := &fakes.ProjectStore{}
+	svc := project.NewService(store, testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "acme"}).WithIssuerBase("https://id.example.com")
+	p, err := svc.Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "web", Name: "Web"})
+	require.NoError(t, err)
+	assert.Equal(t, "acme-web", p.IssuerHandle)
+	assert.Equal(t, "https://id.example.com/p/acme-web", svc.IssuerURL(p.IssuerHandle))
+
+	_, err = svc.Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Slug: "web", Name: "Web"})
+	require.Error(t, err, "the org slug lookup failing fails the create")
+}
+
+func TestService_Create_IssuerHandleCollisions(t *testing.T) {
+	orgID := uuid.New()
+	taken := 0
+	store := &fakes.ProjectStore{SaveFn: func(p *project.Project) error {
+		if p.IssuerHandle == "acme-web" {
+			taken++
+			return &project.IssuerHandleTakenError{Handle: p.IssuerHandle}
+		}
+		return nil
+	}}
+	svc := project.NewService(store, testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "acme"})
+	p, err := svc.Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "web", Name: "Web"})
+	require.NoError(t, err)
+	assert.Equal(t, 1, taken)
+	assert.Regexp(t, `^acme-web-[a-z0-9]{4}$`, p.IssuerHandle, "a taken default handle gets a random suffix")
+
+	_, err = svc.Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "web", Name: "Web", IssuerHandle: "acme-web"})
+	assert.True(t, project.IsIssuerHandleTakenError(err), "a chosen handle is never changed: %v", err)
+	_, err = svc.Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "web", Name: "Web", IssuerHandle: "system"})
+	assert.True(t, project.IsInvalidIssuerHandleError(err))
+
+	reserved := &fakes.ProjectStore{}
+	well, err := project.NewService(reserved, testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "well"}).
+		Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "known", Name: "Known"})
+	require.NoError(t, err)
+	assert.Regexp(t, `^well-known-[a-z0-9]{4}$`, well.IssuerHandle, "a reserved default is suffixed")
+}
+
+func TestService_UpdateIssuerHandle(t *testing.T) {
+	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
+	require.NoError(t, err)
+	store := &fakes.ProjectStore{Project: p}
+	svc := project.NewService(store, testUnexpected())
+	same, err := svc.UpdateIssuerHandle(context.Background(), p.ID, p.IssuerHandle)
+	require.NoError(t, err)
+	assert.Equal(t, p.IssuerHandle, same.IssuerHandle)
+
+	got, err := svc.UpdateIssuerHandle(context.Background(), p.ID, " acme-shop ")
+	require.NoError(t, err)
+	assert.Equal(t, "acme-shop", got.IssuerHandle)
+
+	store.HandleSetErr = &project.IssuerHandleTakenError{Handle: "acme-taken"}
+	_, err = svc.UpdateIssuerHandle(context.Background(), p.ID, "acme-taken")
+	assert.True(t, project.IsIssuerHandleTakenError(err))
+
+	require.NoError(t, svc.LockIssuerHandle(context.Background(), p.ID))
+	require.NotNil(t, store.LockedAt)
+	p.LockIssuerHandle(*store.LockedAt)
+	_, err = svc.UpdateIssuerHandle(context.Background(), p.ID, "acme-other")
+	assert.True(t, project.IsIssuerHandleLockedError(err))
+	reason, err := svc.CheckIssuerHandle(context.Background(), "acme-other", p)
+	require.NoError(t, err)
+	assert.Equal(t, project.HandleLocked, reason)
+}
+
+func TestService_SettingsAndLogo(t *testing.T) {
+	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
+	require.NoError(t, err)
+	store := &fakes.ProjectStore{Project: p}
+	svc := project.NewService(store, testUnexpected())
+	ctx := context.Background()
+
+	_, err = svc.UpdateBranding(ctx, p.ID, "", "red", "")
+	require.Error(t, err)
+	_, err = svc.UploadLogo(ctx, p.ID, []byte("not an image"))
+	assert.True(t, project.IsInvalidLogoError(err))
+	_, err = svc.UploadLogo(ctx, p.ID, []byte{0xFF, 0xD8, 0xFF, 0xE0})
+	require.NoError(t, err)
+	require.NotNil(t, store.LogoContent)
+	assert.Equal(t, "image/jpeg", store.LogoContent.ContentType)
+	assert.Len(t, store.LogoContent.SHA256, 64)
+	l, err := svc.Logo(ctx, p.ID)
+	require.NoError(t, err)
+	assert.NotNil(t, l)
+
+	store.Issuer = &project.Issuer{Handle: "acme-web", ProjectID: p.ID}
+	i, err := svc.ResolveIssuer(ctx, "acme-web")
+	require.NoError(t, err)
+	assert.Equal(t, p.ID, i.ProjectID)
+	_, err = svc.ResolveIssuer(ctx, "nope-nope")
+	assert.True(t, project.IsNotFoundError(err))
+
+	store.Err = errors.New("db down")
+	for _, call := range []func() error{
+		func() error { _, err := svc.UpdateBranding(ctx, p.ID, "", "", ""); return err },
+		func() error { _, err := svc.UpdateTerms(ctx, p.ID, "", ""); return err },
+		func() error { _, err := svc.BumpTermsVersion(ctx, p.ID); return err },
+		func() error { _, err := svc.UploadLogo(ctx, p.ID, []byte{0xFF, 0xD8, 0xFF}); return err },
+		func() error { _, err := svc.DeleteLogo(ctx, p.ID); return err },
+		func() error { _, err := svc.Logo(ctx, p.ID); return err },
+		func() error { _, err := svc.UpdateIssuerHandle(ctx, p.ID, "acme-x"); return err },
+		func() error { return svc.LockIssuerHandle(ctx, p.ID) },
+		func() error { _, err := svc.CheckIssuerHandle(ctx, "acme-x", nil); return err },
+		func() error { _, err := svc.ResolveIssuer(ctx, "acme-x"); return err },
+	} {
+		assert.Error(t, call())
+	}
+}

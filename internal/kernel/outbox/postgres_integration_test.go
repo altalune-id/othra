@@ -43,8 +43,8 @@ func (f *fixture) seedTenant(t *testing.T) (context.Context, tenant.Context) {
 		orgID, orgID.String(), now)
 	require.NoError(t, err)
 	_, err = f.db.ExecContext(t.Context(),
-		`INSERT INTO projects (id, public_id, org_id, slug, name, created_at, updated_at) VALUES ($1, $2, $3, $2, 'P', $4, $4)`,
-		projID, projID.String(), orgID, now)
+		`INSERT INTO projects (id, public_id, org_id, slug, name, issuer_handle, created_at, updated_at) VALUES ($1, $2, $3, $2, 'P', $5, $4, $4)`,
+		projID, projID.String(), orgID, now, "h"+projID.String()[:8])
 	require.NoError(t, err)
 	tc := tenant.Context{OrgID: orgID, ProjectID: projID, UserID: uuid.New()}
 	return tenant.Into(t.Context(), tc), tc

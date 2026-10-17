@@ -110,3 +110,76 @@ func TestProjectService_ListProjects_StoreError(t *testing.T) {
 	_, err := c.ListProjects(context.Background(), connect.NewRequest(&projectv1.ListProjectsRequest{OrgId: refs.Org(uuid.New())}))
 	assert.Error(t, err)
 }
+
+func TestProjectService_IssuerRPCs(t *testing.T) {
+	refs := fakes.NewPublicIDs()
+	orgID := uuid.New()
+	orgPub := refs.Org(orgID)
+	p, err := project.NewProject(orgID, "web", "Web", uuid.New())
+	require.NoError(t, err)
+	store := &fakes.ProjectStore{Project: p, TakenHandles: []string{"taken-one"}}
+	c := newProjectServiceClient(t, store, refs)
+	ctx := context.Background()
+
+	issuer, err := c.UpdateProjectIssuer(ctx, connect.NewRequest(&projectv1.UpdateProjectIssuerRequest{Id: p.PublicID, IssuerHandle: "acme-web"}))
+	require.NoError(t, err)
+	assert.Equal(t, "acme-web", issuer.Msg.GetProject().GetIssuerHandle())
+	assert.Equal(t, "/p/acme-web", issuer.Msg.GetProject().GetIssuerUrl())
+
+	branding, err := c.UpdateProjectBranding(ctx, connect.NewRequest(&projectv1.UpdateProjectBrandingRequest{
+		Id: p.PublicID, DisplayName: "Acme", PrimaryColor: "#4F46E5", SupportEmail: "help@acme.test",
+	}))
+	require.NoError(t, err)
+	assert.Equal(t, "Acme", branding.Msg.GetProject().GetDisplayName())
+
+	_, err = c.BumpTermsVersion(ctx, connect.NewRequest(&projectv1.BumpTermsVersionRequest{Id: p.PublicID}))
+	require.Error(t, err, "no terms link yet")
+	terms, err := c.UpdateProjectTerms(ctx, connect.NewRequest(&projectv1.UpdateProjectTermsRequest{Id: p.PublicID, TermsUrl: "https://acme.test/terms"}))
+	require.NoError(t, err)
+	assert.Equal(t, int32(1), terms.Msg.GetProject().GetTermsVersion())
+	bumped, err := c.BumpTermsVersion(ctx, connect.NewRequest(&projectv1.BumpTermsVersionRequest{Id: p.PublicID}))
+	require.NoError(t, err)
+	assert.Equal(t, int32(2), bumped.Msg.GetVersion())
+	assert.NotNil(t, bumped.Msg.GetPublishedAt())
+
+	png := append([]byte("\x89PNG\r\n\x1a\n"), 1, 2, 3)
+	_, err = c.UploadProjectLogo(ctx, connect.NewRequest(&projectv1.UploadProjectLogoRequest{Id: p.PublicID, Content: png}))
+	require.NoError(t, err)
+	logo, err := c.GetProjectLogo(ctx, connect.NewRequest(&projectv1.GetProjectLogoRequest{Id: p.PublicID}))
+	require.NoError(t, err)
+	assert.Equal(t, "image/png", logo.Msg.GetContentType())
+	assert.Equal(t, png, logo.Msg.GetContent())
+	_, err = c.DeleteProjectLogo(ctx, connect.NewRequest(&projectv1.DeleteProjectLogoRequest{Id: p.PublicID}))
+	require.NoError(t, err)
+	empty, err := c.GetProjectLogo(ctx, connect.NewRequest(&projectv1.GetProjectLogoRequest{Id: p.PublicID}))
+	require.NoError(t, err)
+	assert.Empty(t, empty.Msg.GetContent(), "no logo answers empty")
+
+	for handle, want := range map[string]string{"free-one": "ok", "taken-one": "taken", "system": "reserved", "Bad": "invalid", "acme-web": "ok"} {
+		got, err := c.CheckIssuerHandle(ctx, connect.NewRequest(&projectv1.CheckIssuerHandleRequest{OrgId: orgPub, ProjectId: p.PublicID, IssuerHandle: handle}))
+		require.NoError(t, err, handle)
+		assert.Equal(t, want, got.Msg.GetReason(), handle)
+		assert.Equal(t, want == "ok", got.Msg.GetAvailable(), handle)
+	}
+
+	for _, call := range []func() error{
+		func() error {
+			_, err := c.UpdateProjectIssuer(ctx, connect.NewRequest(&projectv1.UpdateProjectIssuerRequest{Id: "unknwnunknwnunknwnabc", IssuerHandle: "acme-web"}))
+			return err
+		},
+		func() error {
+			_, err := c.GetProjectLogo(ctx, connect.NewRequest(&projectv1.GetProjectLogoRequest{Id: "unknwnunknwnunknwnabc"}))
+			return err
+		},
+		func() error {
+			_, err := c.CheckIssuerHandle(ctx, connect.NewRequest(&projectv1.CheckIssuerHandleRequest{OrgId: "unknwnunknwnunknwnabc", IssuerHandle: "acme-web"}))
+			return err
+		},
+		func() error {
+			_, err := c.CheckIssuerHandle(ctx, connect.NewRequest(&projectv1.CheckIssuerHandleRequest{OrgId: orgPub, ProjectId: "unknwnunknwnunknwnabc", IssuerHandle: "acme-web"}))
+			return err
+		},
+	} {
+		require.Error(t, call())
+	}
+}

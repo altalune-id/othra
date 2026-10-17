@@ -11,3 +11,8 @@ type OrgRefs interface {
 	OrgID(ctx context.Context, publicID string) (id uuid.UUID, ok bool, err error)
 	OrgPublicID(ctx context.Context, id uuid.UUID) (string, error)
 }
+
+// OrgSlugs gives an org's slug, from which a new project's default issuer handle is built.
+type OrgSlugs interface {
+	Slug(ctx context.Context, orgID uuid.UUID) (string, error)
+}

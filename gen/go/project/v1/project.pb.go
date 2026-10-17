@@ -26,15 +26,30 @@ const (
 )
 
 type Project struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	OrgId         string                 `protobuf:"bytes,3,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	Slug          string                 `protobuf:"bytes,4,opt,name=slug,proto3" json:"slug,omitempty"`
-	Name          string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Id           string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	OrgId        string                 `protobuf:"bytes,3,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	Slug         string                 `protobuf:"bytes,4,opt,name=slug,proto3" json:"slug,omitempty"`
+	Name         string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	CreatedAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	IssuerHandle string                 `protobuf:"bytes,8,opt,name=issuer_handle,json=issuerHandle,proto3" json:"issuer_handle,omitempty"`
+	// issuer_url is the project's exact OAuth issuer, https://<host>/p/<issuer_handle>.
+	IssuerUrl            string                 `protobuf:"bytes,9,opt,name=issuer_url,json=issuerUrl,proto3" json:"issuer_url,omitempty"`
+	IssuerHandleLocked   bool                   `protobuf:"varint,10,opt,name=issuer_handle_locked,json=issuerHandleLocked,proto3" json:"issuer_handle_locked,omitempty"`
+	IssuerHandleLockedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=issuer_handle_locked_at,json=issuerHandleLockedAt,proto3" json:"issuer_handle_locked_at,omitempty"`
+	DisplayName          string                 `protobuf:"bytes,12,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	PrimaryColor         string                 `protobuf:"bytes,13,opt,name=primary_color,json=primaryColor,proto3" json:"primary_color,omitempty"`
+	SupportEmail         string                 `protobuf:"bytes,14,opt,name=support_email,json=supportEmail,proto3" json:"support_email,omitempty"`
+	HasLogo              bool                   `protobuf:"varint,15,opt,name=has_logo,json=hasLogo,proto3" json:"has_logo,omitempty"`
+	LogoUpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=logo_updated_at,json=logoUpdatedAt,proto3" json:"logo_updated_at,omitempty"`
+	TermsUrl             string                 `protobuf:"bytes,17,opt,name=terms_url,json=termsUrl,proto3" json:"terms_url,omitempty"`
+	PrivacyUrl           string                 `protobuf:"bytes,18,opt,name=privacy_url,json=privacyUrl,proto3" json:"privacy_url,omitempty"`
+	TermsVersion         int32                  `protobuf:"varint,19,opt,name=terms_version,json=termsVersion,proto3" json:"terms_version,omitempty"`
+	TermsPublishedAt     *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=terms_published_at,json=termsPublishedAt,proto3" json:"terms_published_at,omitempty"`
+	SigninEmailLink      bool                   `protobuf:"varint,21,opt,name=signin_email_link,json=signinEmailLink,proto3" json:"signin_email_link,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *Project) Reset() {
@@ -109,11 +124,110 @@ func (x *Project) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Project) GetIssuerHandle() string {
+	if x != nil {
+		return x.IssuerHandle
+	}
+	return ""
+}
+
+func (x *Project) GetIssuerUrl() string {
+	if x != nil {
+		return x.IssuerUrl
+	}
+	return ""
+}
+
+func (x *Project) GetIssuerHandleLocked() bool {
+	if x != nil {
+		return x.IssuerHandleLocked
+	}
+	return false
+}
+
+func (x *Project) GetIssuerHandleLockedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.IssuerHandleLockedAt
+	}
+	return nil
+}
+
+func (x *Project) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *Project) GetPrimaryColor() string {
+	if x != nil {
+		return x.PrimaryColor
+	}
+	return ""
+}
+
+func (x *Project) GetSupportEmail() string {
+	if x != nil {
+		return x.SupportEmail
+	}
+	return ""
+}
+
+func (x *Project) GetHasLogo() bool {
+	if x != nil {
+		return x.HasLogo
+	}
+	return false
+}
+
+func (x *Project) GetLogoUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LogoUpdatedAt
+	}
+	return nil
+}
+
+func (x *Project) GetTermsUrl() string {
+	if x != nil {
+		return x.TermsUrl
+	}
+	return ""
+}
+
+func (x *Project) GetPrivacyUrl() string {
+	if x != nil {
+		return x.PrivacyUrl
+	}
+	return ""
+}
+
+func (x *Project) GetTermsVersion() int32 {
+	if x != nil {
+		return x.TermsVersion
+	}
+	return 0
+}
+
+func (x *Project) GetTermsPublishedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.TermsPublishedAt
+	}
+	return nil
+}
+
+func (x *Project) GetSigninEmailLink() bool {
+	if x != nil {
+		return x.SigninEmailLink
+	}
+	return false
+}
+
 type CreateProjectRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	OrgId         string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
 	Slug          string                 `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	IssuerHandle  string                 `protobuf:"bytes,4,opt,name=issuer_handle,json=issuerHandle,proto3" json:"issuer_handle,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -165,6 +279,13 @@ func (x *CreateProjectRequest) GetSlug() string {
 func (x *CreateProjectRequest) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateProjectRequest) GetIssuerHandle() string {
+	if x != nil {
+		return x.IssuerHandle
 	}
 	return ""
 }
@@ -493,12 +614,814 @@ func (x *UpdateProjectResponse) GetProject() *Project {
 	return nil
 }
 
+type UpdateProjectIssuerRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	IssuerHandle  string                 `protobuf:"bytes,2,opt,name=issuer_handle,json=issuerHandle,proto3" json:"issuer_handle,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectIssuerRequest) Reset() {
+	*x = UpdateProjectIssuerRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectIssuerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectIssuerRequest) ProtoMessage() {}
+
+func (x *UpdateProjectIssuerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectIssuerRequest.ProtoReflect.Descriptor instead.
+func (*UpdateProjectIssuerRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *UpdateProjectIssuerRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateProjectIssuerRequest) GetIssuerHandle() string {
+	if x != nil {
+		return x.IssuerHandle
+	}
+	return ""
+}
+
+type UpdateProjectIssuerResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Project       *Project               `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectIssuerResponse) Reset() {
+	*x = UpdateProjectIssuerResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectIssuerResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectIssuerResponse) ProtoMessage() {}
+
+func (x *UpdateProjectIssuerResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectIssuerResponse.ProtoReflect.Descriptor instead.
+func (*UpdateProjectIssuerResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *UpdateProjectIssuerResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
+type UpdateProjectBrandingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	PrimaryColor  string                 `protobuf:"bytes,3,opt,name=primary_color,json=primaryColor,proto3" json:"primary_color,omitempty"`
+	SupportEmail  string                 `protobuf:"bytes,4,opt,name=support_email,json=supportEmail,proto3" json:"support_email,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectBrandingRequest) Reset() {
+	*x = UpdateProjectBrandingRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectBrandingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectBrandingRequest) ProtoMessage() {}
+
+func (x *UpdateProjectBrandingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectBrandingRequest.ProtoReflect.Descriptor instead.
+func (*UpdateProjectBrandingRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UpdateProjectBrandingRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateProjectBrandingRequest) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *UpdateProjectBrandingRequest) GetPrimaryColor() string {
+	if x != nil {
+		return x.PrimaryColor
+	}
+	return ""
+}
+
+func (x *UpdateProjectBrandingRequest) GetSupportEmail() string {
+	if x != nil {
+		return x.SupportEmail
+	}
+	return ""
+}
+
+type UpdateProjectBrandingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Project       *Project               `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectBrandingResponse) Reset() {
+	*x = UpdateProjectBrandingResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectBrandingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectBrandingResponse) ProtoMessage() {}
+
+func (x *UpdateProjectBrandingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectBrandingResponse.ProtoReflect.Descriptor instead.
+func (*UpdateProjectBrandingResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UpdateProjectBrandingResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
+type UpdateProjectTermsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	TermsUrl      string                 `protobuf:"bytes,2,opt,name=terms_url,json=termsUrl,proto3" json:"terms_url,omitempty"`
+	PrivacyUrl    string                 `protobuf:"bytes,3,opt,name=privacy_url,json=privacyUrl,proto3" json:"privacy_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectTermsRequest) Reset() {
+	*x = UpdateProjectTermsRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectTermsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectTermsRequest) ProtoMessage() {}
+
+func (x *UpdateProjectTermsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectTermsRequest.ProtoReflect.Descriptor instead.
+func (*UpdateProjectTermsRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *UpdateProjectTermsRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateProjectTermsRequest) GetTermsUrl() string {
+	if x != nil {
+		return x.TermsUrl
+	}
+	return ""
+}
+
+func (x *UpdateProjectTermsRequest) GetPrivacyUrl() string {
+	if x != nil {
+		return x.PrivacyUrl
+	}
+	return ""
+}
+
+type UpdateProjectTermsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Project       *Project               `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectTermsResponse) Reset() {
+	*x = UpdateProjectTermsResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectTermsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectTermsResponse) ProtoMessage() {}
+
+func (x *UpdateProjectTermsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectTermsResponse.ProtoReflect.Descriptor instead.
+func (*UpdateProjectTermsResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *UpdateProjectTermsResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
+type BumpTermsVersionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BumpTermsVersionRequest) Reset() {
+	*x = BumpTermsVersionRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BumpTermsVersionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BumpTermsVersionRequest) ProtoMessage() {}
+
+func (x *BumpTermsVersionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BumpTermsVersionRequest.ProtoReflect.Descriptor instead.
+func (*BumpTermsVersionRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *BumpTermsVersionRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type BumpTermsVersionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Version       int32                  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	PublishedAt   *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=published_at,json=publishedAt,proto3" json:"published_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BumpTermsVersionResponse) Reset() {
+	*x = BumpTermsVersionResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BumpTermsVersionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BumpTermsVersionResponse) ProtoMessage() {}
+
+func (x *BumpTermsVersionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BumpTermsVersionResponse.ProtoReflect.Descriptor instead.
+func (*BumpTermsVersionResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *BumpTermsVersionResponse) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *BumpTermsVersionResponse) GetPublishedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PublishedAt
+	}
+	return nil
+}
+
+type CheckIssuerHandleRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	OrgId string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	// project_id names the project being edited, so its own handle counts as available.
+	ProjectId     string `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	IssuerHandle  string `protobuf:"bytes,3,opt,name=issuer_handle,json=issuerHandle,proto3" json:"issuer_handle,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckIssuerHandleRequest) Reset() {
+	*x = CheckIssuerHandleRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckIssuerHandleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckIssuerHandleRequest) ProtoMessage() {}
+
+func (x *CheckIssuerHandleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckIssuerHandleRequest.ProtoReflect.Descriptor instead.
+func (*CheckIssuerHandleRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *CheckIssuerHandleRequest) GetOrgId() string {
+	if x != nil {
+		return x.OrgId
+	}
+	return ""
+}
+
+func (x *CheckIssuerHandleRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *CheckIssuerHandleRequest) GetIssuerHandle() string {
+	if x != nil {
+		return x.IssuerHandle
+	}
+	return ""
+}
+
+type CheckIssuerHandleResponse struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Available bool                   `protobuf:"varint,1,opt,name=available,proto3" json:"available,omitempty"`
+	// reason is one of ok, taken, reserved, invalid or locked.
+	Reason        string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckIssuerHandleResponse) Reset() {
+	*x = CheckIssuerHandleResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckIssuerHandleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckIssuerHandleResponse) ProtoMessage() {}
+
+func (x *CheckIssuerHandleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckIssuerHandleResponse.ProtoReflect.Descriptor instead.
+func (*CheckIssuerHandleResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *CheckIssuerHandleResponse) GetAvailable() bool {
+	if x != nil {
+		return x.Available
+	}
+	return false
+}
+
+func (x *CheckIssuerHandleResponse) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+type UploadProjectLogoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Content       []byte                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadProjectLogoRequest) Reset() {
+	*x = UploadProjectLogoRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadProjectLogoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadProjectLogoRequest) ProtoMessage() {}
+
+func (x *UploadProjectLogoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadProjectLogoRequest.ProtoReflect.Descriptor instead.
+func (*UploadProjectLogoRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *UploadProjectLogoRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UploadProjectLogoRequest) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+type UploadProjectLogoResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Project       *Project               `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadProjectLogoResponse) Reset() {
+	*x = UploadProjectLogoResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadProjectLogoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadProjectLogoResponse) ProtoMessage() {}
+
+func (x *UploadProjectLogoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadProjectLogoResponse.ProtoReflect.Descriptor instead.
+func (*UploadProjectLogoResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *UploadProjectLogoResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
+type DeleteProjectLogoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteProjectLogoRequest) Reset() {
+	*x = DeleteProjectLogoRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProjectLogoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProjectLogoRequest) ProtoMessage() {}
+
+func (x *DeleteProjectLogoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProjectLogoRequest.ProtoReflect.Descriptor instead.
+func (*DeleteProjectLogoRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *DeleteProjectLogoRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeleteProjectLogoResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Project       *Project               `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteProjectLogoResponse) Reset() {
+	*x = DeleteProjectLogoResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProjectLogoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProjectLogoResponse) ProtoMessage() {}
+
+func (x *DeleteProjectLogoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProjectLogoResponse.ProtoReflect.Descriptor instead.
+func (*DeleteProjectLogoResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *DeleteProjectLogoResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
+type GetProjectLogoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProjectLogoRequest) Reset() {
+	*x = GetProjectLogoRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProjectLogoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectLogoRequest) ProtoMessage() {}
+
+func (x *GetProjectLogoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectLogoRequest.ProtoReflect.Descriptor instead.
+func (*GetProjectLogoRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *GetProjectLogoRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetProjectLogoResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ContentType   string                 `protobuf:"bytes,1,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Content       []byte                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProjectLogoResponse) Reset() {
+	*x = GetProjectLogoResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProjectLogoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectLogoResponse) ProtoMessage() {}
+
+func (x *GetProjectLogoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectLogoResponse.ProtoReflect.Descriptor instead.
+func (*GetProjectLogoResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *GetProjectLogoResponse) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *GetProjectLogoResponse) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
 var File_project_v1_project_proto protoreflect.FileDescriptor
 
 const file_project_v1_project_proto_rawDesc = "" +
 	"\n" +
 	"\x18project/v1/project.proto\x12\n" +
-	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xdf\x01\n" +
+	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xcd\x06\n" +
 	"\aProject\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
 	"\x06org_id\x18\x03 \x01(\tR\x05orgId\x12\x12\n" +
@@ -507,11 +1430,32 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtJ\x04\b\x02\x10\x03R\tpublic_id\"|\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12#\n" +
+	"\rissuer_handle\x18\b \x01(\tR\fissuerHandle\x12\x1d\n" +
+	"\n" +
+	"issuer_url\x18\t \x01(\tR\tissuerUrl\x120\n" +
+	"\x14issuer_handle_locked\x18\n" +
+	" \x01(\bR\x12issuerHandleLocked\x12Q\n" +
+	"\x17issuer_handle_locked_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\x14issuerHandleLockedAt\x12!\n" +
+	"\fdisplay_name\x18\f \x01(\tR\vdisplayName\x12#\n" +
+	"\rprimary_color\x18\r \x01(\tR\fprimaryColor\x12#\n" +
+	"\rsupport_email\x18\x0e \x01(\tR\fsupportEmail\x12\x19\n" +
+	"\bhas_logo\x18\x0f \x01(\bR\ahasLogo\x12B\n" +
+	"\x0flogo_updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\rlogoUpdatedAt\x12\x1b\n" +
+	"\tterms_url\x18\x11 \x01(\tR\btermsUrl\x12\x1f\n" +
+	"\vprivacy_url\x18\x12 \x01(\tR\n" +
+	"privacyUrl\x12#\n" +
+	"\rterms_version\x18\x13 \x01(\x05R\ftermsVersion\x12H\n" +
+	"\x12terms_published_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\x10termsPublishedAt\x12*\n" +
+	"\x11signin_email_link\x18\x15 \x01(\bR\x0fsigninEmailLinkJ\x04\b\x02\x10\x03R\tpublic_id\"\xb1\x04\n" +
 	"\x14CreateProjectRequest\x12#\n" +
 	"\x06org_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x05orgId\x12\x1d\n" +
 	"\x04slug\x18\x02 \x01(\tB\t\xbaH\x06r\x04\xa0\xe42\x01R\x04slug\x12 \n" +
-	"\x04name\x18\x03 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x90\xe42\x01R\x04name\"F\n" +
+	"\x04name\x18\x03 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x90\xe42\x01R\x04name\x12\xb2\x03\n" +
+	"\rissuer_handle\x18\x04 \x01(\tB\x8c\x03\xbaH\x88\x03\xba\x01h\n" +
+	"\x1fproject.issuer_handle.min_len.3\x1aEthis == '' || this.size() >= 3 ? '' : 'must be at least 3 characters'\xba\x01\\\n" +
+	" project.issuer_handle.max_len.40\x1a8this.size() <= 40 ? '' : 'must be at most 40 characters'\xba\x01\xba\x01\n" +
+	"\x1cproject.issuer_handle.format\x1a\x99\x01this == '' || this.matches('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$') ? '' : 'must be lowercase letters, digits and dashes, not starting or ending with a dash'R\fissuerHandle\"F\n" +
 	"\x15CreateProjectResponse\x12-\n" +
 	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"1\n" +
 	"\x11GetProjectRequest\x12\x1c\n" +
@@ -527,7 +1471,64 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x90\xe42\x01R\x04name\x12 \n" +
 	"\x04slug\x18\x03 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\xa0\xe42\x01R\x04slug\"F\n" +
 	"\x15UpdateProjectResponse\x12-\n" +
-	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject2\xc4\x04\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"\xf2\x03\n" +
+	"\x1aUpdateProjectIssuerRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\x12\xb5\x03\n" +
+	"\rissuer_handle\x18\x02 \x01(\tB\x8f\x03\xbaH\x8b\x03\xba\x01h\n" +
+	"\x1fproject.issuer_handle.min_len.3\x1aEthis == '' || this.size() >= 3 ? '' : 'must be at least 3 characters'\xba\x01\\\n" +
+	" project.issuer_handle.max_len.40\x1a8this.size() <= 40 ? '' : 'must be at most 40 characters'\xba\x01\xba\x01\n" +
+	"\x1cproject.issuer_handle.format\x1a\x99\x01this == '' || this.matches('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$') ? '' : 'must be lowercase letters, digits and dashes, not starting or ending with a dash'\xc8\x01\x01R\fissuerHandle\"L\n" +
+	"\x1bUpdateProjectIssuerResponse\x12-\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"\xa3\x03\n" +
+	"\x1cUpdateProjectBrandingRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\x12\x8b\x01\n" +
+	"\fdisplay_name\x18\x02 \x01(\tBh\xbaHe\xba\x01b\n" +
+	"\x1fproject.display_name.max_len.60\x1a?this.trim().size() <= 60 ? '' : 'must be at most 60 characters'R\vdisplayName\x12\xa6\x01\n" +
+	"\rprimary_color\x18\x03 \x01(\tB\x80\x01\xbaH}\xba\x01z\n" +
+	"\x1cproject.primary_color.format\x1aZthis == '' || this.matches('^#[0-9a-fA-F]{6}$') ? '' : 'must be a hex colour like #4F46E5'R\fprimaryColor\x12.\n" +
+	"\rsupport_email\x18\x04 \x01(\tB\t\xbaH\x06r\x04\x98\xe42\x01R\fsupportEmail\"N\n" +
+	"\x1dUpdateProjectBrandingResponse\x12-\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"\x95\x04\n" +
+	"\x19UpdateProjectTermsRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\x12\xe9\x01\n" +
+	"\tterms_url\x18\x02 \x01(\tB\xcb\x01\xbaH\xc7\x01\xba\x01X\n" +
+	"\x18project.url.max_len.2048\x1a<this.size() <= 2048 ? '' : 'must be at most 2048 characters'\xba\x01i\n" +
+	"\x12project.url.format\x1aSthis == '' || this.matches('^https://[^\\\\s/?#]+') ? '' : 'must start with https://'R\btermsUrl\x12\xed\x01\n" +
+	"\vprivacy_url\x18\x03 \x01(\tB\xcb\x01\xbaH\xc7\x01\xba\x01X\n" +
+	"\x18project.url.max_len.2048\x1a<this.size() <= 2048 ? '' : 'must be at most 2048 characters'\xba\x01i\n" +
+	"\x12project.url.format\x1aSthis == '' || this.matches('^https://[^\\\\s/?#]+') ? '' : 'must start with https://'R\n" +
+	"privacyUrl\"K\n" +
+	"\x1aUpdateProjectTermsResponse\x12-\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"7\n" +
+	"\x17BumpTermsVersionRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\"s\n" +
+	"\x18BumpTermsVersionResponse\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\x05R\aversion\x12=\n" +
+	"\fpublished_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vpublishedAt\"\x9a\x01\n" +
+	"\x18CheckIssuerHandleRequest\x12#\n" +
+	"\x06org_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x05orgId\x12(\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x88\xe42\x01R\tprojectId\x12/\n" +
+	"\rissuer_handle\x18\x03 \x01(\tB\n" +
+	"\xbaH\a\xc8\x01\x01r\x02\x18@R\fissuerHandle\"Q\n" +
+	"\x19CheckIssuerHandleResponse\x12\x1c\n" +
+	"\tavailable\x18\x01 \x01(\bR\tavailable\x12\x16\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"`\n" +
+	"\x18UploadProjectLogoRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\x12&\n" +
+	"\acontent\x18\x02 \x01(\fB\f\xbaH\t\xc8\x01\x01z\x04\x18\x80\x80\x10R\acontent\"J\n" +
+	"\x19UploadProjectLogoResponse\x12-\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"8\n" +
+	"\x18DeleteProjectLogoRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\"J\n" +
+	"\x19DeleteProjectLogoResponse\x12-\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"5\n" +
+	"\x15GetProjectLogoRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\"U\n" +
+	"\x16GetProjectLogoResponse\x12!\n" +
+	"\fcontent_type\x18\x01 \x01(\tR\vcontentType\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\fR\acontent2\xdd\n" +
+	"\n" +
 	"\x0eProjectService\x12\xc4\x01\n" +
 	"\rCreateProject\x12 .project.v1.CreateProjectRequest\x1a!.project.v1.CreateProjectResponse\"n\xca\xf3\x18j\n" +
 	"\x0eproject_create\x12QCreate a project within an organization, minting a slug when one is not supplied. \x01*\x03app\x12}\n" +
@@ -536,7 +1537,15 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\vproject_get\x12\x14Get a project by id.\x1a\x02id*\x03app\x12\x95\x01\n" +
 	"\fListProjects\x12\x1f.project.v1.ListProjectsRequest\x1a .project.v1.ListProjectsResponse\"B\xca\xf3\x18>\n" +
 	"\fproject_list\x12!List projects in an organization.\x1a\x06org_id*\x03app\x12T\n" +
-	"\rUpdateProject\x12 .project.v1.UpdateProjectRequest\x1a!.project.v1.UpdateProjectResponseB\x96\x01\n" +
+	"\rUpdateProject\x12 .project.v1.UpdateProjectRequest\x1a!.project.v1.UpdateProjectResponse\x12f\n" +
+	"\x13UpdateProjectIssuer\x12&.project.v1.UpdateProjectIssuerRequest\x1a'.project.v1.UpdateProjectIssuerResponse\x12l\n" +
+	"\x15UpdateProjectBranding\x12(.project.v1.UpdateProjectBrandingRequest\x1a).project.v1.UpdateProjectBrandingResponse\x12c\n" +
+	"\x12UpdateProjectTerms\x12%.project.v1.UpdateProjectTermsRequest\x1a&.project.v1.UpdateProjectTermsResponse\x12]\n" +
+	"\x10BumpTermsVersion\x12#.project.v1.BumpTermsVersionRequest\x1a$.project.v1.BumpTermsVersionResponse\x12`\n" +
+	"\x11CheckIssuerHandle\x12$.project.v1.CheckIssuerHandleRequest\x1a%.project.v1.CheckIssuerHandleResponse\x12`\n" +
+	"\x11UploadProjectLogo\x12$.project.v1.UploadProjectLogoRequest\x1a%.project.v1.UploadProjectLogoResponse\x12`\n" +
+	"\x11DeleteProjectLogo\x12$.project.v1.DeleteProjectLogoRequest\x1a%.project.v1.DeleteProjectLogoResponse\x12W\n" +
+	"\x0eGetProjectLogo\x12!.project.v1.GetProjectLogoRequest\x1a\".project.v1.GetProjectLogoResponseB\x96\x01\n" +
 	"\x0ecom.project.v1B\fProjectProtoP\x01Z-altalune.id/othra/gen/go/project/v1;projectv1\xa2\x02\x03PXX\xaa\x02\n" +
 	"Project.V1\xca\x02\n" +
 	"Project\\V1\xe2\x02\x16Project\\V1\\GPBMetadata\xea\x02\vProject::V1b\x06proto3"
@@ -553,39 +1562,80 @@ func file_project_v1_project_proto_rawDescGZIP() []byte {
 	return file_project_v1_project_proto_rawDescData
 }
 
-var file_project_v1_project_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_project_v1_project_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_project_v1_project_proto_goTypes = []any{
-	(*Project)(nil),               // 0: project.v1.Project
-	(*CreateProjectRequest)(nil),  // 1: project.v1.CreateProjectRequest
-	(*CreateProjectResponse)(nil), // 2: project.v1.CreateProjectResponse
-	(*GetProjectRequest)(nil),     // 3: project.v1.GetProjectRequest
-	(*GetProjectResponse)(nil),    // 4: project.v1.GetProjectResponse
-	(*ListProjectsRequest)(nil),   // 5: project.v1.ListProjectsRequest
-	(*ListProjectsResponse)(nil),  // 6: project.v1.ListProjectsResponse
-	(*UpdateProjectRequest)(nil),  // 7: project.v1.UpdateProjectRequest
-	(*UpdateProjectResponse)(nil), // 8: project.v1.UpdateProjectResponse
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*Project)(nil),                       // 0: project.v1.Project
+	(*CreateProjectRequest)(nil),          // 1: project.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),         // 2: project.v1.CreateProjectResponse
+	(*GetProjectRequest)(nil),             // 3: project.v1.GetProjectRequest
+	(*GetProjectResponse)(nil),            // 4: project.v1.GetProjectResponse
+	(*ListProjectsRequest)(nil),           // 5: project.v1.ListProjectsRequest
+	(*ListProjectsResponse)(nil),          // 6: project.v1.ListProjectsResponse
+	(*UpdateProjectRequest)(nil),          // 7: project.v1.UpdateProjectRequest
+	(*UpdateProjectResponse)(nil),         // 8: project.v1.UpdateProjectResponse
+	(*UpdateProjectIssuerRequest)(nil),    // 9: project.v1.UpdateProjectIssuerRequest
+	(*UpdateProjectIssuerResponse)(nil),   // 10: project.v1.UpdateProjectIssuerResponse
+	(*UpdateProjectBrandingRequest)(nil),  // 11: project.v1.UpdateProjectBrandingRequest
+	(*UpdateProjectBrandingResponse)(nil), // 12: project.v1.UpdateProjectBrandingResponse
+	(*UpdateProjectTermsRequest)(nil),     // 13: project.v1.UpdateProjectTermsRequest
+	(*UpdateProjectTermsResponse)(nil),    // 14: project.v1.UpdateProjectTermsResponse
+	(*BumpTermsVersionRequest)(nil),       // 15: project.v1.BumpTermsVersionRequest
+	(*BumpTermsVersionResponse)(nil),      // 16: project.v1.BumpTermsVersionResponse
+	(*CheckIssuerHandleRequest)(nil),      // 17: project.v1.CheckIssuerHandleRequest
+	(*CheckIssuerHandleResponse)(nil),     // 18: project.v1.CheckIssuerHandleResponse
+	(*UploadProjectLogoRequest)(nil),      // 19: project.v1.UploadProjectLogoRequest
+	(*UploadProjectLogoResponse)(nil),     // 20: project.v1.UploadProjectLogoResponse
+	(*DeleteProjectLogoRequest)(nil),      // 21: project.v1.DeleteProjectLogoRequest
+	(*DeleteProjectLogoResponse)(nil),     // 22: project.v1.DeleteProjectLogoResponse
+	(*GetProjectLogoRequest)(nil),         // 23: project.v1.GetProjectLogoRequest
+	(*GetProjectLogoResponse)(nil),        // 24: project.v1.GetProjectLogoResponse
+	(*timestamppb.Timestamp)(nil),         // 25: google.protobuf.Timestamp
 }
 var file_project_v1_project_proto_depIdxs = []int32{
-	9,  // 0: project.v1.Project.created_at:type_name -> google.protobuf.Timestamp
-	9,  // 1: project.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: project.v1.CreateProjectResponse.project:type_name -> project.v1.Project
-	0,  // 3: project.v1.GetProjectResponse.project:type_name -> project.v1.Project
-	0,  // 4: project.v1.ListProjectsResponse.projects:type_name -> project.v1.Project
-	0,  // 5: project.v1.UpdateProjectResponse.project:type_name -> project.v1.Project
-	1,  // 6: project.v1.ProjectService.CreateProject:input_type -> project.v1.CreateProjectRequest
-	3,  // 7: project.v1.ProjectService.GetProject:input_type -> project.v1.GetProjectRequest
-	5,  // 8: project.v1.ProjectService.ListProjects:input_type -> project.v1.ListProjectsRequest
-	7,  // 9: project.v1.ProjectService.UpdateProject:input_type -> project.v1.UpdateProjectRequest
-	2,  // 10: project.v1.ProjectService.CreateProject:output_type -> project.v1.CreateProjectResponse
-	4,  // 11: project.v1.ProjectService.GetProject:output_type -> project.v1.GetProjectResponse
-	6,  // 12: project.v1.ProjectService.ListProjects:output_type -> project.v1.ListProjectsResponse
-	8,  // 13: project.v1.ProjectService.UpdateProject:output_type -> project.v1.UpdateProjectResponse
-	10, // [10:14] is the sub-list for method output_type
-	6,  // [6:10] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	25, // 0: project.v1.Project.created_at:type_name -> google.protobuf.Timestamp
+	25, // 1: project.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 2: project.v1.Project.issuer_handle_locked_at:type_name -> google.protobuf.Timestamp
+	25, // 3: project.v1.Project.logo_updated_at:type_name -> google.protobuf.Timestamp
+	25, // 4: project.v1.Project.terms_published_at:type_name -> google.protobuf.Timestamp
+	0,  // 5: project.v1.CreateProjectResponse.project:type_name -> project.v1.Project
+	0,  // 6: project.v1.GetProjectResponse.project:type_name -> project.v1.Project
+	0,  // 7: project.v1.ListProjectsResponse.projects:type_name -> project.v1.Project
+	0,  // 8: project.v1.UpdateProjectResponse.project:type_name -> project.v1.Project
+	0,  // 9: project.v1.UpdateProjectIssuerResponse.project:type_name -> project.v1.Project
+	0,  // 10: project.v1.UpdateProjectBrandingResponse.project:type_name -> project.v1.Project
+	0,  // 11: project.v1.UpdateProjectTermsResponse.project:type_name -> project.v1.Project
+	25, // 12: project.v1.BumpTermsVersionResponse.published_at:type_name -> google.protobuf.Timestamp
+	0,  // 13: project.v1.UploadProjectLogoResponse.project:type_name -> project.v1.Project
+	0,  // 14: project.v1.DeleteProjectLogoResponse.project:type_name -> project.v1.Project
+	1,  // 15: project.v1.ProjectService.CreateProject:input_type -> project.v1.CreateProjectRequest
+	3,  // 16: project.v1.ProjectService.GetProject:input_type -> project.v1.GetProjectRequest
+	5,  // 17: project.v1.ProjectService.ListProjects:input_type -> project.v1.ListProjectsRequest
+	7,  // 18: project.v1.ProjectService.UpdateProject:input_type -> project.v1.UpdateProjectRequest
+	9,  // 19: project.v1.ProjectService.UpdateProjectIssuer:input_type -> project.v1.UpdateProjectIssuerRequest
+	11, // 20: project.v1.ProjectService.UpdateProjectBranding:input_type -> project.v1.UpdateProjectBrandingRequest
+	13, // 21: project.v1.ProjectService.UpdateProjectTerms:input_type -> project.v1.UpdateProjectTermsRequest
+	15, // 22: project.v1.ProjectService.BumpTermsVersion:input_type -> project.v1.BumpTermsVersionRequest
+	17, // 23: project.v1.ProjectService.CheckIssuerHandle:input_type -> project.v1.CheckIssuerHandleRequest
+	19, // 24: project.v1.ProjectService.UploadProjectLogo:input_type -> project.v1.UploadProjectLogoRequest
+	21, // 25: project.v1.ProjectService.DeleteProjectLogo:input_type -> project.v1.DeleteProjectLogoRequest
+	23, // 26: project.v1.ProjectService.GetProjectLogo:input_type -> project.v1.GetProjectLogoRequest
+	2,  // 27: project.v1.ProjectService.CreateProject:output_type -> project.v1.CreateProjectResponse
+	4,  // 28: project.v1.ProjectService.GetProject:output_type -> project.v1.GetProjectResponse
+	6,  // 29: project.v1.ProjectService.ListProjects:output_type -> project.v1.ListProjectsResponse
+	8,  // 30: project.v1.ProjectService.UpdateProject:output_type -> project.v1.UpdateProjectResponse
+	10, // 31: project.v1.ProjectService.UpdateProjectIssuer:output_type -> project.v1.UpdateProjectIssuerResponse
+	12, // 32: project.v1.ProjectService.UpdateProjectBranding:output_type -> project.v1.UpdateProjectBrandingResponse
+	14, // 33: project.v1.ProjectService.UpdateProjectTerms:output_type -> project.v1.UpdateProjectTermsResponse
+	16, // 34: project.v1.ProjectService.BumpTermsVersion:output_type -> project.v1.BumpTermsVersionResponse
+	18, // 35: project.v1.ProjectService.CheckIssuerHandle:output_type -> project.v1.CheckIssuerHandleResponse
+	20, // 36: project.v1.ProjectService.UploadProjectLogo:output_type -> project.v1.UploadProjectLogoResponse
+	22, // 37: project.v1.ProjectService.DeleteProjectLogo:output_type -> project.v1.DeleteProjectLogoResponse
+	24, // 38: project.v1.ProjectService.GetProjectLogo:output_type -> project.v1.GetProjectLogoResponse
+	27, // [27:39] is the sub-list for method output_type
+	15, // [15:27] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_project_v1_project_proto_init() }
@@ -599,7 +1649,7 @@ func file_project_v1_project_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_project_v1_project_proto_rawDesc), len(file_project_v1_project_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -42,7 +42,7 @@ func allProcedures() []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 38, "Org 4, Project 4, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7")
+	require.Len(t, procs, 46, "Org 4, Project 12, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]

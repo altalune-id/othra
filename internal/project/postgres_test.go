@@ -13,7 +13,6 @@ import (
 
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/db/dbtest"
-	"altalune.id/othra/schema/entity"
 )
 
 func TestProjectRow_ToProject(t *testing.T) {
@@ -59,7 +58,7 @@ func TestList(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	s := &postgresStore{pool: db.Pool{W: sqlDB, R: sqlDB}, projects: entity.NewProjects("public", "")}
+	s := NewStore(db.Pool{W: sqlDB, R: sqlDB}, "public", "")
 	got, err := s.List(context.Background(), uuid.New())
 	require.NoError(t, err)
 	require.Len(t, got, 1)
@@ -74,7 +73,7 @@ func TestByID_NotFound(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows(projectRowColumns()))
 	mock.ExpectCommit()
 
-	s := &postgresStore{pool: db.Pool{W: sqlDB, R: sqlDB}, projects: entity.NewProjects("public", "")}
+	s := NewStore(db.Pool{W: sqlDB, R: sqlDB}, "public", "")
 	_, err = s.ByID(context.Background(), uuid.New())
 	assert.True(t, IsNotFoundError(err))
 }
@@ -88,7 +87,7 @@ func TestBySlug(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	s := &postgresStore{pool: db.Pool{W: sqlDB, R: sqlDB}, projects: entity.NewProjects("public", "")}
+	s := NewStore(db.Pool{W: sqlDB, R: sqlDB}, "public", "")
 	got, err := s.BySlug(context.Background(), uuid.New(), "acme")
 	require.NoError(t, err)
 	assert.Equal(t, "acme", got.Slug)
@@ -101,7 +100,7 @@ func TestSave(t *testing.T) {
 	mock.ExpectExec("INSERT").WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 
-	s := &postgresStore{pool: db.Pool{W: sqlDB, R: sqlDB}, projects: entity.NewProjects("public", "")}
+	s := NewStore(db.Pool{W: sqlDB, R: sqlDB}, "public", "")
 	p, err := NewProject(uuid.New(), "acme", "Acme", uuid.Nil) // genesis: exercises the NULL created_by branch
 	require.NoError(t, err)
 	assert.NoError(t, s.Save(context.Background(), p))
@@ -114,7 +113,7 @@ func TestSave_AlreadyExists(t *testing.T) {
 	mock.ExpectExec("INSERT").WillReturnError(&pgconn.PgError{Code: "23505"})
 	mock.ExpectRollback()
 
-	s := &postgresStore{pool: db.Pool{W: sqlDB, R: sqlDB}, projects: entity.NewProjects("public", "")}
+	s := NewStore(db.Pool{W: sqlDB, R: sqlDB}, "public", "")
 	p, err := NewProject(uuid.New(), "acme", "Acme", uuid.New())
 	require.NoError(t, err)
 	assert.True(t, IsAlreadyExistsError(s.Save(context.Background(), p)))
@@ -126,7 +125,7 @@ func TestStore_QueryErrors(t *testing.T) {
 	mock.ExpectClose()
 	require.NoError(t, sqlDB.Close())
 
-	s := &postgresStore{pool: db.Pool{W: sqlDB, R: sqlDB}, projects: entity.NewProjects("public", "")}
+	s := NewStore(db.Pool{W: sqlDB, R: sqlDB}, "public", "")
 	ctx := context.Background()
 
 	_, err = s.ByID(ctx, uuid.New())

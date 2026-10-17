@@ -105,9 +105,96 @@ func IsInvalidNameError(err error) bool {
 	return ok
 }
 
+// IssuerHandleTakenError signals an issuer handle another project already uses.
+type IssuerHandleTakenError struct {
+	Handle string
+}
+
+func (e *IssuerHandleTakenError) Error() string {
+	return fmt.Sprintf("project: issuer handle already taken: %q", apperror.Echo(e.Handle))
+}
+
+// IsIssuerHandleTakenError reports whether err wraps an *IssuerHandleTakenError.
+func IsIssuerHandleTakenError(err error) bool {
+	_, ok := errors.AsType[*IssuerHandleTakenError](err)
+	return ok
+}
+
+// IssuerHandleReason is the stable cause of an InvalidIssuerHandleError, sent to clients as meta.reason.
+type IssuerHandleReason string
+
+// The causes of an InvalidIssuerHandleError.
+const (
+	IssuerHandleLength   IssuerHandleReason = "length"
+	IssuerHandleFormat   IssuerHandleReason = "format"
+	IssuerHandleReserved IssuerHandleReason = "reserved"
+)
+
+// InvalidIssuerHandleError signals an issuer handle that fails the handle rules.
+type InvalidIssuerHandleError struct {
+	Handle string
+	Reason IssuerHandleReason
+}
+
+func (e *InvalidIssuerHandleError) Error() string {
+	return fmt.Sprintf("project: invalid issuer handle %q: %s", apperror.Echo(e.Handle), e.Reason)
+}
+
+// IsInvalidIssuerHandleError reports whether err wraps an *InvalidIssuerHandleError.
+func IsInvalidIssuerHandleError(err error) bool {
+	_, ok := errors.AsType[*InvalidIssuerHandleError](err)
+	return ok
+}
+
+// IssuerHandleLockedError signals a handle change after the project's first OAuth client.
+type IssuerHandleLockedError struct{}
+
+func (*IssuerHandleLockedError) Error() string { return "project: issuer handle is locked" }
+
+// IsIssuerHandleLockedError reports whether err wraps an *IssuerHandleLockedError.
+func IsIssuerHandleLockedError(err error) bool {
+	_, ok := errors.AsType[*IssuerHandleLockedError](err)
+	return ok
+}
+
+// LogoReason is the stable cause of an InvalidLogoError, sent to clients as meta.reason.
+type LogoReason string
+
+// The causes of an InvalidLogoError.
+const (
+	LogoType LogoReason = "type"
+	LogoSize LogoReason = "size"
+)
+
+// InvalidLogoError signals a logo that is not PNG, JPEG or WebP, or is too large.
+type InvalidLogoError struct {
+	Reason LogoReason
+}
+
+func (e *InvalidLogoError) Error() string { return "project: invalid logo: " + string(e.Reason) }
+
+// IsInvalidLogoError reports whether err wraps an *InvalidLogoError.
+func IsInvalidLogoError(err error) bool {
+	_, ok := errors.AsType[*InvalidLogoError](err)
+	return ok
+}
+
+// TermsNotSetError signals a terms version bump on a project with no terms link.
+type TermsNotSetError struct{}
+
+func (*TermsNotSetError) Error() string { return "project: no terms link to publish" }
+
+// IsTermsNotSetError reports whether err wraps a *TermsNotSetError.
+func IsTermsNotSetError(err error) bool {
+	_, ok := errors.AsType[*TermsNotSetError](err)
+	return ok
+}
+
 // IsExpectedError reports whether err is a typed domain error a service returns as-is.
 func IsExpectedError(err error) bool {
-	return IsNotFoundError(err) || IsAlreadyExistsError(err) || IsInvalidSlugError(err) || IsInvalidNameError(err)
+	return IsNotFoundError(err) || IsAlreadyExistsError(err) || IsInvalidSlugError(err) || IsInvalidNameError(err) ||
+		IsIssuerHandleTakenError(err) || IsInvalidIssuerHandleError(err) || IsIssuerHandleLockedError(err) ||
+		IsInvalidLogoError(err) || IsTermsNotSetError(err)
 }
 
 // ToAppError maps NotFoundError to the canonical NotFound envelope.
@@ -134,4 +221,35 @@ func (e *InvalidSlugError) ToAppError() *apperror.AppError {
 func (e *InvalidNameError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeProjectInvalidName, fmt.Sprintf("Project name must be %d to %d characters", nameMinLen, nameMaxLen)).
 		WithMeta(map[string]string{"reason": string(e.Reason), "min": strconv.Itoa(nameMinLen), "max": strconv.Itoa(nameMaxLen)}).WithCause(e)
+}
+
+// ToAppError maps IssuerHandleTakenError to its own code with the handle.
+func (e *IssuerHandleTakenError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectIssuerHandleTaken, "Issuer handle already taken").
+		WithMeta(map[string]string{"issuer_handle": apperror.Echo(e.Handle)}).WithCause(e)
+}
+
+// ToAppError maps InvalidIssuerHandleError to its own code with the handle, the reason and the length limits.
+func (e *InvalidIssuerHandleError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectInvalidIssuerHandle, "Invalid issuer handle").
+		WithMeta(map[string]string{
+			"issuer_handle": apperror.Echo(e.Handle), "reason": string(e.Reason),
+			"min": strconv.Itoa(issuerHandleMinLen), "max": strconv.Itoa(issuerHandleMaxLen),
+		}).WithCause(e)
+}
+
+// ToAppError maps IssuerHandleLockedError to its own code.
+func (e *IssuerHandleLockedError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectIssuerHandleLocked, "Issuer handle is locked").WithCause(e)
+}
+
+// ToAppError maps InvalidLogoError to its own code with the reason and the size limit in KB.
+func (e *InvalidLogoError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectInvalidLogo, "Invalid logo").
+		WithMeta(map[string]string{"reason": string(e.Reason), "max": strconv.Itoa(logoMaxBytes >> 10)}).WithCause(e)
+}
+
+// ToAppError maps TermsNotSetError to its own code.
+func (e *TermsNotSetError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectTermsNotSet, "No terms link: add one before publishing a new terms version.").WithCause(e)
 }

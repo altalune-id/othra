@@ -30,7 +30,7 @@ func seedTwoOrgs(t *testing.T, db *sql.DB) twoOrgs {
 		require.NoError(t, err)
 	}
 	for prj, org := range map[uuid.UUID]uuid.UUID{s.prjA: s.orgA, s.prjB: s.orgB} {
-		_, err := db.ExecContext(ctx, `INSERT INTO projects (id, public_id, org_id, slug, name, created_at, updated_at) VALUES ($1, $2, $3, 'p', 'P', now(), now())`,
+		_, err := db.ExecContext(ctx, `INSERT INTO projects (id, public_id, org_id, slug, name, issuer_handle, created_at, updated_at) VALUES ($1, $2, $3, 'p', 'P', $2, now(), now())`,
 			prj, "p"+prj.String()[:8], org)
 		require.NoError(t, err)
 	}

@@ -19,10 +19,15 @@ const (
 	CodeOrgInvalidName      Code = "ORG004"
 	CodeOrgCreationDisabled Code = "ORG005"
 
-	CodeProjectNotFound      Code = "PRJ001"
-	CodeProjectAlreadyExists Code = "PRJ002"
-	CodeProjectInvalidSlug   Code = "PRJ003"
-	CodeProjectInvalidName   Code = "PRJ004"
+	CodeProjectNotFound            Code = "PRJ001"
+	CodeProjectAlreadyExists       Code = "PRJ002"
+	CodeProjectInvalidSlug         Code = "PRJ003"
+	CodeProjectInvalidName         Code = "PRJ004"
+	CodeProjectIssuerHandleTaken   Code = "PRJ005"
+	CodeProjectInvalidIssuerHandle Code = "PRJ006"
+	CodeProjectIssuerHandleLocked  Code = "PRJ007"
+	CodeProjectInvalidLogo         Code = "PRJ008"
+	CodeProjectTermsNotSet         Code = "PRJ009"
 
 	CodeAPIKeyNotFound             Code = "KEY001"
 	CodeAPIKeyInvalidName          Code = "KEY002"
@@ -84,10 +89,15 @@ var kinds = map[Code]Kind{
 	CodeOrgInvalidName:      KindInvalid,
 	CodeOrgCreationDisabled: KindFailedPrecondition,
 
-	CodeProjectNotFound:      KindNotFound,
-	CodeProjectAlreadyExists: KindAlreadyExists,
-	CodeProjectInvalidSlug:   KindInvalid,
-	CodeProjectInvalidName:   KindInvalid,
+	CodeProjectNotFound:            KindNotFound,
+	CodeProjectAlreadyExists:       KindAlreadyExists,
+	CodeProjectInvalidSlug:         KindInvalid,
+	CodeProjectInvalidName:         KindInvalid,
+	CodeProjectIssuerHandleTaken:   KindAlreadyExists,
+	CodeProjectInvalidIssuerHandle: KindInvalid,
+	CodeProjectIssuerHandleLocked:  KindFailedPrecondition,
+	CodeProjectInvalidLogo:         KindInvalid,
+	CodeProjectTermsNotSet:         KindFailedPrecondition,
 
 	CodeAPIKeyNotFound:             KindNotFound,
 	CodeAPIKeyInvalidName:          KindInvalid,

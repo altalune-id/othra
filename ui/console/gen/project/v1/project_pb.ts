@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file project/v1/project.proto.
  */
 export const file_project_v1_project: GenFile = /*@__PURE__*/
-  fileDesc("Chhwcm9qZWN0L3YxL3Byb2plY3QucHJvdG8SCnByb2plY3QudjEisgEKB1Byb2plY3QSCgoCaWQYASABKAkSDgoGb3JnX2lkGAMgASgJEgwKBHNsdWcYBCABKAkSDAoEbmFtZRgFIAEoCRIuCgpjcmVhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEoECAIQA1IJcHVibGljX2lkImkKFENyZWF0ZVByb2plY3RSZXF1ZXN0EhwKBm9yZ19pZBgBIAEoCUIMukgJyAEBcgSI5DIBEhcKBHNsdWcYAiABKAlCCbpIBnIEoOQyARIaCgRuYW1lGAMgASgJQgy6SAnIAQFyBJDkMgEiPQoVQ3JlYXRlUHJvamVjdFJlc3BvbnNlEiQKB3Byb2plY3QYASABKAsyEy5wcm9qZWN0LnYxLlByb2plY3QiLQoRR2V0UHJvamVjdFJlcXVlc3QSGAoCaWQYASABKAlCDLpICcgBAXIEiOQyASI6ChJHZXRQcm9qZWN0UmVzcG9uc2USJAoHcHJvamVjdBgBIAEoCzITLnByb2plY3QudjEuUHJvamVjdCIzChNMaXN0UHJvamVjdHNSZXF1ZXN0EhwKBm9yZ19pZBgBIAEoCUIMukgJyAEBcgSI5DIBIj0KFExpc3RQcm9qZWN0c1Jlc3BvbnNlEiUKCHByb2plY3RzGAEgAygLMhMucHJvamVjdC52MS5Qcm9qZWN0ImgKFFVwZGF0ZVByb2plY3RSZXF1ZXN0EhgKAmlkGAEgASgJQgy6SAnIAQFyBIjkMgESGgoEbmFtZRgCIAEoCUIMukgJyAEBcgSQ5DIBEhoKBHNsdWcYAyABKAlCDLpICcgBAXIEoOQyASI9ChVVcGRhdGVQcm9qZWN0UmVzcG9uc2USJAoHcHJvamVjdBgBIAEoCzITLnByb2plY3QudjEuUHJvamVjdDLEBAoOUHJvamVjdFNlcnZpY2USxAEKDUNyZWF0ZVByb2plY3QSIC5wcm9qZWN0LnYxLkNyZWF0ZVByb2plY3RSZXF1ZXN0GiEucHJvamVjdC52MS5DcmVhdGVQcm9qZWN0UmVzcG9uc2UibsrzGGoKDnByb2plY3RfY3JlYXRlElFDcmVhdGUgYSBwcm9qZWN0IHdpdGhpbiBhbiBvcmdhbml6YXRpb24sIG1pbnRpbmcgYSBzbHVnIHdoZW4gb25lIGlzIG5vdCBzdXBwbGllZC4gASoDYXBwEn0KCkdldFByb2plY3QSHS5wcm9qZWN0LnYxLkdldFByb2plY3RSZXF1ZXN0Gh4ucHJvamVjdC52MS5HZXRQcm9qZWN0UmVzcG9uc2UiMMrzGCwKC3Byb2plY3RfZ2V0EhRHZXQgYSBwcm9qZWN0IGJ5IGlkLhoCaWQqA2FwcBKVAQoMTGlzdFByb2plY3RzEh8ucHJvamVjdC52MS5MaXN0UHJvamVjdHNSZXF1ZXN0GiAucHJvamVjdC52MS5MaXN0UHJvamVjdHNSZXNwb25zZSJCyvMYPgoMcHJvamVjdF9saXN0EiFMaXN0IHByb2plY3RzIGluIGFuIG9yZ2FuaXphdGlvbi4aBm9yZ19pZCoDYXBwElQKDVVwZGF0ZVByb2plY3QSIC5wcm9qZWN0LnYxLlVwZGF0ZVByb2plY3RSZXF1ZXN0GiEucHJvamVjdC52MS5VcGRhdGVQcm9qZWN0UmVzcG9uc2VClgEKDmNvbS5wcm9qZWN0LnYxQgxQcm9qZWN0UHJvdG9QAVotYWx0YWx1bmUuaWQvb3RocmEvZ2VuL2dvL3Byb2plY3QvdjE7cHJvamVjdHYxogIDUFhYqgIKUHJvamVjdC5WMcoCClByb2plY3RcVjHiAhZQcm9qZWN0XFYxXEdQQk1ldGFkYXRh6gILUHJvamVjdDo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_timestamp, file_mcp_v1_annotations, file_othra_v1_rules]);
+  fileDesc("Chhwcm9qZWN0L3YxL3Byb2plY3QucHJvdG8SCnByb2plY3QudjEi1QQKB1Byb2plY3QSCgoCaWQYASABKAkSDgoGb3JnX2lkGAMgASgJEgwKBHNsdWcYBCABKAkSDAoEbmFtZRgFIAEoCRIuCgpjcmVhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIVCg1pc3N1ZXJfaGFuZGxlGAggASgJEhIKCmlzc3Vlcl91cmwYCSABKAkSHAoUaXNzdWVyX2hhbmRsZV9sb2NrZWQYCiABKAgSOwoXaXNzdWVyX2hhbmRsZV9sb2NrZWRfYXQYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhQKDGRpc3BsYXlfbmFtZRgMIAEoCRIVCg1wcmltYXJ5X2NvbG9yGA0gASgJEhUKDXN1cHBvcnRfZW1haWwYDiABKAkSEAoIaGFzX2xvZ28YDyABKAgSMwoPbG9nb191cGRhdGVkX2F0GBAgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIRCgl0ZXJtc191cmwYESABKAkSEwoLcHJpdmFjeV91cmwYEiABKAkSFQoNdGVybXNfdmVyc2lvbhgTIAEoBRI2ChJ0ZXJtc19wdWJsaXNoZWRfYXQYFCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhkKEXNpZ25pbl9lbWFpbF9saW5rGBUgASgISgQIAhADUglwdWJsaWNfaWQikAQKFENyZWF0ZVByb2plY3RSZXF1ZXN0EhwKBm9yZ19pZBgBIAEoCUIMukgJyAEBcgSI5DIBEhcKBHNsdWcYAiABKAlCCbpIBnIEoOQyARIaCgRuYW1lGAMgASgJQgy6SAnIAQFyBJDkMgESpAMKDWlzc3Vlcl9oYW5kbGUYBCABKAlCjAO6SIgDugFoCh9wcm9qZWN0Lmlzc3Vlcl9oYW5kbGUubWluX2xlbi4zGkV0aGlzID09ICcnIHx8IHRoaXMuc2l6ZSgpID49IDMgPyAnJyA6ICdtdXN0IGJlIGF0IGxlYXN0IDMgY2hhcmFjdGVycye6AVwKIHByb2plY3QuaXNzdWVyX2hhbmRsZS5tYXhfbGVuLjQwGjh0aGlzLnNpemUoKSA8PSA0MCA/ICcnIDogJ211c3QgYmUgYXQgbW9zdCA0MCBjaGFyYWN0ZXJzJ7oBugEKHHByb2plY3QuaXNzdWVyX2hhbmRsZS5mb3JtYXQamQF0aGlzID09ICcnIHx8IHRoaXMubWF0Y2hlcygnXlthLXowLTldKD86W2EtejAtOS1dKlthLXowLTldKT8kJykgPyAnJyA6ICdtdXN0IGJlIGxvd2VyY2FzZSBsZXR0ZXJzLCBkaWdpdHMgYW5kIGRhc2hlcywgbm90IHN0YXJ0aW5nIG9yIGVuZGluZyB3aXRoIGEgZGFzaCciPQoVQ3JlYXRlUHJvamVjdFJlc3BvbnNlEiQKB3Byb2plY3QYASABKAsyEy5wcm9qZWN0LnYxLlByb2plY3QiLQoRR2V0UHJvamVjdFJlcXVlc3QSGAoCaWQYASABKAlCDLpICcgBAXIEiOQyASI6ChJHZXRQcm9qZWN0UmVzcG9uc2USJAoHcHJvamVjdBgBIAEoCzITLnByb2plY3QudjEuUHJvamVjdCIzChNMaXN0UHJvamVjdHNSZXF1ZXN0EhwKBm9yZ19pZBgBIAEoCUIMukgJyAEBcgSI5DIBIj0KFExpc3RQcm9qZWN0c1Jlc3BvbnNlEiUKCHByb2plY3RzGAEgAygLMhMucHJvamVjdC52MS5Qcm9qZWN0ImgKFFVwZGF0ZVByb2plY3RSZXF1ZXN0EhgKAmlkGAEgASgJQgy6SAnIAQFyBIjkMgESGgoEbmFtZRgCIAEoCUIMukgJyAEBcgSQ5DIBEhoKBHNsdWcYAyABKAlCDLpICcgBAXIEoOQyASI9ChVVcGRhdGVQcm9qZWN0UmVzcG9uc2USJAoHcHJvamVjdBgBIAEoCzITLnByb2plY3QudjEuUHJvamVjdCLgAwoaVXBkYXRlUHJvamVjdElzc3VlclJlcXVlc3QSGAoCaWQYASABKAlCDLpICcgBAXIEiOQyARKnAwoNaXNzdWVyX2hhbmRsZRgCIAEoCUKPA7pIiwO6AWgKH3Byb2plY3QuaXNzdWVyX2hhbmRsZS5taW5fbGVuLjMaRXRoaXMgPT0gJycgfHwgdGhpcy5zaXplKCkgPj0gMyA/ICcnIDogJ211c3QgYmUgYXQgbGVhc3QgMyBjaGFyYWN0ZXJzJ7oBXAogcHJvamVjdC5pc3N1ZXJfaGFuZGxlLm1heF9sZW4uNDAaOHRoaXMuc2l6ZSgpIDw9IDQwID8gJycgOiAnbXVzdCBiZSBhdCBtb3N0IDQwIGNoYXJhY3RlcnMnugG6AQoccHJvamVjdC5pc3N1ZXJfaGFuZGxlLmZvcm1hdBqZAXRoaXMgPT0gJycgfHwgdGhpcy5tYXRjaGVzKCdeW2EtejAtOV0oPzpbYS16MC05LV0qW2EtejAtOV0pPyQnKSA/ICcnIDogJ211c3QgYmUgbG93ZXJjYXNlIGxldHRlcnMsIGRpZ2l0cyBhbmQgZGFzaGVzLCBub3Qgc3RhcnRpbmcgb3IgZW5kaW5nIHdpdGggYSBkYXNoJ8gBASJDChtVcGRhdGVQcm9qZWN0SXNzdWVyUmVzcG9uc2USJAoHcHJvamVjdBgBIAEoCzITLnByb2plY3QudjEuUHJvamVjdCL1AgocVXBkYXRlUHJvamVjdEJyYW5kaW5nUmVxdWVzdBIYCgJpZBgBIAEoCUIMukgJyAEBcgSI5DIBEn4KDGRpc3BsYXlfbmFtZRgCIAEoCUJoukhlugFiCh9wcm9qZWN0LmRpc3BsYXlfbmFtZS5tYXhfbGVuLjYwGj90aGlzLnRyaW0oKS5zaXplKCkgPD0gNjAgPyAnJyA6ICdtdXN0IGJlIGF0IG1vc3QgNjAgY2hhcmFjdGVycycSmAEKDXByaW1hcnlfY29sb3IYAyABKAlCgAG6SH26AXoKHHByb2plY3QucHJpbWFyeV9jb2xvci5mb3JtYXQaWnRoaXMgPT0gJycgfHwgdGhpcy5tYXRjaGVzKCdeI1swLTlhLWZBLUZdezZ9JCcpID8gJycgOiAnbXVzdCBiZSBhIGhleCBjb2xvdXIgbGlrZSAjNEY0NkU1JxIgCg1zdXBwb3J0X2VtYWlsGAQgASgJQgm6SAZyBJjkMgEiRQodVXBkYXRlUHJvamVjdEJyYW5kaW5nUmVzcG9uc2USJAoHcHJvamVjdBgBIAEoCzITLnByb2plY3QudjEuUHJvamVjdCL7AwoZVXBkYXRlUHJvamVjdFRlcm1zUmVxdWVzdBIYCgJpZBgBIAEoCUIMukgJyAEBcgSI5DIBEt8BCgl0ZXJtc191cmwYAiABKAlCywG6SMcBugFYChhwcm9qZWN0LnVybC5tYXhfbGVuLjIwNDgaPHRoaXMuc2l6ZSgpIDw9IDIwNDggPyAnJyA6ICdtdXN0IGJlIGF0IG1vc3QgMjA0OCBjaGFyYWN0ZXJzJ7oBaQoScHJvamVjdC51cmwuZm9ybWF0GlN0aGlzID09ICcnIHx8IHRoaXMubWF0Y2hlcygnXmh0dHBzOi8vW15cXHMvPyNdKycpID8gJycgOiAnbXVzdCBzdGFydCB3aXRoIGh0dHBzOi8vJxLhAQoLcHJpdmFjeV91cmwYAyABKAlCywG6SMcBugFYChhwcm9qZWN0LnVybC5tYXhfbGVuLjIwNDgaPHRoaXMuc2l6ZSgpIDw9IDIwNDggPyAnJyA6ICdtdXN0IGJlIGF0IG1vc3QgMjA0OCBjaGFyYWN0ZXJzJ7oBaQoScHJvamVjdC51cmwuZm9ybWF0GlN0aGlzID09ICcnIHx8IHRoaXMubWF0Y2hlcygnXmh0dHBzOi8vW15cXHMvPyNdKycpID8gJycgOiAnbXVzdCBzdGFydCB3aXRoIGh0dHBzOi8vJyJCChpVcGRhdGVQcm9qZWN0VGVybXNSZXNwb25zZRIkCgdwcm9qZWN0GAEgASgLMhMucHJvamVjdC52MS5Qcm9qZWN0IjMKF0J1bXBUZXJtc1ZlcnNpb25SZXF1ZXN0EhgKAmlkGAEgASgJQgy6SAnIAQFyBIjkMgEiXQoYQnVtcFRlcm1zVmVyc2lvblJlc3BvbnNlEg8KB3ZlcnNpb24YASABKAUSMAoMcHVibGlzaGVkX2F0GAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ6ChhDaGVja0lzc3VlckhhbmRsZVJlcXVlc3QSHAoGb3JnX2lkGAEgASgJQgy6SAnIAQFyBIjkMgESHQoKcHJvamVjdF9pZBgCIAEoCUIJukgGcgSI5DIBEiEKDWlzc3Vlcl9oYW5kbGUYAyABKAlCCrpIB8gBAXICGEAiPgoZQ2hlY2tJc3N1ZXJIYW5kbGVSZXNwb25zZRIRCglhdmFpbGFibGUYASABKAgSDgoGcmVhc29uGAIgASgJIlMKGFVwbG9hZFByb2plY3RMb2dvUmVxdWVzdBIYCgJpZBgBIAEoCUIMukgJyAEBcgSI5DIBEh0KB2NvbnRlbnQYAiABKAxCDLpICcgBAXoEGICAECJBChlVcGxvYWRQcm9qZWN0TG9nb1Jlc3BvbnNlEiQKB3Byb2plY3QYASABKAsyEy5wcm9qZWN0LnYxLlByb2plY3QiNAoYRGVsZXRlUHJvamVjdExvZ29SZXF1ZXN0EhgKAmlkGAEgASgJQgy6SAnIAQFyBIjkMgEiQQoZRGVsZXRlUHJvamVjdExvZ29SZXNwb25zZRIkCgdwcm9qZWN0GAEgASgLMhMucHJvamVjdC52MS5Qcm9qZWN0IjEKFUdldFByb2plY3RMb2dvUmVxdWVzdBIYCgJpZBgBIAEoCUIMukgJyAEBcgSI5DIBIj8KFkdldFByb2plY3RMb2dvUmVzcG9uc2USFAoMY29udGVudF90eXBlGAEgASgJEg8KB2NvbnRlbnQYAiABKAwy3QoKDlByb2plY3RTZXJ2aWNlEsQBCg1DcmVhdGVQcm9qZWN0EiAucHJvamVjdC52MS5DcmVhdGVQcm9qZWN0UmVxdWVzdBohLnByb2plY3QudjEuQ3JlYXRlUHJvamVjdFJlc3BvbnNlIm7K8xhqCg5wcm9qZWN0X2NyZWF0ZRJRQ3JlYXRlIGEgcHJvamVjdCB3aXRoaW4gYW4gb3JnYW5pemF0aW9uLCBtaW50aW5nIGEgc2x1ZyB3aGVuIG9uZSBpcyBub3Qgc3VwcGxpZWQuIAEqA2FwcBJ9CgpHZXRQcm9qZWN0Eh0ucHJvamVjdC52MS5HZXRQcm9qZWN0UmVxdWVzdBoeLnByb2plY3QudjEuR2V0UHJvamVjdFJlc3BvbnNlIjDK8xgsCgtwcm9qZWN0X2dldBIUR2V0IGEgcHJvamVjdCBieSBpZC4aAmlkKgNhcHASlQEKDExpc3RQcm9qZWN0cxIfLnByb2plY3QudjEuTGlzdFByb2plY3RzUmVxdWVzdBogLnByb2plY3QudjEuTGlzdFByb2plY3RzUmVzcG9uc2UiQsrzGD4KDHByb2plY3RfbGlzdBIhTGlzdCBwcm9qZWN0cyBpbiBhbiBvcmdhbml6YXRpb24uGgZvcmdfaWQqA2FwcBJUCg1VcGRhdGVQcm9qZWN0EiAucHJvamVjdC52MS5VcGRhdGVQcm9qZWN0UmVxdWVzdBohLnByb2plY3QudjEuVXBkYXRlUHJvamVjdFJlc3BvbnNlEmYKE1VwZGF0ZVByb2plY3RJc3N1ZXISJi5wcm9qZWN0LnYxLlVwZGF0ZVByb2plY3RJc3N1ZXJSZXF1ZXN0GicucHJvamVjdC52MS5VcGRhdGVQcm9qZWN0SXNzdWVyUmVzcG9uc2USbAoVVXBkYXRlUHJvamVjdEJyYW5kaW5nEigucHJvamVjdC52MS5VcGRhdGVQcm9qZWN0QnJhbmRpbmdSZXF1ZXN0GikucHJvamVjdC52MS5VcGRhdGVQcm9qZWN0QnJhbmRpbmdSZXNwb25zZRJjChJVcGRhdGVQcm9qZWN0VGVybXMSJS5wcm9qZWN0LnYxLlVwZGF0ZVByb2plY3RUZXJtc1JlcXVlc3QaJi5wcm9qZWN0LnYxLlVwZGF0ZVByb2plY3RUZXJtc1Jlc3BvbnNlEl0KEEJ1bXBUZXJtc1ZlcnNpb24SIy5wcm9qZWN0LnYxLkJ1bXBUZXJtc1ZlcnNpb25SZXF1ZXN0GiQucHJvamVjdC52MS5CdW1wVGVybXNWZXJzaW9uUmVzcG9uc2USYAoRQ2hlY2tJc3N1ZXJIYW5kbGUSJC5wcm9qZWN0LnYxLkNoZWNrSXNzdWVySGFuZGxlUmVxdWVzdBolLnByb2plY3QudjEuQ2hlY2tJc3N1ZXJIYW5kbGVSZXNwb25zZRJgChFVcGxvYWRQcm9qZWN0TG9nbxIkLnByb2plY3QudjEuVXBsb2FkUHJvamVjdExvZ29SZXF1ZXN0GiUucHJvamVjdC52MS5VcGxvYWRQcm9qZWN0TG9nb1Jlc3BvbnNlEmAKEURlbGV0ZVByb2plY3RMb2dvEiQucHJvamVjdC52MS5EZWxldGVQcm9qZWN0TG9nb1JlcXVlc3QaJS5wcm9qZWN0LnYxLkRlbGV0ZVByb2plY3RMb2dvUmVzcG9uc2USVwoOR2V0UHJvamVjdExvZ28SIS5wcm9qZWN0LnYxLkdldFByb2plY3RMb2dvUmVxdWVzdBoiLnByb2plY3QudjEuR2V0UHJvamVjdExvZ29SZXNwb25zZUKWAQoOY29tLnByb2plY3QudjFCDFByb2plY3RQcm90b1ABWi1hbHRhbHVuZS5pZC9vdGhyYS9nZW4vZ28vcHJvamVjdC92MTtwcm9qZWN0djGiAgNQWFiqAgpQcm9qZWN0LlYxygIKUHJvamVjdFxWMeICFlByb2plY3RcVjFcR1BCTWV0YWRhdGHqAgtQcm9qZWN0OjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_google_protobuf_timestamp, file_mcp_v1_annotations, file_othra_v1_rules]);
 
 /**
  * @generated from message project.v1.Project
@@ -50,6 +50,78 @@ export type Project = Message<"project.v1.Project"> & {
    * @generated from field: google.protobuf.Timestamp updated_at = 7;
    */
   updatedAt?: Timestamp;
+
+  /**
+   * @generated from field: string issuer_handle = 8;
+   */
+  issuerHandle: string;
+
+  /**
+   * issuer_url is the project's exact OAuth issuer, https://<host>/p/<issuer_handle>.
+   *
+   * @generated from field: string issuer_url = 9;
+   */
+  issuerUrl: string;
+
+  /**
+   * @generated from field: bool issuer_handle_locked = 10;
+   */
+  issuerHandleLocked: boolean;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp issuer_handle_locked_at = 11;
+   */
+  issuerHandleLockedAt?: Timestamp;
+
+  /**
+   * @generated from field: string display_name = 12;
+   */
+  displayName: string;
+
+  /**
+   * @generated from field: string primary_color = 13;
+   */
+  primaryColor: string;
+
+  /**
+   * @generated from field: string support_email = 14;
+   */
+  supportEmail: string;
+
+  /**
+   * @generated from field: bool has_logo = 15;
+   */
+  hasLogo: boolean;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp logo_updated_at = 16;
+   */
+  logoUpdatedAt?: Timestamp;
+
+  /**
+   * @generated from field: string terms_url = 17;
+   */
+  termsUrl: string;
+
+  /**
+   * @generated from field: string privacy_url = 18;
+   */
+  privacyUrl: string;
+
+  /**
+   * @generated from field: int32 terms_version = 19;
+   */
+  termsVersion: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp terms_published_at = 20;
+   */
+  termsPublishedAt?: Timestamp;
+
+  /**
+   * @generated from field: bool signin_email_link = 21;
+   */
+  signinEmailLink: boolean;
 };
 
 /**
@@ -77,6 +149,11 @@ export type CreateProjectRequest = Message<"project.v1.CreateProjectRequest"> & 
    * @generated from field: string name = 3;
    */
   name: string;
+
+  /**
+   * @generated from field: string issuer_handle = 4;
+   */
+  issuerHandle: string;
 };
 
 /**
@@ -216,6 +293,342 @@ export const UpdateProjectResponseSchema: GenMessage<UpdateProjectResponse> = /*
   messageDesc(file_project_v1_project, 8);
 
 /**
+ * @generated from message project.v1.UpdateProjectIssuerRequest
+ */
+export type UpdateProjectIssuerRequest = Message<"project.v1.UpdateProjectIssuerRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string issuer_handle = 2;
+   */
+  issuerHandle: string;
+};
+
+/**
+ * Describes the message project.v1.UpdateProjectIssuerRequest.
+ * Use `create(UpdateProjectIssuerRequestSchema)` to create a new message.
+ */
+export const UpdateProjectIssuerRequestSchema: GenMessage<UpdateProjectIssuerRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 9);
+
+/**
+ * @generated from message project.v1.UpdateProjectIssuerResponse
+ */
+export type UpdateProjectIssuerResponse = Message<"project.v1.UpdateProjectIssuerResponse"> & {
+  /**
+   * @generated from field: project.v1.Project project = 1;
+   */
+  project?: Project;
+};
+
+/**
+ * Describes the message project.v1.UpdateProjectIssuerResponse.
+ * Use `create(UpdateProjectIssuerResponseSchema)` to create a new message.
+ */
+export const UpdateProjectIssuerResponseSchema: GenMessage<UpdateProjectIssuerResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 10);
+
+/**
+ * @generated from message project.v1.UpdateProjectBrandingRequest
+ */
+export type UpdateProjectBrandingRequest = Message<"project.v1.UpdateProjectBrandingRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string display_name = 2;
+   */
+  displayName: string;
+
+  /**
+   * @generated from field: string primary_color = 3;
+   */
+  primaryColor: string;
+
+  /**
+   * @generated from field: string support_email = 4;
+   */
+  supportEmail: string;
+};
+
+/**
+ * Describes the message project.v1.UpdateProjectBrandingRequest.
+ * Use `create(UpdateProjectBrandingRequestSchema)` to create a new message.
+ */
+export const UpdateProjectBrandingRequestSchema: GenMessage<UpdateProjectBrandingRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 11);
+
+/**
+ * @generated from message project.v1.UpdateProjectBrandingResponse
+ */
+export type UpdateProjectBrandingResponse = Message<"project.v1.UpdateProjectBrandingResponse"> & {
+  /**
+   * @generated from field: project.v1.Project project = 1;
+   */
+  project?: Project;
+};
+
+/**
+ * Describes the message project.v1.UpdateProjectBrandingResponse.
+ * Use `create(UpdateProjectBrandingResponseSchema)` to create a new message.
+ */
+export const UpdateProjectBrandingResponseSchema: GenMessage<UpdateProjectBrandingResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 12);
+
+/**
+ * @generated from message project.v1.UpdateProjectTermsRequest
+ */
+export type UpdateProjectTermsRequest = Message<"project.v1.UpdateProjectTermsRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string terms_url = 2;
+   */
+  termsUrl: string;
+
+  /**
+   * @generated from field: string privacy_url = 3;
+   */
+  privacyUrl: string;
+};
+
+/**
+ * Describes the message project.v1.UpdateProjectTermsRequest.
+ * Use `create(UpdateProjectTermsRequestSchema)` to create a new message.
+ */
+export const UpdateProjectTermsRequestSchema: GenMessage<UpdateProjectTermsRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 13);
+
+/**
+ * @generated from message project.v1.UpdateProjectTermsResponse
+ */
+export type UpdateProjectTermsResponse = Message<"project.v1.UpdateProjectTermsResponse"> & {
+  /**
+   * @generated from field: project.v1.Project project = 1;
+   */
+  project?: Project;
+};
+
+/**
+ * Describes the message project.v1.UpdateProjectTermsResponse.
+ * Use `create(UpdateProjectTermsResponseSchema)` to create a new message.
+ */
+export const UpdateProjectTermsResponseSchema: GenMessage<UpdateProjectTermsResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 14);
+
+/**
+ * @generated from message project.v1.BumpTermsVersionRequest
+ */
+export type BumpTermsVersionRequest = Message<"project.v1.BumpTermsVersionRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message project.v1.BumpTermsVersionRequest.
+ * Use `create(BumpTermsVersionRequestSchema)` to create a new message.
+ */
+export const BumpTermsVersionRequestSchema: GenMessage<BumpTermsVersionRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 15);
+
+/**
+ * @generated from message project.v1.BumpTermsVersionResponse
+ */
+export type BumpTermsVersionResponse = Message<"project.v1.BumpTermsVersionResponse"> & {
+  /**
+   * @generated from field: int32 version = 1;
+   */
+  version: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp published_at = 2;
+   */
+  publishedAt?: Timestamp;
+};
+
+/**
+ * Describes the message project.v1.BumpTermsVersionResponse.
+ * Use `create(BumpTermsVersionResponseSchema)` to create a new message.
+ */
+export const BumpTermsVersionResponseSchema: GenMessage<BumpTermsVersionResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 16);
+
+/**
+ * @generated from message project.v1.CheckIssuerHandleRequest
+ */
+export type CheckIssuerHandleRequest = Message<"project.v1.CheckIssuerHandleRequest"> & {
+  /**
+   * @generated from field: string org_id = 1;
+   */
+  orgId: string;
+
+  /**
+   * project_id names the project being edited, so its own handle counts as available.
+   *
+   * @generated from field: string project_id = 2;
+   */
+  projectId: string;
+
+  /**
+   * @generated from field: string issuer_handle = 3;
+   */
+  issuerHandle: string;
+};
+
+/**
+ * Describes the message project.v1.CheckIssuerHandleRequest.
+ * Use `create(CheckIssuerHandleRequestSchema)` to create a new message.
+ */
+export const CheckIssuerHandleRequestSchema: GenMessage<CheckIssuerHandleRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 17);
+
+/**
+ * @generated from message project.v1.CheckIssuerHandleResponse
+ */
+export type CheckIssuerHandleResponse = Message<"project.v1.CheckIssuerHandleResponse"> & {
+  /**
+   * @generated from field: bool available = 1;
+   */
+  available: boolean;
+
+  /**
+   * reason is one of ok, taken, reserved, invalid or locked.
+   *
+   * @generated from field: string reason = 2;
+   */
+  reason: string;
+};
+
+/**
+ * Describes the message project.v1.CheckIssuerHandleResponse.
+ * Use `create(CheckIssuerHandleResponseSchema)` to create a new message.
+ */
+export const CheckIssuerHandleResponseSchema: GenMessage<CheckIssuerHandleResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 18);
+
+/**
+ * @generated from message project.v1.UploadProjectLogoRequest
+ */
+export type UploadProjectLogoRequest = Message<"project.v1.UploadProjectLogoRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: bytes content = 2;
+   */
+  content: Uint8Array;
+};
+
+/**
+ * Describes the message project.v1.UploadProjectLogoRequest.
+ * Use `create(UploadProjectLogoRequestSchema)` to create a new message.
+ */
+export const UploadProjectLogoRequestSchema: GenMessage<UploadProjectLogoRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 19);
+
+/**
+ * @generated from message project.v1.UploadProjectLogoResponse
+ */
+export type UploadProjectLogoResponse = Message<"project.v1.UploadProjectLogoResponse"> & {
+  /**
+   * @generated from field: project.v1.Project project = 1;
+   */
+  project?: Project;
+};
+
+/**
+ * Describes the message project.v1.UploadProjectLogoResponse.
+ * Use `create(UploadProjectLogoResponseSchema)` to create a new message.
+ */
+export const UploadProjectLogoResponseSchema: GenMessage<UploadProjectLogoResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 20);
+
+/**
+ * @generated from message project.v1.DeleteProjectLogoRequest
+ */
+export type DeleteProjectLogoRequest = Message<"project.v1.DeleteProjectLogoRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message project.v1.DeleteProjectLogoRequest.
+ * Use `create(DeleteProjectLogoRequestSchema)` to create a new message.
+ */
+export const DeleteProjectLogoRequestSchema: GenMessage<DeleteProjectLogoRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 21);
+
+/**
+ * @generated from message project.v1.DeleteProjectLogoResponse
+ */
+export type DeleteProjectLogoResponse = Message<"project.v1.DeleteProjectLogoResponse"> & {
+  /**
+   * @generated from field: project.v1.Project project = 1;
+   */
+  project?: Project;
+};
+
+/**
+ * Describes the message project.v1.DeleteProjectLogoResponse.
+ * Use `create(DeleteProjectLogoResponseSchema)` to create a new message.
+ */
+export const DeleteProjectLogoResponseSchema: GenMessage<DeleteProjectLogoResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 22);
+
+/**
+ * @generated from message project.v1.GetProjectLogoRequest
+ */
+export type GetProjectLogoRequest = Message<"project.v1.GetProjectLogoRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message project.v1.GetProjectLogoRequest.
+ * Use `create(GetProjectLogoRequestSchema)` to create a new message.
+ */
+export const GetProjectLogoRequestSchema: GenMessage<GetProjectLogoRequest> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 23);
+
+/**
+ * @generated from message project.v1.GetProjectLogoResponse
+ */
+export type GetProjectLogoResponse = Message<"project.v1.GetProjectLogoResponse"> & {
+  /**
+   * @generated from field: string content_type = 1;
+   */
+  contentType: string;
+
+  /**
+   * @generated from field: bytes content = 2;
+   */
+  content: Uint8Array;
+};
+
+/**
+ * Describes the message project.v1.GetProjectLogoResponse.
+ * Use `create(GetProjectLogoResponseSchema)` to create a new message.
+ */
+export const GetProjectLogoResponseSchema: GenMessage<GetProjectLogoResponse> = /*@__PURE__*/
+  messageDesc(file_project_v1_project, 24);
+
+/**
  * ProjectService manages projects. Every id is a public id.
  *
  * @generated from service project.v1.ProjectService
@@ -252,6 +665,70 @@ export const ProjectService: GenService<{
     methodKind: "unary";
     input: typeof UpdateProjectRequestSchema;
     output: typeof UpdateProjectResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.UpdateProjectIssuer
+   */
+  updateProjectIssuer: {
+    methodKind: "unary";
+    input: typeof UpdateProjectIssuerRequestSchema;
+    output: typeof UpdateProjectIssuerResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.UpdateProjectBranding
+   */
+  updateProjectBranding: {
+    methodKind: "unary";
+    input: typeof UpdateProjectBrandingRequestSchema;
+    output: typeof UpdateProjectBrandingResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.UpdateProjectTerms
+   */
+  updateProjectTerms: {
+    methodKind: "unary";
+    input: typeof UpdateProjectTermsRequestSchema;
+    output: typeof UpdateProjectTermsResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.BumpTermsVersion
+   */
+  bumpTermsVersion: {
+    methodKind: "unary";
+    input: typeof BumpTermsVersionRequestSchema;
+    output: typeof BumpTermsVersionResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.CheckIssuerHandle
+   */
+  checkIssuerHandle: {
+    methodKind: "unary";
+    input: typeof CheckIssuerHandleRequestSchema;
+    output: typeof CheckIssuerHandleResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.UploadProjectLogo
+   */
+  uploadProjectLogo: {
+    methodKind: "unary";
+    input: typeof UploadProjectLogoRequestSchema;
+    output: typeof UploadProjectLogoResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.DeleteProjectLogo
+   */
+  deleteProjectLogo: {
+    methodKind: "unary";
+    input: typeof DeleteProjectLogoRequestSchema;
+    output: typeof DeleteProjectLogoResponseSchema;
+  },
+  /**
+   * @generated from rpc project.v1.ProjectService.GetProjectLogo
+   */
+  getProjectLogo: {
+    methodKind: "unary";
+    input: typeof GetProjectLogoRequestSchema;
+    output: typeof GetProjectLogoResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_project_v1_project, 0);

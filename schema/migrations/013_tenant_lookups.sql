@@ -87,6 +87,31 @@ AS $$
   LIMIT 1;
 $$;
 
+-- SECURITY: resolves an issuer before any tenant scope exists; the row names the org and project every later read is scoped to.
+CREATE FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_project_by_issuer_handle(p_handle text)
+RETURNS TABLE (id uuid, public_id text, org_id uuid, issuer_handle text, name text, display_name text, primary_color text, support_email text, logo_updated_at timestamptz, terms_url text, privacy_url text, terms_version integer, terms_published_at timestamptz, signin_email_link boolean)
+LANGUAGE sql STABLE
+SECURITY DEFINER
+SET search_path = {{.Schema}}, pg_catalog, pg_temp
+AS $$
+  SELECT p.id, p.public_id, p.org_id, p.issuer_handle, p.name, p.display_name, p.primary_color, p.support_email,
+         (SELECT l.updated_at FROM {{.Schema}}.{{.TablePrefix}}project_logos l WHERE l.project_id = p.id),
+         p.terms_url, p.privacy_url, p.terms_version, p.terms_published_at, p.signin_email_link
+  FROM {{.Schema}}.{{.TablePrefix}}projects p
+  WHERE p.issuer_handle = p_handle
+  LIMIT 1;
+$$;
+
+-- SECURITY: answers whether any org uses a handle, which row level security would otherwise hide; it returns nothing else.
+CREATE FUNCTION {{.Schema}}.{{.TablePrefix}}issuer_handle_exists(p_handle text)
+RETURNS boolean
+LANGUAGE sql STABLE
+SECURITY DEFINER
+SET search_path = {{.Schema}}, pg_catalog, pg_temp
+AS $$
+  SELECT EXISTS (SELECT 1 FROM {{.Schema}}.{{.TablePrefix}}projects p WHERE p.issuer_handle = p_handle);
+$$;
+
 -- SECURITY: resolves a key by its secret hash before any tenant scope exists; the row names the org. The hash only matches, it is never returned.
 CREATE FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_api_key_by_secret_hash(p_hash bytea)
 RETURNS TABLE (id uuid, org_id uuid, project_id uuid, kind text, all_projects boolean, project_ids text, name text, secret_hint text, scopes text, resource_ids text, created_by uuid, created_at timestamptz, expires_at timestamptz, revoked_at timestamptz, last_used_at timestamptz)
@@ -113,12 +138,16 @@ REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}list_orgs_for_user(uuid) FROM
 REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_invite_by_token_hash(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_invite_by_public_id(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_api_key_by_secret_hash(bytea) FROM PUBLIC;
+REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}resolve_project_by_issuer_handle(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION {{.Schema}}.{{.TablePrefix}}issuer_handle_exists(text) FROM PUBLIC;
 
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 
+DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}issuer_handle_exists(text);
+DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_project_by_issuer_handle(text);
 DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_api_key_by_secret_hash(bytea);
 DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_invite_by_public_id(text);
 DROP FUNCTION IF EXISTS {{.Schema}}.{{.TablePrefix}}resolve_invite_by_token_hash(text);
