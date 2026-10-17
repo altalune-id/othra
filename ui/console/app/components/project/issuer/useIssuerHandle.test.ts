@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { ProjectSchema } from '../../../../gen/project/v1/project_pb';
 import { connectError, deferred, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
-import { defaultHandle, isHandleFormat, useIssuerHandle } from './useIssuerHandle';
+import { defaultHandle, handleProblem, isHandleFormat, slugify, useIssuerHandle } from './useIssuerHandle';
 
 const orgId = 'V3StGXR8Z5jdHj6BmyT2a';
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';
@@ -29,6 +29,24 @@ describe('defaultHandle', () => {
     expect(defaultHandle('acme', 'web')).toBe('acme-web');
     expect(defaultHandle('a'.repeat(39), 'web')).toBe('a'.repeat(39));
     expect(defaultHandle('acme', '')).toBe('');
+  });
+});
+
+describe('handleProblem', () => {
+  it('says whether a handle breaks the length or the format rule', () => {
+    expect(handleProblem('acme-web')).toBe('');
+    expect(handleProblem('ab')).toBe('length');
+    expect(handleProblem('a'.repeat(41))).toBe('length');
+    expect(handleProblem('Partners!')).toBe('format');
+    expect(handleProblem('-acme')).toBe('format');
+  });
+});
+
+describe('slugify', () => {
+  it('turns a project name into lowercase words joined by hyphens', () => {
+    expect(slugify('Test Shop')).toBe('test-shop');
+    expect(slugify('  Café -- Ünïcode! ')).toBe('cafe-unicode');
+    expect(slugify('日本')).toBe('');
   });
 });
 

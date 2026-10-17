@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ShownError } from '../../lib/apperror/message';
+import SavedNote from '~/components/ui/SavedNote.vue';
 import ErrorText from '../ui/ErrorText.vue';
 import FieldError from '../ui/FieldError.vue';
 
@@ -39,9 +40,7 @@ const name = defineModel<string>('name', { required: true });
         {{ labels.hint }}
       </p>
       <ErrorText :error="error" />
-      <p v-if="notice" role="status" class="text-sm text-success">
-        {{ notice }}
-      </p>
+      <SavedNote v-if="notice" :label="notice" />
       <div class="card-actions justify-end">
         <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
           {{ labels.save }}

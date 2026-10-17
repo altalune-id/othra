@@ -11,7 +11,20 @@ const serverStatus: Record<string, HandleStatus> = { taken: 'taken', reserved: '
 
 // isHandleFormat applies the issuer handle rules the server enforces: 3–40 lowercase letters, digits and inner hyphens.
 export function isHandleFormat(handle: string): boolean {
-  return handle.length >= 3 && handle.length <= handleMax && handlePattern.test(handle);
+  return handleProblem(handle) === '';
+}
+
+// handleProblem names the rule a handle breaks: its length, its format, or none.
+export function handleProblem(handle: string): '' | 'length' | 'format' {
+  if (handle.length < 3 || handle.length > handleMax) {
+    return 'length';
+  }
+  return handlePattern.test(handle) ? '' : 'format';
+}
+
+// slugify turns a name into lowercase ASCII words joined by single hyphens.
+export function slugify(name: string): string {
+  return name.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 // defaultHandle is the create form's prefill, <org slug>-<project slug>, cut to 40 characters.

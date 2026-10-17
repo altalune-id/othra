@@ -76,6 +76,20 @@ describe('useLegal', () => {
     expect(legal.urlChangedHint.value).toBe(false);
   });
 
+  it('clears "Saved" and the published notice on the next edit', async () => {
+    const legal = useLegal(id);
+    await legal.load();
+    await legal.save();
+    expect(legal.saved.value).toBe(true);
+    legal.privacyUrl.value = 'https://acme.test/privacy-v2';
+    expect(legal.saved.value).toBe(false);
+    legal.askBump();
+    await legal.confirmBump();
+    expect(legal.bumpedTo.value).toBe(4);
+    legal.termsUrl.value = 'https://acme.test/terms-v3';
+    expect(legal.bumpedTo.value).toBe(0);
+  });
+
   it('asks before clearing the terms link, and saves only when confirmed', async () => {
     const legal = useLegal(id);
     await legal.load();
@@ -126,6 +140,18 @@ describe('useLegal', () => {
     expect(timestampDate(useProjectDetailStore().get(id)!.termsPublishedAt!)).toEqual(new Date('2026-10-16T00:00:00Z'));
     expect(legal.bumpedTo.value).toBe(4);
     expect(legal.bumping.value).toBe(false);
+  });
+
+  it('clears the published notice when a later save publishes nothing', async () => {
+    const legal = useLegal(id);
+    await legal.load();
+    legal.askBump();
+    await legal.confirmBump();
+    expect(legal.bumpedTo.value).toBe(4);
+    legal.privacyUrl.value = 'https://acme.test/privacy-v2';
+    await legal.save();
+    expect(legal.bumpedTo.value).toBe(0);
+    expect(legal.saved.value).toBe(true);
   });
 
   it('shows a refused bump', async () => {

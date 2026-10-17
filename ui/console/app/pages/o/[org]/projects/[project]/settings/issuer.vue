@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import IssuerHandleField from '~/components/project/issuer/IssuerHandleField.vue';
+import IssuerUrl from '~/components/project/issuer/IssuerUrl.vue';
 import { useIssuerHandle } from '~/components/project/issuer/useIssuerHandle';
+import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
+import { useCanEditProject } from '~/components/project/useProjectAccess';
 import AppModal from '~/components/ui/AppModal.vue';
 import CopyButton from '~/components/ui/CopyButton.vue';
 import ErrorText from '~/components/ui/ErrorText.vue';
+import SavedNote from '~/components/ui/SavedNote.vue';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
@@ -13,6 +18,8 @@ const { t } = useI18n();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const detail = useProjectDetailStore();
+const canEdit = useCanEditProject();
+await useAuthStore().load();
 
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const listed = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
@@ -34,10 +41,9 @@ const handle = useIssuerHandle({
 const { value, status, canSave, confirming, busy, saved, error, fieldError } = handle;
 
 const issuerUrl = computed(() => project.value?.issuerUrl ?? '');
-const prefix = computed(() => {
-  const url = issuerUrl.value;
+const newUrl = computed(() => {
   const h = project.value?.issuerHandle ?? '';
-  return h && url.endsWith(h) ? url.slice(0, -h.length) : '';
+  return h && issuerUrl.value.endsWith(h) ? `${issuerUrl.value.slice(0, -h.length)}${value.value}` : value.value;
 });
 const locked = computed(() => status.value === 'locked');
 const fieldLabels = computed(() => ({
@@ -48,6 +54,8 @@ const fieldLabels = computed(() => ({
   taken: t('issuer.taken'),
   reserved: t('issuer.reserved'),
   invalid: t('issuer.invalid'),
+  invalidFormat: t('apperror.PRJ006_format'),
+  invalidLength: t('apperror.PRJ006_length', { min: 3, max: 40 }),
   locked: t('issuer.locked'),
   error: t('issuer.check_failed'),
 }));
@@ -65,15 +73,16 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
         {{ t('issuer.subtitle') }}
       </p>
     </div>
+    <ProjectReadOnlyNote v-if="!canEdit" />
 
     <div class="card border border-base-300 bg-base-100">
       <div class="card-body gap-4">
         <div class="space-y-1">
-          <h2 class="text-xs font-semibold text-base-content/60">
+          <h2 class="fieldset-legend">
             {{ t('issuer.url') }}
           </h2>
           <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-            <code class="min-w-0 flex-1 font-mono text-sm break-all" data-testid="issuer-url">{{ issuerUrl }}</code>
+            <IssuerUrl :url="issuerUrl" data-testid="issuer-url" />
             <CopyButton :value="issuerUrl" :label="t('common.copy')" class="shrink-0" />
           </div>
           <p class="text-xs text-base-content/60">
@@ -81,40 +90,55 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
           </p>
         </div>
 
-        <form class="space-y-3" @submit.prevent="handle.ask()">
+        <form v-if="canEdit" novalidate class="space-y-3" @submit.prevent="handle.ask()">
           <IssuerHandleField
             :model-value="value"
             :status="status"
-            :prefix="prefix"
+            prefix="/p/"
             :disabled="busy"
             :field-error="fieldError"
             :labels="fieldLabels"
             @update:model-value="handle.input"
           />
-          <div v-if="locked" role="alert" class="alert alert-soft">
+          <div v-if="locked" role="note" class="alert alert-soft">
             <Icon name="lucide:lock" size="18" />
             <span class="text-sm">{{ t('issuer.locked_note') }}</span>
           </div>
           <template v-else>
-            <div role="note" class="alert alert-info alert-soft">
-              <Icon name="lucide:info" size="18" />
-              <span class="text-sm">{{ t('issuer.unlocked_note') }}</span>
+            <div role="note" class="alert alert-soft">
+              <Icon name="lucide:info" size="18" class="text-info" />
+              <span class="text-sm text-base-content">{{ t('issuer.unlocked_note') }}</span>
             </div>
             <ErrorText :error="error" />
             <div class="flex items-center gap-3">
               <button type="submit" class="btn btn-primary btn-sm" :disabled="!canSave">
                 {{ t('common.save') }}
               </button>
-              <span v-if="saved" class="text-sm text-success">{{ t('common.saved') }}</span>
+              <SavedNote v-if="saved" :label="t('common.saved')" />
             </div>
           </template>
         </form>
+        <div v-else class="space-y-2" data-testid="issuer-readonly">
+          <h2 class="fieldset-legend">
+            {{ t('issuer.handle') }}
+          </h2>
+          <p class="flex items-center gap-2 font-mono text-sm">
+            {{ project.issuerHandle }}
+            <span v-if="locked" class="badge badge-sm badge-ghost gap-1">
+              <Icon name="lucide:lock" size="12" />
+              {{ t('issuer.locked') }}
+            </span>
+          </p>
+          <p v-if="locked" role="note" class="text-sm text-base-content/60">
+            {{ t('issuer.locked_note') }}
+          </p>
+        </div>
       </div>
     </div>
 
     <AppModal :open="confirming" :title="t('issuer.change_title')" @close="handle.cancel()">
       <p class="text-sm">
-        {{ t('issuer.change_body', { old: issuerUrl, new: `${prefix}${value}` }) }}
+        {{ t('issuer.change_body', { old: issuerUrl, new: newUrl }) }}
       </p>
       <template #footer>
         <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="handle.cancel()">

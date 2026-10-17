@@ -207,8 +207,8 @@ function revoke(k: PersonalKeyView) {
                     {{ labels.cancel }}
                   </button>
                 </template>
-                <button v-else type="button" class="btn btn-ghost btn-xs text-error" @click="confirming = k.rowKey">
-                  <Icon name="lucide:ban" size="14" />
+                <button v-else type="button" class="btn btn-ghost btn-xs" @click="confirming = k.rowKey">
+                  <Icon name="lucide:ban" size="14" class="text-error" />
                   {{ labels.revoke }}
                 </button>
               </template>

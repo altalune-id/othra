@@ -68,7 +68,7 @@ const help = computed(() => props.labels.help.replace('{email}', props.model.sup
           <p class="text-sm text-base-content/70">
             {{ labels.heading }}
           </p>
-          <input type="email" class="input input-sm w-full" :placeholder="labels.email" tabindex="-1">
+          <input type="email" class="input w-full" :placeholder="labels.email" tabindex="-1">
           <button type="button" class="btn btn-primary btn-sm" tabindex="-1">
             {{ labels.cta }}
           </button>

@@ -1,6 +1,7 @@
 import type { ShownError } from '~/lib/apperror/message';
 import { create } from '@bufbuild/protobuf';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
+import { watch } from 'vue';
 import { UpdateProjectTermsRequestSchema } from '~~/gen/project/v1/project_pb';
 import { useErrorMessage } from '~/composables/useErrorMessage';
 import { useValidation } from '~/composables/useValidation';
@@ -33,6 +34,11 @@ export function useLegal(projectId: string) {
     return version.value >= 1 && next !== '' && next !== savedTerms.value;
   });
 
+  watch([termsUrl, privacyUrl], () => {
+    saved.value = false;
+    bumpedTo.value = 0;
+  }, { flush: 'sync' });
+
   function sync() {
     termsUrl.value = project.value?.termsUrl ?? '';
     privacyUrl.value = project.value?.privacyUrl ?? '';
@@ -52,6 +58,7 @@ export function useLegal(projectId: string) {
     busy.value = true;
     error.value = null;
     saved.value = false;
+    bumpedTo.value = 0;
     try {
       const res = await client.updateProjectTerms(req);
       if (res.project) {

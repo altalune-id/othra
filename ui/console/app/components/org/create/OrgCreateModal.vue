@@ -5,28 +5,32 @@ import FieldError from '~/components/ui/FieldError.vue';
 import { useOrgCreate } from './useOrgCreate';
 
 const { t } = useI18n();
+const ids = { name: useId(), nameErr: useId(), slug: useId(), slugHelp: useId(), slugErr: useId() };
 const { open, name, slug, busy, error, fieldErrors, hide, submit } = useOrgCreate();
 </script>
 
 <template>
   <AppModal :open="open" :title="t('org.new')" @close="hide()">
-    <form novalidate class="space-y-3" @submit.prevent="submit()">
-      <label class="block">
-        <span class="mb-1 block text-xs text-base-content/60">{{ t('common.name') }}</span>
+    <form novalidate class="space-y-1" @submit.prevent="submit()">
+      <div class="fieldset">
+        <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
         <input
-          v-model="name" type="text" class="input input-sm input-bordered w-full" :class="{ 'input-error': fieldErrors.name }"
-          placeholder="Acme Corp" :disabled="busy" :aria-invalid="!!fieldErrors.name" aria-describedby="org-name-error"
+          :id="ids.name" v-model="name" type="text" class="input w-full" :class="{ 'input-error': fieldErrors.name }"
+          :placeholder="t('org.name_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr"
         >
-        <FieldError id="org-name-error" :message="fieldErrors.name" />
-      </label>
-      <label class="block">
-        <span class="mb-1 block text-xs text-base-content/60">{{ t('common.slug') }}</span>
+        <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
+      </div>
+      <div class="fieldset">
+        <label :for="ids.slug" class="fieldset-legend">{{ t('common.slug') }}</label>
         <input
-          v-model="slug" type="text" class="input input-sm input-bordered w-full" :class="{ 'input-error': fieldErrors.slug }"
-          placeholder="acme (generated when empty)" :disabled="busy" :aria-invalid="!!fieldErrors.slug" aria-describedby="org-slug-error"
+          :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :class="{ 'input-error': fieldErrors.slug }"
+          :placeholder="t('org.slug_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.slug" :aria-describedby="`${ids.slugHelp} ${ids.slugErr}`"
         >
-        <FieldError id="org-slug-error" :message="fieldErrors.slug" />
-      </label>
+        <FieldError :id="ids.slugErr" :message="fieldErrors.slug" />
+        <p :id="ids.slugHelp" class="label whitespace-normal">
+          {{ t('org.slug_random_help') }}
+        </p>
+      </div>
       <ErrorText :error="error" />
     </form>
     <template #footer>

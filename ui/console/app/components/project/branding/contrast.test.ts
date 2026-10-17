@@ -44,8 +44,19 @@ describe('isLowContrast', () => {
 });
 
 describe('formatRatio', () => {
-  it('rounds to one decimal', () => {
-    expect(formatRatio(6.2891)).toBe('6.3');
+  it('floors to one decimal so the label never crosses a threshold the verdict disagrees with', () => {
+    expect(formatRatio(6.2891)).toBe('6.2');
     expect(formatRatio(21)).toBe('21.0');
+    expect(formatRatio(4.48)).toBe('4.4');
+    expect(formatRatio(4.4999)).toBe('4.4');
+    expect(formatRatio(4.5)).toBe('4.5');
+    expect(formatRatio(2.99)).toBe('2.9');
+    expect(formatRatio(3)).toBe('3.0');
+  });
+
+  it('labels a low-contrast colour below 4.5', () => {
+    const ratio = contrastRatio('#777777', bestTextColor('#777777'));
+    expect(isLowContrast('#777777')).toBe(true);
+    expect(Number(formatRatio(ratio))).toBeLessThan(4.5);
   });
 });

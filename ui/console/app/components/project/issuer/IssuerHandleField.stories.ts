@@ -4,7 +4,7 @@ import IssuerHandleField from './IssuerHandleField.vue';
 const meta = {
   title: 'Projects/IssuerHandleField',
   component: IssuerHandleField,
-  args: { modelValue: 'acme-web', status: 'idle', prefix: 'https://auth.example.com/p/' },
+  args: { modelValue: 'acme-web', status: 'idle', prefix: '/p/' },
 } satisfies Meta<typeof IssuerHandleField>;
 
 export default meta;
@@ -24,5 +24,6 @@ export const Reserved: Story = { args: { modelValue: 'console', status: 'reserve
 export const Invalid: Story = { args: { modelValue: 'Acme_Web', status: 'invalid' }, render };
 export const CheckFailed: Story = { args: { modelValue: 'acme-shop', status: 'error' }, render };
 export const Locked: Story = { args: { status: 'locked' }, render };
-export const InCreateModal: Story = { args: { modelValue: 'acme-support-bot', status: 'available', prefix: '' }, render };
+export const InCreateModal: Story = { args: { modelValue: 'acme-customer-portal', status: 'available' }, render };
+export const TooShort: Story = { args: { modelValue: 'ab', status: 'invalid' }, render };
 export const ServerRefused: Story = { args: { modelValue: 'acme-shop', status: 'idle', fieldError: 'The issuer handle acme-shop is already taken.' }, render };

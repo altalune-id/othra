@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ErrorDetailSchema, ViolationSchema } from '../../gen/apperror/v1/error_pb';
 import { CreateOrgRequestSchema, UpdateOrgRequestSchema } from '../../gen/org/v1/org_pb';
+import { CreateProjectRequestSchema, UpdateProjectBrandingRequestSchema, UpdateProjectTermsRequestSchema } from '../../gen/project/v1/project_pb';
 import { connectError, setKnownKeys } from '../../test/nuxt-globals';
 import { useValidation } from './useValidation';
 
@@ -38,6 +39,18 @@ describe('useValidation', () => {
     expect(v.errors.value).toEqual({ slug: 'validation.slug_format' });
     expect(v.check(create(CreateOrgRequestSchema, { name: 'Acme', slug: 'ab' }))).toBe(false);
     expect(v.errors.value).toEqual({ slug: 'validation.too_short|{"min":"3"}' });
+  });
+
+  it('words link, colour and handle format refusals with the agreed reason', () => {
+    const terms = useValidation(UpdateProjectTermsRequestSchema, { fields: ['terms_url', 'privacy_url'] });
+    expect(terms.check(create(UpdateProjectTermsRequestSchema, { id: 'x6MH9WPWjktMwCBKHy4pF', termsUrl: 'http://acme.test/terms', privacyUrl: 'acme.test' }))).toBe(false);
+    expect(terms.errors.value).toEqual({ terms_url: 'validation.https_url', privacy_url: 'validation.https_url' });
+    const branding = useValidation(UpdateProjectBrandingRequestSchema, { fields: ['primary_color'] });
+    expect(branding.check(create(UpdateProjectBrandingRequestSchema, { id: 'x6MH9WPWjktMwCBKHy4pF', primaryColor: 'blue' }))).toBe(false);
+    expect(branding.errors.value).toEqual({ primary_color: 'validation.hex_color' });
+    const project = useValidation(CreateProjectRequestSchema, { fields: ['name', 'issuer_handle'] });
+    expect(project.check(create(CreateProjectRequestSchema, { orgId: 'V3StGXR8Z5jdHj6BmyT2a', name: 'Shop', issuerHandle: 'Shop!' }))).toBe(false);
+    expect(project.errors.value).toEqual({ issuer_handle: 'apperror.PRJ006_format' });
   });
 
   it('reports a refused field the form does not show as a form error', () => {

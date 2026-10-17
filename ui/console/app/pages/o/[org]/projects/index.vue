@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { Project } from '~/stores/projects';
 import ProjectEditModal from '~/components/project/edit/ProjectEditModal.vue';
+import { useCanEditProject } from '~/components/project/useProjectAccess';
 import AppButton from '~/components/ui/AppButton.vue';
 import CopyButton from '~/components/ui/CopyButton.vue';
 import ErrorText from '~/components/ui/ErrorText.vue';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 import { useUIStore } from '~/stores/ui';
@@ -13,6 +15,8 @@ const { t } = useI18n();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const ui = useUIStore();
+const canEdit = useCanEditProject();
+await useAuthStore().load();
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const items = computed(() => (org.value ? projects.forOrg(org.value.id) : []));
 
@@ -30,7 +34,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
       <h1 class="text-2xl font-bold">
         {{ t('project.title') }}
       </h1>
-      <AppButton v-if="org" size="sm" @click="ui.openProjectCreate()">
+      <AppButton v-if="org && canEdit" size="sm" @click="ui.openProjectCreate()">
         <Icon name="lucide:plus" size="16" />
         {{ t('project.new') }}
       </AppButton>
@@ -43,7 +47,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
           <tr>
             <th>{{ t('common.name') }}</th>
             <th>{{ t('common.id') }}</th>
-            <th>{{ t('common.slug') }}</th>
+            <th>{{ t('project.console_slug') }}</th>
             <th />
           </tr>
         </thead>
@@ -68,7 +72,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
                 <Icon name="lucide:external-link" size="14" />
                 {{ t('common.open') }}
               </NuxtLink>
-              <button class="btn btn-ghost btn-xs" @click="edit(project)">
+              <button v-if="canEdit" type="button" class="btn btn-ghost btn-xs" @click="edit(project)">
                 <Icon name="lucide:pencil" size="14" />
                 {{ t('common.edit') }}
               </button>
@@ -81,6 +85,6 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
       {{ t('project.empty') }}
     </p>
 
-    <ProjectEditModal ref="editModal" />
+    <ProjectEditModal v-if="canEdit" ref="editModal" />
   </div>
 </template>

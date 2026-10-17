@@ -1,8 +1,9 @@
 import type { ShownError } from '~/lib/apperror/message';
 
 import { create } from '@bufbuild/protobuf';
+import { watch } from 'vue';
 import { CreateProjectRequestSchema } from '~~/gen/project/v1/project_pb';
-import { useIssuerHandle } from '~/components/project/issuer/useIssuerHandle';
+import { slugify, useIssuerHandle } from '~/components/project/issuer/useIssuerHandle';
 import { useValidation } from '~/composables/useValidation';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -22,12 +23,17 @@ export function useProjectCreate(orgId: string) {
     fields: ['name', 'slug', 'issuer_handle'],
     codes: { PRJ002: 'slug', PRJ003: 'slug', PRJ004: 'name', PRJ005: 'issuer_handle', PRJ006: 'issuer_handle' },
   });
-  const refused = new Set(['taken', 'reserved', 'invalid', 'locked']);
-  const canSubmit = computed(() => !busy.value && !!name.value.trim() && !refused.has(handle.status.value));
+  const blocked = new Set(['checking', 'taken', 'reserved', 'invalid', 'locked']);
+  const handleReady = computed(() => !!handle.value.value.trim() && !blocked.has(handle.status.value));
+  const canSubmit = computed(() => !busy.value && !!name.value.trim() && handleReady.value);
+
+  function prefill() {
+    handle.follow(orgs.items.find(o => o.id === orgId)?.slug ?? '', slug.value.trim() || slugify(name.value));
+  }
+  watch([name, slug], prefill, { flush: 'sync' });
 
   function setSlug(value: string) {
     slug.value = value;
-    handle.follow(orgs.items.find(o => o.id === orgId)?.slug ?? '', value.trim());
   }
   const { $projectClient: client } = useNuxtApp();
 
@@ -43,12 +49,15 @@ export function useProjectCreate(orgId: string) {
   }
 
   async function submit() {
-    if (busy.value || refused.has(handle.status.value)) {
+    if (busy.value) {
       return;
     }
     const req = { orgId, name: name.value.trim(), slug: slug.value.trim(), issuerHandle: handle.value.value.trim() };
     if (!validation.check(create(CreateProjectRequestSchema, req))) {
       error.value = validation.formError.value;
+      return;
+    }
+    if (!handleReady.value) {
       return;
     }
     busy.value = true;

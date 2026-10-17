@@ -31,6 +31,7 @@ export interface MemberListLabels {
   roleTitle: string;
   changeRole: string;
   empty: string;
+  actions: string;
 }
 
 const props = withDefaults(defineProps<{
@@ -62,6 +63,7 @@ const props = withDefaults(defineProps<{
     roleTitle: 'Change role?',
     changeRole: 'Change role',
     empty: 'No members yet.',
+    actions: 'Actions for {name}',
   }),
 });
 
@@ -155,7 +157,7 @@ function onRole(m: MemberListRow, event: Event) {
             <td>
               <select
                 v-if="m.roles.length > 0"
-                class="select select-sm w-36 border-base-300"
+                class="select w-36"
                 :value="m.role"
                 :aria-label="`${labels.role}: ${displayName(m)}`"
                 :disabled="busy"
@@ -170,14 +172,37 @@ function onRole(m: MemberListRow, event: Event) {
               </span>
             </td>
             <td class="whitespace-nowrap text-right">
-              <button v-if="m.removable" type="button" class="btn btn-ghost btn-xs text-error" :disabled="busy" @click="emit('remove', m.userId)">
-                <Icon name="lucide:user-minus" size="14" />
-                {{ labels.remove }}
-              </button>
-              <button v-else-if="m.self && canLeave" type="button" class="btn btn-ghost btn-xs" :disabled="busy" @click="emit('leave')">
-                <Icon name="lucide:log-out" size="14" />
-                {{ labels.leave }}
-              </button>
+              <template v-if="m.removable || (m.self && canLeave)">
+                <div class="max-sm:hidden">
+                  <button v-if="m.removable" type="button" class="btn btn-ghost btn-xs" :disabled="busy" @click="emit('remove', m.userId)">
+                    <Icon name="lucide:user-minus" size="14" class="text-error" />
+                    {{ labels.remove }}
+                  </button>
+                  <button v-else type="button" class="btn btn-ghost btn-xs" :disabled="busy" @click="emit('leave')">
+                    <Icon name="lucide:log-out" size="14" />
+                    {{ labels.leave }}
+                  </button>
+                </div>
+                <div class="dropdown dropdown-left sm:hidden">
+                  <button type="button" class="btn btn-ghost btn-sm btn-square" :aria-label="labels.actions.replace('{name}', displayName(m))" :disabled="busy">
+                    <Icon name="lucide:ellipsis" size="16" />
+                  </button>
+                  <ul tabindex="-1" class="dropdown-content menu z-10 w-52 rounded-box border border-base-300 bg-base-100 p-1 shadow">
+                    <li v-if="m.removable">
+                      <button type="button" @click="emit('remove', m.userId)">
+                        <Icon name="lucide:user-minus" size="14" class="text-error" />
+                        {{ labels.remove }}
+                      </button>
+                    </li>
+                    <li v-else>
+                      <button type="button" @click="emit('leave')">
+                        <Icon name="lucide:log-out" size="14" />
+                        {{ labels.leave }}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </template>
             </td>
           </tr>
         </tbody>

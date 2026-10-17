@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { ShownError } from '~/lib/apperror/message';
-import AppButton from '~/components/ui/AppButton.vue';
+import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
+import { useCanEditProject } from '~/components/project/useProjectAccess';
 import CopyButton from '~/components/ui/CopyButton.vue';
 import ErrorText from '~/components/ui/ErrorText.vue';
+import SavedNote from '~/components/ui/SavedNote.vue';
 import { useErrorMessage } from '~/composables/useErrorMessage';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 
@@ -14,6 +17,8 @@ const errorMessage = useErrorMessage();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const { $projectClient: client } = useNuxtApp();
+const canEdit = useCanEditProject();
+await useAuthStore().load();
 
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const project = computed(() =>
@@ -29,6 +34,9 @@ const slug = ref(project.value.slug);
 const busy = ref(false);
 const error = ref<ShownError | null>(null);
 const saved = ref(false);
+watch([name, slug], () => {
+  saved.value = false;
+});
 
 async function save() {
   const current = project.value;
@@ -58,39 +66,69 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
 </script>
 
 <template>
-  <div v-if="project" class="max-w-lg space-y-6">
-    <h1 class="text-2xl font-bold">
-      {{ t('project.settings_general') }}
-    </h1>
-
-    <div class="space-y-1">
-      <span class="block text-xs text-base-content/60">{{ t('common.id') }}</span>
-      <div class="flex items-center gap-1">
-        <code class="rounded bg-base-200 px-2 py-1 font-mono text-xs">{{ project.id }}</code>
-        <CopyButton :value="project.id" :label="t('common.copy')" />
-      </div>
+  <div v-if="project" class="max-w-2xl space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold">
+        {{ t('project.settings_general') }}
+      </h1>
+      <p class="text-sm text-base-content/60">
+        {{ t('project.settings_general_subtitle') }}
+      </p>
     </div>
+    <ProjectReadOnlyNote v-if="!canEdit" />
 
-    <form class="space-y-3" @submit.prevent="save()">
-      <div>
-        <label :for="ids.name" class="mb-1 block text-xs text-base-content/60">{{ t('common.name') }}</label>
-        <input :id="ids.name" v-model="name" type="text" class="input input-sm input-bordered w-full" :disabled="busy">
+    <section class="card border border-base-300 bg-base-100">
+      <div class="card-body gap-2">
+        <div class="fieldset">
+          <h2 class="fieldset-legend">
+            {{ t('common.id') }}
+          </h2>
+          <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
+            <code class="min-w-0 flex-1 font-mono text-sm break-all">{{ project.id }}</code>
+            <CopyButton :value="project.id" :label="t('common.copy')" class="shrink-0" />
+          </div>
+        </div>
+
+        <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="save()">
+          <div class="fieldset">
+            <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
+            <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">
+          </div>
+          <div class="fieldset">
+            <label :for="ids.slug" class="fieldset-legend">{{ t('project.console_slug') }}</label>
+            <input :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :aria-describedby="ids.slugHelp" :disabled="busy">
+            <p :id="ids.slugHelp" class="label whitespace-normal">
+              {{ t('project.console_slug_help') }}
+            </p>
+          </div>
+          <ErrorText :error="error" />
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="btn btn-primary btn-sm" :disabled="busy || !name.trim()">
+              {{ busy ? t('common.saving') : t('common.save') }}
+            </button>
+            <SavedNote v-if="saved" :label="t('common.saved')" />
+          </div>
+        </form>
+        <dl v-else class="space-y-2" data-testid="general-readonly">
+          <div class="fieldset">
+            <dt class="fieldset-legend">
+              {{ t('common.name') }}
+            </dt>
+            <dd>{{ project.name }}</dd>
+          </div>
+          <div class="fieldset">
+            <dt class="fieldset-legend">
+              {{ t('project.console_slug') }}
+            </dt>
+            <dd class="font-mono text-sm">
+              {{ project.slug }}
+            </dd>
+            <dd class="label whitespace-normal">
+              {{ t('project.console_slug_help') }}
+            </dd>
+          </div>
+        </dl>
       </div>
-      <div>
-        <label :for="ids.slug" class="mb-1 block text-xs text-base-content/60">{{ t('project.console_slug') }}</label>
-        <input :id="ids.slug" v-model="slug" type="text" class="input input-sm input-bordered w-full" :aria-describedby="ids.slugHelp" :disabled="busy">
-        <p :id="ids.slugHelp" class="mt-1 text-xs text-base-content/60">
-          {{ t('project.console_slug_help') }}
-        </p>
-      </div>
-      <ErrorText :error="error" />
-      <div class="flex items-center gap-3">
-        <AppButton type="submit" size="sm" :disabled="busy || !name.trim()">
-          <Icon name="lucide:check" size="16" />
-          {{ busy ? t('common.saving') : t('common.save') }}
-        </AppButton>
-        <span v-if="saved" class="text-sm text-success">{{ t('common.saved') }}</span>
-      </div>
-    </form>
+    </section>
   </div>
 </template>

@@ -39,6 +39,7 @@ export function isLowContrast(background: string): boolean {
   return contrastRatio(background, bestTextColor(background)) < minimum;
 }
 
+// formatRatio floors to one decimal, so a failing 4.48 reads 4.4 and never shows as a passing 4.5.
 export function formatRatio(ratio: number): string {
-  return ratio.toFixed(1);
+  return (Math.floor(ratio * 10) / 10).toFixed(1);
 }

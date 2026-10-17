@@ -8,6 +8,7 @@ import { useProjectCreate } from './useProjectCreate';
 const { orgId } = defineProps<{ orgId: string }>();
 
 const { t } = useI18n();
+const ids = { name: useId(), nameErr: useId(), slug: useId(), slugHelp: useId(), slugErr: useId() };
 const create = useProjectCreate(orgId);
 const { open, name, slug, handle, busy, canSubmit, error, fieldErrors, hide, submit } = create;
 const { value: handleValue, status: handleStatus } = handle;
@@ -19,6 +20,8 @@ const handleLabels = computed(() => ({
   taken: t('issuer.taken'),
   reserved: t('issuer.reserved'),
   invalid: t('issuer.invalid'),
+  invalidFormat: t('apperror.PRJ006_format'),
+  invalidLength: t('apperror.PRJ006_length', { min: 3, max: 40 }),
   locked: t('issuer.locked'),
   error: t('issuer.check_failed'),
 }));
@@ -26,27 +29,31 @@ const handleLabels = computed(() => ({
 
 <template>
   <AppModal :open="open" :title="t('project.new')" @close="hide()">
-    <form novalidate class="space-y-3" @submit.prevent="submit()">
-      <label class="block">
-        <span class="mb-1 block text-xs text-base-content/60">{{ t('common.name') }}</span>
+    <form novalidate class="space-y-1" @submit.prevent="submit()">
+      <div class="fieldset">
+        <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
         <input
-          v-model="name" type="text" class="input input-sm input-bordered w-full" :class="{ 'input-error': fieldErrors.name }"
-          placeholder="Support Bot" :disabled="busy" :aria-invalid="!!fieldErrors.name" aria-describedby="project-name-error"
+          :id="ids.name" v-model="name" type="text" class="input w-full" :class="{ 'input-error': fieldErrors.name }"
+          :placeholder="t('project.name_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr"
         >
-        <FieldError id="project-name-error" :message="fieldErrors.name" />
-      </label>
-      <label class="block">
-        <span class="mb-1 block text-xs text-base-content/60">{{ t('project.console_slug') }}</span>
+        <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
+      </div>
+      <div class="fieldset">
+        <label :for="ids.slug" class="fieldset-legend">{{ t('project.console_slug') }}</label>
         <input
-          :value="slug" type="text" class="input input-sm input-bordered w-full" :class="{ 'input-error': fieldErrors.slug }"
-          placeholder="support-bot (generated when empty)" :disabled="busy" :aria-invalid="!!fieldErrors.slug" aria-describedby="project-slug-error"
+          :id="ids.slug" :value="slug" type="text" class="input w-full font-mono" :class="{ 'input-error': fieldErrors.slug }"
+          :placeholder="t('project.slug_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.slug" :aria-describedby="`${ids.slugHelp} ${ids.slugErr}`"
           @input="create.setSlug(($event.target as HTMLInputElement).value)"
         >
-        <FieldError id="project-slug-error" :message="fieldErrors.slug" />
-      </label>
+        <FieldError :id="ids.slugErr" :message="fieldErrors.slug" />
+        <p :id="ids.slugHelp" class="label whitespace-normal">
+          {{ t('project.slug_random_help') }}
+        </p>
+      </div>
       <IssuerHandleField
         :model-value="handleValue"
         :status="handleStatus"
+        prefix="/p/"
         :disabled="busy"
         :field-error="fieldErrors.issuer_handle"
         :labels="handleLabels"

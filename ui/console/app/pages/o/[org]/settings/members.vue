@@ -5,6 +5,7 @@ import { useInvite } from '~/components/member/invite/useInvite';
 import MemberList from '~/components/member/MemberList.vue';
 import { useMembers } from '~/components/member/useMembers';
 import ErrorText from '~/components/ui/ErrorText.vue';
+import SavedNote from '~/components/ui/SavedNote.vue';
 import { useOrgsStore } from '~/stores/orgs';
 
 const route = useRoute();
@@ -44,6 +45,7 @@ const labels = computed(() => ({
   admin: t('members.role_admin'),
   memberRole: t('members.role_member'),
   remove: t('members.remove'),
+  actions: t('members.actions_for', { name: '{name}' }),
   leave: t('members.leave'),
   cancel: t('common.cancel'),
   removeTitle: t('members.remove_title'),
@@ -128,9 +130,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('members.tit
       @confirm="members.confirm"
       @cancel="members.cancel"
     />
-    <p v-if="inviteNotice" class="text-sm text-success">
-      {{ inviteNotice }}
-    </p>
+    <SavedNote v-if="inviteNotice" :label="inviteNotice" />
     <ErrorText v-if="canInvite && inviteLoadError" :error="inviteLoadError" />
     <PendingInvites
       v-else-if="canInvite"
