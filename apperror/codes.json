@@ -56,5 +56,8 @@
   { "code": "WHK006", "name": "WebhookEndpointInactive", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "WHK007", "name": "WebhookSecretConflict", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "WHK008", "name": "WebhookDeliveryNotFound", "kind": "not_found", "params": [], "reasons": [] },
-  { "code": "WHK009", "name": "WebhookDeliveryNotRetryable", "kind": "failed_precondition", "params": [], "reasons": [] }
+  { "code": "WHK009", "name": "WebhookDeliveryNotRetryable", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "STO001", "name": "StorageUploadNotFound", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "STO002", "name": "StorageUploadMismatch", "kind": "invalid", "params": [], "reasons": ["missing", "size", "type", "content"] },
+  { "code": "STO003", "name": "StorageNotConfigured", "kind": "failed_precondition", "params": [], "reasons": [] }
 ]

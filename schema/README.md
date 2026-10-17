@@ -38,6 +38,8 @@ erDiagram
     users ||--o{ terms_acceptances : accepted
     legal_documents ||--o{ terms_acceptances : "terms, privacy"
     users |o--o{ invites : "invited_by, accepted_by"
+    orgs ||--o{ files : has
+    files |o--o{ projects : "logo_file_id"
 
     orgs {
         uuid id PK
@@ -65,9 +67,27 @@ erDiagram
         int terms_version "0 until the first terms link"
         timestamptz terms_published_at
         bool signin_email_link
+        uuid logo_file_id FK "(org_id, logo_file_id) -> files, NULL when no logo"
         uuid created_by
         timestamptz created_at
         timestamptz updated_at
+    }
+    files {
+        uuid id PK
+        text public_id UK
+        uuid org_id FK
+        text owner_kind "orgs, projects or users"
+        uuid owner_id "the owner row; no FK, the kind names the table"
+        text purpose "logo, avatar, ..."
+        text visibility "public or private"
+        text object_key UK "{visibility}/{app}/{owner kind}/{owner public_id}/{purpose}/{file public_id}.{ext}"
+        text content_type
+        bigint size_bytes "declared on upload, checked on completion"
+        text original_name
+        text status "pending, ready or deleting"
+        timestamptz created_at
+        timestamptz completed_at
+        timestamptz expires_at "an unfinished upload is swept after it"
     }
     project_logos {
         uuid project_id PK, FK "(org_id, project_id) -> projects"
@@ -268,6 +288,9 @@ Rules the diagram can't show. Names omit `{{.TablePrefix}}`.
 | `mail_queue`                                                            | `mail_queue_due_idx` (`WHERE status = 'pending'`)                                                                                                      | the worker's claim of due mail                                                                                                             |
 | `password_resets`                                                       | `token_hash` unique, `password_resets_user_idx` (`WHERE used_at IS NULL`)                                                                              | tokens are found by their hash; a new request deletes the person's unused tokens                                                           |
 | `sessions`                                                              | `sessions_expires_idx`, `sessions_user_idx`                                                                                                            | sweep of expired rows; delete all sessions of a user                                                                                       |
+| `files`                                                                 | `files_org_id_id_key UNIQUE (org_id, id)`, `files_object_key_key` (unique), checks on `owner_kind`, `visibility`, `status` and `size_bytes > 0`        | one object per row; the pair is the target of `projects_logo_file_fkey`                                                                    |
+| `files`                                                                 | `files_status_expires_at_idx`                                                                                                                          | the sweep of expired pending uploads and of files marked deleting                                                                          |
+| `projects`                                                              | `projects_logo_file_fkey`: `(org_id, logo_file_id) → files (org_id, id)`, `ON DELETE SET NULL (logo_file_id)`                                          | a logo is a file of the project's own org; deleting the file clears the logo                                                               |
 
 ## Row level security
 
@@ -278,11 +301,11 @@ Every org-owned table has `ENABLE` and `FORCE ROW LEVEL SECURITY` and one `FOR A
 `tenant_policy_guard_test.go` fails on an inline `current_setting` or an org-owned table without its policy, and
 `rls_isolation_integration_test.go` proves each table as the service role.
 
-| Table                                                                                                                               | Policy                                                                                               |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `projects`, `project_logos`, `api_keys`, `api_key_projects`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries`, `invites` | `org_id = current_org_id()`                                                                          |
-| `memberships`                                                                                                                       | read: `org_id = current_org_id() OR user_id = current_user_id()`; write: `org_id = current_org_id()` |
-| `orgs`                                                                                                                              | read: `id = current_org_id()` or an org the user is a member of; write: `id = current_org_id()`      |
+| Table                                                                                                                                        | Policy                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `projects`, `project_logos`, `api_keys`, `api_key_projects`, `outbox_entries`, `webhook_endpoints`, `webhook_deliveries`, `invites`, `files` | `org_id = current_org_id()`                                                                          |
+| `memberships`                                                                                                                                | read: `org_id = current_org_id() OR user_id = current_user_id()`; write: `org_id = current_org_id()` |
+| `orgs`                                                                                                                                       | read: `id = current_org_id()` or an org the user is a member of; write: `id = current_org_id()`      |
 
 The `orgs` policy reads `memberships`, so `002_orgs.sql` only enables and forces row level security on `orgs`, and
 `007_memberships.sql` creates its policy. `users`, `sessions`, `password_resets`, `terms_acceptances`, `mail_queue`,
@@ -290,7 +313,7 @@ The `orgs` policy reads `memberships`, so `002_orgs.sql` only enables and forces
 
 ## Lookup functions
 
-`013_tenant_lookups.sql` holds the `SECURITY DEFINER` functions for reads that must run before a tenant scope
+`014_tenant_lookups.sql` holds the `SECURITY DEFINER` functions for reads that must run before a tenant scope
 exists, or across every org. Each one runs as the owner with `search_path = <schema>, pg_catalog, pg_temp`,
 returns public columns only (never a hash), and is closed to `PUBLIC`; the service role gets `EXECUTE` through
 the owner's default privileges. `lookups_integration_test.go` checks all of this.

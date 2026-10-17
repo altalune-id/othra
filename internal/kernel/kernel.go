@@ -13,6 +13,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/queue"
+	"altalune.id/othra/internal/kernel/storage"
 )
 
 // Scope is the instrumentation scope for the kernel's tracer and meter.
@@ -27,6 +28,8 @@ type Kernel struct {
 	Reporter *apperror.Reporter
 	// Queue is always non-nil: Disabled when queue.enabled is false.
 	Queue queue.Queue
+	// Storage is the file storage driver, nil when storage.driver is unset.
+	Storage storage.Driver
 
 	closers []io.Closer
 }

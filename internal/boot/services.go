@@ -19,6 +19,7 @@ import (
 	"altalune.id/othra/internal/kernel/outbox"
 	"altalune.id/othra/internal/kernel/ratelimit"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/storage"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
@@ -63,6 +64,7 @@ type Services struct {
 	AuthLimiter     ratelimit.Limiter
 	StateSecret     []byte
 	Validator       *controlplane.Validator
+	Storage         *storage.Service
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -71,6 +73,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	apiKeyStore := apikey.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 
 	uow := db.NewTransactor(k.Pool)
+	files := buildStorage(k, cfg)
 	caps := capabilities.From(capabilitiesConfig(cfg))
 	projects := project.NewService(projectStore, k.Reporter.Unexpected)
 	orgs := org.NewService(orgStore, uow, k.Reporter.Unexpected).
@@ -142,6 +145,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Legal:        buildLegal(k, cfg, users),
 		Caps:         caps,
 		AuthLimiter:  ratelimit.Disabled(),
+		Storage:      files,
 	}
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
 		Store:      auth.NewResetStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),

@@ -204,6 +204,24 @@ redis:
   # env: OTHRA_REDIS_WRITE_TIMEOUT
   writeTimeout: 3s
 
+s3:
+  # [secret] env: OTHRA_S3_ACCESS_KEY_ID
+  accessKeyID: ""
+  # env: OTHRA_S3_BROWSER_ENDPOINT
+  browserEndpoint: ""
+  # env: OTHRA_S3_BUCKET
+  bucket: ""
+  # env: OTHRA_S3_ENDPOINT
+  endpoint: ""
+  # env: OTHRA_S3_REGION
+  region: ""
+  # [secret] env: OTHRA_S3_SECRET_ACCESS_KEY
+  secretAccessKey: ""
+  # env: OTHRA_S3_TIMEOUT
+  timeout: 10s
+  # env: OTHRA_S3_USE_PATH_STYLE
+  usePathStyle: true
+
 scheduler:
   # env: OTHRA_SCHEDULER_ENABLED
   enabled: true
@@ -213,6 +231,26 @@ scheduler:
 secrets:
   # env: OTHRA_SECRETS_ENCRYPTION_KEY
   encryptionKey: ""
+
+storage:
+  # env: OTHRA_STORAGE_APP
+  app: othra
+  # env: OTHRA_STORAGE_DRIVER
+  driver: ""
+  # env: OTHRA_STORAGE_IMAGE_TRANSFORM
+  imageTransform: none
+  private:
+    # env: OTHRA_STORAGE_PRIVATE_SIGNER
+    signer: presign
+    # env: OTHRA_STORAGE_PRIVATE_URL_TTL
+    urlTTL: 5m
+  # env: OTHRA_STORAGE_PUBLIC_BASE_URL
+  publicBaseURL: ""
+  upload:
+    # env: OTHRA_STORAGE_UPLOAD_PENDING_TTL
+    pendingTTL: 1h
+    # env: OTHRA_STORAGE_UPLOAD_URL_TTL
+    urlTTL: 10m
 
 telemetry:
   metrics:

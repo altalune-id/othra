@@ -36,10 +36,10 @@ import (
 func restoreSeams(t *testing.T) {
 	t.Helper()
 	s, p, o, m, u, l := setupTelemetry, openPool, openPostgres, openMigrator, migrateUp, withLock
-	bq, or, on, pr := buildQueueFn, openRedisFn, openNATSFn, probeRLS
+	bq, or, on, os3, pr := buildQueueFn, openRedisFn, openNATSFn, openS3Fn, probeRLS
 	t.Cleanup(func() {
 		setupTelemetry, openPool, openPostgres, openMigrator, migrateUp, withLock = s, p, o, m, u, l
-		buildQueueFn, openRedisFn, openNATSFn, probeRLS = bq, or, on, pr
+		buildQueueFn, openRedisFn, openNATSFn, openS3Fn, probeRLS = bq, or, on, os3, pr
 	})
 	probeRLS = stubProbe(pg.RLSReport{RowSecurity: "on"})
 }

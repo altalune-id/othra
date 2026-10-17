@@ -33,7 +33,7 @@ Today it is the platform base: orgs, projects, members, invites, API keys, webho
    git config commit.template .gitmessage.txt
    ```
 
-3. Start Postgres, Redis, NATS and Mailpit. On its first start the compose Postgres creates the Othra roles (see [Database roles](#database-roles)). To start only the database: `podman compose up -d postgres`.
+3. Start Postgres, Redis, NATS, Garage and Mailpit. On its first start the compose Postgres creates the Othra roles (see [Database roles](#database-roles)). To start only the database: `podman compose up -d postgres`.
 
    ```sh
    docker compose up -d
@@ -120,6 +120,48 @@ volume at `/data` (see the shared server's README). Locally, `docker compose up 
 `docker/nats/nats-server.conf` (`OTHRA` and `OTHER`, dev passwords of 16 characters or more). To run Othra on
 the host against it: `OTHRA_NATS_URL=nats://localhost:4222`, `OTHRA_NATS_USER=othra` and
 `OTHRA_NATS_PASSWORD=othra-dev-nats-password` (the compose default).
+
+### File storage (S3)
+
+Uploads are off unless `storage.driver` is set. With `storage.driver: s3`, the browser uploads straight to an
+S3-compatible bucket with a presigned PUT; Othra never receives the file. `s3.*` is only the connection, and one
+bucket can serve several Altalune apps (`storage.app` is the second key segment).
+
+Cloudflare R2:
+
+```sh
+OTHRA_STORAGE_DRIVER=s3
+OTHRA_STORAGE_PUBLIC_BASE_URL=https://files.altalune.id     # the bucket's custom domain
+OTHRA_STORAGE_IMAGE_TRANSFORM=cloudflare                    # optional: resized images via /cdn-cgi/image/
+OTHRA_S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+OTHRA_S3_REGION=auto
+OTHRA_S3_BUCKET=altalune-files
+OTHRA_S3_ACCESS_KEY_ID=...        # an R2 API token scoped to the bucket
+OTHRA_S3_SECRET_ACCESS_KEY=...
+```
+
+- **CORS:** the bucket needs a rule for each console origin, with methods `PUT`, `GET`, `HEAD`, allowed header
+  `content-type` and exposed header `etag`. Without it the browser's preflight fails and uploads never start.
+- **Browser endpoint:** presigned URLs are signed for one exact host. Set `s3.browserEndpoint` only when browsers
+  reach the S3 API on another host than Othra does (compose: Othra calls `http://garage:3900`, the browser
+  `http://localhost:3900`). It must be exactly the host the browser uses, or every upload gets 403.
+- **Public reads:** files are read from `storage.publicBaseURL`, never through Othra. On R2, attach the custom
+  domain, disable the `r2.dev` URL, and add a WAF custom rule that blocks paths starting with `/private/` on that
+  domain; private files are only ever read through short-lived signed URLs.
+
+Locally, `docker compose up -d` runs Garage (`dxflrs/garage`) and `garage-init`, which creates the bucket
+`altalune-files`, a fixed dev key and the CORS rule for `http://localhost:${OTHRA_PORT:-5150}`. Public files are
+served at `http://altalune-files.localhost:3902`. To run Othra on the host against it:
+
+```sh
+OTHRA_STORAGE_DRIVER=s3
+OTHRA_STORAGE_PUBLIC_BASE_URL=http://altalune-files.localhost:3902
+OTHRA_S3_ENDPOINT=http://localhost:3900
+OTHRA_S3_REGION=garage
+OTHRA_S3_BUCKET=altalune-files
+OTHRA_S3_ACCESS_KEY_ID=GK000000000000000000000001
+OTHRA_S3_SECRET_ACCESS_KEY=0000000000000000000000000000000000000000000000000000000000000001
+```
 
 ## Everyday commands
 

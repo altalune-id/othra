@@ -71,6 +71,10 @@ const (
 	CodeWebhookSecretConflict       Code = "WHK007"
 	CodeWebhookDeliveryNotFound     Code = "WHK008"
 	CodeWebhookDeliveryNotRetryable Code = "WHK009"
+
+	CodeStorageUploadNotFound Code = "STO001"
+	CodeStorageUploadMismatch Code = "STO002"
+	CodeStorageNotConfigured  Code = "STO003"
 )
 
 var kinds = map[Code]Kind{
@@ -141,4 +145,8 @@ var kinds = map[Code]Kind{
 	CodeWebhookSecretConflict:       KindFailedPrecondition,
 	CodeWebhookDeliveryNotFound:     KindNotFound,
 	CodeWebhookDeliveryNotRetryable: KindFailedPrecondition,
+
+	CodeStorageUploadNotFound: KindNotFound,
+	CodeStorageUploadMismatch: KindInvalid,
+	CodeStorageNotConfigured:  KindFailedPrecondition,
 }

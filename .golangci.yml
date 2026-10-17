@@ -158,6 +158,7 @@ linters:
             - "**/pg/**"
             - "**/nats/**"
             - "**/redis/**"
+            - "**/s3/**"
           deny:
             - pkg: "altalune.id/othra/config$"
               desc: "kernel features and connections take their own Config; boot maps config into it"
@@ -181,6 +182,16 @@ linters:
           deny:
             - pkg: github.com/redis/go-redis
               desc: "only the redis connection, the ratelimit/redis driver, boot and redistest import go-redis"
+        s3-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/s3/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/testutil/s3test/**"
+          deny:
+            - pkg: github.com/aws/aws-sdk-go-v2
+              desc: "only the s3 connection, the storage/s3 driver, boot and s3test import the AWS SDK"
         internal-driver-boundary:
           list-mode: lax
           files:
@@ -190,7 +201,8 @@ linters:
             - "!**/internal/kernel/queue/nats/**"
             - "!**/internal/kernel/ratelimit/redis/**"
             - "!**/internal/boot/**"
-            - "!**/internal/testutil/{pgtest,natstest,redistest}/**"
+            - "!**/internal/kernel/storage/s3/**"
+            - "!**/internal/testutil/{pgtest,natstest,redistest,s3test}/**"
           deny:
             - pkg: github.com/jackc/pgx
               desc: "inside internal/, only kernel/db imports the Postgres driver"
@@ -198,6 +210,8 @@ linters:
               desc: "inside internal/, only the queue/nats driver and boot import NATS"
             - pkg: github.com/redis/go-redis
               desc: "inside internal/, only the ratelimit/redis driver and boot import go-redis"
+            - pkg: github.com/aws/aws-sdk-go-v2
+              desc: "inside internal/, only the storage/s3 driver and boot import the AWS SDK"
         application-purity:
           list-mode: lax
           files:
@@ -234,6 +248,8 @@ linters:
               desc: "domains reach NATS through internal/kernel/queue, never the connection"
             - pkg: "altalune.id/othra/redis$"
               desc: "domains never use the Redis connection; a feature's driver does"
+            - pkg: "altalune.id/othra/s3$"
+              desc: "domains reach file storage through internal/kernel/storage, never the connection"
         kernel-boundary:
           list-mode: lax
           files:

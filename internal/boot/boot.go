@@ -99,6 +99,26 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		}()
 	}
 
+	s3c, sh, err := buildS3(ctx, &k, cfg, tp, log)
+	if err != nil {
+		_ = pool.Close()
+		_ = shutdown(ctx)
+		return nil, err
+	}
+	if s3c != nil {
+		defer func() {
+			if err != nil {
+				_ = s3c.Close()
+			}
+		}()
+	}
+
+	if k.Storage, err = buildStorageDriver(cfg, s3c); err != nil {
+		_ = pool.Close()
+		_ = shutdown(ctx)
+		return nil, err
+	}
+
 	svcs := buildServices(k, cfg)
 	if svcs.Mailer, err = buildMailer(cfg); err != nil {
 		_ = pool.Close()
@@ -150,7 +170,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		buildHTTPHandler(httpSurfaces{
 			log:        log,
 			unexpected: k.Reporter.Unexpected,
-			probes:     health.NewWeb(health.NewService(readinessChecks(dbHealth, rh, nh)...)),
+			probes:     health.NewWeb(health.NewService(readinessChecks(dbHealth, rh, nh, sh)...)),
 			basePath:   cfg.HTTP.BasePath,
 			api:        apiHandler,
 			console:    consoleHandler,
@@ -173,6 +193,9 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	}
 	if nh != nil {
 		sup.Register(nh)
+	}
+	if sh != nil {
+		sup.Register(sh)
 	}
 	sup.Register(buildOutboxWorker(svcs, log))
 	sup.Register(buildMailWorker(svcs, log))

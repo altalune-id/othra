@@ -30,6 +30,7 @@ import (
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/storage"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
@@ -160,6 +161,13 @@ func samples() []error {
 		&webhook.SecretConflictError{ID: "x"},
 		&webhook.DeliveryNotFoundError{ID: "x"},
 		&webhook.DeliveryNotRetryableError{ID: "x"},
+
+		&storage.UploadNotFoundError{PublicID: "x"},
+		&storage.UploadMismatchError{PublicID: "x", Reason: storage.MismatchMissing},
+		&storage.UploadMismatchError{PublicID: "x", Reason: storage.MismatchSize},
+		&storage.UploadMismatchError{PublicID: "x", Reason: storage.MismatchType},
+		&storage.UploadMismatchError{PublicID: "x", Reason: storage.MismatchContent},
+		&storage.NotConfiguredError{},
 	}
 }
 

@@ -24,6 +24,8 @@ type Config struct {
 	RateLimit  RateLimitConfig  `yaml:"rateLimit"  mapstructure:"rateLimit"`
 	Redis      RedisConfig      `yaml:"redis"      mapstructure:"redis"`
 	NATS       NATSConfig       `yaml:"nats"       mapstructure:"nats"`
+	Storage    StorageConfig    `yaml:"storage"    mapstructure:"storage"`
+	S3         S3Config         `yaml:"s3"         mapstructure:"s3"`
 }
 
 // CLIConfig configures the Othra CLI; SessionFile may start with "~/", expanded when used.
@@ -154,6 +156,8 @@ func (c *Config) Validate() error {
 		c.validateRateLimit,
 		c.validateRedis,
 		c.validateNATS,
+		c.validateStorage,
+		c.validateS3,
 	} {
 		if err := check(); err != nil {
 			return err

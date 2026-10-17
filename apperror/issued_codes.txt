@@ -56,3 +56,6 @@ PRJ006 ProjectInvalidIssuerHandle
 PRJ007 ProjectIssuerHandleLocked
 PRJ008 ProjectInvalidLogo
 PRJ009 ProjectTermsNotSet
+STO001 StorageUploadNotFound
+STO002 StorageUploadMismatch
+STO003 StorageNotConfigured

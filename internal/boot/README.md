@@ -22,7 +22,9 @@ flowchart TD
     E --> NA["buildNATS: opens NATS only when a feature selects it"]
     NA --> Q["buildQueue: queue.driver picks the driver, Disabled when queue.enabled is false"]
     Q --> RD["buildRedis: opens Redis only when a feature selects it"]
-    RD --> F[buildServices: every domain service, the mail queue]
+    RD --> S3["buildS3: opens the S3 bucket only when a feature selects it"]
+    S3 --> ST["buildStorageDriver: storage.driver picks s3 or memory into Kernel.Storage, nil when unset"]
+    ST --> F[buildServices: every domain service, the mail queue, file storage]
     F --> M[buildMailer: mail.driver picks mailer/console, mailer/smtp or mailer/resend]
     M --> R["buildLimiters: one limiter per rate limit group, Disabled unless switched on (memory or Redis store)"]
     R --> G[buildAuthSecrets: state secret, setup token]
@@ -85,7 +87,7 @@ flowchart TD
 | `org`        | —                                                                                                                                                                                                                                                                                                                                                   | ✓                                                                                                                                                                            | ✓                                                                                          | —                                                                                                                   |
 | `org/invite` | member (actor, add from invite), user (create, by email, accept terms), org (name, slug), user (contact, public id), mail queue, webhook (`invite.created`, `member.added` to every project's subscribers, in the same transaction); auth (sign-in, sessions, the auth rate limiter) on the web side; org (public id → id, `publicIDs`) for the API | ✓ (writes: people and the operator only); CLI `invite create/list/resend/revoke`                                                                                             | `member_invite` (drafts only); `member_invite_confirm`, `member_invite_discard` (app-only) | `/invite/{token}`, `/invite`, `POST /invite/join`, `/invite/accept`, `/invite/switch` (local login only)            |
 | `org/member` | effects: sessions, apikey (personal keys), user (contact), org (name), mail queue                                                                                                                                                                                                                                                                   | ✓ (role changes and removal: people and the operator only; leave: the signed-in person); CLI `member add` (operator, boots the `App`)                                        | `member_list`                                                                              | —                                                                                                                   |
-| `project`    | org (the org slug its default issuer handle is built from); the public base URL for issuer URLs                                                                                                                                                                                                                                                     | ✓                                                                                                                                                                            | ✓                                                                                          | —                                                                                                                   |
+| `project`    | org (the org slug its default issuer handle is built from); the public base URL for issuer URLs; storage (the logo purpose: signed uploads, verify, sweep)                                                                                                                                                                                          | ✓                                                                                                                                                                            | ✓                                                                                          | —                                                                                                                   |
 | `apikey`     | project (ids), member (owner roles)                                                                                                                                                                                                                                                                                                                 | ✓                                                                                                                                                                            | —                                                                                          | —                                                                                                                   |
 | `webhook`    | project + org (refs), project (org of project), outbox                                                                                                                                                                                                                                                                                              | ✓ (org events `invite.created`, `member.added`: only a caller who reaches the whole org and holds `member:read` subscribes or reads their payloads)                          | ✓                                                                                          | —                                                                                                                   |
 | `user`       | —                                                                                                                                                                                                                                                                                                                                                   | CLI `user set-password` (operator, boots the `App`)                                                                                                                          | —                                                                                          | —                                                                                                                   |
@@ -322,6 +324,42 @@ INFO line.
   `OTHRA` account, user `othra`, as on `github.com/altalune-id/nats`). Accounts isolate apps,
   since every app uses the same stream names; never share an account between apps.
 
+## S3
+
+Othra has one S3-compatible connection, `s3.*` (Cloudflare R2, Garage, AWS), and opens it **only
+when a feature selects it**. Today only file storage does (`storage.driver: s3`). With the default
+config Othra never connects; an `s3.endpoint` that no feature uses is ignored with one INFO line.
+
+- **Config:** `s3.endpoint` (the S3 API URL Othra calls), `s3.browserEndpoint` (the S3 API URL
+  browsers upload to, when it differs; presigned URLs are signed for its exact host), `s3.region`
+  (any value: `auto` for R2, the server's `s3_region` for Garage), `s3.bucket`, `s3.accessKeyID`
+  and `s3.secretAccessKey` (secrets), `s3.usePathStyle` (true), `s3.timeout` (10s). Env:
+  `OTHRA_S3_ENDPOINT`, `OTHRA_S3_BROWSER_ENDPOINT`, … The rules apply only while a feature uses S3:
+  then every key but `browserEndpoint` is required, and an endpoint must be an `http(s)://` URL
+  with a host and no credentials, query or fragment.
+- **Connection:** the root package `s3` (`s3.Open`) builds one SDK client for server calls and a
+  presign client that only swaps the endpoint for `s3.browserEndpoint`, then checks the bucket
+  (`HeadBucket`) within `s3.timeout`. A bucket that can't be reached fails boot with
+  `s3: cannot reach bucket "<bucket>" at <host> (s3.endpoint): …`; no error carries the keys.
+  Checksums are sent only when an operation requires them, which R2 and Garage need. `s3.go` here
+  only decides whether to open it (`S3Features`), maps `s3.*` to `s3.Config`, registers the closer
+  and the health check; `readiness.go` adds that check to `/readyz`. The storage driver takes the
+  plain `*s3.Client` fields (`S3`, `Presign`, `Bucket`).
+- **Shutdown and readiness:** the kernel closes the idle connections on shutdown (a failed boot
+  does too). The `s3-health` worker checks the bucket every 30 s; while it does not answer,
+  `/readyz` answers 503. It never stops the process.
+
+## File storage
+
+`storage.driver` turns uploads on: `s3` (the S3 connection above) or `memory` (tests and development only).
+`buildStorageDriver` (`storage.go`) puts the driver in `Kernel.Storage`, and `buildServices` builds
+`Services.Storage`, a `storage.Service` (`internal/kernel/storage`) over that driver and the in-package `files`
+store. Without a driver the service is disabled: every call returns `STO003` and `Enabled()` is false. Domains
+declare a `storage.Purpose` and call `BeginUpload` (record a pending file and sign its PUT), `Verify` (HEAD and magic
+bytes, outside any transaction), then `MarkReady` / `MarkDeleting` inside their own unit of work. The scheduler
+runs `storage-sweep` every 5 min, once per org: it deletes the object and the row of every file marked deleting
+and of every pending upload past `storage.upload.pendingTTL`, 100 per org per run.
+
 ## Queue
 
 `queue.enabled` (default false) turns the job queue on and `queue.driver` picks what carries it.
@@ -395,11 +433,12 @@ The supervisor runs these next to the HTTP server.
 | `db-health`               | pings the pool; `health` reads it for `/readyz`                                                    | always                                                           |
 | `redis-health`            | pings Redis every 5 s; `health` reads it for `/readyz`                                             | when a feature uses Redis                                        |
 | `nats-health`             | checks the NATS connection every 5 s; `health` reads it for `/readyz`                              | when a feature uses NATS                                         |
+| `s3-health`               | checks the S3 bucket every 30 s; `health` reads it for `/readyz`                                   | when a feature uses S3                                           |
 | `outbox`                  | claims due outbox entries, delivers signed webhooks                                                | always                                                           |
 | `mailqueue.send`          | claims due queued mail, sends it through the mailer, erases the sealed payload once sent or failed | always                                                           |
 | `apikey-usage`            | batches `last_used_at` writes every 30 s                                                           | always                                                           |
 | `ratelimit.janitor`       | drops rate limit keys that have fully refilled, every minute                                       | when a rate limit group is on and `rateLimit.driver` is `memory` |
-| `scheduler`               | cron jobs (expired-session sweep)                                                                  | `scheduler.enabled`, unless `--no-scheduler` or consumer-only    |
+| `scheduler`               | cron jobs (expired-session sweep, file storage sweep when `storage.driver` is set)                 | `scheduler.enabled`, unless `--no-scheduler` or consumer-only    |
 | queue consumer / listener | queue handlers (none yet)                                                                          | when `queue.enabled`                                             |
 
 ## Files
@@ -418,7 +457,8 @@ The supervisor runs these next to the HTTP server.
 | `ratelimit.go`                                           | the rate limit store (`internal/kernel/ratelimit/memory` or `internal/kernel/ratelimit/redis` on the shared connection, picked by `rateLimit.driver`) and one `ratelimit.Limiter` per group (`Services.AuthLimiter`); a group that is off gets `ratelimit.Disabled()` |
 | `redis.go`                                               | the shared Redis connection (root `redis`, only when a feature selects it), its closer and its `redis-health` readiness worker                                                                                                                                        |
 | `nats.go`                                                | the shared NATS connection (root `nats`, only when a feature selects it), its draining closer and its `nats-health` readiness worker                                                                                                                                  |
-| `readiness.go`                                           | the `/readyz` checks: the `db-health` monitor, plus `redis-health` and `nats-health` when those connections are open                                                                                                                                                  |
+| `s3.go`, `storage.go`                                    | the shared S3 connection (root `s3`, only when a feature selects it), its closer and its `s3-health` readiness worker; the file storage driver picked by `storage.driver` and `Services.Storage`                                                                      |
+| `readiness.go`                                           | the `/readyz` checks: the `db-health` monitor, plus `redis-health`, `nats-health` and `s3-health` when those connections are open                                                                                                                                     |
 | `db.go`, `sealer.go`, `telemetry.go`                     | the `db.Pool` from `pg.Open` (writer, optional reader), migrations, the `db-health` monitor, sealer, telemetry                                                                                                                                                        |
 | `options.go`, `app.go`, `remote.go`                      | boot options, the running `App` and its operator actions, the CLI graph                                                                                                                                                                                               |
 
