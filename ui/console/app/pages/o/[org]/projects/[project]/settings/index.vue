@@ -9,6 +9,7 @@ import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
 const { t } = useI18n();
+const ids = { name: useId(), slug: useId(), slugHelp: useId() };
 const errorMessage = useErrorMessage();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
@@ -53,13 +54,13 @@ async function save() {
   }
 }
 
-useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('settings.title')} · Othra` });
+useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('project.settings_general')} · Othra` });
 </script>
 
 <template>
   <div v-if="project" class="max-w-lg space-y-6">
     <h1 class="text-2xl font-bold">
-      {{ t('settings.title') }}
+      {{ t('project.settings_general') }}
     </h1>
 
     <div class="space-y-1">
@@ -71,14 +72,17 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('set
     </div>
 
     <form class="space-y-3" @submit.prevent="save()">
-      <label class="block">
-        <span class="mb-1 block text-xs text-base-content/60">{{ t('common.name') }}</span>
-        <input v-model="name" type="text" class="input input-sm input-bordered w-full" :disabled="busy">
-      </label>
-      <label class="block">
-        <span class="mb-1 block text-xs text-base-content/60">{{ t('common.slug') }}</span>
-        <input v-model="slug" type="text" class="input input-sm input-bordered w-full" :disabled="busy">
-      </label>
+      <div>
+        <label :for="ids.name" class="mb-1 block text-xs text-base-content/60">{{ t('common.name') }}</label>
+        <input :id="ids.name" v-model="name" type="text" class="input input-sm input-bordered w-full" :disabled="busy">
+      </div>
+      <div>
+        <label :for="ids.slug" class="mb-1 block text-xs text-base-content/60">{{ t('project.console_slug') }}</label>
+        <input :id="ids.slug" v-model="slug" type="text" class="input input-sm input-bordered w-full" :aria-describedby="ids.slugHelp" :disabled="busy">
+        <p :id="ids.slugHelp" class="mt-1 text-xs text-base-content/60">
+          {{ t('project.console_slug_help') }}
+        </p>
+      </div>
       <ErrorText :error="error" />
       <div class="flex items-center gap-3">
         <AppButton type="submit" size="sm" :disabled="busy || !name.trim()">

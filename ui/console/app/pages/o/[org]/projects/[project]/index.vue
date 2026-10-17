@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CopyButton from '~/components/ui/CopyButton.vue';
 import { useOrgsStore } from '~/stores/orgs';
+import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
@@ -18,6 +19,9 @@ if (!project.value) {
 }
 
 const base = computed(() => `/o/${route.params.org}/projects/${route.params.project}`);
+const detail = useProjectDetailStore();
+await detail.ensureLoaded(project.value.id);
+const full = computed(() => detail.get(project.value?.id ?? ''));
 
 const sections = computed(() => [
   { key: 'webhooks', to: `${base.value}/webhooks`, icon: 'lucide:webhook', title: t('webhooks.title'), hint: t('webhooks.subtitle') },
@@ -41,6 +45,27 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
         <CopyButton :value="project.id" :label="t('common.copy')" />
       </div>
     </div>
+
+    <section v-if="full" class="card border border-base-300 bg-base-100" data-testid="issuer-card">
+      <div class="card-body gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="card-title text-base">
+            <Icon name="lucide:fingerprint" size="18" />
+            {{ t('overview.issuer_card') }}
+          </h2>
+          <NuxtLink :to="`${base}/settings/issuer`" class="link text-sm">
+            {{ t('nav.settings') }}
+          </NuxtLink>
+        </div>
+        <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
+          <code class="min-w-0 flex-1 font-mono text-sm break-all">{{ full.issuerUrl }}</code>
+          <CopyButton :value="full.issuerUrl" :label="t('common.copy')" class="shrink-0" />
+        </div>
+        <p v-if="full.signinEmailLink" class="text-sm text-base-content/60">
+          {{ t('overview.sign_in_line') }}
+        </p>
+      </div>
+    </section>
 
     <div class="grid gap-3 sm:grid-cols-2">
       <NuxtLink

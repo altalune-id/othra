@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 import { connectError, deferred, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
 import { useProjectCreate } from './useProjectCreate';
@@ -9,11 +10,18 @@ const project = { id: 'x6MH9WPWjktMwCBKHy4pF', orgId: 'V3StGXR8Z5jdHj6BmyT2a', s
 
 describe('useProjectCreate', () => {
   let createProject: ReturnType<typeof vi.fn>;
+  let checkIssuerHandle: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     createProject = vi.fn().mockResolvedValue({ project });
-    setClient('$projectClient', { createProject });
+    checkIssuerHandle = vi.fn().mockResolvedValue({ available: true, reason: 'ok' });
+    setClient('$projectClient', { createProject, checkIssuerHandle });
+    useOrgsStore().items = [{ id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme' }];
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('creates a project, adds it and closes', async () => {
@@ -23,7 +31,7 @@ describe('useProjectCreate', () => {
     form.name.value = ' Web ';
     form.slug.value = ' web ';
     await form.submit();
-    expect(createProject).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', name: 'Web', slug: 'web' });
+    expect(createProject).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', name: 'Web', slug: 'web', issuerHandle: '' });
     expect(useProjectsStore().items).toEqual([project]);
     expect(form.open.value).toBe(false);
     expect([form.name.value, form.slug.value]).toEqual(['', '']);
@@ -85,5 +93,46 @@ describe('useProjectCreate', () => {
     await form.submit();
     expect(createProject).toHaveBeenCalledTimes(1);
     expect(form.fieldErrors.value).toEqual({ name: 'validation.required' });
+  });
+
+  it('prefills the issuer handle from the org and the slug until the person edits it, and sends it', async () => {
+    vi.useFakeTimers();
+    const form = useProjectCreate('V3StGXR8Z5jdHj6BmyT2a');
+    form.show();
+    form.name.value = 'Shop';
+    form.setSlug('shop');
+    expect(form.handle.value.value).toBe('acme-shop');
+    await vi.runAllTimersAsync();
+    expect(form.handle.status.value).toBe('available');
+    form.handle.input('acme-store');
+    form.setSlug('shop2');
+    expect(form.handle.value.value).toBe('acme-store');
+    await vi.runAllTimersAsync();
+    await form.submit();
+    expect(createProject).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a', name: 'Shop', slug: 'shop2', issuerHandle: 'acme-store' });
+    expect(form.handle.value.value).toBe('');
+  });
+
+  it('does not create with a handle the check refused', async () => {
+    vi.useFakeTimers();
+    checkIssuerHandle.mockResolvedValue({ available: false, reason: 'taken' });
+    const form = useProjectCreate('V3StGXR8Z5jdHj6BmyT2a');
+    form.show();
+    form.name.value = 'Shop';
+    form.setSlug('shop');
+    await vi.runAllTimersAsync();
+    expect(form.canSubmit.value).toBe(false);
+    await form.submit();
+    expect(createProject).not.toHaveBeenCalled();
+  });
+
+  it('shows a taken handle from the server under the handle input', async () => {
+    setKnownKeys('apperror.PRJ005');
+    createProject.mockRejectedValueOnce(connectError('PRJ005', { issuer_handle: 'acme-web' }));
+    const form = useProjectCreate('V3StGXR8Z5jdHj6BmyT2a');
+    form.show();
+    form.name.value = 'Web';
+    await form.submit();
+    expect(form.fieldErrors.value).toEqual({ issuer_handle: 'apperror.PRJ005|{"issuer_handle":"acme-web"}' });
   });
 });

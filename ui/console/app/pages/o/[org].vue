@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppSidebar from '~/components/layout/AppSidebar.vue';
 import SettingsSidebar from '~/components/org/SettingsSidebar.vue';
+import ProjectSettingsSidebar from '~/components/project/ProjectSettingsSidebar.vue';
 import ProjectSidebar from '~/components/project/ProjectSidebar.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -28,6 +29,7 @@ if (!org.value) {
 
 const projectSlug = computed(() => route.params.project as string | undefined);
 const inSettings = computed(() => route.path.startsWith(`/o/${route.params.org}/settings`));
+const inProjectSettings = computed(() => !!projectSlug.value && route.path.startsWith(`/o/${route.params.org}/projects/${projectSlug.value}/settings`));
 
 watch(() => route.fullPath, () => {
   ui.navOpen = false;
@@ -45,7 +47,10 @@ await projects.ensureLoaded(org.value.id);
         ? 'fixed top-14 bottom-0 left-0 flex flex-col overflow-y-auto bg-base-100 max-md:[&_[data-sidebar-footer]]:hidden shadow-xl md:static md:z-auto md:flex-row md:overflow-visible md:bg-transparent md:shadow-none'
         : 'hidden md:flex md:flex-row'"
     >
-      <ProjectSidebar v-if="projectSlug" />
+      <template v-if="projectSlug">
+        <ProjectSidebar />
+        <ProjectSettingsSidebar v-if="inProjectSettings" />
+      </template>
       <template v-else>
         <AppSidebar />
         <SettingsSidebar v-if="inSettings" />
