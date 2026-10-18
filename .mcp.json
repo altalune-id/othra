@@ -4,7 +4,19 @@
       "type": "stdio",
       "command": "npx",
       "args": [
-        "@playwright/mcp@latest"
+        "@playwright/mcp@0.0.83",
+        "--isolated"
+      ],
+      "env": {}
+    },
+    "playwright-webkit": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@0.0.83",
+        "--isolated",
+        "--browser",
+        "webkit"
       ],
       "env": {}
     },
