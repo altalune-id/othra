@@ -5,6 +5,8 @@ export interface Org {
   id: string;
   slug: string;
   name: string;
+  role?: string;
+  permissions?: string[];
 }
 
 export const useOrgsStore = defineStore('orgs', () => {
@@ -36,7 +38,7 @@ export const useOrgsStore = defineStore('orgs', () => {
     error.value = null;
     try {
       const res = await client.listOrgs({});
-      items.value = (res.orgs ?? []).map(org => ({ id: org.id, slug: org.slug, name: org.name }));
+      items.value = (res.orgs ?? []).map(org => ({ id: org.id, slug: org.slug, name: org.name, role: org.role ?? '', permissions: org.permissions ?? [] }));
       loaded.value = true;
     } catch (e) {
       error.value = errorMessage(e, 'error.load_orgs');

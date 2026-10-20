@@ -36,13 +36,27 @@ describe('useActiveOrg', () => {
     expect(setActiveOrg).not.toHaveBeenCalled();
   });
 
-  it('never switches a key, basic auth or an operator, who reach orgs without it', async () => {
-    for (const me of [{ source: 'apikey' }, { source: 'basic' }, { source: 'local', operator: true, activeOrgSlug: 'acme' }]) {
+  it('never switches a key or basic auth, which reach orgs without it', async () => {
+    for (const me of [{ source: 'apikey' }, { source: 'basic' }]) {
       setActivePinia(createPinia());
       const setActiveOrg = setup(me);
       await useActiveOrg().enter('beta');
       expect(setActiveOrg).not.toHaveBeenCalled();
     }
+  });
+
+  it('switches an operator to an org they belong to, so project pages there load', async () => {
+    const setActiveOrg = setup({ source: 'local', operator: true, activeOrgSlug: 'acme' });
+    await useActiveOrg().enter('beta');
+    expect(setActiveOrg).toHaveBeenCalledWith({ orgId: 'betaId' });
+  });
+
+  it('keeps an operator in an org they do not belong to when the switch is refused', async () => {
+    setup({ source: 'local', operator: true, activeOrgSlug: 'acme' });
+    const setActiveOrg = vi.fn().mockRejectedValue(new Error('not found'));
+    setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', operator: true, activeOrgSlug: 'acme' }), setActiveOrg });
+    await expect(useActiveOrg().enter('beta')).resolves.toBeUndefined();
+    expect(setActiveOrg).toHaveBeenCalledWith({ orgId: 'betaId' });
   });
 
   it('does nothing with nobody signed in', async () => {

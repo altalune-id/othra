@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { ShownError } from '~/lib/apperror/message';
+import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import AppButton from '~/components/ui/AppButton.vue';
 import CopyButton from '~/components/ui/CopyButton.vue';
 import ErrorText from '~/components/ui/ErrorText.vue';
 import SavedNote from '~/components/ui/SavedNote.vue';
+import { useCan } from '~/composables/useCan';
 import { useErrorMessage } from '~/composables/useErrorMessage';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 
 const route = useRoute();
@@ -13,6 +16,8 @@ const ids = { name: useId(), slug: useId() };
 const errorMessage = useErrorMessage();
 const orgs = useOrgsStore();
 const { $orgClient: client } = useNuxtApp();
+const canEdit = useCan('org:write');
+await useAuthStore().load();
 
 const org = computed(() => orgs.bySlug(route.params.org as string));
 
@@ -25,6 +30,9 @@ const slug = ref(org.value.slug);
 const busy = ref(false);
 const error = ref<ShownError | null>(null);
 const saved = ref(false);
+watch([name, slug], () => {
+  saved.value = false;
+});
 
 async function save() {
   const current = org.value;
@@ -58,6 +66,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
     <h1 class="text-2xl font-bold">
       {{ t('settings.title') }}
     </h1>
+    <ProjectReadOnlyNote v-if="!canEdit" :text="t('settings.read_only')" />
 
     <div class="space-y-1">
       <span class="block text-xs text-base-content/60">{{ t('common.id') }}</span>
@@ -67,7 +76,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
       </div>
     </div>
 
-    <form novalidate class="space-y-2" @submit.prevent="save()">
+    <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="save()">
       <div class="fieldset">
         <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
         <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">
@@ -85,5 +94,21 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
         <SavedNote v-if="saved" :label="t('common.saved')" />
       </div>
     </form>
+    <dl v-else class="space-y-2" data-testid="org-settings-readonly">
+      <div class="fieldset">
+        <dt class="fieldset-legend">
+          {{ t('common.name') }}
+        </dt>
+        <dd>{{ org.name }}</dd>
+      </div>
+      <div class="fieldset">
+        <dt class="fieldset-legend">
+          {{ t('common.slug') }}
+        </dt>
+        <dd class="font-mono text-sm">
+          {{ org.slug }}
+        </dd>
+      </div>
+    </dl>
   </div>
 </template>

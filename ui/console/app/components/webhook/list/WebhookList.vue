@@ -74,7 +74,18 @@ async function rotate(webhook: Webhook) {
   }
 }
 
-async function destroy(webhook: Webhook) {
+const deleting = ref<Webhook | null>(null);
+
+function askDelete(webhook: Webhook) {
+  deleting.value = webhook;
+}
+
+async function confirmDelete() {
+  const webhook = deleting.value;
+  if (!webhook || busyId.value) {
+    return;
+  }
+  deleting.value = null;
   busyId.value = webhook.id;
   try {
     await client.deleteWebhook({ orgId, projectId, id: webhook.id });
@@ -137,7 +148,7 @@ function closeRotate() {
               <Icon name="lucide:key-round" size="14" />
               {{ t('webhooks.rotate') }}
             </button>
-            <button class="btn btn-ghost btn-xs" :disabled="busyId === webhook.id" @click="destroy(webhook)">
+            <button class="btn btn-ghost btn-xs" :disabled="busyId === webhook.id" @click="askDelete(webhook)">
               <Icon name="lucide:trash-2" size="14" class="text-error" />
               {{ t('common.delete') }}
             </button>
@@ -146,6 +157,20 @@ function closeRotate() {
       </tbody>
     </table>
   </div>
+
+  <AppModal :open="!!deleting" :title="t('webhooks.delete_title')" @close="deleting = null">
+    <p class="text-sm break-words">
+      {{ t('webhooks.delete_body', { url: deleting?.url ?? '' }) }}
+    </p>
+    <template #footer>
+      <button type="button" class="btn btn-ghost btn-sm" @click="deleting = null">
+        {{ t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-error btn-sm" @click="confirmDelete()">
+        {{ t('common.delete') }}
+      </button>
+    </template>
+  </AppModal>
 
   <AppModal :open="!!rotating" :title="t('webhooks.rotate')" @close="closeRotate()">
     <div class="space-y-3">

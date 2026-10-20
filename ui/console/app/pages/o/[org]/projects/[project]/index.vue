@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import IssuerUrl from '~/components/project/issuer/IssuerUrl.vue';
+import { discoveryUrls } from '~/components/project/issuer/discovery';
 import CopyButton from '~/components/ui/CopyButton.vue';
+import UrlField from '~/components/ui/UrlField.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
@@ -23,6 +24,8 @@ const base = computed(() => `/o/${route.params.org}/projects/${route.params.proj
 const detail = useProjectDetailStore();
 await detail.ensureLoaded(project.value.id);
 const full = computed(() => detail.get(project.value?.id ?? ''));
+const discovery = computed(() => discoveryUrls(full.value?.issuerUrl ?? ''));
+const copyLabel = computed(() => t('common.copy_label', { label: '{label}' }));
 
 const sections = computed(() => [
   { key: 'webhooks', to: `${base.value}/webhooks`, icon: 'lucide:webhook', title: t('webhooks.title'), hint: t('webhooks.subtitle') },
@@ -61,10 +64,8 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
             {{ t('issuer.edit') }}
           </NuxtLink>
         </div>
-        <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-          <IssuerUrl :url="full.issuerUrl" />
-          <CopyButton :value="full.issuerUrl" :label="t('common.copy')" class="shrink-0" />
-        </div>
+        <UrlField :label="t('issuer.url')" :value="full.issuerUrl" size="sm" :copy-label="copyLabel" testid="overview-issuer-url" />
+        <UrlField v-if="discovery" :label="t('overview.discovery')" :value="discovery.oidc" size="sm" :copy-label="copyLabel" testid="overview-discovery-url" />
         <p v-if="full.signinEmailLink" class="text-sm text-base-content/60">
           {{ t('overview.sign_in_line') }}
         </p>

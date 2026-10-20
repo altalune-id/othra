@@ -4,12 +4,14 @@ import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { connectError, navigateTo, runtimeConfig, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
+import { mintableForMe } from './grants';
 import { mcpSnippet } from './mcpSnippet';
 import { usePersonalKeyCreate } from './usePersonalKeyCreate';
 import { createdKeyState } from './usePersonalKeys';
 
-const acme = { id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme' };
-const globex = { id: 'YeDxg2kMYznPJJG3wVmjj', slug: 'globex', name: 'Globex' };
+const acme = { id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme', role: 'admin', permissions: ['webhook:*', 'member:write'] };
+const globex = { id: 'YeDxg2kMYznPJJG3wVmjj', slug: 'globex', name: 'Globex', role: 'member', permissions: ['org:read', 'project:read', 'webhook:*', 'member:read', 'apikey:read'] };
+const initech = { id: 'KdrF3t3FHtppBPmMgj4sy', slug: 'initech', name: 'Initech', role: '', permissions: [] };
 const now = new Date('2026-10-01T00:00:00Z');
 
 describe('usePersonalKeyCreate', () => {
@@ -69,10 +71,19 @@ describe('usePersonalKeyCreate', () => {
     ]);
   });
 
-  it('offers another org every scope a personal key may hold and leaves the role check to the server', async () => {
+  it('offers another org only the scopes the viewer\'s role there holds', async () => {
     const form = usePersonalKeyCreate();
     await form.load();
     await form.selectOrg(globex.id);
+    expect(form.mintable.value.map(s => s.name)).toEqual(mintableForMe(scopes, globex.permissions).map(s => s.name));
+    expect(form.mintable.value.map(s => s.name)).not.toContain('member:write');
+  });
+
+  it('offers every scope a personal key may hold when the org carries no role, and leaves the check to the server', async () => {
+    listOrgs.mockResolvedValue({ orgs: [acme, initech] });
+    const form = usePersonalKeyCreate();
+    await form.load();
+    await form.selectOrg(initech.id);
     expect(form.mintable.value.map(s => s.name)).toEqual(scopes.filter(s => !s.personOnly).map(s => s.name));
   });
 
@@ -95,14 +106,14 @@ describe('usePersonalKeyCreate', () => {
     expect(form.projects.value.map(p => p.id)).toEqual(['x6MH9WPWjktMwCBKHy4pF']);
   });
 
-  it('offers every person-safe scope when whoami fails, and treats a missing project list as empty', async () => {
+  it('takes the scopes from the org even when whoami fails, and treats a missing project list as empty', async () => {
     setClient('$authClient', { whoami: vi.fn().mockRejectedValue(new Error('down')) });
     listProjects.mockResolvedValue({});
     const form = usePersonalKeyCreate();
     await form.load();
     expect(form.orgName.value).toBe('');
     await form.selectOrg(acme.id);
-    expect(form.mintable.value.map(s => s.name)).toEqual(scopes.filter(s => !s.personOnly).map(s => s.name));
+    expect(form.mintable.value.map(s => s.name)).toEqual(['webhook:read', 'webhook:write']);
     expect(form.projects.value).toEqual([]);
   });
 

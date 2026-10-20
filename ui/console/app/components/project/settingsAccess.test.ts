@@ -152,7 +152,82 @@ describe('m1.5 design re-check', () => {
   it('lets issuer URLs wrap after /p/ (P-d) and calls the Overview link "Edit issuer" (P-e)', () => {
     const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
     expect(overview).toContain('issuer.edit');
-    expect(overview).toContain('<IssuerUrl');
-    expect(pages.find(p => p.name === 'issuer')!.source).toContain('<IssuerUrl');
+    expect(overview).toContain('<UrlField');
+    expect(pages.find(p => p.name === 'issuer')!.source).toContain('<UrlField');
+  });
+});
+
+describe('m2 discovery and signing keys (no RPC)', () => {
+  it('adds a Discovery card with the OIDC, OAuth metadata and JWKS URLs on Issuer', () => {
+    const issuer = pages.find(p => p.name === 'issuer')!.source;
+    expect(issuer).toContain('issuer.discovery_title');
+    expect(issuer).toContain('issuer.discovery_help');
+    const fields = [...issuer.matchAll(/<UrlField[^>]*:value="discovery\.(\w+)"/g)].map(m => m[1]);
+    expect(fields).toEqual(['oidc', 'oauth', 'jwks']);
+  });
+
+  it('shows the issuer and discovery URLs on the Overview, without JWKS or Open', () => {
+    const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
+    expect(overview).toContain('overview.discovery');
+    expect(overview).not.toContain('discovery.jwks');
+    expect(overview).not.toMatch(/<UrlField[^>]*\sopen[\s>]/);
+  });
+
+  it('lists Signing keys after Issuer in the settings sidebar, with its own page', () => {
+    const sidebar = read('./ProjectSettingsSidebar.vue');
+    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'keys\''));
+    expect(sidebar.indexOf('\'keys\'')).toBeLessThan(sidebar.indexOf('\'branding\''));
+    expect(sidebar).toContain('lucide:key-square');
+    const keys = read('../../pages/o/[org]/projects/[project]/settings/keys.vue');
+    expect(keys).toContain('keys.title');
+    expect(keys).toContain('keys.subtitle');
+  });
+});
+
+describe('signing keys page', () => {
+  const page = () => read('../../pages/o/[org]/projects/[project]/settings/keys.vue');
+  const list = () => read('./keys/SigningKeyList.vue');
+
+  it('loads through useSigningKeys and stops its timer on leave', () => {
+    expect(page()).toContain('useSigningKeys(listed.value.id)');
+    expect(page()).toContain('onBeforeUnmount(() => keys.dispose())');
+  });
+
+  it('shows the Rotation card to editors only, and replaces Rotate with the waiting line while a key is Next', () => {
+    const source = page();
+    expect(source).toMatch(/<section v-if="canEdit && loaded" class="card[^"]*" data-testid="rotation-card">/);
+    expect(source).toMatch(/<p v-if="waitingUntil && !noActive" role="status"/);
+    expect(source).toMatch(/<button v-else type="button" class="btn btn-primary btn-sm [^"]*max-sm:btn-block[^"]*" @click="keys\.askRotate\(\)">/);
+    expect(source).toContain('keys.emergency');
+    expect(source).toMatch(/`othra project keys rotate \$\{listed\.value\?\.id\} --now`/);
+  });
+
+  it('tells editors and members apart when the project has no active key', () => {
+    const source = page();
+    expect(source).toContain('canEdit ? t(\'keys.no_active\') : t(\'keys.no_active_member\')');
+  });
+
+  it('confirms with a primary button and shows the server reason in the dialog', () => {
+    const source = page();
+    expect(source).toContain('<AppModal :open="confirming" :title="t(\'keys.rotate_title\')" @close="keys.cancelRotate()">');
+    expect(source).toContain('<ErrorText :error="error" />');
+    expect(source).toMatch(/class="btn btn-primary btn-sm" :disabled="busy" @click="keys\.confirmRotate\(\)"/);
+  });
+
+  it('lists keys as a table on desktop and a stacked list on mobile, with status text and decorative dots', () => {
+    const source = list();
+    expect(source).toMatch(/<table class="table table-sm max-sm:hidden"/);
+    expect(source).toMatch(/<ul class="space-y-2 sm:hidden"/);
+    expect(source).toContain('<span class="status" :class="dot(row.status)" aria-hidden="true" />');
+    expect(source).toContain('labels.retiredNote');
+    expect(source).toContain('skeleton');
+  });
+});
+
+describe('m2 design review contrast', () => {
+  it('dims retired key rows to /60, not /50 (SF1)', () => {
+    const list = read('./keys/SigningKeyList.vue');
+    expect(list).not.toContain('\'text-base-content/50\': row.status === \'retired\'');
+    expect(list.match(/'text-base-content\/60': row\.status === 'retired'/g)).toHaveLength(2);
   });
 });

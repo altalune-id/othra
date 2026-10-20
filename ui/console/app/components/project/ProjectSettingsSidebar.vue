@@ -9,6 +9,7 @@ const base = computed(() => `/o/${route.params.org}/projects/${route.params.proj
 const items = computed<NavItem[]>(() => [
   { key: 'general', label: t('project.settings_general'), icon: 'lucide:sliders-horizontal', active: route.path === base.value },
   { key: 'issuer', label: t('issuer.title'), icon: 'lucide:fingerprint', active: route.path.startsWith(`${base.value}/issuer`) },
+  { key: 'keys', label: t('keys.title'), icon: 'lucide:key-square', active: route.path.startsWith(`${base.value}/keys`) },
   { key: 'branding', label: t('branding.title'), icon: 'lucide:palette', active: route.path.startsWith(`${base.value}/branding`) },
   { key: 'legal', label: t('legal.title'), icon: 'lucide:scale', active: route.path.startsWith(`${base.value}/legal`) },
 ]);

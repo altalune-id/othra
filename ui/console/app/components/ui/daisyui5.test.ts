@@ -31,10 +31,11 @@ describe('console markup', () => {
 });
 
 describe('light-theme contrast', () => {
-  it('keeps text neutral: warning, success and info colours go on icons only', () => {
+  it('keeps text neutral: error, warning, success and info colours go on icons only', () => {
     const files = sources(app).map(path => ({ path: path.slice(app.length), text: readFileSync(path, 'utf8') }));
     const offenders = files
-      .filter(f => /<(?:p|span|div|dd|li|label)\s[^>]*\bclass="[^"]*\btext-(?:warning|success|info)\b/.test(f.text))
+      .filter(f => /<(?:p|span|div|dd|li|label)\s[^>]*\bclass="[^"]*\btext-(?:error|warning|success|info)\b/.test(f.text)
+        || /<(?:p|span|div|dd|li|label)\s[^>]*:class="[^"]*'text-(?:error|warning|success|info)'/.test(f.text))
       .map(f => f.path);
     expect(offenders).toEqual([]);
   });
@@ -100,5 +101,31 @@ describe('final M1.5 nits', () => {
     const id = JSON.parse(readFileSync(join(app, '../i18n/locales/id-ID.json'), 'utf8')) as Record<string, string>;
     const offenders = Object.entries(id).filter(([, text]) => /\bfile\b/i.test(text)).map(([key]) => key);
     expect(offenders).toEqual([]);
+  });
+});
+
+describe('member-visible write actions', () => {
+  const read = (path: string) => readFileSync(join(app, path), 'utf8');
+
+  it('shows org API key Revoke only to people who manage keys, behind a confirm naming the key', () => {
+    const list = read('components/apikey/list/APIKeyList.vue');
+    expect(list).toMatch(/<button v-if="canManage && !k\.revokedAt"[^>]*@click="askRevoke\(k\)"/);
+    expect(list).toContain('<AppModal :open="!!revoking" :title="t(\'apikeys.revoke_confirm\')"');
+    expect(list).toContain('apikeys.revoke_body');
+    expect(read('pages/o/[org]/settings/api-keys.vue')).toContain('<APIKeyList :org-id="org.id" :can-manage="canManage" />');
+  });
+
+  it('asks before deleting a webhook', () => {
+    const list = read('components/webhook/list/WebhookList.vue');
+    expect(list).toMatch(/@click="askDelete\(webhook\)"/);
+    expect(list).toContain('<AppModal :open="!!deleting" :title="t(\'webhooks.delete_title\')"');
+  });
+
+  it('makes org settings read-only for people without org:write', () => {
+    const settings = read('pages/o/[org]/settings/index.vue');
+    expect(settings).toContain('useCan(\'org:write\')');
+    expect(settings).toMatch(/<form v-if="canEdit" novalidate/);
+    expect(settings).toContain('<dl v-else');
+    expect(settings).toContain('settings.read_only');
   });
 });

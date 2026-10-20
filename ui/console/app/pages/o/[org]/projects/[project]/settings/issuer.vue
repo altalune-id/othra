@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import { discoveryUrls } from '~/components/project/issuer/discovery';
 import IssuerHandleField from '~/components/project/issuer/IssuerHandleField.vue';
-import IssuerUrl from '~/components/project/issuer/IssuerUrl.vue';
 import { useIssuerHandle } from '~/components/project/issuer/useIssuerHandle';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import AppModal from '~/components/ui/AppModal.vue';
-import CopyButton from '~/components/ui/CopyButton.vue';
 import ErrorText from '~/components/ui/ErrorText.vue';
 import SavedNote from '~/components/ui/SavedNote.vue';
+import UrlField from '~/components/ui/UrlField.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
@@ -41,6 +41,8 @@ const handle = useIssuerHandle({
 const { value, status, canSave, confirming, busy, saved, error, fieldError } = handle;
 
 const issuerUrl = computed(() => project.value?.issuerUrl ?? '');
+const discovery = computed(() => discoveryUrls(issuerUrl.value));
+const urlLabels = computed(() => ({ copyLabel: t('common.copy_label', { label: '{label}' }), openLabel: t('common.open_new_tab', { label: '{label}' }) }));
 const newUrl = computed(() => {
   const h = project.value?.issuerHandle ?? '';
   return h && issuerUrl.value.endsWith(h) ? `${issuerUrl.value.slice(0, -h.length)}${value.value}` : value.value;
@@ -77,18 +79,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
 
     <div class="card border border-base-300 bg-base-100">
       <div class="card-body gap-4">
-        <div class="space-y-1">
-          <h2 class="fieldset-legend">
-            {{ t('issuer.url') }}
-          </h2>
-          <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-            <IssuerUrl :url="issuerUrl" data-testid="issuer-url" />
-            <CopyButton :value="issuerUrl" :label="t('common.copy')" class="shrink-0" />
-          </div>
-          <p class="text-xs text-base-content/60">
-            {{ t('issuer.url_help') }}
-          </p>
-        </div>
+        <UrlField :label="t('issuer.url')" :value="issuerUrl" :help="t('issuer.url_help')" testid="issuer-url" v-bind="urlLabels" />
 
         <form v-if="canEdit" novalidate class="space-y-3" @submit.prevent="handle.ask()">
           <IssuerHandleField
@@ -135,6 +126,20 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
         </div>
       </div>
     </div>
+
+    <section v-if="discovery" class="card border border-base-300 bg-base-100" data-testid="discovery-card">
+      <div class="card-body gap-3">
+        <h2 class="card-title text-base">
+          {{ t('issuer.discovery_title') }}
+        </h2>
+        <p class="text-sm text-base-content/70">
+          {{ t('issuer.discovery_help') }}
+        </p>
+        <UrlField :label="t('issuer.discovery_oidc')" :value="discovery.oidc" open v-bind="urlLabels" />
+        <UrlField :label="t('issuer.discovery_oauth')" :value="discovery.oauth" open v-bind="urlLabels" />
+        <UrlField :label="t('keys.jwks_url')" :value="discovery.jwks" open v-bind="urlLabels" />
+      </div>
+    </section>
 
     <AppModal :open="confirming" :title="t('issuer.change_title')" @close="handle.cancel()">
       <p class="text-sm">

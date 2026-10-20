@@ -40,15 +40,12 @@ export function usePersonalKeyCreate() {
   const orgOptions = computed(() => orgs.items.map(o => ({ value: o.id, label: o.name })));
   const orgName = computed(() => orgs.items.find(o => o.id === orgId.value)?.name ?? '');
   const canSubmit = computed(() => !busy.value && !!orgId.value && !!name.value.trim());
-  // NOTE: whoami's permissions cover the active org only; for another org the server enforces the role (ScopeExceedsRole).
   const mintable = computed(() => {
-    if (!orgId.value) {
+    const org = orgs.items.find(o => o.id === orgId.value);
+    if (!org) {
       return [];
     }
-    const me = auth.me;
-    const allowed = me && orgId.value === me.activeOrgId
-      ? mintableForMe(scopes, me.permissions)
-      : scopes.filter(s => !s.personOnly);
+    const allowed = org.role ? mintableForMe(scopes, org.permissions ?? []) : scopes.filter(s => !s.personOnly);
     return allowed.map(s => ({ name: s.name, label: scopeLabel(s.name) }));
   });
 

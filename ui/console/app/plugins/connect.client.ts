@@ -4,6 +4,7 @@ import { createConnectTransport } from '@connectrpc/connect-web';
 import { APIKeyService } from '~~/gen/apikey/v1/apikey_pb';
 import { AuthService } from '~~/gen/auth/v1/auth_pb';
 import { InviteService } from '~~/gen/invite/v1/invite_pb';
+import { SigningKeyService } from '~~/gen/keys/v1/keys_pb';
 import { MemberService } from '~~/gen/member/v1/member_pb';
 import { OrgService } from '~~/gen/org/v1/org_pb';
 import { ProjectService } from '~~/gen/project/v1/project_pb';
@@ -44,6 +45,7 @@ export default defineNuxtPlugin({
         webhookClient: createClient(WebhookService, transport),
         memberClient: createClient(MemberService, transport),
         inviteClient: createClient(InviteService, transport),
+        signingKeyClient: createClient(SigningKeyService, transport),
         authClient: createClient(AuthService, whoamiTransport),
       },
     };

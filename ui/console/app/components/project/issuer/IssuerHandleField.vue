@@ -97,13 +97,14 @@ function onInput(event: Event) {
         <span class="sr-only">{{ labels.locked }}</span>
       </span>
     </div>
-    <p v-if="statusText" :id="ids.status" class="flex items-center gap-1 text-sm" :class="bad ? 'text-error' : 'text-base-content/70'" aria-live="polite">
+    <p v-if="statusText" :id="ids.status" class="flex items-center gap-1 text-sm" :class="bad ? 'text-base-content' : 'text-base-content/70'" aria-live="polite">
       <span v-if="status === 'checking'" class="loading loading-spinner loading-xs" />
       <Icon v-else-if="status === 'available'" name="lucide:check" size="14" class="text-success" />
-      <Icon v-else name="lucide:x" size="14" />
+      <Icon v-else name="lucide:x" size="14" :class="{ 'text-error': bad }" />
       {{ statusText }}
     </p>
-    <p v-if="fieldError" :id="ids.error" class="text-sm text-error">
+    <p v-if="fieldError" :id="ids.error" class="flex items-start gap-1 text-sm text-base-content">
+      <Icon name="lucide:circle-alert" size="14" class="mt-0.5 shrink-0 text-error" />
       {{ fieldError }}
     </p>
     <p :id="ids.help" class="label whitespace-normal">

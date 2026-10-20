@@ -2,6 +2,7 @@ import type { Client } from '@connectrpc/connect';
 import type { APIKeyService } from '~~/gen/apikey/v1/apikey_pb';
 import type { AuthService } from '~~/gen/auth/v1/auth_pb';
 import type { InviteService } from '~~/gen/invite/v1/invite_pb';
+import type { SigningKeyService } from '~~/gen/keys/v1/keys_pb';
 import type { MemberService } from '~~/gen/member/v1/member_pb';
 import type { OrgService } from '~~/gen/org/v1/org_pb';
 import type { ProjectService } from '~~/gen/project/v1/project_pb';
@@ -15,6 +16,7 @@ declare module '#app' {
     $webhookClient: Client<typeof WebhookService>;
     $memberClient: Client<typeof MemberService>;
     $inviteClient: Client<typeof InviteService>;
+    $signingKeyClient: Client<typeof SigningKeyService>;
     $authClient: Client<typeof AuthService>;
   }
 }

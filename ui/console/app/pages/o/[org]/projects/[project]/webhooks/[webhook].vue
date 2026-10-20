@@ -250,7 +250,8 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
             <span class="text-base-content/60">#{{ attempt.attempt }}</span>
             <span class="text-base-content/60">{{ attempt.durationMs }}ms</span>
           </div>
-          <p v-if="attempt.error" class="mt-1 text-sm text-error">
+          <p v-if="attempt.error" class="mt-1 flex items-start gap-1 text-sm text-base-content">
+            <Icon name="lucide:circle-alert" size="14" class="mt-0.5 shrink-0 text-error" />
             {{ attempt.error }}
           </p>
           <div v-if="attempt.responseBody" class="mt-2 space-y-1">
