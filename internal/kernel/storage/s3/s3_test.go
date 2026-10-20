@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
 	"altalune.id/othra/internal/kernel/storage"
 	storages3 "altalune.id/othra/internal/kernel/storage/s3"
@@ -35,7 +34,7 @@ func fakeBucket(t *testing.T, objectStatus int) *storages3.Driver {
 	c, err := s3conn.Open(t.Context(), s3conn.Config{
 		Endpoint: srv.URL, Region: "garage", Bucket: "b", AccessKeyID: "k", SecretAccessKey: "s",
 		UsePathStyle: true, Timeout: 2 * time.Second,
-	}, nooptrace.NewTracerProvider())
+	})
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = c.Close() })
 	return storages3.New(c)

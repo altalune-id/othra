@@ -99,7 +99,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		}()
 	}
 
-	s3c, sh, err := buildS3(ctx, &k, cfg, tp, log)
+	s3c, sh, err := buildS3(ctx, &k, cfg, log)
 	if err != nil {
 		_ = pool.Close()
 		_ = shutdown(ctx)

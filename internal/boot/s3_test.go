@@ -12,8 +12,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/trace"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/kernel"
@@ -49,10 +47,10 @@ func stubS3(t *testing.T) (calls *int, client *s3conn.Client) {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }))
 	t.Cleanup(srv.Close)
-	client, err := s3conn.Open(t.Context(), s3Config(s3TestConfig(srv.URL)), nooptrace.NewTracerProvider())
+	client, err := s3conn.Open(t.Context(), s3Config(s3TestConfig(srv.URL)))
 	require.NoError(t, err)
 	calls = new(int)
-	openS3Fn = func(context.Context, s3conn.Config, trace.TracerProvider) (*s3conn.Client, error) {
+	openS3Fn = func(context.Context, s3conn.Config) (*s3conn.Client, error) {
 		*calls++
 		return client, nil
 	}
@@ -67,7 +65,7 @@ func TestBuildS3_UnusedNeverConnects(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(&logs, nil))
 
 	k := &kernel.Kernel{}
-	c, sh, err := buildS3(t.Context(), k, config.Config{}, nooptrace.NewTracerProvider(), log)
+	c, sh, err := buildS3(t.Context(), k, config.Config{}, log)
 	require.NoError(t, err)
 	assert.Nil(t, c)
 	assert.Nil(t, sh)
@@ -75,7 +73,7 @@ func TestBuildS3_UnusedNeverConnects(t *testing.T) {
 
 	cfg := config.Config{S3: s3TestConfig("https://acct.r2.cloudflarestorage.com")}
 	cfg.Storage.Driver = config.StorageDriverMemory
-	c, sh, err = buildS3(t.Context(), k, cfg, nooptrace.NewTracerProvider(), log)
+	c, sh, err = buildS3(t.Context(), k, cfg, log)
 	require.NoError(t, err)
 	assert.Nil(t, c)
 	assert.Nil(t, sh, "the memory driver needs no connection")
@@ -90,14 +88,14 @@ func TestBuildS3_FeatureConnectsOnceWithTheMappedConfig(t *testing.T) {
 	_, client := stubS3(t)
 	var got s3conn.Config
 	calls := 0
-	openS3Fn = func(_ context.Context, c s3conn.Config, _ trace.TracerProvider) (*s3conn.Client, error) {
+	openS3Fn = func(_ context.Context, c s3conn.Config) (*s3conn.Client, error) {
 		calls++
 		got = c
 		return client, nil
 	}
 	var logs bytes.Buffer
 	k := &kernel.Kernel{}
-	c, sh, err := buildS3(t.Context(), k, s3FeatureConfig("http://garage:3900"), nooptrace.NewTracerProvider(), slog.New(slog.NewTextHandler(&logs, nil)))
+	c, sh, err := buildS3(t.Context(), k, s3FeatureConfig("http://garage:3900"), slog.New(slog.NewTextHandler(&logs, nil)))
 	require.NoError(t, err)
 	require.NotNil(t, sh)
 	assert.Equal(t, 1, calls)
@@ -112,10 +110,10 @@ func TestBuildS3_FeatureConnectsOnceWithTheMappedConfig(t *testing.T) {
 
 func TestBuildS3_ConnectErrorFailsBoot(t *testing.T) {
 	restoreSeams(t)
-	openS3Fn = func(context.Context, s3conn.Config, trace.TracerProvider) (*s3conn.Client, error) {
+	openS3Fn = func(context.Context, s3conn.Config) (*s3conn.Client, error) {
 		return nil, errors.New(`s3: cannot reach bucket "altalune-files" at garage:3900 (s3.endpoint): refused`)
 	}
-	_, _, err := buildS3(t.Context(), &kernel.Kernel{}, s3FeatureConfig("http://garage:3900"), nooptrace.NewTracerProvider(), testLogger())
+	_, _, err := buildS3(t.Context(), &kernel.Kernel{}, s3FeatureConfig("http://garage:3900"), testLogger())
 	assert.ErrorContains(t, err, "boot: s3: cannot reach bucket")
 }
 

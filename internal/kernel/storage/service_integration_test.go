@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
@@ -45,7 +44,7 @@ func TestService_UploadVerifyAttachReplaceSweep_OnGarageAndPostgres(t *testing.T
 	conn, err := s3conn.Open(t.Context(), s3conn.Config{
 		Endpoint: h.Endpoint, Region: h.Region, Bucket: h.Bucket, AccessKeyID: h.AccessKeyID,
 		SecretAccessKey: h.SecretAccessKey, UsePathStyle: true, Timeout: 5 * time.Second,
-	}, nooptrace.NewTracerProvider())
+	})
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = conn.Close() })
 

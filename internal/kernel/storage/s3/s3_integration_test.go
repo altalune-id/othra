@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
 	"altalune.id/othra/internal/kernel/storage"
 	storages3 "altalune.id/othra/internal/kernel/storage/s3"
@@ -26,7 +25,7 @@ func newDriver(t *testing.T) (*storages3.Driver, *s3test.Handle) {
 	c, err := s3conn.Open(t.Context(), s3conn.Config{
 		Endpoint: h.Endpoint, Region: h.Region, Bucket: h.Bucket, AccessKeyID: h.AccessKeyID,
 		SecretAccessKey: h.SecretAccessKey, UsePathStyle: true, Timeout: 5 * time.Second,
-	}, nooptrace.NewTracerProvider())
+	})
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = c.Close() })
 	return storages3.New(c), h

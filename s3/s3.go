@@ -3,7 +3,6 @@ package s3
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/trace"
+
+	"altalune.id/othra/httpclient"
 )
 
 // Client is the open connection: S3 for server calls, Presign for URLs a browser uses, and the bucket name.
@@ -25,7 +24,7 @@ type Client struct {
 }
 
 // Open builds the clients and checks the bucket once within Timeout. SECURITY: errors name the host and bucket, never the keys.
-func Open(ctx context.Context, c Config, tp trace.TracerProvider) (*Client, error) {
+func Open(ctx context.Context, c Config) (*Client, error) {
 	endpoint, err := endpointURL(c.Endpoint, "s3.endpoint")
 	if err != nil {
 		return nil, err
@@ -36,11 +35,8 @@ func Open(ctx context.Context, c Config, tp trace.TracerProvider) (*Client, erro
 			return nil, err
 		}
 	}
-	transport, ok := http.DefaultTransport.(*http.Transport)
-	if !ok {
-		return nil, errors.New("s3: http.DefaultTransport is not an *http.Transport")
-	}
-	hc := &http.Client{Timeout: c.Timeout, Transport: otelhttp.NewTransport(transport.Clone(), otelhttp.WithTracerProvider(tp))}
+	// NOTE: the endpoint is trusted operator config, often on a private network, so the SSRF filter is off.
+	hc := httpclient.New(httpclient.WithTimeout(c.Timeout), httpclient.WithAllowPrivateHosts(true))
 	client := awss3.New(awss3.Options{
 		Region:                     c.Region,
 		BaseEndpoint:               aws.String(endpoint),

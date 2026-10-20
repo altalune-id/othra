@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	noopmetric "go.opentelemetry.io/otel/metric/noop"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/config"
@@ -39,7 +38,7 @@ func TestBuildStorageDriver(t *testing.T) {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }))
 	t.Cleanup(srv.Close)
-	c, err := s3conn.Open(t.Context(), s3Config(s3TestConfig(srv.URL)), nooptrace.NewTracerProvider())
+	c, err := s3conn.Open(t.Context(), s3Config(s3TestConfig(srv.URL)))
 	require.NoError(t, err)
 	d, err = buildStorageDriver(s3cfg, c)
 	require.NoError(t, err)

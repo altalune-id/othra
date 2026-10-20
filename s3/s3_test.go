@@ -17,7 +17,6 @@ import (
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 )
 
 const (
@@ -61,7 +60,7 @@ func TestOpen_ChecksTheBucketAndSignsBrowserURLsForTheBrowserEndpoint(t *testing
 	cfg := testConfig(srv.URL + "/")
 	cfg.BrowserEndpoint = "http://localhost:3900"
 
-	c, err := Open(t.Context(), cfg, nooptrace.NewTracerProvider())
+	c, err := Open(t.Context(), cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = c.Close() })
 	assert.Equal(t, testBucket, c.Bucket)
@@ -85,7 +84,7 @@ func TestOpen_ChecksTheBucketAndSignsBrowserURLsForTheBrowserEndpoint(t *testing
 
 func TestOpen_WithoutABrowserEndpointSignsForTheEndpoint(t *testing.T) {
 	_, srv := newFakeStore(t)
-	c, err := Open(t.Context(), testConfig(srv.URL), nooptrace.NewTracerProvider())
+	c, err := Open(t.Context(), testConfig(srv.URL))
 	require.NoError(t, err)
 	req, err := c.Presign.PresignGetObject(t.Context(), &awss3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String("k")})
 	require.NoError(t, err)
@@ -97,7 +96,7 @@ func TestOpen_WithoutABrowserEndpointSignsForTheEndpoint(t *testing.T) {
 func TestOpen_RefusedBucketFailsWithoutTheSecret(t *testing.T) {
 	f, srv := newFakeStore(t)
 	f.status.Store(http.StatusForbidden)
-	_, err := Open(t.Context(), testConfig(srv.URL), nooptrace.NewTracerProvider())
+	_, err := Open(t.Context(), testConfig(srv.URL))
 	require.Error(t, err)
 	host := strings.TrimPrefix(srv.URL, "http://")
 	assert.ErrorContains(t, err, `s3: cannot reach bucket "altalune-files" at `+host+" (s3.endpoint)")
@@ -127,7 +126,7 @@ func TestOpen_SilentServerFailsWithinTimeout(t *testing.T) {
 	cfg := testConfig("http://" + ln.Addr().String())
 	cfg.Timeout = 300 * time.Millisecond
 	start := time.Now()
-	c, err := Open(t.Context(), cfg, nooptrace.NewTracerProvider())
+	c, err := Open(t.Context(), cfg)
 	require.Error(t, err)
 	assert.Nil(t, c)
 	assert.Less(t, time.Since(start), 3*time.Second, "bounded by s3.timeout")
@@ -147,7 +146,7 @@ func TestOpen_BadEndpointsAreNotEchoed(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			cfg := testConfig(tc.endpoint)
 			cfg.BrowserEndpoint = tc.browser
-			_, err := Open(t.Context(), cfg, nooptrace.NewTracerProvider())
+			_, err := Open(t.Context(), cfg)
 			require.Error(t, err)
 			assert.ErrorContains(t, err, tc.key)
 			assert.NotContains(t, err.Error(), testSecret)
@@ -158,7 +157,7 @@ func TestOpen_BadEndpointsAreNotEchoed(t *testing.T) {
 
 func TestHealth_FlipsAndLogsOncePerChange(t *testing.T) {
 	f, srv := newFakeStore(t)
-	c, err := Open(t.Context(), testConfig(srv.URL), nooptrace.NewTracerProvider())
+	c, err := Open(t.Context(), testConfig(srv.URL))
 	require.NoError(t, err)
 	var logs bytes.Buffer
 	h := NewHealth(c, time.Second, slog.New(slog.NewTextHandler(&logs, nil)))
@@ -179,7 +178,7 @@ func TestHealth_FlipsAndLogsOncePerChange(t *testing.T) {
 
 func TestHealth_RunStopsWithItsContextAndIgnoresACancelledProbe(t *testing.T) {
 	f, srv := newFakeStore(t)
-	c, err := Open(t.Context(), testConfig(srv.URL), nooptrace.NewTracerProvider())
+	c, err := Open(t.Context(), testConfig(srv.URL))
 	require.NoError(t, err)
 	h := NewHealth(c, time.Second, discard())
 	f.status.Store(http.StatusServiceUnavailable)

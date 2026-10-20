@@ -6,15 +6,13 @@ import (
 	"log/slog"
 	"strings"
 
-	"go.opentelemetry.io/otel/trace"
-
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/health"
 	"altalune.id/othra/internal/kernel"
 	s3conn "altalune.id/othra/s3"
 )
 
-type s3Opener func(context.Context, s3conn.Config, trace.TracerProvider) (*s3conn.Client, error)
+type s3Opener func(context.Context, s3conn.Config) (*s3conn.Client, error)
 
 //nolint:gochecknoglobals // test seam.
 var openS3Fn s3Opener = s3conn.Open
@@ -35,7 +33,7 @@ func s3Config(c config.S3Config) s3conn.Config {
 }
 
 func buildS3(
-	ctx context.Context, k *kernel.Kernel, cfg config.Config, tp trace.TracerProvider, log *slog.Logger,
+	ctx context.Context, k *kernel.Kernel, cfg config.Config, log *slog.Logger,
 ) (*s3conn.Client, *s3conn.Health, error) {
 	features := cfg.S3Features()
 	if len(features) == 0 {
@@ -44,7 +42,7 @@ func buildS3(
 		}
 		return nil, nil, nil
 	}
-	client, err := openS3Fn(ctx, s3Config(cfg.S3), tp)
+	client, err := openS3Fn(ctx, s3Config(cfg.S3))
 	if err != nil {
 		return nil, nil, fmt.Errorf("boot: %w", err)
 	}

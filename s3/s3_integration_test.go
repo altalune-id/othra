@@ -14,7 +14,6 @@ import (
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
 	"altalune.id/othra/internal/testutil/s3test"
 )
@@ -33,7 +32,7 @@ func TestOpen_RealBucket_PresignedPutEnforcesTypeAndSizeOnTheBrowserEndpoint(t *
 		Endpoint: h.Endpoint, BrowserEndpoint: otherHost(h.Endpoint), Region: h.Region, Bucket: h.Bucket,
 		AccessKeyID: h.AccessKeyID, SecretAccessKey: h.SecretAccessKey, UsePathStyle: true, Timeout: 5 * time.Second,
 	}
-	c, err := Open(t.Context(), cfg, nooptrace.NewTracerProvider())
+	c, err := Open(t.Context(), cfg)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = c.Close() })
 
@@ -83,11 +82,11 @@ func TestOpen_RealServer_UnknownBucketOrWrongKeyFails(t *testing.T) {
 		Endpoint: h.Endpoint, Region: h.Region, Bucket: "no-such-bucket",
 		AccessKeyID: h.AccessKeyID, SecretAccessKey: h.SecretAccessKey, UsePathStyle: true, Timeout: 5 * time.Second,
 	}
-	_, err := Open(t.Context(), cfg, nooptrace.NewTracerProvider())
+	_, err := Open(t.Context(), cfg)
 	assert.ErrorContains(t, err, `s3: cannot reach bucket "no-such-bucket"`)
 
 	cfg.Bucket, cfg.SecretAccessKey = h.Bucket, "wrong-secret-"+strings.Repeat("0", 51)
-	_, err = Open(t.Context(), cfg, nooptrace.NewTracerProvider())
+	_, err = Open(t.Context(), cfg)
 	require.Error(t, err)
 	assert.NotContains(t, err.Error(), cfg.SecretAccessKey)
 }
