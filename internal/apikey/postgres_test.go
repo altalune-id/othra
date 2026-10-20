@@ -47,9 +47,6 @@ func TestRow_ToKey(t *testing.T) {
 }
 
 func TestPgArrayLiteral(t *testing.T) {
-	assert.Equal(t, "{}", pgTextArrayLiteral(nil))
-	assert.Equal(t, `{"a","b"}`, pgTextArrayLiteral([]string{"a", "b"}))
-	assert.Equal(t, `{"a\"b"}`, pgTextArrayLiteral([]string{`a"b`}))
 	assert.Equal(t, `{"`+"366d1b02-30b8-4b9f-9a34-8f8b6f1f5c0a"+`"}`, pgUUIDArrayLiteral([]uuid.UUID{uuid.MustParse("366d1b02-30b8-4b9f-9a34-8f8b6f1f5c0a")}))
 }
 

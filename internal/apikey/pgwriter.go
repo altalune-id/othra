@@ -28,14 +28,14 @@ func (s *postgresStore) save(ctx context.Context, tx *sql.Tx, k *APIKey) error {
 	stmt := s.keys.INSERT(s.keys.AllColumns).
 		VALUES(
 			k.ID, k.OrgID, pgNullableUUID(k.ProjectID), string(k.Kind), k.AllProjects, k.Name, k.SecretHash[:], k.SecretHint,
-			pgTextArrayExpr(k.Scopes), pgUUIDArrayExpr(k.ResourceIDs), pgNullableUUID(k.CreatedBy),
+			db.TextArray(k.Scopes), pgUUIDArrayExpr(k.ResourceIDs), pgNullableUUID(k.CreatedBy),
 			k.CreatedAt.UTC(), pgNullableTimeExpr(k.ExpiresAt), pgNullableTimeExpr(k.RevokedAt), pgNullableTimeExpr(k.LastUsedAt),
 		).
 		ON_CONFLICT(s.keys.ID).
 		DO_UPDATE(postgres.SET(
 			s.keys.Name.SET(postgres.String(k.Name)),
 			s.keys.AllProjects.SET(postgres.Bool(k.AllProjects)),
-			s.keys.Scopes.SET(pgTextArrayExpr(k.Scopes)),
+			s.keys.Scopes.SET(db.TextArray(k.Scopes)),
 			s.keys.ResourceIDs.SET(pgUUIDArrayExpr(k.ResourceIDs)),
 			s.keys.ExpiresAt.SET(pgNullableTimeExpr(k.ExpiresAt)),
 			s.keys.RevokedAt.SET(pgNullableTimeExpr(k.RevokedAt)),

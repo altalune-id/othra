@@ -78,6 +78,24 @@ const (
 
 	CodeSigningKeyNoActive        Code = "SGK001"
 	CodeSigningKeyRotationPending Code = "SGK002"
+
+	CodeClientNotFound           Code = "CLT001"
+	CodeClientInvalidRedirectURI Code = "CLT002"
+	CodeClientInvalidSettings    Code = "CLT003"
+	CodeClientHasNoSecret        Code = "CLT004"
+	CodeClientSecretPersonOnly   Code = "CLT005"
+	CodeClientSecretNotFound     Code = "CLT006"
+	CodeClientSecretExists       Code = "CLT007"
+
+	CodeResourceServerNotFound            Code = "RSV001"
+	CodeResourceServerInvalidIdentifier   Code = "RSV002"
+	CodeResourceServerIdentifierTaken     Code = "RSV003"
+	CodeResourceServerInvalidScope        Code = "RSV004"
+	CodeResourceServerScopePinned         Code = "RSV005"
+	CodeResourceServerLinked              Code = "RSV006"
+	CodeResourceServerTrustSelfHostedOnly Code = "RSV007"
+	CodeResourceServerVerifyTooSoon       Code = "RSV008"
+	CodeResourceServerInvalidLinkScopes   Code = "RSV009"
 )
 
 var kinds = map[Code]Kind{
@@ -155,4 +173,22 @@ var kinds = map[Code]Kind{
 
 	CodeSigningKeyNoActive:        KindFailedPrecondition,
 	CodeSigningKeyRotationPending: KindFailedPrecondition,
+
+	CodeClientNotFound:           KindNotFound,
+	CodeClientInvalidRedirectURI: KindInvalid,
+	CodeClientInvalidSettings:    KindInvalid,
+	CodeClientHasNoSecret:        KindFailedPrecondition,
+	CodeClientSecretPersonOnly:   KindForbidden,
+	CodeClientSecretNotFound:     KindNotFound,
+	CodeClientSecretExists:       KindFailedPrecondition,
+
+	CodeResourceServerNotFound:            KindNotFound,
+	CodeResourceServerInvalidIdentifier:   KindInvalid,
+	CodeResourceServerIdentifierTaken:     KindAlreadyExists,
+	CodeResourceServerInvalidScope:        KindInvalid,
+	CodeResourceServerScopePinned:         KindFailedPrecondition,
+	CodeResourceServerLinked:              KindFailedPrecondition,
+	CodeResourceServerTrustSelfHostedOnly: KindFailedPrecondition,
+	CodeResourceServerVerifyTooSoon:       KindResourceExhausted,
+	CodeResourceServerInvalidLinkScopes:   KindInvalid,
 }

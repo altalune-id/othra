@@ -13,12 +13,14 @@ import (
 
 	"altalune.id/othra/config"
 	authv1mcp "altalune.id/othra/gen/go/auth/v1/authv1mcp"
+	clientv1mcp "altalune.id/othra/gen/go/client/v1/clientv1mcp"
 	invitev1mcp "altalune.id/othra/gen/go/invite/v1/invitev1mcp"
 	keysv1mcp "altalune.id/othra/gen/go/keys/v1/keysv1mcp"
 	memberv1mcp "altalune.id/othra/gen/go/member/v1/memberv1mcp"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	orgv1mcp "altalune.id/othra/gen/go/org/v1/orgv1mcp"
 	projectv1mcp "altalune.id/othra/gen/go/project/v1/projectv1mcp"
+	resourceserverv1mcp "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1mcp"
 	webhookv1mcp "altalune.id/othra/gen/go/webhook/v1/webhookv1mcp"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
@@ -119,6 +121,22 @@ func TestMCPTools_PermissionsComeFromTheTable(t *testing.T) {
 		authv1mcp.AuthWhoamiToolName:            {authz.AnyAuthenticated},
 		keysv1mcp.SigningKeyListToolName:        {scope.ProjectRead},
 		keysv1mcp.SigningKeyRotateToolName:      {scope.ProjectWrite},
+		clientv1mcp.ClientListToolName:          {scope.ProjectRead},
+		clientv1mcp.ClientGetToolName:           {scope.ProjectRead},
+		clientv1mcp.ClientCreateToolName:        {scope.ProjectWrite},
+		clientv1mcp.ClientUpdateToolName:        {scope.ProjectWrite},
+		clientv1mcp.ClientDeleteToolName:        {scope.ProjectWrite},
+
+		resourceserverv1mcp.ResourceServerListToolName:       {scope.ProjectRead},
+		resourceserverv1mcp.ResourceServerGetToolName:        {scope.ProjectRead},
+		resourceserverv1mcp.ResourceServerCreateToolName:     {scope.ProjectWrite},
+		resourceserverv1mcp.ResourceServerUpdateToolName:     {scope.ProjectWrite},
+		resourceserverv1mcp.ResourceServerDeleteToolName:     {scope.ProjectWrite},
+		resourceserverv1mcp.ResourceServerVerifyToolName:     {scope.ProjectWrite},
+		resourceserverv1mcp.ResourceServerLinkListToolName:   {scope.ProjectRead},
+		resourceserverv1mcp.ResourceServerLinkCreateToolName: {scope.ProjectWrite},
+		resourceserverv1mcp.ResourceServerLinkUpdateToolName: {scope.ProjectWrite},
+		resourceserverv1mcp.ResourceServerLinkDeleteToolName: {scope.ProjectWrite},
 	}
 	names := srv.Registry().Names()
 	assert.Len(t, names, len(want), "the published tool list")

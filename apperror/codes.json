@@ -61,5 +61,21 @@
   { "code": "STO002", "name": "StorageUploadMismatch", "kind": "invalid", "params": [], "reasons": ["missing", "size", "type", "content"] },
   { "code": "STO003", "name": "StorageNotConfigured", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "SGK001", "name": "SigningKeyNoActive", "kind": "failed_precondition", "params": [], "reasons": [] },
-  { "code": "SGK002", "name": "SigningKeyRotationPending", "kind": "failed_precondition", "params": [], "reasons": [] }
+  { "code": "SGK002", "name": "SigningKeyRotationPending", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "CLT001", "name": "ClientNotFound", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "CLT002", "name": "ClientInvalidRedirectURI", "kind": "invalid", "params": ["field", "uri", "canonical"], "reasons": ["required", "unparsable", "fragment", "wildcard", "userinfo", "dot_segments", "https_required", "loopback_only", "port_ignored", "not_canonical", "too_long", "too_many", "duplicate"] },
+  { "code": "CLT003", "name": "ClientInvalidSettings", "kind": "invalid", "params": [], "reasons": ["post_logout_native"] },
+  { "code": "CLT004", "name": "ClientHasNoSecret", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "CLT005", "name": "ClientSecretPersonOnly", "kind": "forbidden", "params": [], "reasons": [] },
+  { "code": "CLT006", "name": "ClientSecretNotFound", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "CLT007", "name": "ClientSecretExists", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "RSV001", "name": "ResourceServerNotFound", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "RSV002", "name": "ResourceServerInvalidIdentifier", "kind": "invalid", "params": ["canonical"], "reasons": ["unparsable", "https_required", "query", "fragment", "userinfo", "not_canonical", "too_long", "needs_trust"] },
+  { "code": "RSV003", "name": "ResourceServerIdentifierTaken", "kind": "already_exists", "params": [], "reasons": [] },
+  { "code": "RSV004", "name": "ResourceServerInvalidScope", "kind": "invalid", "params": ["scope"], "reasons": ["format", "reserved", "duplicate", "too_many"] },
+  { "code": "RSV005", "name": "ResourceServerScopePinned", "kind": "failed_precondition", "params": ["scope", "clients"], "reasons": [] },
+  { "code": "RSV006", "name": "ResourceServerLinked", "kind": "failed_precondition", "params": ["clients"], "reasons": [] },
+  { "code": "RSV007", "name": "ResourceServerTrustSelfHostedOnly", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "RSV008", "name": "ResourceServerVerifyTooSoon", "kind": "resource_exhausted", "params": ["time"], "reasons": [] },
+  { "code": "RSV009", "name": "ResourceServerInvalidLinkScopes", "kind": "invalid", "params": ["scope"], "reasons": ["empty", "not_in_catalog"] }
 ]

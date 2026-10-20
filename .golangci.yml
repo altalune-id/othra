@@ -126,8 +126,8 @@ linters:
         domain-purity:
           list-mode: strict
           files:
-            - "**/internal/{apikey,auth,install,legal,org,project,user,webhook}/{apikey,auth,install,legal,org,project,user,webhook}.go"
-            - "**/internal/{apikey,auth,install,legal,org,project,user,webhook}/{store,errors}.go"
+            - "**/internal/{apikey,auth,client,install,legal,org,project,resourceserver,user,webhook}/{apikey,auth,client,install,legal,org,project,resourceserver,user,webhook}.go"
+            - "**/internal/{apikey,auth,client,install,legal,org,project,resourceserver,user,webhook}/{store,errors}.go"
             # org/member and org/invite are excluded: they share role and error types with their parent domain.
           allow:
             - $gostd
@@ -136,6 +136,7 @@ linters:
             - altalune.id/othra/apperror
             - altalune.id/othra/gen/go
             - altalune.id/othra/internal/kernel/events
+            - altalune.id/othra/internal/oauth/redirecturi
             - altalune.id/othra/nanoid
             - altalune.id/othra/scope
             - altalune.id/othra/slug

@@ -78,25 +78,8 @@ func pgNullableTimeExpr(t *time.Time) postgres.TimestampzExpression {
 	return postgres.TimestampzT(t.UTC())
 }
 
-// NOTE: the cast to text[] is explicit because Postgres has no assignment cast from a text parameter to an array type.
-func pgTextArrayExpr(elems []string) postgres.StringExpression {
-	return postgres.StringExp(postgres.CAST(postgres.String(pgTextArrayLiteral(elems))).AS("text[]"))
-}
-
 func pgUUIDArrayExpr(ids []uuid.UUID) postgres.StringExpression {
 	return postgres.StringExp(postgres.CAST(postgres.String(pgUUIDArrayLiteral(ids))).AS("uuid[]"))
-}
-
-func pgTextArrayLiteral(elems []string) string {
-	if len(elems) == 0 {
-		return "{}"
-	}
-	esc := strings.NewReplacer(`\`, `\\`, `"`, `\"`)
-	parts := make([]string, len(elems))
-	for i, e := range elems {
-		parts[i] = `"` + esc.Replace(e) + `"`
-	}
-	return "{" + strings.Join(parts, ",") + "}"
 }
 
 func pgUUIDArrayLiteral(ids []uuid.UUID) string {
@@ -104,7 +87,7 @@ func pgUUIDArrayLiteral(ids []uuid.UUID) string {
 	for i, id := range ids {
 		elems[i] = id.String()
 	}
-	return pgTextArrayLiteral(elems)
+	return db.TextArrayLiteral(elems)
 }
 
 func parsePgTextArray(s string) ([]string, error) {

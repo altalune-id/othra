@@ -43,6 +43,34 @@ func TestBindings(t *testing.T) {
 			},
 		},
 		{
+			"oauth_clients",
+			func(s, p string) binding { b := entity.NewOAuthClients(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "name", "client_type", "application_type",
+				"token_endpoint_auth_method", "grant_types", "allowed_scopes", "redirect_uris",
+				"post_logout_redirect_uris", "consent_policy", "created_at", "updated_at",
+			},
+		},
+		{
+			"oauth_client_secrets",
+			func(s, p string) binding { b := entity.NewOAuthClientSecrets(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "org_id", "project_id", "client_id", "secret_hash", "hint", "created_at", "expires_at"},
+		},
+		{
+			"resource_servers",
+			func(s, p string) binding { b := entity.NewResourceServers(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "name", "identifier", "scopes", "verification_state",
+				"verified_at", "last_checked_at", "last_error", "consecutive_failures", "trusted", "trusted_at",
+				"trusted_by", "created_at", "updated_at",
+			},
+		},
+		{
+			"oauth_client_resources",
+			func(s, p string) binding { b := entity.NewOAuthClientResources(s, p); return binding{b, b.AllColumns} },
+			[]string{"org_id", "project_id", "client_id", "resource_server_id", "scopes", "created_at", "updated_at"},
+		},
+		{
 			"files",
 			func(s, p string) binding { b := entity.NewFiles(s, p); return binding{b, b.AllColumns} },
 			[]string{

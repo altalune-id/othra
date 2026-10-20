@@ -104,5 +104,5 @@ message RekeyRequest {
 }
 
 message RekeyResponse {
-  string secret = 1;
+  string key_id = 1;
 }

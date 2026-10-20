@@ -16,11 +16,13 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 
 	authv1 "altalune.id/othra/gen/go/auth/v1"
+	clientv1 "altalune.id/othra/gen/go/client/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
 	keysv1 "altalune.id/othra/gen/go/keys/v1"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	projectv1 "altalune.id/othra/gen/go/project/v1"
+	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
 	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 )
 
@@ -29,11 +31,13 @@ const committedParameter = "paths=source_relative,ui_prefix=ui://othra"
 func committedFiles() []protoreflect.FileDescriptor {
 	return []protoreflect.FileDescriptor{
 		authv1.File_auth_v1_auth_proto,
+		clientv1.File_client_v1_client_proto,
 		invitev1.File_invite_v1_invite_proto,
 		keysv1.File_keys_v1_keys_proto,
 		memberv1.File_member_v1_member_proto,
 		orgv1.File_org_v1_org_proto,
 		projectv1.File_project_v1_project_proto,
+		resourceserverv1.File_resourceserver_v1_resourceserver_proto,
 		webhookv1.File_webhook_v1_webhook_proto,
 	}
 }

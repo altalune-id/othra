@@ -37,6 +37,10 @@ func fillProbe(msg *dynamicpb.Message) {
 		case fd.IsList() && fd.Name() == "event_types":
 			list := msg.Mutable(fd).List()
 			list.Append(protoreflect.ValueOfString("invite.created"))
+		case fd.IsList() && fd.Name() == "redirect_uris":
+			msg.Mutable(fd).List().Append(protoreflect.ValueOfString("https://example.com/probe"))
+		case fd.Kind() == protoreflect.EnumKind:
+			msg.Set(fd, protoreflect.ValueOfEnum(fd.Enum().Values().Get(1).Number()))
 		case fd.IsList() && fd.Name() == "scopes":
 			list := msg.Mutable(fd).List()
 			list.Append(protoreflect.ValueOfString("webhook:read"))
@@ -60,7 +64,8 @@ func fillProbe(msg *dynamicpb.Message) {
 var probeStrings = map[protoreflect.Name]string{
 	"name": "Probe", "description": "probe", "url": "https://example.com/probe",
 	"email": "probe@example.com", "role": "member", "kind": "org", "issuer_handle": "probe-issuer",
-	"content_type": "image/png", "upload_id": "prbeprbeprbeprbeprbe2",
+	"content_type": "image/png", "upload_id": "prbeprbeprbeprbeprbe2", "secret_id": "prbeprbeprbeprbeprbe3",
+	"identifier": "https://probe.invalid",
 }
 
 func (f *apiFixture) callForResponse(

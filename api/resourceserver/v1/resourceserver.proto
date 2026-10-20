@@ -1,0 +1,364 @@
+syntax = "proto3";
+
+package resourceserver.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "altalune.id/othra/gen/go/resourceserver/v1;resourceserverv1";
+
+// ResourceServerService registers a project's resource servers, verifies them over RFC 9728 and links OAuth clients to them. Every id is a public id.
+service ResourceServerService {
+  rpc ListResourceServers(ListResourceServersRequest) returns (ListResourceServersResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_list"
+      description: "List a project's resource servers with their scopes and verification state."
+      required: ["project_id"]
+    };
+  }
+  rpc GetResourceServer(GetResourceServerRequest) returns (GetResourceServerResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_get"
+      description: "Get one resource server of a project, with its verification state and metadata URL."
+      required: ["project_id", "resource_server_id"]
+    };
+  }
+  rpc CreateResourceServer(CreateResourceServerRequest) returns (CreateResourceServerResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_create"
+      description: "Register a resource server: an API or MCP endpoint named by its https identifier, exactly as it checks the token's aud, with the scopes apps can ask for. It starts pending until verified."
+      required: ["project_id", "name", "identifier", "scopes"]
+      mutation: true
+      destructive: false
+    };
+  }
+  rpc UpdateResourceServer(UpdateResourceServerRequest) returns (UpdateResourceServerResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_update"
+      description: "Replace a resource server's name and scopes. The identifier can't change, and a scope a link still allows can't be removed."
+      required: ["project_id", "resource_server_id", "name", "scopes"]
+      mutation: true
+      destructive: true
+    };
+  }
+  rpc DeleteResourceServer(DeleteResourceServerRequest) returns (DeleteResourceServerResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_delete"
+      description: "Delete a resource server. It is refused while clients are linked to it."
+      required: ["project_id", "resource_server_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+  rpc VerifyResourceServer(VerifyResourceServerRequest) returns (VerifyResourceServerResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_verify"
+      description: "Check a resource server's RFC 9728 metadata now. A pass verifies it; a failure shows the error and changes nothing."
+      required: ["project_id", "resource_server_id"]
+      mutation: true
+      destructive: false
+    };
+  }
+  // SECURITY: trust skips verification; a signed-in person sets it, never MCP.
+  rpc SetResourceServerTrust(SetResourceServerTrustRequest) returns (SetResourceServerTrustResponse);
+  rpc ListLinks(ListLinksRequest) returns (ListLinksResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_link_list"
+      description: "List the links of one OAuth client or of one resource server, with the scopes each link allows. Send client_id or resource_server_id."
+      required: ["project_id"]
+    };
+  }
+  rpc LinkClient(LinkClientRequest) returns (LinkClientResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_link_create"
+      description: "Link an OAuth client to a resource server of the same project, allowing it some of the server's scopes."
+      required: ["project_id", "client_id", "resource_server_id", "scopes"]
+      mutation: true
+      destructive: false
+    };
+  }
+  rpc UpdateLink(UpdateLinkRequest) returns (UpdateLinkResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_link_update"
+      description: "Replace the scopes a link between an OAuth client and a resource server allows."
+      required: ["project_id", "client_id", "resource_server_id", "scopes"]
+      mutation: true
+      destructive: true
+    };
+  }
+  rpc UnlinkClient(UnlinkClientRequest) returns (UnlinkClientResponse) {
+    option (mcp.v1.tool) = {
+      name: "resource_server_link_delete"
+      description: "Unlink an OAuth client from a resource server; the client can no longer ask for its scopes."
+      required: ["project_id", "client_id", "resource_server_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+}
+
+// ResourceServerState is where RFC 9728 verification stands.
+enum ResourceServerState {
+  RESOURCE_SERVER_STATE_UNSPECIFIED = 0;
+  // PENDING has never passed a check.
+  RESOURCE_SERVER_STATE_PENDING = 1;
+  RESOURCE_SERVER_STATE_VERIFIED = 2;
+  // FAILED served a document naming another resource or not this issuer, or was verified and then failed three scheduled checks in a row.
+  RESOURCE_SERVER_STATE_FAILED = 3;
+}
+
+message ResourceServer {
+  string id = 1;
+  string name = 2;
+  // identifier is the audience, exactly as the resource server checks it.
+  string identifier = 3;
+  repeated string scopes = 4;
+  ResourceServerState state = 5;
+  // trusted skips verification, on self-hosted Othra only.
+  bool trusted = 6;
+  google.protobuf.Timestamp verified_at = 7;
+  google.protobuf.Timestamp last_checked_at = 8;
+  // last_error is why the latest check failed, unset after a pass.
+  VerificationFailure last_error = 9;
+  int32 consecutive_failures = 10;
+  // metadata_url is where Othra fetches the RFC 9728 metadata.
+  string metadata_url = 11;
+  // trust_available is true when this deployment allows trust without verification.
+  bool trust_available = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+// VerificationFailure is why an RFC 9728 check failed.
+message VerificationFailure {
+  // reason is not_found, status, redirect, not_json, too_large, resource_mismatch, issuer_missing, timeout, network or blocked.
+  string reason = 1;
+  // status is the HTTP status on reason status.
+  int32 status = 2;
+  // resource is the metadata's resource value on reason resource_mismatch.
+  string resource = 3;
+  google.protobuf.Timestamp checked_at = 4;
+}
+
+message Link {
+  string client_id = 1;
+  string client_name = 2;
+  string resource_server_id = 3;
+  string resource_server_name = 4;
+  string resource_server_identifier = 5;
+  ResourceServerState resource_server_state = 6;
+  bool resource_server_trusted = 7;
+  // scopes are the resource server scopes the client may ask for.
+  repeated string scopes = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+message ListResourceServersRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message ListResourceServersResponse {
+  repeated ResourceServer resource_servers = 1;
+  // trust_available is true when this deployment allows trust without verification.
+  bool trust_available = 2;
+}
+
+message GetResourceServerRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GetResourceServerResponse {
+  ResourceServer resource_server = 1;
+}
+
+message CreateResourceServerRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).cel = {id: "resource_server.name.blank", expression: "this.trim() != '' ? '' : 'must not be blank'"},
+    (buf.validate.field).cel = {id: "resource_server.name.max_len.100", expression: "this.trim().size() <= 100 ? '' : 'must be at most 100 characters'"}
+  ];
+  string identifier = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 512
+  ];
+  repeated string scopes = 4 [
+    (buf.validate.field).repeated.min_items = 1,
+    (buf.validate.field).repeated.max_items = 64,
+    (buf.validate.field).repeated.items.string.max_len = 128
+  ];
+  bool trusted = 5;
+}
+
+message CreateResourceServerResponse {
+  ResourceServer resource_server = 1;
+}
+
+message UpdateResourceServerRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string name = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).cel = {id: "resource_server.name.blank", expression: "this.trim() != '' ? '' : 'must not be blank'"},
+    (buf.validate.field).cel = {id: "resource_server.name.max_len.100", expression: "this.trim().size() <= 100 ? '' : 'must be at most 100 characters'"}
+  ];
+  repeated string scopes = 4 [
+    (buf.validate.field).repeated.min_items = 1,
+    (buf.validate.field).repeated.max_items = 64,
+    (buf.validate.field).repeated.items.string.max_len = 128
+  ];
+}
+
+message UpdateResourceServerResponse {
+  ResourceServer resource_server = 1;
+}
+
+message DeleteResourceServerRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message DeleteResourceServerResponse {}
+
+message VerifyResourceServerRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message VerifyResourceServerResponse {
+  ResourceServer resource_server = 1;
+  // passed is false when this check failed; resource_server then shows its state before the check.
+  bool passed = 2;
+  // error is why this check failed.
+  VerificationFailure error = 3;
+}
+
+message SetResourceServerTrustRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  bool trusted = 3;
+}
+
+message SetResourceServerTrustResponse {
+  ResourceServer resource_server = 1;
+}
+
+message ListLinksRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  oneof target {
+    option (buf.validate.oneof).required = true;
+    string client_id = 2 [(buf.validate.field).string.(othra.v1.public_id) = true];
+    string resource_server_id = 3 [(buf.validate.field).string.(othra.v1.public_id) = true];
+  }
+}
+
+message ListLinksResponse {
+  repeated Link links = 1;
+}
+
+message LinkClientRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  repeated string scopes = 4 [
+    (buf.validate.field).repeated.min_items = 1,
+    (buf.validate.field).repeated.max_items = 64,
+    (buf.validate.field).repeated.items.string.max_len = 128
+  ];
+}
+
+message LinkClientResponse {
+  Link link = 1;
+}
+
+message UpdateLinkRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  repeated string scopes = 4 [
+    (buf.validate.field).repeated.min_items = 1,
+    (buf.validate.field).repeated.max_items = 64,
+    (buf.validate.field).repeated.items.string.max_len = 128
+  ];
+}
+
+message UpdateLinkResponse {
+  Link link = 1;
+}
+
+message UnlinkClientRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message UnlinkClientResponse {}

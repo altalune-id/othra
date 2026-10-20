@@ -11,20 +11,24 @@ import (
 	"altalune.id/othra/apperror"
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	clientv1connect "altalune.id/othra/gen/go/client/v1/clientv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
 	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	resourceserverv1connect "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/webhook"
 )
@@ -49,7 +53,10 @@ type Services struct {
 	Invites  *invite.Service
 	Auth     *auth.Service
 	Keys     *keys.Service
-	Refs     Refs
+	Clients  *client.Service
+
+	ResourceServers *resourceserver.Service
+	Refs            Refs
 	// FileUploads is true when the deployment has file storage.
 	FileUploads bool
 }
@@ -63,6 +70,8 @@ type Refs interface {
 	member.Refs
 	auth.PublicIDs
 	keys.Refs
+	client.Refs
+	resourceserver.Refs
 }
 
 // Server holds the wired Connect handlers.
@@ -80,6 +89,8 @@ type Server struct {
 	MemberSvc  *member.MemberService
 	InviteSvc  *invite.InviteService
 	KeySvc     *keys.SigningKeyService
+	ClientSvc  *client.ClientService
+	RSSvc      *resourceserver.ResourceServerService
 
 	OpenAPIEnabled   bool
 	OpenAPIBasicAuth *BasicAuth
@@ -114,6 +125,12 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 	}
 	if svcs.Keys != nil {
 		s.KeySvc = keys.NewControlPlane(svcs.Keys, svcs.Refs)
+	}
+	if svcs.Clients != nil {
+		s.ClientSvc = client.NewControlPlane(svcs.Clients, svcs.Refs)
+	}
+	if svcs.ResourceServers != nil {
+		s.RSSvc = resourceserver.NewControlPlane(svcs.ResourceServers, svcs.Refs)
 	}
 	if svcs.Members != nil {
 		s.MemberSvc = member.NewControlPlane(svcs.Members, svcs.Refs)
@@ -155,6 +172,14 @@ func (s *Server) Handler(basePath string) http.Handler {
 	if s.KeySvc != nil {
 		keysPath, keysHandler := keysv1connect.NewSigningKeyServiceHandler(s.KeySvc, s.handlerOptions()...)
 		inner.Handle(keysPath, keysHandler)
+	}
+	if s.ClientSvc != nil {
+		clientPath, clientHandler := clientv1connect.NewClientServiceHandler(s.ClientSvc, s.handlerOptions()...)
+		inner.Handle(clientPath, clientHandler)
+	}
+	if s.RSSvc != nil {
+		rsPath, rsHandler := resourceserverv1connect.NewResourceServerServiceHandler(s.RSSvc, s.handlerOptions()...)
+		inner.Handle(rsPath, rsHandler)
 	}
 
 	if s.AuthSvc != nil {

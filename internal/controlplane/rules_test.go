@@ -18,11 +18,13 @@ import (
 	"altalune.id/othra/apperror"
 	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
+	clientv1 "altalune.id/othra/gen/go/client/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
 	keysv1 "altalune.id/othra/gen/go/keys/v1"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	projectv1 "altalune.id/othra/gen/go/project/v1"
+	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
 	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 	"altalune.id/othra/internal/permission"
 	"altalune.id/othra/nanoid"
@@ -34,10 +36,14 @@ var unruled = map[string]string{
 	"auth.v1.SignOutEverywhereRequest": "empty request",
 	"org.v1.ListOrgsRequest":           "empty request",
 
-	"apikey.v1.CreateAPIKeyRequest.all_projects":    "a bool; the domain checks it against project_ids (KEY005)",
-	"webhook.v1.UpdateWebhookRequest.active":        "a bool; false deactivates",
-	"keys.v1.RotateSigningKeyRequest.immediate":     "a bool; true promotes the new key at once",
-	"webhook.v1.ListWebhookDeliveriesRequest.limit": "any int32 works today: clamped to 1..50",
+	"apikey.v1.CreateAPIKeyRequest.all_projects":              "a bool; the domain checks it against project_ids (KEY005)",
+	"webhook.v1.UpdateWebhookRequest.active":                  "a bool; false deactivates",
+	"keys.v1.RotateSigningKeyRequest.immediate":               "a bool; true promotes the new key at once",
+	"client.v1.CreateClientRequest.refresh_tokens":            "a bool; true adds the refresh_token grant",
+	"client.v1.UpdateClientRequest.refresh_tokens":            "a bool; true adds the refresh_token grant",
+	"resourceserver.v1.SetResourceServerTrustRequest.trusted": "a bool; the domain refuses it outside self-hosted (RSV007)",
+	"resourceserver.v1.CreateResourceServerRequest.trusted":   "a bool; the domain refuses it outside self-hosted (RSV007) and from a key",
+	"webhook.v1.ListWebhookDeliveriesRequest.limit":           "any int32 works today: clamped to 1..50",
 }
 
 // SECURITY: every RPC request is checked before its handler; a field with no rule must be allowlisted with a reason.
@@ -193,6 +199,15 @@ func TestRequestRules_Accept(t *testing.T) {
 		{"reserved slug is the domain's", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme", Slug: "new"}},
 		{"list signing keys", &keysv1.ListSigningKeysRequest{ProjectId: goodID}},
 		{"rotate at once", &keysv1.RotateSigningKeyRequest{ProjectId: goodID, Immediate: true}},
+		{"web client", &clientv1.CreateClientRequest{ProjectId: goodID, Name: strings.Repeat("c", 100), Kind: clientv1.ClientKind_CLIENT_KIND_WEB, RedirectUris: []string{"https://a.example/cb"}}},
+		{"redirect URI shape is the domain's", &clientv1.CreateClientRequest{ProjectId: goodID, Name: "CLI", Kind: clientv1.ClientKind_CLIENT_KIND_CLI, RedirectUris: []string{"not a url", strings.Repeat("u", 2000)}, ConsentPolicy: clientv1.ConsentPolicy_CONSENT_POLICY_IMPLICIT}},
+		{"twenty redirect URIs", &clientv1.UpdateClientRequest{ProjectId: goodID, ClientId: goodID, Name: "Web", RedirectUris: make([]string, 20), PostLogoutRedirectUris: make([]string, 20), ConsentPolicy: clientv1.ConsentPolicy_CONSENT_POLICY_REQUIRE}},
+		{"rotate with the default grace", &clientv1.RotateClientSecretRequest{ProjectId: goodID, ClientId: goodID}},
+		{"revoke a secret", &clientv1.RevokeClientSecretRequest{ProjectId: goodID, ClientId: goodID, SecretId: goodID}},
+		{"identifier shape is the domain's", &resourceserverv1.CreateResourceServerRequest{ProjectId: goodID, Name: "API", Identifier: strings.Repeat("i", 512), Scopes: make([]string, 64)}},
+		{"links of a client", &resourceserverv1.ListLinksRequest{ProjectId: goodID, Target: &resourceserverv1.ListLinksRequest_ClientId{ClientId: goodID}}},
+		{"links of a resource server", &resourceserverv1.ListLinksRequest{ProjectId: goodID, Target: &resourceserverv1.ListLinksRequest_ResourceServerId{ResourceServerId: goodID}}},
+		{"link with a 128-character scope", &resourceserverv1.LinkClientRequest{ProjectId: goodID, ClientId: goodID, ResourceServerId: goodID, Scopes: []string{strings.Repeat("s", 128)}}},
 	}
 	for _, tt := range accepted {
 		t.Run(tt.name, func(t *testing.T) {
@@ -253,6 +268,28 @@ func TestRequestRules_Refuse(t *testing.T) {
 		{"missing upload id", &projectv1.CompleteProjectLogoUploadRequest{Id: goodID}, "upload_id", apperror.FieldRequired},
 		{"missing slug on update", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme"}, "slug", apperror.FieldRequired},
 		{"delivery id", &webhookv1.RetryWebhookDeliveryRequest{OrgId: goodID, ProjectId: goodID, Id: goodID, DeliveryId: "x"}, "delivery_id", apperror.FieldInvalidFormat},
+		{"client without a kind", &clientv1.CreateClientRequest{ProjectId: goodID, Name: "Web", RedirectUris: []string{"https://a.example/cb"}}, "kind", apperror.FieldRequired},
+		{"unknown client kind", &clientv1.CreateClientRequest{ProjectId: goodID, Name: "Web", Kind: 9, RedirectUris: []string{"https://a.example/cb"}}, "kind", apperror.FieldNotAllowed},
+		{"101-character client name", &clientv1.CreateClientRequest{ProjectId: goodID, Name: strings.Repeat("c", 101), Kind: clientv1.ClientKind_CLIENT_KIND_WEB, RedirectUris: []string{"https://a.example/cb"}}, "name", apperror.FieldTooLong},
+		{"blank client name", &clientv1.UpdateClientRequest{ProjectId: goodID, ClientId: goodID, Name: "  ", RedirectUris: []string{"https://a.example/cb"}, ConsentPolicy: clientv1.ConsentPolicy_CONSENT_POLICY_REQUIRE}, "name", apperror.FieldRequired},
+		{"no redirect URI", &clientv1.CreateClientRequest{ProjectId: goodID, Name: "Web", Kind: clientv1.ClientKind_CLIENT_KIND_WEB}, "redirect_uris", apperror.FieldRequired},
+		{"21 redirect URIs", &clientv1.CreateClientRequest{ProjectId: goodID, Name: "Web", Kind: clientv1.ClientKind_CLIENT_KIND_WEB, RedirectUris: make([]string, 21)}, "redirect_uris", apperror.FieldTooMany},
+		{"2001-character redirect URI", &clientv1.CreateClientRequest{ProjectId: goodID, Name: "Web", Kind: clientv1.ClientKind_CLIENT_KIND_WEB, RedirectUris: []string{strings.Repeat("u", 2001)}}, "redirect_uris[0]", apperror.FieldTooLong},
+		{"21 sign-out URIs", &clientv1.UpdateClientRequest{ProjectId: goodID, ClientId: goodID, Name: "Web", RedirectUris: []string{"https://a.example/cb"}, PostLogoutRedirectUris: make([]string, 21), ConsentPolicy: clientv1.ConsentPolicy_CONSENT_POLICY_REQUIRE}, "post_logout_redirect_uris", apperror.FieldTooMany},
+		{"update without a consent policy", &clientv1.UpdateClientRequest{ProjectId: goodID, ClientId: goodID, Name: "Web", RedirectUris: []string{"https://a.example/cb"}}, "consent_policy", apperror.FieldRequired},
+		{"unknown grace", &clientv1.RotateClientSecretRequest{ProjectId: goodID, ClientId: goodID, Grace: 9}, "grace", apperror.FieldNotAllowed},
+		{"missing secret id", &clientv1.RevokeClientSecretRequest{ProjectId: goodID, ClientId: goodID}, "secret_id", apperror.FieldRequired},
+		{"missing client id", &clientv1.GenerateClientSecretRequest{ProjectId: goodID}, "client_id", apperror.FieldRequired},
+		{"missing identifier", &resourceserverv1.CreateResourceServerRequest{ProjectId: goodID, Name: "API", Scopes: []string{"read"}}, "identifier", apperror.FieldRequired},
+		{"513-character identifier", &resourceserverv1.CreateResourceServerRequest{ProjectId: goodID, Name: "API", Identifier: strings.Repeat("i", 513), Scopes: []string{"read"}}, "identifier", apperror.FieldTooLong},
+		{"no scopes", &resourceserverv1.UpdateResourceServerRequest{ProjectId: goodID, ResourceServerId: goodID, Name: "API"}, "scopes", apperror.FieldRequired},
+		{"65 scopes", &resourceserverv1.CreateResourceServerRequest{ProjectId: goodID, Name: "API", Identifier: "https://a.example", Scopes: make([]string, 65)}, "scopes", apperror.FieldTooMany},
+		{"129-character scope", &resourceserverv1.UpdateLinkRequest{ProjectId: goodID, ClientId: goodID, ResourceServerId: goodID, Scopes: []string{strings.Repeat("s", 129)}}, "scopes[0]", apperror.FieldTooLong},
+		{"101-character resource server name", &resourceserverv1.CreateResourceServerRequest{ProjectId: goodID, Name: strings.Repeat("r", 101), Identifier: "https://a.example", Scopes: []string{"read"}}, "name", apperror.FieldTooLong},
+		{"link without scopes", &resourceserverv1.LinkClientRequest{ProjectId: goodID, ClientId: goodID, ResourceServerId: goodID}, "scopes", apperror.FieldRequired},
+		{"links of nothing", &resourceserverv1.ListLinksRequest{ProjectId: goodID}, "target", apperror.FieldRequired},
+		{"links of a bad client id", &resourceserverv1.ListLinksRequest{ProjectId: goodID, Target: &resourceserverv1.ListLinksRequest_ClientId{ClientId: "x"}}, "client_id", apperror.FieldInvalidFormat},
+		{"missing resource server id", &resourceserverv1.UnlinkClientRequest{ProjectId: goodID, ClientId: goodID}, "resource_server_id", apperror.FieldRequired},
 	}
 	for _, tt := range refused {
 		t.Run(tt.name, func(t *testing.T) {

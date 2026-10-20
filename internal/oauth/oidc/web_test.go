@@ -319,6 +319,24 @@ func TestIssuerCache(t *testing.T) {
 	assert.Equal(t, 3, f.issuers.calls)
 }
 
+// R-10: a renamed handle stops answering at once, not when its cache entry expires.
+func TestIssuerCache_AHandleChangeDropsTheOldHandle(t *testing.T) {
+	f := newFixture(t, "")
+	require.Equal(t, http.StatusOK, f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Code)
+	renamed := *f.acme
+	renamed.Handle = "acme-shop"
+	f.issuers.mu.Lock()
+	f.issuers.byHandle = map[string]*project.Issuer{"acme-shop": &renamed}
+	f.issuers.mu.Unlock()
+	assert.Equal(t, http.StatusOK, f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Code, "still cached")
+
+	f.web.Forget(f.acme.ProjectID)
+	assert.Equal(t, http.StatusNotFound, f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Code)
+	rec := f.do(t, http.MethodGet, "/p/acme-shop/.well-known/openid-configuration")
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Body.String(), `"issuer":"https://id.example.com/p/acme-shop"`)
+}
+
 func TestLookupsAreRateLimitedPerClient(t *testing.T) {
 	f := newFixture(t, "")
 	lim := &limiter{allow: false}

@@ -27,6 +27,8 @@ type Config struct {
 	Storage    StorageConfig    `yaml:"storage"    mapstructure:"storage"`
 	S3         S3Config         `yaml:"s3"         mapstructure:"s3"`
 	Keys       KeysConfig       `yaml:"keys"       mapstructure:"keys"`
+
+	ResourceServers ResourceServersConfig `yaml:"resourceServers" mapstructure:"resourceServers"`
 }
 
 // CLIConfig configures the Othra CLI; SessionFile may start with "~/", expanded when used.
@@ -160,6 +162,7 @@ func (c *Config) Validate() error {
 		c.validateStorage,
 		c.validateS3,
 		c.validateKeys,
+		c.validateResourceServers,
 	} {
 		if err := check(); err != nil {
 			return err

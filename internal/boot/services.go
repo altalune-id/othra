@@ -10,6 +10,7 @@ import (
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/controlplane"
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel"
@@ -26,6 +27,7 @@ import (
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/webhook"
 	"altalune.id/othra/mailer"
@@ -67,6 +69,8 @@ type Services struct {
 	Validator       *controlplane.Validator
 	Storage         *storage.Service
 	Keys            *keys.Service
+	Clients         *client.Service
+	ResourceServers *resourceserver.Service
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -157,7 +161,10 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		AuthLimiter:  ratelimit.Disabled(),
 		Storage:      files,
 		Keys:         signingKeys,
+		Clients: client.NewService(client.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, projects, k.Reporter.Unexpected).
+			WithLogger(k.Log),
 	}
+	svcs.ResourceServers = buildResourceServers(k, cfg, uow, projects, users, svcs.Clients)
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
 		Store:      auth.NewResetStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),
 		Transactor: uow,

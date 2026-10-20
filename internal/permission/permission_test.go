@@ -9,11 +9,13 @@ import (
 
 	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
+	clientv1 "altalune.id/othra/gen/go/client/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
 	keysv1 "altalune.id/othra/gen/go/keys/v1"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	projectv1 "altalune.id/othra/gen/go/project/v1"
+	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
 	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/scope"
@@ -24,11 +26,13 @@ func allProcedures() []string {
 	for _, f := range []protoreflect.FileDescriptor{
 		apikeyv1.File_apikey_v1_apikey_proto,
 		authv1.File_auth_v1_auth_proto,
+		clientv1.File_client_v1_client_proto,
 		invitev1.File_invite_v1_invite_proto,
 		keysv1.File_keys_v1_keys_proto,
 		memberv1.File_member_v1_member_proto,
 		orgv1.File_org_v1_org_proto,
 		projectv1.File_project_v1_project_proto,
+		resourceserverv1.File_resourceserver_v1_resourceserver_proto,
 		webhookv1.File_webhook_v1_webhook_proto,
 	} {
 		svcs := f.Services()
@@ -44,7 +48,7 @@ func allProcedures() []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 48, "Org 4, Project 12, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2")
+	require.Len(t, procs, 67, "Org 4, Project 12, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 11")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]
@@ -63,35 +67,54 @@ func TestEveryRPCHasAPermission(t *testing.T) {
 func TestPermissionTable_Spec15(t *testing.T) {
 	table := Table()
 	for proc, want := range map[string]string{
-		"/org.v1.OrgService/CreateOrg":                            "org:write",
-		"/org.v1.OrgService/ListOrgs":                             "org:read",
-		"/org.v1.OrgService/UpdateOrg":                            "org:write",
-		"/project.v1.ProjectService/UpdateProject":                "project:write",
-		"/project.v1.ProjectService/ListProjects":                 "project:read",
-		"/keys.v1.SigningKeyService/ListSigningKeys":              "project:read",
-		"/keys.v1.SigningKeyService/RotateSigningKey":             "project:write",
-		"/webhook.v1.WebhookService/ListWebhookDeliveryAttempts":  "webhook:read",
-		"/webhook.v1.WebhookService/RotateWebhookSecret":          "webhook:write",
-		"/webhook.v1.WebhookService/RetryFailedWebhookDeliveries": "webhook:write",
-		"/apikey.v1.APIKeyService/ListAPIKeys":                    "apikey:read",
-		"/apikey.v1.APIKeyService/CreateAPIKey":                   authz.AnyAuthenticated,
-		"/apikey.v1.APIKeyService/RevokeAPIKey":                   authz.AnyAuthenticated,
-		"/auth.v1.AuthService/Whoami":                             authz.AnyAuthenticated,
-		"/auth.v1.AuthService/SetActiveOrg":                       authz.PersonOnly,
-		"/auth.v1.AuthService/UpdateProfile":                      authz.PersonOnly,
-		"/auth.v1.AuthService/ChangePassword":                     authz.PersonOnly,
-		"/auth.v1.AuthService/SignOutEverywhere":                  authz.PersonOnly,
-		"/member.v1.MemberService/ListMembers":                    "member:read",
-		"/member.v1.MemberService/SetMemberRole":                  "member:write",
-		"/member.v1.MemberService/RemoveMember":                   "member:write",
-		"/member.v1.MemberService/LeaveOrg":                       authz.PersonOnly,
-		"/invite.v1.InviteService/ListInvites":                    "member:read",
-		"/invite.v1.InviteService/CreateInvite":                   "member:write",
-		"/invite.v1.InviteService/ResendInvite":                   "member:write",
-		"/invite.v1.InviteService/RevokeInvite":                   "member:write",
-		"/invite.v1.InviteService/DraftInvite":                    "member:write",
-		"/invite.v1.InviteService/ConfirmDraftInvite":             "member:write",
-		"/invite.v1.InviteService/DiscardDraftInvite":             "member:write",
+		"/org.v1.OrgService/CreateOrg":                                    "org:write",
+		"/org.v1.OrgService/ListOrgs":                                     "org:read",
+		"/org.v1.OrgService/UpdateOrg":                                    "org:write",
+		"/project.v1.ProjectService/UpdateProject":                        "project:write",
+		"/project.v1.ProjectService/ListProjects":                         "project:read",
+		"/keys.v1.SigningKeyService/ListSigningKeys":                      "project:read",
+		"/keys.v1.SigningKeyService/RotateSigningKey":                     "project:write",
+		"/client.v1.ClientService/ListClients":                            "project:read",
+		"/client.v1.ClientService/GetClient":                              "project:read",
+		"/client.v1.ClientService/CreateClient":                           "project:write",
+		"/client.v1.ClientService/UpdateClient":                           "project:write",
+		"/client.v1.ClientService/DeleteClient":                           "project:write",
+		"/client.v1.ClientService/GenerateClientSecret":                   "project:write",
+		"/client.v1.ClientService/RotateClientSecret":                     "project:write",
+		"/client.v1.ClientService/RevokeClientSecret":                     "project:write",
+		"/resourceserver.v1.ResourceServerService/ListResourceServers":    "project:read",
+		"/resourceserver.v1.ResourceServerService/GetResourceServer":      "project:read",
+		"/resourceserver.v1.ResourceServerService/CreateResourceServer":   "project:write",
+		"/resourceserver.v1.ResourceServerService/UpdateResourceServer":   "project:write",
+		"/resourceserver.v1.ResourceServerService/DeleteResourceServer":   "project:write",
+		"/resourceserver.v1.ResourceServerService/VerifyResourceServer":   "project:write",
+		"/resourceserver.v1.ResourceServerService/SetResourceServerTrust": "project:write",
+		"/resourceserver.v1.ResourceServerService/ListLinks":              "project:read",
+		"/resourceserver.v1.ResourceServerService/LinkClient":             "project:write",
+		"/resourceserver.v1.ResourceServerService/UpdateLink":             "project:write",
+		"/resourceserver.v1.ResourceServerService/UnlinkClient":           "project:write",
+		"/webhook.v1.WebhookService/ListWebhookDeliveryAttempts":          "webhook:read",
+		"/webhook.v1.WebhookService/RotateWebhookSecret":                  "webhook:write",
+		"/webhook.v1.WebhookService/RetryFailedWebhookDeliveries":         "webhook:write",
+		"/apikey.v1.APIKeyService/ListAPIKeys":                            "apikey:read",
+		"/apikey.v1.APIKeyService/CreateAPIKey":                           authz.AnyAuthenticated,
+		"/apikey.v1.APIKeyService/RevokeAPIKey":                           authz.AnyAuthenticated,
+		"/auth.v1.AuthService/Whoami":                                     authz.AnyAuthenticated,
+		"/auth.v1.AuthService/SetActiveOrg":                               authz.PersonOnly,
+		"/auth.v1.AuthService/UpdateProfile":                              authz.PersonOnly,
+		"/auth.v1.AuthService/ChangePassword":                             authz.PersonOnly,
+		"/auth.v1.AuthService/SignOutEverywhere":                          authz.PersonOnly,
+		"/member.v1.MemberService/ListMembers":                            "member:read",
+		"/member.v1.MemberService/SetMemberRole":                          "member:write",
+		"/member.v1.MemberService/RemoveMember":                           "member:write",
+		"/member.v1.MemberService/LeaveOrg":                               authz.PersonOnly,
+		"/invite.v1.InviteService/ListInvites":                            "member:read",
+		"/invite.v1.InviteService/CreateInvite":                           "member:write",
+		"/invite.v1.InviteService/ResendInvite":                           "member:write",
+		"/invite.v1.InviteService/RevokeInvite":                           "member:write",
+		"/invite.v1.InviteService/DraftInvite":                            "member:write",
+		"/invite.v1.InviteService/ConfirmDraftInvite":                     "member:write",
+		"/invite.v1.InviteService/DiscardDraftInvite":                     "member:write",
 	} {
 		assert.Equal(t, []string{want}, table[proc], proc)
 	}

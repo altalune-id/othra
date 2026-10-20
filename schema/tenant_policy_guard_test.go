@@ -59,6 +59,19 @@ func TestMigrations_EveryOrgOwnedTableForcesItsPolicy(t *testing.T) {
 	}
 }
 
+// SECURITY: a project-owned table checks the project as well as the org, on reads and writes alike.
+func TestMigrations_ProjectOwnedTablesCheckTheProject(t *testing.T) {
+	all := strings.Join(mapValues(migrationSources(t)), "\n")
+	scope := `org_id = {{.Schema}}.{{.TablePrefix}}current_org_id() AND project_id = {{.Schema}}.{{.TablePrefix}}current_project_id()`
+	for _, table := range []string{"signing_keys", "oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources"} {
+		target := `{{.Schema}}.{{.TablePrefix}}` + table
+		want := "CREATE POLICY {{.TablePrefix}}" + table + "_tenant ON " + target + "\n  FOR ALL\n  USING (" + scope + ")\n  WITH CHECK (" + scope + ");"
+		if !strings.Contains(all, want) {
+			t.Errorf("%s: missing the org AND project policy", table)
+		}
+	}
+}
+
 func migrationSources(t *testing.T) map[string]string {
 	t.Helper()
 	entries, err := fs.ReadDir(MigrationsFS(), ".")

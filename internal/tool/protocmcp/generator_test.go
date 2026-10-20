@@ -72,6 +72,16 @@ func TestGenerateRefusals(t *testing.T) {
 			file:  "othratest/v1/bad_constclash.proto",
 			wants: []string{"SecondClash", "_twin", "TwinToolName", "FirstClash"},
 		},
+		{
+			name:  "response with a secret field",
+			file:  "othratest/v1/bad_secret.proto",
+			wants: []string{"MintSecret", "secret_mint", "MintSecretResponse.secret"},
+		},
+		{
+			name:  "response nesting a plaintext field",
+			file:  "othratest/v1/bad_plaintext.proto",
+			wants: []string{"IssueKey", "key_issue", "IssuedKey.plaintext"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -87,6 +97,12 @@ func TestGenerateRefusals(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestSecretToolAllowlistDoesNotGrow(t *testing.T) {
+	if len(secretToolAllowed) != 1 || !secretToolAllowed["webhook.v1.WebhookService.CreateWebhook"] {
+		t.Fatalf("secretToolAllowed = %v; no new tool may return a secret over MCP", secretToolAllowed)
 	}
 }
 

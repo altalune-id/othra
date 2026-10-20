@@ -102,6 +102,8 @@ func TestMCP_ToolResultsHoldNoUUID(t *testing.T) {
 		"org_id": s.pub.org, "project_id": s.pub.project, "invite_id": s.pub.invite, "user_id": s.pub.member,
 		"delivery_id": s.pub.delivery, "name": "Probe", "email": "probe@example.com", "role": "member",
 		"url": "https://example.com/probe", "event_types": []string{"invite.created"},
+		"client_id": s.pub.client, "kind": "CLIENT_KIND_WEB", "redirect_uris": []string{"https://example.com/probe"},
+		"consent_policy": "CONSENT_POLICY_REQUIRE",
 	}
 	ids := map[string]string{"org": s.pub.org, "project": s.pub.project, "webhook": s.pub.webhook}
 	answered := 0
@@ -127,6 +129,43 @@ func TestMCP_ToolResultsHoldNoUUID(t *testing.T) {
 		assert.Empty(t, uuidShaped.FindAllString(string(body), -1), "%s answered with a UUID: %s", tool.Name, body)
 	}
 	assert.Greater(t, answered, len(list.Result.Tools)/2, "most tools must succeed for the check to mean anything")
+}
+
+// SECURITY: D4, no MCP tool hands out a client secret; a web client created over MCP has none.
+func TestMCP_ClientToolsNeverReturnASecret(t *testing.T) {
+	f := newAPIFixture(t)
+	s := seedReach(t, f)
+	key := f.mintKey(t, apikey.CreateRequest{OrgID: s.orgB, Kind: apikey.KindOrg, Scopes: mintableScopes(), AllProjects: true})
+	status, _, body := f.mcpCall(t, key, `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
+	require.Equal(t, http.StatusOK, status, string(body))
+	var list struct {
+		Result struct {
+			Tools []struct{ Name string } `json:"tools"`
+		} `json:"result"`
+	}
+	require.NoError(t, json.Unmarshal(body, &list))
+	require.NotEmpty(t, list.Result.Tools)
+	for _, tool := range list.Result.Tools {
+		assert.NotContains(t, tool.Name, "secret", "no secret tool is published")
+		assert.NotContains(t, tool.Name, "trust", "the trust switch is person-only")
+	}
+
+	raw, err := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": map[string]any{
+		"name": "client_create", "arguments": map[string]any{
+			"projectId": s.pub.project, "name": "MCP web", "kind": "CLIENT_KIND_WEB", "redirectUris": []string{"https://example.com/cb"},
+		},
+	}})
+	require.NoError(t, err)
+	status, _, body = f.mcpCall(t, key, string(raw))
+	require.Equal(t, http.StatusOK, status, string(body))
+	assert.NotContains(t, string(body), `"isError":true`, string(body))
+	assert.Contains(t, string(body), "MCP web")
+	assert.NotContains(t, string(body), "othra_cs_")
+	assert.NotContains(t, string(body), `\"secret\"`)
+	assert.NotContains(t, string(body), `"secret"`)
+	var n int
+	require.NoError(t, f.db.QueryRowContext(t.Context(), `SELECT count(*) FROM oauth_client_secrets WHERE org_id = $1`, s.orgB).Scan(&n))
+	assert.Zero(t, n, "the client has no secret until a person generates one")
 }
 
 func snake(name string) string {

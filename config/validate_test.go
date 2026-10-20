@@ -126,6 +126,13 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"rateLimit.driver unknown", func(c *Config) { c.RateLimit.Driver = "disk" }, invalidSetting("rateLimit.driver")},
 		{"rateLimit.maxKeys 0 with memory", func(c *Config) { c.RateLimit.MaxKeys = 0 }, invalidSetting("rateLimit.maxKeys")},
 		{"rateLimit.maxKeys 0 with redis", func(c *Config) { c.RateLimit.Driver = RateLimitDriverRedis; c.RateLimit.MaxKeys = 0 }, valid},
+		{"resourceServers.verification.allowPrivateHosts in development", func(c *Config) {
+			devConsole(c)
+			c.ResourceServers.Verification.AllowPrivateHosts = true
+		}, valid},
+		{"resourceServers.verification.allowPrivateHosts in production", func(c *Config) {
+			c.ResourceServers.Verification.AllowPrivateHosts = true
+		}, invalidSetting("resourceServers.verification.allowPrivateHosts")},
 		{"redis used", redisFeature, valid},
 		{"redis.url empty when used", func(c *Config) { redisFeature(c); c.Redis.URL = "" }, missingSetting("redis.url")},
 		{"redis.url wrong scheme when used", func(c *Config) { redisFeature(c); c.Redis.URL = "http://localhost" }, invalidSetting("redis.url")},

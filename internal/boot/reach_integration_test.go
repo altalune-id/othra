@@ -22,12 +22,14 @@ import (
 	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
 	"altalune.id/othra/internal/apikey"
+	oauthclient "altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/kernel/events"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/permission"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/scope"
 )
@@ -58,7 +60,8 @@ type reachOrg struct {
 }
 
 type reachIDs struct {
-	org, project, otherProject, webhook, delivery, member, invite, keyHint string
+	org, project, otherProject, webhook, delivery, member, invite, keyHint, client string
+	resourceServer                                                                 string
 }
 
 func (ids reachIDs) serviceID(service protoreflect.FullName) string {
@@ -100,18 +103,26 @@ func seedReach(t *testing.T, f *apiFixture) reachOrg {
 	require.NoError(t, err)
 	c, err := f.svcs.Invites.Create(ctx, member.Requester{Operator: true}, b.ID, "b-invitee@example.com", member.RoleMember)
 	require.NoError(t, err)
+	oc, err := f.svcs.Clients.Create(ctx, b.ID, prj.ID, oauthclient.KindWeb, oauthclient.Settings{Name: "Web", RedirectURIs: []string{"https://example.com/cb"}})
+	require.NoError(t, err)
+	rs, err := f.svcs.ResourceServers.Create(ctx, resourceserver.CreateRequest{
+		OrgID: b.ID, ProjectID: prj.ID, Name: "API", Identifier: "https://api.invalid", Scopes: []string{scope.WebhookRead},
+	})
+	require.NoError(t, err)
 	var delivery, deliveryID string
 	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT public_id, id::text FROM outbox_entries WHERE target = $1`, hook.ID.String()).
 		Scan(&delivery, &deliveryID))
 	s.pub = reachIDs{
 		org: b.PublicID, project: prj.PublicID, otherProject: other.PublicID, webhook: hook.PublicID, delivery: delivery,
-		member: u.PublicID, invite: c.Invite.PublicID, keyHint: hintOf(key),
+		member: u.PublicID, invite: c.Invite.PublicID, keyHint: hintOf(key), client: oc.PublicID,
+		resourceServer: rs.PublicID,
 	}
 	var keyID string
 	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT id::text FROM api_keys WHERE org_id = $1 AND secret_hint = $2`, b.ID, hintOf(key)).Scan(&keyID))
 	s.uuids = reachIDs{
 		org: b.ID.String(), project: prj.ID.String(), otherProject: other.ID.String(), webhook: hook.ID.String(),
-		delivery: deliveryID, member: u.ID.String(), invite: c.Invite.ID.String(), keyHint: keyID,
+		delivery: deliveryID, member: u.ID.String(), invite: c.Invite.ID.String(), keyHint: keyID, client: oc.ID.String(),
+		resourceServer: rs.ID.String(),
 	}
 	return s
 }
@@ -127,7 +138,11 @@ func (s reachOrg) snapshot(t *testing.T, f *apiFixture) string {
 		(SELECT count(*) FROM webhook_deliveries WHERE org_id = $1),
 		(SELECT count(*) FROM api_keys WHERE org_id = $1 AND revoked_at IS NULL),
 		(SELECT string_agg(user_id || role, ',' ORDER BY user_id) FROM memberships WHERE org_id = $1),
-		(SELECT count(*) || md5(string_agg(coalesce(token_hash, '') || updated_at || coalesce(revoked_at::text, ''), ',' ORDER BY id)) FROM invites WHERE org_id = $1))`, s.orgB).Scan(&got))
+		(SELECT count(*) || md5(string_agg(coalesce(token_hash, '') || updated_at || coalesce(revoked_at::text, ''), ',' ORDER BY id)) FROM invites WHERE org_id = $1),
+		(SELECT count(*) || max(updated_at)::text FROM oauth_clients WHERE org_id = $1),
+		(SELECT count(*) FROM oauth_client_secrets WHERE org_id = $1),
+		(SELECT count(*) || max(updated_at)::text FROM resource_servers WHERE org_id = $1),
+		(SELECT count(*) || max(updated_at)::text FROM oauth_client_resources WHERE org_id = $1))`, s.orgB).Scan(&got))
 	return got
 }
 
@@ -149,6 +164,7 @@ func (ids reachIDs) request(t *testing.T, procedure string) (protoreflect.Method
 	tenantIDs := map[protoreflect.Name]string{
 		"org_id": ids.org, "project_id": ids.project, "user_id": ids.member, "invite_id": ids.invite,
 		"delivery_id": ids.delivery, "hint": ids.keyHint, "id": ids.serviceID(method.Parent().FullName()),
+		"client_id": ids.client, "resource_server_id": ids.resourceServer,
 	}
 	aimed := false
 	fields := method.Input().Fields()
@@ -306,9 +322,9 @@ func TestReach_UUIDsAndGarbageAreRefused(t *testing.T) {
 	f := newAPIFixture(t)
 	s := seedReach(t, f)
 	cookie, _, _ := f.personCookieIn(t, s.orgB, "b-owner@example.com", member.RoleOwner)
-	garbage := reachIDs{"nope", "nope", "nope", "nope", "nope", "nope", "nope", "nope"}
+	garbage := reachIDs{"nope", "nope", "nope", "nope", "nope", "nope", "nope", "nope", "nope", "nope"}
 	const unknownID = "unknwnunknwnunknwnabc"
-	unknown := reachIDs{unknownID, unknownID, unknownID, unknownID, unknownID, unknownID, unknownID, "zzzz"}
+	unknown := reachIDs{unknownID, unknownID, unknownID, unknownID, unknownID, unknownID, unknownID, "zzzz", unknownID, unknownID}
 	before := s.snapshot(t, f)
 	for name, tc := range map[string]struct {
 		ids  reachIDs

@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/pluginpb"
 
 	mcpv1 "altalune.id/othra/gen/go/mcp/v1"
@@ -155,6 +157,10 @@ func newTool(method *protogen.Method, spec *mcpv1.Tool, opts Options) (tool, err
 			full, name, unknown, method.Input.Desc.FullName(), jsonFieldNames(method.Input))
 	}
 
+	if leak := secretField(method.Output, map[*protogen.Message]bool{}); leak != "" && !secretToolAllowed[full] {
+		return tool{}, fmt.Errorf("%s: tool %q answers with %s; an MCP result must never carry a secret", full, name, leak)
+	}
+
 	description := cmp.Or(spec.GetDescription(), comment(method.Comments.Leading))
 	if description == "" {
 		return tool{}, fmt.Errorf(
@@ -180,6 +186,32 @@ func newTool(method *protogen.Method, spec *mcpv1.Tool, opts Options) (tool, err
 		schema:      schema,
 		uiResource:  uiURI,
 	}, nil
+}
+
+//nolint:gochecknoglobals // fixed field names.
+var secretFieldNames = []protoreflect.Name{"secret", "plaintext"}
+
+// TODO: remove CreateWebhook once webhook_create stops returning its secret over MCP (BACKLOG, D4).
+//
+//nolint:gochecknoglobals // a fixed allowlist.
+var secretToolAllowed = map[protoreflect.FullName]bool{
+	"webhook.v1.WebhookService.CreateWebhook": true,
+}
+
+func secretField(msg *protogen.Message, seen map[*protogen.Message]bool) string {
+	if msg == nil || seen[msg] {
+		return ""
+	}
+	seen[msg] = true
+	for _, field := range msg.Fields {
+		if slices.Contains(secretFieldNames, field.Desc.Name()) {
+			return string(msg.Desc.Name()) + "." + string(field.Desc.Name())
+		}
+		if leak := secretField(field.Message, seen); leak != "" {
+			return leak
+		}
+	}
+	return ""
 }
 
 func generatedPackage(file *protogen.File) string {

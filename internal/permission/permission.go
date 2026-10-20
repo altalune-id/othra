@@ -4,11 +4,13 @@ package permission
 import (
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
+	clientv1connect "altalune.id/othra/gen/go/client/v1/clientv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
 	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	resourceserverv1connect "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/scope"
@@ -37,6 +39,27 @@ func Table() map[string][]string {
 
 		keysv1connect.SigningKeyServiceListSigningKeysProcedure:  {scope.ProjectRead},
 		keysv1connect.SigningKeyServiceRotateSigningKeyProcedure: {scope.ProjectWrite},
+
+		clientv1connect.ClientServiceListClientsProcedure:          {scope.ProjectRead},
+		clientv1connect.ClientServiceGetClientProcedure:            {scope.ProjectRead},
+		clientv1connect.ClientServiceCreateClientProcedure:         {scope.ProjectWrite},
+		clientv1connect.ClientServiceUpdateClientProcedure:         {scope.ProjectWrite},
+		clientv1connect.ClientServiceDeleteClientProcedure:         {scope.ProjectWrite},
+		clientv1connect.ClientServiceGenerateClientSecretProcedure: {scope.ProjectWrite},
+		clientv1connect.ClientServiceRotateClientSecretProcedure:   {scope.ProjectWrite},
+		clientv1connect.ClientServiceRevokeClientSecretProcedure:   {scope.ProjectWrite},
+
+		resourceserverv1connect.ResourceServerServiceListResourceServersProcedure:    {scope.ProjectRead},
+		resourceserverv1connect.ResourceServerServiceGetResourceServerProcedure:      {scope.ProjectRead},
+		resourceserverv1connect.ResourceServerServiceCreateResourceServerProcedure:   {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceUpdateResourceServerProcedure:   {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceDeleteResourceServerProcedure:   {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceVerifyResourceServerProcedure:   {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceSetResourceServerTrustProcedure: {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceListLinksProcedure:              {scope.ProjectRead},
+		resourceserverv1connect.ResourceServerServiceLinkClientProcedure:             {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceUpdateLinkProcedure:             {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceUnlinkClientProcedure:           {scope.ProjectWrite},
 
 		apikeyv1connect.APIKeyServiceListAPIKeysProcedure:  {scope.ApikeyRead},
 		apikeyv1connect.APIKeyServiceCreateAPIKeyProcedure: {authz.AnyAuthenticated},

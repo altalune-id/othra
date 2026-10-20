@@ -1,0 +1,273 @@
+syntax = "proto3";
+
+package client.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "altalune.id/othra/gen/go/client/v1;clientv1";
+
+// ClientService registers a project's OAuth clients and manages their secrets. Every id is a public id.
+service ClientService {
+  rpc ListClients(ListClientsRequest) returns (ListClientsResponse) {
+    option (mcp.v1.tool) = {
+      name: "client_list"
+      description: "List a project's OAuth clients with their redirect URIs and secret hints."
+      required: ["project_id"]
+    };
+  }
+  rpc GetClient(GetClientRequest) returns (GetClientResponse) {
+    option (mcp.v1.tool) = {
+      name: "client_get"
+      description: "Get one OAuth client of a project by its client_id."
+      required: ["project_id", "client_id"]
+    };
+  }
+  rpc CreateClient(CreateClientRequest) returns (CreateClientResponse) {
+    option (mcp.v1.tool) = {
+      name: "client_create"
+      description: "Register an OAuth client in a project: WEB for a confidential web app, CLI for a public native app on loopback redirect URIs. It never returns a secret; a person generates a WEB client's secret in the console."
+      required: ["project_id", "name", "kind", "redirect_uris"]
+      mutation: true
+      destructive: false
+    };
+  }
+  rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse) {
+    option (mcp.v1.tool) = {
+      name: "client_update"
+      description: "Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change."
+      required: ["project_id", "client_id", "name", "redirect_uris", "consent_policy"]
+      mutation: true
+      destructive: true
+    };
+  }
+  rpc DeleteClient(DeleteClientRequest) returns (DeleteClientResponse) {
+    option (mcp.v1.tool) = {
+      name: "client_delete"
+      description: "Delete an OAuth client and its secrets and links. Apps using its client_id stop signing in."
+      required: ["project_id", "client_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+  // SECURITY: the secret RPCs answer with a one-time secret or end one; a signed-in person calls them, never MCP.
+  rpc GenerateClientSecret(GenerateClientSecretRequest) returns (GenerateClientSecretResponse);
+  rpc RotateClientSecret(RotateClientSecretRequest) returns (RotateClientSecretResponse);
+  rpc RevokeClientSecret(RevokeClientSecretRequest) returns (RevokeClientSecretResponse);
+}
+
+// ClientKind is fixed at create.
+enum ClientKind {
+  CLIENT_KIND_UNSPECIFIED = 0;
+  // WEB is a confidential web app that signs in with client_secret_basic.
+  CLIENT_KIND_WEB = 1;
+  // CLI is a public native app with loopback redirect URIs and no secret.
+  CLIENT_KIND_CLI = 2;
+}
+
+// ConsentPolicy says whether end users see the consent page.
+enum ConsentPolicy {
+  // UNSPECIFIED is REQUIRE on create.
+  CONSENT_POLICY_UNSPECIFIED = 0;
+  CONSENT_POLICY_REQUIRE = 1;
+  // IMPLICIT skips consent, for first-party apps.
+  CONSENT_POLICY_IMPLICIT = 2;
+}
+
+// SecretGrace is how long the current secret keeps working after a rotation.
+enum SecretGrace {
+  // UNSPECIFIED is a day.
+  SECRET_GRACE_UNSPECIFIED = 0;
+  SECRET_GRACE_NOW = 1;
+  SECRET_GRACE_HOUR = 2;
+  SECRET_GRACE_DAY = 3;
+  SECRET_GRACE_WEEK = 4;
+}
+
+message ClientSecret {
+  string id = 1;
+  // hint is the secret's last 4 characters.
+  string hint = 2;
+  google.protobuf.Timestamp created_at = 3;
+  // expires_at is unset on the current secret and set on an old one that still works until then.
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message Client {
+  // id is the OAuth client_id.
+  string id = 1;
+  string name = 2;
+  ClientKind kind = 3;
+  repeated string redirect_uris = 4;
+  repeated string post_logout_redirect_uris = 5;
+  bool refresh_tokens = 6;
+  ConsentPolicy consent_policy = 7;
+  repeated string grant_types = 8;
+  repeated string allowed_scopes = 9;
+  string token_endpoint_auth_method = 10;
+  repeated ClientSecret secrets = 11;
+  // issuer_handle_locked is true once the project's issuer handle can no longer change.
+  bool issuer_handle_locked = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+message ListClientsRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message ListClientsResponse {
+  repeated Client clients = 1;
+}
+
+message GetClientRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GetClientResponse {
+  Client client = 1;
+}
+
+message CreateClientRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).cel = {id: "client.name.blank", expression: "this.trim() != '' ? '' : 'must not be blank'"},
+    (buf.validate.field).cel = {id: "client.name.max_len.100", expression: "this.trim().size() <= 100 ? '' : 'must be at most 100 characters'"}
+  ];
+  ClientKind kind = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).enum.defined_only = true
+  ];
+  repeated string redirect_uris = 4 [
+    (buf.validate.field).repeated.min_items = 1,
+    (buf.validate.field).repeated.max_items = 20,
+    (buf.validate.field).repeated.items.string.max_len = 2000
+  ];
+  repeated string post_logout_redirect_uris = 5 [
+    (buf.validate.field).repeated.max_items = 20,
+    (buf.validate.field).repeated.items.string.max_len = 2000
+  ];
+  bool refresh_tokens = 6;
+  ConsentPolicy consent_policy = 7 [(buf.validate.field).enum.defined_only = true];
+}
+
+message CreateClientResponse {
+  Client client = 1;
+}
+
+message UpdateClientRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string name = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).cel = {id: "client.name.blank", expression: "this.trim() != '' ? '' : 'must not be blank'"},
+    (buf.validate.field).cel = {id: "client.name.max_len.100", expression: "this.trim().size() <= 100 ? '' : 'must be at most 100 characters'"}
+  ];
+  repeated string redirect_uris = 4 [
+    (buf.validate.field).repeated.min_items = 1,
+    (buf.validate.field).repeated.max_items = 20,
+    (buf.validate.field).repeated.items.string.max_len = 2000
+  ];
+  repeated string post_logout_redirect_uris = 5 [
+    (buf.validate.field).repeated.max_items = 20,
+    (buf.validate.field).repeated.items.string.max_len = 2000
+  ];
+  bool refresh_tokens = 6;
+  ConsentPolicy consent_policy = 7 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).enum.defined_only = true
+  ];
+}
+
+message UpdateClientResponse {
+  Client client = 1;
+}
+
+message DeleteClientRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message DeleteClientResponse {}
+
+message GenerateClientSecretRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GenerateClientSecretResponse {
+  Client client = 1;
+  // secret is the one-time secret. It is never present on any other response.
+  string secret = 2 [debug_redact = true];
+}
+
+message RotateClientSecretRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  SecretGrace grace = 3 [(buf.validate.field).enum.defined_only = true];
+}
+
+message RotateClientSecretResponse {
+  Client client = 1;
+  // secret is the new one-time secret. It is never present on any other response.
+  string secret = 2 [debug_redact = true];
+}
+
+message RevokeClientSecretRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string secret_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message RevokeClientSecretResponse {
+  Client client = 1;
+}

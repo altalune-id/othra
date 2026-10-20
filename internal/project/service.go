@@ -25,6 +25,7 @@ type Service struct {
 	tx          db.Transactor
 	members     Members
 	afterCreate func(ctx context.Context, p *Project) error
+	onIssuer    func(projectID uuid.UUID)
 	now         func() time.Time
 }
 
@@ -42,6 +43,12 @@ func (s *Service) WithStorage(files FileStorage, tx db.Transactor) *Service {
 // WithAfterCreate runs hook in the new project's unit of work, so a failing hook rolls the project back.
 func (s *Service) WithAfterCreate(hook func(ctx context.Context, p *Project) error) *Service {
 	s.afterCreate = hook
+	return s
+}
+
+// WithOnIssuerChange calls fn with a project's id after its issuer handle changes.
+func (s *Service) WithOnIssuerChange(fn func(projectID uuid.UUID)) *Service {
+	s.onIssuer = fn
 	return s
 }
 
@@ -222,6 +229,9 @@ func (s *Service) UpdateIssuerHandle(ctx context.Context, id uuid.UUID, handle s
 	}
 	if err := s.store.SetIssuerHandle(ctx, p.ID, h); err != nil {
 		return nil, s.errOrReport(ctx, "project: update issuer", err)
+	}
+	if s.onIssuer != nil {
+		s.onIssuer(p.ID)
 	}
 	return s.reload(ctx, "project: update issuer", p.ID)
 }

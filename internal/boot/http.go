@@ -61,17 +61,20 @@ func buildAPIHandler(
 		opts.OpenAPIBasicAuth = &controlplane.BasicAuth{User: cfg.OpenAPI.BasicAuthUser, Password: cfg.OpenAPI.BasicAuthPassword}
 	}
 	h := controlplane.New(controlplane.Services{
-		Orgs:        svcs.Orgs,
-		Projects:    svcs.Projects,
-		APIKeys:     svcs.APIKeys,
-		Webhooks:    svcs.Webhooks,
-		Users:       svcs.Users,
-		Members:     svcs.Members,
-		Invites:     svcs.Invites,
-		Auth:        svcs.Auth,
-		Keys:        svcs.Keys,
-		Refs:        newPublicIDs(svcs),
-		FileUploads: svcs.Caps.FileUploads,
+		Orgs:     svcs.Orgs,
+		Projects: svcs.Projects,
+		APIKeys:  svcs.APIKeys,
+		Webhooks: svcs.Webhooks,
+		Users:    svcs.Users,
+		Members:  svcs.Members,
+		Invites:  svcs.Invites,
+		Auth:     svcs.Auth,
+		Keys:     svcs.Keys,
+		Clients:  svcs.Clients,
+
+		ResourceServers: svcs.ResourceServers,
+		Refs:            newPublicIDs(svcs),
+		FileUploads:     svcs.Caps.FileUploads,
 	}, unexpected, opts).Handler(basePath)
 	if requireCredentials && svcs.Caps.BasicAuth {
 		h = auth.BasicChallenge(h)
@@ -170,6 +173,7 @@ func buildIssuerRoutes(
 		CORS:       middleware.PublicCORS,
 	}).WithLimiter(svcs.AuthLimiter, cfg.HTTP.TrustedProxyHops)
 	svcs.Keys.WithOnChange(issuers.Forget)
+	svcs.Projects.WithOnIssuerChange(issuers.Forget)
 	return []web.Registrar{issuers}, []web.Registrar{issuers.Pages()}
 }
 

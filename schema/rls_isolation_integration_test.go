@@ -21,7 +21,7 @@ import (
 )
 
 type rlsTenant struct {
-	org, project, user, key, endpoint uuid.UUID
+	org, project, user, key, endpoint, client, rs uuid.UUID
 }
 
 type rlsFixture struct {
@@ -41,7 +41,10 @@ func newRLSFixture(t *testing.T) *rlsFixture {
 
 func (f *rlsFixture) seed(t *testing.T, tag string) rlsTenant {
 	t.Helper()
-	tn := rlsTenant{org: uuid.New(), project: uuid.New(), user: uuid.New(), key: uuid.New(), endpoint: uuid.New()}
+	tn := rlsTenant{
+		org: uuid.New(), project: uuid.New(), user: uuid.New(), key: uuid.New(), endpoint: uuid.New(),
+		client: uuid.New(), rs: uuid.New(),
+	}
 	for _, ins := range rlsInserts() {
 		_, err := f.admin.ExecContext(t.Context(), ins.sql(f.schema), ins.args(tn, tag)...)
 		require.NoError(t, err, ins.table)
@@ -84,6 +87,26 @@ func rlsInserts() []rlsInsert {
 			return `INSERT INTO ` + s + `.signing_keys (id, public_id, org_id, project_id, kid, alg, public_jwk, private_key_enc, status, created_at) VALUES ($1, $2, $3, $4, $5, 'RS256', '{}', '\x01', 'active', $6)`
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{uuid.New(), "k" + id()[:12], tn.org, tn.project, "kid" + id(), now}
+		}},
+		{"oauth_clients", func(s string) string {
+			return `INSERT INTO ` + s + `.oauth_clients (id, public_id, org_id, project_id, name, client_type, application_type, token_endpoint_auth_method, grant_types, allowed_scopes, redirect_uris, created_at, updated_at) VALUES ($1, $2, $3, $4, 'Web', 'confidential', 'web', 'client_secret_basic', '{authorization_code}', '{openid}', '{https://a.example/cb}', $5, $5)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{tn.client, "c" + id()[:12], tn.org, tn.project, now}
+		}},
+		{"oauth_client_secrets", func(s string) string {
+			return `INSERT INTO ` + s + `.oauth_client_secrets (id, public_id, org_id, project_id, client_id, secret_hash, hint, created_at) VALUES ($1, $2, $3, $4, $5, 'sha256$' || encode(sha256(convert_to($6, 'UTF8')), 'hex'), 'abcd', $7)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), "s" + id()[:12], tn.org, tn.project, tn.client, id(), now}
+		}},
+		{"resource_servers", func(s string) string {
+			return `INSERT INTO ` + s + `.resource_servers (id, public_id, org_id, project_id, name, identifier, scopes, created_at, updated_at) VALUES ($1, $2, $3, $4, 'API', 'https://api.example/' || $2, '{read}', $5, $5)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{tn.rs, "r" + id()[:12], tn.org, tn.project, now}
+		}},
+		{"oauth_client_resources", func(s string) string {
+			return `INSERT INTO ` + s + `.oauth_client_resources (org_id, project_id, client_id, resource_server_id, scopes, created_at, updated_at) VALUES ($1, $2, $3, $4, '{read}', $5, $5)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{tn.org, tn.project, tn.client, tn.rs, now}
 		}},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
@@ -264,6 +287,79 @@ func TestRLS_SigningKeysAreProjectScoped(t *testing.T) {
 	}))
 	for _, col := range cols {
 		assert.NotContains(t, []string{"kid", "public_jwk", "private_key_enc"}, col, "the issuer definer returns no key column")
+	}
+}
+
+//nolint:gochecknoglobals // the project-owned M3 tables.
+var clientTables = []string{"oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources"}
+
+func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
+	t.Helper()
+	sibling := uuid.New()
+	_, err := f.admin.ExecContext(t.Context(),
+		`INSERT INTO `+f.schema+`.projects (id, public_id, org_id, slug, name, issuer_handle, created_at, updated_at) VALUES ($1, $2, $3, $4, 'P', $4, $5, $5)`,
+		sibling, "p"+sibling.String()[:12], f.a.org, "p"+sibling.String()[:12], time.Now().UTC())
+	require.NoError(t, err)
+	return sibling
+}
+
+// SECURITY: clients, their secrets, resource servers and links are scoped to their project as well as their org, for reads and writes.
+func TestRLS_ClientsAndResourceServersAreProjectScoped(t *testing.T) {
+	f := newRLSFixture(t)
+	sibling := f.siblingProject(t)
+	own := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: f.a.project})
+	other := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: sibling})
+	orgOnly := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org})
+	byTable := map[string]rlsInsert{}
+	for _, ins := range rlsInserts() {
+		byTable[ins.table] = ins
+	}
+	for _, table := range clientTables {
+		t.Run(table, func(t *testing.T) {
+			assert.Equal(t, []uuid.UUID{f.a.org}, f.visible(t, own, table))
+			assert.Empty(t, f.visible(t, other, table), "another project of the same org sees none")
+			assert.Empty(t, f.visible(t, orgOnly, table), "an org scope without a project sees none")
+
+			mine := f.a
+			mine.client, mine.rs = uuid.New(), uuid.New()
+			err := db.RunInTx(other, f.svc, func(ctx context.Context) error {
+				tx, _ := db.CurrentTx(ctx)
+				_, err := tx.ExecContext(ctx, byTable[table].sql(f.schema), byTable[table].args(mine, "x")...)
+				return err
+			})
+			assert.True(t, isRLSViolation(err), "writing project A's row under the sibling's scope: %v", err)
+		})
+	}
+}
+
+// SECURITY: the composite keys make a link between two projects impossible, a linked resource server can't be deleted, and a project delete still removes everything.
+func TestSchema_LinksStayInsideOneProject(t *testing.T) {
+	f := newRLSFixture(t)
+	sibling := f.siblingProject(t)
+	now := time.Now().UTC()
+	rs := uuid.New()
+	_, err := f.admin.ExecContext(t.Context(),
+		`INSERT INTO `+f.schema+`.resource_servers (id, public_id, org_id, project_id, name, identifier, scopes, created_at, updated_at) VALUES ($1, $2, $3, $4, 'API', 'https://api.example', '{read}', $5, $5)`,
+		rs, "r"+rs.String()[:12], f.a.org, sibling, now)
+	require.NoError(t, err)
+
+	for name, project := range map[string]uuid.UUID{"the client's project": f.a.project, "the server's project": sibling} {
+		_, err = f.admin.ExecContext(t.Context(),
+			`INSERT INTO `+f.schema+`.oauth_client_resources (org_id, project_id, client_id, resource_server_id, scopes, created_at, updated_at) VALUES ($1, $2, $3, $4, '{read}', $5, $5)`,
+			f.a.org, project, f.a.client, rs, now)
+		assert.Equal(t, "23503", pgCode(err), "a link named under %s: %v", name, err)
+	}
+
+	_, err = f.admin.ExecContext(t.Context(), `DELETE FROM `+f.schema+`.resource_servers WHERE id = $1`, f.a.rs)
+	assert.Equal(t, "23503", pgCode(err), "a linked resource server stays: %v", err)
+
+	_, err = f.admin.ExecContext(t.Context(), `DELETE FROM `+f.schema+`.projects WHERE id = $1`, f.a.project)
+	require.NoError(t, err, "a project delete cascades to its clients, servers and links")
+	for _, table := range clientTables {
+		var n int
+		require.NoError(t, f.admin.QueryRowContext(t.Context(),
+			`SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
+		assert.Zero(t, n, table)
 	}
 }
 

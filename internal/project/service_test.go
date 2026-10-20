@@ -227,14 +227,17 @@ func TestService_UpdateIssuerHandle(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
 	require.NoError(t, err)
 	store := &fakes.ProjectStore{Project: p}
-	svc := project.NewService(store, testUnexpected())
+	var changed []uuid.UUID
+	svc := project.NewService(store, testUnexpected()).WithOnIssuerChange(func(id uuid.UUID) { changed = append(changed, id) })
 	same, err := svc.UpdateIssuerHandle(context.Background(), p.ID, p.IssuerHandle)
 	require.NoError(t, err)
 	assert.Equal(t, p.IssuerHandle, same.IssuerHandle)
+	assert.Empty(t, changed, "the same handle changes nothing")
 
 	got, err := svc.UpdateIssuerHandle(context.Background(), p.ID, " acme-shop ")
 	require.NoError(t, err)
 	assert.Equal(t, "acme-shop", got.IssuerHandle)
+	assert.Equal(t, []uuid.UUID{p.ID}, changed, "R-10: a handle change drops the issuer cache")
 
 	store.HandleSetErr = &project.IssuerHandleTakenError{Handle: "acme-taken"}
 	_, err = svc.UpdateIssuerHandle(context.Background(), p.ID, "acme-taken")

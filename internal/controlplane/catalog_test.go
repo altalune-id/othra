@@ -26,6 +26,7 @@ import (
 	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/authz"
@@ -37,6 +38,7 @@ import (
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/webhook"
 	"altalune.id/othra/password"
@@ -172,6 +174,47 @@ func samples() []error {
 
 		&keys.NoActiveKeyError{ProjectID: "x"},
 		&keys.RotationPendingError{ProjectID: "x"},
+
+		&client.NotFoundError{},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "https://A.example/cb", Reason: client.RedirectURINotCanonical, Canonical: "https://a.example/cb"},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIRequired},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIUnparsable},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIFragment},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIWildcard},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIUserinfo},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIDotSegments},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIHTTPSRequired},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURILoopbackOnly},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIPortIgnored},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURITooLong},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURITooMany},
+		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIDuplicate},
+		&client.InvalidSettingsError{Reason: client.SettingsPostLogoutNative},
+		&client.NoSecretError{},
+		&client.SecretPersonOnlyError{},
+		&client.SecretNotFoundError{},
+		&client.SecretExistsError{},
+
+		&resourceserver.NotFoundError{},
+		&resourceserver.InvalidIdentifierError{Identifier: "https://A.example", Reason: resourceserver.IdentifierNotCanonical, Canonical: "https://a.example"},
+		&resourceserver.InvalidIdentifierError{Identifier: "x", Reason: resourceserver.IdentifierUnparsable},
+		&resourceserver.InvalidIdentifierError{Identifier: "x", Reason: resourceserver.IdentifierHTTPSRequired},
+		&resourceserver.InvalidIdentifierError{Identifier: "x", Reason: resourceserver.IdentifierQuery},
+		&resourceserver.InvalidIdentifierError{Identifier: "x", Reason: resourceserver.IdentifierFragment},
+		&resourceserver.InvalidIdentifierError{Identifier: "x", Reason: resourceserver.IdentifierUserinfo},
+		&resourceserver.InvalidIdentifierError{Identifier: "x", Reason: resourceserver.IdentifierTooLong},
+		&resourceserver.InvalidIdentifierError{Identifier: "x", Reason: resourceserver.IdentifierNeedsTrust},
+		&resourceserver.IdentifierTakenError{Identifier: "https://a.example"},
+		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeFormat},
+		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeReserved},
+		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeDuplicate},
+		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeTooMany},
+		&resourceserver.ScopePinnedError{Scope: "read", Clients: []string{"Web"}},
+		&resourceserver.LinkedError{Clients: []string{"Web"}},
+		&resourceserver.TrustSelfHostedOnlyError{},
+		&resourceserver.VerifyTooSoonError{RetryAt: time.Unix(0, 0)},
+		&resourceserver.InvalidLinkScopesError{Reason: resourceserver.LinkScopesEmpty},
+		&resourceserver.InvalidLinkScopesError{Scope: "x", Reason: resourceserver.LinkScopesNotInCatalog},
 	}
 }
 
