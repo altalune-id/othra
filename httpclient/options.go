@@ -15,6 +15,7 @@ type settings struct {
 	responseBodyLimit int64
 	otel              bool
 	noTimeout         bool
+	noRedirects       bool
 	retry             RetryPolicy
 }
 
@@ -39,6 +40,11 @@ func WithTimeout(d time.Duration) Option {
 // WithoutTimeout removes the overall request bound; the transport still caps dial, TLS and response-header waits.
 func WithoutTimeout() Option {
 	return func(s *settings) { s.noTimeout = true }
+}
+
+// WithoutRedirects makes the client return a 3xx response as it is instead of following it.
+func WithoutRedirects() Option {
+	return func(s *settings) { s.noRedirects = true }
 }
 
 // WithResponseBodyLimit caps how many bytes a response body may yield; zero means unlimited.

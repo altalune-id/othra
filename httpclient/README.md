@@ -20,6 +20,7 @@ resp, err := c.Get(url)
 | `WithAllowPrivateHosts(bool)`         | allow private/loopback targets (default: refused) |
 | `WithDialTimeout(d)`                  | per-dial timeout (default 10s)                    |
 | `WithTimeout(d)` / `WithoutTimeout()` | whole-request bound (default 30s)                 |
+| `WithoutRedirects()`                  | return a 3xx response as is (default: follow)     |
 | `WithResponseBodyLimit(n)`            | cap response body bytes (0 = unlimited)           |
 | `WithRetry(RetryPolicy{...})`         | retrying transport; `MaxAttempts < 2` disables it |
 | `WithOtel(bool)`                      | otelhttp instrumentation (default on)             |
