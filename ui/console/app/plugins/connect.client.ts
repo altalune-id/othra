@@ -3,11 +3,13 @@ import { createClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
 import { APIKeyService } from '~~/gen/apikey/v1/apikey_pb';
 import { AuthService } from '~~/gen/auth/v1/auth_pb';
+import { ClientService } from '~~/gen/client/v1/client_pb';
 import { InviteService } from '~~/gen/invite/v1/invite_pb';
 import { SigningKeyService } from '~~/gen/keys/v1/keys_pb';
 import { MemberService } from '~~/gen/member/v1/member_pb';
 import { OrgService } from '~~/gen/org/v1/org_pb';
 import { ProjectService } from '~~/gen/project/v1/project_pb';
+import { ResourceServerService } from '~~/gen/resourceserver/v1/resourceserver_pb';
 import { WebhookService } from '~~/gen/webhook/v1/webhook_pb';
 import { createRedirectOnce, isUnauthenticated } from '~/lib/auth/unauthenticated';
 import { loginURL } from '~/lib/auth/urls';
@@ -46,6 +48,8 @@ export default defineNuxtPlugin({
         memberClient: createClient(MemberService, transport),
         inviteClient: createClient(InviteService, transport),
         signingKeyClient: createClient(SigningKeyService, transport),
+        clientClient: createClient(ClientService, transport),
+        resourceServerClient: createClient(ResourceServerService, transport),
         authClient: createClient(AuthService, whoamiTransport),
       },
     };

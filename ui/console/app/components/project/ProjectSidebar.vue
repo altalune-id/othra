@@ -17,14 +17,18 @@ const base = computed(() => `/o/${route.params.org}/projects/${projectSlug.value
 
 const items = computed<NavItem[]>(() => [
   { key: 'overview', label: t('nav.overview'), icon: 'lucide:layout-dashboard', active: route.path === base.value },
+  { key: 'clients', label: t('nav.clients'), icon: 'lucide:app-window', active: route.path.startsWith(`${base.value}/clients`) },
+  { key: 'resource-servers', label: t('nav.resource_servers'), icon: 'lucide:server', active: route.path.startsWith(`${base.value}/resource-servers`) },
   { key: 'webhooks', label: t('webhooks.title'), icon: 'lucide:webhook', active: route.path.startsWith(`${base.value}/webhooks`) },
   { key: 'settings', label: t('nav.settings'), icon: 'lucide:settings', active: route.path.startsWith(`${base.value}/settings`) },
 ]);
 
 const targets: Record<string, string> = {
-  overview: '',
-  webhooks: '/webhooks',
-  settings: '/settings',
+  'overview': '',
+  'clients': '/clients',
+  'resource-servers': '/resource-servers',
+  'webhooks': '/webhooks',
+  'settings': '/settings',
 };
 
 function onSelect(key: string) {

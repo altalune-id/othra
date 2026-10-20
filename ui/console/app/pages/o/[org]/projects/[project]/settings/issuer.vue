@@ -92,8 +92,8 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
             @update:model-value="handle.input"
           />
           <div v-if="locked" role="note" class="alert alert-soft">
-            <Icon name="lucide:lock" size="18" />
-            <span class="text-sm">{{ t('issuer.locked_note') }}</span>
+            <Icon name="lucide:lock" size="18" class="text-info" />
+            <span class="text-sm text-base-content">{{ t('issuer.locked_note') }}</span>
           </div>
           <template v-else>
             <div role="note" class="alert alert-soft">

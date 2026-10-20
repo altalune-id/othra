@@ -22,6 +22,14 @@ describe('useErrorMessage', () => {
     expect(shown).toEqual({ message: 'apperror.GEN004|{"field":"field.organization_id"}' });
   });
 
+  it('shows a time param as a local time and leaves a non-time value alone', () => {
+    setKnownKeys('apperror.RSV008');
+    const iso = '2026-10-20T14:05:30Z';
+    const local = new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date(iso));
+    expect(useErrorMessage()(connectError('RSV008', { time: iso }, ''), 'error.verify_rs')).toEqual({ message: `apperror.RSV008|${JSON.stringify({ time: local })}` });
+    expect(useErrorMessage()(connectError('RSV008', { time: 'soon' }, ''), 'error.verify_rs')).toEqual({ message: 'apperror.RSV008|{"time":"soon"}' });
+  });
+
   it('translates the fallback key for a plain error', () => {
     expect(useErrorMessage()(new Error('boom'), 'error.load_orgs')).toEqual({ message: 'error.load_orgs' });
   });

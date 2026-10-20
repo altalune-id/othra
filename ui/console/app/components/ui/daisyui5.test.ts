@@ -79,7 +79,9 @@ describe('m1.5 design re-check (console-wide)', () => {
   it('opens AppModal as a native modal dialog so Esc closes it (product M1.5 7)', () => {
     const modal = files.find(f => f.path === 'components/ui/AppModal.vue')!.text;
     expect(modal).toContain('showModal()');
-    expect(modal).toContain('@cancel.prevent="emit(\'close\')"');
+    expect(modal).toContain('@cancel.prevent="cancel()"');
+    expect(modal).toMatch(/function cancel\(\) \{\s+if \(dismissible\) \{\s+emit\('close'\);/);
+    expect(modal).toContain('<form v-if="dismissible" method="dialog" class="modal-backdrop"');
     expect(modal).not.toContain('modal-open');
   });
 

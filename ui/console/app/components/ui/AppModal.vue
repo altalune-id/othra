@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref, useId, watch } from 'vue';
 
-const { open = false, title = '' } = defineProps<{
+const { open = false, title = '', dismissible = true } = defineProps<{
   open?: boolean,
   title?: string,
+  dismissible?: boolean,
 }>();
 
 const emit = defineEmits<{ close: [] }>();
@@ -23,12 +24,18 @@ function sync() {
   }
 }
 
+function cancel() {
+  if (dismissible) {
+    emit('close');
+  }
+}
+
 watch(() => open, sync, { flush: 'post' });
 onMounted(sync);
 </script>
 
 <template>
-  <dialog ref="dialog" class="modal" :aria-labelledby="title ? titleId : undefined" @cancel.prevent="emit('close')">
+  <dialog ref="dialog" class="modal" :aria-labelledby="title ? titleId : undefined" @cancel.prevent="cancel()">
     <div class="modal-box">
       <h3 v-if="title" :id="titleId" class="text-lg font-bold">
         {{ title }}
@@ -40,7 +47,7 @@ onMounted(sync);
         <slot name="footer" />
       </div>
     </div>
-    <form method="dialog" class="modal-backdrop" @submit.prevent="emit('close')">
+    <form v-if="dismissible" method="dialog" class="modal-backdrop" @submit.prevent="emit('close')">
       <button type="submit">
         close
       </button>

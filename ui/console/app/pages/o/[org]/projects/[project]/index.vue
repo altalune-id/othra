@@ -28,6 +28,8 @@ const discovery = computed(() => discoveryUrls(full.value?.issuerUrl ?? ''));
 const copyLabel = computed(() => t('common.copy_label', { label: '{label}' }));
 
 const sections = computed(() => [
+  { key: 'clients', to: `${base.value}/clients`, icon: 'lucide:app-window', title: t('nav.clients'), hint: t('clients.subtitle') },
+  { key: 'resource-servers', to: `${base.value}/resource-servers`, icon: 'lucide:server', title: t('nav.resource_servers'), hint: t('rs.subtitle') },
   { key: 'webhooks', to: `${base.value}/webhooks`, icon: 'lucide:webhook', title: t('webhooks.title'), hint: t('webhooks.subtitle') },
   { key: 'settings', to: `${base.value}/settings`, icon: 'lucide:settings', title: t('nav.settings'), hint: t('project.settings_hint') },
 ]);

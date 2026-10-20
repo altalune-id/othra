@@ -1,4 +1,5 @@
 import type { ShownError } from '~/lib/apperror/message';
+import { unref } from 'vue';
 import { useScopeLabel } from '~/composables/useScopeLabel';
 import { describeError, toShown } from '~/lib/apperror/message';
 
@@ -8,7 +9,8 @@ export function useErrorMessage() {
   const scope = useScopeLabel();
   return (err: unknown, fallbackKey: string): ShownError => {
     const t = (key: string, params?: Record<string, unknown>) => $i18n.t(key, params ?? {});
-    const view = describeError(err, t, key => $i18n.te(key), t(fallbackKey), { scope });
+    const time = (iso: string) => new Intl.DateTimeFormat(unref($i18n.locale), { timeStyle: 'medium' }).format(new Date(iso));
+    const view = describeError(err, t, key => $i18n.te(key), t(fallbackKey), { scope, time });
     return toShown(view, id => t('error.ref', { id }));
   };
 }
