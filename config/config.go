@@ -26,6 +26,7 @@ type Config struct {
 	NATS       NATSConfig       `yaml:"nats"       mapstructure:"nats"`
 	Storage    StorageConfig    `yaml:"storage"    mapstructure:"storage"`
 	S3         S3Config         `yaml:"s3"         mapstructure:"s3"`
+	Keys       KeysConfig       `yaml:"keys"       mapstructure:"keys"`
 }
 
 // CLIConfig configures the Othra CLI; SessionFile may start with "~/", expanded when used.
@@ -158,6 +159,7 @@ func (c *Config) Validate() error {
 		c.validateNATS,
 		c.validateStorage,
 		c.validateS3,
+		c.validateKeys,
 	} {
 		if err := check(); err != nil {
 			return err

@@ -5,6 +5,7 @@ import (
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
@@ -33,6 +34,9 @@ func Table() map[string][]string {
 		projectv1connect.ProjectServiceCompleteProjectLogoUploadProcedure: {scope.ProjectWrite},
 		projectv1connect.ProjectServiceDeleteProjectLogoProcedure:         {scope.ProjectWrite},
 		projectv1connect.ProjectServiceCheckIssuerHandleProcedure:         {scope.ProjectRead},
+
+		keysv1connect.SigningKeyServiceListSigningKeysProcedure:  {scope.ProjectRead},
+		keysv1connect.SigningKeyServiceRotateSigningKeyProcedure: {scope.ProjectWrite},
 
 		apikeyv1connect.APIKeyServiceListAPIKeysProcedure:  {scope.ApikeyRead},
 		apikeyv1connect.APIKeyServiceCreateAPIKeyProcedure: {authz.AnyAuthenticated},

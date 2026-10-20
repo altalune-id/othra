@@ -15,6 +15,7 @@ require (
 	github.com/aws/smithy-go v1.28.5
 	github.com/exaring/otelpgx v0.13.0
 	github.com/go-jet/jet/v2 v2.16.1
+	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/jsonschema-go v0.4.3

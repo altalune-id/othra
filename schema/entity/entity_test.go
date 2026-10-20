@@ -35,6 +35,14 @@ func TestBindings(t *testing.T) {
 			},
 		},
 		{
+			"signing_keys",
+			func(s, p string) binding { b := entity.NewSigningKeys(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "kid", "alg", "public_jwk", "private_key_enc", "status",
+				"created_at", "activates_at", "activated_at", "retire_after", "retired_at",
+			},
+		},
+		{
 			"files",
 			func(s, p string) binding { b := entity.NewFiles(s, p); return binding{b, b.AllColumns} },
 			[]string{

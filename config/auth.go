@@ -81,16 +81,19 @@ func (c *Config) validateAuth() error {
 }
 
 func (c *Config) validateSecrets() error {
+	if c.Secrets.EncryptionKey == "" {
+		return &MissingSettingError{Keys: "secrets.encryptionKey", Reason: "signing keys are sealed with it; " + generateHint}
+	}
+	if err := checkEncryptionKey(c.Secrets.EncryptionKey); err != nil {
+		return err
+	}
 	if c.Env == EnvDevelopment || c.Auth.Mode != AuthModeLocal {
 		return nil
 	}
 	if c.HTTP.StateSecret == "" {
 		return &MissingSettingError{Keys: "http.stateSecret", Reason: "required in production; " + generateHint}
 	}
-	if c.Secrets.EncryptionKey == "" {
-		return &MissingSettingError{Keys: "secrets.encryptionKey", Reason: "required in production; " + generateHint}
-	}
-	return checkEncryptionKey(c.Secrets.EncryptionKey)
+	return nil
 }
 
 func checkEncryptionKey(key string) error {

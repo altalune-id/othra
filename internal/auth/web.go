@@ -16,6 +16,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/auth/views"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/web/layout"
 )
@@ -113,6 +114,10 @@ func (h *Web) viewOf(ctx context.Context, p session.Principal) (principalView, e
 		Operator:    p.Operator,
 	}
 	var err error
+	// SECURITY: the lookups run in the principal's own active org, the scope row-level security reads them under.
+	if p.ActiveOrgID != uuid.Nil {
+		ctx = tenant.Into(ctx, tenant.Context{OrgID: p.ActiveOrgID, UserID: p.UserID})
+	}
 	if p.UserID != uuid.Nil {
 		if v.UserID, err = h.ids.UserPublicID(ctx, p.UserID); err != nil {
 			return principalView{}, err

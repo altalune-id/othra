@@ -158,13 +158,24 @@ func TestValidate_Auth(t *testing.T) {
 			},
 			check: func(t *testing.T, err error) { assert.NoError(t, err) },
 		},
-		"development with console mail needs no secrets": {
+		"development with console mail needs no state secret": {
 			mutate: func(c *Config) {
 				c.Env = EnvDevelopment
 				c.Mail.Driver = MailDriverConsole
-				c.HTTP.StateSecret, c.Secrets.EncryptionKey = "", ""
+				c.HTTP.StateSecret = ""
 			},
 			check: func(t *testing.T, err error) { assert.NoError(t, err) },
+		},
+		"development still needs the encryption key": {
+			mutate: func(c *Config) {
+				c.Env = EnvDevelopment
+				c.Mail.Driver = MailDriverConsole
+				c.Secrets.EncryptionKey = ""
+			},
+			check: func(t *testing.T, err error) {
+				assert.True(t, IsMissingSettingError(err), "got %v", err)
+				assert.Contains(t, err.Error(), "signing keys are sealed with it")
+			},
 		},
 		"insecure cookie in production": {
 			mutate: func(c *Config) { c.HTTP.CookieSecure = false },

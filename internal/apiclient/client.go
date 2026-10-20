@@ -11,6 +11,7 @@ import (
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
@@ -37,6 +38,7 @@ type Client struct {
 	Auth     authv1connect.AuthServiceClient
 	Members  memberv1connect.MemberServiceClient
 	Invites  invitev1connect.InviteServiceClient
+	Keys     keysv1connect.SigningKeyServiceClient
 }
 
 // New points every client at baseURL+"/api"; a token becomes the Bearer header, else a session becomes the cookie.
@@ -55,6 +57,7 @@ func New(baseURL string, cred Credential) *Client {
 		Auth:     authv1connect.NewAuthServiceClient(httpClient, base, opts...),
 		Members:  memberv1connect.NewMemberServiceClient(httpClient, base, opts...),
 		Invites:  invitev1connect.NewInviteServiceClient(httpClient, base, opts...),
+		Keys:     keysv1connect.NewSigningKeyServiceClient(httpClient, base, opts...),
 	}
 }
 

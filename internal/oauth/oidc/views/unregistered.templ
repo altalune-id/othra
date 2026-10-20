@@ -1,0 +1,11 @@
+package views
+
+import "altalune.id/othra/internal/web/layout"
+
+templ Unregistered(d layout.LayoutData, project string) {
+	@layout.Layout(d) {
+		@layout.Card(d.Title) {
+			<p>This app isn't registered with { project }, so you can't sign in to it here. If you followed a link from the app, tell its developer.</p>
+		}
+	}
+}

@@ -12,7 +12,7 @@ Use this when a service needs a database verb its `Store` does not have. The `St
 - [ ] **Failures.** No row → the domain's `*NotFoundError`. Unique violation → `*AlreadyExistsError`. Nothing else is typed.
 - [ ] **Order.** A list needs a stable order. Use a total order: a timestamp and then `id`. The `apikey`, `member` and `webhook` readers do this; the `project` and `org` `List` readers order by `created_at` only, so don't copy those.
 - [ ] **Text search.** No store does a `LIKE`/`ILIKE` or full-text search yet, so there is no reference for case, escaping or indexes. Ask before adding the first one.
-- [ ] **Transaction.** The store never begins one. It joins the unit of work on `ctx`, if any.
+- [ ] **Transaction.** The store never begins one. It joins the unit of work on `ctx`, if any. The tx scope follows the joining context: every join keeps the org (another org fails with `db.ErrTenantMismatch`) and sets the project to the context's, or clears it when the context names none.
 
 ## Build
 
@@ -84,7 +84,7 @@ Use this when a service needs a database verb its `Store` does not have. The `St
 - Total order: [internal/apikey/pgreader.go](../../internal/apikey/pgreader.go), [internal/org/member/pgreader.go](../../internal/org/member/pgreader.go)
 - Unit of work: [internal/kernel/db/db.go](../../internal/kernel/db/db.go) (`Read`, `ReadPrimary`, `Write`), [internal/kernel/db/uow.go](../../internal/kernel/db/uow.go) (`InTx`, the tenant scope), [internal/kernel/db/errors.go](../../internal/kernel/db/errors.go) (`IsNoRows`, `IsUniqueViolation`, `IsForeignKeyViolation`, `ViolatedConstraint`)
 - Guard tests: [internal/kernel/db/guard_test.go](../../internal/kernel/db/guard_test.go) (`TestOnlyKernelDBBeginsTransactions`, `TestOnlyKernelDBTouchesThePoolHandles`, `TestOnlyKernelDBSetsSessionState`, `TestReadersNeverWrite`)
-- Definer lookup: [internal/apikey/pgreader.go](../../internal/apikey/pgreader.go) (`BySecretHash`), [schema/migrations/014_tenant_lookups.sql](../../schema/migrations/014_tenant_lookups.sql)
+- Definer lookup: [internal/apikey/pgreader.go](../../internal/apikey/pgreader.go) (`BySecretHash`), [schema/migrations/015_tenant_lookups.sql](../../schema/migrations/015_tenant_lookups.sql)
 - Binding: [schema/entity/projects.go](../../schema/entity/projects.go) (`NewProjects`)
 - Fake: [internal/testutil/fakes/project.go](../../internal/testutil/fakes/project.go) (`ProjectStore`)
 - Tests: [internal/project/postgres_test.go](../../internal/project/postgres_test.go), [internal/project/postgres_integration_test.go](../../internal/project/postgres_integration_test.go)

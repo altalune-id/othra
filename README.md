@@ -163,6 +163,17 @@ OTHRA_S3_ACCESS_KEY_ID=GK000000000000000000000001
 OTHRA_S3_SECRET_ACCESS_KEY=0000000000000000000000000000000000000000000000000000000000000001
 ```
 
+### Signing keys
+
+Every project signs its tokens with its own RS256 keys, sealed at rest with `secrets.encryptionKey`, which is
+therefore required in every mode. A rotation publishes the new key first and makes it sign after
+`keys.rotation.prePublish` (10 minutes); the old key stays published for `keys.rotation.overlap` (7 days). Project
+editors rotate from the console or with `othra project keys rotate <project>`; `--now` makes the new key sign at
+once, and verifiers that cached the old key set reject new tokens until they fetch it again.
+
+Changing `secrets.encryptionKey` makes every sealed private key unreadable (the published public keys stay
+servable). After a key change, run `othra project keys rotate <project> --now` for every project.
+
 ## Everyday commands
 
 | Command                      | What it does                                                         |

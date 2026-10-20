@@ -43,7 +43,7 @@ func (s *APIKeyService) CreateAPIKey(
 	if kind == KindPersonal && p.IsPerson() {
 		ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId())
 	} else {
-		orgID, err = s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+		ctx, orgID, err = s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
 	}
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (s *APIKeyService) ListAPIKeys(
 	req *connect.Request[apikeyv1.ListAPIKeysRequest],
 ) (*connect.Response[apikeyv1.ListAPIKeysResponse], error) {
 	p := session.PrincipalFrom(ctx)
-	orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachWholeOrg)
+	ctx, orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachWholeOrg)
 	ownOnly := false
 	if IsNotFoundError(err) && p.IsPerson() {
 		ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId())
@@ -152,7 +152,7 @@ func (s *APIKeyService) RevokeAPIKey(
 	req *connect.Request[apikeyv1.RevokeAPIKeyRequest],
 ) (*connect.Response[apikeyv1.RevokeAPIKeyResponse], error) {
 	p := session.PrincipalFrom(ctx)
-	orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+	ctx, orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
 	if IsNotFoundError(err) && p.IsPerson() {
 		if ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId()); err != nil {
 			return nil, err
@@ -200,16 +200,18 @@ func (s *APIKeyService) memberOrg(ctx context.Context, publicID string) (context
 	return tenant.WithOrg(ctx, id), id, nil
 }
 
-// SECURITY: an unknown org and an org out of reach answer the same not-found.
-func (s *APIKeyService) org(ctx context.Context, publicID string, reach func(context.Context, uuid.UUID) bool) (uuid.UUID, error) {
+// SECURITY: an unknown org and an org out of reach answer the same not-found; a reached org scopes the rest of the call to itself.
+func (s *APIKeyService) org(
+	ctx context.Context, publicID string, reach func(context.Context, uuid.UUID) bool,
+) (context.Context, uuid.UUID, error) {
 	id, ok, err := s.refs.OrgID(ctx, publicID)
 	if err != nil {
-		return uuid.Nil, err
+		return ctx, uuid.Nil, err
 	}
 	if !ok || !reach(ctx, id) {
-		return uuid.Nil, &NotFoundError{}
+		return ctx, uuid.Nil, &NotFoundError{}
 	}
-	return id, nil
+	return tenant.WithOrg(ctx, id), id, nil
 }
 
 // SECURITY: an unknown project and another org's project are the same refused grant.

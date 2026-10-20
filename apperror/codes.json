@@ -59,5 +59,7 @@
   { "code": "WHK009", "name": "WebhookDeliveryNotRetryable", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "STO001", "name": "StorageUploadNotFound", "kind": "not_found", "params": [], "reasons": [] },
   { "code": "STO002", "name": "StorageUploadMismatch", "kind": "invalid", "params": [], "reasons": ["missing", "size", "type", "content"] },
-  { "code": "STO003", "name": "StorageNotConfigured", "kind": "failed_precondition", "params": [], "reasons": [] }
+  { "code": "STO003", "name": "StorageNotConfigured", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SGK001", "name": "SigningKeyNoActive", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SGK002", "name": "SigningKeyRotationPending", "kind": "failed_precondition", "params": [], "reasons": [] }
 ]

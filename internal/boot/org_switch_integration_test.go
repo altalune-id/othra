@@ -18,8 +18,8 @@ import (
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
-	projectv1 "altalune.id/othra/gen/go/project/v1"
-	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
+	orgv1 "altalune.id/othra/gen/go/org/v1"
+	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/member"
@@ -42,9 +42,9 @@ func (f *apiFixture) setActiveOrg(cookie, bearer, orgID string) (*authv1.WhoamiR
 	return resp.Msg.GetMe(), nil
 }
 
-func (f *apiFixture) listProjects(cookie, orgID string) error {
-	_, err := projectv1connect.NewProjectServiceClient(http.DefaultClient, f.url).
-		ListProjects(context.Background(), withCookie(connect.NewRequest(&projectv1.ListProjectsRequest{OrgId: orgID}), cookie))
+func (f *apiFixture) getOrg(cookie, orgID string) error {
+	_, err := orgv1connect.NewOrgServiceClient(http.DefaultClient, f.url).
+		GetOrg(context.Background(), withCookie(connect.NewRequest(&orgv1.GetOrgRequest{Id: orgID}), cookie))
 	return err
 }
 
@@ -73,15 +73,15 @@ func TestAPI_APersonSwitchesBetweenTheirOrgs(t *testing.T) {
 	}
 	assert.ElementsMatch(t, []string{f.orgID, beta.PublicID}, listed, "every org the person belongs to, and nothing else")
 
-	require.Error(t, f.listProjects(cookie, beta.PublicID), "before the switch the second org is out of reach")
+	require.Error(t, f.getOrg(cookie, beta.PublicID), "before the switch the second org is out of reach")
 
 	me, err := f.setActiveOrg(cookie, "", beta.PublicID)
 	require.NoError(t, err)
 	assert.Equal(t, beta.PublicID, me.GetActiveOrgId())
 	assert.Contains(t, me.GetPermissions(), "member:*", "admin scopes in the new org")
 
-	require.NoError(t, f.listProjects(cookie, beta.PublicID), "the switch holds for later requests")
-	require.Error(t, f.listProjects(cookie, f.orgID), "the old org is now out of reach")
+	require.NoError(t, f.getOrg(cookie, beta.PublicID), "the switch holds for later requests")
+	require.Error(t, f.getOrg(cookie, f.orgID), "the old org is now out of reach")
 
 	_, err = f.setActiveOrg(cookie, "", foreign.PublicID)
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err), "an org you do not belong to is not found: %v", err)

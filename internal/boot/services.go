@@ -20,6 +20,7 @@ import (
 	"altalune.id/othra/internal/kernel/ratelimit"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/kernel/storage"
+	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
@@ -65,6 +66,7 @@ type Services struct {
 	StateSecret     []byte
 	Validator       *controlplane.Validator
 	Storage         *storage.Service
+	Keys            *keys.Service
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -85,6 +87,11 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	projects.WithOrgSlugs(projectOrgSlugs{orgs: orgs}).WithIssuerBase(publicBase(cfg.HTTP)).WithStorage(files, uow)
 
 	sl := buildSealer(cfg.Secrets)
+	signingKeys := buildKeys(k, cfg, uow, sl)
+	projects.WithAfterCreate(func(ctx context.Context, p *project.Project) error {
+		_, err := signingKeys.Generate(ctx, p.OrgID, p.ID)
+		return err
+	})
 	outboxStore := outbox.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 	webhookStore := webhook.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 	projectOwners := projectOrgs{projects: projects}
@@ -96,6 +103,9 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	users := user.NewService(user.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), k.Reporter.Unexpected)
 	members := member.NewService(member.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, k.Reporter.Unexpected).
 		WithOperatorSupport(caps.OperatorOrgSupport)
+
+	orgs.WithMemberRoles(memberPermissions{members: members})
+	projects.WithMembers(memberPermissions{members: members})
 
 	keyScheme := apikey.NewScheme("")
 	owners := ownerRoles{members: members}
@@ -146,6 +156,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Caps:         caps,
 		AuthLimiter:  ratelimit.Disabled(),
 		Storage:      files,
+		Keys:         signingKeys,
 	}
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
 		Store:      auth.NewResetStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),
@@ -315,6 +326,21 @@ func (o ownerRoles) Role(ctx context.Context, orgID, userID uuid.UUID) (member.R
 		return "", false, err
 	}
 	return m.Role, true, nil
+}
+
+type memberPermissions struct{ members *member.Service }
+
+func (m memberPermissions) Role(ctx context.Context, orgID, userID uuid.UUID) (role string, permissions []string, ok bool, err error) {
+	r, ok, err := ownerRoles(m).Role(ctx, orgID, userID)
+	if err != nil || !ok {
+		return "", nil, false, err
+	}
+	return string(r), member.BuiltinPermissions(r), true, nil
+}
+
+func (m memberPermissions) IsMember(ctx context.Context, orgID, userID uuid.UUID) (bool, error) {
+	_, ok, err := ownerRoles(m).Role(ctx, orgID, userID)
+	return ok, err
 }
 
 type projectOrgs struct{ projects *project.Service }

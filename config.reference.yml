@@ -81,6 +81,15 @@ install:
   # [secret] env: OTHRA_INSTALL_TOKEN
   token: ""
 
+keys:
+  rotation:
+    # env: OTHRA_KEYS_ROTATION_OVERLAP
+    overlap: 168h
+    # env: OTHRA_KEYS_ROTATION_PRE_PUBLISH
+    prePublish: 10m
+  # env: OTHRA_KEYS_RSA_BITS
+  rsaBits: 2048
+
 mail:
   # env: OTHRA_MAIL_DRIVER
   driver: console

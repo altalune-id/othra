@@ -121,14 +121,15 @@ func TestJoin_AcceptsTheSameOrgOrNone(t *testing.T) {
 	ctx, tc := scoped()
 	mock.ExpectBegin()
 	expectScope(mock, tc)
+	expectProject(mock, uuid.Nil)
 	mock.ExpectCommit()
 
 	require.NoError(t, RunInTx(ctx, pool, func(ctx context.Context) error {
-		if err := Read(tenant.WithProject(ctx, uuid.New()), pool, func(qrm.DB) error { return nil }); err != nil {
+		if err := Read(tenant.WithProject(ctx, tc.ProjectID), pool, func(qrm.DB) error { return nil }); err != nil {
 			return err
 		}
 		return Read(tenant.Into(ctx, tenant.Context{}), pool, func(qrm.DB) error { return nil })
-	}))
+	}), "a context without a scope keeps the org and clears the project")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

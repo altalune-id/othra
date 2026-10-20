@@ -19,6 +19,7 @@ import (
 	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	keysv1 "altalune.id/othra/gen/go/keys/v1"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	projectv1 "altalune.id/othra/gen/go/project/v1"
@@ -35,6 +36,7 @@ var unruled = map[string]string{
 
 	"apikey.v1.CreateAPIKeyRequest.all_projects":    "a bool; the domain checks it against project_ids (KEY005)",
 	"webhook.v1.UpdateWebhookRequest.active":        "a bool; false deactivates",
+	"keys.v1.RotateSigningKeyRequest.immediate":     "a bool; true promotes the new key at once",
 	"webhook.v1.ListWebhookDeliveriesRequest.limit": "any int32 works today: clamped to 1..50",
 }
 
@@ -189,6 +191,8 @@ func TestRequestRules_Accept(t *testing.T) {
 		{"any declared type is the domain's", &projectv1.CreateProjectLogoUploadRequest{Id: goodID, ContentType: "image/gif", SizeBytes: 1}},
 		{"complete an upload", &projectv1.CompleteProjectLogoUploadRequest{Id: goodID, UploadId: goodID}},
 		{"reserved slug is the domain's", &orgv1.UpdateOrgRequest{Id: goodID, Name: "Acme", Slug: "new"}},
+		{"list signing keys", &keysv1.ListSigningKeysRequest{ProjectId: goodID}},
+		{"rotate at once", &keysv1.RotateSigningKeyRequest{ProjectId: goodID, Immediate: true}},
 	}
 	for _, tt := range accepted {
 		t.Run(tt.name, func(t *testing.T) {

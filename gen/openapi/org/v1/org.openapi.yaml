@@ -389,6 +389,16 @@ components:
         updatedAt:
           title: updated_at
           $ref: '#/components/schemas/google.protobuf.Timestamp'
+        role:
+          type: string
+          title: role
+          description: role is the caller's role in this org; set only when a person lists the orgs they belong to.
+        permissions:
+          type: array
+          items:
+            type: string
+          title: permissions
+          description: permissions are what that role grants in this org, so a client can offer only the scopes a key there may hold.
       title: Org
       additionalProperties: false
     org.v1.UpdateOrgRequest:

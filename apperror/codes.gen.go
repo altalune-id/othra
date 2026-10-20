@@ -75,6 +75,9 @@ const (
 	CodeStorageUploadNotFound Code = "STO001"
 	CodeStorageUploadMismatch Code = "STO002"
 	CodeStorageNotConfigured  Code = "STO003"
+
+	CodeSigningKeyNoActive        Code = "SGK001"
+	CodeSigningKeyRotationPending Code = "SGK002"
 )
 
 var kinds = map[Code]Kind{
@@ -149,4 +152,7 @@ var kinds = map[Code]Kind{
 	CodeStorageUploadNotFound: KindNotFound,
 	CodeStorageUploadMismatch: KindInvalid,
 	CodeStorageNotConfigured:  KindFailedPrecondition,
+
+	CodeSigningKeyNoActive:        KindFailedPrecondition,
+	CodeSigningKeyRotationPending: KindFailedPrecondition,
 }

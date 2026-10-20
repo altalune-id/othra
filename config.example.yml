@@ -11,7 +11,7 @@ http:
   # generate: openssl rand -hex 32
   stateSecret: "f8e6ed3aae2d359d0ecd41f884ffc71631bb16e10cc69205da1e7767aeab9074"
 secrets:
-  # generate: openssl rand -hex 32
+  # required in every mode: it seals each project's signing keys; generate: openssl rand -hex 32
   encryptionKey: "6d8f96d24a1ae4aabc10010dcdc7d23f98c1bdd5c8ca81209313f968abad27de"
 mail:
   # console prints emails to the log; refused in production

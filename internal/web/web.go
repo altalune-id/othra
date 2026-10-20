@@ -18,11 +18,12 @@ type Registrar interface {
 
 // ServerOpts configures the web server handler.
 type ServerOpts struct {
-	APIHandler http.Handler // optional Connect-RPC surface mounted at BasePath+"/api"
-	MCPHandler http.Handler // optional MCP surface mounted at BasePath+"/mcp"
-	Console    http.Handler // optional console SPA mounted at BasePath+"/console"
-	Routes     []Registrar  // optional server-rendered routes; their mux also answers every unknown path
-	Probes     Registrar    // optional /healthz and /readyz, mounted with no gate, session or CSRF check
+	APIHandler   http.Handler // optional Connect-RPC surface mounted at BasePath+"/api"
+	MCPHandler   http.Handler // optional MCP surface mounted at BasePath+"/mcp"
+	Console      http.Handler // optional console SPA mounted at BasePath+"/console"
+	Routes       []Registrar  // optional server-rendered routes; their mux also answers every unknown path
+	PublicRoutes []Registrar  // optional cookie-less public documents: no session, CSRF check or no-store
+	Probes       Registrar    // optional /healthz and /readyz, mounted with no gate, session or CSRF check
 
 	Gate        func(http.Handler) http.Handler // optional; wraps every route, probes included
 	Session     func(http.Handler) http.Handler // optional; puts the cookie's Principal on routes and the console
@@ -44,6 +45,9 @@ func NewServer(opts ServerOpts) http.Handler {
 	outer := http.NewServeMux()
 	if opts.Probes != nil {
 		opts.Probes.Register(outer)
+	}
+	for _, r := range opts.PublicRoutes {
+		r.Register(outer)
 	}
 	if opts.APIHandler != nil {
 		outer.Handle(layout.Path(opts.BasePath, "/api")+"/", cop.Handler(opts.APIHandler))

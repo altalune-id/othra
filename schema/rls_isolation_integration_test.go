@@ -80,6 +80,11 @@ func rlsInserts() []rlsInsert {
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{uuid.New(), "f" + id()[:12], tn.org, tn.project, "public/othra/projects/" + id() + "/logo/f.png", now}
 		}},
+		{"signing_keys", func(s string) string {
+			return `INSERT INTO ` + s + `.signing_keys (id, public_id, org_id, project_id, kid, alg, public_jwk, private_key_enc, status, created_at) VALUES ($1, $2, $3, $4, $5, 'RS256', '{}', '\x01', 'active', $6)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), "k" + id()[:12], tn.org, tn.project, "kid" + id(), now}
+		}},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
 		}, func(tn rlsTenant, _ string) []any {
@@ -142,7 +147,7 @@ func isRLSViolation(err error) bool {
 // SECURITY: R1/O18, as the NOBYPASSRLS service role every org-owned table shows one tenant's rows, none without a scope, and refuses cross-tenant writes.
 func TestRLS_EveryOrgOwnedTableIsolatesTenants(t *testing.T) {
 	f := newRLSFixture(t)
-	scopeA := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org})
+	scopeA := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: f.a.project})
 	for _, ins := range rlsInserts() {
 		if ins.table == "users" {
 			continue
@@ -228,4 +233,96 @@ func TestRLS_DefinersResolveOneTenantForTheServiceRole(t *testing.T) {
 		return rows.Err()
 	}))
 	assert.Equal(t, []uuid.UUID{f.a.org}, ids)
+}
+
+// SECURITY: signing keys are scoped to their project as well as their org, and no definer hands out a key column.
+func TestRLS_SigningKeysAreProjectScoped(t *testing.T) {
+	f := newRLSFixture(t)
+	other := uuid.New()
+	now := time.Now().UTC()
+	_, err := f.admin.ExecContext(t.Context(),
+		`INSERT INTO `+f.schema+`.projects (id, public_id, org_id, slug, name, issuer_handle, created_at, updated_at) VALUES ($1, $2, $3, $4, 'P', $4, $5, $5)`,
+		other, "p"+other.String()[:12], f.a.org, "p"+other.String()[:12], now)
+	require.NoError(t, err)
+
+	own := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: f.a.project})
+	sibling := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: other})
+	orgOnly := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org})
+	assert.Equal(t, []uuid.UUID{f.a.org}, f.visible(t, own, "signing_keys"))
+	assert.Empty(t, f.visible(t, sibling, "signing_keys"), "another project of the same org sees none")
+	assert.Empty(t, f.visible(t, orgOnly, "signing_keys"), "an org scope without a project sees none")
+
+	var cols []string
+	require.NoError(t, db.Read(t.Context(), f.svc, func(q qrm.DB) error {
+		rows, err := q.QueryContext(t.Context(), `SELECT * FROM `+f.schema+`.resolve_project_by_issuer_handle('nope') LIMIT 0`)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = rows.Close() }()
+		cols, err = rows.Columns()
+		return err
+	}))
+	for _, col := range cols {
+		assert.NotContains(t, []string{"kid", "public_jwk", "private_key_enc"}, col, "the issuer definer returns no key column")
+	}
+}
+
+// SECURITY: inside one org-scoped unit of work the project scope follows each joining context: A sees A's keys, B only B's, no project none; org-only tables keep working and another org is refused.
+func TestRLS_TheProjectScopeFollowsTheJoiningContext(t *testing.T) {
+	f := newRLSFixture(t)
+	sibling := uuid.New()
+	now := time.Now().UTC()
+	_, err := f.admin.ExecContext(t.Context(),
+		`INSERT INTO `+f.schema+`.projects (id, public_id, org_id, slug, name, issuer_handle, created_at, updated_at) VALUES ($1, $2, $3, $4, 'P', $4, $5, $5)`,
+		sibling, "p"+sibling.String()[:12], f.a.org, "p"+sibling.String()[:12], now)
+	require.NoError(t, err)
+
+	insertKey := func(ctx context.Context, project uuid.UUID) error {
+		return db.InTx(ctx, f.svc, func(tx *sql.Tx) error {
+			_, err := tx.ExecContext(ctx,
+				`INSERT INTO `+f.schema+`.signing_keys (id, public_id, org_id, project_id, kid, alg, public_jwk, private_key_enc, status, created_at) VALUES ($1, $2, $3, $4, $5, 'RS256', '{}', '\x01', 'retired', $6)`,
+				uuid.New(), "k"+uuid.NewString()[:12], f.a.org, project, "kid"+uuid.NewString(), now)
+			return err
+		})
+	}
+	keyProjects := func(ctx context.Context) []uuid.UUID {
+		var out []uuid.UUID
+		require.NoError(t, db.Read(ctx, f.svc, func(q qrm.DB) error {
+			rows, err := q.QueryContext(ctx, `SELECT DISTINCT project_id FROM `+f.schema+`.signing_keys`)
+			if err != nil {
+				return err
+			}
+			defer func() { _ = rows.Close() }()
+			for rows.Next() {
+				var id uuid.UUID
+				if err := rows.Scan(&id); err != nil {
+					return err
+				}
+				out = append(out, id)
+			}
+			return rows.Err()
+		}))
+		return out
+	}
+	orgScope := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org})
+	err = db.RunInTx(orgScope, f.svc, func(ctx context.Context) error {
+		inA, inB := tenant.WithProject(ctx, f.a.project), tenant.WithProject(ctx, sibling)
+		require.NoError(t, insertKey(inA, f.a.project))
+		assert.Equal(t, []uuid.UUID{f.a.project}, keyProjects(inA), "A sees only A's keys")
+
+		require.NoError(t, insertKey(inB, sibling), "the scope moves to B")
+		assert.Equal(t, []uuid.UUID{sibling}, keyProjects(inB), "B sees only B's keys")
+
+		assert.Empty(t, keyProjects(ctx), "a context with no project sees no keys")
+		tx, ok := db.CurrentTx(ctx)
+		require.True(t, ok)
+		var invites int
+		require.NoError(t, tx.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.invites`).Scan(&invites))
+		assert.Positive(t, invites, "org-only tables still answer")
+
+		assert.ErrorIs(t, insertKey(tenant.Into(ctx, tenant.Context{OrgID: f.b.org, ProjectID: f.b.project}), f.b.project), db.ErrTenantMismatch,
+			"another org is refused")
+		return insertKey(inA, sibling)
+	})
+	assert.True(t, isRLSViolation(err), "B's key is not writable under A's scope: %v", err)
 }

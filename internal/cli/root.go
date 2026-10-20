@@ -16,6 +16,7 @@ import (
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
@@ -24,6 +25,7 @@ import (
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/boot"
+	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
@@ -139,6 +141,7 @@ func NewRootCmd(bootServer ServerBootFn, bootClient ClientBootFn) *cobra.Command
 	markClientTree(inviteCmd)
 
 	projectCmd := project.NewCmd(projectClientFn(bootClient))
+	projectCmd.AddCommand(keys.NewCmd(keysClientFn(bootClient)))
 	markClientTree(projectCmd)
 
 	apiKeyCmd := apikey.NewCmd(apiKeyClientFn(bootClient))
@@ -231,6 +234,16 @@ func projectClientFn(bootClient ClientBootFn) project.ClientFn {
 			return nil, err
 		}
 		return client.Projects, nil
+	}
+}
+
+func keysClientFn(bootClient ClientBootFn) keys.ClientFn {
+	return func(cmd *cobra.Command) (keysv1connect.SigningKeyServiceClient, error) {
+		client, err := connectClient(cmd, bootClient)
+		if err != nil {
+			return nil, err
+		}
+		return client.Keys, nil
 	}
 }
 

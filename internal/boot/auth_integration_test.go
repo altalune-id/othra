@@ -3,6 +3,7 @@
 package boot
 
 import (
+	"cmp"
 	"regexp"
 	"testing"
 
@@ -21,6 +22,7 @@ func migratedServices(t *testing.T, cfg config.Config) (*Services, config.Config
 	t.Helper()
 	svc, _, schemaName := pgtest.MigratedRLS(t)
 	cfg.Postgres.Schema = schemaName
+	cfg.Secrets.EncryptionKey = cmp.Or(cfg.Secrets.EncryptionKey, testKeyHex)
 	k := kernel.Kernel{Pool: svc, Reporter: apperror.NewReporter(nil, false)}
 	svcs := buildServices(k, cfg)
 	require.NoError(t, buildAuthSecrets(cfg, svcs, testLogger()))

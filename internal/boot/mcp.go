@@ -7,11 +7,13 @@ import (
 	"altalune.id/othra/config"
 	authv1mcp "altalune.id/othra/gen/go/auth/v1/authv1mcp"
 	invitev1mcp "altalune.id/othra/gen/go/invite/v1/invitev1mcp"
+	keysv1mcp "altalune.id/othra/gen/go/keys/v1/keysv1mcp"
 	memberv1mcp "altalune.id/othra/gen/go/member/v1/memberv1mcp"
 	orgv1mcp "altalune.id/othra/gen/go/org/v1/orgv1mcp"
 	projectv1mcp "altalune.id/othra/gen/go/project/v1/projectv1mcp"
 	webhookv1mcp "altalune.id/othra/gen/go/webhook/v1/webhookv1mcp"
 	"altalune.id/othra/internal/auth"
+	"altalune.id/othra/internal/keys"
 	mcpinternal "altalune.id/othra/internal/mcp"
 	mcpui "altalune.id/othra/internal/mcp/ui"
 	"altalune.id/othra/internal/org"
@@ -37,6 +39,7 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *roo
 	webhookv1mcp.RegisterWebhookServiceTools(registry, webhook.NewControlPlane(svcs.Webhooks, refs), permission.For, validate)
 	memberv1mcp.RegisterMemberServiceTools(registry, member.NewControlPlane(svcs.Members, refs), permission.For, validate)
 	invitev1mcp.RegisterInviteServiceTools(registry, invite.NewControlPlane(svcs.Invites, refs), permission.For, validate)
+	keysv1mcp.RegisterSigningKeyServiceTools(registry, keys.NewControlPlane(svcs.Keys, refs), permission.For, validate)
 	authSvc := auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users).WithFileUploads(svcs.Caps.FileUploads)
 	authv1mcp.RegisterAuthServiceTools(registry, authSvc, permission.For, validate)
 

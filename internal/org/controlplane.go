@@ -57,11 +57,46 @@ func (s *OrgService) ListOrgs(
 	if err != nil {
 		return nil, err
 	}
+	member, err := s.memberships(ctx, orgs)
+	if err != nil {
+		return nil, err
+	}
+	p := session.PrincipalFrom(ctx)
 	out := make([]*orgv1.Org, 0, len(orgs))
 	for _, o := range orgs {
-		out = append(out, orgToProto(o))
+		pb := orgToProto(o)
+		if member[o.ID] {
+			role, permissions, ok, err := s.orgs.MemberRole(ctx, o.ID, p.UserID)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				pb.Role, pb.Permissions = role, permissions
+			}
+		}
+		out = append(out, pb)
 	}
 	return connect.NewResponse(&orgv1.ListOrgsResponse{Orgs: out}), nil
+}
+
+// SECURITY: a person sees a role only in orgs they belong to; an operator's other orgs, and every key, see none.
+func (s *OrgService) memberships(ctx context.Context, listed []*Org) (map[uuid.UUID]bool, error) {
+	p := session.PrincipalFrom(ctx)
+	if !p.IsPerson() {
+		return nil, nil
+	}
+	mine := listed
+	if p.Operator {
+		var err error
+		if mine, err = s.orgs.ListForUser(ctx, p.UserID); err != nil {
+			return nil, err
+		}
+	}
+	out := make(map[uuid.UUID]bool, len(mine))
+	for _, o := range mine {
+		out[o.ID] = true
+	}
+	return out, nil
 }
 
 // UpdateOrg changes an organization's display name and slug.

@@ -140,11 +140,10 @@ func TestValidate_Mail(t *testing.T) {
 			},
 			check: missingSetting("secrets.encryptionKey"),
 		},
-		"console in development ok without encryption key": {
+		"console in development needs no mail settings": {
 			mutate: func(c *Config) {
 				c.Env = EnvDevelopment
 				c.Mail = MailConfig{Driver: MailDriverConsole}
-				c.Secrets.EncryptionKey = ""
 			},
 			check: func(t *testing.T, err error) { assert.NoError(t, err) },
 		},

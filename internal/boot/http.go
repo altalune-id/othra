@@ -19,6 +19,7 @@ import (
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/legal"
 	mcpinternal "altalune.id/othra/internal/mcp"
+	"altalune.id/othra/internal/oauth/oidc"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/permission"
 	"altalune.id/othra/internal/web"
@@ -68,6 +69,7 @@ func buildAPIHandler(
 		Members:     svcs.Members,
 		Invites:     svcs.Invites,
 		Auth:        svcs.Auth,
+		Keys:        svcs.Keys,
 		Refs:        newPublicIDs(svcs),
 		FileUploads: svcs.Caps.FileUploads,
 	}, unexpected, opts).Handler(basePath)
@@ -153,6 +155,22 @@ func warnSampleLegal(cfg config.Config, log *slog.Logger, serving bool) {
 	}
 	log.Warn("boot: serving the built-in sample terms/privacy; set compliance.termsURL and compliance.privacyURL",
 		slog.String("missing", strings.Join(missing, " ")))
+}
+
+func buildIssuerRoutes(
+	cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc,
+) (public, pages []web.Registrar) {
+	if svcs == nil || svcs.Projects == nil || svcs.Keys == nil {
+		return nil, nil
+	}
+	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
+	issuers := oidc.NewWeb(svcs.Projects, svcs.Keys, kit, oidc.Config{
+		PublicBase: publicBase(cfg.HTTP),
+		BasePath:   cfg.HTTP.BasePath,
+		CORS:       middleware.PublicCORS,
+	}).WithLimiter(svcs.AuthLimiter, cfg.HTTP.TrustedProxyHops)
+	svcs.Keys.WithOnChange(issuers.Forget)
+	return []web.Registrar{issuers}, []web.Registrar{issuers.Pages()}
 }
 
 func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc) []web.Registrar {
@@ -241,6 +259,7 @@ type httpSurfaces struct {
 	console    http.Handler
 	mcp        http.Handler
 	routes     []web.Registrar
+	public     []web.Registrar
 
 	installRequired *atomic.Bool
 	session         func(http.Handler) http.Handler
@@ -253,14 +272,15 @@ type httpSurfaces struct {
 
 func buildHTTPHandler(s httpSurfaces) http.Handler {
 	return web.NewServer(web.ServerOpts{
-		APIHandler: s.api,
-		MCPHandler: s.mcp,
-		Console:    s.console,
-		Routes:     s.routes,
-		BasePath:   s.basePath,
-		Log:        s.log,
-		Unexpected: s.unexpected,
-		Probes:     s.probes,
+		APIHandler:   s.api,
+		MCPHandler:   s.mcp,
+		Console:      s.console,
+		Routes:       s.routes,
+		PublicRoutes: s.public,
+		BasePath:     s.basePath,
+		Log:          s.log,
+		Unexpected:   s.unexpected,
+		Probes:       s.probes,
 
 		Gate:        install.InstallGate(s.basePath, s.installRequired),
 		Session:     s.session,

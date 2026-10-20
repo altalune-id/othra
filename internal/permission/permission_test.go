@@ -10,6 +10,7 @@ import (
 	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
+	keysv1 "altalune.id/othra/gen/go/keys/v1"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	projectv1 "altalune.id/othra/gen/go/project/v1"
@@ -24,6 +25,7 @@ func allProcedures() []string {
 		apikeyv1.File_apikey_v1_apikey_proto,
 		authv1.File_auth_v1_auth_proto,
 		invitev1.File_invite_v1_invite_proto,
+		keysv1.File_keys_v1_keys_proto,
 		memberv1.File_member_v1_member_proto,
 		orgv1.File_org_v1_org_proto,
 		projectv1.File_project_v1_project_proto,
@@ -42,7 +44,7 @@ func allProcedures() []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 46, "Org 4, Project 12, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7")
+	require.Len(t, procs, 48, "Org 4, Project 12, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]
@@ -66,6 +68,8 @@ func TestPermissionTable_Spec15(t *testing.T) {
 		"/org.v1.OrgService/UpdateOrg":                            "org:write",
 		"/project.v1.ProjectService/UpdateProject":                "project:write",
 		"/project.v1.ProjectService/ListProjects":                 "project:read",
+		"/keys.v1.SigningKeyService/ListSigningKeys":              "project:read",
+		"/keys.v1.SigningKeyService/RotateSigningKey":             "project:write",
 		"/webhook.v1.WebhookService/ListWebhookDeliveryAttempts":  "webhook:read",
 		"/webhook.v1.WebhookService/RotateWebhookSecret":          "webhook:write",
 		"/webhook.v1.WebhookService/RetryFailedWebhookDeliveries": "webhook:write",

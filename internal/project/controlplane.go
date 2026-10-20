@@ -10,6 +10,7 @@ import (
 	projectv1 "altalune.id/othra/gen/go/project/v1"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
 	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/session"
 )
 
 // ProjectService implements project.v1.ProjectService; every id it takes and returns is a public id.
@@ -68,7 +69,7 @@ func (s *ProjectService) ListProjects(
 	ctx context.Context,
 	req *connect.Request[projectv1.ListProjectsRequest],
 ) (*connect.Response[projectv1.ListProjectsResponse], error) {
-	orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+	orgID, byMembership, err := s.listableOrg(ctx, req.Msg.GetOrgId())
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (s *ProjectService) ListProjects(
 	}
 	out := make([]*projectv1.Project, 0, len(projects))
 	for _, p := range projects {
-		if authz.ReachProject(ctx, p.OrgID, p.ID) {
+		if byMembership || authz.ReachProject(ctx, p.OrgID, p.ID) {
 			out = append(out, projectToProto(p, req.Msg.GetOrgId(), s.projects.IssuerURL(p.IssuerHandle), s.projects.LogoURL(p.LogoKey)))
 		}
 	}
@@ -261,6 +262,32 @@ func (s *ProjectService) org(ctx context.Context, publicID string, reach func(co
 		return uuid.Nil, &NotFoundError{}
 	}
 	return id, nil
+}
+
+// SECURITY: beyond the reached org, a person (never a key) lists the projects of another org they are a member of, checked per call.
+func (s *ProjectService) listableOrg(ctx context.Context, publicID string) (uuid.UUID, bool, error) {
+	id, ok, err := s.orgs.OrgID(ctx, publicID)
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	if !ok {
+		return uuid.Nil, false, &NotFoundError{}
+	}
+	if authz.ReachOrg(ctx, id) {
+		return id, false, nil
+	}
+	p := session.PrincipalFrom(ctx)
+	if !p.IsPerson() {
+		return uuid.Nil, false, &NotFoundError{}
+	}
+	member, err := s.projects.IsMember(ctx, id, p.UserID)
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	if !member {
+		return uuid.Nil, false, &NotFoundError{}
+	}
+	return id, true, nil
 }
 
 // SECURITY: an unknown project and a project out of reach answer the same not-found.

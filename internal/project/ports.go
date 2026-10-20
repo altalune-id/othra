@@ -24,6 +24,11 @@ type FileStorage interface {
 	PublicURL(key string) string
 }
 
+// Members reports whether a person belongs to an org.
+type Members interface {
+	IsMember(ctx context.Context, orgID, userID uuid.UUID) (bool, error)
+}
+
 // OrgSlugs gives an org's slug, from which a new project's default issuer handle is built.
 type OrgSlugs interface {
 	Slug(ctx context.Context, orgID uuid.UUID) (string, error)

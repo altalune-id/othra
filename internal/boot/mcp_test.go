@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/config"
 	authv1mcp "altalune.id/othra/gen/go/auth/v1/authv1mcp"
 	invitev1mcp "altalune.id/othra/gen/go/invite/v1/invitev1mcp"
+	keysv1mcp "altalune.id/othra/gen/go/keys/v1/keysv1mcp"
 	memberv1mcp "altalune.id/othra/gen/go/member/v1/memberv1mcp"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	orgv1mcp "altalune.id/othra/gen/go/org/v1/orgv1mcp"
@@ -116,6 +117,8 @@ func TestMCPTools_PermissionsComeFromTheTable(t *testing.T) {
 		invitev1mcp.MemberInviteConfirmToolName: {scope.MemberWrite},
 		invitev1mcp.MemberInviteDiscardToolName: {scope.MemberWrite},
 		authv1mcp.AuthWhoamiToolName:            {authz.AnyAuthenticated},
+		keysv1mcp.SigningKeyListToolName:        {scope.ProjectRead},
+		keysv1mcp.SigningKeyRotateToolName:      {scope.ProjectWrite},
 	}
 	names := srv.Registry().Names()
 	assert.Len(t, names, len(want), "the published tool list")

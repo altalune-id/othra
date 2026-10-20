@@ -12,6 +12,7 @@ import (
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
+	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
@@ -19,6 +20,7 @@ import (
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
@@ -46,6 +48,7 @@ type Services struct {
 	Members  *member.Service
 	Invites  *invite.Service
 	Auth     *auth.Service
+	Keys     *keys.Service
 	Refs     Refs
 	// FileUploads is true when the deployment has file storage.
 	FileUploads bool
@@ -59,6 +62,7 @@ type Refs interface {
 	webhook.Refs
 	member.Refs
 	auth.PublicIDs
+	keys.Refs
 }
 
 // Server holds the wired Connect handlers.
@@ -75,6 +79,7 @@ type Server struct {
 	AuthSvc    *auth.AuthService
 	MemberSvc  *member.MemberService
 	InviteSvc  *invite.InviteService
+	KeySvc     *keys.SigningKeyService
 
 	OpenAPIEnabled   bool
 	OpenAPIBasicAuth *BasicAuth
@@ -106,6 +111,9 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 	}
 	if svcs.Webhooks != nil {
 		s.WebhookSvc = webhook.NewControlPlane(svcs.Webhooks, svcs.Refs)
+	}
+	if svcs.Keys != nil {
+		s.KeySvc = keys.NewControlPlane(svcs.Keys, svcs.Refs)
 	}
 	if svcs.Members != nil {
 		s.MemberSvc = member.NewControlPlane(svcs.Members, svcs.Refs)
@@ -143,6 +151,10 @@ func (s *Server) Handler(basePath string) http.Handler {
 	if s.InviteSvc != nil {
 		invitePath, inviteHandler := invitev1connect.NewInviteServiceHandler(s.InviteSvc, s.handlerOptions()...)
 		inner.Handle(invitePath, inviteHandler)
+	}
+	if s.KeySvc != nil {
+		keysPath, keysHandler := keysv1connect.NewSigningKeyServiceHandler(s.KeySvc, s.handlerOptions()...)
+		inner.Handle(keysPath, keysHandler)
 	}
 
 	if s.AuthSvc != nil {

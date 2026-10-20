@@ -17,13 +17,15 @@ import (
 
 // Service is the project application service: the driving port surfaces call.
 type Service struct {
-	store      Store
-	unexpected apperror.UnexpectedFunc
-	orgSlugs   OrgSlugs
-	issuerBase string
-	files      FileStorage
-	tx         db.Transactor
-	now        func() time.Time
+	store       Store
+	unexpected  apperror.UnexpectedFunc
+	orgSlugs    OrgSlugs
+	issuerBase  string
+	files       FileStorage
+	tx          db.Transactor
+	members     Members
+	afterCreate func(ctx context.Context, p *Project) error
+	now         func() time.Time
 }
 
 // NewService builds a Service over store, without file storage until WithStorage.
@@ -34,6 +36,12 @@ func NewService(store Store, unexpected apperror.UnexpectedFunc) *Service {
 // WithStorage keeps project files such as the logo in files, attaching them in units of work run by tx.
 func (s *Service) WithStorage(files FileStorage, tx db.Transactor) *Service {
 	s.files, s.tx = files, tx
+	return s
+}
+
+// WithAfterCreate runs hook in the new project's unit of work, so a failing hook rolls the project back.
+func (s *Service) WithAfterCreate(hook func(ctx context.Context, p *Project) error) *Service {
+	s.afterCreate = hook
 	return s
 }
 
@@ -94,8 +102,11 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*Project, erro
 		if handle == "" {
 			p.IssuerHandle = defaultHandle(orgSlug, p.Slug, suffixed)
 		}
-		last = s.store.Save(ctx, p)
+		hookErr, saveErr := s.save(ctx, p)
+		last = saveErr
 		switch {
+		case hookErr != nil:
+			return nil, s.errOrReport(ctx, "project: after create", hookErr)
 		case last == nil:
 			return p, nil
 		case generated && IsAlreadyExistsError(last):
@@ -106,6 +117,26 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*Project, erro
 		}
 	}
 	return nil, s.errOrReport(ctx, "project: create", last)
+}
+
+func (s *Service) save(ctx context.Context, p *Project) (hookErr, err error) {
+	run := func(ctx context.Context) error {
+		if err := s.store.Save(ctx, p); err != nil {
+			return err
+		}
+		if s.afterCreate == nil {
+			return nil
+		}
+		hookErr = s.afterCreate(ctx, p)
+		return hookErr
+	}
+	if s.tx == nil {
+		return hookErr, run(ctx)
+	}
+	// SECURITY: a new project's unit of work is scoped to its org only, never the caller's active project.
+	scoped := tenant.Into(ctx, tenant.Context{OrgID: p.OrgID, UserID: tenant.Peek(ctx).UserID})
+	err = s.tx.RunInTx(scoped, run)
+	return hookErr, err
 }
 
 func defaultHandle(orgSlug, projectSlug string, suffixed bool) string {
@@ -223,6 +254,24 @@ func (s *Service) BumpTermsVersion(ctx context.Context, id uuid.UUID) (*Project,
 		_, err := p.BumpTermsVersion(s.now())
 		return err
 	})
+}
+
+// WithMembers lets a person list the projects of every org they belong to, not only the active one.
+func (s *Service) WithMembers(m Members) *Service {
+	s.members = m
+	return s
+}
+
+// IsMember reports whether userID belongs to orgID; without WithMembers nobody does.
+func (s *Service) IsMember(ctx context.Context, orgID, userID uuid.UUID) (bool, error) {
+	if s.members == nil {
+		return false, nil
+	}
+	ok, err := s.members.IsMember(ctx, orgID, userID)
+	if err != nil {
+		return false, s.errOrReport(ctx, "project: membership", err)
+	}
+	return ok, nil
 }
 
 // LogoPurpose is where a project's logo lives in file storage: a public PNG, JPEG or WebP of at most 256 KB.

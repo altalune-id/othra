@@ -96,7 +96,11 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"secrets.encryptionKey not a key with console in development", func(c *Config) {
 			devConsole(c)
 			c.Secrets.EncryptionKey = "zz"
-		}, valid},
+		}, invalidSetting("secrets.encryptionKey")},
+		{"secrets.encryptionKey empty in development", func(c *Config) {
+			devConsole(c)
+			c.Secrets.EncryptionKey = ""
+		}, missingSetting("secrets.encryptionKey")},
 		{"mail.driver unknown", func(c *Config) { c.Mail.Driver = "fax" }, invalidSetting("mail.driver")},
 		{"mail.driver empty", func(c *Config) { c.Mail.Driver = "" }, invalidSetting("mail.driver")},
 		{"mail.driver console in production", func(c *Config) { c.Mail.Driver = MailDriverConsole }, invalidSetting("mail.driver")},

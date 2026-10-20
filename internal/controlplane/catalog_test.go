@@ -32,6 +32,7 @@ import (
 	"altalune.id/othra/internal/kernel/events"
 	"altalune.id/othra/internal/kernel/storage"
 	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
@@ -168,6 +169,9 @@ func samples() []error {
 		&storage.UploadMismatchError{PublicID: "x", Reason: storage.MismatchType},
 		&storage.UploadMismatchError{PublicID: "x", Reason: storage.MismatchContent},
 		&storage.NotConfiguredError{},
+
+		&keys.NoActiveKeyError{ProjectID: "x"},
+		&keys.RotationPendingError{ProjectID: "x"},
 	}
 }
 

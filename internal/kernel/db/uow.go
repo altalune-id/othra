@@ -15,6 +15,8 @@ const setScope = `SELECT set_config('app.current_org_id', $1, true),
        set_config('app.current_project_id', $2, true),
        set_config('app.current_user_id', $3, true)`
 
+const setProject = `SELECT set_config('app.current_project_id', $1, true)`
+
 type txCtxKey struct{}
 
 type unitOfWork struct {
@@ -87,11 +89,19 @@ func own(ctx context.Context, handle *sql.DB, opts *sql.TxOptions, fn func(uow *
 	return nil
 }
 
+// SECURITY: a join keeps the org and makes the transaction's project scope exactly the joining context's, cleared when it names none.
 func (u *unitOfWork) join(ctx context.Context) error {
-	org := tenant.Peek(ctx).OrgID
-	if org != uuid.Nil && u.scope.OrgID != uuid.Nil && org != u.scope.OrgID {
+	tc := tenant.Peek(ctx)
+	if tc.OrgID != uuid.Nil && u.scope.OrgID != uuid.Nil && tc.OrgID != u.scope.OrgID {
 		return ErrTenantMismatch
 	}
+	if tc.ProjectID == u.scope.ProjectID {
+		return nil
+	}
+	if _, err := u.tx.ExecContext(ctx, setProject, scopeValue(tc.ProjectID)); err != nil {
+		return fmt.Errorf("db: set project scope: %w", err)
+	}
+	u.scope.ProjectID = tc.ProjectID
 	return nil
 }
 

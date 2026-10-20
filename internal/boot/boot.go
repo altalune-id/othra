@@ -162,6 +162,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		return nil, err
 	}
 	consoleHandler := buildConsoleHandler(cfg.HTTP.BasePath)
+	issuerPublic, issuerPages := buildIssuerRoutes(cfg, svcs, log, k.Reporter.Unexpected)
 	mcpServer := buildMCPServer(cfg.MCP, svcs, log)
 
 	sup := worker.New(log)
@@ -175,7 +176,8 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 			api:        apiHandler,
 			console:    consoleHandler,
 			mcp:        buildMCPHandler(mcpServer, svcs, log),
-			routes:     buildRoutes(cfg, svcs, log, k.Reporter.Unexpected),
+			routes:     append(buildRoutes(cfg, svcs, log, k.Reporter.Unexpected), issuerPages...),
+			public:     issuerPublic,
 
 			installRequired: svcs.InstallRequired,
 			session:         buildSessionMiddleware(svcs, k.Reporter.Unexpected),

@@ -59,3 +59,5 @@ PRJ009 ProjectTermsNotSet
 STO001 StorageUploadNotFound
 STO002 StorageUploadMismatch
 STO003 StorageNotConfigured
+SGK001 SigningKeyNoActive
+SGK002 SigningKeyRotationPending
