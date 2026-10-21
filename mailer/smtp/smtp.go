@@ -188,6 +188,13 @@ func buildMIME(from, to *mail.Address, m mailer.Message, now time.Time) ([]byte,
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "From: %s\r\n", from.String())
 	fmt.Fprintf(&b, "To: %s\r\n", to.String())
+	if m.ReplyTo != "" {
+		replyTo, err := mail.ParseAddress(m.ReplyTo)
+		if err != nil {
+			return nil, &mailer.InvalidAddressError{Field: "Reply-To"}
+		}
+		fmt.Fprintf(&b, "Reply-To: %s\r\n", replyTo.String())
+	}
 	fmt.Fprintf(&b, "Subject: %s\r\n", mime.QEncoding.Encode("utf-8", m.Subject))
 	fmt.Fprintf(&b, "Date: %s\r\n", now.Format(time.RFC1123Z))
 	fmt.Fprintf(&b, "Message-ID: <%s@%s>\r\n", id, domain)

@@ -174,3 +174,8 @@ func TestBuildLegal_AnyCustomURLKeepsNoHistory(t *testing.T) {
 	require.NoError(t, l.Publish(t.Context()), "nothing is snapshotted, so no database is touched")
 	assert.True(t, l.TermsUpdatedAt().IsZero(), "custom terms are re-asked only by compliance.termsUpdatedAt")
 }
+
+func TestHostedImageBases_OnlyWithStorage(t *testing.T) {
+	assert.Nil(t, hostedImageBases(config.StorageConfig{PublicBaseURL: "https://files.example.com"}), "no driver, no logos")
+	assert.Equal(t, []string{"https://files.example.com"}, hostedImageBases(config.StorageConfig{Driver: config.StorageDriverS3, PublicBaseURL: "https://files.example.com"}))
+}

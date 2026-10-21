@@ -125,7 +125,9 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"mail.resend.apiKey empty", func(c *Config) { c.Mail.Driver = MailDriverResend }, missingSetting("mail.resend.apiKey")},
 		{"rateLimit.driver unknown", func(c *Config) { c.RateLimit.Driver = "disk" }, invalidSetting("rateLimit.driver")},
 		{"rateLimit.maxKeys 0 with memory", func(c *Config) { c.RateLimit.MaxKeys = 0 }, invalidSetting("rateLimit.maxKeys")},
-		{"rateLimit.maxKeys 0 with redis", func(c *Config) { c.RateLimit.Driver = RateLimitDriverRedis; c.RateLimit.MaxKeys = 0 }, valid},
+		{"rateLimit.maxKeys 0 with redis", func(c *Config) {
+			c.RateLimit.Driver, c.RateLimit.MaxKeys, c.RateLimit.Auth.Enabled = RateLimitDriverRedis, 0, false
+		}, valid},
 		{"resourceServers.verification.allowPrivateHosts in development", func(c *Config) {
 			devConsole(c)
 			c.ResourceServers.Verification.AllowPrivateHosts = true

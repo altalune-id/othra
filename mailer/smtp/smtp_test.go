@@ -239,6 +239,27 @@ func TestSMTP_Send_MultipartAlternative(t *testing.T) {
 	assert.Equal(t, []string{"plain line", "<p>rich line</p>"}, bodies)
 }
 
+func TestSMTP_Send_ReplyTo(t *testing.T) {
+	f := newFakeSMTP(t, fakeSMTPOpts{})
+	m := mailer.Message{To: "t@example.com", ReplyTo: "Acme Help <help@acme.test>", Subject: "s", TextBody: "x"}
+	require.NoError(t, f.client(t, Config{TLS: TLSNone}).Send(t.Context(), m))
+	_, data, _ := f.result()
+	assert.Equal(t, `"Acme Help" <help@acme.test>`, readMessage(t, data).Header.Get("Reply-To"))
+
+	f = newFakeSMTP(t, fakeSMTPOpts{})
+	m.ReplyTo = "not an address"
+	err := f.client(t, Config{TLS: TLSNone}).Send(t.Context(), m)
+	var bad *mailer.InvalidAddressError
+	require.ErrorAs(t, err, &bad)
+	assert.Equal(t, "Reply-To", bad.Field)
+
+	f = newFakeSMTP(t, fakeSMTPOpts{})
+	m.ReplyTo = ""
+	require.NoError(t, f.client(t, Config{TLS: TLSNone}).Send(t.Context(), m))
+	_, data, _ = f.result()
+	assert.NotContains(t, string(data), "Reply-To")
+}
+
 func TestSMTP_Send_SinglePart(t *testing.T) {
 	for name, tc := range map[string]struct {
 		m    mailer.Message

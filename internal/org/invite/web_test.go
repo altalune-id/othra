@@ -62,10 +62,10 @@ type slugs map[uuid.UUID]string
 func (s slugs) Slug(_ context.Context, orgID uuid.UUID) (string, error) { return s[orgID], nil }
 
 func newWebFixture(t *testing.T, requireTerms bool) *webFixture {
-	return newLimitedWebFixture(t, requireTerms, auth.Limits{})
+	return newLimitedWebFixture(t, requireTerms, layout.Limits{})
 }
 
-func newLimitedWebFixture(t *testing.T, requireTerms bool, limits auth.Limits) *webFixture {
+func newLimitedWebFixture(t *testing.T, requireTerms bool, limits layout.Limits) *webFixture {
 	f := &webFixture{fixture: newFixture(t), sessions: session.NewMemoryStore()}
 	f.signIn = &fakeSignIn{users: f.users}
 	cookies := auth.CookieSessions{Store: f.sessions, Secret: webSecret, Cookie: session.CookieOptions{Path: "/", Secure: true}, TTL: time.Hour}

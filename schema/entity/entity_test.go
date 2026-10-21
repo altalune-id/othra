@@ -71,6 +71,46 @@ func TestBindings(t *testing.T) {
 			[]string{"org_id", "project_id", "client_id", "resource_server_id", "scopes", "created_at", "updated_at"},
 		},
 		{
+			"end_users",
+			func(s, p string) binding { b := entity.NewEndUsers(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "email", "email_verified_at", "name", "last_sign_in_at",
+				"created_at", "updated_at",
+			},
+		},
+		{
+			"browser_sessions",
+			func(s, p string) binding { b := entity.NewBrowserSessions(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "org_id", "project_id", "secret_hash", "user_agent", "created_at", "last_seen_at",
+				"absolute_expires_at", "ended_at",
+			},
+		},
+		{
+			"user_sessions",
+			func(s, p string) binding { b := entity.NewUserSessions(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "browser_session_id", "end_user_id", "method", "auth_time",
+				"selected_at", "created_at", "last_seen_at", "ended_at",
+			},
+		},
+		{
+			"end_user_terms",
+			func(s, p string) binding { b := entity.NewEndUserTerms(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"org_id", "project_id", "end_user_id", "terms_version", "terms_url", "privacy_url", "accepted_at",
+				"user_session_id", "user_session_public_id", "ip", "user_agent",
+			},
+		},
+		{
+			"magic_links",
+			func(s, p string) binding { b := entity.NewMagicLinks(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "token_hash", "email", "return_to", "request_ip",
+				"created_at", "expires_at", "used_at", "browser_session_id",
+			},
+		},
+		{
 			"files",
 			func(s, p string) binding { b := entity.NewFiles(s, p); return binding{b, b.AllColumns} },
 			[]string{

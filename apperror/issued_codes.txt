@@ -77,3 +77,7 @@ RSV006 ResourceServerLinked
 RSV007 ResourceServerTrustSelfHostedOnly
 RSV008 ResourceServerVerifyTooSoon
 RSV009 ResourceServerInvalidLinkScopes
+SIG001 SignInLinkNotUsable
+SIG002 SignInEmailDisabled
+SIG003 SignInSessionGone
+SIG004 SignInFormExpired

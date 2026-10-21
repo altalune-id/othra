@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel/ratelimit"
 	"altalune.id/othra/internal/kernel/ratelimit/memory"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/web/layout"
 )
 
 type downLimiter struct{}
@@ -27,7 +27,7 @@ func (downLimiter) Allow(context.Context, string, ratelimit.Rule) (ratelimit.Res
 
 func (downLimiter) Reset(context.Context, string) error { return nil }
 
-func memLimits() auth.Limits { return auth.Limits{Limiter: memory.New(10_000)} }
+func memLimits() layout.Limits { return layout.Limits{Limiter: memory.New(10_000)} }
 
 func linkPath(c *invite.Created) string {
 	return strings.TrimPrefix(c.Link, "https://othra.example.com")
@@ -77,7 +77,7 @@ func TestWeb_JoinAndAcceptLimitedPerIP(t *testing.T) {
 }
 
 func TestWeb_BrokenLimiterFailsClosed(t *testing.T) {
-	f := newLimitedWebFixture(t, false, auth.Limits{Limiter: downLimiter{}})
+	f := newLimitedWebFixture(t, false, layout.Limits{Limiter: downLimiter{}})
 	c := f.create("bob@x.io", member.RoleMember)
 	rec := f.get(linkPath(c))
 	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
@@ -114,7 +114,7 @@ func TestWeb_JoinLimitedTheSameForKnownAndUnknownEmails(t *testing.T) {
 }
 
 func TestWeb_OffNeverLimits(t *testing.T) {
-	f := newLimitedWebFixture(t, false, auth.Limits{Limiter: ratelimit.Disabled()})
+	f := newLimitedWebFixture(t, false, layout.Limits{Limiter: ratelimit.Disabled()})
 	c := f.create("bob@x.io", member.RoleMember)
 	for range 100 {
 		require.Equal(t, http.StatusSeeOther, f.get(linkPath(c)).Code)

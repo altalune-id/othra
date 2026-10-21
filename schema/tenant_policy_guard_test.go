@@ -49,6 +49,17 @@ func TestMigrations_EveryOrgOwnedTableForcesItsPolicy(t *testing.T) {
 				t.Errorf("%s: missing %q", table, want)
 			}
 		}
+		if appendOnly[table] {
+			read := regexp.MustCompile(`(?s)CREATE POLICY \{\{\.TablePrefix\}\}` + table + `_read ON ` + regexp.QuoteMeta(target) + `\s+FOR SELECT\s+USING \(.*?current_org_id\(\).*?\);`)
+			appendPolicy := regexp.MustCompile(`(?s)CREATE POLICY \{\{\.TablePrefix\}\}` + table + `_append ON ` + regexp.QuoteMeta(target) + `\s+FOR INSERT\s+WITH CHECK \(.*?current_org_id\(\).*?\);`)
+			if !read.MatchString(all) || !appendPolicy.MatchString(all) {
+				t.Errorf("%s: an append-only table needs a FOR SELECT %s_read and a FOR INSERT %s_append policy", table, table, table)
+			}
+			if strings.Contains(all, "CREATE POLICY {{.TablePrefix}}"+table+"_tenant") {
+				t.Errorf("%s: an append-only table has no FOR ALL policy", table)
+			}
+			continue
+		}
 		policy := regexp.MustCompile(`(?s)CREATE POLICY \{\{\.TablePrefix\}\}` + table + `_tenant ON ` + regexp.QuoteMeta(target) + `\s+FOR ALL\s+USING \(.*?\)\s+WITH CHECK \(.*?current_org_id\(\).*?\);`)
 		if !policy.MatchString(all) {
 			t.Errorf("%s: missing a FOR ALL policy %s_tenant with USING and a WITH CHECK on current_org_id()", table, table)
@@ -59,13 +70,20 @@ func TestMigrations_EveryOrgOwnedTableForcesItsPolicy(t *testing.T) {
 	}
 }
 
+//nolint:gochecknoglobals // the tables whose rows are evidence: read and append only.
+var appendOnly = map[string]bool{"end_user_terms": true}
+
 // SECURITY: a project-owned table checks the project as well as the org, on reads and writes alike.
 func TestMigrations_ProjectOwnedTablesCheckTheProject(t *testing.T) {
 	all := strings.Join(mapValues(migrationSources(t)), "\n")
 	scope := `org_id = {{.Schema}}.{{.TablePrefix}}current_org_id() AND project_id = {{.Schema}}.{{.TablePrefix}}current_project_id()`
-	for _, table := range []string{"signing_keys", "oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources"} {
+	for _, table := range []string{"signing_keys", "oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources", "end_users", "browser_sessions", "user_sessions", "end_user_terms", "magic_links"} {
 		target := `{{.Schema}}.{{.TablePrefix}}` + table
 		want := "CREATE POLICY {{.TablePrefix}}" + table + "_tenant ON " + target + "\n  FOR ALL\n  USING (" + scope + ")\n  WITH CHECK (" + scope + ");"
+		if appendOnly[table] {
+			want = "CREATE POLICY {{.TablePrefix}}" + table + "_read ON " + target + "\n  FOR SELECT\n  USING (" + scope + ");\n" +
+				"CREATE POLICY {{.TablePrefix}}" + table + "_append ON " + target + "\n  FOR INSERT\n  WITH CHECK (" + scope + ");"
+		}
 		if !strings.Contains(all, want) {
 			t.Errorf("%s: missing the org AND project policy", table)
 		}

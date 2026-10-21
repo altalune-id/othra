@@ -1,0 +1,68 @@
+package views
+
+import (
+	"net/url"
+
+	"altalune.id/othra/internal/web/i18n"
+	"altalune.id/othra/internal/web/layout"
+)
+
+// LoginData is the email form's state; Error is a translated message about the email, Notice the bare email just signed out.
+type LoginData struct {
+	Site
+	Email      string
+	Error      string
+	Notice     string
+	ReturnTo   string
+	LoginToken string
+	FromPicker bool
+}
+
+// Login is the email form that sends a magic link.
+templ Login(d layout.LayoutData, v LoginData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "login.title"))) {
+		@layout.Card(i18n.T(ctx, "login.title")) {
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle", "project", v.Project) }</p>
+			if v.Notice != "" {
+				@alertSuccess() {
+					@withEmail(i18n.T(ctx, "picker.signed_out_notice"), v.Notice)
+				}
+			}
+			<form method="post" action={ v.href(d, "/login") } class="flex flex-col gap-3">
+				@layout.CSRFInput(v.LoginToken)
+				if v.ReturnTo != "" {
+					<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+				}
+				<label class="floating-label">
+					<span>{ i18n.T(ctx, "common.email") }</span>
+					<input
+						class="input w-full"
+						type="email"
+						name="email"
+						value={ v.Email }
+						placeholder={ i18n.T(ctx, "common.email_placeholder") }
+						autocomplete="email"
+						inputmode="email"
+						spellcheck="false"
+						required
+						autofocus
+						if v.Error != "" {
+							aria-invalid="true"
+							aria-describedby="email-error"
+						}
+					/>
+				</label>
+				if v.Error != "" {
+					<p id="email-error" class="flex items-start gap-1.5 text-sm text-base-content">
+						@iconError()
+						<span>{ v.Error }</span>
+					</p>
+				}
+				<button class="btn btn-primary btn-block" type="submit">{ i18n.T(ctx, "login.submit") }</button>
+			</form>
+			if v.FromPicker {
+				<p class="text-sm"><a class="link" href={ templ.SafeURL(v.login(d, url.Values{"return_to": {v.ReturnTo}})) }>← { i18n.T(ctx, "login.back_to_accounts") }</a></p>
+			}
+		}
+	}
+}

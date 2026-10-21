@@ -96,6 +96,11 @@ const (
 	CodeResourceServerTrustSelfHostedOnly Code = "RSV007"
 	CodeResourceServerVerifyTooSoon       Code = "RSV008"
 	CodeResourceServerInvalidLinkScopes   Code = "RSV009"
+
+	CodeSignInLinkNotUsable Code = "SIG001"
+	CodeSignInEmailDisabled Code = "SIG002"
+	CodeSignInSessionGone   Code = "SIG003"
+	CodeSignInFormExpired   Code = "SIG004"
 )
 
 var kinds = map[Code]Kind{
@@ -191,4 +196,9 @@ var kinds = map[Code]Kind{
 	CodeResourceServerTrustSelfHostedOnly: KindFailedPrecondition,
 	CodeResourceServerVerifyTooSoon:       KindResourceExhausted,
 	CodeResourceServerInvalidLinkScopes:   KindInvalid,
+
+	CodeSignInLinkNotUsable: KindFailedPrecondition,
+	CodeSignInEmailDisabled: KindFailedPrecondition,
+	CodeSignInSessionGone:   KindFailedPrecondition,
+	CodeSignInFormExpired:   KindForbidden,
 }

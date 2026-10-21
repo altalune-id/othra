@@ -12,6 +12,7 @@ import (
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/controlplane"
+	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/capabilities"
@@ -23,6 +24,7 @@ import (
 	"altalune.id/othra/internal/kernel/storage"
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/legal"
+	"altalune.id/othra/internal/oauth/oidc"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
@@ -71,6 +73,8 @@ type Services struct {
 	Keys            *keys.Service
 	Clients         *client.Service
 	ResourceServers *resourceserver.Service
+	IssuerResolver  *oidc.Resolver
+	EndUsers        *enduser.Service
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -164,6 +168,8 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Clients: client.NewService(client.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, projects, k.Reporter.Unexpected).
 			WithLogger(k.Log),
 	}
+	svcs.EndUsers = buildEndUsers(k, cfg, uow, mailQueue)
+	svcs.IssuerResolver = oidc.NewResolver(projects, signingKeys, publicBase(cfg.HTTP), k.Reporter.Unexpected)
 	svcs.ResourceServers = buildResourceServers(k, cfg, uow, projects, users, svcs.Clients)
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
 		Store:      auth.NewResetStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),

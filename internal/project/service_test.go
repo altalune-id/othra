@@ -424,3 +424,50 @@ func TestService_LogoStoreFailures(t *testing.T) {
 	_, err = svc.CompleteLogoUpload(ctx, p.ID, f.PublicID)
 	require.Error(t, err)
 }
+
+// qa F2: a terms change drops the issuer cache at once, so the hosted pages never gate on the old version.
+func TestService_TermsChangeDropsTheIssuerCache(t *testing.T) {
+	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
+	require.NoError(t, err)
+	store := &fakes.ProjectStore{Project: p}
+	var changed []uuid.UUID
+	svc := project.NewService(store, testUnexpected()).WithOnIssuerChange(func(id uuid.UUID) { changed = append(changed, id) })
+	ctx := context.Background()
+
+	_, err = svc.UpdateTerms(ctx, p.ID, "https://acme.example/terms", "")
+	require.NoError(t, err)
+	assert.Equal(t, []uuid.UUID{p.ID}, changed, "setting the terms URL publishes version 1")
+	_, err = svc.BumpTermsVersion(ctx, p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, []uuid.UUID{p.ID, p.ID}, changed, "a bump drops the cache too")
+
+	store.Err = errors.New("db down")
+	_, err = svc.BumpTermsVersion(ctx, p.ID)
+	require.Error(t, err)
+	assert.Len(t, changed, 2, "a failed change drops nothing")
+}
+
+// A branding or logo change drops the issuer cache at once, so the hosted pages show it right away.
+func TestService_BrandingChangeDropsTheIssuerCache(t *testing.T) {
+	svc, store, files, p := logoService(t)
+	var changed []uuid.UUID
+	svc.WithOnIssuerChange(func(id uuid.UUID) { changed = append(changed, id) })
+	ctx := context.Background()
+
+	_, err := svc.UpdateBranding(ctx, p.ID, "Acme", "#1e3a8a", "")
+	require.NoError(t, err)
+	logo := &storage.File{ID: uuid.New(), PublicID: "logologologologologo2"}
+	files.Files[logo.PublicID] = logo
+	_, err = svc.CompleteLogoUpload(ctx, p.ID, logo.PublicID)
+	require.NoError(t, err)
+	_, err = svc.DeleteLogo(ctx, p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, []uuid.UUID{p.ID, p.ID, p.ID}, changed)
+
+	_, err = svc.UpdateBranding(ctx, p.ID, "", "red", "")
+	require.Error(t, err)
+	store.Err = errors.New("db down")
+	_, err = svc.DeleteLogo(ctx, p.ID)
+	require.Error(t, err)
+	assert.Len(t, changed, 3, "a refused or failed change drops nothing")
+}

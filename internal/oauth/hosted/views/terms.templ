@@ -1,0 +1,55 @@
+package views
+
+import (
+	"strconv"
+
+	"altalune.id/othra/internal/web/i18n"
+	"altalune.id/othra/internal/web/layout"
+)
+
+// TermsData is the terms gate's state; UserSession names the account the consent is recorded for, and Version the terms version shown.
+type TermsData struct {
+	Site
+	Email       string
+	UserSession string
+	ReturnTo    string
+	TermsToken  string
+	Updated     bool
+	Version     int32
+	TermsURL    string
+	PrivacyURL  string
+	Error       string
+}
+
+func (v TermsData) key(base string) string {
+	if v.Updated {
+		return base + "_updated"
+	}
+	return base + "_new"
+}
+
+// Terms asks the signed-in account to accept the project's current terms before it continues.
+templ Terms(d layout.LayoutData, v TermsData) {
+	@layout.Layout(titled(withoutLegalFooter(d), i18n.T(ctx, v.key("terms.title")))) {
+		@layout.Card(i18n.T(ctx, v.key("terms.title"))) {
+			<p class="text-sm text-base-content/70">
+				@withEmail(i18n.T(ctx, "terms.signing_in_as"), v.Email)
+			</p>
+			<p>{ i18n.T(ctx, v.key("terms.body"), "project", v.Project) }</p>
+			if v.Error != "" {
+				@alertError(v.Error)
+			}
+			<form method="post" action={ v.href(d, "/terms") } class="flex flex-col gap-4">
+				@layout.CSRFInput(v.TermsToken)
+				<input type="hidden" name="user_session" value={ v.UserSession }/>
+				<input type="hidden" name="terms_version" value={ strconv.Itoa(int(v.Version)) }/>
+				if v.ReturnTo != "" {
+					<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+				}
+				@layout.Consent(d, layout.ConsentData{TermsURL: v.TermsURL, PrivacyURL: v.PrivacyURL, Required: true})
+				<button class="btn btn-primary btn-block" type="submit">{ i18n.T(ctx, v.key("terms.submit")) }</button>
+			</form>
+			<p class="text-sm"><a class="link" href={ templ.SafeURL(v.addAccount(d, v.ReturnTo)) }>{ i18n.T(ctx, "terms.use_another") }</a></p>
+		}
+	}
+}

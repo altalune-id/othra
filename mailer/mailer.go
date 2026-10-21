@@ -6,10 +6,11 @@ import (
 	"strings"
 )
 
-// Message is one email being sent; an empty From uses the driver's default sender.
+// Message is one email being sent; an empty From uses the driver's default sender, and an empty ReplyTo sends none.
 type Message struct {
 	To       string
 	From     string
+	ReplyTo  string
 	Subject  string
 	TextBody string
 	HTMLBody string
@@ -20,6 +21,7 @@ func (m Message) Validate() error {
 	for _, f := range []struct{ name, val string }{
 		{"From", m.From},
 		{"To", m.To},
+		{"Reply-To", m.ReplyTo},
 		{"Subject", m.Subject},
 	} {
 		if strings.ContainsAny(f.val, "\r\n") {

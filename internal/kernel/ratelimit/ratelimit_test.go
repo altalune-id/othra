@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,6 +40,10 @@ func TestKey(t *testing.T) {
 	want := "email:" + hex.EncodeToString(sum[:])
 	assert.Equal(t, want, EmailSubject(" Ana@Example.com "))
 	assert.NotContains(t, Key(r, EmailSubject("ana@example.com")), "ana")
+
+	a, b := uuid.MustParse("11111111-1111-4111-8111-111111111111"), uuid.MustParse("22222222-2222-4222-8222-222222222222")
+	assert.Equal(t, "login:project:"+a.String()+":ip:192.0.2.1", Key(r, ProjectSubject(a, IPSubject("192.0.2.1"))))
+	assert.NotEqual(t, Key(r, ProjectSubject(a, want)), Key(r, ProjectSubject(b, want)), "one email is a separate key per project")
 }
 
 func TestDisabled(t *testing.T) {

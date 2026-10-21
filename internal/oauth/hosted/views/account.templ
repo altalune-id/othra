@@ -1,0 +1,57 @@
+package views
+
+import (
+	"net/url"
+
+	"altalune.id/othra/internal/web/i18n"
+	"altalune.id/othra/internal/web/layout"
+)
+
+// AccountData is the signed-in landing page's state.
+type AccountData struct {
+	Site
+	Email        string
+	UserSession  string
+	ReturnTo     string
+	SignOutToken string
+}
+
+// Account is the M4 landing page for a signed-in end user: who is signed in, switch account and sign out.
+templ Account(d layout.LayoutData, v AccountData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "account.title"))) {
+		@layout.Card(i18n.T(ctx, "account.title")) {
+			<div class="flex items-center gap-3 rounded-box bg-base-200 px-4 py-3">
+				<span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-base-300 text-sm font-semibold" aria-hidden="true">{ initial(v.Email) }</span>
+				<span class="min-w-0 break-all font-medium">{ v.Email }</span>
+			</div>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "account.close_hint") }</p>
+			<div class="flex flex-col gap-2 sm:flex-row">
+				<a class="btn max-sm:btn-block" href={ templ.SafeURL(v.login(d, url.Values{"return_to": {v.href(d, "/account/")}})) }>{ i18n.T(ctx, "account.switch") }</a>
+				<form method="post" action={ v.href(d, "/login/signout") }>
+					@layout.CSRFInput(v.SignOutToken)
+					<input type="hidden" name="user_session" value={ v.UserSession }/>
+					<input type="hidden" name="next" value="signed_out"/>
+					if v.ReturnTo != "" {
+						<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+					}
+					<button class="btn btn-ghost max-sm:btn-block" type="submit">{ i18n.T(ctx, "account.sign_out") }</button>
+				</form>
+			</div>
+		}
+	}
+}
+
+// SignedOutData is the signed-out page's state.
+type SignedOutData struct {
+	Site
+}
+
+// SignedOut confirms the sign-out and offers to sign in again.
+templ SignedOut(d layout.LayoutData, v SignedOutData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "signed_out.title"))) {
+		@layout.Card(i18n.T(ctx, "signed_out.title")) {
+			<p>{ i18n.T(ctx, "signed_out.body", "project", v.Project) }</p>
+			<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.href(d, "/login")) }>{ i18n.T(ctx, "signed_out.sign_in") }</a>
+		}
+	}
+}

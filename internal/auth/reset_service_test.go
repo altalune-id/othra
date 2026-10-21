@@ -16,6 +16,7 @@ import (
 	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/mailer"
+	"altalune.id/othra/nanoid"
 )
 
 type memResets struct {
@@ -164,7 +165,7 @@ func TestResets_RequestKnownEmailQueuesOneLink(t *testing.T) {
 	require.Len(t, f.store.rows, 1)
 	for _, r := range f.store.rows {
 		assert.Equal(t, u.ID, r.UserID)
-		assert.Equal(t, hashResetToken(raw), r.TokenHash, "only the hash is stored")
+		assert.Equal(t, nanoid.HashToken(raw), r.TokenHash, "only the hash is stored")
 		assert.NotContains(t, m.TextBody, r.PublicID, "the email holds the token, not the public id")
 		assert.NotContains(t, m.TextBody, u.ID.String())
 	}

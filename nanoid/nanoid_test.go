@@ -38,17 +38,17 @@ func TestMustNew(t *testing.T) {
 	assert.Panics(t, func() { MustNew(0) })
 }
 
-func TestNewInviteToken_Deterministic(t *testing.T) {
-	raw, hash, err := NewInviteToken()
+func TestNewToken_Deterministic(t *testing.T) {
+	raw, hash, err := NewToken()
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, len(raw), 21)
 	assert.Len(t, hash, 64)
 }
 
-func TestNewInviteToken_Unique(t *testing.T) {
+func TestNewToken_Unique(t *testing.T) {
 	seen := map[string]bool{}
 	for i := range 1000 {
-		raw, _, err := NewInviteToken()
+		raw, _, err := NewToken()
 		require.NoError(t, err)
 		assert.False(t, seen[raw], "collision at iter %d", i)
 		seen[raw] = true

@@ -22,6 +22,16 @@ func TestSend(t *testing.T) {
 	}
 }
 
+func TestSend_ReplyTo(t *testing.T) {
+	buf := &bytes.Buffer{}
+	require.NoError(t, New("", buf).Send(t.Context(), mailer.Message{To: "a@b", From: "f@x", ReplyTo: "help@x", Subject: "hi", TextBody: "hello"}))
+	assert.Contains(t, buf.String(), "To: a@b\nReply-To: help@x\nSubject: hi")
+
+	buf.Reset()
+	require.NoError(t, New("", buf).Send(t.Context(), mailer.Message{To: "a@b", From: "f@x", Subject: "hi", TextBody: "hello"}))
+	assert.NotContains(t, buf.String(), "Reply-To")
+}
+
 func TestSend_RejectsInjection(t *testing.T) {
 	buf := &bytes.Buffer{}
 	err := New("", buf).Send(t.Context(), mailer.Message{To: "t@x", From: "f@x", Subject: "hi\r\nBcc: e@v", TextBody: "b"})

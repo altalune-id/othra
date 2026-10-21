@@ -1,0 +1,25 @@
+package views
+
+import (
+	"strconv"
+
+	"altalune.id/othra/internal/web/i18n"
+	"altalune.id/othra/internal/web/layout"
+)
+
+// MailHTML is the HTML part of the magic-link email in ctx's locale, with the button in the project's colour.
+templ MailHTML(m MailData) {
+	@layout.Mail(i18n.Locale(ctx), MailSubject(ctx, m)) {
+		<p style="margin:0 0 12px;">{ i18n.T(ctx, m.key("mail.intro"), "project", m.Project) }</p>
+		<p style="margin:0 0 12px;">{ i18n.T(ctx, m.key("mail.action"), "minutes", strconv.Itoa(m.Minutes)) }</p>
+		<p style="margin:0 0 20px;">
+			@layout.MailButton(m.Link, i18n.T(ctx, m.key("mail.button")), m.Primary)
+		</p>
+		<p style="margin:0 0 12px;font-size:13px;word-break:break-all;color:#52525b;">{ i18n.T(ctx, "mail.copy_link", "link", m.Link) }</p>
+		<p style="margin:0 0 12px;font-size:13px;color:#52525b;">{ i18n.T(ctx, m.key("mail.ignore")) }</p>
+		if m.HasReplyTo {
+			<p style="margin:0 0 12px;font-size:13px;color:#52525b;">{ i18n.T(ctx, "mail.reply") }</p>
+		}
+		<p style="margin:0;font-size:13px;color:#52525b;">{ i18n.T(ctx, "mail.footer", "project", m.Project) }</p>
+	}
+}

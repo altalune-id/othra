@@ -18,9 +18,10 @@ func TestMail(t *testing.T) {
 		return err
 	})
 	ctx := templ.WithChildren(t.Context(), body)
-	require.NoError(t, Mail("Join <Acme>").Render(ctx, &buf))
+	require.NoError(t, Mail("id-ID", "Join <Acme>").Render(ctx, &buf))
 	html := buf.String()
 
+	assert.Contains(t, html, `<html lang="id-ID">`)
 	assert.Contains(t, html, "<title>Join &lt;Acme&gt;</title>")
 	assert.Contains(t, html, `font-weight:600;">Join &lt;Acme&gt;</h1>`)
 	assert.Contains(t, html, "<p>hello</p>")

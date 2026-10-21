@@ -37,11 +37,12 @@ func newIssuerServer(t *testing.T, basePath string) (*httptest.Server, *Services
 	required, err := installRequired(t.Context(), svcs)
 	require.NoError(t, err)
 
-	public, pages := buildIssuerRoutes(cfg, svcs, nil, nil)
+	public, hosted := buildIssuerRoutes(cfg, svcs, nil, nil)
 	ts := httptest.NewServer(buildHTTPHandler(httpSurfaces{
 		basePath:        basePath,
-		routes:          append(buildRoutes(cfg, svcs, nil, nil), pages...),
+		routes:          buildRoutes(cfg, svcs, nil, nil),
 		public:          public,
+		hosted:          hosted,
 		session:         buildSessionMiddleware(svcs, nil),
 		installRequired: required,
 	}))

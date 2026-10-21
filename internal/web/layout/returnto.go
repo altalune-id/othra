@@ -29,8 +29,13 @@ func SanitizeReturnTo(basePath, raw string) string {
 
 // ResolveReturnTo returns the sanitized raw, or the console when raw is unsafe or empty.
 func ResolveReturnTo(basePath, raw string) string {
+	return ResolveReturnToOr(basePath, raw, Path(basePath, "/console")+"/")
+}
+
+// ResolveReturnToOr returns the sanitized raw, or fallback when raw is unsafe or empty.
+func ResolveReturnToOr(basePath, raw, fallback string) string {
 	if s := SanitizeReturnTo(basePath, raw); s != "" {
 		return s
 	}
-	return Path(basePath, "/console") + "/"
+	return fallback
 }

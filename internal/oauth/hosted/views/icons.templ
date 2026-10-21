@@ -1,0 +1,82 @@
+package views
+
+templ svgIcon(class string) {
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class={ "shrink-0", class } aria-hidden="true">
+		{ children... }
+	</svg>
+}
+
+templ iconError() {
+	@svgIcon("mt-0.5 size-4 text-error") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<line x1="12" x2="12" y1="8" y2="12"></line>
+		<line x1="12" x2="12.01" y1="16" y2="16"></line>
+	}
+}
+
+templ iconChevron() {
+	@svgIcon("size-4 text-base-content/60") {
+		<path d="m9 18 6-6-6-6"></path>
+	}
+}
+
+templ iconSignOut() {
+	@svgIcon("size-4") {
+		<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+		<polyline points="16 17 21 12 16 7"></polyline>
+		<line x1="21" x2="9" y1="12" y2="12"></line>
+	}
+}
+
+templ iconPlus() {
+	@svgIcon("size-4") {
+		<path d="M5 12h14"></path>
+		<path d="M12 5v14"></path>
+	}
+}
+
+templ iconMail() {
+	@svgIcon("size-6") {
+		<rect width="20" height="16" x="2" y="4" rx="2"></rect>
+		<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+	}
+}
+
+templ iconCircle() {
+	<div class="flex size-12 items-center justify-center self-center rounded-full bg-base-200">
+		{ children... }
+	</div>
+}
+
+templ iconCheck() {
+	@svgIcon("mt-0.5 size-4 text-success") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<path d="m9 12 2 2 4-4"></path>
+	}
+}
+
+templ alertError(msg string) {
+	<div role="alert" class="alert alert-error alert-soft items-start">
+		@iconError()
+		<span>{ msg }</span>
+	</div>
+}
+
+templ alertSuccess() {
+	<div role="status" class="alert alert-success alert-soft items-start">
+		@iconCheck()
+		<span class="min-w-0">
+			{ children... }
+		</span>
+	</div>
+}
+
+templ withEmail(msg, email string) {
+	for _, p := range splitAround(msg, "{email}") {
+		if p == "{email}" {
+			<span class="break-all">{ email }</span>
+		} else {
+			{ p }
+		}
+	}
+}

@@ -45,7 +45,7 @@ func TestKeyProjects_ScopesEachProjectOfEachOrg(t *testing.T) {
 	projects := project.NewService(&fakes.ProjectStore{Projects: []*project.Project{p1}}, nil)
 
 	var seen []tenant.Context
-	require.NoError(t, keyProjects{orgs: orgs, projects: projects}.Each(context.Background(), func(ctx context.Context, orgID, projectID uuid.UUID) error {
+	require.NoError(t, projectTenants{orgs: orgs, projects: projects}.Each(context.Background(), func(ctx context.Context, orgID, projectID uuid.UUID) error {
 		tc := tenant.Peek(ctx)
 		assert.Equal(t, orgID, tc.OrgID)
 		assert.Equal(t, projectID, tc.ProjectID)

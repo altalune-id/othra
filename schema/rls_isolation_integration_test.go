@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"slices"
 	"testing"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 
 type rlsTenant struct {
 	org, project, user, key, endpoint, client, rs uuid.UUID
+	endUser, browser, userSession                 uuid.UUID
 }
 
 type rlsFixture struct {
@@ -43,7 +45,7 @@ func (f *rlsFixture) seed(t *testing.T, tag string) rlsTenant {
 	t.Helper()
 	tn := rlsTenant{
 		org: uuid.New(), project: uuid.New(), user: uuid.New(), key: uuid.New(), endpoint: uuid.New(),
-		client: uuid.New(), rs: uuid.New(),
+		client: uuid.New(), rs: uuid.New(), endUser: uuid.New(), browser: uuid.New(), userSession: uuid.New(),
 	}
 	for _, ins := range rlsInserts() {
 		_, err := f.admin.ExecContext(t.Context(), ins.sql(f.schema), ins.args(tn, tag)...)
@@ -107,6 +109,27 @@ func rlsInserts() []rlsInsert {
 			return `INSERT INTO ` + s + `.oauth_client_resources (org_id, project_id, client_id, resource_server_id, scopes, created_at, updated_at) VALUES ($1, $2, $3, $4, '{read}', $5, $5)`
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{tn.org, tn.project, tn.client, tn.rs, now}
+		}},
+		{"end_users", func(s string) string {
+			return `INSERT INTO ` + s + `.end_users (id, public_id, org_id, project_id, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{tn.endUser, "e" + id()[:12], tn.org, tn.project, "eu" + id()[:8] + "@example.com", now}
+		}},
+		{"browser_sessions", func(s string) string {
+			return `INSERT INTO ` + s + `.browser_sessions (id, org_id, project_id, secret_hash, created_at, last_seen_at, absolute_expires_at) VALUES ($1, $2, $3, encode(sha256(convert_to($4, 'UTF8')), 'hex'), $5::timestamptz, $5::timestamptz, $5::timestamptz + interval '1 day')`
+		}, func(tn rlsTenant, _ string) []any { return []any{tn.browser, tn.org, tn.project, id(), now} }},
+		{"user_sessions", func(s string) string {
+			return `INSERT INTO ` + s + `.user_sessions (id, public_id, org_id, project_id, browser_session_id, end_user_id, method, auth_time, selected_at, created_at, last_seen_at) VALUES ($1, $2, $3, $4, $5, $6, 'magic_link', $7, $7, $7, $7)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{tn.userSession, "s" + id()[:12], tn.org, tn.project, tn.browser, tn.endUser, now}
+		}},
+		{"end_user_terms", func(s string) string {
+			return `INSERT INTO ` + s + `.end_user_terms (org_id, project_id, end_user_id, terms_version, terms_url, accepted_at, user_session_id, user_session_public_id) VALUES ($1, $2, $3, 1, 'https://acme.test/terms', $4, $5, 'us-public')`
+		}, func(tn rlsTenant, _ string) []any { return []any{tn.org, tn.project, tn.endUser, now, tn.userSession} }},
+		{"magic_links", func(s string) string {
+			return `INSERT INTO ` + s + `.magic_links (id, public_id, org_id, project_id, token_hash, email, return_to, created_at, expires_at) VALUES ($1, $2, $3, $4, encode(sha256(convert_to($5, 'UTF8')), 'hex'), $6, '/p/x/account/', $7::timestamptz, $7::timestamptz + interval '15 minutes')`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), "m" + id()[:12], tn.org, tn.project, id(), "ml" + id()[:8] + "@example.com", now}
 		}},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
@@ -293,6 +316,9 @@ func TestRLS_SigningKeysAreProjectScoped(t *testing.T) {
 //nolint:gochecknoglobals // the project-owned M3 tables.
 var clientTables = []string{"oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources"}
 
+//nolint:gochecknoglobals // the project-owned M4 tables.
+var endUserTables = []string{"end_users", "browser_sessions", "user_sessions", "end_user_terms", "magic_links"}
+
 func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
 	t.Helper()
 	sibling := uuid.New()
@@ -303,8 +329,8 @@ func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
 	return sibling
 }
 
-// SECURITY: clients, their secrets, resource servers and links are scoped to their project as well as their org, for reads and writes.
-func TestRLS_ClientsAndResourceServersAreProjectScoped(t *testing.T) {
+// SECURITY: clients, resource servers, end users, their sessions, terms and magic links are scoped to their project as well as their org, for reads and writes.
+func TestRLS_ProjectOwnedTablesAreProjectScoped(t *testing.T) {
 	f := newRLSFixture(t)
 	sibling := f.siblingProject(t)
 	own := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: f.a.project})
@@ -314,7 +340,7 @@ func TestRLS_ClientsAndResourceServersAreProjectScoped(t *testing.T) {
 	for _, ins := range rlsInserts() {
 		byTable[ins.table] = ins
 	}
-	for _, table := range clientTables {
+	for _, table := range append(slices.Clone(clientTables), endUserTables...) {
 		t.Run(table, func(t *testing.T) {
 			assert.Equal(t, []uuid.UUID{f.a.org}, f.visible(t, own, table))
 			assert.Empty(t, f.visible(t, other, table), "another project of the same org sees none")
@@ -322,6 +348,7 @@ func TestRLS_ClientsAndResourceServersAreProjectScoped(t *testing.T) {
 
 			mine := f.a
 			mine.client, mine.rs = uuid.New(), uuid.New()
+			mine.endUser, mine.browser, mine.userSession = uuid.New(), uuid.New(), uuid.New()
 			err := db.RunInTx(other, f.svc, func(ctx context.Context) error {
 				tx, _ := db.CurrentTx(ctx)
 				_, err := tx.ExecContext(ctx, byTable[table].sql(f.schema), byTable[table].args(mine, "x")...)
@@ -421,4 +448,75 @@ func TestRLS_TheProjectScopeFollowsTheJoiningContext(t *testing.T) {
 		return insertKey(inA, sibling)
 	})
 	assert.True(t, isRLSViolation(err), "B's key is not writable under A's scope: %v", err)
+}
+
+// SECURITY: F5, consent rows are evidence: the service role reads and appends them but can't change or delete them.
+func TestRLS_EndUserTermsAreAppendOnly(t *testing.T) {
+	f := newRLSFixture(t)
+	own := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: f.a.project})
+	for _, stmt := range []string{
+		`UPDATE ` + f.schema + `.end_user_terms SET terms_url = 'https://evil.test/' WHERE end_user_id = $1`,
+		`DELETE FROM ` + f.schema + `.end_user_terms WHERE end_user_id = $1`,
+	} {
+		var n int64
+		require.NoError(t, db.RunInTx(own, f.svc, func(ctx context.Context) error {
+			tx, _ := db.CurrentTx(ctx)
+			res, err := tx.ExecContext(ctx, stmt, f.a.endUser)
+			if err != nil {
+				return err
+			}
+			n, err = res.RowsAffected()
+			return err
+		}))
+		assert.Zero(t, n, "%s touches nothing, even in its own project", stmt)
+	}
+	var url string
+	require.NoError(t, f.admin.QueryRowContext(t.Context(), `SELECT terms_url FROM `+f.schema+`.end_user_terms WHERE end_user_id = $1`, f.a.endUser).Scan(&url))
+	assert.Equal(t, "https://acme.test/terms", url)
+	assert.Equal(t, []uuid.UUID{f.a.org}, f.visible(t, own, "end_user_terms"), "the project still reads its rows")
+}
+
+// One live magic link per email and one live user session per browser and account; the same email may exist in another project; a project delete removes every end-user row.
+func TestSchema_EndUserConstraints(t *testing.T) {
+	f := newRLSFixture(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	link := func(email string) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.magic_links (id, public_id, org_id, project_id, token_hash, email, return_to, created_at, expires_at)
+			 VALUES ($1, $2, $3, $4, encode(sha256(convert_to($7, 'UTF8')), 'hex'), $5, '/p/x/account/', $6::timestamptz, $6::timestamptz + interval '15 minutes')`,
+			uuid.New(), "m"+uuid.NewString()[:12], f.a.org, f.a.project, email, now, uuid.NewString())
+		return err
+	}
+	require.NoError(t, link("ada@example.com"))
+	assert.Equal(t, "23505", pgCode(link("ada@example.com")), "one unused link per email")
+	_, err := f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.magic_links SET used_at = $1 WHERE email = 'ada@example.com'`, now)
+	require.NoError(t, err)
+	assert.NoError(t, link("ada@example.com"), "a used link frees the email")
+	assert.Equal(t, "23514", pgCode(link("Ada@Example.com")), "emails are stored normalized")
+
+	sibling := f.siblingProject(t)
+	var email string
+	require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT email FROM `+f.schema+`.end_users WHERE id = $1`, f.a.endUser).Scan(&email))
+	_, err = f.admin.ExecContext(ctx,
+		`INSERT INTO `+f.schema+`.end_users (id, public_id, org_id, project_id, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6)`,
+		uuid.New(), "e"+uuid.NewString()[:12], f.a.org, sibling, email, now)
+	assert.NoError(t, err, "the same email is another end user in another project")
+	_, err = f.admin.ExecContext(ctx,
+		`INSERT INTO `+f.schema+`.end_users (id, public_id, org_id, project_id, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6)`,
+		uuid.New(), "e"+uuid.NewString()[:12], f.a.org, f.a.project, email, now)
+	assert.Equal(t, "23505", pgCode(err), "one end user per email in a project")
+
+	_, err = f.admin.ExecContext(ctx,
+		`INSERT INTO `+f.schema+`.user_sessions (id, public_id, org_id, project_id, browser_session_id, end_user_id, method, auth_time, selected_at, created_at, last_seen_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, 'magic_link', $7, $7, $7, $7)`,
+		uuid.New(), "s"+uuid.NewString()[:12], f.a.org, f.a.project, f.a.browser, f.a.endUser, now)
+	assert.Equal(t, "23505", pgCode(err), "one live user session per browser and account")
+
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.projects WHERE id = $1`, f.a.project)
+	require.NoError(t, err)
+	for _, table := range endUserTables {
+		var n int
+		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
+		assert.Zero(t, n, table)
+	}
 }

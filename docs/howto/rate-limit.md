@@ -1,6 +1,6 @@
 # Rate-limit an action
 
-Use this when an action needs Othra's own limiter: a form that can be brute-forced or used to spam mail. Othra's limiter is **off by default**, because many deployments limit at the edge (a CDN, nginx, an API gateway). Each **group** of limits has its own switch, and every group shares one store. The only group today is `auth` (sign-in, password reset, invite pages); it is applied on pre-sign-in web forms only.
+Use this when an action needs Othra's own limiter: a form that can be brute-forced or used to spam mail. Othra's `auth` group is **on by default** (memory driver); a deployment that limits at the edge (a CDN, nginx, an API gateway) may turn it off. Each **group** of limits has its own switch, and every group shares one store. The only group today is `auth` (sign-in, password reset, invite pages); it is applied on pre-sign-in web forms only.
 
 The `internal/kernel/ratelimit` feature is generic: a `Rule` (GCRA: `Rate` calls per `Per`, `Burst` at once), a key, and a `Limiter` with `Allow` and `Reset`. Drivers, picked by `rateLimit.driver`: `ratelimit/memory` (per server, bounded, with a janitor worker) and `ratelimit/redis` (one Lua script over the shared Redis connection, so every server counts against one limit).
 
@@ -26,13 +26,13 @@ The `internal/kernel/ratelimit` feature is generic: a `Rule` (GCRA: `Rate` calls
 
    Auth rules live in `internal/auth/limits.go`; invite rules in `internal/org/invite/web.go`.
 
-2. **Apply it in the web handler** through `auth.Limits`, which the page's options already carry. Never call the `Limiter` directly: `Limits` builds the key and maps a refusal to `*auth.RateLimitedError`.
+2. **Apply it in the web handler** through `layout.Limits`, which the page's options already carry. Never call the `Limiter` directly: `Limits` builds the key and maps a refusal to `*layout.RateLimitedError`.
 
    ```go
    func (h *Web) limited(rule ratelimit.Rule, next http.HandlerFunc) http.HandlerFunc {
    	return func(w http.ResponseWriter, r *http.Request) {
    		if err := h.o.Limits.LimitIP(r, rule); err != nil {
-   			auth.WriteLimited(w, r, h.o.Kit, "Invite", err)
+   			layout.WriteLimited(w, r, h.o.Kit, "Invite", err)
    			return
    		}
    		next(w, r)
@@ -40,16 +40,16 @@ The `internal/kernel/ratelimit` feature is generic: a `Rule` (GCRA: `Rate` calls
    }
    ```
 
-   `auth.WriteLimited` answers 429 with `Retry-After` and a generic message, or 503 and reports the error once. A JSON caller of `/login` gets `AUT003` with `retry_after` (`RateLimitedError.ToAppError`).
+   `layout.WriteLimited` answers 429 with `Retry-After` and a generic message, or 503 and reports the error once. A JSON caller of `/login` gets `AUT003` with `retry_after` (`layout.RateLimitedError.ToAppError`).
 
-3. **A new page** gets `auth.Limits` in its options from `authLimits(cfg, svcs)` in `buildRoutes` (`internal/boot/http.go`). It carries the auth group's limiter and `http.trustedProxyHops`.
-4. **Tests** in the page's `web_limits_test.go`, with the memory store (`memory.New(10_000)`) for "on" and `ratelimit.Disabled()` (or the zero `auth.Limits`) for "off": limited after `Burst` calls with 429 and `Retry-After`; per email across IPs and per IP across emails where both apply; a broken limiter gives 503 (fail closed); off by default never limits; known and unknown emails get identical answers.
+3. **A new page** gets `layout.Limits` in its options from `authLimits(cfg, svcs)` in `buildRoutes` (`internal/boot/http.go`). It carries the auth group's limiter and `http.trustedProxyHops`.
+4. **Tests** in the page's `web_limits_test.go`, with the memory store (`memory.New(10_000)`) for "on" and `ratelimit.Disabled()` (or the zero `layout.Limits`) for "off": limited after `Burst` calls with 429 and `Retry-After`; per email across IPs and per IP across emails where both apply; a broken limiter gives 503 (fail closed); a group that is off never limits; known and unknown emails get identical answers.
 
 ## Build: a new group
 
 1. **Config** (`config/ratelimit.go`): a `RateLimitGroupConfig` field on `RateLimitConfig`, added to `AnyEnabled`; `v.SetDefault("rateLimit.<group>.enabled", false)` in `setDefaults`. Follow [config-key.md](config-key.md) and run `make config-examples`.
 2. **Boot** (`internal/boot/ratelimit.go`): a field on `limiters`, defaulting to `ratelimit.Disabled()` and set to the shared store when the group is on; a field on `Services` (like `AuthLimiter`) set in `Boot`. Tests next to `TestBuildLimiters_AuthOnWithMemory`.
-3. **A limits helper** for that surface, in the shape of `auth.Limits` (a zero value that limits nothing).
+3. **A limits helper** for that surface, in the shape of `layout.Limits` (a zero value that limits nothing).
 
 ## Build: a new store
 
@@ -58,10 +58,10 @@ A driver subpackage `ratelimit/<driver>` that implements `ratelimit.Limiter`, va
 ## Review
 
 - [ ] Rule is a func with a unique kebab-case name and its numbers in the doc comment.
-- [ ] Applied through `auth.Limits` and answered through `auth.WriteLimited`; no direct `Limiter` call in a handler.
+- [ ] Applied through `layout.Limits` and answered through `layout.WriteLimited`; no direct `Limiter` call in a handler.
 - [ ] No key, log line or message holds a raw email or password; email subjects are hashed.
 - [ ] Same answer for known and unknown accounts, limiter on and off.
-- [ ] Off by default; a group that is off gets `ratelimit.Disabled()` and starts no janitor.
+- [ ] A group that is off gets `ratelimit.Disabled()` and starts no janitor; a new group's default is decided with the owner.
 - [ ] `internal/boot/README.md` **Rate limits** section updated in the same commit (where each group applies, its numbers, its keys).
 - [ ] Gates: `make check`, `make cover` (≥ 85% per package), `make test-integration` (Redis store and boot), `make config-check` for a new key.
 
@@ -71,7 +71,8 @@ A driver subpackage `ratelimit/<driver>` that implements `ratelimit.Limiter`, va
 - [internal/kernel/ratelimit/memory/memory.go](../../internal/kernel/ratelimit/memory/memory.go): `Store`, `Store.Run` (janitor)
 - [internal/kernel/ratelimit/redis/redis.go](../../internal/kernel/ratelimit/redis/redis.go), [internal/kernel/ratelimit/redis/gcra.lua](../../internal/kernel/ratelimit/redis/gcra.lua)
 - [internal/kernel/ratelimit/ratelimittest/contract.go](../../internal/kernel/ratelimit/ratelimittest/contract.go): `Run`, `Clock`
-- [internal/auth/limits.go](../../internal/auth/limits.go): `Limits`, `WriteLimited`, `LoginIPRule`, `LoginEmailRule`
+- [internal/web/layout/limits.go](../../internal/web/layout/limits.go): `Limits`, `WriteLimited`, `RateLimitedError`
+- [internal/auth/limits.go](../../internal/auth/limits.go): `LoginIPRule`, `LoginEmailRule`
 - [internal/auth/web.go](../../internal/auth/web.go): `limitLogin`; [internal/org/invite/web.go](../../internal/org/invite/web.go): `limited`, `LandingRule`, `SubmitRule`
 - [internal/web/layout/clientip.go](../../internal/web/layout/clientip.go): `ClientIP`
 - [config/ratelimit.go](../../config/ratelimit.go): `RateLimitConfig`, `AnyEnabled`; [config/redis.go](../../config/redis.go): `RedisFeatures`

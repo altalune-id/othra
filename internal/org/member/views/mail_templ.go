@@ -76,7 +76,7 @@ func RemovedHTML(org string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layout.Mail(RemovedSubject(org)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layout.Mail("en-US", RemovedSubject(org)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -163,7 +163,7 @@ func RoleChangedHTML(org string, role string, consoleURL string) templ.Component
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layout.Mail(RoleChangedSubject(org, role)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layout.Mail("en-US", RoleChangedSubject(org, role)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

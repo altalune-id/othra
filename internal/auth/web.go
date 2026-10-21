@@ -41,7 +41,7 @@ type Web struct {
 	signIn   SignIn
 	sessions CookieSessions
 	ids      PublicIDs
-	limits   Limits
+	limits   layout.Limits
 	resets   *Resets
 	reset    session.SignedCookie
 }
@@ -52,7 +52,7 @@ func NewWeb(kit layout.Kit, signIn SignIn, sessions CookieSessions, ids PublicID
 }
 
 // WithLimits rate limits sign-in per client IP and per email.
-func (h *Web) WithLimits(l Limits) *Web {
+func (h *Web) WithLimits(l layout.Limits) *Web {
 	h.limits = l
 	return h
 }
@@ -213,7 +213,7 @@ func (h *Web) limitLogin(r *http.Request, email string) error {
 }
 
 func (h *Web) loginLimited(w http.ResponseWriter, r *http.Request, err error, wantsJSON bool, view views.LoginData) {
-	rl, limited := errors.AsType[*RateLimitedError](err)
+	rl, limited := errors.AsType[*layout.RateLimitedError](err)
 	w.Header().Set("Cache-Control", "no-store")
 	switch {
 	case limited && wantsJSON:
@@ -226,11 +226,11 @@ func (h *Web) loginLimited(w http.ResponseWriter, r *http.Request, err error, wa
 		view.Error = rl.Message()
 		h.kit.Render(w, r, http.StatusTooManyRequests, views.Login(h.kit.Layout("Sign in"), view))
 	case wantsJSON:
-		limiterFailed(w, r, h.kit, err)
-		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"code": string(apperror.CodeUnexpected), "message": limiterDown})
+		layout.LimiterFailed(w, r, h.kit, err)
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"code": string(apperror.CodeUnexpected), "message": layout.LimiterDown})
 	default:
-		limiterFailed(w, r, h.kit, err)
-		view.Error = limiterDown
+		layout.LimiterFailed(w, r, h.kit, err)
+		view.Error = layout.LimiterDown
 		h.kit.Render(w, r, http.StatusServiceUnavailable, views.Login(h.kit.Layout("Sign in"), view))
 	}
 }
@@ -260,11 +260,11 @@ func (h *Web) getForgot(w http.ResponseWriter, r *http.Request) {
 func (h *Web) postForgot(w http.ResponseWriter, r *http.Request) {
 	email := strings.TrimSpace(r.PostFormValue("email"))
 	if err := h.limits.LimitIP(r, ResetIPRule()); err != nil {
-		WriteLimited(w, r, h.kit, "Reset your password", err)
+		layout.WriteLimited(w, r, h.kit, "Reset your password", err)
 		return
 	}
 	if err := h.limits.LimitEmail(r.Context(), email, ResetEmailRule()); err != nil {
-		WriteLimited(w, r, h.kit, "Reset your password", err)
+		layout.WriteLimited(w, r, h.kit, "Reset your password", err)
 		return
 	}
 	if err := h.resets.Request(r.Context(), email); err != nil {
@@ -278,7 +278,7 @@ func (h *Web) resetLimited(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		if err := h.limits.LimitIP(r, ResetLinkIPRule()); err != nil {
-			WriteLimited(w, r, h.kit, "Reset your password", err)
+			layout.WriteLimited(w, r, h.kit, "Reset your password", err)
 			return
 		}
 		next(w, r)

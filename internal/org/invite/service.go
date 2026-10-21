@@ -16,6 +16,7 @@ import (
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/mailer"
+	"altalune.id/othra/nanoid"
 )
 
 // Deps are what the invite service needs.
@@ -195,7 +196,7 @@ func (s *Service) Lookup(ctx context.Context, rawToken string) (*Invite, error) 
 	if rawToken == "" {
 		return nil, &NotUsableError{Reason: ReasonNotFound}
 	}
-	inv, err := s.store.ByTokenHash(ctx, hashToken(rawToken))
+	inv, err := s.store.ByTokenHash(ctx, nanoid.HashToken(rawToken))
 	if IsNotFoundError(err) {
 		return nil, &NotUsableError{Reason: ReasonNotFound}
 	}

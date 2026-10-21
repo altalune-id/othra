@@ -1,0 +1,115 @@
+package i18n
+
+import (
+	"context"
+	"io/fs"
+	"maps"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"regexp"
+	"slices"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestPick(t *testing.T) {
+	for header, want := range map[string]string{
+		"":                               English,
+		"id-ID":                          Indonesian,
+		"id":                             Indonesian,
+		"ID-id":                          Indonesian,
+		"en-GB,en;q=0.9":                 English,
+		"fr-FR,id;q=0.5,en;q=0.4":        Indonesian,
+		"en;q=0.4,id;q=0.8":              Indonesian,
+		"id;q=0,en":                      English,
+		"ja-JP":                          English,
+		"*":                              English,
+		"id;q=bogus,en":                  English,
+		" id-ID ; q=0.9 , en-US ; q=0.8": Indonesian,
+	} {
+		assert.Equal(t, want, Pick(header), "%q", header)
+	}
+}
+
+func TestMiddleware(t *testing.T) {
+	var got string
+	h := Middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) { got = Locale(r.Context()) }))
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Accept-Language", "id-ID,id;q=0.9")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	assert.Equal(t, Indonesian, got)
+	assert.Equal(t, "Accept-Language", rec.Header().Get("Vary"))
+}
+
+func TestLocale(t *testing.T) {
+	assert.Equal(t, English, Locale(context.Background()))
+	assert.Equal(t, Indonesian, Locale(WithLocale(context.Background(), Indonesian)))
+	assert.Equal(t, English, Locale(WithLocale(context.Background(), "fr-FR")), "an unsupported locale falls back")
+}
+
+func TestT(t *testing.T) {
+	en, id := WithLocale(context.Background(), English), WithLocale(context.Background(), Indonesian)
+	assert.Equal(t, "Sign in to Openwa", T(en, "verify.title", "project", "Openwa"))
+	assert.Equal(t, "Masuk ke Openwa", T(id, "verify.title", "project", "Openwa"))
+	assert.Equal(t, "We sent a sign-in link to a@example.com. It works once, for 15 minutes.",
+		T(en, "sent.body", "email", "a@example.com", "minutes", "15"))
+	assert.Equal(t, "Masuk ke {project}", T(id, "verify.title"), "no args leaves the placeholder")
+	assert.Equal(t, "Masuk ke {email}", T(id, "verify.title", "project", "{email}", "email", "x"), "a value is never expanded again")
+	assert.Equal(t, "nope.missing", T(en, "nope.missing"))
+	assert.Equal(t, "Welcome", T(en, "login.title", "dangling"))
+}
+
+var placeholder = regexp.MustCompile(`\{[a-z_]+\}`)
+
+// D2: every locale has the same keys, no empty message, and the same placeholders per key.
+func TestCatalogs_Parity(t *testing.T) {
+	c := catalogs()
+	base := slices.Sorted(maps.Keys(c[Default]))
+	require.NotEmpty(t, base)
+	for _, locale := range Locales() {
+		keys := slices.Sorted(maps.Keys(c[locale]))
+		assert.Equal(t, base, keys, "%s keys", locale)
+		for k, msg := range c[locale] {
+			assert.NotEmpty(t, strings.TrimSpace(msg), "%s %s", locale, k)
+			assert.ElementsMatch(t, placeholder.FindAllString(c[Default][k], -1), placeholder.FindAllString(msg, -1), "%s %s placeholders", locale, k)
+		}
+	}
+}
+
+var tCall = regexp.MustCompile(`i18n\.T\(\s*[A-Za-z_.()]+\s*,\s*"([^"]+)"`)
+
+// D2: every key a Go or templ file asks for exists in the catalogs.
+func TestCatalogs_HaveEveryUsedKey(t *testing.T) {
+	root, err := filepath.Abs("../../..")
+	require.NoError(t, err)
+	var missing []string
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() && (d.Name() == "node_modules" || d.Name() == ".git" || d.Name() == "gen") {
+			return filepath.SkipDir
+		}
+		if d.IsDir() || (!strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, ".templ")) || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		body, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		for _, m := range tCall.FindAllSubmatch(body, -1) {
+			if _, ok := catalogs()[Default][string(m[1])]; !ok {
+				missing = append(missing, string(m[1])+" in "+path)
+			}
+		}
+		return nil
+	})
+	require.NoError(t, err)
+	assert.Empty(t, missing)
+}

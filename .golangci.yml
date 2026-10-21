@@ -126,14 +126,15 @@ linters:
         domain-purity:
           list-mode: strict
           files:
-            - "**/internal/{apikey,auth,client,install,legal,org,project,resourceserver,user,webhook}/{apikey,auth,client,install,legal,org,project,resourceserver,user,webhook}.go"
-            - "**/internal/{apikey,auth,client,install,legal,org,project,resourceserver,user,webhook}/{store,errors}.go"
+            - "**/internal/{apikey,auth,client,enduser,install,legal,org,project,resourceserver,user,webhook}/{apikey,auth,client,enduser,install,legal,org,project,resourceserver,user,webhook}.go"
+            - "**/internal/{apikey,auth,client,enduser,install,legal,org,project,resourceserver,user,webhook}/{store,errors}.go"
             # org/member and org/invite are excluded: they share role and error types with their parent domain.
           allow:
             - $gostd
             - github.com/google/uuid
             - google.golang.org/protobuf/types/known/timestamppb
             - altalune.id/othra/apperror
+            - altalune.id/othra/emailaddr
             - altalune.id/othra/gen/go
             - altalune.id/othra/internal/kernel/events
             - altalune.id/othra/internal/oauth/redirecturi

@@ -51,6 +51,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 - Signed-in surfaces (Connect, MCP, signed-in pages) call the `controlplane` handlers, never a service directly.
 - Every RPC has an entry in the permission table (`internal/permission`) and protovalidate rules in its proto.
 - Only pre-sign-in pages (login, install, invite landing, legal) are templ pages. Everything signed-in goes in the console.
+- Exception: the hosted end-user pages under `/p/<handle>/` (sign-in, account picker, terms) are templ too, and `/p/<handle>/account/` is a templ placeholder for signed-in end users until the M8 portal SPA replaces it.
 
 **Data**
 

@@ -77,5 +77,9 @@
   { "code": "RSV006", "name": "ResourceServerLinked", "kind": "failed_precondition", "params": ["clients"], "reasons": [] },
   { "code": "RSV007", "name": "ResourceServerTrustSelfHostedOnly", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "RSV008", "name": "ResourceServerVerifyTooSoon", "kind": "resource_exhausted", "params": ["time"], "reasons": [] },
-  { "code": "RSV009", "name": "ResourceServerInvalidLinkScopes", "kind": "invalid", "params": ["scope"], "reasons": ["empty", "not_in_catalog"] }
+  { "code": "RSV009", "name": "ResourceServerInvalidLinkScopes", "kind": "invalid", "params": ["scope"], "reasons": ["empty", "not_in_catalog"] },
+  { "code": "SIG001", "name": "SignInLinkNotUsable", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG002", "name": "SignInEmailDisabled", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG003", "name": "SignInSessionGone", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG004", "name": "SignInFormExpired", "kind": "forbidden", "params": [], "reasons": [] }
 ]

@@ -72,7 +72,7 @@ func TestKitPathAndLayout(t *testing.T) {
 	k := Kit{BasePath: "/app/"}
 	assert.Equal(t, "/app/login", k.Path("login"))
 	assert.Equal(t, "/app", k.Path(""))
-	assert.Equal(t, LayoutData{BasePath: "/app/", Title: "Sign in"}, k.Layout("Sign in"))
+	assert.Equal(t, LayoutData{BasePath: "/app/", Title: "Sign in", Home: "/app/console/"}, k.Layout("Sign in"))
 }
 
 func renderString(t *testing.T, c templ.Component) string {
@@ -110,17 +110,25 @@ func TestCardTemplate(t *testing.T) {
 	require.NoError(t, Card("Welcome & hi").Render(ctx, &buf))
 	out := buf.String()
 
-	assert.Contains(t, out, `<h1 class="card-title text-2xl">Welcome &amp; hi</h1>`)
+	assert.Contains(t, out, `<h1 class="card-title text-2xl break-words max-sm:text-xl">Welcome &amp; hi</h1>`)
 	assert.Contains(t, out, "<p>body</p>")
 }
 
 func TestErrorTemplate(t *testing.T) {
-	out := renderString(t, Error(LayoutData{BasePath: "/app", Title: "Oops"}, "Try <again>"))
+	out := renderString(t, Error(Kit{BasePath: "/app"}.Layout("Oops"), "Try <again>"))
 
 	assert.Contains(t, out, "<title>Oops · Othra</title>")
-	assert.Contains(t, out, `<h1 class="card-title text-2xl">Oops</h1>`)
+	assert.Contains(t, out, `<h1 class="card-title text-2xl break-words max-sm:text-xl">Oops</h1>`)
 	assert.Contains(t, out, "<p>Try &lt;again&gt;</p>")
 	assert.Contains(t, out, `href="/app/console/"`)
+}
+
+// SECURITY: S1, an end-user error page never links to the console.
+func TestErrorTemplate_WithoutHome(t *testing.T) {
+	out := renderString(t, Error(LayoutData{BasePath: "/app", Title: "Oops"}, "Try again"))
+	assert.Contains(t, out, "<p>Try again</p>")
+	assert.NotContains(t, out, "console")
+	assert.NotContains(t, out, "card-actions")
 }
 
 func TestKitRender(t *testing.T) {

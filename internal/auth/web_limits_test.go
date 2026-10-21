@@ -92,7 +92,7 @@ func TestLogin_LimitedJSON(t *testing.T) {
 
 func TestLogin_BrokenLimiterFailsClosed(t *testing.T) {
 	broken := &brokenLimiter{}
-	f := newLimitedLoginFixture(t, "", Limits{Limiter: broken})
+	f := newLimitedLoginFixture(t, "", layout.Limits{Limiter: broken})
 	rec := f.do(loginPost("", url.Values{"email": {"ada@example.com"}, "password": {"correct horse battery"}}))
 	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 	assert.Contains(t, rec.Body.String(), "Sign-in is temporarily unavailable")
@@ -108,7 +108,7 @@ func TestLogin_BrokenLimiterFailsClosed(t *testing.T) {
 }
 
 func TestLogin_OffByDefaultNeverLimits(t *testing.T) {
-	for name, limits := range map[string]Limits{"zero value": {}, "disabled": {Limiter: ratelimit.Disabled()}} {
+	for name, limits := range map[string]layout.Limits{"zero value": {}, "disabled": {Limiter: ratelimit.Disabled()}} {
 		t.Run(name, func(t *testing.T) {
 			f := newLimitedLoginFixture(t, "", limits)
 			for i := range 100 {
@@ -126,7 +126,7 @@ func TestLogin_KnownAndUnknownEmailLookTheSame(t *testing.T) {
 		header http.Header
 		body   string
 	}
-	run := func(t *testing.T, known bool, limits Limits, accept string) (outcome, *fixture) {
+	run := func(t *testing.T, known bool, limits layout.Limits, accept string) (outcome, *fixture) {
 		sf := newFixture(t, BasicCredentials{})
 		if known {
 			sf.addUser(t, "ada@example.com", true)
@@ -150,12 +150,12 @@ func TestLogin_KnownAndUnknownEmailLookTheSame(t *testing.T) {
 	for _, mode := range []string{"off", "on"} {
 		for _, accept := range []string{"", "application/json"} {
 			t.Run(mode+" "+accept, func(t *testing.T) {
-				limits := func() Limits {
+				limits := func() layout.Limits {
 					if mode == "on" {
 						l, _ := memoryLimits(t)
 						return l
 					}
-					return Limits{}
+					return layout.Limits{}
 				}
 				known, kf := run(t, true, limits(), accept)
 				unknown, uf := run(t, false, limits(), accept)

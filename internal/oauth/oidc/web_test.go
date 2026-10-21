@@ -88,6 +88,7 @@ type fixture struct {
 	keys      *publisher
 	web       *oidc.Web
 	mux       *http.ServeMux
+	resolver  *oidc.Resolver
 	acme      *project.Issuer
 	reported  []string
 	corsCalls int
@@ -105,7 +106,8 @@ func newFixture(t *testing.T, basePath string) *fixture {
 		f.reported = append(f.reported, msg)
 		return apperror.New(apperror.CodeUnexpected, "unexpected").WithCause(err)
 	}}
-	f.web = oidc.NewWeb(f.issuers, f.keys, kit, oidc.Config{
+	f.resolver = oidc.NewResolver(f.issuers, f.keys, "https://id.example.com"+basePath, kit.Unexpected)
+	f.web = oidc.NewWeb(f.resolver, kit, oidc.Config{
 		PublicBase: "https://id.example.com" + basePath,
 		BasePath:   basePath,
 		CORS: func(next http.Handler) http.Handler {
@@ -291,14 +293,14 @@ func TestAuthorizeStubShowsAnUnregisteredAppPage(t *testing.T) {
 	}
 
 	f.acme.DisplayName = ""
-	f.web.Forget(f.acme.ProjectID)
+	f.resolver.Forget(f.acme.ProjectID)
 	assert.Contains(t, f.do(t, http.MethodGet, "/p/acme-web/oauth2/authorize").Body.String(), "registered with Web,", "the project name stands in for a missing display name")
 }
 
 func TestIssuerCache(t *testing.T) {
 	f := newFixture(t, "")
 	now := time.Date(2026, 10, 18, 9, 0, 0, 0, time.UTC)
-	f.web.SetClock(func() time.Time { return now })
+	f.resolver.SetClock(func() time.Time { return now })
 
 	for range 3 {
 		f.do(t, http.MethodGet, "/p/acme-web/oauth2/jwks.json")
@@ -312,10 +314,10 @@ func TestIssuerCache(t *testing.T) {
 	assert.Equal(t, 2, f.issuers.calls, "the entry expires after 30 seconds")
 
 	f.keys.body = `{"keys":[]}`
-	f.web.Forget(f.acme.ProjectID)
+	f.resolver.Forget(f.acme.ProjectID)
 	rec := f.do(t, http.MethodGet, "/p/acme-web/oauth2/jwks.json")
 	assert.JSONEq(t, `{"keys":[]}`, rec.Body.String(), "a rotation drops the cached keys at once")
-	f.web.Forget(uuid.New())
+	f.resolver.Forget(uuid.New())
 	assert.Equal(t, 3, f.issuers.calls)
 }
 
@@ -330,7 +332,7 @@ func TestIssuerCache_AHandleChangeDropsTheOldHandle(t *testing.T) {
 	f.issuers.mu.Unlock()
 	assert.Equal(t, http.StatusOK, f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Code, "still cached")
 
-	f.web.Forget(f.acme.ProjectID)
+	f.resolver.Forget(f.acme.ProjectID)
 	assert.Equal(t, http.StatusNotFound, f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Code)
 	rec := f.do(t, http.MethodGet, "/p/acme-shop/.well-known/openid-configuration")
 	require.Equal(t, http.StatusOK, rec.Code)
@@ -340,7 +342,7 @@ func TestIssuerCache_AHandleChangeDropsTheOldHandle(t *testing.T) {
 func TestLookupsAreRateLimitedPerClient(t *testing.T) {
 	f := newFixture(t, "")
 	lim := &limiter{allow: false}
-	f.web.WithLimiter(lim, 0)
+	f.resolver.WithLimiter(lim, 0)
 
 	rec := f.do(t, http.MethodGet, "/p/acme-web/oauth2/jwks.json")
 	assert.Equal(t, http.StatusTooManyRequests, rec.Code)
@@ -356,7 +358,7 @@ func TestLookupsAreRateLimitedPerClient(t *testing.T) {
 	assert.Equal(t, http.StatusOK, f.do(t, http.MethodGet, "/p/acme-web/oauth2/jwks.json").Code, "a cached issuer is never limited")
 
 	lim.err = errors.New("redis down")
-	f.web.Forget(f.acme.ProjectID)
+	f.resolver.Forget(f.acme.ProjectID)
 	assert.Equal(t, http.StatusOK, f.do(t, http.MethodGet, "/p/acme-web/oauth2/jwks.json").Code, "a broken limiter never takes the keys offline")
 	assert.Contains(t, f.reported, "oidc: rate limit")
 }
@@ -374,4 +376,38 @@ func TestFailuresAnswer503AndAreReported(t *testing.T) {
 	f.issuers.err = errors.New("db down")
 	assert.Equal(t, http.StatusServiceUnavailable, f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Code)
 	assert.Len(t, f.reported, 2)
+}
+
+// The hosted pages share the resolver: typed errors they render as HTML, and the cache the documents fill.
+func TestResolver_ResolveForPages(t *testing.T) {
+	f := newFixture(t, "")
+	req := func(handle string) *http.Request {
+		r := httptest.NewRequest(http.MethodGet, "/p/x/login", nil)
+		r.SetPathValue("handle", handle)
+		return r
+	}
+	i, err := f.resolver.Resolve(req("acme-web"))
+	require.NoError(t, err)
+	assert.Equal(t, f.acme.ProjectID, i.ProjectID)
+	require.Equal(t, http.StatusOK, f.do(t, http.MethodGet, "/p/acme-web/oauth2/jwks.json").Code)
+	assert.Equal(t, 1, f.issuers.calls, "the documents reuse the issuer the page loaded")
+
+	for _, handle := range []string{"nope-nope", "Bad Handle", "p"} {
+		_, err := f.resolver.Resolve(req(handle))
+		assert.ErrorIs(t, err, oidc.ErrUnknownIssuer, handle)
+	}
+
+	f.resolver.Forget(f.acme.ProjectID)
+	f.resolver.WithLimiter(&limiter{allow: false}, 0)
+	_, err = f.resolver.Resolve(req("acme-web"))
+	limited, ok := errors.AsType[*oidc.LookupLimitedError](err)
+	require.True(t, ok, "%v", err)
+	assert.Equal(t, 2, limited.RetryAfter)
+	assert.NotEmpty(t, limited.Error())
+
+	f.resolver.WithLimiter(&limiter{allow: true}, 0)
+	f.issuers.err = errors.New("db down")
+	_, err = f.resolver.Resolve(req("acme-web"))
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, oidc.ErrUnknownIssuer)
 }

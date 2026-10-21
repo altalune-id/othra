@@ -162,19 +162,24 @@ func warnSampleLegal(cfg config.Config, log *slog.Logger, serving bool) {
 
 func buildIssuerRoutes(
 	cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc,
-) (public, pages []web.Registrar) {
-	if svcs == nil || svcs.Projects == nil || svcs.Keys == nil {
+) (public, hosted []web.Registrar) {
+	if svcs == nil || svcs.IssuerResolver == nil {
 		return nil, nil
 	}
 	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
-	issuers := oidc.NewWeb(svcs.Projects, svcs.Keys, kit, oidc.Config{
+	resolver := svcs.IssuerResolver.WithLimiter(svcs.AuthLimiter, cfg.HTTP.TrustedProxyHops)
+	issuers := oidc.NewWeb(resolver, kit, oidc.Config{
 		PublicBase: publicBase(cfg.HTTP),
 		BasePath:   cfg.HTTP.BasePath,
 		CORS:       middleware.PublicCORS,
-	}).WithLimiter(svcs.AuthLimiter, cfg.HTTP.TrustedProxyHops)
-	svcs.Keys.WithOnChange(issuers.Forget)
-	svcs.Projects.WithOnIssuerChange(issuers.Forget)
-	return []web.Registrar{issuers}, []web.Registrar{issuers.Pages()}
+	})
+	svcs.Keys.WithOnChange(resolver.Forget)
+	svcs.Projects.WithOnIssuerChange(resolver.Forget)
+	pages := []web.Registrar{issuers.Pages()}
+	if svcs.EndUsers != nil {
+		pages = append(pages, buildHosted(cfg, svcs, kit, resolver))
+	}
+	return []web.Registrar{issuers}, pages
 }
 
 func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc) []web.Registrar {
@@ -221,8 +226,8 @@ func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected
 	}
 }
 
-func authLimits(cfg config.Config, svcs *Services) auth.Limits {
-	return auth.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops}
+func authLimits(cfg config.Config, svcs *Services) layout.Limits {
+	return layout.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops}
 }
 
 func consentData(cfg config.Config) layout.ConsentData {
@@ -264,6 +269,8 @@ type httpSurfaces struct {
 	mcp        http.Handler
 	routes     []web.Registrar
 	public     []web.Registrar
+	hosted     []web.Registrar
+	images     []string
 
 	installRequired *atomic.Bool
 	session         func(http.Handler) http.Handler
@@ -281,10 +288,13 @@ func buildHTTPHandler(s httpSurfaces) http.Handler {
 		Console:      s.console,
 		Routes:       s.routes,
 		PublicRoutes: s.public,
-		BasePath:     s.basePath,
-		Log:          s.log,
-		Unexpected:   s.unexpected,
-		Probes:       s.probes,
+		HostedPages:  s.hosted,
+
+		HostedImageBases: s.images,
+		BasePath:         s.basePath,
+		Log:              s.log,
+		Unexpected:       s.unexpected,
+		Probes:           s.probes,
 
 		Gate:        install.InstallGate(s.basePath, s.installRequired),
 		Session:     s.session,
@@ -292,4 +302,11 @@ func buildHTTPHandler(s httpSurfaces) http.Handler {
 		ConsoleGate: s.consoleGate,
 		CrossOrigin: s.crossOrigin,
 	})
+}
+
+func hostedImageBases(s config.StorageConfig) []string {
+	if s.Driver == "" {
+		return nil
+	}
+	return []string{s.PublicBaseURL}
 }

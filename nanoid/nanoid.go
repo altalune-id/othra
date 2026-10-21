@@ -47,14 +47,19 @@ func MustNew(length int) string {
 	return s
 }
 
-// NewInviteToken returns a raw token and its sha256 hex hash.
-func NewInviteToken() (raw, hash string, err error) {
+// NewToken returns a raw 32-character token and its HashToken hash.
+func NewToken() (raw, hash string, err error) {
 	raw, err = New(32)
 	if err != nil {
 		return "", "", err
 	}
+	return raw, HashToken(raw), nil
+}
+
+// HashToken is the stored form of a raw token: its sha256 in hex.
+func HashToken(raw string) string {
 	sum := sha256.Sum256([]byte(raw))
-	return raw, hex.EncodeToString(sum[:]), nil
+	return hex.EncodeToString(sum[:])
 }
 
 // IsValid reports whether s is a length-n nanoid.

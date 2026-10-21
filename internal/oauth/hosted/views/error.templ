@@ -1,0 +1,75 @@
+package views
+
+import (
+	"context"
+
+	"altalune.id/othra/internal/web/i18n"
+	"altalune.id/othra/internal/web/layout"
+)
+
+// ErrorData is a hosted error: translated Title and Message, the error Code and the request's Reference; an empty Site means an unknown project.
+type ErrorData struct {
+	Site
+	Title        string
+	Message      string
+	Code         string
+	Reference    string
+	SupportEmail string
+}
+
+func (v ErrorData) title(ctx context.Context) string {
+	switch {
+	case v.Handle == "":
+		return i18n.T(ctx, "error.not_found_title")
+	case v.Title != "":
+		return v.Title
+	default:
+		return i18n.T(ctx, "error.title")
+	}
+}
+
+func (v ErrorData) message(ctx context.Context) string {
+	if v.Handle == "" {
+		return i18n.T(ctx, "error.not_found_body")
+	}
+	return v.Message
+}
+
+// Error is the hosted error page: never a console link, a way back to sign in when the project is known.
+templ Error(d layout.LayoutData, v ErrorData) {
+	@layout.Layout(titled(d, v.title(ctx))) {
+		@layout.Card(v.title(ctx)) {
+			if v.message(ctx) != "" {
+				<p class="break-words">{ v.message(ctx) }</p>
+			}
+			if v.Code != "" || v.Reference != "" {
+				<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-base-content/70">
+					if v.Code != "" {
+						<dt>{ i18n.T(ctx, "error.code") }</dt>
+						<dd class="font-mono">{ v.Code }</dd>
+					}
+					if v.Reference != "" {
+						<dt>{ i18n.T(ctx, "error.reference") }</dt>
+						<dd class="font-mono break-all">{ v.Reference }</dd>
+					}
+				</dl>
+			}
+			if v.Handle != "" {
+				if v.SupportEmail != "" {
+					<p class="text-sm break-words text-base-content/70">
+						for _, p := range splitAround(i18n.T(ctx, "error.help_email"), "{support_email}") {
+							if p == "{support_email}" {
+								<a class="link break-all" href={ templ.SafeURL("mailto:" + v.SupportEmail) }>{ v.SupportEmail }</a>
+							} else {
+								{ p }
+							}
+						}
+					</p>
+				} else {
+					<p class="text-sm text-base-content/70">{ i18n.T(ctx, "error.help") }</p>
+				}
+				<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.href(d, "/login")) }>{ i18n.T(ctx, "common.back_to_sign_in") }</a>
+			}
+		}
+	}
+}

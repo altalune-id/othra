@@ -18,6 +18,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
 - [ ] Rate limits for every form that takes an email, a password or a token ([rate-limit.md](rate-limit.md)).
 - [ ] New service method or error code? Do [service-method.md](service-method.md) or [error-code.md](error-code.md) first.
 - [ ] Must a signed-in person who has not accepted the terms reach it? Then it joins the `WelcomeGate` skip list.
+- [ ] Is it an end-user page of a project, under `/p/<handle>/`? Then it registers through `ServerOpts.HostedPages` (`buildIssuerRoutes`): no admin session or `WelcomeGate`, `no-referrer`, the issuer resolved by `oidc.Resolver`, and its error pages leave `LayoutData.Home` empty so they never link to the console.
 
 ## Build
 
@@ -52,7 +53,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
    }
    ```
 
-   Links use `d.Href(...)`, assets `d.Static(...)`. A new password input uses `layout.PasswordField`; terms consent uses `layout.Consent`. Copy is plain English in the view (templ pages have no i18n).
+   Links use `d.Href(...)`, assets `d.Static(...)`. A new password input uses `layout.PasswordField`; terms consent uses `layout.Consent`. Admin pages keep plain English copy in the view. Hosted end-user pages (`/p/<handle>/`) take every string from `internal/web/i18n` (`i18n.T(ctx, key, "name", value)`), with each key in both `internal/web/i18n/locales/*.json` (`TestCatalogs_Parity`, `TestCatalogs_HaveEveryUsedKey`). They set `LayoutData.Brand` (`layout.NewBrand`): the layout then adds the brand header, the footer links and the brand colours, in one `<style>` under the CSP nonce from `middleware.HostedCSP` (the hosted pages' strict policy; `img-src` adds the storage public origin for logos). See `internal/oauth/hosted/views`.
 
 2. **Generate.** `make templ` (or `make generate`). Commit the `*_templ.go` files.
 3. **Handlers.** In `internal/<domain>/web.go`: an options struct, `type Web`, `NewWeb`, `Register(mux *http.ServeMux)`.
@@ -62,7 +63,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
    type WebOpts struct {
    	Kit     layout.Kit
    	Service *Service
-   	Limits  auth.Limits
+   	Limits  layout.Limits
    }
 
    // Web serves /thing.
@@ -80,7 +81,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
    func (h *Web) postThing(w http.ResponseWriter, r *http.Request) {
    	email := strings.TrimSpace(r.PostFormValue("email"))
    	if err := h.o.Limits.LimitIP(r, ThingIPRule()); err != nil {
-   		auth.WriteLimited(w, r, h.o.Kit, "Thing", err)
+   		layout.WriteLimited(w, r, h.o.Kit, "Thing", err)
    		return
    	}
    	if err := h.o.Service.Do(r.Context(), email); err != nil {
@@ -96,11 +97,11 @@ A server-rendered templ page that a person opens **before** they are signed in: 
    - `return_to` goes through `layout.SanitizeReturnTo` (into the form) and `layout.ResolveReturnTo` (before the redirect).
    - Answer the same for known and unknown emails.
 
-4. **Rate limits.** Define `XxxRule() ratelimit.Rule` funcs next to the handlers, count with `auth.Limits` (`LimitIP`, `LimitEmail`) and refuse with `auth.WriteLimited` (429 + `Retry-After`, or 503 when the store fails). See [rate-limit.md](rate-limit.md).
+4. **Rate limits.** Define `XxxRule() ratelimit.Rule` funcs next to the handlers, count with `layout.Limits` (`LimitIP`, `LimitEmail`) and refuse with `layout.WriteLimited` (429 + `Retry-After`, or 503 when the store fails). See [rate-limit.md](rate-limit.md).
 5. **Wire.** Add `<domain>.NewWeb(...)` to the slice in `buildRoutes` ([internal/boot/http.go](../../internal/boot/http.go)). Pass `kit` and the services from `Services`.
 6. **Gates.**
    - Routes are open to signed-out callers; the handler decides who may act.
-   - Cross-origin `POST`s are refused by `http.CrossOriginProtection` (set in `web.NewServer`), so forms carry no CSRF token.
+   - Cross-origin `POST`s are refused by `http.CrossOriginProtection` (set in `web.NewServer`). Admin forms carry no CSRF token. Hosted end-user forms also carry one per form: the handler gets it from `hosted.CSRF.Token` and the view renders `@layout.CSRFInput(token)`. The `POST` handler checks it with `CSRF.Check`.
    - A page that a person must reach before accepting the terms joins `skipped` in `WelcomeGate` ([internal/legal/web.go](../../internal/legal/web.go)).
    - A page that renders a token from a URL sets `Referrer-Policy: no-referrer` (see `resetLimited`).
 
@@ -126,7 +127,8 @@ A server-rendered templ page that a person opens **before** they are signed in: 
 - [internal/auth/web.go](../../internal/auth/web.go): `Web`, `Register`, `getLogin`, `postLogin`, `postForgot`, `resetLimited`
 - [internal/auth/views/login.templ](../../internal/auth/views/login.templ): `Login`, `LoginData`
 - [internal/auth/views/forgot.templ](../../internal/auth/views/forgot.templ): `Forgot`, `ForgotData`
-- [internal/auth/limits.go](../../internal/auth/limits.go): `Limits`, `LoginIPRule`, `WriteLimited`
+- [internal/web/layout/limits.go](../../internal/web/layout/limits.go): `Limits`, `WriteLimited`
+- [internal/auth/limits.go](../../internal/auth/limits.go): `LoginIPRule`
 - [internal/legal/web.go](../../internal/legal/web.go): `WebOpts`, `Web`, `WelcomeGate`, `postWelcome`
 - [internal/legal/views/welcome.templ](../../internal/legal/views/welcome.templ): `Welcome`, `WelcomeData`
 - [internal/org/invite/web.go](../../internal/org/invite/web.go): `WebOpts`, `LandingRule`, `SubmitRule`

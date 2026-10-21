@@ -9,7 +9,7 @@ const (
 	RateLimitDriverRedis  RateLimitDriver = "redis"
 )
 
-// RateLimitConfig configures Othra's own rate limiter: one shared driver, one switch per group, every group off by default.
+// RateLimitConfig configures Othra's own rate limiter: one shared driver and one switch per group; the auth group is on by default.
 type RateLimitConfig struct {
 	Driver  RateLimitDriver      `yaml:"driver"  mapstructure:"driver"  validate:"oneof=memory redis"`
 	MaxKeys int                  `yaml:"maxKeys" mapstructure:"maxKeys"`

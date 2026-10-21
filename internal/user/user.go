@@ -3,18 +3,17 @@ package user
 
 import (
 	"database/sql"
-	"net/mail"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
+	"altalune.id/othra/emailaddr"
 	"altalune.id/othra/nanoid"
 )
 
 const (
 	publicIDLen = 21
-	emailMaxLen = 254
 	nameMaxLen  = 200
 )
 
@@ -72,14 +71,10 @@ func cleanName(name string) (string, error) {
 // HasPassword reports whether u can sign in with a local password.
 func (u *User) HasPassword() bool { return u.PasswordHash != "" }
 
-// NormalizeEmail trims and lowercases email and rejects anything that is not a bare address.
+// NormalizeEmail is emailaddr.Normalize with a *InvalidEmailError for anything that is not a bare address.
 func NormalizeEmail(email string) (string, error) {
-	e := strings.ToLower(strings.TrimSpace(email))
-	if e == "" || len(e) > emailMaxLen {
-		return "", &InvalidEmailError{}
-	}
-	addr, err := mail.ParseAddress(e)
-	if err != nil || addr.Address != e || addr.Name != "" {
+	e, err := emailaddr.Normalize(email)
+	if err != nil {
 		return "", &InvalidEmailError{}
 	}
 	return e, nil

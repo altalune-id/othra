@@ -27,6 +27,7 @@ import (
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/client"
+	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/authz"
@@ -34,12 +35,14 @@ import (
 	"altalune.id/othra/internal/kernel/storage"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/keys"
+	"altalune.id/othra/internal/oauth/hosted"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/user"
+	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/internal/webhook"
 	"altalune.id/othra/password"
 	"altalune.id/othra/scope"
@@ -130,7 +133,7 @@ func samples() []error {
 		&invite.PendingError{},
 
 		&auth.InvalidCredentialsError{},
-		&auth.RateLimitedError{RetryAfter: 90 * time.Second},
+		&layout.RateLimitedError{RetryAfter: 90 * time.Second},
 		&auth.ResetNotUsableError{Reason: auth.ResetExpired},
 		&auth.ResetNotUsableError{Reason: auth.ResetUsed},
 		&auth.ResetNotUsableError{Reason: auth.ResetNotFound},
@@ -215,6 +218,11 @@ func samples() []error {
 		&resourceserver.VerifyTooSoonError{RetryAt: time.Unix(0, 0)},
 		&resourceserver.InvalidLinkScopesError{Reason: resourceserver.LinkScopesEmpty},
 		&resourceserver.InvalidLinkScopesError{Scope: "x", Reason: resourceserver.LinkScopesNotInCatalog},
+
+		&enduser.LinkNotUsableError{},
+		&enduser.EmailDisabledError{},
+		&enduser.SessionGoneError{},
+		&hosted.FormExpiredError{Reason: hosted.FormExpired},
 	}
 }
 

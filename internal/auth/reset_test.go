@@ -19,7 +19,7 @@ func TestNewReset(t *testing.T) {
 	assert.Equal(t, userID, r.UserID)
 	assert.True(t, nanoid.IsValid(r.PublicID, 21))
 	assert.Len(t, raw, 32)
-	assert.Equal(t, hashResetToken(raw), r.TokenHash)
+	assert.Equal(t, nanoid.HashToken(raw), r.TokenHash)
 	assert.NotContains(t, r.TokenHash, raw)
 	assert.Equal(t, now.UTC().Add(time.Hour), r.ExpiresAt)
 	assert.Equal(t, time.UTC, r.CreatedAt.Location())

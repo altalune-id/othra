@@ -2,9 +2,7 @@
 package invite
 
 import (
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
@@ -80,7 +78,7 @@ func newInvite(orgID uuid.UUID, email string, role member.Role, invitedBy uuid.U
 }
 
 func (i *Invite) issue(now time.Time) (string, error) {
-	raw, hash, err := nanoid.NewInviteToken()
+	raw, hash, err := nanoid.NewToken()
 	if err != nil {
 		return "", err
 	}
@@ -154,9 +152,4 @@ type listedRow struct {
 	Invite       inviteRow
 	InviterName  sql.NullString `alias:"users.name"`
 	InviterEmail sql.NullString `alias:"users.email"`
-}
-
-func hashToken(raw string) string {
-	sum := sha256.Sum256([]byte(raw))
-	return hex.EncodeToString(sum[:])
 }

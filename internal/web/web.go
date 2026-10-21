@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/internal/web/middleware"
 )
@@ -23,12 +24,16 @@ type ServerOpts struct {
 	Console      http.Handler // optional console SPA mounted at BasePath+"/console"
 	Routes       []Registrar  // optional server-rendered routes; their mux also answers every unknown path
 	PublicRoutes []Registrar  // optional cookie-less public documents: no session, CSRF check or no-store
+	HostedPages  []Registrar  // optional end-user pages under BasePath+"/p/": never the admin Session or SessionGate
 	Probes       Registrar    // optional /healthz and /readyz, mounted with no gate, session or CSRF check
 
 	Gate        func(http.Handler) http.Handler // optional; wraps every route, probes included
 	Session     func(http.Handler) http.Handler // optional; puts the cookie's Principal on routes and the console
 	SessionGate func(http.Handler) http.Handler // optional; runs after Session on routes and the console
 	ConsoleGate func(http.Handler) http.Handler // optional; runs after SessionGate on the console only
+	HostedGate  func(http.Handler) http.Handler // optional; wraps the hosted pages only, inside their headers and CSRF check
+
+	HostedImageBases []string // optional; base URLs the hosted pages may load images from (the storage public URL)
 
 	CrossOrigin *http.CrossOriginProtection // guards routes and /api, not /mcp; nil uses the stdlib default
 	BasePath    string
@@ -67,6 +72,9 @@ func NewServer(opts ServerOpts) http.Handler {
 		}
 		outer.Handle(console+"/", withSession(spa))
 	}
+	if len(opts.HostedPages) > 0 {
+		outer.Handle(layout.Path(opts.BasePath, "/p")+"/", hostedHandler(opts, cop))
+	}
 	static := layout.Path(opts.BasePath, "/static") + "/"
 	outer.Handle("GET "+static, staticHandler(static, StaticFS()))
 	toConsole := http.RedirectHandler(layout.Path(opts.BasePath, "/console")+"/", http.StatusFound)
@@ -96,6 +104,19 @@ func NewServer(opts ServerOpts) http.Handler {
 		root = opts.Gate(root)
 	}
 	return middleware.Recoverer(opts.Log, opts.Unexpected, middleware.RequestID(root))
+}
+
+// SECURITY: O5, end-user pages get their own stack with no admin session, so an admin cookie never reaches them.
+func hostedHandler(opts ServerOpts, cop *http.CrossOriginProtection) http.Handler {
+	mux := http.NewServeMux()
+	for _, r := range opts.HostedPages {
+		r.Register(mux)
+	}
+	var h http.Handler = mux
+	if opts.HostedGate != nil {
+		h = opts.HostedGate(h)
+	}
+	return middleware.NoStore(middleware.NoReferrer(middleware.HostedCSP(opts.HostedImageBases...)(cop.Handler(i18n.Middleware(h)))))
 }
 
 func chain(outer, inner func(http.Handler) http.Handler) func(http.Handler) http.Handler {

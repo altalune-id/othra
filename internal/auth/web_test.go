@@ -34,10 +34,10 @@ type loginFixture struct {
 
 func newLoginFixture(t *testing.T, base string) *loginFixture {
 	t.Helper()
-	return newLimitedLoginFixture(t, base, Limits{})
+	return newLimitedLoginFixture(t, base, layout.Limits{})
 }
 
-func newLimitedLoginFixture(t *testing.T, base string, limits Limits) *loginFixture {
+func newLimitedLoginFixture(t *testing.T, base string, limits layout.Limits) *loginFixture {
 	t.Helper()
 	f := &loginFixture{
 		base:  base,

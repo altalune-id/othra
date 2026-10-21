@@ -1,9 +1,9 @@
 package layout
 
-// Mail is the shell of an HTML email: one card with heading and the children, styled inline for mail clients.
-templ Mail(heading string) {
+// Mail is the shell of an HTML email in lang: one card with heading and the children, styled inline for mail clients.
+templ Mail(lang, heading string) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang={ lang }>
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>

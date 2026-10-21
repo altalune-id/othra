@@ -34,9 +34,13 @@ func (s *Sender) Send(_ context.Context, m mailer.Message) error {
 	if err := m.Validate(); err != nil {
 		return err
 	}
+	replyTo := ""
+	if m.ReplyTo != "" {
+		replyTo = "Reply-To: " + m.ReplyTo + "\n"
+	}
 	_, err := fmt.Fprintf(s.out,
-		"\n--- mailer.console %s ---\nFrom: %s\nTo: %s\nSubject: %s\n\n%s\n\n%s\n------------------------------\n",
-		time.Now().UTC().Format(time.RFC3339), m.From, m.To, m.Subject, m.TextBody, m.HTMLBody)
+		"\n--- mailer.console %s ---\nFrom: %s\nTo: %s\n%sSubject: %s\n\n%s\n\n%s\n------------------------------\n",
+		time.Now().UTC().Format(time.RFC3339), m.From, m.To, replyTo, m.Subject, m.TextBody, m.HTMLBody)
 	if err != nil {
 		return fmt.Errorf("mailer: console: %w", err)
 	}

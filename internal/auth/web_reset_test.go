@@ -23,7 +23,7 @@ type resetWeb struct {
 	srv http.Handler
 }
 
-func newResetWeb(t *testing.T, limits Limits) *resetWeb {
+func newResetWeb(t *testing.T, limits layout.Limits) *resetWeb {
 	t.Helper()
 	f := &resetWeb{resetFixture: newResetFixture(t)}
 	sessions := testSessions(f.sessions)
@@ -67,7 +67,7 @@ func (f *resetWeb) open(t *testing.T) (*http.Cookie, string) {
 }
 
 func TestResetWeb_LoginLinksToForgotPassword(t *testing.T) {
-	f := newResetWeb(t, Limits{})
+	f := newResetWeb(t, layout.Limits{})
 	body := f.do(httptest.NewRequest(http.MethodGet, "/login", nil)).Body.String()
 	assert.Contains(t, body, `href="/forgot-password">Forgot password?</a>`)
 	assert.NotContains(t, newLoginFixture(t, "").do(httptest.NewRequest(http.MethodGet, "/login", nil)).Body.String(), "Forgot password?",
@@ -83,7 +83,7 @@ func TestResetWeb_RequestLooksTheSameForKnownAndUnknownEmails(t *testing.T) {
 	for _, mode := range []string{"off", "on"} {
 		t.Run(mode, func(t *testing.T) {
 			outcome := func(known bool) (*httptest.ResponseRecorder, *resetWeb) {
-				limits := Limits{}
+				limits := layout.Limits{}
 				if mode == "on" {
 					limits, _ = memoryLimits(t)
 				}
@@ -115,7 +115,7 @@ func TestResetWeb_RequestLooksTheSameForKnownAndUnknownEmails(t *testing.T) {
 }
 
 func TestResetWeb_RepeatWithinTwoMinutesLooksTheSame(t *testing.T) {
-	f := newResetWeb(t, Limits{})
+	f := newResetWeb(t, layout.Limits{})
 	f.addUser(t, "ada@example.com", true)
 	first := f.do(form("/forgot-password", url.Values{"email": {"ada@example.com"}}))
 	f.now = f.now.Add(time.Minute)
@@ -146,7 +146,7 @@ func TestResetWeb_RequestLimitedPerIP(t *testing.T) {
 }
 
 func TestResetWeb_LinkSetsACookieAndLeavesTheURL(t *testing.T) {
-	f := newResetWeb(t, Limits{})
+	f := newResetWeb(t, layout.Limits{})
 	u := f.addUser(t, "ada@example.com", true)
 	require.Equal(t, http.StatusOK, f.do(form("/forgot-password", url.Values{"email": {"ada@example.com"}})).Code)
 	raw := linkToken(t, f.mail.sent[0])
@@ -184,7 +184,7 @@ func TestResetWeb_LinkSetsACookieAndLeavesTheURL(t *testing.T) {
 }
 
 func TestResetWeb_DeadLinks(t *testing.T) {
-	f := newResetWeb(t, Limits{})
+	f := newResetWeb(t, layout.Limits{})
 	f.addUser(t, "ada@example.com", true)
 	ck, raw := f.open(t)
 	for name, path := range map[string]string{"unknown": "/reset-password/nope", "valid then expired": "/reset-password/" + raw} {
@@ -213,7 +213,7 @@ func TestResetWeb_DeadLinks(t *testing.T) {
 }
 
 func TestResetWeb_SetPassword(t *testing.T) {
-	f := newResetWeb(t, Limits{})
+	f := newResetWeb(t, layout.Limits{})
 	u := f.addUser(t, "ada@example.com", true)
 	require.NoError(t, f.sessions.Save(t.Context(), "old", sessionOf(u), time.Now().Add(time.Hour)))
 	ck, _ := f.open(t)

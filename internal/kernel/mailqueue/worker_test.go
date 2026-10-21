@@ -100,7 +100,7 @@ const (
 )
 
 func testMessage() mailer.Message {
-	return mailer.Message{To: testTo, Subject: "Join Acme now", TextBody: testBody, HTMLBody: "<p>" + testBody + "</p>"}
+	return mailer.Message{To: testTo, ReplyTo: "help@acme.test", Subject: "Join Acme now", TextBody: testBody, HTMLBody: "<p>" + testBody + "</p>"}
 }
 
 func claimed(attempt int) Entry {

@@ -60,6 +60,23 @@ db:
     # [bootstrap] env: OTHRA_DB_RLS_ALLOW_BYPASS
     allowBypass: false
 
+endUsers:
+  csrf:
+    # env: OTHRA_END_USERS_CSRF_MAX_AGE
+    maxAge: 1h
+  magicLink:
+    # env: OTHRA_END_USERS_MAGIC_LINK_RESEND_AFTER
+    resendAfter: 60s
+    # env: OTHRA_END_USERS_MAGIC_LINK_TTL
+    ttl: 15m
+  session:
+    # env: OTHRA_END_USERS_SESSION_ABSOLUTE
+    absolute: 2160h
+    # env: OTHRA_END_USERS_SESSION_IDLE
+    idle: 720h
+    # env: OTHRA_END_USERS_SESSION_MAX_ACCOUNTS
+    maxAccounts: 20
+
 # [required, bootstrap] env: OTHRA_ENV
 env: production
 
@@ -189,7 +206,7 @@ queue:
 rateLimit:
   auth:
     # env: OTHRA_RATE_LIMIT_AUTH_ENABLED
-    enabled: false
+    enabled: true
   # env: OTHRA_RATE_LIMIT_DRIVER
   driver: memory
   # env: OTHRA_RATE_LIMIT_MAX_KEYS

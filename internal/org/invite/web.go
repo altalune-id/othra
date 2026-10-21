@@ -39,7 +39,7 @@ type WebOpts struct {
 	StateSecret  []byte
 	CookieSecure bool
 	Now          func() time.Time
-	Limits       auth.Limits
+	Limits       layout.Limits
 }
 
 // LandingRule limits opening invite links and the invite page per client IP: 60 an hour.
@@ -81,7 +81,7 @@ func (h *Web) limited(rule ratelimit.Rule, next http.HandlerFunc) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h.o.Limits.LimitIP(r, rule); err != nil {
 			w.Header().Set("Referrer-Policy", "no-referrer")
-			auth.WriteLimited(w, r, h.o.Kit, "Invite", err)
+			layout.WriteLimited(w, r, h.o.Kit, "Invite", err)
 			return
 		}
 		next(w, r)

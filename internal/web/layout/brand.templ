@@ -1,0 +1,41 @@
+package layout
+
+import "altalune.id/othra/internal/web/i18n"
+
+// BrandHeader is the project's logo, or a letter avatar, and name at the top of a hosted card.
+templ BrandHeader(b *Brand) {
+	<div class="flex min-w-0 items-center gap-3" data-testid="brand-header">
+		if b.LogoURL != "" {
+			<img src={ b.LogoURL } alt="" class="h-10 w-auto max-w-40 object-contain" width="160" height="40"/>
+		} else {
+			<span class="flex size-10 shrink-0 items-center justify-center rounded-box bg-base-200 text-lg font-semibold" aria-hidden="true">{ b.initial() }</span>
+		}
+		<span class="truncate text-sm font-semibold" title={ b.Name }>{ b.Name }</span>
+	</div>
+	<div class="divider my-0"></div>
+}
+
+// CSRFInput is the hidden field that carries a hosted form's CSRF token; it renders nothing without a token.
+templ CSRFInput(token string) {
+	if token != "" {
+		<input type="hidden" name={ CSRFField } value={ token }/>
+	}
+}
+
+// MailButton is an email's call to action, filled with primary (re-checked hex, else Othra's) and readable text on it.
+templ MailButton(href, label, primary string) {
+	<a href={ templ.SafeURL(href) } style={ mailButtonStyle(primary) }>{ label }</a>
+}
+
+templ brandFooter(b *Brand) {
+	if b.TermsURL != "" || b.PrivacyURL != "" {
+		<nav class="flex gap-3 text-xs text-base-content/60">
+			if b.TermsURL != "" {
+				@newTabLink(b.TermsURL, i18n.T(ctx, "terms.terms_link"))
+			}
+			if b.PrivacyURL != "" {
+				@newTabLink(b.PrivacyURL, i18n.T(ctx, "terms.privacy_link"))
+			}
+		</nav>
+	}
+}

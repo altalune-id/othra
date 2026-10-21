@@ -3,23 +3,15 @@ package oidc
 import (
 	"cmp"
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/google/uuid"
-
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/oauth/oidc/views"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/web/layout"
 )
-
-const cacheTTL = 30 * time.Second
 
 //nolint:gochecknoglobals // fixed response bodies.
 var (
@@ -28,13 +20,6 @@ var (
 	unavailableBody = []byte(`{"error":"temporarily_unavailable"}`)
 	invalidClient   = []byte(`{"error":"invalid_client"}`)
 )
-
-var errUnknownIssuer = errors.New("oidc: unknown issuer")
-
-// LookupIPRule limits issuer lookups that miss the cache per client IP: 120 a minute, 60 at once.
-func LookupIPRule() ratelimit.Rule {
-	return ratelimit.Rule{Name: "issuer-lookup-ip", Rate: 120, Per: time.Minute, Burst: 60}
-}
 
 // Config places the issuer routes.
 type Config struct {
@@ -47,35 +32,15 @@ type Config struct {
 
 // Web serves each issuer's discovery documents, JWKS and endpoint stubs.
 type Web struct {
-	issuers Issuers
-	keys    Publisher
-	kit     layout.Kit
-	cfg     Config
-	limiter ratelimit.Limiter
-	hops    int
-	cache   *issuerCache
-	now     func() time.Time
+	resolver *Resolver
+	kit      layout.Kit
+	cfg      Config
 }
 
-// NewWeb binds the issuer routes to the issuer lookup and the key publisher.
-func NewWeb(issuers Issuers, keys Publisher, kit layout.Kit, cfg Config) *Web {
-	return &Web{
-		issuers: issuers, keys: keys, kit: kit, cfg: cfg, limiter: ratelimit.Disabled(),
-		cache: &issuerCache{ttl: cacheTTL, entries: map[string]*issuerEntry{}}, now: time.Now,
-	}
+// NewWeb binds the issuer routes to the resolver its documents and pages share.
+func NewWeb(resolver *Resolver, kit layout.Kit, cfg Config) *Web {
+	return &Web{resolver: resolver, kit: kit, cfg: cfg}
 }
-
-// WithLimiter limits cache-missing lookups per client IP, read through trustedHops proxies.
-func (h *Web) WithLimiter(l ratelimit.Limiter, trustedHops int) *Web {
-	h.limiter, h.hops = l, trustedHops
-	return h
-}
-
-// SetClock replaces the cache's clock, for tests.
-func (h *Web) SetClock(now func() time.Time) { h.now = now }
-
-// Forget drops a project's cached documents, after its keys or handle change.
-func (h *Web) Forget(projectID uuid.UUID) { h.cache.forget(projectID) }
 
 // Register mounts the public documents and the token endpoint on mux.
 func (h *Web) Register(mux *http.ServeMux) {
@@ -143,67 +108,22 @@ func (h *Web) authorize(w http.ResponseWriter, r *http.Request) {
 	h.kit.Render(w, r, http.StatusBadRequest, views.Unregistered(h.kit.Layout("This app isn't registered"), name))
 }
 
-// SECURITY: an unknown, reserved or malformed handle all answer the same 404, and only a well-formed miss reaches the database.
 func (h *Web) entry(w http.ResponseWriter, r *http.Request) (*issuerEntry, bool) {
-	handle := r.PathValue("handle")
-	if project.ValidateIssuerHandle(handle) != nil {
-		writeJSON(w, http.StatusNotFound, notFoundBody)
-		return nil, false
-	}
-	now := h.now()
-	if e := h.cache.get(handle, now); e != nil {
-		return e, true
-	}
-	if retry, limited := h.limited(r); limited {
-		w.Header().Set("Retry-After", strconv.Itoa(retry))
-		writeJSON(w, http.StatusTooManyRequests, limitedBody)
-		return nil, false
-	}
-	e, err := h.load(r.Context(), handle)
+	e, err := h.resolver.entry(r)
+	limited, isLimited := errors.AsType[*LookupLimitedError](err)
 	switch {
-	case errors.Is(err, errUnknownIssuer):
+	case err == nil:
+		return e, true
+	case errors.Is(err, ErrUnknownIssuer):
 		writeJSON(w, http.StatusNotFound, notFoundBody)
-		return nil, false
-	case err != nil:
+	case isLimited:
+		w.Header().Set("Retry-After", strconv.Itoa(limited.RetryAfter))
+		writeJSON(w, http.StatusTooManyRequests, limitedBody)
+	default:
 		h.report(r.Context(), "oidc: load issuer", err)
 		writeJSON(w, http.StatusServiceUnavailable, unavailableBody)
-		return nil, false
 	}
-	h.cache.put(handle, e, now)
-	return e, true
-}
-
-func (h *Web) load(ctx context.Context, handle string) (*issuerEntry, error) {
-	i, err := h.issuers.ResolveIssuer(ctx, handle)
-	if project.IsNotFoundError(err) {
-		return nil, errUnknownIssuer
-	}
-	if err != nil {
-		return nil, err
-	}
-	jwks, err := h.keys.JWKS(tenant.Into(ctx, tenant.Context{OrgID: i.OrgID, ProjectID: i.ProjectID}), i.ProjectID)
-	if err != nil {
-		return nil, err
-	}
-	discovery, err := json.Marshal(Discovery(project.IssuerURL(h.cfg.PublicBase, i.Handle)))
-	if err != nil {
-		return nil, err
-	}
-	return &issuerEntry{issuer: i, discovery: newDocument(discovery), jwks: newDocument(jwks)}, nil
-}
-
-// SECURITY: a broken limiter lets lookups through, so a Redis outage never takes every issuer's keys offline.
-func (h *Web) limited(r *http.Request) (int, bool) {
-	rule := LookupIPRule()
-	res, err := h.limiter.Allow(r.Context(), ratelimit.Key(rule, ratelimit.IPSubject(layout.ClientIP(r, h.hops))), rule)
-	if err != nil {
-		h.report(r.Context(), "oidc: rate limit", err)
-		return 0, false
-	}
-	if res.Allowed {
-		return 0, false
-	}
-	return res.RetryAfterSeconds(), true
+	return nil, false
 }
 
 func (h *Web) report(ctx context.Context, msg string, err error) {

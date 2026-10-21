@@ -104,6 +104,7 @@ func (r *Sender) Send(ctx context.Context, m mailer.Message) error {
 	body, err := json.Marshal(payload{
 		From:    m.From,
 		To:      []string{m.To},
+		ReplyTo: m.ReplyTo,
 		Subject: m.Subject,
 		Text:    m.TextBody,
 		HTML:    m.HTMLBody,
@@ -140,6 +141,7 @@ func (r *Sender) Send(ctx context.Context, m mailer.Message) error {
 type payload struct {
 	From    string   `json:"from"`
 	To      []string `json:"to"`
+	ReplyTo string   `json:"reply_to,omitempty"`
 	Subject string   `json:"subject"`
 	Text    string   `json:"text,omitempty"`
 	HTML    string   `json:"html,omitempty"`

@@ -246,24 +246,32 @@ func (s *Service) LockIssuerHandle(ctx context.Context, id uuid.UUID) error {
 
 // UpdateBranding sets a project's display name, primary colour and support email.
 func (s *Service) UpdateBranding(ctx context.Context, id uuid.UUID, displayName, primaryColor, supportEmail string) (*Project, error) {
-	return s.change(ctx, "project: update branding", id, func(p *Project) error {
+	return s.issuerChanged(s.change(ctx, "project: update branding", id, func(p *Project) error {
 		return p.UpdateBranding(displayName, primaryColor, supportEmail)
-	})
+	}))
 }
 
 // UpdateTerms sets a project's terms and privacy links; a first terms link publishes version 1.
 func (s *Service) UpdateTerms(ctx context.Context, id uuid.UUID, termsURL, privacyURL string) (*Project, error) {
-	return s.change(ctx, "project: update terms", id, func(p *Project) error {
+	return s.issuerChanged(s.change(ctx, "project: update terms", id, func(p *Project) error {
 		return p.UpdateTerms(termsURL, privacyURL, s.now())
-	})
+	}))
 }
 
 // BumpTermsVersion publishes a new terms version, so every end user accepts again.
 func (s *Service) BumpTermsVersion(ctx context.Context, id uuid.UUID) (*Project, error) {
-	return s.change(ctx, "project: bump terms", id, func(p *Project) error {
+	return s.issuerChanged(s.change(ctx, "project: bump terms", id, func(p *Project) error {
 		_, err := p.BumpTermsVersion(s.now())
 		return err
-	})
+	}))
+}
+
+// NOTE: the issuer cache holds the terms and branding the hosted pages show, so a change to either drops it at once.
+func (s *Service) issuerChanged(p *Project, err error) (*Project, error) {
+	if err == nil && s.onIssuer != nil {
+		s.onIssuer(p.ID)
+	}
+	return p, err
 }
 
 // WithMembers lets a person list the projects of every org they belong to, not only the active one.
@@ -347,7 +355,7 @@ func (s *Service) CompleteLogoUpload(ctx context.Context, id uuid.UUID, uploadID
 	if err != nil {
 		return nil, s.errOrReport(ctx, "project: complete logo upload", err)
 	}
-	return s.reload(ctx, "project: complete logo upload", p.ID)
+	return s.issuerChanged(s.reload(ctx, "project: complete logo upload", p.ID))
 }
 
 // DeleteLogo removes a project's logo and hands its file to the sweep.
@@ -368,7 +376,7 @@ func (s *Service) DeleteLogo(ctx context.Context, id uuid.UUID) (*Project, error
 	if err != nil {
 		return nil, s.errOrReport(ctx, "project: delete logo", err)
 	}
-	return s.reload(ctx, "project: delete logo", p.ID)
+	return s.issuerChanged(s.reload(ctx, "project: delete logo", p.ID))
 }
 
 func (s *Service) swapLogo(ctx context.Context, projectID uuid.UUID, fileID *uuid.UUID) error {

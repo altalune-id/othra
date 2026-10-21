@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,7 +25,7 @@ type Reset struct {
 }
 
 func newReset(userID uuid.UUID, now time.Time) (*Reset, string, error) {
-	raw, hash, err := nanoid.NewInviteToken()
+	raw, hash, err := nanoid.NewToken()
 	if err != nil {
 		return nil, "", err
 	}
@@ -51,11 +49,6 @@ func (r *Reset) Usable(now time.Time) error {
 		return &ResetNotUsableError{Reason: ResetExpired}
 	}
 	return nil
-}
-
-func hashResetToken(raw string) string {
-	sum := sha256.Sum256([]byte(raw))
-	return hex.EncodeToString(sum[:])
 }
 
 type resetRow struct {

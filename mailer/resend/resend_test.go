@@ -118,6 +118,21 @@ func TestResend_Send_PostsExpectedPayload(t *testing.T) {
 	if got.body.Subject != "hi" || got.body.Text != "plain" || got.body.HTML != "<b>rich</b>" {
 		t.Errorf("body = %+v", got.body)
 	}
+	if got.body.ReplyTo != "" {
+		t.Errorf("reply_to = %q, want none", got.body.ReplyTo)
+	}
+}
+
+func TestResend_Send_SendsReplyTo(t *testing.T) {
+	rs := newResendServer(t, `{"id":"abc-123"}`, http.StatusOK)
+	m := validMessage()
+	m.ReplyTo = "help@acme.test"
+	if err := newResendAt(t, rs, Config{APIKey: "re_secret"}).Send(t.Context(), m); err != nil {
+		t.Fatalf("Send: %v", err)
+	}
+	if got := rs.last().body.ReplyTo; got != "help@acme.test" {
+		t.Errorf("reply_to = %q, want help@acme.test", got)
+	}
 }
 
 func TestResend_Send_DefaultsFromWhenMissing(t *testing.T) {

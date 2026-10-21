@@ -39,3 +39,10 @@ func TestResolveReturnTo(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveReturnToOr(t *testing.T) {
+	assert.Equal(t, "/auth/p/acme/account/", ResolveReturnToOr("/auth/p/acme", "https://evil.example/", "/auth/p/acme/account/"))
+	assert.Equal(t, "/auth/p/acme/account/", ResolveReturnToOr("/auth/p/acme", "", "/auth/p/acme/account/"))
+	assert.Equal(t, "/auth/p/acme/x?y=1", ResolveReturnToOr("/auth/p/acme", "/auth/p/acme/x?y=1", "/fallback"))
+	assert.Equal(t, "/fallback", ResolveReturnToOr("/auth/p/acme", "/auth/p/acmeevil/x", "/fallback"))
+}

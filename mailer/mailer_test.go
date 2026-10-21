@@ -19,6 +19,7 @@ func TestMessage_ValidateRejectsHeaderInjection(t *testing.T) {
 		{"crlf in from", Message{From: "f@x\r\nBcc: attacker@evil.com", To: "t@x", Subject: "s"}, "From"},
 		{"lf in to", Message{From: "f@x", To: "t@x\nBcc: attacker@evil.com", Subject: "s"}, "To"},
 		{"cr in subject", Message{From: "f@x", To: "t@x", Subject: "hi\rBcc: attacker@evil.com"}, "Subject"},
+		{"lf in reply-to", Message{From: "f@x", To: "t@x", ReplyTo: "r@x\nBcc: attacker@evil.com", Subject: "s"}, "Reply-To"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
