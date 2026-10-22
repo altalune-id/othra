@@ -64,7 +64,7 @@
   { "code": "SGK002", "name": "SigningKeyRotationPending", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "CLT001", "name": "ClientNotFound", "kind": "not_found", "params": [], "reasons": [] },
   { "code": "CLT002", "name": "ClientInvalidRedirectURI", "kind": "invalid", "params": ["field", "uri", "canonical"], "reasons": ["required", "unparsable", "fragment", "wildcard", "userinfo", "dot_segments", "https_required", "loopback_only", "port_ignored", "not_canonical", "too_long", "too_many", "duplicate"] },
-  { "code": "CLT003", "name": "ClientInvalidSettings", "kind": "invalid", "params": [], "reasons": ["post_logout_native"] },
+  { "code": "CLT003", "name": "ClientInvalidSettings", "kind": "invalid", "params": [], "reasons": ["post_logout_native", "pkce_native", "auth_method_native"] },
   { "code": "CLT004", "name": "ClientHasNoSecret", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "CLT005", "name": "ClientSecretPersonOnly", "kind": "forbidden", "params": [], "reasons": [] },
   { "code": "CLT006", "name": "ClientSecretNotFound", "kind": "not_found", "params": [], "reasons": [] },
@@ -81,5 +81,10 @@
   { "code": "SIG001", "name": "SignInLinkNotUsable", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "SIG002", "name": "SignInEmailDisabled", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "SIG003", "name": "SignInSessionGone", "kind": "failed_precondition", "params": [], "reasons": [] },
-  { "code": "SIG004", "name": "SignInFormExpired", "kind": "forbidden", "params": [], "reasons": [] }
+  { "code": "SIG004", "name": "SignInFormExpired", "kind": "forbidden", "params": [], "reasons": [] },
+  { "code": "SIG005", "name": "AuthorizeClientUnknown", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "SIG006", "name": "AuthorizeRedirectNotRegistered", "kind": "invalid", "params": [], "reasons": [] },
+  { "code": "SIG007", "name": "AuthorizeRequestInvalid", "kind": "invalid", "params": [], "reasons": [] },
+  { "code": "SIG008", "name": "SignOutHintInvalid", "kind": "invalid", "params": [], "reasons": [] },
+  { "code": "SIG009", "name": "SignOutRedirectNotRegistered", "kind": "invalid", "params": [], "reasons": [] }
 ]

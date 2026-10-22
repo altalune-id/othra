@@ -133,6 +133,16 @@ func (s *Service) Get(ctx context.Context, orgID, projectID uuid.UUID, publicID 
 	return c, nil
 }
 
+// Authenticate returns one client of a project by its client_id, able to VerifySecret, or *NotFoundError.
+func (s *Service) Authenticate(ctx context.Context, orgID, projectID uuid.UUID, publicID string) (*Client, error) {
+	ctx = scope(ctx, orgID, projectID)
+	c, err := s.store.ForAuthentication(ctx, projectID, publicID, s.now())
+	if err != nil {
+		return nil, s.errOrReport(ctx, "client: authenticate", err)
+	}
+	return c, nil
+}
+
 // GenerateSecret gives a web client without a current secret a new one and returns its plaintext once.
 func (s *Service) GenerateSecret(ctx context.Context, orgID, projectID uuid.UUID, publicID string) (*Client, string, error) {
 	return s.issueSecret(ctx, orgID, projectID, publicID, "client: generate secret", func(_ context.Context, c *Client, _ time.Time) error {

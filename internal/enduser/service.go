@@ -358,6 +358,25 @@ func (s *Service) SignOut(ctx context.Context, p Project, secret, publicID strin
 	return nil
 }
 
+// EndUser returns the project's end user id for an ID token or userinfo, or nil when it is gone.
+func (s *Service) EndUser(ctx context.Context, p Project, id uuid.UUID) (*EndUser, error) {
+	ctx = scope(ctx, p)
+	u, err := s.store.EndUserByID(ctx, p.ID, id)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "enduser: end user", err)
+	}
+	return u, nil
+}
+
+// EndSession ends the user session publicID on whichever browser holds it, for an RP-initiated logout; an ended one is no error.
+func (s *Service) EndSession(ctx context.Context, p Project, publicID string) error {
+	ctx = scope(ctx, p)
+	if err := s.store.EndUserSessionAnywhere(ctx, p.ID, publicID, s.now()); err != nil {
+		return s.errOrReport(ctx, "enduser: end session", err)
+	}
+	return nil
+}
+
 // NeedsTerms reports whether a owes the project's current terms and whether it accepted an older one; M5 /authorize calls it too.
 func (s *Service) NeedsTerms(ctx context.Context, p Project, a Account) (needed, updated bool, err error) {
 	if !p.TermsRequired() {

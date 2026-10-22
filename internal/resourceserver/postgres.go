@@ -60,7 +60,7 @@ type linkRow struct {
 }
 
 func (r *serverRow) toServer() (*ResourceServer, error) {
-	scopes, err := parseTextArray(r.Scopes)
+	scopes, err := db.ParseJSONArray(r.Scopes)
 	if err != nil {
 		return nil, fmt.Errorf("resourceserver.postgres: scopes of %s: %w", r.PublicID, err)
 	}
@@ -89,7 +89,7 @@ func (r *linkRow) toLink() (*Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	pins, err := parseTextArray(r.Pins)
+	pins, err := db.ParseJSONArray(r.Pins)
 	if err != nil {
 		return nil, fmt.Errorf("resourceserver.postgres: link scopes of %s: %w", server.PublicID, err)
 	}
@@ -112,16 +112,4 @@ func timeExpr(t *time.Time) postgres.Expression {
 		return postgres.NULL
 	}
 	return postgres.TimestampzT(t.UTC())
-}
-
-func jsonArray(col postgres.Column, alias string) postgres.Projection {
-	return postgres.CAST(postgres.Func("to_json", col)).AS_TEXT().AS(alias)
-}
-
-func parseTextArray(raw string) ([]string, error) {
-	out := []string{}
-	if err := json.Unmarshal([]byte(raw), &out); err != nil {
-		return nil, err
-	}
-	return out, nil
 }

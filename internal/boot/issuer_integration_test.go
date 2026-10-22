@@ -112,13 +112,16 @@ func TestIssuerRoutesThroughBoot(t *testing.T) {
 			before := resp.Header.Get("ETag")
 
 			resp, body := fetch(t, http.MethodPost, local(doc["token_endpoint"].(string)))
+			assert.Equal(t, http.StatusBadRequest, resp.StatusCode, "RFC 6749 §3.2: the token endpoint takes a form body")
+			assert.Equal(t, "no-store", resp.Header.Get("Cache-Control"))
+			assert.Contains(t, body, `"error":"invalid_request"`)
+			resp, _ = fetch(t, http.MethodGet, local(doc["userinfo_endpoint"].(string)))
 			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-			assert.Equal(t, `Basic realm="`+issuer+`"`, resp.Header.Get("WWW-Authenticate"))
-			assert.JSONEq(t, `{"error":"invalid_client"}`, body)
+			assert.Equal(t, `Bearer realm="`+issuer+`"`, resp.Header.Get("WWW-Authenticate"))
 			resp, body = fetch(t, http.MethodGet, local(doc["authorization_endpoint"].(string)))
 			assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 			assert.Equal(t, "no-store", resp.Header.Get("Cache-Control"))
-			assert.Contains(t, body, "This app isn&#39;t registered")
+			assert.Contains(t, body, string(apperror.CodeAuthorizeClientUnknown))
 			assert.Empty(t, resp.Header.Get("Location"))
 
 			for _, path := range []string{"/p/nobody-home/oauth2/jwks.json", "/p/ACME-WEB/.well-known/openid-configuration", "/p/system/oauth2/jwks.json"} {

@@ -85,4 +85,17 @@ describe('clients and resource server pages (M3)', () => {
     expect(read('../resourceserver/VerificationCard.vue')).toContain('<template v-if="trustAvailable && (canEdit || trusted())">');
     expect(read('../link/LinkList.vue')).toContain('{{ canEdit ? labels.empty : labels.emptyReadOnly }}');
   });
+
+  it('notes on require-consent clients that end users cannot sign in yet (M5 D3)', () => {
+    expect(read('../client/ClientForm.vue')).toMatch(/<p v-if="fields\.consent === 'require'" :id="ids\.consentNote"[^>]*>\s*<Icon name="lucide:triangle-alert"[^>]*class="[^"]*text-warning"[^>]*\/>\s*\{\{ labels\.consentRequireNote \}\}/);
+    expect(details[0]!.source).toMatch(/<p v-if="client\.consentPolicy !== ConsentPolicy\.IMPLICIT"[^>]*data-testid="consent-require-note"[^>]*>\s*<Icon name="lucide:triangle-alert"[^>]*class="[^"]*text-warning"/);
+    expect(read('../client/ClientForm.vue')).not.toContain('lucide:info');
+  });
+
+  it('offers the secret method and the PKCE switch on web apps only, with a warning when PKCE is off (M5 G11)', () => {
+    const form = read('../client/ClientForm.vue');
+    expect(form).toMatch(/<template v-if="kind\?\.secret">[\s\S]*name="client-auth-method"[\s\S]*labels\.pkceRequired[\s\S]*<\/template>/);
+    expect(form).toMatch(/<p v-if="!fields\.pkceRequired" :id="ids\.pkceWarn"[^>]*>\s*<Icon name="lucide:triangle-alert"/);
+    expect(details[0]!.source).toMatch(/<template v-if="kind\.secret">[\s\S]*clients\.auth_method[\s\S]*data-testid="client-pkce-off"/);
+  });
 });

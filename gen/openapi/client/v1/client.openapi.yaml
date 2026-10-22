@@ -285,6 +285,14 @@ paths:
                 $ref: '#/components/schemas/client.v1.UpdateClientResponse'
 components:
   schemas:
+    client.v1.AuthMethod:
+      type: string
+      title: AuthMethod
+      enum:
+        - AUTH_METHOD_UNSPECIFIED
+        - AUTH_METHOD_CLIENT_SECRET_BASIC
+        - AUTH_METHOD_CLIENT_SECRET_POST
+      description: AuthMethod is how a WEB client sends its secret to the token endpoint; a CLI client always uses none.
     client.v1.Client:
       type: object
       properties:
@@ -342,6 +350,10 @@ components:
         updatedAt:
           title: updated_at
           $ref: '#/components/schemas/google.protobuf.Timestamp'
+        pkceRequired:
+          type: boolean
+          title: pkce_required
+          description: pkce_required is false only for a WEB client that can't send PKCE; it must then send a nonce.
       title: Client
       additionalProperties: false
     client.v1.ClientKind:
@@ -417,6 +429,14 @@ components:
         consentPolicy:
           title: consent_policy
           $ref: '#/components/schemas/client.v1.ConsentPolicy'
+        authMethod:
+          title: auth_method
+          $ref: '#/components/schemas/client.v1.AuthMethod'
+        pkceRequired:
+          type:
+            - boolean
+            - "null"
+          title: pkce_required
       title: CreateClientRequest
       required:
         - projectId
@@ -646,6 +666,14 @@ components:
         consentPolicy:
           title: consent_policy
           $ref: '#/components/schemas/client.v1.ConsentPolicy'
+        authMethod:
+          title: auth_method
+          $ref: '#/components/schemas/client.v1.AuthMethod'
+        pkceRequired:
+          type:
+            - boolean
+            - "null"
+          title: pkce_required
       title: UpdateClientRequest
       required:
         - projectId

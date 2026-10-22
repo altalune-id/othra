@@ -81,3 +81,8 @@ SIG001 SignInLinkNotUsable
 SIG002 SignInEmailDisabled
 SIG003 SignInSessionGone
 SIG004 SignInFormExpired
+SIG005 AuthorizeClientUnknown
+SIG006 AuthorizeRedirectNotRegistered
+SIG007 AuthorizeRequestInvalid
+SIG008 SignOutHintInvalid
+SIG009 SignOutRedirectNotRegistered

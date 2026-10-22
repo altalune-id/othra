@@ -21,6 +21,7 @@ type LayoutData struct {
 	Brand    *Brand
 	Home     string
 	CSRF     string
+	Refresh  string
 }
 
 // Href returns sub (which starts with "/") under the base path.

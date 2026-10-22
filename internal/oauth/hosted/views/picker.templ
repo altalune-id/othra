@@ -20,13 +20,18 @@ type PickerData struct {
 	SignOutToken string
 	Notice       string
 	Error        string
+	Client       string
 }
 
 // Picker lists the browser's signed-in accounts: continue as one, sign one out, or use another account.
 templ Picker(d layout.LayoutData, v PickerData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "picker.title"))) {
 		@layout.Card(i18n.T(ctx, "picker.title")) {
-			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle", "project", v.Project) }</p>
+			if v.Client != "" {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle_client", "client", v.Client) }</p>
+			} else {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle", "project", v.Project) }</p>
+			}
 			if v.Notice != "" {
 				@alertSuccess() {
 					@withEmail(i18n.T(ctx, "picker.signed_out_notice"), v.Notice)

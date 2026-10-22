@@ -31,6 +31,8 @@ type Store interface {
 	// TouchBrowser marks the browser seen at now.
 	TouchBrowser(ctx context.Context, projectID, browserID uuid.UUID, now time.Time) error
 
+	// EndUserByID returns the end user id, or nil.
+	EndUserByID(ctx context.Context, projectID, id uuid.UUID) (*EndUser, error)
 	// EndUserExists reports whether the project has an end user with email.
 	EndUserExists(ctx context.Context, projectID uuid.UUID, email string) (bool, error)
 	// SaveEndUser finds or creates the end user with email, verifying it and recording a sign-in at now.
@@ -44,6 +46,8 @@ type Store interface {
 	Select(ctx context.Context, projectID, browserID uuid.UUID, publicID string, now time.Time) (bool, error)
 	// EndUserSession ends the live user session publicID of the browser at now.
 	EndUserSession(ctx context.Context, projectID, browserID uuid.UUID, publicID string, now time.Time) error
+	// EndUserSessionAnywhere ends the live user session publicID at now, on whichever browser holds it.
+	EndUserSessionAnywhere(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) error
 	// KeepNewest ends every live user session of the browser beyond the keep most recently selected.
 	KeepNewest(ctx context.Context, projectID, browserID uuid.UUID, keep int, now time.Time) error
 

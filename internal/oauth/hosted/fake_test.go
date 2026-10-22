@@ -41,6 +41,7 @@ type fakeUsers struct {
 	issued   []IssueRequest
 	last     map[string]time.Time
 	now      func() time.Time
+	stamp    *tickClock
 	redeems  int
 	failOn   string
 	seq      int
@@ -48,10 +49,33 @@ type fakeUsers struct {
 
 const fakeCooldown = time.Minute
 
+type tickClock struct {
+	mu   sync.Mutex
+	last time.Time
+	skew time.Duration
+}
+
+func (c *tickClock) advance(d time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.skew += d
+}
+
+func (c *tickClock) now() time.Time {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	t := time.Now().Add(c.skew).Truncate(time.Millisecond)
+	if !t.After(c.last) {
+		t = c.last.Add(time.Millisecond)
+	}
+	c.last = t
+	return t
+}
+
 func newFakeUsers() *fakeUsers {
 	return &fakeUsers{
 		links: map[string]*fakeLink{}, browsers: map[string]*fakeBrowser{}, users: map[string]string{}, accepted: map[string][]int32{},
-		last: map[string]time.Time{}, now: time.Now,
+		last: map[string]time.Time{}, now: time.Now, stamp: &tickClock{},
 	}
 }
 
@@ -138,7 +162,8 @@ func (f *fakeUsers) Redeem(_ context.Context, req RedeemRequest) (*Redeemed, err
 	delete(f.browsers, req.BrowserSecret)
 	secret := f.next("sec")
 	f.browsers[secret] = b
-	a := Account{UserSession: f.next("us"), EndUser: sub, Email: l.email, AuthTime: time.Now()}
+	now := f.stamp.now()
+	a := Account{UserSession: f.next("us"), EndUser: sub, Email: l.email, AuthTime: now, SelectedAt: now}
 	b.accounts = append([]Account{a}, b.accounts...)
 	return &Redeemed{BrowserSecret: secret, ExpiresAt: time.Now().Add(90 * 24 * time.Hour), Account: a, ReturnTo: l.returnTo}, nil
 }
@@ -173,6 +198,7 @@ func (f *fakeUsers) Select(_ context.Context, p Project, secret, userSession str
 	}
 	for i, a := range b.accounts {
 		if a.UserSession == userSession {
+			a.SelectedAt = f.stamp.now()
 			b.accounts = append([]Account{a}, slices.Delete(b.accounts, i, i+1)...)
 			return a, nil
 		}

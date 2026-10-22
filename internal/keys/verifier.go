@@ -57,30 +57,9 @@ func NewVerifier(keys PublishedKeys, opts ...VerifierOption) *Verifier {
 
 // Verify checks the signature by kid, the typ, exp, iat, nbf and iss of a compact RS256 token of projectID.
 func (v *Verifier) Verify(ctx context.Context, projectID uuid.UUID, compact string) (*Claims, error) {
-	parsed, err := jwt.ParseSigned(compact, []jose.SignatureAlgorithm{jose.RS256})
-	if err != nil {
-		return nil, fmt.Errorf("%w: parse: %s", ErrInvalidToken, err.Error())
-	}
-	if len(parsed.Headers) != 1 || parsed.Headers[0].KeyID == "" {
-		return nil, fmt.Errorf("%w: one signature with a kid is required", ErrInvalidToken)
-	}
-	h := parsed.Headers[0]
-	if v.typ != "" {
-		if got, _ := h.ExtraHeaders[jose.HeaderType].(string); got != string(v.typ) {
-			return nil, fmt.Errorf("%w: typ %q", ErrInvalidToken, got)
-		}
-	}
-	keys, err := v.keys.Published(ctx, projectID)
-	if err != nil {
-		return nil, err
-	}
-	pub, err := publicKeyFor(keys, h.KeyID)
-	if err != nil {
-		return nil, err
-	}
 	var claims Claims
-	if err := parsed.Claims(pub, &claims); err != nil {
-		return nil, fmt.Errorf("%w: claims: %s", ErrInvalidToken, err.Error())
+	if err := v.signed(ctx, projectID, compact, v.typ, &claims); err != nil {
+		return nil, err
 	}
 	now := v.now().Unix()
 	skew := int64(v.clockSkew.Seconds())
@@ -97,6 +76,49 @@ func (v *Verifier) Verify(ctx context.Context, projectID uuid.UUID, compact stri
 		return nil, fmt.Errorf("%w: iss does not match", ErrInvalidToken)
 	}
 	return &claims, nil
+}
+
+// VerifyIDTokenHint checks an ID token of projectID used as id_token_hint: signed by a published key, typ JWT, iss issuer; exp is ignored.
+func (v *Verifier) VerifyIDTokenHint(ctx context.Context, projectID uuid.UUID, issuer, compact string) (*IDTokenClaims, error) {
+	var claims IDTokenClaims
+	if err := v.signed(ctx, projectID, compact, TypeIDToken, &claims); err != nil {
+		return nil, err
+	}
+	switch {
+	case claims.Issuer != issuer:
+		return nil, fmt.Errorf("%w: iss does not match", ErrInvalidToken)
+	case claims.Subject == "", len(claims.Audience) == 0:
+		return nil, fmt.Errorf("%w: sub and aud are required", ErrInvalidToken)
+	}
+	return &claims, nil
+}
+
+func (v *Verifier) signed(ctx context.Context, projectID uuid.UUID, compact string, typ jose.ContentType, dst any) error {
+	parsed, err := jwt.ParseSigned(compact, []jose.SignatureAlgorithm{jose.RS256})
+	if err != nil {
+		return fmt.Errorf("%w: parse: %s", ErrInvalidToken, err.Error())
+	}
+	if len(parsed.Headers) != 1 || parsed.Headers[0].KeyID == "" {
+		return fmt.Errorf("%w: one signature with a kid is required", ErrInvalidToken)
+	}
+	h := parsed.Headers[0]
+	if typ != "" {
+		if got, _ := h.ExtraHeaders[jose.HeaderType].(string); got != string(typ) {
+			return fmt.Errorf("%w: typ %q", ErrInvalidToken, got)
+		}
+	}
+	keys, err := v.keys.Published(ctx, projectID)
+	if err != nil {
+		return err
+	}
+	pub, err := publicKeyFor(keys, h.KeyID)
+	if err != nil {
+		return err
+	}
+	if err := parsed.Claims(pub, dst); err != nil {
+		return fmt.Errorf("%w: claims: %s", ErrInvalidToken, err.Error())
+	}
+	return nil
 }
 
 func publicKeyFor(keys []*Key, kid string) (*rsa.PublicKey, error) {

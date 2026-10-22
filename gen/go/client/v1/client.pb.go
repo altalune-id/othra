@@ -129,6 +129,57 @@ func (ConsentPolicy) EnumDescriptor() ([]byte, []int) {
 	return file_client_v1_client_proto_rawDescGZIP(), []int{1}
 }
 
+// AuthMethod is how a WEB client sends its secret to the token endpoint; a CLI client always uses none.
+type AuthMethod int32
+
+const (
+	// UNSPECIFIED is CLIENT_SECRET_BASIC for a WEB client and none for a CLI client.
+	AuthMethod_AUTH_METHOD_UNSPECIFIED         AuthMethod = 0
+	AuthMethod_AUTH_METHOD_CLIENT_SECRET_BASIC AuthMethod = 1
+	AuthMethod_AUTH_METHOD_CLIENT_SECRET_POST  AuthMethod = 2
+)
+
+// Enum value maps for AuthMethod.
+var (
+	AuthMethod_name = map[int32]string{
+		0: "AUTH_METHOD_UNSPECIFIED",
+		1: "AUTH_METHOD_CLIENT_SECRET_BASIC",
+		2: "AUTH_METHOD_CLIENT_SECRET_POST",
+	}
+	AuthMethod_value = map[string]int32{
+		"AUTH_METHOD_UNSPECIFIED":         0,
+		"AUTH_METHOD_CLIENT_SECRET_BASIC": 1,
+		"AUTH_METHOD_CLIENT_SECRET_POST":  2,
+	}
+)
+
+func (x AuthMethod) Enum() *AuthMethod {
+	p := new(AuthMethod)
+	*p = x
+	return p
+}
+
+func (x AuthMethod) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AuthMethod) Descriptor() protoreflect.EnumDescriptor {
+	return file_client_v1_client_proto_enumTypes[2].Descriptor()
+}
+
+func (AuthMethod) Type() protoreflect.EnumType {
+	return &file_client_v1_client_proto_enumTypes[2]
+}
+
+func (x AuthMethod) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AuthMethod.Descriptor instead.
+func (AuthMethod) EnumDescriptor() ([]byte, []int) {
+	return file_client_v1_client_proto_rawDescGZIP(), []int{2}
+}
+
 // SecretGrace is how long the current secret keeps working after a rotation.
 type SecretGrace int32
 
@@ -170,11 +221,11 @@ func (x SecretGrace) String() string {
 }
 
 func (SecretGrace) Descriptor() protoreflect.EnumDescriptor {
-	return file_client_v1_client_proto_enumTypes[2].Descriptor()
+	return file_client_v1_client_proto_enumTypes[3].Descriptor()
 }
 
 func (SecretGrace) Type() protoreflect.EnumType {
-	return &file_client_v1_client_proto_enumTypes[2]
+	return &file_client_v1_client_proto_enumTypes[3]
 }
 
 func (x SecretGrace) Number() protoreflect.EnumNumber {
@@ -183,7 +234,7 @@ func (x SecretGrace) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SecretGrace.Descriptor instead.
 func (SecretGrace) EnumDescriptor() ([]byte, []int) {
-	return file_client_v1_client_proto_rawDescGZIP(), []int{2}
+	return file_client_v1_client_proto_rawDescGZIP(), []int{3}
 }
 
 type ClientSecret struct {
@@ -274,8 +325,10 @@ type Client struct {
 	IssuerHandleLocked bool                   `protobuf:"varint,12,opt,name=issuer_handle_locked,json=issuerHandleLocked,proto3" json:"issuer_handle_locked,omitempty"`
 	CreatedAt          *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt          *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// pkce_required is false only for a WEB client that can't send PKCE; it must then send a nonce.
+	PkceRequired  bool `protobuf:"varint,15,opt,name=pkce_required,json=pkceRequired,proto3" json:"pkce_required,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Client) Reset() {
@@ -404,6 +457,13 @@ func (x *Client) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Client) GetPkceRequired() bool {
+	if x != nil {
+		return x.PkceRequired
+	}
+	return false
 }
 
 type ListClientsRequest struct {
@@ -599,6 +659,8 @@ type CreateClientRequest struct {
 	PostLogoutRedirectUris []string               `protobuf:"bytes,5,rep,name=post_logout_redirect_uris,json=postLogoutRedirectUris,proto3" json:"post_logout_redirect_uris,omitempty"`
 	RefreshTokens          bool                   `protobuf:"varint,6,opt,name=refresh_tokens,json=refreshTokens,proto3" json:"refresh_tokens,omitempty"`
 	ConsentPolicy          ConsentPolicy          `protobuf:"varint,7,opt,name=consent_policy,json=consentPolicy,proto3,enum=client.v1.ConsentPolicy" json:"consent_policy,omitempty"`
+	AuthMethod             AuthMethod             `protobuf:"varint,8,opt,name=auth_method,json=authMethod,proto3,enum=client.v1.AuthMethod" json:"auth_method,omitempty"`
+	PkceRequired           *bool                  `protobuf:"varint,9,opt,name=pkce_required,json=pkceRequired,proto3,oneof" json:"pkce_required,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -682,6 +744,20 @@ func (x *CreateClientRequest) GetConsentPolicy() ConsentPolicy {
 	return ConsentPolicy_CONSENT_POLICY_UNSPECIFIED
 }
 
+func (x *CreateClientRequest) GetAuthMethod() AuthMethod {
+	if x != nil {
+		return x.AuthMethod
+	}
+	return AuthMethod_AUTH_METHOD_UNSPECIFIED
+}
+
+func (x *CreateClientRequest) GetPkceRequired() bool {
+	if x != nil && x.PkceRequired != nil {
+		return *x.PkceRequired
+	}
+	return false
+}
+
 type CreateClientResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Client        *Client                `protobuf:"bytes,1,opt,name=client,proto3" json:"client,omitempty"`
@@ -735,6 +811,8 @@ type UpdateClientRequest struct {
 	PostLogoutRedirectUris []string               `protobuf:"bytes,5,rep,name=post_logout_redirect_uris,json=postLogoutRedirectUris,proto3" json:"post_logout_redirect_uris,omitempty"`
 	RefreshTokens          bool                   `protobuf:"varint,6,opt,name=refresh_tokens,json=refreshTokens,proto3" json:"refresh_tokens,omitempty"`
 	ConsentPolicy          ConsentPolicy          `protobuf:"varint,7,opt,name=consent_policy,json=consentPolicy,proto3,enum=client.v1.ConsentPolicy" json:"consent_policy,omitempty"`
+	AuthMethod             AuthMethod             `protobuf:"varint,8,opt,name=auth_method,json=authMethod,proto3,enum=client.v1.AuthMethod" json:"auth_method,omitempty"`
+	PkceRequired           *bool                  `protobuf:"varint,9,opt,name=pkce_required,json=pkceRequired,proto3,oneof" json:"pkce_required,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -816,6 +894,20 @@ func (x *UpdateClientRequest) GetConsentPolicy() ConsentPolicy {
 		return x.ConsentPolicy
 	}
 	return ConsentPolicy_CONSENT_POLICY_UNSPECIFIED
+}
+
+func (x *UpdateClientRequest) GetAuthMethod() AuthMethod {
+	if x != nil {
+		return x.AuthMethod
+	}
+	return AuthMethod_AUTH_METHOD_UNSPECIFIED
+}
+
+func (x *UpdateClientRequest) GetPkceRequired() bool {
+	if x != nil && x.PkceRequired != nil {
+		return *x.PkceRequired
+	}
+	return false
 }
 
 type UpdateClientResponse struct {
@@ -1283,7 +1375,7 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xff\x04\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xa4\x05\n" +
 	"\x06Client\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12)\n" +
@@ -1302,7 +1394,8 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"A\n" +
+	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12#\n" +
+	"\rpkce_required\x18\x0f \x01(\bR\fpkceRequired\"A\n" +
 	"\x12ListClientsRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\"B\n" +
@@ -1313,7 +1406,7 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12)\n" +
 	"\tclient_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\bclientId\">\n" +
 	"\x11GetClientResponse\x12)\n" +
-	"\x06client\x18\x01 \x01(\v2\x11.client.v1.ClientR\x06client\"\xb2\x04\n" +
+	"\x06client\x18\x01 \x01(\v2\x11.client.v1.ClientR\x06client\"\xb0\x05\n" +
 	"\x13CreateClientRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12\xbf\x01\n" +
@@ -1324,9 +1417,13 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\rredirect_uris\x18\x04 \x03(\tB\x11\xbaH\x0e\x92\x01\v\b\x01\x10\x14\"\x05r\x03\x18\xd0\x0fR\fredirectUris\x12J\n" +
 	"\x19post_logout_redirect_uris\x18\x05 \x03(\tB\x0f\xbaH\f\x92\x01\t\x10\x14\"\x05r\x03\x18\xd0\x0fR\x16postLogoutRedirectUris\x12%\n" +
 	"\x0erefresh_tokens\x18\x06 \x01(\bR\rrefreshTokens\x12I\n" +
-	"\x0econsent_policy\x18\a \x01(\x0e2\x18.client.v1.ConsentPolicyB\b\xbaH\x05\x82\x01\x02\x10\x01R\rconsentPolicy\"A\n" +
+	"\x0econsent_policy\x18\a \x01(\x0e2\x18.client.v1.ConsentPolicyB\b\xbaH\x05\x82\x01\x02\x10\x01R\rconsentPolicy\x12@\n" +
+	"\vauth_method\x18\b \x01(\x0e2\x15.client.v1.AuthMethodB\b\xbaH\x05\x82\x01\x02\x10\x01R\n" +
+	"authMethod\x12(\n" +
+	"\rpkce_required\x18\t \x01(\bH\x00R\fpkceRequired\x88\x01\x01B\x10\n" +
+	"\x0e_pkce_required\"A\n" +
 	"\x14CreateClientResponse\x12)\n" +
-	"\x06client\x18\x01 \x01(\v2\x11.client.v1.ClientR\x06client\"\xa8\x04\n" +
+	"\x06client\x18\x01 \x01(\v2\x11.client.v1.ClientR\x06client\"\xa6\x05\n" +
 	"\x13UpdateClientRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12)\n" +
@@ -1337,7 +1434,11 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\rredirect_uris\x18\x04 \x03(\tB\x11\xbaH\x0e\x92\x01\v\b\x01\x10\x14\"\x05r\x03\x18\xd0\x0fR\fredirectUris\x12J\n" +
 	"\x19post_logout_redirect_uris\x18\x05 \x03(\tB\x0f\xbaH\f\x92\x01\t\x10\x14\"\x05r\x03\x18\xd0\x0fR\x16postLogoutRedirectUris\x12%\n" +
 	"\x0erefresh_tokens\x18\x06 \x01(\bR\rrefreshTokens\x12L\n" +
-	"\x0econsent_policy\x18\a \x01(\x0e2\x18.client.v1.ConsentPolicyB\v\xbaH\b\xc8\x01\x01\x82\x01\x02\x10\x01R\rconsentPolicy\"A\n" +
+	"\x0econsent_policy\x18\a \x01(\x0e2\x18.client.v1.ConsentPolicyB\v\xbaH\b\xc8\x01\x01\x82\x01\x02\x10\x01R\rconsentPolicy\x12@\n" +
+	"\vauth_method\x18\b \x01(\x0e2\x15.client.v1.AuthMethodB\b\xbaH\x05\x82\x01\x02\x10\x01R\n" +
+	"authMethod\x12(\n" +
+	"\rpkce_required\x18\t \x01(\bH\x00R\fpkceRequired\x88\x01\x01B\x10\n" +
+	"\x0e_pkce_required\"A\n" +
 	"\x14UpdateClientResponse\x12)\n" +
 	"\x06client\x18\x01 \x01(\v2\x11.client.v1.ClientR\x06client\"m\n" +
 	"\x13DeleteClientRequest\x12+\n" +
@@ -1375,7 +1476,12 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\rConsentPolicy\x12\x1e\n" +
 	"\x1aCONSENT_POLICY_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16CONSENT_POLICY_REQUIRE\x10\x01\x12\x1b\n" +
-	"\x17CONSENT_POLICY_IMPLICIT\x10\x02*\x85\x01\n" +
+	"\x17CONSENT_POLICY_IMPLICIT\x10\x02*r\n" +
+	"\n" +
+	"AuthMethod\x12\x1b\n" +
+	"\x17AUTH_METHOD_UNSPECIFIED\x10\x00\x12#\n" +
+	"\x1fAUTH_METHOD_CLIENT_SECRET_BASIC\x10\x01\x12\"\n" +
+	"\x1eAUTH_METHOD_CLIENT_SECRET_POST\x10\x02*\x85\x01\n" +
 	"\vSecretGrace\x12\x1c\n" +
 	"\x18SECRET_GRACE_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10SECRET_GRACE_NOW\x10\x01\x12\x15\n" +
@@ -1417,72 +1523,75 @@ func file_client_v1_client_proto_rawDescGZIP() []byte {
 	return file_client_v1_client_proto_rawDescData
 }
 
-var file_client_v1_client_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_client_v1_client_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_client_v1_client_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_client_v1_client_proto_goTypes = []any{
 	(ClientKind)(0),                      // 0: client.v1.ClientKind
 	(ConsentPolicy)(0),                   // 1: client.v1.ConsentPolicy
-	(SecretGrace)(0),                     // 2: client.v1.SecretGrace
-	(*ClientSecret)(nil),                 // 3: client.v1.ClientSecret
-	(*Client)(nil),                       // 4: client.v1.Client
-	(*ListClientsRequest)(nil),           // 5: client.v1.ListClientsRequest
-	(*ListClientsResponse)(nil),          // 6: client.v1.ListClientsResponse
-	(*GetClientRequest)(nil),             // 7: client.v1.GetClientRequest
-	(*GetClientResponse)(nil),            // 8: client.v1.GetClientResponse
-	(*CreateClientRequest)(nil),          // 9: client.v1.CreateClientRequest
-	(*CreateClientResponse)(nil),         // 10: client.v1.CreateClientResponse
-	(*UpdateClientRequest)(nil),          // 11: client.v1.UpdateClientRequest
-	(*UpdateClientResponse)(nil),         // 12: client.v1.UpdateClientResponse
-	(*DeleteClientRequest)(nil),          // 13: client.v1.DeleteClientRequest
-	(*DeleteClientResponse)(nil),         // 14: client.v1.DeleteClientResponse
-	(*GenerateClientSecretRequest)(nil),  // 15: client.v1.GenerateClientSecretRequest
-	(*GenerateClientSecretResponse)(nil), // 16: client.v1.GenerateClientSecretResponse
-	(*RotateClientSecretRequest)(nil),    // 17: client.v1.RotateClientSecretRequest
-	(*RotateClientSecretResponse)(nil),   // 18: client.v1.RotateClientSecretResponse
-	(*RevokeClientSecretRequest)(nil),    // 19: client.v1.RevokeClientSecretRequest
-	(*RevokeClientSecretResponse)(nil),   // 20: client.v1.RevokeClientSecretResponse
-	(*timestamppb.Timestamp)(nil),        // 21: google.protobuf.Timestamp
+	(AuthMethod)(0),                      // 2: client.v1.AuthMethod
+	(SecretGrace)(0),                     // 3: client.v1.SecretGrace
+	(*ClientSecret)(nil),                 // 4: client.v1.ClientSecret
+	(*Client)(nil),                       // 5: client.v1.Client
+	(*ListClientsRequest)(nil),           // 6: client.v1.ListClientsRequest
+	(*ListClientsResponse)(nil),          // 7: client.v1.ListClientsResponse
+	(*GetClientRequest)(nil),             // 8: client.v1.GetClientRequest
+	(*GetClientResponse)(nil),            // 9: client.v1.GetClientResponse
+	(*CreateClientRequest)(nil),          // 10: client.v1.CreateClientRequest
+	(*CreateClientResponse)(nil),         // 11: client.v1.CreateClientResponse
+	(*UpdateClientRequest)(nil),          // 12: client.v1.UpdateClientRequest
+	(*UpdateClientResponse)(nil),         // 13: client.v1.UpdateClientResponse
+	(*DeleteClientRequest)(nil),          // 14: client.v1.DeleteClientRequest
+	(*DeleteClientResponse)(nil),         // 15: client.v1.DeleteClientResponse
+	(*GenerateClientSecretRequest)(nil),  // 16: client.v1.GenerateClientSecretRequest
+	(*GenerateClientSecretResponse)(nil), // 17: client.v1.GenerateClientSecretResponse
+	(*RotateClientSecretRequest)(nil),    // 18: client.v1.RotateClientSecretRequest
+	(*RotateClientSecretResponse)(nil),   // 19: client.v1.RotateClientSecretResponse
+	(*RevokeClientSecretRequest)(nil),    // 20: client.v1.RevokeClientSecretRequest
+	(*RevokeClientSecretResponse)(nil),   // 21: client.v1.RevokeClientSecretResponse
+	(*timestamppb.Timestamp)(nil),        // 22: google.protobuf.Timestamp
 }
 var file_client_v1_client_proto_depIdxs = []int32{
-	21, // 0: client.v1.ClientSecret.created_at:type_name -> google.protobuf.Timestamp
-	21, // 1: client.v1.ClientSecret.expires_at:type_name -> google.protobuf.Timestamp
+	22, // 0: client.v1.ClientSecret.created_at:type_name -> google.protobuf.Timestamp
+	22, // 1: client.v1.ClientSecret.expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: client.v1.Client.kind:type_name -> client.v1.ClientKind
 	1,  // 3: client.v1.Client.consent_policy:type_name -> client.v1.ConsentPolicy
-	3,  // 4: client.v1.Client.secrets:type_name -> client.v1.ClientSecret
-	21, // 5: client.v1.Client.created_at:type_name -> google.protobuf.Timestamp
-	21, // 6: client.v1.Client.updated_at:type_name -> google.protobuf.Timestamp
-	4,  // 7: client.v1.ListClientsResponse.clients:type_name -> client.v1.Client
-	4,  // 8: client.v1.GetClientResponse.client:type_name -> client.v1.Client
+	4,  // 4: client.v1.Client.secrets:type_name -> client.v1.ClientSecret
+	22, // 5: client.v1.Client.created_at:type_name -> google.protobuf.Timestamp
+	22, // 6: client.v1.Client.updated_at:type_name -> google.protobuf.Timestamp
+	5,  // 7: client.v1.ListClientsResponse.clients:type_name -> client.v1.Client
+	5,  // 8: client.v1.GetClientResponse.client:type_name -> client.v1.Client
 	0,  // 9: client.v1.CreateClientRequest.kind:type_name -> client.v1.ClientKind
 	1,  // 10: client.v1.CreateClientRequest.consent_policy:type_name -> client.v1.ConsentPolicy
-	4,  // 11: client.v1.CreateClientResponse.client:type_name -> client.v1.Client
-	1,  // 12: client.v1.UpdateClientRequest.consent_policy:type_name -> client.v1.ConsentPolicy
-	4,  // 13: client.v1.UpdateClientResponse.client:type_name -> client.v1.Client
-	4,  // 14: client.v1.GenerateClientSecretResponse.client:type_name -> client.v1.Client
-	2,  // 15: client.v1.RotateClientSecretRequest.grace:type_name -> client.v1.SecretGrace
-	4,  // 16: client.v1.RotateClientSecretResponse.client:type_name -> client.v1.Client
-	4,  // 17: client.v1.RevokeClientSecretResponse.client:type_name -> client.v1.Client
-	5,  // 18: client.v1.ClientService.ListClients:input_type -> client.v1.ListClientsRequest
-	7,  // 19: client.v1.ClientService.GetClient:input_type -> client.v1.GetClientRequest
-	9,  // 20: client.v1.ClientService.CreateClient:input_type -> client.v1.CreateClientRequest
-	11, // 21: client.v1.ClientService.UpdateClient:input_type -> client.v1.UpdateClientRequest
-	13, // 22: client.v1.ClientService.DeleteClient:input_type -> client.v1.DeleteClientRequest
-	15, // 23: client.v1.ClientService.GenerateClientSecret:input_type -> client.v1.GenerateClientSecretRequest
-	17, // 24: client.v1.ClientService.RotateClientSecret:input_type -> client.v1.RotateClientSecretRequest
-	19, // 25: client.v1.ClientService.RevokeClientSecret:input_type -> client.v1.RevokeClientSecretRequest
-	6,  // 26: client.v1.ClientService.ListClients:output_type -> client.v1.ListClientsResponse
-	8,  // 27: client.v1.ClientService.GetClient:output_type -> client.v1.GetClientResponse
-	10, // 28: client.v1.ClientService.CreateClient:output_type -> client.v1.CreateClientResponse
-	12, // 29: client.v1.ClientService.UpdateClient:output_type -> client.v1.UpdateClientResponse
-	14, // 30: client.v1.ClientService.DeleteClient:output_type -> client.v1.DeleteClientResponse
-	16, // 31: client.v1.ClientService.GenerateClientSecret:output_type -> client.v1.GenerateClientSecretResponse
-	18, // 32: client.v1.ClientService.RotateClientSecret:output_type -> client.v1.RotateClientSecretResponse
-	20, // 33: client.v1.ClientService.RevokeClientSecret:output_type -> client.v1.RevokeClientSecretResponse
-	26, // [26:34] is the sub-list for method output_type
-	18, // [18:26] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	2,  // 11: client.v1.CreateClientRequest.auth_method:type_name -> client.v1.AuthMethod
+	5,  // 12: client.v1.CreateClientResponse.client:type_name -> client.v1.Client
+	1,  // 13: client.v1.UpdateClientRequest.consent_policy:type_name -> client.v1.ConsentPolicy
+	2,  // 14: client.v1.UpdateClientRequest.auth_method:type_name -> client.v1.AuthMethod
+	5,  // 15: client.v1.UpdateClientResponse.client:type_name -> client.v1.Client
+	5,  // 16: client.v1.GenerateClientSecretResponse.client:type_name -> client.v1.Client
+	3,  // 17: client.v1.RotateClientSecretRequest.grace:type_name -> client.v1.SecretGrace
+	5,  // 18: client.v1.RotateClientSecretResponse.client:type_name -> client.v1.Client
+	5,  // 19: client.v1.RevokeClientSecretResponse.client:type_name -> client.v1.Client
+	6,  // 20: client.v1.ClientService.ListClients:input_type -> client.v1.ListClientsRequest
+	8,  // 21: client.v1.ClientService.GetClient:input_type -> client.v1.GetClientRequest
+	10, // 22: client.v1.ClientService.CreateClient:input_type -> client.v1.CreateClientRequest
+	12, // 23: client.v1.ClientService.UpdateClient:input_type -> client.v1.UpdateClientRequest
+	14, // 24: client.v1.ClientService.DeleteClient:input_type -> client.v1.DeleteClientRequest
+	16, // 25: client.v1.ClientService.GenerateClientSecret:input_type -> client.v1.GenerateClientSecretRequest
+	18, // 26: client.v1.ClientService.RotateClientSecret:input_type -> client.v1.RotateClientSecretRequest
+	20, // 27: client.v1.ClientService.RevokeClientSecret:input_type -> client.v1.RevokeClientSecretRequest
+	7,  // 28: client.v1.ClientService.ListClients:output_type -> client.v1.ListClientsResponse
+	9,  // 29: client.v1.ClientService.GetClient:output_type -> client.v1.GetClientResponse
+	11, // 30: client.v1.ClientService.CreateClient:output_type -> client.v1.CreateClientResponse
+	13, // 31: client.v1.ClientService.UpdateClient:output_type -> client.v1.UpdateClientResponse
+	15, // 32: client.v1.ClientService.DeleteClient:output_type -> client.v1.DeleteClientResponse
+	17, // 33: client.v1.ClientService.GenerateClientSecret:output_type -> client.v1.GenerateClientSecretResponse
+	19, // 34: client.v1.ClientService.RotateClientSecret:output_type -> client.v1.RotateClientSecretResponse
+	21, // 35: client.v1.ClientService.RevokeClientSecret:output_type -> client.v1.RevokeClientSecretResponse
+	28, // [28:36] is the sub-list for method output_type
+	20, // [20:28] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_client_v1_client_proto_init() }
@@ -1490,12 +1599,14 @@ func file_client_v1_client_proto_init() {
 	if File_client_v1_client_proto != nil {
 		return
 	}
+	file_client_v1_client_proto_msgTypes[6].OneofWrappers = []any{}
+	file_client_v1_client_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_client_v1_client_proto_rawDesc), len(file_client_v1_client_proto_rawDesc)),
-			NumEnums:      3,
+			NumEnums:      4,
 			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,

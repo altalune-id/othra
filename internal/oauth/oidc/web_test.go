@@ -120,7 +120,6 @@ func newFixture(t *testing.T, basePath string) *fixture {
 	})
 	f.mux = http.NewServeMux()
 	f.web.Register(f.mux)
-	f.web.Pages().Register(f.mux)
 	return f
 }
 
@@ -175,14 +174,22 @@ func TestDiscovery_HasEveryRequiredField(t *testing.T) {
 	assert.NotContains(t, issuer, "?")
 	assert.NotContains(t, issuer, "#")
 	assert.False(t, strings.HasSuffix(issuer, "/"))
-	for _, field := range []string{"authorization_endpoint", "token_endpoint", "jwks_uri"} {
+	for _, field := range []string{"authorization_endpoint", "token_endpoint", "jwks_uri", "userinfo_endpoint", "end_session_endpoint"} {
 		u, _ := doc[field].(string)
 		assert.True(t, strings.HasPrefix(u, issuer+"/"), "%s lives under the issuer: %s", field, u)
 	}
 	assert.Equal(t, []any{"RS256"}, doc["id_token_signing_alg_values_supported"])
 	assert.Equal(t, []any{"S256"}, doc["code_challenge_methods_supported"])
 	assert.Equal(t, []any{"query"}, doc["response_modes_supported"], "the profile bans the fragment mode the default would imply")
-	assert.Len(t, doc, 10, "nothing is advertised beyond what M2 answers")
+	assert.Equal(t, []any{"client_secret_basic", "client_secret_post", "none"}, doc["token_endpoint_auth_methods_supported"])
+	assert.Equal(t, []any{"authorization_code", "refresh_token"}, doc["grant_types_supported"])
+	assert.Equal(t, true, doc["authorization_response_iss_parameter_supported"], "RFC 9207")
+	assert.Equal(t, []any{"none", "login", "select_account"}, doc["prompt_values_supported"], "consent comes with the M6 consent page")
+	assert.Equal(t, []any{"en-US", "id-ID"}, doc["ui_locales_supported"], "the hosted pages' locales")
+	for _, field := range []string{"request_parameter_supported", "request_uri_parameter_supported", "claims_parameter_supported"} {
+		assert.Equal(t, false, doc[field], "%s: request objects and the claims parameter are refused", field)
+	}
+	assert.Len(t, doc, 21, "nothing is advertised beyond what M5 answers")
 }
 
 // K14: every URL a discovery document advertises answers, or answers the spec error; never 404 or 500.
@@ -199,7 +206,9 @@ func TestDiscovery_EveryAdvertisedURLAnswers(t *testing.T) {
 		token := f.do(t, http.MethodPost, local(doc.TokenEndpoint))
 		assert.Equal(t, http.StatusUnauthorized, token.Code)
 		assert.JSONEq(t, `{"error":"invalid_client"}`, token.Body.String())
-		assert.Equal(t, http.StatusBadRequest, f.do(t, http.MethodGet, local(doc.AuthorizationEndpoint)).Code)
+		userinfo := f.do(t, http.MethodGet, local(doc.UserinfoEndpoint))
+		assert.Equal(t, http.StatusUnauthorized, userinfo.Code)
+		assert.Contains(t, userinfo.Header().Get("WWW-Authenticate"), "Bearer")
 	}
 }
 
@@ -242,7 +251,6 @@ func TestUnknownHandlesAnswerOneIdentical404(t *testing.T) {
 			"/p/" + handle + "/oauth2/jwks.json",
 			"/p/" + handle + "/.well-known/openid-configuration",
 			"/.well-known/oauth-authorization-server/p/" + handle,
-			"/p/" + handle + "/oauth2/authorize",
 		} {
 			rec := f.do(t, http.MethodGet, path)
 			assert.Equal(t, http.StatusNotFound, rec.Code, path)
@@ -260,7 +268,7 @@ func TestUnknownHandlesAnswerOneIdentical404(t *testing.T) {
 		assert.Equal(t, first.Body.String(), token.Body.String())
 	}
 	assert.JSONEq(t, `{"error":"not_found"}`, first.Body.String())
-	assert.Equal(t, 5, f.issuers.calls, "only the well-formed unknown handle reaches the database, once per request")
+	assert.Equal(t, 4, f.issuers.calls, "only the well-formed unknown handle reaches the database, once per request")
 }
 
 func TestTokenStubRefusesEveryClient(t *testing.T) {
@@ -276,25 +284,6 @@ func TestTokenStubRefusesEveryClient(t *testing.T) {
 	get := f.do(t, http.MethodGet, "/p/acme-web/oauth2/token")
 	assert.Equal(t, http.StatusMethodNotAllowed, get.Code)
 	assert.Equal(t, "POST, OPTIONS", get.Header().Get("Allow"))
-}
-
-func TestAuthorizeStubShowsAnUnregisteredAppPage(t *testing.T) {
-	f := newFixture(t, "")
-	for _, method := range []string{http.MethodGet, http.MethodPost} {
-		rec := f.do(t, method, "/p/acme-web/oauth2/authorize?client_id=x&redirect_uri=https://evil.example/cb")
-		assert.Equal(t, http.StatusBadRequest, rec.Code, method)
-		assert.Empty(t, rec.Header().Get("Location"), "never a redirect")
-		assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"))
-		body := rec.Body.String()
-		assert.Contains(t, body, "This app isn&#39;t registered")
-		assert.Contains(t, body, "registered with Acme,")
-		assert.NotContains(t, body, "evil.example")
-		assert.NotContains(t, body, "/console/", "an end user gets no console link")
-	}
-
-	f.acme.DisplayName = ""
-	f.resolver.Forget(f.acme.ProjectID)
-	assert.Contains(t, f.do(t, http.MethodGet, "/p/acme-web/oauth2/authorize").Body.String(), "registered with Web,", "the project name stands in for a missing display name")
 }
 
 func TestIssuerCache(t *testing.T) {

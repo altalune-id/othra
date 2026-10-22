@@ -142,6 +142,15 @@ func (s *postgresStore) EndUserSession(ctx context.Context, projectID, browserID
 	return err
 }
 
+// EndUserSessionAnywhere ends the live user session publicID at now, on whichever browser holds it.
+func (s *postgresStore) EndUserSessionAnywhere(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) error {
+	t := s.sessions
+	stmt := t.UPDATE(t.EndedAt).SET(postgres.TimestampzT(now.UTC())).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.PublicID.EQ(postgres.String(publicID))).AND(t.EndedAt.IS_NULL()))
+	_, err := s.exec(ctx, "EndUserSessionAnywhere", stmt)
+	return err
+}
+
 func (s *postgresStore) liveSession(projectID, browserID uuid.UUID, publicID string) postgres.BoolExpression {
 	t := s.sessions
 	return t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.BrowserSessionID.EQ(postgres.UUID(browserID))).

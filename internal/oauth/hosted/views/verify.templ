@@ -3,6 +3,7 @@ package views
 import (
 	"net/url"
 
+	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
 )
@@ -42,7 +43,7 @@ type LinkUnusableData struct {
 templ LinkUnusable(d layout.LayoutData, v LinkUnusableData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "verify.invalid_title"))) {
 		@layout.Card(i18n.T(ctx, "verify.invalid_title")) {
-			<p>{ i18n.T(ctx, "apperror.SIG001") }</p>
+			<p>{ i18n.Error(ctx, apperror.CodeSignInLinkNotUsable) }</p>
 			<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.login(d, url.Values{"return_to": {v.ReturnTo}})) }>{ i18n.T(ctx, "verify.request_new") }</a>
 		}
 	}

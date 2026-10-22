@@ -20,6 +20,8 @@ func TestErrors_CarryTheirCodes(t *testing.T) {
 		{&NotFoundError{}, apperror.CodeClientNotFound, IsNotFoundError},
 		{&InvalidRedirectURIError{Field: "redirect_uris", URI: "http://x", Reason: RedirectURINotCanonical, Canonical: "http://x/"}, apperror.CodeClientInvalidRedirectURI, IsInvalidRedirectURIError},
 		{&InvalidSettingsError{Reason: SettingsPostLogoutNative}, apperror.CodeClientInvalidSettings, IsInvalidSettingsError},
+		{&InvalidSettingsError{Reason: SettingsPKCENative}, apperror.CodeClientInvalidSettings, IsInvalidSettingsError},
+		{&InvalidSettingsError{Reason: SettingsAuthMethodNative}, apperror.CodeClientInvalidSettings, IsInvalidSettingsError},
 		{&NoSecretError{}, apperror.CodeClientHasNoSecret, IsNoSecretError},
 		{&SecretPersonOnlyError{}, apperror.CodeClientSecretPersonOnly, IsSecretPersonOnlyError},
 		{&SecretNotFoundError{}, apperror.CodeClientSecretNotFound, IsSecretNotFoundError},

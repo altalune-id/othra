@@ -17,6 +17,7 @@ import (
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/legal"
 	mcpinternal "altalune.id/othra/internal/mcp"
 	"altalune.id/othra/internal/oauth/oidc"
@@ -127,8 +128,11 @@ func mcpChain(svcs *Services) authn.Chain {
 }
 
 // SECURITY: behind a proxy the Host header is not the public origin, so the configured baseURL origin is trusted explicitly.
-func buildCrossOrigin(baseURL string) (*http.CrossOriginProtection, error) {
+func buildCrossOrigin(baseURL string, crossSite []string) (*http.CrossOriginProtection, error) {
 	cop := http.NewCrossOriginProtection()
+	for _, pattern := range crossSite {
+		cop.AddInsecureBypassPattern(pattern)
+	}
 	if baseURL == "" {
 		return cop, nil
 	}
@@ -173,13 +177,19 @@ func buildIssuerRoutes(
 		BasePath:   cfg.HTTP.BasePath,
 		CORS:       middleware.PublicCORS,
 	})
+	if svcs.Grants != nil && svcs.Clients != nil && svcs.EndUsers != nil && svcs.Keys != nil {
+		issuers.WithTokens(oidc.Tokens{
+			Clients: svcs.Clients, Grants: svcs.Grants, EndUsers: svcs.EndUsers, IDTokens: keys.NewSigner(svcs.Keys),
+			IDTokenTTL: cfg.OAuth.IDTokenTTL, CORS: middleware.BearerCORS,
+			Limits: layout.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops},
+		})
+	}
 	svcs.Keys.WithOnChange(resolver.Forget)
 	svcs.Projects.WithOnIssuerChange(resolver.Forget)
-	pages := []web.Registrar{issuers.Pages()}
-	if svcs.EndUsers != nil {
-		pages = append(pages, buildHosted(cfg, svcs, kit, resolver))
+	if svcs.EndUsers == nil {
+		return []web.Registrar{issuers}, nil
 	}
-	return []web.Registrar{issuers}, pages
+	return []web.Registrar{issuers}, []web.Registrar{buildHosted(cfg, svcs, kit, resolver)}
 }
 
 func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc) []web.Registrar {

@@ -8,6 +8,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/enduser"
+	"altalune.id/othra/internal/grant"
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/kernel/storage"
@@ -54,6 +55,9 @@ func buildScheduler(k kernel.Kernel, cfg config.Config, s *Services, log *slog.L
 	if s.EndUsers != nil {
 		eu := enduser.NewScheduler(s.EndUsers, projectTenants{orgs: s.Orgs, projects: s.Projects}, orDiscard(log))
 		jobs = append(jobs, eu.SchedulerJobs()...)
+	}
+	if s.Grants != nil {
+		jobs = append(jobs, grant.NewScheduler(s.Grants, projectTenants{orgs: s.Orgs, projects: s.Projects}, orDiscard(log)).SchedulerJobs()...)
 	}
 	if s.ResourceServers != nil {
 		rs := resourceserver.NewScheduler(s.ResourceServers, projectTenants{orgs: s.Orgs, projects: s.Projects}, orDiscard(log))

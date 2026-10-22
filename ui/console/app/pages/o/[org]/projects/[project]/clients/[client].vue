@@ -187,7 +187,23 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
           <dt class="text-base-content/60">
             {{ t('clients.kind') }}
           </dt>
-          <dd>{{ t(kind.labelKey) }} · <code class="font-mono text-xs">{{ client.tokenEndpointAuthMethod }}</code></dd>
+          <dd>{{ t(kind.labelKey) }}</dd>
+          <template v-if="kind.secret">
+            <dt class="text-base-content/60">
+              {{ t('clients.auth_method') }}
+            </dt>
+            <dd><code class="font-mono text-xs" data-testid="client-auth-method">{{ client.tokenEndpointAuthMethod }}</code></dd>
+            <dt class="text-base-content/60">
+              {{ t('clients.pkce') }}
+            </dt>
+            <dd v-if="client.pkceRequired">
+              {{ t('clients.pkce_on') }}
+            </dd>
+            <dd v-else class="flex items-start gap-1" data-testid="client-pkce-off">
+              <Icon name="lucide:triangle-alert" size="14" class="mt-0.5 shrink-0 text-warning" />
+              {{ t('clients.pkce_off') }}
+            </dd>
+          </template>
           <dt class="text-base-content/60">
             {{ t('clients.scopes') }}
           </dt>
@@ -258,7 +274,13 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
           <dt class="text-base-content/60">
             {{ t('clients.consent') }}
           </dt>
-          <dd>{{ consentLabel }}</dd>
+          <dd>
+            {{ consentLabel }}
+            <p v-if="client.consentPolicy !== ConsentPolicy.IMPLICIT" class="mt-1 flex items-start gap-1 text-xs text-base-content" data-testid="consent-require-note">
+              <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
+              {{ t('clients.consent_require_note') }}
+            </p>
+          </dd>
         </dl>
       </div>
     </section>

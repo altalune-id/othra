@@ -178,3 +178,10 @@ func TestBrandComponentsReturnWriteErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestLayout_Refresh(t *testing.T) {
+	html := page(t, t.Context(), LayoutData{Title: "T", Refresh: `/p/acme/oauth2/authorize?a=1&b="x"`})
+	assert.Contains(t, html, `<meta http-equiv="refresh" content="0;url=/p/acme/oauth2/authorize?a=1&amp;b=&#34;x&#34;">`)
+	assert.Less(t, strings.Index(html, "http-equiv"), strings.Index(html, "</head>"))
+	assert.NotContains(t, page(t, t.Context(), LayoutData{Title: "T"}), "http-equiv", "no refresh unless asked")
+}

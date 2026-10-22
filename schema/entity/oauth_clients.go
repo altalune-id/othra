@@ -19,6 +19,7 @@ type OAuthClients struct {
 	RedirectURIs            postgres.ColumnString
 	PostLogoutRedirectURIs  postgres.ColumnString
 	ConsentPolicy           postgres.ColumnString
+	PKCERequired            postgres.ColumnBool
 	CreatedAt               postgres.ColumnTimestampz
 	UpdatedAt               postgres.ColumnTimestampz
 
@@ -44,11 +45,12 @@ func NewOAuthClients(schema, tablePrefix string) *OAuthClients {
 		redirectURIs            = postgres.StringColumn("redirect_uris")
 		postLogoutRedirectURIs  = postgres.StringColumn("post_logout_redirect_uris")
 		consentPolicy           = postgres.StringColumn("consent_policy")
+		pkceRequired            = postgres.BoolColumn("pkce_required")
 		createdAt               = postgres.TimestampzColumn("created_at")
 		updatedAt               = postgres.TimestampzColumn("updated_at")
 		all                     = postgres.ColumnList{
 			id, publicID, orgID, projectID, name, clientType, applicationType, tokenEndpointAuthMethod,
-			grantTypes, allowedScopes, redirectURIs, postLogoutRedirectURIs, consentPolicy, createdAt, updatedAt,
+			grantTypes, allowedScopes, redirectURIs, postLogoutRedirectURIs, consentPolicy, pkceRequired, createdAt, updatedAt,
 		}
 	)
 	return &OAuthClients{
@@ -66,6 +68,7 @@ func NewOAuthClients(schema, tablePrefix string) *OAuthClients {
 		RedirectURIs:            redirectURIs,
 		PostLogoutRedirectURIs:  postLogoutRedirectURIs,
 		ConsentPolicy:           consentPolicy,
+		PKCERequired:            pkceRequired,
 		CreatedAt:               createdAt,
 		UpdatedAt:               updatedAt,
 		AllColumns:              all,

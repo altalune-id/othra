@@ -5,12 +5,17 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/google/uuid"
+
+	"altalune.id/othra/nanoid"
 )
+
+const jtiLen = 21
 
 // The JWS typ headers: RFC 9068 access tokens and OIDC ID tokens.
 const (
@@ -57,6 +62,18 @@ type IDTokenClaims struct {
 	AuthorizedParty string   `json:"azp,omitempty"`
 	AuthTime        int64    `json:"auth_time,omitempty"`
 	SessionID       string   `json:"sid,omitempty"`
+	Email           string   `json:"email,omitempty"`
+	EmailVerified   *bool    `json:"email_verified,omitempty"`
+	Name            string   `json:"name,omitempty"`
+}
+
+// Profile is the end-user claims an ID token carries for the granted scopes; a nil Profile carries none.
+type Profile struct {
+	Email         string
+	EmailVerified bool
+	Name          string
+	WithEmail     bool
+	WithName      bool
 }
 
 // MintIDTokenInput is one ID token to sign.
@@ -71,6 +88,7 @@ type MintIDTokenInput struct {
 	AuthTime    time.Time
 	IssuedAt    time.Time
 	ExpiresAt   time.Time
+	Profile     *Profile
 }
 
 // Token is a signed compact JWT.
@@ -93,27 +111,30 @@ func NewSigner(keys ActiveKeys) *Signer { return &Signer{keys: keys} }
 
 // Mint signs an access token for projectID.
 func (s *Signer) Mint(ctx context.Context, projectID uuid.UUID, in *MintInput) (*Token, error) {
-	jti, err := uuid.NewV7()
+	jti, err := nanoid.New(jtiLen)
 	if err != nil {
 		return nil, fmt.Errorf("keys: jti: %w", err)
 	}
 	claims := Claims{
 		Issuer: in.Issuer, Subject: in.Subject, Audience: in.Audience,
 		ExpiresAt: in.ExpiresAt.Unix(), IssuedAt: in.IssuedAt.Unix(), NotBefore: in.IssuedAt.Unix(),
-		JWTID: jti.String(), ClientID: in.ClientID, SessionID: in.SessionID, Scope: in.Scope,
+		JWTID: jti, ClientID: in.ClientID, SessionID: in.SessionID, Scope: in.Scope,
 	}
 	return s.sign(ctx, projectID, TypeAccessToken, claims, in.ExpiresAt)
 }
 
-// MintIDToken signs an ID token for projectID.
+// MintIDToken signs an ID token for projectID; it refuses an empty audience or a ClientID outside it.
 func (s *Signer) MintIDToken(ctx context.Context, projectID uuid.UUID, in *MintIDTokenInput) (*Token, error) {
-	jti, err := uuid.NewV7()
+	if len(in.Audience) == 0 || !slices.Contains(in.Audience, in.ClientID) {
+		return nil, fmt.Errorf("keys: an ID token's audience must hold its client")
+	}
+	jti, err := nanoid.New(jtiLen)
 	if err != nil {
 		return nil, fmt.Errorf("keys: jti: %w", err)
 	}
 	claims := IDTokenClaims{
 		Issuer: in.Issuer, Subject: in.Subject, Audience: in.Audience,
-		ExpiresAt: in.ExpiresAt.Unix(), IssuedAt: in.IssuedAt.Unix(), JWTID: jti.String(),
+		ExpiresAt: in.ExpiresAt.Unix(), IssuedAt: in.IssuedAt.Unix(), JWTID: jti,
 		Nonce: in.Nonce, SessionID: in.SessionID,
 	}
 	if len(in.Audience) > 1 {
@@ -124,6 +145,14 @@ func (s *Signer) MintIDToken(ctx context.Context, projectID uuid.UUID, in *MintI
 	}
 	if !in.AuthTime.IsZero() {
 		claims.AuthTime = in.AuthTime.Unix()
+	}
+	if p := in.Profile; p != nil {
+		if p.WithEmail {
+			claims.Email, claims.EmailVerified = p.Email, &p.EmailVerified
+		}
+		if p.WithName {
+			claims.Name = p.Name
+		}
 	}
 	return s.sign(ctx, projectID, TypeIDToken, claims, in.ExpiresAt)
 }

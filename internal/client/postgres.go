@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 
 	"altalune.id/othra/internal/kernel/db"
@@ -43,6 +42,7 @@ type clientRow struct {
 	RedirectURIs           string    `alias:"oauth_clients.redirect_uris"`
 	PostLogoutRedirectURIs string    `alias:"oauth_clients.post_logout_redirect_uris"`
 	ConsentPolicy          string    `alias:"oauth_clients.consent_policy"`
+	PKCERequired           bool      `alias:"oauth_clients.pkce_required"`
 	CreatedAt              time.Time `alias:"oauth_clients.created_at"`
 	UpdatedAt              time.Time `alias:"oauth_clients.updated_at"`
 }
@@ -64,8 +64,8 @@ func (r *clientRow) toClient() (*Client, error) {
 		ID: r.ID, PublicID: r.PublicID, OrgID: r.OrgID, ProjectID: r.ProjectID, Name: r.Name,
 		ClientType: r.ClientType, ApplicationType: r.ApplicationType, TokenEndpointAuthMethod: r.AuthMethod,
 		GrantTypes: grants, AllowedScopes: scopes, RedirectURIs: redirects, PostLogoutRedirectURIs: postLogout,
-		ConsentPolicy: ConsentPolicy(r.ConsentPolicy),
-		CreatedAt:     r.CreatedAt.UTC(), UpdatedAt: r.UpdatedAt.UTC(), Secrets: []Secret{},
+		ConsentPolicy: ConsentPolicy(r.ConsentPolicy), PKCERequired: r.PKCERequired,
+		CreatedAt: r.CreatedAt.UTC(), UpdatedAt: r.UpdatedAt.UTC(), Secrets: []Secret{},
 	}, nil
 }
 
@@ -76,17 +76,14 @@ type secretRow struct {
 	Hint      string     `alias:"oauth_client_secrets.hint"`
 	CreatedAt time.Time  `alias:"oauth_client_secrets.created_at"`
 	ExpiresAt *time.Time `alias:"oauth_client_secrets.expires_at"`
+	Hash      string     `alias:"oauth_client_secrets.secret_hash"`
 }
 
 func (r *secretRow) toSecret() Secret {
-	s := Secret{ID: r.ID, PublicID: r.PublicID, Hint: r.Hint, CreatedAt: r.CreatedAt.UTC()}
+	s := Secret{ID: r.ID, PublicID: r.PublicID, Hint: r.Hint, CreatedAt: r.CreatedAt.UTC(), hash: r.Hash}
 	if r.ExpiresAt != nil {
 		at := r.ExpiresAt.UTC()
 		s.ExpiresAt = &at
 	}
 	return s
-}
-
-func jsonArray(col postgres.Column, alias string) postgres.Projection {
-	return postgres.CAST(postgres.Func("to_json", col)).AS_TEXT().AS(alias)
 }

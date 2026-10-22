@@ -18,7 +18,7 @@ func (s *postgresStore) Insert(ctx context.Context, c *Client) error {
 	stmt := t.INSERT(t.AllColumns).VALUES(
 		c.ID, c.PublicID, c.OrgID, c.ProjectID, c.Name, c.ClientType, c.ApplicationType, c.TokenEndpointAuthMethod,
 		db.TextArray(c.GrantTypes), db.TextArray(c.AllowedScopes), db.TextArray(c.RedirectURIs), db.TextArray(c.PostLogoutRedirectURIs),
-		string(c.ConsentPolicy), c.CreatedAt.UTC(), c.UpdatedAt.UTC(),
+		string(c.ConsentPolicy), c.PKCERequired, c.CreatedAt.UTC(), c.UpdatedAt.UTC(),
 	)
 	return s.write(ctx, "Insert", stmt)
 }
@@ -26,9 +26,11 @@ func (s *postgresStore) Insert(ctx context.Context, c *Client) error {
 // Update saves a client's settings and updated_at.
 func (s *postgresStore) Update(ctx context.Context, c *Client) error {
 	t := s.clients
-	stmt := t.UPDATE(t.Name, t.GrantTypes, t.AllowedScopes, t.RedirectURIs, t.PostLogoutRedirectURIs, t.ConsentPolicy, t.UpdatedAt).
+	stmt := t.UPDATE(t.Name, t.GrantTypes, t.AllowedScopes, t.RedirectURIs, t.PostLogoutRedirectURIs, t.ConsentPolicy,
+		t.TokenEndpointAuthMethod, t.PKCERequired, t.UpdatedAt).
 		SET(postgres.String(c.Name), db.TextArray(c.GrantTypes), db.TextArray(c.AllowedScopes), db.TextArray(c.RedirectURIs),
-			db.TextArray(c.PostLogoutRedirectURIs), postgres.String(string(c.ConsentPolicy)), postgres.TimestampzT(c.UpdatedAt.UTC())).
+			db.TextArray(c.PostLogoutRedirectURIs), postgres.String(string(c.ConsentPolicy)), postgres.String(c.TokenEndpointAuthMethod),
+			postgres.Bool(c.PKCERequired), postgres.TimestampzT(c.UpdatedAt.UTC())).
 		WHERE(t.ID.EQ(postgres.UUID(c.ID)).AND(t.ProjectID.EQ(postgres.UUID(c.ProjectID))))
 	return s.write(ctx, "Update", stmt)
 }

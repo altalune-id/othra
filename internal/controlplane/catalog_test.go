@@ -193,6 +193,8 @@ func samples() []error {
 		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURITooMany},
 		&client.InvalidRedirectURIError{Field: "redirect_uris", URI: "x", Reason: client.RedirectURIDuplicate},
 		&client.InvalidSettingsError{Reason: client.SettingsPostLogoutNative},
+		&client.InvalidSettingsError{Reason: client.SettingsPKCENative},
+		&client.InvalidSettingsError{Reason: client.SettingsAuthMethodNative},
 		&client.NoSecretError{},
 		&client.SecretPersonOnlyError{},
 		&client.SecretNotFoundError{},
@@ -223,6 +225,11 @@ func samples() []error {
 		&enduser.EmailDisabledError{},
 		&enduser.SessionGoneError{},
 		&hosted.FormExpiredError{Reason: hosted.FormExpired},
+		&hosted.RefusedError{Code: apperror.CodeAuthorizeClientUnknown},
+		&hosted.RefusedError{Code: apperror.CodeAuthorizeRedirectNotRegistered},
+		&hosted.RefusedError{Code: apperror.CodeAuthorizeRequestInvalid},
+		&hosted.RefusedError{Code: apperror.CodeSignOutHintInvalid},
+		&hosted.RefusedError{Code: apperror.CodeSignOutRedirectNotRegistered},
 	}
 }
 

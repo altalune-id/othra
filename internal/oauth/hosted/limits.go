@@ -31,3 +31,8 @@ func RedeemIPRule() ratelimit.Rule {
 func FormIPRule() ratelimit.Rule {
 	return ratelimit.Rule{Name: "hosted-form-ip", Rate: 60, Per: time.Hour, Burst: 60}
 }
+
+// AuthorizeIPRule limits authorization requests per client IP and project: 60 a minute.
+func AuthorizeIPRule() ratelimit.Rule {
+	return ratelimit.Rule{Name: "hosted-authorize-ip", Rate: 60, Per: time.Minute, Burst: 60}
+}

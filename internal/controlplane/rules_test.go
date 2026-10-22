@@ -41,6 +41,8 @@ var unruled = map[string]string{
 	"keys.v1.RotateSigningKeyRequest.immediate":               "a bool; true promotes the new key at once",
 	"client.v1.CreateClientRequest.refresh_tokens":            "a bool; true adds the refresh_token grant",
 	"client.v1.UpdateClientRequest.refresh_tokens":            "a bool; true adds the refresh_token grant",
+	"client.v1.CreateClientRequest.pkce_required":             "an optional bool; unset is true, false only for a WEB client (CLT003)",
+	"client.v1.UpdateClientRequest.pkce_required":             "an optional bool; unset is true, false only for a WEB client (CLT003)",
 	"resourceserver.v1.SetResourceServerTrustRequest.trusted": "a bool; the domain refuses it outside self-hosted (RSV007)",
 	"resourceserver.v1.CreateResourceServerRequest.trusted":   "a bool; the domain refuses it outside self-hosted (RSV007) and from a key",
 	"webhook.v1.ListWebhookDeliveriesRequest.limit":           "any int32 works today: clamped to 1..50",

@@ -16,6 +16,7 @@ export interface ClientKindOption {
   redirectHelp: string;
   placeholder: string;
   postLogout: boolean;
+  secret: boolean;
 }
 
 export interface ClientFormLabels {
@@ -32,6 +33,14 @@ export interface ClientFormLabels {
   consentRequire: string;
   consentImplicit: string;
   consentImplicitWarning: string;
+  consentRequireNote: string;
+  authMethod: string;
+  authMethodBasic: string;
+  authMethodPost: string;
+  authMethodHelp: string;
+  pkce: string;
+  pkceRequired: string;
+  pkceOffWarning: string;
   submit: string;
   submitting: string;
   cancel: string;
@@ -69,6 +78,14 @@ const props = withDefaults(defineProps<{
     consentRequire: 'Ask the end user',
     consentImplicit: 'Skip consent (first-party app)',
     consentImplicitWarning: 'Only for your own apps. End users won\'t see what this app can access.',
+    consentRequireNote: 'End users can\'t sign in to this app yet, because the consent page isn\'t available. For your own apps, use Skip consent.',
+    authMethod: 'How the app sends its secret',
+    authMethodBasic: 'Authorization header (client_secret_basic)',
+    authMethodPost: 'Request body (client_secret_post)',
+    authMethodHelp: 'Use the header unless the app\'s library only supports the body.',
+    pkce: 'PKCE',
+    pkceRequired: 'Require PKCE (recommended)',
+    pkceOffWarning: 'Only for apps that can\'t send PKCE, such as a conformance test client. The app must then send a nonce on every sign-in.',
     submit: 'Create client',
     submitting: 'Creating…',
     cancel: 'Cancel',
@@ -85,7 +102,7 @@ const emit = defineEmits<{
   remove: [list: 'redirect' | 'postLogout', index: number],
 }>();
 const fields = defineModel<ClientFields>('fields', { required: true });
-const ids = { name: useId(), nameHelp: useId(), nameErr: useId(), consentWarn: useId() };
+const ids = { name: useId(), nameHelp: useId(), nameErr: useId(), consentWarn: useId(), consentNote: useId(), authHelp: useId(), pkceWarn: useId() };
 
 const kind = computed(() => props.kinds.find(k => k.value === fields.value.kind) ?? props.kinds[0]);
 
@@ -195,18 +212,62 @@ function patch(next: Partial<ClientFields>) {
       </label>
     </fieldset>
 
+    <template v-if="kind?.secret">
+      <fieldset class="fieldset" :aria-describedby="ids.authHelp">
+        <legend class="fieldset-legend">
+          {{ labels.authMethod }}
+        </legend>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="radio" name="client-auth-method" class="radio radio-sm" :checked="fields.authMethod === 'basic'" :disabled="busy" @change="patch({ authMethod: 'basic' })">
+          {{ labels.authMethodBasic }}
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="radio" name="client-auth-method" class="radio radio-sm" :checked="fields.authMethod === 'post'" :disabled="busy" @change="patch({ authMethod: 'post' })">
+          {{ labels.authMethodPost }}
+        </label>
+        <p :id="ids.authHelp" class="label whitespace-normal">
+          {{ labels.authMethodHelp }}
+        </p>
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">
+          {{ labels.pkce }}
+        </legend>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm rounded-sm"
+            :checked="fields.pkceRequired"
+            :disabled="busy"
+            :aria-describedby="fields.pkceRequired ? undefined : ids.pkceWarn"
+            @change="patch({ pkceRequired: ($event.target as HTMLInputElement).checked })"
+          >
+          {{ labels.pkceRequired }}
+        </label>
+        <p v-if="!fields.pkceRequired" :id="ids.pkceWarn" class="mt-1 flex items-start gap-1 text-xs text-base-content">
+          <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
+          {{ labels.pkceOffWarning }}
+        </p>
+      </fieldset>
+    </template>
+
     <fieldset class="fieldset">
       <legend class="fieldset-legend">
         {{ labels.consent }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
-        <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'require'" :disabled="busy" @change="patch({ consent: 'require' })">
+        <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'require'" :disabled="busy" :aria-describedby="ids.consentNote" @change="patch({ consent: 'require' })">
         {{ labels.consentRequire }}
       </label>
       <label class="flex items-center gap-2 text-sm">
         <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'implicit'" :disabled="busy" :aria-describedby="ids.consentWarn" @change="patch({ consent: 'implicit' })">
         {{ labels.consentImplicit }}
       </label>
+      <p v-if="fields.consent === 'require'" :id="ids.consentNote" class="mt-1 flex items-start gap-1 text-xs text-base-content">
+        <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
+        {{ labels.consentRequireNote }}
+      </p>
       <p v-if="fields.consent === 'implicit'" :id="ids.consentWarn" class="mt-1 flex items-start gap-1 text-xs text-base-content">
         <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
         {{ labels.consentImplicitWarning }}

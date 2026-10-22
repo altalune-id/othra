@@ -16,11 +16,11 @@ func (s *postgresStore) clientColumns() postgres.ProjectionList {
 	t := s.clients
 	return postgres.ProjectionList{
 		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Name, t.ClientType, t.ApplicationType, t.TokenEndpointAuthMethod,
-		jsonArray(t.GrantTypes, "oauth_clients.grant_types"),
-		jsonArray(t.AllowedScopes, "oauth_clients.allowed_scopes"),
-		jsonArray(t.RedirectURIs, "oauth_clients.redirect_uris"),
-		jsonArray(t.PostLogoutRedirectURIs, "oauth_clients.post_logout_redirect_uris"),
-		t.ConsentPolicy, t.CreatedAt, t.UpdatedAt,
+		db.ArrayAsJSON(t.GrantTypes, "oauth_clients.grant_types"),
+		db.ArrayAsJSON(t.AllowedScopes, "oauth_clients.allowed_scopes"),
+		db.ArrayAsJSON(t.RedirectURIs, "oauth_clients.redirect_uris"),
+		db.ArrayAsJSON(t.PostLogoutRedirectURIs, "oauth_clients.post_logout_redirect_uris"),
+		t.ConsentPolicy, t.PKCERequired, t.CreatedAt, t.UpdatedAt,
 	}
 }
 
@@ -30,29 +30,42 @@ func (s *postgresStore) List(ctx context.Context, projectID uuid.UUID, now time.
 	stmt := postgres.SELECT(s.clientColumns()).FROM(t).
 		WHERE(t.ProjectID.EQ(postgres.UUID(projectID))).
 		ORDER_BY(t.CreatedAt.ASC(), t.PublicID.ASC())
-	return s.read(ctx, "List", stmt, projectID, now)
+	return s.read(ctx, "List", stmt, projectID, now, false)
 }
 
 // ByPublicID returns one client with its live secrets at now, the current one first, or *NotFoundError.
 func (s *postgresStore) ByPublicID(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error) {
-	return s.one(ctx, "ByPublicID", projectID, publicID, now, false)
+	return s.one(ctx, "ByPublicID", projectID, publicID, now, readPlain)
 }
 
 // Lock locks a client's row and returns it with its live secrets at now, or *NotFoundError.
 func (s *postgresStore) Lock(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error) {
-	return s.one(ctx, "Lock", projectID, publicID, now, true)
+	return s.one(ctx, "Lock", projectID, publicID, now, readLocked)
 }
 
+// ForAuthentication returns one client with its live secrets at now and their hashes, for VerifySecret only, or *NotFoundError.
+func (s *postgresStore) ForAuthentication(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error) {
+	return s.one(ctx, "ForAuthentication", projectID, publicID, now, readHashes)
+}
+
+type readMode int
+
+const (
+	readPlain readMode = iota
+	readLocked
+	readHashes
+)
+
 func (s *postgresStore) one(
-	ctx context.Context, op string, projectID uuid.UUID, publicID string, now time.Time, lock bool,
+	ctx context.Context, op string, projectID uuid.UUID, publicID string, now time.Time, mode readMode,
 ) (*Client, error) {
 	t := s.clients
 	stmt := postgres.SELECT(s.clientColumns()).FROM(t).
 		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.PublicID.EQ(postgres.String(publicID))))
-	if lock {
+	if mode == readLocked {
 		stmt = stmt.FOR(postgres.UPDATE())
 	}
-	out, err := s.read(ctx, op, stmt, projectID, now)
+	out, err := s.read(ctx, op, stmt, projectID, now, mode == readHashes)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +76,7 @@ func (s *postgresStore) one(
 }
 
 func (s *postgresStore) read(
-	ctx context.Context, op string, stmt postgres.SelectStatement, projectID uuid.UUID, now time.Time,
+	ctx context.Context, op string, stmt postgres.SelectStatement, projectID uuid.UUID, now time.Time, hashes bool,
 ) ([]*Client, error) {
 	var rows []clientRow
 	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
@@ -85,7 +98,11 @@ func (s *postgresStore) read(
 		ids = append(ids, postgres.UUID(c.ID))
 	}
 	sec := s.secrets
-	secStmt := postgres.SELECT(sec.ID, sec.PublicID, sec.ClientID, sec.Hint, sec.CreatedAt, sec.ExpiresAt).FROM(sec).
+	cols := postgres.ProjectionList{sec.ID, sec.PublicID, sec.ClientID, sec.Hint, sec.CreatedAt, sec.ExpiresAt}
+	if hashes {
+		cols = append(cols, sec.SecretHash)
+	}
+	secStmt := postgres.SELECT(cols).FROM(sec).
 		WHERE(sec.ProjectID.EQ(postgres.UUID(projectID)).
 			AND(sec.ClientID.IN(ids...)).
 			AND(sec.ExpiresAt.IS_NULL().OR(sec.ExpiresAt.GT(postgres.TimestampzT(now.UTC()))))).

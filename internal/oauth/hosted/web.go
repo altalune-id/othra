@@ -56,6 +56,9 @@ type Web struct {
 	csrf    *CSRF
 	cookies cookies
 	limits  layout.Limits
+	clients Clients
+	grants  Grants
+	marker  *Marker
 }
 
 // NewWeb builds the hosted pages over users and issuers.
@@ -64,6 +67,12 @@ func NewWeb(users EndUsers, issuers Issuers, kit layout.Kit, cfg Config) *Web {
 		users: users, issuers: issuers, kit: kit, cfg: cfg,
 		csrf: NewCSRF(cfg.CSRFKey, cfg.CSRFMaxAge), cookies: cookies{key: cfg.CookieKey, now: time.Now},
 	}
+}
+
+// WithOAuth serves /oauth2/authorize and /oauth2/end-session over clients and grants, with marker for re-entry.
+func (h *Web) WithOAuth(clients Clients, grants Grants, marker *Marker) *Web {
+	h.clients, h.grants, h.marker = clients, grants, marker
+	return h
 }
 
 // WithLimits counts the hosted forms on l; without it nothing is limited.
@@ -87,6 +96,12 @@ func (h *Web) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+p+"/terms", h.page(h.acceptTerms))
 	mux.HandleFunc("GET "+p+"/account/{$}", h.page(h.account))
 	mux.HandleFunc("GET "+p+"/signed-out", h.page(h.signedOut))
+	if h.grants != nil {
+		mux.HandleFunc("GET "+p+authorizePath, h.page(h.authorize))
+		mux.HandleFunc("POST "+p+authorizePath, h.page(h.authorize))
+		mux.HandleFunc("GET "+p+endSessionPath, h.page(h.endSession))
+		mux.HandleFunc("POST "+p+endSessionPath, h.page(h.endSession))
+	}
 	mux.HandleFunc(p+"/", h.page(h.notFound))
 }
 
@@ -199,10 +214,13 @@ func (h *Web) login(w http.ResponseWriter, r *http.Request, s *site) {
 		return
 	}
 	if !s.issuer.SignInEmailLink {
-		h.renderError(w, r, s, http.StatusForbidden, "", i18n.T(r.Context(), "apperror.SIG002"), apperror.CodeSignInEmailDisabled)
+		h.codeError(w, r, s, http.StatusForbidden, apperror.CodeSignInEmailDisabled)
 		return
 	}
-	h.renderLogin(w, r, s, http.StatusOK, views.LoginData{ReturnTo: returnTo, Notice: notice, FromPicker: len(b.Accounts) > 0})
+	pend := h.pending(r, s, returnTo)
+	h.renderLogin(w, r, s, http.StatusOK, views.LoginData{
+		ReturnTo: returnTo, Notice: notice, FromPicker: len(b.Accounts) > 0, Client: pend.client, Reauth: pend.reauth, Email: pend.hint,
+	})
 }
 
 func (h *Web) renderLogin(w http.ResponseWriter, r *http.Request, s *site, status int, v views.LoginData) {
@@ -220,7 +238,7 @@ func (h *Web) renderPicker(w http.ResponseWriter, r *http.Request, s *site, b *B
 		return
 	}
 	h.kit.Render(w, r, http.StatusOK, views.Picker(h.layout(r, s), views.PickerData{
-		Site: s.views(), Accounts: tiles, ReturnTo: returnTo, Notice: notice, Error: errMsg,
+		Site: s.views(), Accounts: tiles, ReturnTo: returnTo, Notice: notice, Error: errMsg, Client: h.clientName(r, s, returnTo),
 		SelectToken: h.token(w, r, s, "select"), SignOutToken: h.token(w, r, s, "signout"),
 	}))
 }
@@ -231,7 +249,7 @@ func (h *Web) issue(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 	returnTo := h.returnTo(s, r.PostFormValue("return_to"))
 	if !s.issuer.SignInEmailLink {
-		h.renderError(w, r, s, http.StatusForbidden, "", i18n.T(r.Context(), "apperror.SIG002"), apperror.CodeSignInEmailDisabled)
+		h.codeError(w, r, s, http.StatusForbidden, apperror.CodeSignInEmailDisabled)
 		return
 	}
 	raw := strings.TrimSpace(r.PostFormValue("email"))
@@ -244,6 +262,7 @@ func (h *Web) issue(w http.ResponseWriter, r *http.Request, s *site) {
 		}
 		h.renderLogin(w, r, s, http.StatusUnprocessableEntity, views.LoginData{
 			Email: raw, Error: i18n.T(r.Context(), "login.email_invalid"), ReturnTo: returnTo, FromPicker: len(b.Accounts) > 0,
+			Client: h.clientName(r, s, returnTo), Reauth: h.pending(r, s, returnTo).reauth,
 		})
 		return
 	}
@@ -395,12 +414,6 @@ func (h *Web) linkFailed(w http.ResponseWriter, r *http.Request, s *site, err er
 	}))
 }
 
-// Continue sends a signed-in account to the terms page when its terms wait, else to returnTo; M5 /authorize calls it too.
-func (h *Web) Continue(w http.ResponseWriter, r *http.Request, i *project.Issuer, a Account, returnTo string) {
-	s := h.site(i)
-	h.next(w, r, s, h.cookies.browser(r), a, h.returnTo(s, returnTo))
-}
-
 func (h *Web) next(w http.ResponseWriter, r *http.Request, s *site, secret string, a Account, returnTo string) {
 	state, err := h.users.TermsState(r.Context(), s.project(), secret, a.UserSession)
 	switch {
@@ -439,7 +452,7 @@ func (h *Web) sessionFailed(w http.ResponseWriter, r *http.Request, s *site, sec
 		h.fail(w, r, s, "hosted: browser", err)
 		return
 	}
-	h.renderPicker(w, r, s, b, returnTo, "", i18n.T(r.Context(), "apperror.SIG003"))
+	h.renderPicker(w, r, s, b, returnTo, "", i18n.Error(r.Context(), apperror.CodeSignInSessionGone))
 }
 
 func (h *Web) signOut(w http.ResponseWriter, r *http.Request, s *site) {
@@ -508,7 +521,11 @@ func (h *Web) acceptTerms(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 	a, ok := b.Find(userSession)
 	if !ok {
-		h.renderPicker(w, r, s, b, returnTo, "", i18n.T(r.Context(), "apperror.SIG003"))
+		h.renderPicker(w, r, s, b, returnTo, "", i18n.Error(r.Context(), apperror.CodeSignInSessionGone))
+		return
+	}
+	if r.PostFormValue("decline") == "1" {
+		h.declineTerms(w, r, s, returnTo)
 		return
 	}
 	if r.PostFormValue("accept_terms") != "1" {
@@ -594,7 +611,7 @@ func (h *Web) limited(w http.ResponseWriter, r *http.Request, s *site, err error
 	rl, ok := errors.AsType[*layout.RateLimitedError](err)
 	if !ok {
 		layout.LimiterFailed(w, r, h.kit, err)
-		h.renderError(w, r, s, http.StatusServiceUnavailable, "", i18n.T(ctx, "apperror.GEN900"), apperror.CodeUnexpected)
+		h.codeError(w, r, s, http.StatusServiceUnavailable, apperror.CodeUnexpected)
 		return
 	}
 	retry := rl.RetryAfterSeconds()
@@ -607,7 +624,11 @@ func (h *Web) fail(w http.ResponseWriter, r *http.Request, s *site, msg string, 
 	if h.kit.Unexpected != nil {
 		_ = h.kit.Unexpected(r.Context(), msg, err)
 	}
-	h.renderError(w, r, s, http.StatusInternalServerError, "", i18n.T(r.Context(), "apperror.GEN900"), apperror.CodeUnexpected)
+	h.codeError(w, r, s, http.StatusInternalServerError, apperror.CodeUnexpected)
+}
+
+func (h *Web) codeError(w http.ResponseWriter, r *http.Request, s *site, status int, code apperror.Code) {
+	h.renderError(w, r, s, status, "", i18n.Error(r.Context(), code), code)
 }
 
 func (h *Web) renderError(w http.ResponseWriter, r *http.Request, s *site, status int, title, message string, code apperror.Code) {
@@ -642,7 +663,19 @@ func (h *Web) toPage(w http.ResponseWriter, r *http.Request, s *site, p page, qu
 
 // SECURITY: H8, RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked.
 func (h *Web) toReturnTo(w http.ResponseWriter, r *http.Request, s *site, raw string) {
-	http.Redirect(w, r, ReturnTo(s.issuerURL, raw), http.StatusSeeOther) //nolint:gosec // G710: target is validated by ReturnTo (H8).
+	target := ReturnTo(s.issuerURL, raw)
+	if r.Method == http.MethodPost && strings.HasPrefix(target, s.path+authorizePath+"?") {
+		h.forward(w, r, s, h.clientName(r, s, target), target)
+		return
+	}
+	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: target is validated by ReturnTo (H8).
+}
+
+// SECURITY: G4, S11: after a POST the next hop is a GET, so form-action never blocks the 302; target is ReturnTo's or registered.
+func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string) {
+	d := h.layout(r, s)
+	d.Refresh = target
+	h.kit.Render(w, r, http.StatusOK, views.Continue(d, views.ContinueData{Site: s.views(), Client: client, Target: target}))
 }
 
 func seenVersion(r *http.Request) int32 {

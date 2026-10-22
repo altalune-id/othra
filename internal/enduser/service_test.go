@@ -472,3 +472,40 @@ func TestStoreFailuresAreUnexpected(t *testing.T) {
 	h.store.failOn = "EndUserSession"
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(h.svc.SignOut(context.Background(), h.project, r.Secret, r.Account.PublicID)))
 }
+
+// RP-Initiated Logout: the hinted session ends whichever browser holds it; other accounts stay.
+func TestEndSession_EndsOnlyThatSessionAnywhere(t *testing.T) {
+	h := newHarness(t)
+	ada := h.signIn(t, "ada@example.com", "")
+	h.now = h.now.Add(time.Second)
+	bob := h.signIn(t, "bob@example.com", ada.Secret)
+
+	require.NoError(t, h.svc.EndSession(context.Background(), h.project, ada.Account.PublicID))
+	sess, err := h.svc.Session(context.Background(), h.project, bob.Secret)
+	require.NoError(t, err)
+	require.Len(t, sess.Accounts, 1)
+	assert.Equal(t, "bob@example.com", sess.Active().Email)
+	require.NoError(t, h.svc.EndSession(context.Background(), h.project, ada.Account.PublicID), "ending it twice is fine")
+
+	h.store.failOn = "EndUserSessionAnywhere"
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(h.svc.EndSession(context.Background(), h.project, bob.Account.PublicID)))
+}
+
+func TestEndUser(t *testing.T) {
+	h := newHarness(t)
+	ada := h.signIn(t, "ada@example.com", "")
+	u, err := h.svc.EndUser(context.Background(), h.project, ada.Account.EndUserID)
+	require.NoError(t, err)
+	require.NotNil(t, u)
+	assert.Equal(t, ada.Account.Subject, u.Subject)
+	assert.Equal(t, "ada@example.com", u.Email)
+	assert.True(t, u.EmailVerified, "a magic link verifies the email")
+
+	gone, err := h.svc.EndUser(context.Background(), h.project, uuid.New())
+	require.NoError(t, err)
+	assert.Nil(t, gone)
+
+	h.store.failOn = "EndUserByID"
+	_, err = h.svc.EndUser(context.Background(), h.project, ada.Account.EndUserID)
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+}

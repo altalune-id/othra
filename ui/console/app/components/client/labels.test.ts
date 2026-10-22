@@ -11,12 +11,14 @@ describe('client labels', () => {
     expect(create.postLogoutList.remove).toBe('clients.post_logout_uri_remove');
     const edit = clientFormLabels(t, 'edit');
     expect([edit.submit, edit.submitting]).toEqual(['common.save', 'common.saving']);
+    expect(create.consentRequireNote).toBe('clients.consent_require_note');
+    expect([create.authMethodPost, create.pkceOffWarning]).toEqual(['clients.auth_method_post', 'clients.pkce_off_warning']);
   });
 
   it('offers every kind from the kind map with its copy', () => {
     expect(kindOptions(t)).toEqual([
-      { value: 'web', icon: 'lucide:globe', label: 'clients.kind_web', help: 'clients.kind_web_help', redirectHelp: 'clients.redirect_help_web', placeholder: 'https://app.example.com/oauth/callback', postLogout: true },
-      { value: 'cli', icon: 'lucide:terminal', label: 'clients.kind_native', help: 'clients.kind_native_help', redirectHelp: 'clients.redirect_help_native', placeholder: 'http://127.0.0.1/callback', postLogout: false },
+      { value: 'web', icon: 'lucide:globe', label: 'clients.kind_web', help: 'clients.kind_web_help', redirectHelp: 'clients.redirect_help_web', placeholder: 'https://app.example.com/oauth/callback', postLogout: true, secret: true },
+      { value: 'cli', icon: 'lucide:terminal', label: 'clients.kind_native', help: 'clients.kind_native_help', redirectHelp: 'clients.redirect_help_native', placeholder: 'http://127.0.0.1/callback', postLogout: false, secret: false },
     ]);
   });
 

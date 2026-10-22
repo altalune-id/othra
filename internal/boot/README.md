@@ -73,8 +73,8 @@ flowchart TD
 - **Credentials required:** `requireCredentials` (`http.go`) makes `/api` and `/mcp` answer 401 and the console redirect to `/login?return_to=…` (local) or send a Basic challenge (basic mode) when no credential is sent. `/login`, `/logout`, `/forgot-password`, `/reset-password`, `/install`, `/invite`, `/welcome`, `/terms`, `/privacy`, `/static`, `/healthz` and `/readyz` stay open. A request with no Principal reaches nothing (`kernel/authz`).
 - **Security headers:** every response except `/mcp` gets `X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin` (`web.NewServer`, `middleware.SecurityHeaders`); a handler may override one (token pages send `no-referrer`, the API docs page its own CSP). The hosted pages under `/p/` replace the CSP with a strict one (`middleware.HostedCSP`): `default-src 'self'`, `img-src 'self' data:` (daisyUI's CSS texture) plus the origin of `storage.publicBaseURL` when storage is on (project logos), `style-src 'self'` plus a per-response nonce for the brand colours, `form-action 'self'`, `base-uri 'none'`, `object-src 'none'` and `frame-ancestors 'none'`. `/mcp` is left alone because MCP hosts frame its views. HSTS is not set by othra: set it at the TLS edge (Cloudflare, nginx).
 - **No caching of pre-sign-in pages:** every response from the server-rendered routes (login, reset, invite, install, legal and any unknown path) carries `Cache-Control: no-store` (`middleware.NoStore`), so a browser never replays a token page or its verdict; `/static` and the console keep their own cache headers.
-- **Issuer routes:** `buildIssuerRoutes` (`http.go`) mounts `internal/oauth/oidc` for every project. `{basePath}/p/{handle}/oauth2/jwks.json`, `{basePath}/p/{handle}/.well-known/openid-configuration`, the host-root `/.well-known/oauth-authorization-server{basePath}/p/{handle}` (RFC 8414 path insertion) and the `/oauth2/token` stub are `ServerOpts.PublicRoutes`: mounted on the outer mux with no session, CSRF check or `NoStore`, behind `middleware.PublicCORS`, `Cache-Control: public, max-age=300` with a strong `ETag`. The `/oauth2/authorize` stub page is a hosted page (below). A handle resolves through `Services.IssuerResolver` (`oidc.Resolver`, built in `buildServices`), which the documents and the hosted pages share: `project.Service.ResolveIssuer`, then `keys.Service.JWKS` under the project's scope. Each issuer is cached for 30 s and dropped on every key change (`keys.WithOnChange`) and every issuer handle change (`project.WithOnIssuerChange`). Cache misses are rate limited per client IP on `Services.AuthLimiter` (rule `issuer-lookup-ip`), failing open. An unknown, reserved or malformed handle answers one identical `404 {"error":"not_found"}`.
-- **Hosted pages:** the end-user pages under `{basePath}/p/` are `ServerOpts.HostedPages`, their own group on the outer mux (`web.hostedHandler`). They get `no-store`, `Referrer-Policy: no-referrer`, a per-request `style-src` nonce, the cross-origin check and the `i18n` locale, plus the security headers every page has. They never get the admin `Session`, `SessionGate` or `WelcomeGate` (O5): an admin cookie on `/p/<handle>/…` is ignored, and `hosted_integration_test.go` proves an admin who owes Othra's terms is not sent to `/welcome`. `ServerOpts.HostedGate` wraps only this group. The issuer pages (`oidc.Pages`) live here, with the sign-in pages (`buildHosted`, below).
+- **Issuer routes:** `buildIssuerRoutes` (`http.go`) mounts `internal/oauth/oidc` for every project. `{basePath}/p/{handle}/oauth2/jwks.json`, `{basePath}/p/{handle}/.well-known/openid-configuration`, the host-root `/.well-known/oauth-authorization-server{basePath}/p/{handle}` (RFC 8414 path insertion), `/oauth2/token` and `/oauth2/userinfo` are `ServerOpts.PublicRoutes`: mounted on the outer mux with no session, CSRF check or `NoStore`. The documents sit behind `middleware.PublicCORS` with `Cache-Control: public, max-age=300` and a strong `ETag`; token and userinfo sit behind `middleware.BearerCORS` (any origin, GET and POST, `Authorization`, never credentials), answer `Cache-Control: no-store` and `Pragma: no-cache`, and are exempt from `CrossOriginProtection` (`oidc.CrossSitePOSTs`, beside `hosted.CrossSitePOSTs`) because they carry no cookie. A handle resolves through `Services.IssuerResolver` (`oidc.Resolver`, built in `buildServices`), which the documents and the hosted pages share: `project.Service.ResolveIssuer`, then `keys.Service.JWKS` under the project's scope. Each issuer is cached for 30 s and dropped on every key change (`keys.WithOnChange`) and every issuer handle change (`project.WithOnIssuerChange`). Cache misses are rate limited per client IP on `Services.AuthLimiter` (rule `issuer-lookup-ip`), failing open. An unknown, reserved or malformed handle answers one identical `404 {"error":"not_found"}`.
+- **Hosted pages:** the end-user pages under `{basePath}/p/` are `ServerOpts.HostedPages`, their own group on the outer mux (`web.hostedHandler`). They get `no-store`, `Referrer-Policy: no-referrer`, a per-request `style-src` nonce, the cross-origin check and the `i18n` locale, plus the security headers every page has. They never get the admin `Session`, `SessionGate` or `WelcomeGate` (O5): an admin cookie on `/p/<handle>/…` is ignored, and `hosted_integration_test.go` proves an admin who owes Othra's terms is not sent to `/welcome`. `ServerOpts.HostedGate` wraps only this group. The sign-in, authorize and end-session pages (`buildHosted`, below) live here.
 - **Embedded assets:** the console (`/console`, `internal/web/console`) and the sign-in assets (`/static`, `internal/web/static.go`) are served from memory by `internal/web/assets`. Every file has a strong `ETag` (a hash of its bytes, computed once at startup) and `If-None-Match` answers `304`. Console files under `_nuxt/` have hashed names and get `Cache-Control: public, max-age=31536000, immutable`, except the build manifest `_nuxt/builds/latest.json` (`no-cache`); other console files and `/static` files get `public, max-age=3600`. `index.html`, also served for every client route, is rebased once per handler (base path, `apiUrl`, `appVersion`), sent `no-cache` with the `ETag` of the rebased bytes, and gzipped in memory once. `make ui` writes `.br` and `.gz` next to each text asset (`ui/scripts/compress.mts`); a request whose `Accept-Encoding` allows it gets brotli, else gzip, with `Vary: Accept-Encoding` and an `ETag` per encoding. A `Range` request or a client without `Accept-Encoding` gets the plain file, a `.br` or `.gz` name answers 404, and a directory falls back to `index.html` (console) or 404 (`/static`).
 - **Permissions:** `internal/permission` is the one table of the permissions each RPC needs (all of them; a missing or empty entry is denied). `authz.AnyAuthenticated` admits any signed-in caller; `authz.PersonOnly` admits only a signed-in person (profile, password, sign out everywhere, leave org), so a key is refused before its request is validated. The `/api` interceptor reads it, and every generated MCP tool takes its RPC's entry (`permission.For` in `mcp.go`).
 - **App-only tools:** a tool marked `app_only` carries `_meta.ui.visibility: ["app"]`, so a host that honours MCP Apps offers it to the MCP view, not the model; with `mcp.appsUI` off it is not registered at all. A drafted invite is sent only through one (`member_invite_confirm`) or the console; on a host that ignores the visibility the model can call it too.
@@ -139,6 +139,7 @@ flowchart TD
         resourceserver
         client
         enduser
+        grant
     end
     subgraph Core
         org
@@ -163,6 +164,7 @@ flowchart TD
     resourceserver --> project & client
     client --> project
     enduser --> mailqueue
+    tokens["oidc token, userinfo"] --> client & grant & enduser & keys
     member -. effects .-> sessions & apikey & user & org & mailqueue
     health --> dbh[(db-health monitor)]
 
@@ -171,7 +173,7 @@ flowchart TD
 
 **Unit of work:** a use case owns its transaction; stores never begin one. `buildServices` makes one
 `db.NewTransactor(k.Pool)` and hands it to every service that writes more than one row (`org`,
-`org/member`, `org/invite`, `install`, `legal`, `resourceserver`, `client`, `enduser`, the password resets in `auth`). A store joins the transaction on `ctx`
+`org/member`, `org/invite`, `install`, `legal`, `resourceserver`, `client`, `enduser`, `grant`, the password resets in `auth`). A store joins the transaction on `ctx`
 (`db.Read`, `db.Write`, `db.InTx`) or opens its own: `db.Read` a read-only one on the reader, the others one on the
 writer. Every statement therefore runs in a transaction, and a nested `RunInTx` joins the outer one.
 
@@ -404,6 +406,26 @@ browser succeeds. A browser session lives `endUsers.session.idle` (30 days) sinc
 project, end user and user session public ids (never the email, IP or token); consent rows are read and append only. The `enduser-prune` job removes expired links and ended or
 expired sessions every hour.
 
+## Grants and tokens
+
+`buildGrants` (`grants.go`) builds `Services.Grants` over `authorization_codes`, `grant_families`, `access_tokens` and
+`refresh_tokens` (FORCE RLS on org **and** project), with `oauth.*` mapped into `grant.Config` (`codeTTL` 60 s,
+`accessTokenTTL` 15 min, `refresh.idle` 30 days, `refresh.absolute` 90 days). Codes, access tokens and refresh tokens
+are 32 random bytes; only their SHA-256 is stored and none is logged. A code is spent once, in one unit of work that
+locks it, checks the client, the `redirect_uri` when sent and the S256 verifier, and starts a grant family (its
+`public_id` is the `sid`); a replayed code revokes that family. A family gets a refresh token only when the client
+holds `refresh_token` and `offline_access` was granted; every refresh rotates it, and a reused token, or another
+client presenting it, revokes the family. Sign-out and end-session revoke the user session's families except `offline_access` ones, which
+outlive the sign-in (OIDC Core §11; `RevokeUserSession`); end-session also revokes the hinted family whatever its scope
+(`RevokeFamily`). Access tokens are opaque and checked server-side (`grant.Service.Access`).
+
+`buildIssuerRoutes` (`http.go`) gives `oidc.Web` the token endpoint's ports when grants, clients, end users and keys
+exist: `client.Service.Authenticate` (secrets with their hashes, for `Client.VerifySecret`), `Services.Grants`,
+`enduser.Service.EndUser` and `keys.NewSigner(Services.Keys)` for RS256 ID tokens that live `oauth.idTokenTTL`
+(5 min). `keys.rotation.overlap` must cover the longer of the access and ID token lifetimes plus the JWKS max-age.
+The `grant-prune` job removes, every hour per project, expired codes and tokens, used codes after a day, and
+families revoked a week ago or unused for `oauth.refresh.idle`.
+
 ## Hosted sign-in pages
 
 `buildHosted` (`hosted.go`) builds `internal/oauth/hosted` over `Services.EndUsers` (through the `hostedUsers` adapter)
@@ -417,7 +439,15 @@ valid `endUsers.csrf.maxAge`, default 1 h) behind the cross-origin check. The CS
 signed secret; the store keeps its hash. `return_to` passes `hosted.ReturnTo` on every hop. Magic-link sends and redeems
 and the other forms are limited per client IP and project on `Services.AuthLimiter`; the per-email send limit and the
 resend cooldown answer like a sent link. The mail is from `"<project>" <mail.from>`, with Reply-To the project's support
-email, in the request's language.
+email, in the request's language. Signing an account out also revokes its grants (`grant.Service.RevokeUserSession`).
+
+When `Services.Grants`, `Services.Clients` and `Services.Keys` are set, `buildHosted` also serves
+`/oauth2/authorize` and `/oauth2/end-session` (GET and POST) through the `hostedOAuth` adapter: clients from
+`client.Service.Get`, codes from `grant.Service.IssueCode`, `id_token_hint` checked by `keys.Verifier.VerifyIDTokenHint`,
+and end-session through `grant.Service.RevokeFamily`, `enduser.Service.EndSession` and `RevokeUserSession`. The re-entry
+marker `othra_t` is signed with its own `http.stateSecret` purpose key and lives as long as a magic link. Both POST routes
+are exempt from the cross-origin check (`hosted.CrossSitePOSTs`): relying parties post them from their own origin, and
+the end-session confirm form keeps its CSRF token.
 
 ## OAuth clients
 
@@ -495,6 +525,10 @@ which allows every call.
   closed). Known and unknown emails get the same answer, limiter on or off.
   `POST /forgot-password` counts 20 an hour per IP and 3 an hour per email; opening a reset link,
   its form and setting the password count 20 an hour per IP.
+  `/oauth2/token` counts 120 a minute per project and client IP (`oauth-token-ip`) and 30 a minute per
+  project, client IP and `client_id` (`oauth-token-client-ip`); `/oauth2/userinfo` counts 300 a minute per
+  project and client IP (`oauth-userinfo-ip`). They answer 429 with `Retry-After` and fail open when the
+  store fails, so the apps keep their tokens through a Redis outage.
 - **Client IP:** `layout.ClientIP` keys on `RemoteAddr`, or, when `http.trustedProxyHops` (env
   `OTHRA_HTTP_TRUSTED_PROXY_HOPS`) is n >= 1, on the n-th `X-Forwarded-For` entry counted from the
   right. Each trusted proxy appends the address it saw, so entries further left are whatever the
@@ -513,19 +547,19 @@ which allows every call.
 
 The supervisor runs these next to the HTTP server.
 
-| Worker                    | What it does                                                                                                                                                                                                                                                                 | When it runs                                                     |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `http`                    | the HTTP server (all surfaces above)                                                                                                                                                                                                                                         | always                                                           |
-| `db-health`               | pings the pool; `health` reads it for `/readyz`                                                                                                                                                                                                                              | always                                                           |
-| `redis-health`            | pings Redis every 5 s; `health` reads it for `/readyz`                                                                                                                                                                                                                       | when a feature uses Redis                                        |
-| `nats-health`             | checks the NATS connection every 5 s; `health` reads it for `/readyz`                                                                                                                                                                                                        | when a feature uses NATS                                         |
-| `s3-health`               | checks the S3 bucket every 30 s; `health` reads it for `/readyz`                                                                                                                                                                                                             | when a feature uses S3                                           |
-| `outbox`                  | claims due outbox entries, delivers signed webhooks                                                                                                                                                                                                                          | always                                                           |
-| `mailqueue.send`          | claims due queued mail, sends it through the mailer, erases the sealed payload once sent or failed                                                                                                                                                                           | always                                                           |
-| `apikey-usage`            | batches `last_used_at` writes every 30 s                                                                                                                                                                                                                                     | always                                                           |
-| `ratelimit.janitor`       | drops rate limit keys that have fully refilled, every minute                                                                                                                                                                                                                 | when a rate limit group is on and `rateLimit.driver` is `memory` |
-| `scheduler`               | cron jobs (expired-session sweep, file storage sweep when `storage.driver` is set, `keys-promote` every minute and `keys-prune` hourly per project, `resource-servers-verify` every `resourceServers.verification.interval` per project, `enduser-prune` hourly per project) | `scheduler.enabled`, unless `--no-scheduler` or consumer-only    |
-| queue consumer / listener | queue handlers (none yet)                                                                                                                                                                                                                                                    | when `queue.enabled`                                             |
+| Worker                    | What it does                                                                                                                                                                                                                                                                                   | When it runs                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `http`                    | the HTTP server (all surfaces above)                                                                                                                                                                                                                                                           | always                                                           |
+| `db-health`               | pings the pool; `health` reads it for `/readyz`                                                                                                                                                                                                                                                | always                                                           |
+| `redis-health`            | pings Redis every 5 s; `health` reads it for `/readyz`                                                                                                                                                                                                                                         | when a feature uses Redis                                        |
+| `nats-health`             | checks the NATS connection every 5 s; `health` reads it for `/readyz`                                                                                                                                                                                                                          | when a feature uses NATS                                         |
+| `s3-health`               | checks the S3 bucket every 30 s; `health` reads it for `/readyz`                                                                                                                                                                                                                               | when a feature uses S3                                           |
+| `outbox`                  | claims due outbox entries, delivers signed webhooks                                                                                                                                                                                                                                            | always                                                           |
+| `mailqueue.send`          | claims due queued mail, sends it through the mailer, erases the sealed payload once sent or failed                                                                                                                                                                                             | always                                                           |
+| `apikey-usage`            | batches `last_used_at` writes every 30 s                                                                                                                                                                                                                                                       | always                                                           |
+| `ratelimit.janitor`       | drops rate limit keys that have fully refilled, every minute                                                                                                                                                                                                                                   | when a rate limit group is on and `rateLimit.driver` is `memory` |
+| `scheduler`               | cron jobs (expired-session sweep, file storage sweep when `storage.driver` is set, `keys-promote` every minute and `keys-prune` hourly per project, `resource-servers-verify` every `resourceServers.verification.interval` per project, `enduser-prune` and `grant-prune` hourly per project) | `scheduler.enabled`, unless `--no-scheduler` or consumer-only    |
+| queue consumer / listener | queue handlers (none yet)                                                                                                                                                                                                                                                                      | when `queue.enabled`                                             |
 
 ## Files
 
@@ -539,6 +573,7 @@ The supervisor runs these next to the HTTP server.
 | `mcp.go`                                                 | MCP server and its tools                                                                                                                                                                                                                                              |
 | `resourceservers.go`                                     | `Services.ResourceServers`, its config and its project and client adapters                                                                                                                                                                                            |
 | `endusers.go`                                            | `Services.EndUsers` and its config                                                                                                                                                                                                                                    |
+| `grants.go`                                              | `Services.Grants` and its config                                                                                                                                                                                                                                      |
 | `hosted.go`                                              | the hosted sign-in pages, their keys and config, and the `enduser` adapter                                                                                                                                                                                            |
 | `tenants.go`                                             | `projectTenants`: every org's projects, each scoped to its org and project, for the per-project scheduler jobs                                                                                                                                                        |
 | `console.go`                                             | console SPA handler                                                                                                                                                                                                                                                   |

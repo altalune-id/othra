@@ -7,12 +7,14 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// LoginData is the email form's state; Error is a translated message about the email, Notice the bare email just signed out.
+// LoginData is the email form's state; Error is a translated message about the email, Notice the bare email just signed out, Client the app asking and Reauth a forced fresh sign-in.
 type LoginData struct {
 	Site
 	Email      string
 	Error      string
 	Notice     string
+	Client     string
+	Reauth     bool
 	ReturnTo   string
 	LoginToken string
 	FromPicker bool
@@ -22,7 +24,14 @@ type LoginData struct {
 templ Login(d layout.LayoutData, v LoginData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "login.title"))) {
 		@layout.Card(i18n.T(ctx, "login.title")) {
-			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle", "project", v.Project) }</p>
+			if v.Client != "" {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle_client", "client", v.Client) }</p>
+			} else {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle", "project", v.Project) }</p>
+			}
+			if v.Reauth && v.Client != "" {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.reauth_client", "client", v.Client) }</p>
+			}
 			if v.Notice != "" {
 				@alertSuccess() {
 					@withEmail(i18n.T(ctx, "picker.signed_out_notice"), v.Notice)
@@ -60,7 +69,7 @@ templ Login(d layout.LayoutData, v LoginData) {
 				}
 				<button class="btn btn-primary btn-block" type="submit">{ i18n.T(ctx, "login.submit") }</button>
 			</form>
-			if v.FromPicker {
+			if v.FromPicker && !v.Reauth {
 				<p class="text-sm"><a class="link" href={ templ.SafeURL(v.login(d, url.Values{"return_to": {v.ReturnTo}})) }>← { i18n.T(ctx, "login.back_to_accounts") }</a></p>
 			}
 		}

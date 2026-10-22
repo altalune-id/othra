@@ -4,11 +4,11 @@ import type { ClientKindName } from './kinds';
 import type { UriList, UriProblem } from './redirectUris';
 import type { ShownError } from '~/lib/apperror/message';
 import { create } from '@bufbuild/protobuf';
-import { CreateClientRequestSchema, UpdateClientRequestSchema } from '~~/gen/client/v1/client_pb';
+import { AuthMethod, CreateClientRequestSchema, UpdateClientRequestSchema } from '~~/gen/client/v1/client_pb';
 import { useErrorMessage } from '~/composables/useErrorMessage';
 import { useValidation } from '~/composables/useValidation';
 import { errorCode, errorMeta } from '~/lib/apperror/message';
-import { consentValue, emptyFields, fieldsOf } from './clientForm';
+import { authMethodValue, consentValue, emptyFields, fieldsOf } from './clientForm';
 import { clientKinds } from './kinds';
 import { checkUriList, serverRow, usesLocalhost } from './redirectUris';
 
@@ -95,6 +95,8 @@ export function useClientForm(projectId: string, saved?: Client) {
       postLogoutRedirectUris: l.postLogout.uris,
       refreshTokens: f.refreshTokens,
       consentPolicy: consentValue(f.consent),
+      authMethod: kind.value.secret ? authMethodValue(f.authMethod) : AuthMethod.UNSPECIFIED,
+      pkceRequired: kind.value.secret ? f.pkceRequired : undefined,
     };
   }
 

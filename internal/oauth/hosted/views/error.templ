@@ -7,7 +7,7 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// ErrorData is a hosted error: translated Title and Message, the error Code and the request's Reference; an empty Site means an unknown project.
+// ErrorData is a hosted error: translated Title and Message, the error Code and the request's Reference; an empty Site means an unknown project, and NoSignIn hides the way back to sign in.
 type ErrorData struct {
 	Site
 	Title        string
@@ -15,6 +15,16 @@ type ErrorData struct {
 	Code         string
 	Reference    string
 	SupportEmail string
+	NoSignIn     bool
+}
+
+// TermsDeclined is the error page for an account that declined the project's terms outside an app's sign-in.
+func TermsDeclined(ctx context.Context, s Site) ErrorData {
+	return ErrorData{
+		Site:    s,
+		Title:   i18n.T(ctx, "terms.declined_title"),
+		Message: i18n.T(ctx, "terms.declined_body", "project", s.Project),
+	}
 }
 
 func (v ErrorData) title(ctx context.Context) string {
@@ -26,6 +36,15 @@ func (v ErrorData) title(ctx context.Context) string {
 	default:
 		return i18n.T(ctx, "error.title")
 	}
+}
+
+func (v ErrorData) hasReference() bool { return v.Code != "" || v.Reference != "" }
+
+func (v ErrorData) helpEmailKey() string {
+	if v.hasReference() {
+		return "error.help_email"
+	}
+	return "error.help_email_plain"
 }
 
 func (v ErrorData) message(ctx context.Context) string {
@@ -57,7 +76,7 @@ templ Error(d layout.LayoutData, v ErrorData) {
 			if v.Handle != "" {
 				if v.SupportEmail != "" {
 					<p class="text-sm break-words text-base-content/70">
-						for _, p := range splitAround(i18n.T(ctx, "error.help_email"), "{support_email}") {
+						for _, p := range splitAround(i18n.T(ctx, v.helpEmailKey()), "{support_email}") {
 							if p == "{support_email}" {
 								<a class="link break-all" href={ templ.SafeURL("mailto:" + v.SupportEmail) }>{ v.SupportEmail }</a>
 							} else {
@@ -65,10 +84,12 @@ templ Error(d layout.LayoutData, v ErrorData) {
 							}
 						}
 					</p>
-				} else {
+				} else if v.hasReference() {
 					<p class="text-sm text-base-content/70">{ i18n.T(ctx, "error.help") }</p>
 				}
-				<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.href(d, "/login")) }>{ i18n.T(ctx, "common.back_to_sign_in") }</a>
+				if !v.NoSignIn {
+					<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.href(d, "/login")) }>{ i18n.T(ctx, "common.back_to_sign_in") }</a>
+				}
 			}
 		}
 	}

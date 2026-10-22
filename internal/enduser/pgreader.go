@@ -120,3 +120,25 @@ func (s *postgresStore) EndUserExists(ctx context.Context, projectID uuid.UUID, 
 	}
 	return len(rows) > 0, nil
 }
+
+// EndUserByID returns the end user id, or nil.
+func (s *postgresStore) EndUserByID(ctx context.Context, projectID, id uuid.UUID) (*EndUser, error) {
+	t := s.users
+	stmt := postgres.SELECT(t.ID, t.PublicID, t.Email, t.EmailVerifiedAt, t.Name).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(id))))
+	var row struct {
+		ID         uuid.UUID  `alias:"end_users.id"`
+		Subject    string     `alias:"end_users.public_id"`
+		Email      string     `alias:"end_users.email"`
+		VerifiedAt *time.Time `alias:"end_users.email_verified_at"`
+		Name       string     `alias:"end_users.name"`
+	}
+	err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) })
+	switch {
+	case db.IsNoRows(err):
+		return nil, nil
+	case err != nil:
+		return nil, wrap("EndUserByID", err)
+	}
+	return &EndUser{ID: row.ID, Subject: row.Subject, Email: row.Email, EmailVerified: row.VerifiedAt != nil, Name: row.Name}, nil
+}

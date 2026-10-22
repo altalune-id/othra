@@ -135,6 +135,17 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"resourceServers.verification.allowPrivateHosts in production", func(c *Config) {
 			c.ResourceServers.Verification.AllowPrivateHosts = true
 		}, invalidSetting("resourceServers.verification.allowPrivateHosts")},
+		{"oauth.codeTTL 10m", func(c *Config) { c.OAuth.CodeTTL = 10 * time.Minute }, valid},
+		{"oauth.codeTTL above 10m", func(c *Config) { c.OAuth.CodeTTL = 11 * time.Minute }, invalidSetting("oauth.codeTTL")},
+		{"oauth.accessTokenTTL 15m", func(c *Config) { c.OAuth.AccessTokenTTL = 15 * time.Minute }, valid},
+		{"oauth.accessTokenTTL above 15m", func(c *Config) { c.OAuth.AccessTokenTTL = 16 * time.Minute }, invalidSetting("oauth.accessTokenTTL")},
+		{"oauth.idTokenTTL 1m", func(c *Config) { c.OAuth.IDTokenTTL = time.Minute }, valid},
+		{"oauth.idTokenTTL below 1m", func(c *Config) { c.OAuth.IDTokenTTL = time.Second }, invalidSetting("oauth.idTokenTTL")},
+		{"oauth.idTokenTTL above 10m", func(c *Config) { c.OAuth.IDTokenTTL = 11 * time.Minute }, invalidSetting("oauth.idTokenTTL")},
+		{"oauth.refresh.idle 1h", func(c *Config) { c.OAuth.Refresh.Idle = time.Hour }, valid},
+		{"oauth.refresh.idle below 1h", func(c *Config) { c.OAuth.Refresh.Idle = time.Minute }, invalidSetting("oauth.refresh.idle")},
+		{"oauth.refresh.absolute equal to idle", func(c *Config) { c.OAuth.Refresh.Absolute = c.OAuth.Refresh.Idle }, valid},
+		{"oauth.refresh.absolute below idle", func(c *Config) { c.OAuth.Refresh.Absolute = time.Hour }, invalidSetting("oauth.refresh.absolute")},
 		{"redis used", redisFeature, valid},
 		{"redis.url empty when used", func(c *Config) { redisFeature(c); c.Redis.URL = "" }, missingSetting("redis.url")},
 		{"redis.url wrong scheme when used", func(c *Config) { redisFeature(c); c.Redis.URL = "http://localhost" }, invalidSetting("redis.url")},

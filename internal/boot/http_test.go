@@ -16,6 +16,8 @@ import (
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/capabilities"
 	"altalune.id/othra/internal/legal"
+	"altalune.id/othra/internal/oauth/hosted"
+	"altalune.id/othra/internal/oauth/oidc"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/web/layout"
 )
@@ -90,7 +92,7 @@ func TestAPIChain(t *testing.T) {
 }
 
 func TestBuildCrossOrigin(t *testing.T) {
-	cop, err := buildCrossOrigin("https://othra.example.com/app")
+	cop, err := buildCrossOrigin("https://othra.example.com/app", hosted.CrossSitePOSTs("/app"))
 	require.NoError(t, err)
 	req := httptest.NewRequest(http.MethodPost, "/api/x", nil)
 	req.Host = "internal:8080"
@@ -99,7 +101,24 @@ func TestBuildCrossOrigin(t *testing.T) {
 	req.Header.Set("Origin", "https://evil.example")
 	assert.Error(t, cop.Check(req))
 
-	cop, err = buildCrossOrigin("")
+	req = httptest.NewRequest(http.MethodPost, "/app/p/acme/oauth2/authorize", nil)
+	req.Header.Set("Origin", "https://evil.example")
+	assert.NoError(t, cop.Check(req), "S3: a relying party posts the authorize request from its own origin")
+	req = httptest.NewRequest(http.MethodPost, "/app/p/acme/oauth2/end-session", nil)
+	req.Header.Set("Origin", "https://evil.example")
+	assert.NoError(t, cop.Check(req), "RPL §2: and the logout request")
+	cop, err = buildCrossOrigin("https://othra.example.com/app", oidc.CrossSitePOSTs("/app"))
+	require.NoError(t, err)
+	for _, path := range []string{"/app/p/acme/oauth2/token", "/app/p/acme/oauth2/userinfo"} {
+		req = httptest.NewRequest(http.MethodPost, path, nil)
+		req.Header.Set("Origin", "https://evil.example")
+		assert.NoError(t, cop.Check(req), "%s carries no cookie, so a browser app may call it", path)
+	}
+	req = httptest.NewRequest(http.MethodPost, "/app/p/acme/login", nil)
+	req.Header.Set("Origin", "https://evil.example")
+	assert.Error(t, cop.Check(req))
+
+	cop, err = buildCrossOrigin("", nil)
 	require.NoError(t, err)
 	assert.NotNil(t, cop)
 }

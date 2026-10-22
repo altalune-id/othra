@@ -139,6 +139,47 @@ func TestCreate_RefusesBadSettings(t *testing.T) {
 	assert.Empty(t, h.issuer.locked, "a refused client locks nothing")
 }
 
+func TestCreate_AuthMethodAndPKCE(t *testing.T) {
+	h := newHarness(t)
+	off := false
+	c := h.create(t, client.KindWeb, web())
+	assert.True(t, c.PKCERequired, "PKCE is on by default")
+	assert.True(t, c.UsesSecret())
+
+	s := web()
+	s.AuthMethod, s.PKCERequired = client.AuthClientSecretPost, &off
+	c = h.create(t, client.KindWeb, s)
+	assert.Equal(t, client.AuthClientSecretPost, c.TokenEndpointAuthMethod)
+	assert.False(t, c.PKCERequired, "a confidential client may turn PKCE off")
+	assert.True(t, c.UsesSecret())
+
+	c = h.create(t, client.KindCLI, cli())
+	assert.True(t, c.PKCERequired)
+	assert.False(t, c.UsesSecret())
+
+	for name, tc := range map[string]struct {
+		mutate func(s *client.Settings)
+		reason client.SettingsReason
+	}{
+		"a native client keeps PKCE":    {mutate: func(s *client.Settings) { s.PKCERequired = &off }, reason: client.SettingsPKCENative},
+		"a native client has no secret": {mutate: func(s *client.Settings) { s.AuthMethod = client.AuthClientSecretBasic }, reason: client.SettingsAuthMethodNative},
+	} {
+		t.Run(name, func(t *testing.T) {
+			s := cli()
+			tc.mutate(&s)
+			_, err := h.svc.Create(context.Background(), h.org, h.project, client.KindCLI, s)
+			e, ok := errors.AsType[*client.InvalidSettingsError](err)
+			require.True(t, ok, "%v", err)
+			assert.Equal(t, tc.reason, e.Reason)
+		})
+	}
+
+	s = web()
+	s.AuthMethod = client.AuthNone
+	_, err := h.svc.Create(context.Background(), h.org, h.project, client.KindWeb, s)
+	assert.Equal(t, apperror.CodeValidation, codeOf(err), "a web client authenticates with a secret")
+}
+
 // The console puts a redirect URI error on its row: meta.field names the list and the index, meta.uri the URI.
 func TestCreate_RedirectURIErrorNamesTheRow(t *testing.T) {
 	h := newHarness(t)
@@ -299,6 +340,43 @@ func TestRotateSecret_KeepsAtMostTwoLive(t *testing.T) {
 	got, err = h.svc.Get(context.Background(), h.org, h.project, c.PublicID)
 	require.NoError(t, err)
 	assert.Len(t, got.Secrets, 1, "an expired secret is no longer live")
+}
+
+// SECURITY: R-5, a secret authenticates only while live: the current one and the old one through its grace, never a revoked or expired one.
+func TestVerifySecret(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	c := h.create(t, client.KindWeb, web())
+	_, first, err := h.svc.GenerateSecret(ctx, h.org, h.project, c.PublicID)
+	require.NoError(t, err)
+	_, second, err := h.svc.RotateSecret(ctx, h.org, h.project, c.PublicID, time.Hour)
+	require.NoError(t, err)
+
+	got, err := h.svc.Authenticate(ctx, h.org, h.project, c.PublicID)
+	require.NoError(t, err)
+	assert.True(t, got.VerifySecret(second, h.now), "the current secret")
+	assert.True(t, got.VerifySecret(first, h.now), "the old one in its grace")
+	assert.False(t, got.VerifySecret(first+"x", h.now))
+	assert.False(t, got.VerifySecret("", h.now))
+	assert.False(t, got.VerifySecret(first, h.now.Add(time.Hour)), "the grace ends at its expiry")
+
+	plain, err := h.svc.Get(ctx, h.org, h.project, c.PublicID)
+	require.NoError(t, err)
+	assert.False(t, plain.VerifySecret(second, h.now), "only an authentication read holds the hashes")
+
+	h.now = h.now.Add(time.Hour)
+	got, err = h.svc.Authenticate(ctx, h.org, h.project, c.PublicID)
+	require.NoError(t, err)
+	assert.False(t, got.VerifySecret(first, h.now), "an expired secret is not read")
+	assert.True(t, got.VerifySecret(second, h.now))
+
+	native := h.create(t, client.KindCLI, cli())
+	got, err = h.svc.Authenticate(ctx, h.org, h.project, native.PublicID)
+	require.NoError(t, err)
+	assert.False(t, got.VerifySecret(second, h.now), "a public client has no secret")
+
+	_, err = h.svc.Authenticate(ctx, h.org, h.project, "nope")
+	assert.True(t, client.IsNotFoundError(err))
 }
 
 func TestRevokeSecret(t *testing.T) {

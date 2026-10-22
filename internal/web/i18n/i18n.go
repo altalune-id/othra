@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"altalune.id/othra/apperror"
 )
 
 // The supported locales; Default is the fallback.
@@ -60,6 +62,13 @@ func Locale(ctx context.Context) string {
 	}
 	return Default
 }
+
+// Error returns the message for an error code in the locale on ctx.
+func Error(ctx context.Context, code apperror.Code) string {
+	return T(ctx, errorKeyPrefix+string(code))
+}
+
+const errorKeyPrefix = "apperror."
 
 // Middleware puts the locale picked from Accept-Language on the request context.
 func Middleware(next http.Handler) http.Handler {

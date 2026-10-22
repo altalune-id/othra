@@ -1,13 +1,13 @@
 import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ClientKind, ClientSchema, ConsentPolicy } from '../../../gen/client/v1/client_pb';
+import { AuthMethod, ClientKind, ClientSchema, ConsentPolicy } from '../../../gen/client/v1/client_pb';
 import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
 import { useClientForm } from './useClientForm';
 
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';
 const clientId = 'dPm7fmQRJKPVw8PxrgdrN';
-const web = create(ClientSchema, { id: clientId, name: 'Store web', kind: ClientKind.WEB, redirectUris: ['https://store.example/cb'], refreshTokens: true, consentPolicy: ConsentPolicy.REQUIRE });
+const web = create(ClientSchema, { id: clientId, name: 'Store web', kind: ClientKind.WEB, redirectUris: ['https://store.example/cb'], refreshTokens: true, consentPolicy: ConsentPolicy.REQUIRE, pkceRequired: true });
 const cli = create(ClientSchema, { id: 'H9MspUj32ux8pfYKYsu1a', name: 'Store CLI', kind: ClientKind.CLI, redirectUris: ['http://127.0.0.1/callback'] });
 
 describe('useClientForm (create)', () => {
@@ -35,6 +35,8 @@ describe('useClientForm (create)', () => {
       postLogoutRedirectUris: ['https://store.example/'],
       refreshTokens: false,
       consentPolicy: ConsentPolicy.IMPLICIT,
+      authMethod: AuthMethod.CLIENT_SECRET_BASIC,
+      pkceRequired: true,
     });
     expect(generateClientSecret).toHaveBeenCalledWith({ projectId, clientId });
     expect(saved?.id).toBe(clientId);
@@ -54,7 +56,9 @@ describe('useClientForm (create)', () => {
     f.fields.value.name = 'Store CLI';
     f.fields.value.redirectUris = ['http://127.0.0.1/callback'];
     await f.submit();
-    expect(createClient.mock.calls[0]![0]).toMatchObject({ kind: ClientKind.CLI, postLogoutRedirectUris: [] });
+    expect(createClient.mock.calls[0]![0]).toMatchObject({ kind: ClientKind.CLI, postLogoutRedirectUris: [], authMethod: AuthMethod.UNSPECIFIED });
+    expect(createClient.mock.calls[0]![0]).not.toHaveProperty('pkceRequired', false);
+    expect(createClient.mock.calls[0]![0].pkceRequired).toBeUndefined();
     expect(generateClientSecret).not.toHaveBeenCalled();
     expect(f.revealed.value).toBeNull();
   });
@@ -198,6 +202,8 @@ describe('useClientForm (edit)', () => {
       postLogoutRedirectUris: [],
       refreshTokens: true,
       consentPolicy: ConsentPolicy.REQUIRE,
+      authMethod: AuthMethod.CLIENT_SECRET_BASIC,
+      pkceRequired: true,
     });
     expect(saved?.name).toBe('Renamed');
     expect(f.done.value).toBe(true);
@@ -210,5 +216,19 @@ describe('useClientForm (edit)', () => {
     await f.submit();
     expect(f.nameError.value).toBe('validation.required');
     expect(updateClient).not.toHaveBeenCalled();
+  });
+});
+
+describe('useClientForm (M5 web settings)', () => {
+  it('sends the post method and PKCE off for a web app, and shows the server refusal', async () => {
+    setKnownKeys('apperror.CLT003_pkce_native');
+    const updateClient = vi.fn().mockRejectedValueOnce(connectError('CLT003', { reason: 'pkce_native' })).mockResolvedValue({ client: web });
+    setClient('$clientClient', { updateClient });
+    const f = useClientForm(projectId, web);
+    f.fields.value.authMethod = 'post';
+    f.fields.value.pkceRequired = false;
+    await f.submit();
+    expect(updateClient.mock.calls[0]![0]).toMatchObject({ authMethod: AuthMethod.CLIENT_SECRET_POST, pkceRequired: false });
+    expect(f.error.value?.message).toMatch(/^apperror\.CLT003_pkce_native/);
   });
 });

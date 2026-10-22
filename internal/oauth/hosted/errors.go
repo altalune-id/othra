@@ -9,6 +9,18 @@ import (
 // ErrTermsChanged signals an acceptance of terms that changed after the page showed them.
 var ErrTermsChanged = errors.New("hosted: terms changed")
 
+// RefusedError is an authorize or end-session request answered with a page, never a redirect (SIG005–SIG009).
+type RefusedError struct {
+	Code apperror.Code
+}
+
+func (e *RefusedError) Error() string { return "hosted: request refused: " + string(e.Code) }
+
+// ToAppError maps RefusedError to its code.
+func (e *RefusedError) ToAppError() *apperror.AppError {
+	return apperror.New(e.Code, "This request can't be completed").WithCause(e)
+}
+
 // FormReason is the cause of a FormExpiredError, kept for logs; the page never shows it.
 type FormReason string
 

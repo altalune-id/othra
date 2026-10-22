@@ -15,6 +15,7 @@ CREATE TABLE {{.Schema}}.{{.TablePrefix}}oauth_clients (
   redirect_uris               TEXT[] NOT NULL,
   post_logout_redirect_uris   TEXT[] NOT NULL DEFAULT '{}',
   consent_policy              TEXT NOT NULL DEFAULT 'require',
+  pkce_required               BOOLEAN NOT NULL DEFAULT true,
   created_at                  TIMESTAMPTZ NOT NULL,
   updated_at                  TIMESTAMPTZ NOT NULL,
   CONSTRAINT {{.TablePrefix}}oauth_clients_org_project_fkey FOREIGN KEY (org_id, project_id)
@@ -22,12 +23,13 @@ CREATE TABLE {{.Schema}}.{{.TablePrefix}}oauth_clients (
   CONSTRAINT {{.TablePrefix}}oauth_clients_org_project_id_key UNIQUE (org_id, project_id, id),
   CONSTRAINT {{.TablePrefix}}oauth_clients_name_length CHECK (char_length(name) BETWEEN 1 AND 100),
   CONSTRAINT {{.TablePrefix}}oauth_clients_kind_check CHECK (
-    (client_type = 'confidential' AND application_type = 'web' AND token_endpoint_auth_method = 'client_secret_basic')
+    (client_type = 'confidential' AND application_type = 'web' AND token_endpoint_auth_method IN ('client_secret_basic', 'client_secret_post'))
     OR (client_type = 'public' AND application_type = 'native' AND token_endpoint_auth_method = 'none')
   ),
   CONSTRAINT {{.TablePrefix}}oauth_clients_grant_types_check CHECK (
     'authorization_code' = ANY (grant_types) AND grant_types <@ ARRAY['authorization_code', 'refresh_token']::TEXT[]
   ),
+  CONSTRAINT {{.TablePrefix}}oauth_clients_pkce_public CHECK (pkce_required OR client_type = 'confidential'),
   CONSTRAINT {{.TablePrefix}}oauth_clients_consent_policy_check CHECK (consent_policy IN ('require', 'implicit')),
   CONSTRAINT {{.TablePrefix}}oauth_clients_redirect_uris_count CHECK (cardinality(redirect_uris) BETWEEN 1 AND 20),
   CONSTRAINT {{.TablePrefix}}oauth_clients_post_logout_uris_check CHECK (

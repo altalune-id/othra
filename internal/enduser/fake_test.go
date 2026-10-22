@@ -267,6 +267,17 @@ func (f *fakeStore) EndUserSession(_ context.Context, projectID, browserID uuid.
 	return f.fail("EndUserSession")
 }
 
+func (f *fakeStore) EndUserSessionAnywhere(_ context.Context, projectID uuid.UUID, publicID string, _ time.Time) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, s := range f.sessions {
+		if s.project == projectID && s.publicID == publicID {
+			s.ended = true
+		}
+	}
+	return f.fail("EndUserSessionAnywhere")
+}
+
 func (f *fakeStore) KeepNewest(_ context.Context, _, browserID uuid.UUID, keep int, _ time.Time) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -293,6 +304,17 @@ func (f *fakeStore) LatestTerms(_ context.Context, _, endUserID uuid.UUID) (int,
 		latest = max(latest, v)
 	}
 	return latest, f.fail("LatestTerms")
+}
+
+func (f *fakeStore) EndUserByID(_ context.Context, projectID, id uuid.UUID) (*EndUser, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, u := range f.users {
+		if u.project == projectID && u.id == id {
+			return &EndUser{ID: u.id, Subject: u.subject, Email: u.email, EmailVerified: u.verifiedAt != nil}, f.fail("EndUserByID")
+		}
+	}
+	return nil, f.fail("EndUserByID")
 }
 
 func (f *fakeStore) EndUserExists(_ context.Context, projectID uuid.UUID, email string) (bool, error) {

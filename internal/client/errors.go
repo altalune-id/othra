@@ -78,8 +78,12 @@ func (e *InvalidRedirectURIError) ToAppError() *apperror.AppError {
 // SettingsReason is the stable cause of an InvalidSettingsError, sent to clients as meta.reason.
 type SettingsReason string
 
-// SettingsPostLogoutNative is a CLI client with sign-out return URIs.
-const SettingsPostLogoutNative SettingsReason = "post_logout_native"
+// The causes of an InvalidSettingsError.
+const (
+	SettingsPostLogoutNative SettingsReason = "post_logout_native"
+	SettingsPKCENative       SettingsReason = "pkce_native"
+	SettingsAuthMethodNative SettingsReason = "auth_method_native"
+)
 
 // InvalidSettingsError signals client settings that don't fit together.
 type InvalidSettingsError struct {

@@ -80,6 +80,8 @@ func (s *ClientService) CreateClient(
 		PostLogoutRedirectURIs: req.Msg.GetPostLogoutRedirectUris(),
 		RefreshTokens:          req.Msg.GetRefreshTokens(),
 		ConsentPolicy:          consentFromProto(req.Msg.GetConsentPolicy()),
+		AuthMethod:             authMethodFromProto(req.Msg.GetAuthMethod()),
+		PKCERequired:           req.Msg.PkceRequired,
 	})
 	if err != nil {
 		return nil, err
@@ -101,6 +103,8 @@ func (s *ClientService) UpdateClient(
 		PostLogoutRedirectURIs: req.Msg.GetPostLogoutRedirectUris(),
 		RefreshTokens:          req.Msg.GetRefreshTokens(),
 		ConsentPolicy:          consentFromProto(req.Msg.GetConsentPolicy()),
+		AuthMethod:             authMethodFromProto(req.Msg.GetAuthMethod()),
+		PKCERequired:           req.Msg.PkceRequired,
 	})
 	if err != nil {
 		return nil, err
@@ -223,8 +227,20 @@ func toProto(c *Client) *clientv1.Client {
 		TokenEndpointAuthMethod: c.TokenEndpointAuthMethod,
 		Secrets:                 secrets,
 		IssuerHandleLocked:      true,
+		PkceRequired:            c.PKCERequired,
 		CreatedAt:               timestamppb.New(c.CreatedAt),
 		UpdatedAt:               timestamppb.New(c.UpdatedAt),
+	}
+}
+
+func authMethodFromProto(m clientv1.AuthMethod) string {
+	switch m {
+	case clientv1.AuthMethod_AUTH_METHOD_CLIENT_SECRET_BASIC:
+		return AuthClientSecretBasic
+	case clientv1.AuthMethod_AUTH_METHOD_CLIENT_SECRET_POST:
+		return AuthClientSecretPost
+	default:
+		return ""
 	}
 }
 

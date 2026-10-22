@@ -47,7 +47,7 @@ func TestSigner_RS256RoundTrip(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "u1", claims.Subject)
 	assert.Equal(t, "c1", claims.ClientID)
-	assert.NotEmpty(t, claims.JWTID)
+	assert.Len(t, claims.JWTID, 21, "a nanoid jti")
 }
 
 func TestSigner_IDTokenCarriesAtHashAndAzp(t *testing.T) {
@@ -65,6 +65,9 @@ func TestSigner_IDTokenCarriesAtHashAndAzp(t *testing.T) {
 	var claims IDTokenClaims
 	require.NoError(t, parsed.UnsafeClaimsWithoutVerification(&claims))
 	assert.Equal(t, AtHash("at"), claims.AtHash)
+	assert.Len(t, claims.JWTID, 21, "A26: a nanoid, never a UUID on a surface")
+	_, uuidErr := uuid.Parse(claims.JWTID)
+	assert.Error(t, uuidErr)
 	assert.Equal(t, "c1", claims.AuthorizedParty)
 	assert.Equal(t, now.Unix(), claims.AuthTime)
 
@@ -138,4 +141,75 @@ func TestSigner_NeedsAnActiveKey(t *testing.T) {
 	_, err := NewSigner(h.svc).Mint(context.Background(), h.project, &MintInput{IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
 	assert.True(t, IsNoActiveKeyError(err), "%v", err)
 	assert.False(t, strings.Contains(err.Error(), "BEGIN"))
+}
+
+// SECURITY: R-5, an ID token always names its client in aud.
+func TestSigner_IDTokenRefusesAWrongAudience(t *testing.T) {
+	h := newHarness(t)
+	h.generate(t)
+	now := time.Now()
+	for name, aud := range map[string][]string{"none": nil, "another client": {"c2"}} {
+		_, err := NewSigner(h.svc).MintIDToken(context.Background(), h.project, &MintIDTokenInput{
+			Issuer: "i", Subject: "u1", Audience: aud, ClientID: "c1", IssuedAt: now, ExpiresAt: now.Add(time.Minute),
+		})
+		assert.Error(t, err, name)
+	}
+}
+
+// OIDC Core §5.4: email and email_verified with the email scope, name with profile.
+func TestSigner_IDTokenCarriesTheScopedProfile(t *testing.T) {
+	h := newHarness(t)
+	h.generate(t)
+	now := time.Now()
+	claims := func(p *Profile) IDTokenClaims {
+		tok, err := NewSigner(h.svc).MintIDToken(context.Background(), h.project, &MintIDTokenInput{
+			Issuer: "i", Subject: "u1", Audience: []string{"c1"}, ClientID: "c1", SessionID: "sid1",
+			IssuedAt: now, ExpiresAt: now.Add(time.Minute), Profile: p,
+		})
+		require.NoError(t, err)
+		parsed, err := jwt.ParseSigned(tok.Compact, []jose.SignatureAlgorithm{jose.RS256})
+		require.NoError(t, err)
+		var c IDTokenClaims
+		require.NoError(t, parsed.UnsafeClaimsWithoutVerification(&c))
+		return c
+	}
+	all := claims(&Profile{Email: "ada@example.com", EmailVerified: true, Name: "Ada", WithEmail: true, WithName: true})
+	assert.Equal(t, "ada@example.com", all.Email)
+	require.NotNil(t, all.EmailVerified)
+	assert.True(t, *all.EmailVerified)
+	assert.Equal(t, "Ada", all.Name)
+	assert.Equal(t, "sid1", all.SessionID)
+
+	none := claims(&Profile{Email: "ada@example.com", Name: "Ada"})
+	assert.Empty(t, none.Email)
+	assert.Nil(t, none.EmailVerified)
+	assert.Empty(t, none.Name)
+}
+
+// RP-Initiated Logout §2: an expired hint still names its session; a hint from another issuer or of another type does not.
+func TestVerifier_IDTokenHintIgnoresExpiry(t *testing.T) {
+	h := newHarness(t)
+	h.generate(t)
+	past := time.Now().Add(-24 * time.Hour)
+	tok, err := NewSigner(h.svc).MintIDToken(context.Background(), h.project, &MintIDTokenInput{
+		Issuer: "https://othra.example.com/p/acme", Subject: "u1", Audience: []string{"c1"}, ClientID: "c1", SessionID: "sid1",
+		IssuedAt: past, ExpiresAt: past.Add(5 * time.Minute),
+	})
+	require.NoError(t, err)
+	v := NewVerifier(scopedKeys{h.svc})
+	claims, err := v.VerifyIDTokenHint(context.Background(), h.project, "https://othra.example.com/p/acme", tok.Compact)
+	require.NoError(t, err)
+	assert.Equal(t, "u1", claims.Subject)
+	assert.Equal(t, "sid1", claims.SessionID)
+	assert.Equal(t, []string{"c1"}, claims.Audience)
+
+	_, err = v.VerifyIDTokenHint(context.Background(), h.project, "https://othra.example.com/p/other", tok.Compact)
+	assert.ErrorIs(t, err, ErrInvalidToken, "another issuer")
+	_, err = v.VerifyIDTokenHint(context.Background(), uuid.New(), "https://othra.example.com/p/acme", tok.Compact)
+	assert.Error(t, err, "another project's keys")
+	access := mint(t, h, "https://othra.example.com/p/acme", time.Now(), time.Now().Add(time.Minute))
+	_, err = v.VerifyIDTokenHint(context.Background(), h.project, "https://othra.example.com/p/acme", access.Compact)
+	assert.ErrorIs(t, err, ErrInvalidToken, "an access token is not an ID token")
+	_, err = v.VerifyIDTokenHint(context.Background(), h.project, "https://othra.example.com/p/acme", "not.a.jwt")
+	assert.ErrorIs(t, err, ErrInvalidToken)
 }

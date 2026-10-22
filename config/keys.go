@@ -5,11 +5,8 @@ import (
 	"time"
 )
 
-// The signing key bounds: the JWKS max-age every verifier may cache for, and the longest token lifetime.
-const (
-	JWKSMaxAge       = 5 * time.Minute
-	MaxTokenLifetime = 15 * time.Minute
-)
+// JWKSMaxAge is how long every verifier may cache a project's JWKS.
+const JWKSMaxAge = 5 * time.Minute
 
 // KeysConfig configures each project's token signing keys.
 type KeysConfig struct {
@@ -33,9 +30,10 @@ func (c *Config) validateKeys() error {
 		return &InvalidSettingError{Key: "keys.rsaBits", Reason: "must be 2048 or 3072"}
 	case k.Rotation.PrePublish < JWKSMaxAge:
 		return &InvalidSettingError{Key: "keys.rotation.prePublish", Reason: "must be at least the JWKS max-age, 5m"}
-	case k.Rotation.Overlap < MaxTokenLifetime+JWKSMaxAge:
+	case k.Rotation.Overlap < c.OAuth.MaxTokenLifetime()+JWKSMaxAge:
 		return &InvalidSettingError{
-			Key: "keys.rotation.overlap", Reason: "must be at least the longest token lifetime plus the JWKS max-age, 20m",
+			Key:    "keys.rotation.overlap",
+			Reason: "must be at least the longest token lifetime plus the JWKS max-age, " + (c.OAuth.MaxTokenLifetime() + JWKSMaxAge).String(),
 		}
 	}
 	return nil

@@ -2,6 +2,7 @@ package i18n
 
 import (
 	"context"
+	"encoding/json"
 	"io/fs"
 	"maps"
 	"net/http"
@@ -15,6 +16,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"altalune.id/othra/apperror"
 )
 
 func TestPick(t *testing.T) {
@@ -65,6 +68,13 @@ func TestT(t *testing.T) {
 	assert.Equal(t, "Welcome", T(en, "login.title", "dangling"))
 }
 
+func TestError(t *testing.T) {
+	en, id := WithLocale(context.Background(), English), WithLocale(context.Background(), Indonesian)
+	assert.Equal(t, T(en, "apperror.GEN900"), Error(en, apperror.CodeUnexpected))
+	assert.Equal(t, T(id, "apperror.SIG005"), Error(id, apperror.CodeAuthorizeClientUnknown))
+	assert.NotEqual(t, Error(en, apperror.CodeAuthorizeClientUnknown), Error(id, apperror.CodeAuthorizeClientUnknown))
+}
+
 var placeholder = regexp.MustCompile(`\{[a-z_]+\}`)
 
 // D2: every locale has the same keys, no empty message, and the same placeholders per key.
@@ -84,10 +94,26 @@ func TestCatalogs_Parity(t *testing.T) {
 
 var tCall = regexp.MustCompile(`i18n\.T\(\s*[A-Za-z_.()]+\s*,\s*"([^"]+)"`)
 
+var errorCall = regexp.MustCompile(`i18n\.Error\(\s*[A-Za-z_.()]+\s*,\s*apperror\.Code([A-Za-z0-9]+)\)`)
+
+func codesByName(t *testing.T, root string) map[string]string {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(root, "apperror", "codes.json"))
+	require.NoError(t, err)
+	var entries []struct{ Code, Name string }
+	require.NoError(t, json.Unmarshal(raw, &entries))
+	out := map[string]string{}
+	for _, e := range entries {
+		out[e.Name] = e.Code
+	}
+	return out
+}
+
 // D2: every key a Go or templ file asks for exists in the catalogs.
 func TestCatalogs_HaveEveryUsedKey(t *testing.T) {
 	root, err := filepath.Abs("../../..")
 	require.NoError(t, err)
+	codes := codesByName(t, root)
 	var missing []string
 	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -106,6 +132,12 @@ func TestCatalogs_HaveEveryUsedKey(t *testing.T) {
 		for _, m := range tCall.FindAllSubmatch(body, -1) {
 			if _, ok := catalogs()[Default][string(m[1])]; !ok {
 				missing = append(missing, string(m[1])+" in "+path)
+			}
+		}
+		for _, m := range errorCall.FindAllSubmatch(body, -1) {
+			key := errorKeyPrefix + codes[string(m[1])]
+			if _, ok := catalogs()[Default][key]; !ok {
+				missing = append(missing, key+" (Code"+string(m[1])+") in "+path)
 			}
 		}
 		return nil

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/config"
@@ -12,6 +13,8 @@ import (
 	"altalune.id/othra/internal/controlplane"
 	"altalune.id/othra/internal/health"
 	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/oauth/hosted"
+	"altalune.id/othra/internal/oauth/oidc"
 	"altalune.id/othra/scheduler"
 	"altalune.id/othra/worker"
 )
@@ -155,7 +158,8 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	warnSampleLegal(cfg, log, logsInstallURL(o))
 	dbHealth := buildDBHealth(k, cfg, log)
 	apiHandler := buildAPIHandler(svcs, k.Reporter.Unexpected, cfg.API, cfg.HTTP.BasePath, log)
-	crossOrigin, err := buildCrossOrigin(cfg.HTTP.BaseURL)
+	crossSite := slices.Concat(hosted.CrossSitePOSTs(cfg.HTTP.BasePath), oidc.CrossSitePOSTs(cfg.HTTP.BasePath))
+	crossOrigin, err := buildCrossOrigin(cfg.HTTP.BaseURL, crossSite)
 	if err != nil {
 		_ = pool.Close()
 		_ = shutdown(ctx)

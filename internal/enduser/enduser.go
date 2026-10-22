@@ -102,6 +102,15 @@ type Account struct {
 	SelectedAt    time.Time
 }
 
+// EndUser is a project's end user as an ID token and userinfo describe it; Subject is the sub claim.
+type EndUser struct {
+	ID            uuid.UUID
+	Subject       string
+	Email         string
+	EmailVerified bool
+	Name          string
+}
+
 // Session is a browser's live accounts, the most recently selected first; Active is nil when none is left.
 type Session struct {
 	BrowserSessionID uuid.UUID

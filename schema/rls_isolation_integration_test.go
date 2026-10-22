@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,7 +24,7 @@ import (
 
 type rlsTenant struct {
 	org, project, user, key, endpoint, client, rs uuid.UUID
-	endUser, browser, userSession                 uuid.UUID
+	endUser, browser, userSession, family         uuid.UUID
 }
 
 type rlsFixture struct {
@@ -45,7 +46,7 @@ func (f *rlsFixture) seed(t *testing.T, tag string) rlsTenant {
 	t.Helper()
 	tn := rlsTenant{
 		org: uuid.New(), project: uuid.New(), user: uuid.New(), key: uuid.New(), endpoint: uuid.New(),
-		client: uuid.New(), rs: uuid.New(), endUser: uuid.New(), browser: uuid.New(), userSession: uuid.New(),
+		client: uuid.New(), rs: uuid.New(), endUser: uuid.New(), browser: uuid.New(), userSession: uuid.New(), family: uuid.New(),
 	}
 	for _, ins := range rlsInserts() {
 		_, err := f.admin.ExecContext(t.Context(), ins.sql(f.schema), ins.args(tn, tag)...)
@@ -131,6 +132,22 @@ func rlsInserts() []rlsInsert {
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{uuid.New(), "m" + id()[:12], tn.org, tn.project, id(), "ml" + id()[:8] + "@example.com", now}
 		}},
+		{"grant_families", func(s string) string {
+			return `INSERT INTO ` + s + `.grant_families (id, public_id, org_id, project_id, client_id, end_user_id, user_session_id, user_session_public_id, scopes, auth_time, created_at, last_used_at, absolute_expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, 'us-public', '{openid}', $8::timestamptz, $8::timestamptz, $8::timestamptz, $8::timestamptz + interval '90 days')`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{tn.family, "g" + id()[:12], tn.org, tn.project, tn.client, tn.endUser, tn.userSession, now}
+		}},
+		{"authorization_codes", func(s string) string {
+			return `INSERT INTO ` + s + `.authorization_codes (id, org_id, project_id, code_hash, client_id, end_user_id, user_session_id, redirect_uri, scopes, code_challenge, code_challenge_method, auth_time, created_at, expires_at) VALUES ($1, $2, $3, encode(sha256(convert_to($4, 'UTF8')), 'hex'), $5, $6, $7, 'https://a.example/cb', '{openid}', repeat('a', 43), 'S256', $8::timestamptz, $8::timestamptz, $8::timestamptz + interval '1 minute')`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), tn.org, tn.project, id(), tn.client, tn.endUser, tn.userSession, now}
+		}},
+		{"access_tokens", func(s string) string {
+			return `INSERT INTO ` + s + `.access_tokens (id, org_id, project_id, family_id, token_hash, scopes, created_at, expires_at) VALUES ($1, $2, $3, $4, encode(sha256(convert_to($5, 'UTF8')), 'hex'), '{openid}', $6::timestamptz, $6::timestamptz + interval '15 minutes')`
+		}, func(tn rlsTenant, _ string) []any { return []any{uuid.New(), tn.org, tn.project, tn.family, id(), now} }},
+		{"refresh_tokens", func(s string) string {
+			return `INSERT INTO ` + s + `.refresh_tokens (id, org_id, project_id, family_id, token_hash, created_at, expires_at) VALUES ($1, $2, $3, $4, encode(sha256(convert_to($5, 'UTF8')), 'hex'), $6::timestamptz, $6::timestamptz + interval '30 days')`
+		}, func(tn rlsTenant, _ string) []any { return []any{uuid.New(), tn.org, tn.project, tn.family, id(), now} }},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
 		}, func(tn rlsTenant, _ string) []any {
@@ -319,6 +336,9 @@ var clientTables = []string{"oauth_clients", "oauth_client_secrets", "resource_s
 //nolint:gochecknoglobals // the project-owned M4 tables.
 var endUserTables = []string{"end_users", "browser_sessions", "user_sessions", "end_user_terms", "magic_links"}
 
+//nolint:gochecknoglobals // the project-owned M5 tables.
+var grantTables = []string{"grant_families", "authorization_codes", "access_tokens", "refresh_tokens"}
+
 func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
 	t.Helper()
 	sibling := uuid.New()
@@ -329,7 +349,7 @@ func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
 	return sibling
 }
 
-// SECURITY: clients, resource servers, end users, their sessions, terms and magic links are scoped to their project as well as their org, for reads and writes.
+// SECURITY: clients, resource servers, end users, their sessions, terms, magic links and grants are scoped to their project as well as their org, for reads and writes.
 func TestRLS_ProjectOwnedTablesAreProjectScoped(t *testing.T) {
 	f := newRLSFixture(t)
 	sibling := f.siblingProject(t)
@@ -340,7 +360,7 @@ func TestRLS_ProjectOwnedTablesAreProjectScoped(t *testing.T) {
 	for _, ins := range rlsInserts() {
 		byTable[ins.table] = ins
 	}
-	for _, table := range append(slices.Clone(clientTables), endUserTables...) {
+	for _, table := range slices.Concat(clientTables, endUserTables, grantTables) {
 		t.Run(table, func(t *testing.T) {
 			assert.Equal(t, []uuid.UUID{f.a.org}, f.visible(t, own, table))
 			assert.Empty(t, f.visible(t, other, table), "another project of the same org sees none")
@@ -348,7 +368,7 @@ func TestRLS_ProjectOwnedTablesAreProjectScoped(t *testing.T) {
 
 			mine := f.a
 			mine.client, mine.rs = uuid.New(), uuid.New()
-			mine.endUser, mine.browser, mine.userSession = uuid.New(), uuid.New(), uuid.New()
+			mine.endUser, mine.browser, mine.userSession, mine.family = uuid.New(), uuid.New(), uuid.New(), uuid.New()
 			err := db.RunInTx(other, f.svc, func(ctx context.Context) error {
 				tx, _ := db.CurrentTx(ctx)
 				_, err := tx.ExecContext(ctx, byTable[table].sql(f.schema), byTable[table].args(mine, "x")...)
@@ -515,6 +535,79 @@ func TestSchema_EndUserConstraints(t *testing.T) {
 	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.projects WHERE id = $1`, f.a.project)
 	require.NoError(t, err)
 	for _, table := range endUserTables {
+		var n int
+		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
+		assert.Zero(t, n, table)
+	}
+}
+
+// SECURITY: one live refresh token per family, a stored PKCE challenge is S256, a code links a family only once used, grants stay inside their project and die with it.
+func TestSchema_GrantConstraints(t *testing.T) {
+	f := newRLSFixture(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	refresh := func(family uuid.UUID) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.refresh_tokens (id, org_id, project_id, family_id, token_hash, created_at, expires_at)
+			 VALUES ($1, $2, $3, $4, encode(sha256(convert_to($5, 'UTF8')), 'hex'), $6::timestamptz, $6::timestamptz + interval '30 days')`,
+			uuid.New(), f.a.org, f.a.project, family, uuid.NewString(), now)
+		return err
+	}
+	assert.Equal(t, "23505", pgCode(refresh(f.a.family)), "one live refresh token per family")
+	_, err := f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.refresh_tokens SET used_at = $1 WHERE family_id = $2`, now, f.a.family)
+	require.NoError(t, err)
+	assert.NoError(t, refresh(f.a.family), "a used token frees the family for its successor")
+
+	code := func(challenge, method any, used any, family any) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.authorization_codes (id, org_id, project_id, code_hash, client_id, end_user_id, redirect_uri, scopes, code_challenge, code_challenge_method, auth_time, created_at, expires_at, used_at, family_id)
+			 VALUES ($1, $2, $3, encode(sha256(convert_to($4, 'UTF8')), 'hex'), $5, $6, 'https://a.example/cb', '{openid}', $7, $8, $9::timestamptz, $9::timestamptz, $9::timestamptz + interval '1 minute', $10, $11)`,
+			uuid.New(), f.a.org, f.a.project, uuid.NewString(), f.a.client, f.a.endUser, challenge, method, now, used, family)
+		return err
+	}
+	challenge := strings.Repeat("a", 43)
+	assert.NoError(t, code(nil, nil, nil, nil), "a confidential client may skip PKCE")
+	assert.Equal(t, "23514", pgCode(code(challenge, "plain", nil, nil)), "plain is refused")
+	assert.Equal(t, "23514", pgCode(code("short", "S256", nil, nil)), "a challenge is 43 characters")
+	assert.Equal(t, "23514", pgCode(code(challenge, nil, nil, nil)), "a challenge needs its method")
+	assert.Equal(t, "23514", pgCode(code(nil, "S256", nil, nil)), "a method needs its challenge")
+	assert.Equal(t, "23514", pgCode(code(strings.Repeat("+", 43), "S256", nil, nil)), "a challenge is base64url")
+	assert.Equal(t, "23514", pgCode(code(challenge, "S256", nil, f.a.family)), "an unused code has no family")
+	assert.NoError(t, code(challenge, "S256", now, f.a.family))
+
+	_, err = f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.grant_families SET revoked_at = $1 WHERE id = $2`, now, f.a.family)
+	assert.Equal(t, "23514", pgCode(err), "a revocation names its reason")
+	_, err = f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.grant_families SET revoked_at = $1, revoked_reason = 'bored' WHERE id = $2`, now, f.a.family)
+	assert.Equal(t, "23514", pgCode(err), "an unknown reason is refused")
+
+	_, err = f.admin.ExecContext(ctx,
+		`INSERT INTO `+f.schema+`.access_tokens (id, org_id, project_id, family_id, token_hash, scopes, created_at, expires_at)
+		 VALUES ($1, $2, $3, $4, encode(sha256(convert_to($5, 'UTF8')), 'hex'), '{openid}', $6::timestamptz, $6::timestamptz + interval '15 minutes')`,
+		uuid.New(), f.a.org, f.siblingProject(t), f.a.family, uuid.NewString(), now)
+	assert.Equal(t, "23503", pgCode(err), "a token can't join another project's family")
+
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.user_sessions WHERE id = $1`, f.a.userSession)
+	require.NoError(t, err)
+	var sid sql.NullString
+	var publicSID string
+	require.NoError(t, f.admin.QueryRowContext(ctx,
+		`SELECT user_session_id, user_session_public_id FROM `+f.schema+`.grant_families WHERE id = $1`, f.a.family).Scan(&sid, &publicSID))
+	assert.False(t, sid.Valid, "an ended user session leaves the family")
+	assert.Equal(t, "us-public", publicSID, "the family keeps the sid its ID tokens carry")
+
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.grant_families WHERE id = $1`, f.a.family)
+	require.NoError(t, err)
+	var tokens, linked int
+	require.NoError(t, f.admin.QueryRowContext(ctx,
+		`SELECT (SELECT count(*) FROM `+f.schema+`.access_tokens WHERE project_id = $1) + (SELECT count(*) FROM `+f.schema+`.refresh_tokens WHERE project_id = $1)`,
+		f.a.project).Scan(&tokens))
+	assert.Zero(t, tokens, "a family takes its tokens with it")
+	require.NoError(t, f.admin.QueryRowContext(ctx,
+		`SELECT count(*) FROM `+f.schema+`.authorization_codes WHERE project_id = $1 AND family_id IS NOT NULL`, f.a.project).Scan(&linked))
+	assert.Zero(t, linked, "its codes stay, unlinked, for replay detection until pruned")
+
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.projects WHERE id = $1`, f.a.project)
+	require.NoError(t, err)
+	for _, table := range grantTables {
 		var n int
 		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
 		assert.Zero(t, n, table)

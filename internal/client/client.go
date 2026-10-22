@@ -54,6 +54,7 @@ const (
 // The token endpoint auth methods.
 const (
 	AuthClientSecretBasic = "client_secret_basic"
+	AuthClientSecretPost  = "client_secret_post"
 	AuthNone              = "none"
 )
 
@@ -95,6 +96,7 @@ type Client struct {
 	RedirectURIs            []string
 	PostLogoutRedirectURIs  []string
 	ConsentPolicy           ConsentPolicy
+	PKCERequired            bool
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 	Secrets                 []Secret
@@ -107,6 +109,13 @@ type Secret struct {
 	Hint      string
 	CreatedAt time.Time
 	ExpiresAt *time.Time
+	hash      string
+}
+
+// WithHash returns s carrying its stored hash, for a store answering Store.ForAuthentication only.
+func (s Secret) WithHash(hash string) Secret {
+	s.hash = hash
+	return s
 }
 
 // Current reports whether s is the client's current secret rather than an old one in its grace period.
@@ -119,10 +128,15 @@ type Settings struct {
 	PostLogoutRedirectURIs []string
 	RefreshTokens          bool
 	ConsentPolicy          ConsentPolicy
+	// AuthMethod is how a web client sends its secret; empty keeps the kind's default.
+	AuthMethod string
+	// PKCERequired nil means required; only a web client may turn it off.
+	PKCERequired *bool
 }
 
 // Preset sets the protocol fields kind fixes: web is confidential with client_secret_basic, CLI is a public native client.
 func (c *Client) Preset(kind Kind) {
+	c.PKCERequired = true
 	if kind == KindCLI {
 		c.ClientType, c.ApplicationType, c.TokenEndpointAuthMethod = TypePublic, AppNative, AuthNone
 		return
@@ -144,7 +158,7 @@ func (c *Client) RefreshTokens() bool { return slices.Contains(c.GrantTypes, Gra
 // UsesSecret reports whether the client's token endpoint auth method needs a client secret.
 func (c *Client) UsesSecret() bool {
 	switch c.TokenEndpointAuthMethod {
-	case AuthClientSecretBasic:
+	case AuthClientSecretBasic, AuthClientSecretPost:
 		return true
 	default:
 		return false
@@ -170,6 +184,11 @@ func (c *Client) Apply(s Settings) error {
 	if err := redirectError(FieldPostLogoutRedirectURIs, redirecturi.ValidateList(appType, s.PostLogoutRedirectURIs, false)); err != nil {
 		return err
 	}
+	method, pkce, err := c.authSettings(s)
+	if err != nil {
+		return err
+	}
+	c.TokenEndpointAuthMethod, c.PKCERequired = method, pkce
 	c.Name = name
 	c.RedirectURIs = slices.Clone(s.RedirectURIs)
 	c.PostLogoutRedirectURIs = slices.Clone(s.PostLogoutRedirectURIs)
@@ -187,6 +206,26 @@ func (c *Client) Apply(s Settings) error {
 		c.ConsentPolicy = ConsentRequire
 	}
 	return nil
+}
+
+func (c *Client) authSettings(s Settings) (method string, pkce bool, err error) {
+	pkce = s.PKCERequired == nil || *s.PKCERequired
+	if c.ApplicationType == AppNative {
+		switch {
+		case s.AuthMethod != "" && s.AuthMethod != AuthNone:
+			return "", false, &InvalidSettingsError{Reason: SettingsAuthMethodNative}
+		case !pkce:
+			return "", false, &InvalidSettingsError{Reason: SettingsPKCENative}
+		}
+		return AuthNone, true, nil
+	}
+	switch s.AuthMethod {
+	case "":
+		return AuthClientSecretBasic, pkce, nil
+	case AuthClientSecretBasic, AuthClientSecretPost:
+		return s.AuthMethod, pkce, nil
+	}
+	return "", false, apperror.Invalid("auth_method", apperror.FieldNotAllowed)
 }
 
 func redirectError(field string, err error) error {
@@ -227,6 +266,23 @@ func NewSecret() (plaintext, hash, hint string, err error) {
 func HashSecret(plaintext string) string {
 	sum := sha256.Sum256([]byte(plaintext))
 	return hashPrefix + hex.EncodeToString(sum[:])
+}
+
+// VerifySecret reports whether presented matches a secret of the client that is live at now; every live secret is compared.
+func (c *Client) VerifySecret(presented string, now time.Time) bool {
+	if !c.UsesSecret() || presented == "" {
+		return false
+	}
+	ok := false
+	for _, s := range c.Secrets {
+		if s.hash == "" || s.ExpiresAt != nil && !now.Before(*s.ExpiresAt) {
+			continue
+		}
+		if SecretMatches(s.hash, presented) {
+			ok = true
+		}
+	}
+	return ok
 }
 
 // SecretMatches compares a presented secret with a stored hash in constant time.

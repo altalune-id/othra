@@ -19,6 +19,8 @@ type Store interface {
 	List(ctx context.Context, projectID uuid.UUID, now time.Time) ([]*Client, error)
 	// ByPublicID returns one client with its live secrets at now, the current one first, or *NotFoundError.
 	ByPublicID(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error)
+	// ForAuthentication returns one client with its live secrets at now and their hashes, for VerifySecret only, or *NotFoundError.
+	ForAuthentication(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error)
 	// Lock locks a client's row and returns it with its live secrets at now, or *NotFoundError.
 	Lock(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error)
 	// InsertSecret records secret s of client c by its hash.

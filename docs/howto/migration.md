@@ -94,7 +94,7 @@ Use this when you add or change a table, column, constraint or index. Migrations
 - [schema/migrate_integration_test.go](../../schema/migrate_integration_test.go): `TestMigrations_UpDownUp`
 - [schema/project_fk_integration_test.go](../../schema/project_fk_integration_test.go)
 - [schema/migrations/003_projects.sql](../../schema/migrations/003_projects.sql): an org-owned table with its policy; [schema/migrations/002_orgs.sql](../../schema/migrations/002_orgs.sql): the `current_*_id()` helpers
-- [schema/migrations/021_tenant_lookups.sql](../../schema/migrations/021_tenant_lookups.sql): the definer functions
+- [schema/migrations/023_tenant_lookups.sql](../../schema/migrations/023_tenant_lookups.sql): the definer functions
 - [schema/rls_isolation_integration_test.go](../../schema/rls_isolation_integration_test.go), [schema/tenant_policy_guard_test.go](../../schema/tenant_policy_guard_test.go), [schema/lookups_integration_test.go](../../schema/lookups_integration_test.go)
 - [internal/boot/db.go](../../internal/boot/db.go): `migrate`, `MigrationLockName`
 - [schema/README.md](../../schema/README.md)

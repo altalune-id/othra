@@ -116,6 +116,20 @@ func (f *ClientStore) ByPublicID(_ context.Context, projectID uuid.UUID, publicI
 	return f.find("ByPublicID", projectID, publicID, now)
 }
 
+// ForAuthentication implements client.Store.
+func (f *ClientStore) ForAuthentication(_ context.Context, projectID uuid.UUID, publicID string, now time.Time) (*client.Client, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	c, err := f.find("ForAuthentication", projectID, publicID, now)
+	if err != nil {
+		return nil, err
+	}
+	for i, s := range c.Secrets {
+		c.Secrets[i] = s.WithHash(f.Hashes[s.ID])
+	}
+	return c, nil
+}
+
 // Lock implements client.Store.
 func (f *ClientStore) Lock(_ context.Context, projectID uuid.UUID, publicID string, now time.Time) (*client.Client, error) {
 	f.mu.Lock()

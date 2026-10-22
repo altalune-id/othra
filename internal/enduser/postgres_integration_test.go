@@ -266,3 +266,33 @@ func TestPostgres_ExpiryAndProjects(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEqual(t, r.Account.Subject, o.Account.Subject, "the same email is another end user in another project")
 }
+
+func TestPostgres_EndUserAndEndSession(t *testing.T) {
+	f := newPGFixture(t)
+	ctx := t.Context()
+	p := f.project(t)
+	adaToken, _ := f.link(t, p, "ada@example.com")
+	ada, err := f.svc.Redeem(ctx, p, enduser.RedeemRequest{Token: adaToken})
+	require.NoError(t, err)
+	f.now = f.now.Add(time.Second)
+	bobToken, _ := f.link(t, p, "bob@example.com")
+	bob, err := f.svc.Redeem(ctx, p, enduser.RedeemRequest{Token: bobToken, BrowserSecret: ada.Secret})
+	require.NoError(t, err)
+
+	u, err := f.svc.EndUser(ctx, p, ada.Account.EndUserID)
+	require.NoError(t, err)
+	require.NotNil(t, u)
+	assert.Equal(t, ada.Account.Subject, u.Subject)
+	assert.Equal(t, "ada@example.com", u.Email)
+	assert.True(t, u.EmailVerified)
+	other := f.project(t)
+	gone, err := f.svc.EndUser(ctx, other, ada.Account.EndUserID)
+	require.NoError(t, err)
+	assert.Nil(t, gone, "an end user is only found in its project")
+
+	require.NoError(t, f.svc.EndSession(ctx, p, ada.Account.PublicID))
+	sess, err := f.svc.Session(ctx, p, bob.Secret)
+	require.NoError(t, err)
+	require.Len(t, sess.Accounts, 1, "only the named session ends")
+	assert.Equal(t, "bob@example.com", sess.Active().Email)
+}

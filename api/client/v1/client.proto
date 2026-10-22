@@ -76,6 +76,14 @@ enum ConsentPolicy {
   CONSENT_POLICY_IMPLICIT = 2;
 }
 
+// AuthMethod is how a WEB client sends its secret to the token endpoint; a CLI client always uses none.
+enum AuthMethod {
+  // UNSPECIFIED is CLIENT_SECRET_BASIC for a WEB client and none for a CLI client.
+  AUTH_METHOD_UNSPECIFIED = 0;
+  AUTH_METHOD_CLIENT_SECRET_BASIC = 1;
+  AUTH_METHOD_CLIENT_SECRET_POST = 2;
+}
+
 // SecretGrace is how long the current secret keeps working after a rotation.
 enum SecretGrace {
   // UNSPECIFIED is a day.
@@ -112,6 +120,8 @@ message Client {
   bool issuer_handle_locked = 12;
   google.protobuf.Timestamp created_at = 13;
   google.protobuf.Timestamp updated_at = 14;
+  // pkce_required is false only for a WEB client that can't send PKCE; it must then send a nonce.
+  bool pkce_required = 15;
 }
 
 message ListClientsRequest {
@@ -165,6 +175,8 @@ message CreateClientRequest {
   ];
   bool refresh_tokens = 6;
   ConsentPolicy consent_policy = 7 [(buf.validate.field).enum.defined_only = true];
+  AuthMethod auth_method = 8 [(buf.validate.field).enum.defined_only = true];
+  optional bool pkce_required = 9;
 }
 
 message CreateClientResponse {
@@ -199,6 +211,8 @@ message UpdateClientRequest {
     (buf.validate.field).required = true,
     (buf.validate.field).enum.defined_only = true
   ];
+  AuthMethod auth_method = 8 [(buf.validate.field).enum.defined_only = true];
+  optional bool pkce_required = 9;
 }
 
 message UpdateClientResponse {

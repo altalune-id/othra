@@ -13,6 +13,7 @@ import (
 	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/controlplane"
 	"altalune.id/othra/internal/enduser"
+	"altalune.id/othra/internal/grant"
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/capabilities"
@@ -75,6 +76,7 @@ type Services struct {
 	ResourceServers *resourceserver.Service
 	IssuerResolver  *oidc.Resolver
 	EndUsers        *enduser.Service
+	Grants          *grant.Service
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -166,9 +168,10 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Storage:      files,
 		Keys:         signingKeys,
 		Clients: client.NewService(client.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, projects, k.Reporter.Unexpected).
-			WithLogger(k.Log),
+			WithLogger(orDiscard(k.Log)),
 	}
 	svcs.EndUsers = buildEndUsers(k, cfg, uow, mailQueue)
+	svcs.Grants = buildGrants(k, cfg, uow)
 	svcs.IssuerResolver = oidc.NewResolver(projects, signingKeys, publicBase(cfg.HTTP), k.Reporter.Unexpected)
 	svcs.ResourceServers = buildResourceServers(k, cfg, uow, projects, users, svcs.Clients)
 	svcs.Resets = auth.NewResets(auth.ResetDeps{

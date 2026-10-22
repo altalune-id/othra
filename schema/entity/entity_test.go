@@ -48,7 +48,7 @@ func TestBindings(t *testing.T) {
 			[]string{
 				"id", "public_id", "org_id", "project_id", "name", "client_type", "application_type",
 				"token_endpoint_auth_method", "grant_types", "allowed_scopes", "redirect_uris",
-				"post_logout_redirect_uris", "consent_policy", "created_at", "updated_at",
+				"post_logout_redirect_uris", "consent_policy", "pkce_required", "created_at", "updated_at",
 			},
 		},
 		{
@@ -109,6 +109,34 @@ func TestBindings(t *testing.T) {
 				"id", "public_id", "org_id", "project_id", "token_hash", "email", "return_to", "request_ip",
 				"created_at", "expires_at", "used_at", "browser_session_id",
 			},
+		},
+		{
+			"grant_families",
+			func(s, p string) binding { b := entity.NewGrantFamilies(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "client_id", "end_user_id", "user_session_id", "user_session_public_id",
+				"scopes", "auth_time", "created_at", "last_used_at", "absolute_expires_at", "revoked_at", "revoked_reason",
+				"resource_server_id",
+			},
+		},
+		{
+			"authorization_codes",
+			func(s, p string) binding { b := entity.NewAuthorizationCodes(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "org_id", "project_id", "code_hash", "client_id", "end_user_id", "user_session_id", "redirect_uri", "scopes",
+				"code_challenge", "code_challenge_method", "nonce", "auth_time", "created_at", "expires_at", "used_at", "family_id",
+				"resource_server_id",
+			},
+		},
+		{
+			"access_tokens",
+			func(s, p string) binding { b := entity.NewAccessTokens(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "org_id", "project_id", "family_id", "token_hash", "scopes", "created_at", "expires_at"},
+		},
+		{
+			"refresh_tokens",
+			func(s, p string) binding { b := entity.NewRefreshTokens(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "org_id", "project_id", "family_id", "token_hash", "created_at", "expires_at", "used_at"},
 		},
 		{
 			"files",

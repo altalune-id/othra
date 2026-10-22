@@ -152,6 +152,19 @@ nats:
   # env: OTHRA_NATS_USER
   user: ""
 
+oauth:
+  # env: OTHRA_OAUTH_ACCESS_TOKEN_TTL
+  accessTokenTTL: 15m
+  # env: OTHRA_OAUTH_CODE_TTL
+  codeTTL: 60s
+  # env: OTHRA_OAUTH_ID_TOKEN_TTL
+  idTokenTTL: 5m
+  refresh:
+    # env: OTHRA_OAUTH_REFRESH_ABSOLUTE
+    absolute: 2160h
+    # env: OTHRA_OAUTH_REFRESH_IDLE
+    idle: 720h
+
 postgres:
   # env: OTHRA_POSTGRES_CONN_MAX_IDLE_TIME
   connMaxIdleTime: ""

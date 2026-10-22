@@ -31,6 +31,14 @@ export function clientFormLabels(t: Translate, mode: 'create' | 'edit'): ClientF
     consentRequire: t('clients.consent_require'),
     consentImplicit: t('clients.consent_implicit'),
     consentImplicitWarning: t('clients.consent_implicit_warning'),
+    consentRequireNote: t('clients.consent_require_note'),
+    authMethod: t('clients.auth_method'),
+    authMethodBasic: t('clients.auth_method_basic'),
+    authMethodPost: t('clients.auth_method_post'),
+    authMethodHelp: t('clients.auth_method_help'),
+    pkce: t('clients.pkce'),
+    pkceRequired: t('clients.pkce_required'),
+    pkceOffWarning: t('clients.pkce_off_warning'),
     submit: mode === 'create' ? t('clients.create') : t('common.save'),
     submitting: mode === 'create' ? t('common.creating') : t('common.saving'),
     cancel: t('common.cancel'),
@@ -43,7 +51,7 @@ export function clientFormLabels(t: Translate, mode: 'create' | 'edit'): ClientF
 export function kindOptions(t: Translate): ClientKindOption[] {
   return clientKindNames.map((value) => {
     const k = clientKinds[value];
-    return { value, icon: k.icon, label: t(k.labelKey), help: t(k.helpKey), redirectHelp: t(k.redirectHelpKey), placeholder: k.placeholder, postLogout: k.postLogout };
+    return { value, icon: k.icon, label: t(k.labelKey), help: t(k.helpKey), redirectHelp: t(k.redirectHelpKey), placeholder: k.placeholder, postLogout: k.postLogout, secret: k.secret };
   });
 }
 

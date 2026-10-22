@@ -40,6 +40,7 @@ type webFixture struct {
 	beta    *project.Issuer
 	client  *http.Client
 	reports []string
+	grants  *fakeGrants
 }
 
 func newIssuer(handle, name string) *project.Issuer {
@@ -70,6 +71,10 @@ func newWebFixture(t *testing.T) *webFixture {
 		CookieKey: []byte("cookie-key-cookie-key-cookie-key"), CSRFMaxAge: time.Hour, LinkTTL: 15 * time.Minute,
 		LogoURL: func(k string) string { return "https://cdn.example/" + k },
 	})
+	f.grants = newFakeGrants(f.users)
+	marker := NewMarker([]byte("marker-key-marker-key-marker-key"), 15*time.Minute)
+	marker.now = f.users.stamp.now
+	f.web.WithOAuth(testClients(), f.grants, marker)
 	f.web.Register(mux)
 	f.client = f.newClient()
 	return f
@@ -640,31 +645,6 @@ func TestWeb_ServiceFailures(t *testing.T) {
 	f.users.failOn = "signout"
 	assert.Equal(t, http.StatusInternalServerError, f.submit(f.client, account, "/login/signout", nil).status)
 	assert.NotEmpty(t, f.reports)
-}
-
-func TestWeb_Continue(t *testing.T) {
-	f := newWebFixture(t)
-	f.signIn(f.client, "acme", "ana@example.com")
-	var acct Account
-	var secret string
-	for sec, b := range f.users.browsers {
-		acct, secret = b.accounts[0], sec
-	}
-	set := httptest.NewRecorder()
-	f.web.cookies.setBrowser(set, "/", secret, time.Now().Add(time.Hour))
-	req := httptest.NewRequest(http.MethodGet, "/p/acme/oauth2/authorize", nil)
-	req.Header.Set("Cookie", strings.Split(set.Header().Get("Set-Cookie"), ";")[0])
-	rec := httptest.NewRecorder()
-	f.web.Continue(rec, req, f.acme, acct, "/p/acme/oauth2/authorize?client_id=x")
-	assert.Equal(t, "/p/acme/oauth2/authorize?client_id=x", rec.Header().Get("Location"))
-	f.acme.TermsVersion = 3
-	rec = httptest.NewRecorder()
-	f.web.Continue(rec, req, f.acme, acct, "https://evil.example/")
-	assert.Equal(t, "/p/acme/terms?return_to=%2Fp%2Facme%2Faccount%2F", rec.Header().Get("Location"))
-
-	rec = httptest.NewRecorder()
-	f.web.Continue(rec, httptest.NewRequest(http.MethodGet, "/p/acme/oauth2/authorize", nil), f.acme, acct, "")
-	assert.Equal(t, "/p/acme/login?return_to=%2Fp%2Facme%2Faccount%2F", rec.Header().Get("Location"), "an account not on this browser signs in again")
 }
 
 func TestUserAgent(t *testing.T) {

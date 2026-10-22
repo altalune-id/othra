@@ -15,7 +15,7 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// ErrorData is a hosted error: translated Title and Message, the error Code and the request's Reference; an empty Site means an unknown project.
+// ErrorData is a hosted error: translated Title and Message, the error Code and the request's Reference; an empty Site means an unknown project, and NoSignIn hides the way back to sign in.
 type ErrorData struct {
 	Site
 	Title        string
@@ -23,6 +23,16 @@ type ErrorData struct {
 	Code         string
 	Reference    string
 	SupportEmail string
+	NoSignIn     bool
+}
+
+// TermsDeclined is the error page for an account that declined the project's terms outside an app's sign-in.
+func TermsDeclined(ctx context.Context, s Site) ErrorData {
+	return ErrorData{
+		Site:    s,
+		Title:   i18n.T(ctx, "terms.declined_title"),
+		Message: i18n.T(ctx, "terms.declined_body", "project", s.Project),
+	}
 }
 
 func (v ErrorData) title(ctx context.Context) string {
@@ -34,6 +44,15 @@ func (v ErrorData) title(ctx context.Context) string {
 	default:
 		return i18n.T(ctx, "error.title")
 	}
+}
+
+func (v ErrorData) hasReference() bool { return v.Code != "" || v.Reference != "" }
+
+func (v ErrorData) helpEmailKey() string {
+	if v.hasReference() {
+		return "error.help_email"
+	}
+	return "error.help_email_plain"
 }
 
 func (v ErrorData) message(ctx context.Context) string {
@@ -97,7 +116,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 					var templ_7745c5c3_Var4 string
 					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.message(ctx))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 43, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 62, Col: 43}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 					if templ_7745c5c3_Err != nil {
@@ -125,7 +144,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 						var templ_7745c5c3_Var5 string
 						templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "error.code"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 48, Col: 37}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 67, Col: 37}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 						if templ_7745c5c3_Err != nil {
@@ -138,7 +157,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 						var templ_7745c5c3_Var6 string
 						templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(v.Code)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 49, Col: 36}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 68, Col: 36}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 						if templ_7745c5c3_Err != nil {
@@ -157,7 +176,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 						var templ_7745c5c3_Var7 string
 						templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "error.reference"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 52, Col: 42}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 71, Col: 42}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 						if templ_7745c5c3_Err != nil {
@@ -170,7 +189,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(v.Reference)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 53, Col: 51}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 72, Col: 51}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -196,7 +215,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						for _, p := range splitAround(i18n.T(ctx, "error.help_email"), "{support_email}") {
+						for _, p := range splitAround(i18n.T(ctx, v.helpEmailKey()), "{support_email}") {
 							if p == "{support_email}" {
 								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<a class=\"link break-all\" href=\"")
 								if templ_7745c5c3_Err != nil {
@@ -205,7 +224,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 								var templ_7745c5c3_Var9 templ.SafeURL
 								templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("mailto:" + v.SupportEmail))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 62, Col: 82}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 81, Col: 82}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 								if templ_7745c5c3_Err != nil {
@@ -218,7 +237,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 								var templ_7745c5c3_Var10 string
 								templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(v.SupportEmail)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 62, Col: 101}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 81, Col: 101}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 								if templ_7745c5c3_Err != nil {
@@ -232,7 +251,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 								var templ_7745c5c3_Var11 string
 								templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(p)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 64, Col: 11}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 83, Col: 11}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 								if templ_7745c5c3_Err != nil {
@@ -244,7 +263,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-					} else {
+					} else if v.hasReference() {
 						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<p class=\"text-sm text-base-content/70\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
@@ -252,7 +271,7 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "error.help"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 69, Col: 72}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 88, Col: 72}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 						if templ_7745c5c3_Err != nil {
@@ -263,35 +282,41 @@ func Error(d layout.LayoutData, v ErrorData) templ.Component {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " <a class=\"btn btn-primary btn-block\" href=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var13 templ.SafeURL
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.href(d, "/login")))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 71, Col: 82}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var14 string
-					templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.back_to_sign_in"))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 71, Col: 124}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</a>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
+					if !v.NoSignIn {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<a class=\"btn btn-primary btn-block\" href=\"")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var13 templ.SafeURL
+						templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.href(d, "/login")))
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 91, Col: 83}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var14 string
+						templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.back_to_sign_in"))
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/error.templ`, Line: 91, Col: 125}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</a>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
 					}
 				}
 				return nil

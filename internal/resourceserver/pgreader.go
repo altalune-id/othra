@@ -15,7 +15,7 @@ import (
 func (s *postgresStore) serverColumns() postgres.ProjectionList {
 	t := s.servers
 	return postgres.ProjectionList{
-		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Name, t.Identifier, jsonArray(t.Scopes, "resource_servers.scopes"),
+		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Name, t.Identifier, db.ArrayAsJSON(t.Scopes, "resource_servers.scopes"),
 		t.VerificationState, t.VerifiedAt, t.LastCheckedAt, postgres.CAST(t.LastError).AS_TEXT().AS("resource_servers.last_error"),
 		t.ConsecutiveFailures, t.Trusted, t.TrustedAt, t.TrustedBy, t.CreatedAt, t.UpdatedAt,
 	}
@@ -57,7 +57,7 @@ func (s *postgresStore) Links(ctx context.Context, projectID, clientID, serverID
 		where = where.AND(l.ResourceServerID.EQ(postgres.UUID(serverID)))
 	}
 	stmt := postgres.SELECT(
-		s.serverColumns(), l.ClientID, jsonArray(l.Scopes, "oauth_client_resources.scopes"), l.CreatedAt, l.UpdatedAt,
+		s.serverColumns(), l.ClientID, db.ArrayAsJSON(l.Scopes, "oauth_client_resources.scopes"), l.CreatedAt, l.UpdatedAt,
 	).FROM(l.INNER_JOIN(t, t.ID.EQ(l.ResourceServerID).AND(t.ProjectID.EQ(l.ProjectID)))).
 		WHERE(where).
 		ORDER_BY(t.Name.ASC(), l.CreatedAt.ASC())

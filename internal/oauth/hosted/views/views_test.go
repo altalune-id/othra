@@ -220,7 +220,7 @@ func TestError(t *testing.T) {
 	v.SupportEmail, v.Title, v.Code, v.Reference = "help@acme.test", "", "", ""
 	help := html(t, ctxIn(t, i18n.Indonesian), Error(page(), v))
 	assert.Contains(t, help, "<title>Terjadi kesalahan · Acme Store</title>")
-	assert.Contains(t, help, `Butuh bantuan? Kirim email ke <a class="link break-all" href="mailto:help@acme.test">help@acme.test</a> dan sertakan ID referensi.`)
+	assert.Contains(t, help, `Butuh bantuan? Kirim email ke <a class="link break-all" href="mailto:help@acme.test">help@acme.test</a>.`, "no code or reference: no reference ID to share")
 	assert.NotContains(t, help, "<dl")
 	assert.Contains(t, help, "Kembali ke halaman masuk")
 }
@@ -277,4 +277,104 @@ func TestTerms_HidesTheFooterLinks(t *testing.T) {
 	assert.Equal(t, 1, strings.Count(out, `href="https://acme.test/terms"`))
 	assert.Equal(t, "https://acme.test/terms", d.Brand.TermsURL, "the caller's brand is not changed")
 	assert.Contains(t, html(t, ctxIn(t, i18n.English), Login(d, LoginData{Site: site})), "<nav", "other pages keep the footer")
+}
+
+func TestContinue(t *testing.T) {
+	target := "https://app.example/oauth/callback?code=abc&state=s1&iss=https%3A%2F%2Fid.example%2Fp%2Facme"
+	out := html(t, ctxIn(t, i18n.English), Continue(page(), ContinueData{Site: site, Client: "Openwa Web", Target: target}))
+	assert.Contains(t, out, `<meta http-equiv="refresh" content="0;url=https://app.example/oauth/callback?code=abc&amp;state=s1&amp;iss=https%3A%2F%2Fid.example%2Fp%2Facme">`)
+	assert.Contains(t, out, "<title>Continuing to Openwa Web · Acme Store</title>")
+	assert.Contains(t, out, `<p role="status" class="text-sm text-base-content/70">If nothing happens, use the button below.</p>`)
+	assert.Contains(t, out, `<a class="btn btn-primary btn-block" href="https://app.example/oauth/callback?code=abc&amp;state=s1&amp;iss=https%3A%2F%2Fid.example%2Fp%2Facme">Continue to Openwa Web</a>`)
+	assert.Contains(t, out, `loading loading-spinner loading-sm`)
+	assert.NotContains(t, out, "<script")
+
+	id := html(t, ctxIn(t, i18n.Indonesian), Continue(page(), ContinueData{Site: site, Target: "/id/p/acme/oauth2/authorize?client_id=x"}))
+	assert.Contains(t, id, "Melanjutkan ke Acme Store", "no client name falls back to the project")
+	assert.Contains(t, id, ">Lanjut ke Acme Store</a>")
+}
+
+func TestEndSession(t *testing.T) {
+	v := EndSessionData{Site: site, Client: "Openwa Web", Token: "tok-end", Hint: "eyJ.hint", PostLogout: "https://app.example/", State: "s1"}
+	out := html(t, ctxIn(t, i18n.English), EndSession(page(), v))
+	assert.Contains(t, out, "<title>Sign out of Acme Store? · Acme Store</title>")
+	assert.Contains(t, out, "Openwa Web asked to sign you out of Acme Store.")
+	form := strings.ReplaceAll(out[strings.Index(out, `<form method="post" action="/id/p/acme/oauth2/end-session">`):], "> <", "><")
+	assert.Contains(t, form, `<input type="hidden" name="csrf" value="tok-end"><input type="hidden" name="confirm" value="1"><input type="hidden" name="id_token_hint" value="eyJ.hint"><input type="hidden" name="post_logout_redirect_uri" value="https://app.example/"><input type="hidden" name="state" value="s1"><button class="btn btn-primary btn-block" type="submit">Sign out</button>`)
+	assert.Contains(t, out, "If you didn&#39;t ask for this, close this page. You stay signed in.")
+
+	bare := html(t, ctxIn(t, i18n.Indonesian), EndSession(page(), EndSessionData{Site: site, Token: "t", Hint: "h"}))
+	assert.Contains(t, bare, "Keluar dari Acme Store?")
+	assert.Contains(t, bare, "Acme Store meminta agar Anda keluar dari Acme Store.", "no client name falls back to the project")
+	assert.NotContains(t, bare, "post_logout_redirect_uri")
+	assert.NotContains(t, bare, `name="state"`)
+}
+
+func TestError_NoSignIn(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Error(page(), ErrorData{Site: site, Title: "Can't sign in to this app", Message: "x", Code: "SIG006", NoSignIn: true}))
+	assert.NotContains(t, out, "Back to sign in")
+	assert.NotContains(t, out, "/login")
+	assert.Contains(t, out, "If it keeps happening")
+}
+
+func TestTermsDeclined(t *testing.T) {
+	ctx := ctxIn(t, i18n.English)
+	v := TermsDeclined(ctx, site)
+	assert.Equal(t, ErrorData{Site: site, Title: "You didn't accept the terms", Message: "You need to accept Acme Store's terms to use your account. You can come back and accept them any time."}, v)
+	out := html(t, ctx, Error(page(), v))
+	assert.Contains(t, out, "Back to sign in")
+	assert.NotContains(t, out, "<dl")
+	assert.Equal(t, "Anda tidak menyetujui ketentuan", TermsDeclined(ctxIn(t, i18n.Indonesian), site).Title)
+}
+
+func TestTerms_Decline(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Terms(page(), TermsData{Site: site, TermsURL: "https://acme.test/terms"}))
+	assert.Contains(t, out, `<button class="btn btn-ghost btn-block" type="submit" name="decline" value="1" formnovalidate>Decline</button>`)
+	assert.Less(t, strings.Index(out, ">Create account</button>"), strings.Index(out, ">Decline</button>"), "Decline sits under the main action, in the same form")
+	assert.Less(t, strings.Index(out, ">Decline</button>"), strings.Index(out, "</form>"))
+}
+
+func TestLoginAndPicker_ClientContext(t *testing.T) {
+	en := ctxIn(t, i18n.English)
+	plain := html(t, en, Login(page(), LoginData{Site: site}))
+	assert.Contains(t, plain, "Sign in to continue to Acme Store.")
+
+	withClient := html(t, en, Login(page(), LoginData{Site: site, Client: "Openwa Web", Email: "ana@acme.test"}))
+	assert.Contains(t, withClient, "Sign in to continue to Openwa Web.")
+	assert.Contains(t, withClient, `value="ana@acme.test"`, "login_hint prefills the email")
+	assert.NotContains(t, withClient, "asks you to sign in again")
+
+	reauth := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Client: "Openwa Web", Reauth: true}))
+	assert.Contains(t, reauth, `<p class="text-sm text-base-content/70">Openwa Web meminta Anda masuk lagi.</p>`)
+	assert.Contains(t, reauth, "Masuk untuk melanjutkan ke Openwa Web.")
+	assert.NotContains(t, html(t, en, Login(page(), LoginData{Site: site, Reauth: true})), "sign in again", "no client, no reauth line")
+
+	assert.Contains(t, html(t, en, Picker(page(), PickerData{Site: site})), "to continue to Acme Store")
+	assert.Contains(t, html(t, en, Picker(page(), PickerData{Site: site, Client: "Openwa Web"})), "to continue to Openwa Web")
+}
+
+func TestLogin_ReauthHasNoWayBackToThePicker(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Login(page(), LoginData{Site: site, Client: "Openwa Web", Reauth: true, FromPicker: true}))
+	assert.NotContains(t, out, "Back to accounts", "M1: the picker would send the user straight back here")
+	assert.Contains(t, out, "Openwa Web asks you to sign in again.")
+}
+
+func TestError_HelpLineOnlyWithSomethingToShare(t *testing.T) {
+	en := ctxIn(t, i18n.English)
+	declined := html(t, en, Error(page(), TermsDeclined(en, site)))
+	assert.NotContains(t, declined, "reference ID", "M2: nothing to share")
+	assert.Contains(t, declined, "Back to sign in")
+
+	support := TermsDeclined(en, site)
+	support.SupportEmail = "help@acme.test"
+	plain := html(t, en, Error(page(), support))
+	assert.Contains(t, plain, `Need help? Email <a class="link break-all" href="mailto:help@acme.test">help@acme.test</a>.`, "the contact stays, without the reference ID")
+	assert.NotContains(t, plain, "reference ID")
+
+	for name, v := range map[string]ErrorData{
+		"code":      {Site: site, Message: "x", Code: "SIG006"},
+		"reference": {Site: site, Message: "x", Reference: "req-1"},
+	} {
+		assert.Contains(t, html(t, en, Error(page(), v)), "share the reference ID", name)
+	}
 }

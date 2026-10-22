@@ -48,6 +48,7 @@ templ Terms(d layout.LayoutData, v TermsData) {
 				}
 				@layout.Consent(d, layout.ConsentData{TermsURL: v.TermsURL, PrivacyURL: v.PrivacyURL, Required: true})
 				<button class="btn btn-primary btn-block" type="submit">{ i18n.T(ctx, v.key("terms.submit")) }</button>
+				<button class="btn btn-ghost btn-block" type="submit" name="decline" value="1" formnovalidate>{ i18n.T(ctx, "terms.decline") }</button>
 			</form>
 			<p class="text-sm"><a class="link" href={ templ.SafeURL(v.addAccount(d, v.ReturnTo)) }>{ i18n.T(ctx, "terms.use_another") }</a></p>
 		}

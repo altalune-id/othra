@@ -47,6 +47,7 @@ type Account struct {
 	Email       string
 	Name        string
 	AuthTime    time.Time
+	SelectedAt  time.Time
 }
 
 // Browser is the browser session a cookie names, with its live accounts, the active one first.
@@ -133,4 +134,56 @@ type EndUsers interface {
 	TermsState(ctx context.Context, p Project, secret, userSession string) (TermsState, error)
 	// AcceptTerms appends the acceptance: *enduser.SessionGoneError for an account not on this browser, ErrTermsChanged for moved terms.
 	AcceptTerms(ctx context.Context, a TermsAcceptance) error
+}
+
+// Client is what /authorize and end-session need to know about a registered OAuth client.
+type Client struct {
+	ID                     string
+	Name                   string
+	Native                 bool
+	Confidential           bool
+	RedirectURIs           []string
+	PostLogoutRedirectURIs []string
+	AllowedScopes          []string
+	Refresh                bool
+	PKCERequired           bool
+	ConsentRequired        bool
+}
+
+// Clients reads the project's OAuth clients.
+type Clients interface {
+	// Client returns the project's client id; ok is false when there is none.
+	Client(ctx context.Context, p Project, id string) (c Client, ok bool, err error)
+}
+
+// CodeRequest is an authorization code to issue for a signed-in account.
+type CodeRequest struct {
+	Project       Project
+	ClientID      string
+	RedirectURI   string
+	Scopes        []string
+	CodeChallenge string
+	Nonce         string
+	UserSession   string
+	EndUser       string
+	AuthTime      time.Time
+}
+
+// Hint is a verified id_token_hint: an ID token this issuer signed, expired or not.
+type Hint struct {
+	Subject  string
+	SID      string
+	Audience []string
+}
+
+// Grants issues codes and ends the grants a sign-out names.
+type Grants interface {
+	// IssueCode stores a code for req and returns it; the plaintext is never kept.
+	IssueCode(ctx context.Context, req CodeRequest) (string, error)
+	// VerifyHint checks that raw is an ID token this project issued, ignoring its expiry; ok is false when it is not.
+	VerifyHint(ctx context.Context, p Project, raw string) (h Hint, ok bool, err error)
+	// SessionOf returns the user session of the grant family sid in any state, empty when unknown or pruned; live reports the family is.
+	SessionOf(ctx context.Context, p Project, sid string) (userSession string, live bool, err error)
+	// EndSession revokes the grant family sid and ends userSession with its grants; anything already ended is no error.
+	EndSession(ctx context.Context, p Project, sid, userSession string) error
 }

@@ -7,6 +7,8 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
+const maxReturnToLen = 4096
+
 // ReturnTo returns raw rebuilt from its path and query when it names this issuer's authorize or account page, else the account page.
 func ReturnTo(issuer, raw string) string {
 	base := issuerPath(issuer)
@@ -29,8 +31,11 @@ func ReturnTo(issuer, raw string) string {
 	if u.Path != base+"/oauth2/authorize" && !strings.HasPrefix(u.Path, fallback) {
 		return fallback
 	}
-	out := &url.URL{Path: u.Path, RawQuery: u.Query().Encode()}
-	return out.String()
+	out := (&url.URL{Path: u.Path, RawQuery: u.Query().Encode()}).String()
+	if len(out) > maxReturnToLen {
+		return fallback
+	}
+	return out
 }
 
 func issuerPath(issuer string) string {

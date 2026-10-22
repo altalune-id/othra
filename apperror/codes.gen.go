@@ -97,10 +97,15 @@ const (
 	CodeResourceServerVerifyTooSoon       Code = "RSV008"
 	CodeResourceServerInvalidLinkScopes   Code = "RSV009"
 
-	CodeSignInLinkNotUsable Code = "SIG001"
-	CodeSignInEmailDisabled Code = "SIG002"
-	CodeSignInSessionGone   Code = "SIG003"
-	CodeSignInFormExpired   Code = "SIG004"
+	CodeSignInLinkNotUsable            Code = "SIG001"
+	CodeSignInEmailDisabled            Code = "SIG002"
+	CodeSignInSessionGone              Code = "SIG003"
+	CodeSignInFormExpired              Code = "SIG004"
+	CodeAuthorizeClientUnknown         Code = "SIG005"
+	CodeAuthorizeRedirectNotRegistered Code = "SIG006"
+	CodeAuthorizeRequestInvalid        Code = "SIG007"
+	CodeSignOutHintInvalid             Code = "SIG008"
+	CodeSignOutRedirectNotRegistered   Code = "SIG009"
 )
 
 var kinds = map[Code]Kind{
@@ -197,8 +202,13 @@ var kinds = map[Code]Kind{
 	CodeResourceServerVerifyTooSoon:       KindResourceExhausted,
 	CodeResourceServerInvalidLinkScopes:   KindInvalid,
 
-	CodeSignInLinkNotUsable: KindFailedPrecondition,
-	CodeSignInEmailDisabled: KindFailedPrecondition,
-	CodeSignInSessionGone:   KindFailedPrecondition,
-	CodeSignInFormExpired:   KindForbidden,
+	CodeSignInLinkNotUsable:            KindFailedPrecondition,
+	CodeSignInEmailDisabled:            KindFailedPrecondition,
+	CodeSignInSessionGone:              KindFailedPrecondition,
+	CodeSignInFormExpired:              KindForbidden,
+	CodeAuthorizeClientUnknown:         KindNotFound,
+	CodeAuthorizeRedirectNotRegistered: KindInvalid,
+	CodeAuthorizeRequestInvalid:        KindInvalid,
+	CodeSignOutHintInvalid:             KindInvalid,
+	CodeSignOutRedirectNotRegistered:   KindInvalid,
 }
