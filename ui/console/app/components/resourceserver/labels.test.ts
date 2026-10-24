@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ResourceServerSchema, ResourceServerState, VerificationFailureSchema } from '../../../gen/resourceserver/v1/resourceserver_pb';
 import { t } from '../../../test/nuxt-globals';
-import { resourceServerListLabels, scopeTableLabels, verificationCardLabels, verificationText } from './labels';
+import { cimdCardLabels, resourceServerListLabels, scopeTableLabels, verificationCardLabels, verificationText } from './labels';
 
 const at = (iso: string) => timestampFromDate(new Date(iso));
 const format = (when: Date) => when.toISOString().slice(0, 10);
@@ -14,6 +14,8 @@ describe('resource server labels', () => {
   it('translates the list, the scope editor and the card', () => {
     expect(resourceServerListLabels(t).checked).toBe('rs.col_checked');
     expect(scopeTableLabels(t).add).toBe('rs.add_scope');
+    expect(scopeTableLabels(t).description).toBe('rs.scope_description');
+    expect(cimdCardLabels(t)).toMatchObject({ title: 'rs.cimd_title', locked: 'rs.cimd_locked', firstSeen: 'links.first_seen', save: 'common.save' });
     expect(verificationCardLabels(t).copyLabel).toBe('common.copy_label|{"label":"{label}"}');
   });
 

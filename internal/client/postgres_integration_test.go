@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -213,4 +214,95 @@ func TestPostgres_HandleLockSharesTheUnitOfWork(t *testing.T) {
 	_, err = f.svc.Create(ctx, org, prj, client.KindWeb, client.Settings{Name: "Web", RedirectURIs: []string{"https://app.example/cb"}})
 	require.NoError(t, err)
 	assert.True(t, f.locked(t, prj))
+}
+
+type noLinks struct{}
+
+func (noLinks) LinkMetadataClient(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID, []string) error {
+	return nil
+}
+
+type docFetcher struct{ name string }
+
+func (d docFetcher) FetchMetadata(context.Context, string) (*client.FetchedMetadata, error) {
+	body := `{"client_id":"https://claude.ai/oauth/claude-code-client-metadata","client_name":"` + d.name +
+		`","redirect_uris":["http://localhost/callback"],"grant_types":["authorization_code","refresh_token"],"token_endpoint_auth_method":"none"}`
+	return &client.FetchedMetadata{Body: []byte(body), ContentType: "application/json", CacheControl: "max-age=1"}, nil
+}
+
+// A16, M11, E10: a shadow client is one row per project and URL, read by its URL, hidden from the list, and passes the 026 checks.
+func TestPostgres_ShadowClient(t *testing.T) {
+	f := newPGFixture(t)
+	org, prj := f.seed(t)
+	ctx := t.Context()
+	const metadataURL = "https://claude.ai/oauth/claude-code-client-metadata"
+	cfg := client.MetadataConfig{Cache: client.MetadataCache{Min: 0, Max: time.Hour, Default: time.Hour}, IssuerHost: "othra.example.com"}
+	f.svc.WithMetadata(docFetcher{name: "Claude Code"}, noLinks{}, cfg)
+	first, err := f.svc.Admit(ctx, org, prj, client.AdmitRequest{URL: metadataURL, ResourceServerID: uuid.New()})
+	require.NoError(t, err)
+	time.Sleep(1100 * time.Millisecond)
+	f.svc.WithMetadata(docFetcher{name: "Claude Code 2"}, noLinks{}, cfg)
+	second, err := f.svc.Admit(ctx, org, prj, client.AdmitRequest{URL: metadataURL, ResourceServerID: uuid.New()})
+	require.NoError(t, err)
+	assert.Equal(t, first.ID, second.ID)
+	assert.Equal(t, first.PublicID, second.PublicID)
+	assert.Equal(t, 1, f.count(t, "oauth_clients", prj))
+
+	got, err := f.svc.Get(ctx, org, prj, metadataURL)
+	require.NoError(t, err)
+	assert.Equal(t, "Claude Code 2", got.Name)
+	assert.Equal(t, metadataURL, got.OAuthID())
+	require.NotNil(t, got.MetadataExpiresAt)
+	byID, err := f.svc.Authenticate(ctx, org, prj, got.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, got.ID, byID.ID)
+	list, err := f.svc.List(ctx, org, prj)
+	require.NoError(t, err)
+	assert.Empty(t, list)
+	var kind string
+	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT registration_kind FROM oauth_clients WHERE id = $1`, got.ID).Scan(&kind))
+	assert.Equal(t, "cimd", kind)
+}
+
+// M11, A20: an expired shadow with no consent and no live grant is pruned; one with a consent stays.
+func TestPostgres_PruneShadows(t *testing.T) {
+	f := newPGFixture(t)
+	org, prj := f.seed(t)
+	ctx := t.Context()
+	insert := func(url string, expires time.Time) uuid.UUID {
+		id := uuid.New()
+		_, err := f.db.ExecContext(ctx, `INSERT INTO oauth_clients (id, public_id, org_id, project_id, name, client_type, application_type,
+			token_endpoint_auth_method, grant_types, allowed_scopes, redirect_uris, consent_policy, registration_kind, metadata_url,
+			metadata_fetched_at, metadata_expires_at, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, 'C', 'public', 'native', 'none', '{authorization_code}', '{openid}', '{http://localhost/callback}',
+			'require', 'cimd', $5, $6, $6, now(), now())`, id, "c"+strings.ReplaceAll(uuid.NewString(), "-", "")[:20], org, prj, url, expires)
+		require.NoError(t, err)
+		return id
+	}
+	old := time.Now().Add(-8 * 24 * time.Hour)
+	unused := insert("https://a.example.com/c.json", old)
+	consented := insert("https://b.example.com/c.json", old)
+	fresh := insert("https://c.example.com/c.json", time.Now().Add(time.Hour))
+	endUser := uuid.New()
+	_, err := f.db.ExecContext(ctx, `INSERT INTO end_users (id, public_id, org_id, project_id, email, created_at, updated_at) VALUES ($1, $2, $3, $4, 'e@example.com', now(), now())`,
+		endUser, "e"+endUser.String()[:12], org, prj)
+	require.NoError(t, err)
+	_, err = f.db.ExecContext(ctx, `INSERT INTO scope_consents (id, public_id, org_id, project_id, end_user_id, client_id, scopes, granted_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, '{openid}', now(), now())`, uuid.New(), "k"+uuid.NewString()[:12], org, prj, endUser, consented)
+	require.NoError(t, err)
+
+	n, err := f.svc.PruneShadows(ctx, org, prj)
+	require.NoError(t, err)
+	assert.Equal(t, 1, n)
+	var left []uuid.UUID
+	rows, err := f.db.QueryContext(ctx, `SELECT id FROM oauth_clients WHERE project_id = $1 ORDER BY metadata_url`, prj)
+	require.NoError(t, err)
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var id uuid.UUID
+		require.NoError(t, rows.Scan(&id))
+		left = append(left, id)
+	}
+	assert.Equal(t, []uuid.UUID{consented, fresh}, left)
+	assert.NotContains(t, left, unused)
 }

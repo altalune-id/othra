@@ -9,18 +9,19 @@ import (
 
 // NewCode is a code to store, named by the public ids of its client, user session and end user.
 type NewCode struct {
-	ID            uuid.UUID
-	Hash          string
-	Client        string
-	UserSession   string
-	EndUser       string
-	RedirectURI   string
-	Scopes        []string
-	CodeChallenge string
-	Nonce         string
-	AuthTime      time.Time
-	CreatedAt     time.Time
-	ExpiresAt     time.Time
+	ID               uuid.UUID
+	Hash             string
+	Client           string
+	UserSession      string
+	EndUser          string
+	RedirectURI      string
+	Scopes           []string
+	CodeChallenge    string
+	Nonce            string
+	AuthTime         time.Time
+	CreatedAt        time.Time
+	ExpiresAt        time.Time
+	ResourceServerID *uuid.UUID
 }
 
 // Cutoffs are what Prune keeps: codes and tokens until Now, used codes after UsedCodes, families revoked after Revoked and used after Idle.
@@ -51,10 +52,17 @@ type Store interface {
 	// RevokeUserSession revokes the live families of the user session userSession without offline_access, and drops its unused codes.
 	RevokeUserSession(ctx context.Context, projectID uuid.UUID, userSession, reason string, now time.Time) error
 
-	// InsertAccessToken stores an access token of the family by its hash.
-	InsertAccessToken(ctx context.Context, orgID, projectID, familyID uuid.UUID, hash string, scopes []string, now, expires time.Time) error
+	// InsertAccessToken stores an access token of the family, bound to resourceServerID or nil, by its hash.
+	InsertAccessToken(
+		ctx context.Context, orgID, projectID, familyID uuid.UUID, resourceServerID *uuid.UUID, hash string, scopes []string,
+		now, expires time.Time,
+	) error
 	// AccessByHash returns the access token with hash and its family, or nil.
 	AccessByHash(ctx context.Context, projectID uuid.UUID, hash string) (*Access, error)
+	// RevokeAccessToken revokes the access token tokenID alone at now.
+	RevokeAccessToken(ctx context.Context, projectID, tokenID uuid.UUID, now time.Time) error
+	// Subject returns the public id of the end user endUserID, the sub of an access token.
+	Subject(ctx context.Context, projectID, endUserID uuid.UUID) (string, error)
 
 	// InsertRefreshToken stores a refresh token of the family by its hash.
 	InsertRefreshToken(ctx context.Context, orgID, projectID, familyID uuid.UUID, hash string, now, expires time.Time) error

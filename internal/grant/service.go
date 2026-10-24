@@ -2,6 +2,7 @@ package grant
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"slices"
 	"time"
@@ -24,6 +25,8 @@ type Service struct {
 	now        func() time.Time
 	newSecret  func() (string, error)
 	log        *slog.Logger
+	tokens     AccessTokens
+	audiences  Audiences
 }
 
 // NewService builds the Service over store.
@@ -37,6 +40,12 @@ func NewService(store Store, uow db.Transactor, cfg Config, unexpected apperror.
 // WithLogger sets where revocations are logged.
 func (s *Service) WithLogger(log *slog.Logger) *Service {
 	s.log = log
+	return s
+}
+
+// WithResources signs at+jwt access tokens with tokens for grants bound to a resource server that audiences still admits.
+func (s *Service) WithResources(tokens AccessTokens, audiences Audiences) *Service {
+	s.tokens, s.audiences = tokens, audiences
 	return s
 }
 
@@ -60,6 +69,8 @@ type CodeRequest struct {
 	UserSession   string
 	EndUser       string
 	AuthTime      time.Time
+	// ResourceServerID is the resource server the code is bound to (RFC 8707); nil for a sign-in with no resource.
+	ResourceServerID *uuid.UUID
 }
 
 // IssueCode stores a code for req and returns its plaintext once; *SessionGoneError when the account or client is gone.
@@ -73,7 +84,7 @@ func (s *Service) IssueCode(ctx context.Context, p Project, req CodeRequest) (st
 	err = s.store.InsertCode(ctx, p.ID, NewCode{
 		ID: uuid.New(), Hash: nanoid.HashToken(code), Client: req.Client, UserSession: req.UserSession, EndUser: req.EndUser,
 		RedirectURI: req.RedirectURI, Scopes: req.Scopes, CodeChallenge: req.CodeChallenge, Nonce: req.Nonce,
-		AuthTime: req.AuthTime.UTC(), CreatedAt: now, ExpiresAt: now.Add(s.cfg.CodeTTL),
+		AuthTime: req.AuthTime.UTC(), CreatedAt: now, ExpiresAt: now.Add(s.cfg.CodeTTL), ResourceServerID: req.ResourceServerID,
 	})
 	if err != nil {
 		return "", s.errOrReport(ctx, "grant: issue code", err)
@@ -81,12 +92,13 @@ func (s *Service) IssueCode(ctx context.Context, p Project, req CodeRequest) (st
 	return code, nil
 }
 
-// ExchangeRequest redeems Code for the authenticated Client; RedirectURI is "" when the request left it out.
+// ExchangeRequest redeems Code for the authenticated Client; RedirectURI and Resource are "" when the request left them out.
 type ExchangeRequest struct {
 	Client       Client
 	Code         string
 	RedirectURI  string
 	CodeVerifier string
+	Resource     string
 }
 
 // Exchange redeems a code once and starts its grant family; a replay by its own client and verifier revokes the family it started.
@@ -116,6 +128,10 @@ func (s *Service) Exchange(ctx context.Context, p Project, req ExchangeRequest) 
 		case !verifyPKCE(c.CodeChallenge, req.CodeVerifier):
 			return &InvalidGrantError{}
 		}
+		aud, err := s.audience(ctx, p, c.ResourceServerID, req.Client, c.Scopes, req.Resource)
+		if err != nil {
+			return err
+		}
 		sid, err := nanoid.New(publicIDLen)
 		if err != nil {
 			return err
@@ -123,7 +139,7 @@ func (s *Service) Exchange(ctx context.Context, p Project, req ExchangeRequest) 
 		f := &Family{
 			ID: uuid.New(), PublicID: sid, ClientID: c.ClientID, EndUserID: c.EndUserID, UserSessionID: c.UserSessionID,
 			UserSession: c.UserSession, Scopes: c.Scopes, AuthTime: c.AuthTime, CreatedAt: now, LastUsedAt: now,
-			AbsoluteExpiresAt: now.Add(s.cfg.RefreshAbsolute),
+			AbsoluteExpiresAt: now.Add(s.cfg.RefreshAbsolute), ResourceServerID: c.ResourceServerID,
 		}
 		if err := s.store.InsertFamily(ctx, p.OrgID, p.ID, f); err != nil {
 			return err
@@ -131,7 +147,9 @@ func (s *Service) Exchange(ctx context.Context, p Project, req ExchangeRequest) 
 		if err := s.store.UseCode(ctx, p.ID, c.ID, f.ID, now); err != nil {
 			return err
 		}
-		out, err = s.issue(ctx, p, f, c.Scopes, req.Client.Refresh && slices.Contains(c.Scopes, ScopeOfflineAccess), now)
+		out, err = s.issue(ctx, p, f, issueRequest{
+			client: req.Client, scopes: c.Scopes, refresh: req.Client.Refresh && slices.Contains(c.Scopes, ScopeOfflineAccess), audience: aud,
+		}, now)
 		if out != nil {
 			out.Nonce = c.Nonce
 		}
@@ -154,6 +172,8 @@ type RefreshRequest struct {
 	Client       Client
 	RefreshToken string
 	Scopes       []string
+	// Resource is "" or the resource server identifier the grant is bound to (RFC 8707 §2.2).
+	Resource string
 }
 
 // Refresh rotates a refresh token; a used token revokes its family, and so does another client presenting it.
@@ -184,6 +204,17 @@ func (s *Service) Refresh(ctx context.Context, p Project, req RefreshRequest) (*
 			return &InvalidGrantError{}
 		case req.Scopes != nil && !subset(req.Scopes, f.Scopes):
 			return &InvalidScopeError{}
+		case req.Scopes != nil && f.ResourceServerID != nil && len(ResourceScopes(req.Scopes)) == 0:
+			// NOTE: qa O1, E3: a resource-bound token keeps at least one of its server's scopes.
+			return &InvalidScopeError{}
+		}
+		scopes := f.Scopes
+		if req.Scopes != nil {
+			scopes = req.Scopes
+		}
+		aud, err := s.audience(ctx, p, f.ResourceServerID, req.Client, scopes, req.Resource)
+		if err != nil {
+			return err
 		}
 		if err := s.store.UseRefreshToken(ctx, p.ID, rt.ID, now); err != nil {
 			return err
@@ -192,11 +223,7 @@ func (s *Service) Refresh(ctx context.Context, p Project, req RefreshRequest) (*
 			return err
 		}
 		f.LastUsedAt = now
-		scopes := f.Scopes
-		if req.Scopes != nil {
-			scopes = req.Scopes
-		}
-		out, err = s.issue(ctx, p, f, scopes, true, now)
+		out, err = s.issue(ctx, p, f, issueRequest{client: req.Client, scopes: scopes, refresh: true, audience: aud}, now)
 		return err
 	})
 	if err != nil {
@@ -211,16 +238,50 @@ func (s *Service) Refresh(ctx context.Context, p Project, req RefreshRequest) (*
 	return out, nil
 }
 
-func (s *Service) issue(ctx context.Context, p Project, f *Family, scopes []string, refresh bool, now time.Time) (*Tokens, error) {
-	access, err := s.newSecret()
+// SECURITY: RFC 8707 §2.2, RFC 9700 §2.3: every token rechecks that the server still admits the client and scopes.
+func (s *Service) audience(ctx context.Context, p Project, rsID *uuid.UUID, c Client, scopes []string, requested string) (string, error) {
+	if rsID == nil {
+		if requested != "" {
+			return "", &InvalidTargetError{}
+		}
+		return "", nil
+	}
+	if s.audiences == nil {
+		return "", errNoResources
+	}
+	aud, ok, err := s.audiences.Audience(ctx, p, *rsID, c, ResourceScopes(scopes))
+	switch {
+	case err != nil:
+		return "", err
+	case !ok:
+		return "", &InvalidGrantError{}
+	case requested != "" && requested != aud:
+		return "", &InvalidTargetError{}
+	}
+	return aud, nil
+}
+
+var errNoResources = errors.New("grant: no access token signer for resource-bound grants")
+
+type issueRequest struct {
+	client   Client
+	scopes   []string
+	refresh  bool
+	audience string
+}
+
+func (s *Service) issue(ctx context.Context, p Project, f *Family, req issueRequest, now time.Time) (*Tokens, error) {
+	out := &Tokens{Family: f, ExpiresAt: now.Add(s.cfg.AccessTokenTTL), Scopes: req.scopes, Audience: req.audience}
+	access, err := s.accessToken(ctx, p, f, req, out.ExpiresAt, now)
 	if err != nil {
 		return nil, err
 	}
-	out := &Tokens{Family: f, AccessToken: access, ExpiresAt: now.Add(s.cfg.AccessTokenTTL), Scopes: scopes}
-	if err := s.store.InsertAccessToken(ctx, p.OrgID, p.ID, f.ID, nanoid.HashToken(access), scopes, now, out.ExpiresAt); err != nil {
+	out.AccessToken = access
+	err = s.store.InsertAccessToken(ctx, p.OrgID, p.ID, f.ID, f.ResourceServerID, nanoid.HashToken(access), req.scopes, now, out.ExpiresAt)
+	if err != nil {
 		return nil, err
 	}
-	if !refresh {
+	if !req.refresh {
 		return out, nil
 	}
 	if out.RefreshToken, err = s.newSecret(); err != nil {
@@ -236,6 +297,23 @@ func (s *Service) issue(ctx context.Context, p Project, f *Family, scopes []stri
 	return out, nil
 }
 
+func (s *Service) accessToken(ctx context.Context, p Project, f *Family, req issueRequest, expires, now time.Time) (string, error) {
+	if f.ResourceServerID == nil {
+		return s.newSecret()
+	}
+	if s.tokens == nil {
+		return "", errNoResources
+	}
+	subject, err := s.store.Subject(ctx, p.ID, f.EndUserID)
+	if err != nil {
+		return "", err
+	}
+	return s.tokens.Sign(ctx, p, AccessToken{
+		Audience: req.audience, Subject: subject, ClientID: req.client.OAuthID, SessionID: f.PublicID,
+		Scopes: ResourceScopes(req.scopes), AuthTime: f.AuthTime, IssuedAt: now, ExpiresAt: expires,
+	})
+}
+
 // Access returns the live access token token with its grant, or *InvalidTokenError.
 func (s *Service) Access(ctx context.Context, p Project, token string) (*Access, error) {
 	ctx = scope(ctx, p)
@@ -244,10 +322,58 @@ func (s *Service) Access(ctx context.Context, p Project, token string) (*Access,
 	switch {
 	case err != nil:
 		return nil, s.errOrReport(ctx, "grant: access", err)
-	case a == nil, !now.Before(a.ExpiresAt), !a.Family.Live(now):
+	case a == nil, a.RevokedAt != nil, !now.Before(a.ExpiresAt), !a.Family.Live(now):
 		return nil, &InvalidTokenError{}
 	}
 	return a, nil
+}
+
+// Revoke ends c's token per RFC 7009 §2.1; SECURITY: an unknown or foreign token is ignored, so the caller answers 200 (§2.2).
+func (s *Service) Revoke(ctx context.Context, p Project, c Client, token, hint string) error {
+	ctx = scope(ctx, p)
+	now := s.now()
+	hash := nanoid.HashToken(token)
+	var family string
+	access := func(ctx context.Context) (bool, error) {
+		a, err := s.store.AccessByHash(ctx, p.ID, hash)
+		if err != nil || a == nil {
+			return false, err
+		}
+		if a.Family.ClientID != c.ID || a.RevokedAt != nil {
+			return true, nil
+		}
+		return true, s.store.RevokeAccessToken(ctx, p.ID, a.ID, now)
+	}
+	refresh := func(ctx context.Context) (bool, error) {
+		rt, f, err := s.store.RefreshByHash(ctx, p.ID, hash)
+		if err != nil || rt == nil {
+			return false, err
+		}
+		if f.ClientID != c.ID || f.RevokedAt != nil {
+			return true, nil
+		}
+		family = f.PublicID
+		return true, s.store.RevokeFamily(ctx, p.ID, f.ID, ReasonRevoked, now)
+	}
+	lookups := []func(context.Context) (bool, error){access, refresh}
+	if hint == "refresh_token" {
+		lookups = []func(context.Context) (bool, error){refresh, access}
+	}
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		for _, lookup := range lookups {
+			if found, err := lookup(ctx); err != nil || found {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return s.errOrReport(ctx, "grant: revoke", err)
+	}
+	if family != "" {
+		s.revoked(ctx, family, ReasonRevoked)
+	}
+	return nil
 }
 
 // Family returns the live grant family sid, or nil when it is unknown, revoked or expired.

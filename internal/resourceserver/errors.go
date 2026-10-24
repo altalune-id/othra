@@ -94,6 +94,8 @@ const (
 	ScopeReserved  ScopeReason = "reserved"
 	ScopeDuplicate ScopeReason = "duplicate"
 	ScopeTooMany   ScopeReason = "too_many"
+	// ScopeDescription is a scope description outside 1 to 120 characters.
+	ScopeDescription ScopeReason = "description"
 )
 
 // InvalidScopeError signals a resource server scope that breaks the scope rules.
@@ -121,10 +123,11 @@ func (e *InvalidScopeError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeResourceServerInvalidScope, "Invalid scope").WithMeta(meta).WithCause(e)
 }
 
-// ScopePinnedError signals the removal of a scope that links still allow.
+// ScopePinnedError signals the removal of a scope that links, or the CIMD admission when CIMD is set, still allow.
 type ScopePinnedError struct {
 	Scope   string
 	Clients []string
+	CIMD    bool
 }
 
 func (e *ScopePinnedError) Error() string {
@@ -139,8 +142,62 @@ func IsScopePinnedError(err error) bool {
 
 // ToAppError maps ScopePinnedError to RSV005 with the scope and the client names.
 func (e *ScopePinnedError) ToAppError() *apperror.AppError {
-	return apperror.New(apperror.CodeResourceServerScopePinned, "Scope is still allowed for linked clients").
-		WithMeta(map[string]string{"scope": apperror.Echo(e.Scope), "clients": names(e.Clients)}).WithCause(e)
+	meta := map[string]string{"scope": apperror.Echo(e.Scope), "clients": names(e.Clients)}
+	if e.CIMD {
+		meta["reason"] = "cimd_admission"
+	}
+	return apperror.New(apperror.CodeResourceServerScopePinned, "Scope is still allowed for linked clients").WithMeta(meta).WithCause(e)
+}
+
+// HostReason is the stable cause of an InvalidClientHostError, sent to clients as meta.reason.
+type HostReason string
+
+// The causes of an InvalidClientHostError.
+const (
+	HostFormat    HostReason = "format"
+	HostIPLiteral HostReason = "ip_literal"
+	HostDuplicate HostReason = "duplicate"
+	HostTooMany   HostReason = "too_many"
+)
+
+// InvalidClientHostError signals a CIMD allowed host that is not a lower-case DNS name, repeats, or one too many.
+type InvalidClientHostError struct {
+	Host   string
+	Reason HostReason
+}
+
+func (e *InvalidClientHostError) Error() string {
+	return "resourceserver: invalid CIMD host " + apperror.Echo(e.Host) + ": " + string(e.Reason)
+}
+
+// IsInvalidClientHostError reports whether err's tree contains an *InvalidClientHostError.
+func IsInvalidClientHostError(err error) bool {
+	_, ok := errors.AsType[*InvalidClientHostError](err)
+	return ok
+}
+
+// ToAppError maps InvalidClientHostError to RSV010 with the host and the reason.
+func (e *InvalidClientHostError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeResourceServerInvalidClientHost, "Invalid host").
+		WithMeta(map[string]string{"host": apperror.Echo(e.Host), "reason": string(e.Reason)}).WithCause(e)
+}
+
+// AdmissionUnverifiedError signals CIMD admission turned on for a server that is neither verified nor trusted.
+type AdmissionUnverifiedError struct{}
+
+func (*AdmissionUnverifiedError) Error() string {
+	return "resourceserver: CIMD admission needs a verified server"
+}
+
+// IsAdmissionUnverifiedError reports whether err's tree contains an *AdmissionUnverifiedError.
+func IsAdmissionUnverifiedError(err error) bool {
+	_, ok := errors.AsType[*AdmissionUnverifiedError](err)
+	return ok
+}
+
+// ToAppError maps AdmissionUnverifiedError to RSV011.
+func (e *AdmissionUnverifiedError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeResourceServerAdmissionUnverified, "Verify the resource server first").WithCause(e)
 }
 
 // LinkedError signals a delete of a resource server that clients are still linked to.
@@ -280,5 +337,24 @@ func names(clients []string) string {
 func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsInvalidIdentifierError(err) || IsIdentifierTakenError(err) || IsInvalidScopeError(err) ||
 		IsScopePinnedError(err) || IsLinkedError(err) || IsTrustSelfHostedOnlyError(err) || IsVerifyTooSoonError(err) ||
-		IsInvalidLinkScopesError(err) || IsClientNotFoundError(err) || IsProjectNotFoundError(err)
+		IsInvalidLinkScopesError(err) || IsClientNotFoundError(err) || IsProjectNotFoundError(err) || IsInvalidClientHostError(err) ||
+		IsAdmissionUnverifiedError(err) || IsClientManagedError(err)
+}
+
+// ClientManagedError signals a link change for a metadata document client, which only its admission sets.
+type ClientManagedError struct{}
+
+func (*ClientManagedError) Error() string {
+	return "resourceserver: client managed by its metadata document"
+}
+
+// IsClientManagedError reports whether err's tree contains a *ClientManagedError.
+func IsClientManagedError(err error) bool {
+	_, ok := errors.AsType[*ClientManagedError](err)
+	return ok
+}
+
+// ToAppError maps ClientManagedError to CLT008.
+func (e *ClientManagedError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeClientMetadataManaged, "This app is managed by its metadata document").WithCause(e)
 }

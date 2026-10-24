@@ -2,12 +2,19 @@ package boot
 
 import (
 	"cmp"
+	"context"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/grant"
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/keys"
+	"altalune.id/othra/internal/resourceserver"
 )
 
 const (
@@ -26,7 +33,37 @@ func grantConfig(c config.OAuthConfig) grant.Config {
 	}
 }
 
-func buildGrants(k kernel.Kernel, cfg config.Config, uow db.Transactor) *grant.Service {
+func buildGrants(k kernel.Kernel, cfg config.Config, uow db.Transactor, signing *keys.Service, audiences grant.Audiences) *grant.Service {
 	store := grant.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
-	return grant.NewService(store, uow, grantConfig(cfg.OAuth), k.Reporter.Unexpected).WithLogger(orDiscard(k.Log))
+	svc := grant.NewService(store, uow, grantConfig(cfg.OAuth), k.Reporter.Unexpected).WithLogger(orDiscard(k.Log))
+	if signing != nil {
+		svc.WithResources(accessTokenSigner{signer: keys.NewSigner(signing)}, audiences)
+	}
+	return svc
+}
+
+type accessTokenSigner struct{ signer *keys.Signer }
+
+var _ grant.AccessTokens = accessTokenSigner{}
+
+func (a accessTokenSigner) Sign(ctx context.Context, p grant.Project, t grant.AccessToken) (string, error) {
+	ctx = tenant.Into(ctx, tenant.Context{OrgID: p.OrgID, ProjectID: p.ID})
+	tok, err := a.signer.Mint(ctx, p.ID, &keys.MintInput{
+		Issuer: p.IssuerURL, Subject: t.Subject, Audience: []string{t.Audience}, ClientID: t.ClientID, SessionID: t.SessionID,
+		Scope: strings.Join(t.Scopes, " "), AuthTime: t.AuthTime, IssuedAt: t.IssuedAt, ExpiresAt: t.ExpiresAt,
+	})
+	if err != nil {
+		return "", err
+	}
+	return tok.Compact, nil
+}
+
+type grantAudiences struct{ servers *resourceserver.Service }
+
+var _ grant.Audiences = grantAudiences{}
+
+func (a grantAudiences) Audience(
+	ctx context.Context, p grant.Project, serverID uuid.UUID, c grant.Client, scopes []string,
+) (identifier string, ok bool, err error) {
+	return a.servers.Admits(ctx, p.OrgID, p.ID, serverID, c.ID, c.CIMDHost, scopes)
 }

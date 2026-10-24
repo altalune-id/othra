@@ -299,7 +299,7 @@ components:
         id:
           type: string
           title: id
-          description: id is the OAuth client_id.
+          description: id is the client's public id and, for a registered client, its OAuth client_id.
         name:
           type: string
           title: name
@@ -354,6 +354,17 @@ components:
           type: boolean
           title: pkce_required
           description: pkce_required is false only for a WEB client that can't send PKCE; it must then send a nonce.
+        registration:
+          title: registration
+          $ref: '#/components/schemas/client.v1.ClientRegistration'
+        metadataUrl:
+          type: string
+          title: metadata_url
+          description: metadata_url is a CIMD client's OAuth client_id, where its metadata document lives; empty for a registered client.
+        metadataFetchedAt:
+          title: metadata_fetched_at
+          description: metadata_fetched_at is when Othra last read a CIMD client's metadata document.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
       title: Client
       additionalProperties: false
     client.v1.ClientKind:
@@ -364,6 +375,14 @@ components:
         - CLIENT_KIND_WEB
         - CLIENT_KIND_CLI
       description: ClientKind is fixed at create.
+    client.v1.ClientRegistration:
+      type: string
+      title: ClientRegistration
+      enum:
+        - CLIENT_REGISTRATION_UNSPECIFIED
+        - CLIENT_REGISTRATION_REGISTERED
+        - CLIENT_REGISTRATION_CIMD
+      description: ClientRegistration is how a client came to the project.
     client.v1.ClientSecret:
       type: object
       properties:

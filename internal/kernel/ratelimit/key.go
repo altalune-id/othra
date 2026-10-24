@@ -24,3 +24,9 @@ func EmailSubject(email string) string {
 	sum := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(email))))
 	return "email:" + hex.EncodeToString(sum[:])
 }
+
+// HostSubject is the subject for a host name, lower-cased.
+func HostSubject(host string) string { return "host:" + strings.ToLower(host) }
+
+// URLSubject is the subject for a URL, kept as given.
+func URLSubject(url string) string { return "url:" + url }

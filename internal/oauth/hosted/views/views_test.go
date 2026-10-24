@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
 )
@@ -377,4 +378,150 @@ func TestError_HelpLineOnlyWithSomethingToShare(t *testing.T) {
 	} {
 		assert.Contains(t, html(t, en, Error(page(), v)), "share the reference ID", name)
 	}
+}
+
+func consentData() ConsentData {
+	return ConsentData{
+		Site:         site,
+		Client:       "Claude Code",
+		ClientHost:   "claude.ai",
+		RS:           "Openwa MCP",
+		RSIdentifier: "https://openwa.example.com/mcp",
+		Email:        "ana@acme.test",
+		UserSession:  "us1",
+		ReturnTo:     "/id/p/acme/oauth2/authorize?client_id=x",
+		ConsentToken: "tok-consent",
+		Scopes: []ConsentScope{
+			{Scope: "openid", AllowedBefore: true},
+			{Scope: "messages:read", Description: "Read your messages"},
+			{Scope: "offline_access"},
+			{Scope: "devices:write"},
+		},
+		RedirectHost: "localhost",
+		Loopback:     true,
+	}
+}
+
+func TestConsent_FirstTime(t *testing.T) {
+	out := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Consent(page(), consentData())), "> <", "><")
+	assert.Contains(t, out, "<title>Allow Claude Code to access Openwa MCP? · Acme Store</title>")
+	assert.Contains(t, out, `<span class="font-medium">Openwa MCP</span>`)
+	assert.Contains(t, out, `https://openwa.example.com/mcp</span>`)
+	assert.Contains(t, out, `aria-hidden="true">C</span>`, "a letter avatar, never a hot-linked logo")
+	assert.NotContains(t, out, "<img")
+
+	assert.Contains(t, out, `role="note" class="alert alert-warning alert-soft`)
+	assert.Contains(t, out, "Unverified app")
+	assert.Contains(t, out, "Acme Store hasn&#39;t reviewed this app. Its details come from claude.ai.")
+
+	assert.Contains(t, out, `<span class="block text-sm font-medium">Read your messages</span><span class="block font-mono text-xs text-base-content/70">messages:read</span>`)
+	assert.Contains(t, out, `<span class="block text-sm font-medium">Stay connected when you&#39;re away</span>`, "offline_access is its own line")
+	assert.Contains(t, out, `<span class="block text-sm font-medium">devices:write</span>`, "no description: the raw scope")
+	assert.Contains(t, out, `<span class="badge badge-ghost badge-sm">Allowed before</span>`)
+	order := []int{strings.Index(out, "messages:read"), strings.Index(out, ">offline_access<"), strings.Index(out, "devices:write"), strings.Index(out, ">openid<")}
+	assert.IsIncreasing(t, order, "new scopes first, in request order; allowed-before last")
+
+	assert.Contains(t, out, "After you allow, you&#39;ll go back to <span class=\"font-medium\">localhost</span>.")
+	assert.Contains(t, out, `<p class="font-medium">That&#39;s a program on this device. Continue only if you started this sign-in.</p>`)
+
+	form := out[strings.Index(out, `<form method="post" action="/id/p/acme/consent"`):]
+	assert.Contains(t, form, `<input type="hidden" name="csrf" value="tok-consent"><input type="hidden" name="user_session" value="us1"><input type="hidden" name="return_to" value="/id/p/acme/oauth2/authorize?client_id=x">`)
+	assert.Contains(t, form, `<button class="btn btn-primary btn-block" type="submit">Allow</button><button class="btn btn-ghost btn-block" type="submit" name="deny" value="1" formnovalidate>Deny</button>`)
+	assert.Contains(t, out, `href="/id/p/acme/login?add=1&amp;return_to=%2Fid%2Fp%2Facme%2Foauth2%2Fauthorize%3Fclient_id%3Dx">Use another account</a>`)
+	assert.Contains(t, out, `<span class="block truncate font-medium" title="ana@acme.test">ana@acme.test</span>`)
+}
+
+func TestConsent_RegisteredAccountTitleNoLoopback(t *testing.T) {
+	v := consentData()
+	v.ClientHost, v.RS, v.RSIdentifier, v.Loopback, v.RedirectHost = "", "", "", false, "app.example"
+	out := html(t, ctxIn(t, i18n.Indonesian), Consent(page(), v))
+	assert.Contains(t, out, "Izinkan Claude Code mengakses akun Acme Store Anda?")
+	assert.NotContains(t, out, "alert-warning", "no CIMD note for a registered client")
+	assert.NotContains(t, out, "perangkat ini", "no loopback warning")
+	assert.Contains(t, out, `Setelah Anda mengizinkan, Anda akan kembali ke <span class="font-medium">app.example</span>.`)
+	assert.Contains(t, out, "Mengetahui siapa Anda")
+	assert.Contains(t, out, ">Izinkan</button>")
+}
+
+func TestConsent_Remembered(t *testing.T) {
+	v := consentData()
+	v.Remembered = true
+	out := html(t, ctxIn(t, i18n.English), Consent(page(), v))
+	assert.Contains(t, out, "<title>Continue to Claude Code? · Acme Store</title>")
+	assert.Contains(t, out, "You allowed Claude Code to access Openwa MCP before.")
+	assert.Contains(t, out, `<p class="text-xs text-base-content/70">From claude.ai · unverified app</p>`)
+	assert.NotContains(t, out, "alert-warning", "the remembered page has one muted line, not the box")
+	assert.NotContains(t, out, "messages:read", "no scope list")
+	assert.Contains(t, out, "You&#39;ll go back to <span class=\"font-medium\">localhost</span>.")
+	assert.Contains(t, out, "That&#39;s a program on this device.")
+	assert.Contains(t, out, `<button class="btn btn-primary btn-block" type="submit">Continue to Claude Code</button>`)
+	assert.Contains(t, out, `name="deny" value="1" formnovalidate>Deny</button>`)
+	assert.Contains(t, out, `name="csrf" value="tok-consent"`, "a real POST, never a link")
+
+	v.ClientHost = ""
+	assert.NotContains(t, html(t, ctxIn(t, i18n.English), Consent(page(), v)), "unverified app")
+}
+
+func TestConsent_EscapesTheAppsName(t *testing.T) {
+	v := consentData()
+	v.Client = `<script>x</script>`
+	v.Scopes = []ConsentScope{{Scope: "a", Description: `<img src=x>`}}
+	out := html(t, ctxIn(t, i18n.English), Consent(page(), v))
+	assert.NotContains(t, out, "<script>")
+	assert.NotContains(t, out, "<img")
+}
+
+func TestAuthorizeError(t *testing.T) {
+	en := ctxIn(t, i18n.English)
+	v := AuthorizeError(en, site, apperror.CodeAuthorizeRedirectNotRegistered, "req-9")
+	assert.Equal(t, ErrorData{
+		Site: site, Title: "Can't sign in to this app", Message: "This app asked to return to an address that isn't registered for it.",
+		Code: "SIG006", Reference: "req-9", NoSignIn: true,
+	}, v)
+	out := html(t, en, Error(page(), v))
+	assert.NotContains(t, out, "Back to sign in")
+	assert.Contains(t, out, "SIG006")
+}
+
+func TestTerms_UsesTheSharedAccountTile(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Terms(page(), TermsData{Site: site, Email: "ana@acme.test", TermsURL: "https://acme.test/t"}))
+	assert.Contains(t, out, `<span class="block truncate font-medium" title="ana@acme.test">ana@acme.test</span>`)
+	assert.Contains(t, out, ">Use another account</a>")
+}
+
+func TestLoginAndPicker_CIMDClientShowsItsHost(t *testing.T) {
+	en := ctxIn(t, i18n.English)
+	line := `<p class="text-xs text-base-content/70">From claude.ai · unverified app</p>`
+	login := html(t, en, Login(page(), LoginData{Site: site, Client: "Claude Code", ClientHost: "claude.ai"}))
+	assert.Contains(t, login, "Sign in to continue to Claude Code.")
+	assert.Contains(t, login, line, "R-10: a self-asserted name always comes with its host")
+	assert.Less(t, strings.Index(login, "Claude Code."), strings.Index(login, line))
+
+	picker := html(t, en, Picker(page(), PickerData{Site: site, Client: "Claude Code", ClientHost: "claude.ai"}))
+	assert.Contains(t, picker, line)
+
+	id := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Client: "Claude Code", ClientHost: "claude.ai"}))
+	assert.Contains(t, id, "Dari claude.ai · aplikasi belum terverifikasi")
+
+	for name, out := range map[string]string{
+		"registered login":  html(t, en, Login(page(), LoginData{Site: site, Client: "Openwa Web"})),
+		"registered picker": html(t, en, Picker(page(), PickerData{Site: site, Client: "Openwa Web"})),
+		"no client":         html(t, en, Login(page(), LoginData{Site: site, ClientHost: "claude.ai"})),
+	} {
+		assert.NotContains(t, out, "unverified app", name)
+	}
+}
+
+func TestConsent_AppMarkSitsInTheTitleRow(t *testing.T) {
+	en := ctxIn(t, i18n.English)
+	for name, v := range map[string]ConsentData{
+		"first":      consentData(),
+		"remembered": func() ConsentData { v := consentData(); v.Remembered = true; return v }(),
+		"account":    func() ConsentData { v := consentData(); v.RS, v.RSIdentifier = "", ""; return v }(),
+	} {
+		out := strings.ReplaceAll(html(t, en, Consent(page(), v)), "> <", "><")
+		assert.Regexp(t, `<div class="flex items-center gap-3"><span class="[^"]*rounded-full[^"]*" aria-hidden="true">C</span><h1 `, out, "%s: MF3 the app mark is the title's", name)
+	}
+	first := strings.ReplaceAll(html(t, en, Consent(page(), consentData())), "> <", "><")
+	assert.Contains(t, first, `</h1></div><p class="text-sm"><span class="font-medium">Openwa MCP</span><span class="block font-mono text-xs break-all text-base-content/70">https://openwa.example.com/mcp</span></p>`, "the resource line is text only, under the title")
 }

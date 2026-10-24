@@ -2,10 +2,12 @@
 package resourceserver
 
 import (
+	"net"
 	"net/url"
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -17,6 +19,8 @@ const (
 	MaxScopeLength      = 128
 	// FailureLimit is how many scheduled checks in a row may fail before a verified server becomes failed.
 	FailureLimit = 3
+	// MaxClientHosts bounds the hosts a server admits metadata document clients from.
+	MaxClientHosts = 64
 	// MetadataPath is the RFC 9728 §3 well-known path, inserted between the host and the path of the identifier.
 	MetadataPath = "/.well-known/oauth-protected-resource"
 )
@@ -73,8 +77,11 @@ type ResourceServer struct {
 	Trusted             bool
 	TrustedAt           *time.Time
 	TrustedBy           uuid.UUID
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
+	Admission           Admission
+	// Descriptions are what each scope lets an app do, shown on the consent page; a scope may have none.
+	Descriptions map[string]string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 // Pass records a check that passed at now.
@@ -105,6 +112,66 @@ func (f Failure) mismatch() bool {
 // Admissible reports whether tokens may be minted for the server; M6 /authorize, /token and CIMD admission call only this.
 func (r *ResourceServer) Admissible(trustAvailable bool) bool {
 	return r.State == StateVerified || (r.Trusted && trustAvailable)
+}
+
+// Admission is whether a server admits Client ID Metadata Document clients, from which hosts, with which scopes (nil: the catalog).
+type Admission struct {
+	Accept bool
+	Hosts  []string
+	Scopes []string
+}
+
+// SECURITY: M2, ADR-0021 D1: only an admissible server that accepts metadata document clients, from a listed host (none listed: any).
+func (r *ResourceServer) AdmitsMetadataClient(host string, trustAvailable bool) bool {
+	if !r.Admission.Accept || !r.Admissible(trustAvailable) {
+		return false
+	}
+	return len(r.Admission.Hosts) == 0 || slices.Contains(r.Admission.Hosts, strings.ToLower(host))
+}
+
+// MetadataClientScopes returns the scopes a metadata document client may ask for: the admission pin, else the catalog.
+func (r *ResourceServer) MetadataClientScopes() []string {
+	if r.Admission.Scopes != nil {
+		return slices.Clone(r.Admission.Scopes)
+	}
+	return slices.Clone(r.Scopes)
+}
+
+// ValidateClientHosts checks admission hosts: at most MaxClientHosts lower-case DNS names, no IP literal, none twice.
+func ValidateClientHosts(hosts []string) error {
+	if len(hosts) > MaxClientHosts {
+		return &InvalidClientHostError{Reason: HostTooMany}
+	}
+	seen := make(map[string]bool, len(hosts))
+	for _, h := range hosts {
+		switch {
+		case net.ParseIP(h) != nil:
+			return &InvalidClientHostError{Host: h, Reason: HostIPLiteral}
+		case !dnsName(h):
+			return &InvalidClientHostError{Host: h, Reason: HostFormat}
+		case seen[h]:
+			return &InvalidClientHostError{Host: h, Reason: HostDuplicate}
+		}
+		seen[h] = true
+	}
+	return nil
+}
+
+func dnsName(h string) bool {
+	if len(h) > 253 || !strings.Contains(h, ".") {
+		return false
+	}
+	for label := range strings.SplitSeq(h, ".") {
+		if label == "" || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+		for i := range len(label) {
+			if c := label[i]; (c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '-' {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // Trust marks the server trusted without verification by userID at now.
@@ -288,6 +355,19 @@ func scopeToken(s string) bool {
 	return true
 }
 
+// MaxDescriptionLength bounds a scope description, in characters.
+const MaxDescriptionLength = 120
+
+// ValidateDescriptions checks scope descriptions: each names one of scopes and is 1 to MaxDescriptionLength characters.
+func ValidateDescriptions(scopes []string, descriptions map[string]string) error {
+	for scope, d := range descriptions {
+		if n := utf8.RuneCountInString(strings.TrimSpace(d)); !slices.Contains(scopes, scope) || n == 0 || n > MaxDescriptionLength {
+			return &InvalidScopeError{Scope: scope, Reason: ScopeDescription}
+		}
+	}
+	return nil
+}
+
 // LinkScopes checks the scopes a link allows against the server's scopes and returns them without repeats.
 func (r *ResourceServer) LinkScopes(scopes []string) ([]string, error) {
 	if len(scopes) == 0 {
@@ -333,4 +413,7 @@ type ClientRef struct {
 	ID       uuid.UUID
 	PublicID string
 	Name     string
+	// MetadataURL and MetadataFetchedAt are set on a metadata document client, which only its document changes.
+	MetadataURL       string
+	MetadataFetchedAt *time.Time
 }

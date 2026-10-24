@@ -11,9 +11,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/consent"
 	"altalune.id/othra/internal/oauth/hosted/views"
 	"altalune.id/othra/internal/oauth/redirecturi"
+	"altalune.id/othra/internal/web/layout"
 )
 
 const (
@@ -41,6 +45,7 @@ const (
 	descTooLong      = "the authorization request is too long"
 	descHintAccount  = "the signed-in account is not the one id_token_hint names"
 	descHintGone     = "the sign-in took too long to confirm the id_token_hint account"
+	descTarget       = "the resource must be one absolute URI this client may use"
 )
 
 var singleParams = []string{ //nolint:gochecknoglobals // the fixed list of one-value authorize parameters.
@@ -63,6 +68,7 @@ type authRequest struct {
 	loginHint   string
 	idTokenHint string
 	hint        *Hint
+	resource    *Resource
 }
 
 // NOTE: E2: the client hears about this failure by redirect, with state and iss.
@@ -74,22 +80,15 @@ type authorizeError struct {
 
 func (e *authorizeError) Error() string { return "hosted: authorize error " + e.code }
 
-func parseAuthorize(ctx context.Context, clients Clients, p Project, q url.Values) (*authRequest, error) {
+func parseAuthorize(ctx context.Context, o OAuth, p Project, q url.Values) (*authRequest, error) {
 	for _, k := range []string{"client_id", "redirect_uri", "response_mode"} {
 		if len(q[k]) > 1 {
 			return nil, &RefusedError{Code: apperror.CodeAuthorizeRequestInvalid}
 		}
 	}
-	id := q.Get("client_id")
-	if id == "" {
-		return nil, &RefusedError{Code: apperror.CodeAuthorizeClientUnknown}
-	}
-	c, ok, err := clients.Client(ctx, p, id)
+	c, res, err := client(ctx, o, p, q)
 	if err != nil {
 		return nil, err
-	}
-	if !ok {
-		return nil, &RefusedError{Code: apperror.CodeAuthorizeClientUnknown}
 	}
 	redirect := q.Get("redirect_uri")
 	if !registered(c, redirect) {
@@ -103,9 +102,68 @@ func parseAuthorize(ctx context.Context, clients Clients, p Project, q url.Value
 			return nil, &RefusedError{Code: apperror.CodeAuthorizeRequestInvalid}
 		}
 	}
-	req := &authRequest{client: c, redirectURI: redirect, state: q.Get("state")}
-	err = req.validate(q)
+	req := &authRequest{client: c, redirectURI: redirect, state: q.Get("state"), resource: res}
+	if err := req.validate(q); err != nil {
+		return req, err
+	}
+	if req.resource == nil {
+		if err := req.target(ctx, o, p, q["resource"]); err != nil {
+			return req, err
+		}
+	}
+	err = req.finish(q)
 	return req, err
+}
+
+// SECURITY: M2, ADR-0021 D3: a client_id URL is admitted through the request's resource; any miss is a page, never a redirect.
+func client(ctx context.Context, o OAuth, p Project, q url.Values) (Client, *Resource, error) {
+	id := q.Get("client_id")
+	if strings.HasPrefix(id, "https://") {
+		if o.Admissions == nil {
+			return Client{}, nil, &RefusedError{Code: apperror.CodeAuthorizeClientUnknown}
+		}
+		c, res, err := o.Admissions.Admit(ctx, p, id, q["resource"])
+		switch code := codeOf(err); {
+		case code == apperror.CodeAuthorizeClientNotAdmitted || code == apperror.CodeAuthorizeClientMetadataUnusable:
+			return Client{}, nil, &RefusedError{Code: code}
+		case err != nil:
+			return Client{}, nil, err
+		}
+		return c, &res, nil
+	}
+	if id == "" {
+		return Client{}, nil, &RefusedError{Code: apperror.CodeAuthorizeClientUnknown}
+	}
+	c, ok, err := o.Clients.Client(ctx, p, id)
+	switch {
+	case err != nil:
+		return Client{}, nil, err
+	case !ok:
+		return Client{}, nil, &RefusedError{Code: apperror.CodeAuthorizeClientUnknown}
+	}
+	return c, nil, nil
+}
+
+// NOTE: RFC 8707 §2, E1: one resource per token; unknown, unadmissible and unlinked answer alike, so the error is no oracle.
+func (r *authRequest) target(ctx context.Context, o OAuth, p Project, values []string) error {
+	values = slices.Compact(slices.Clone(values))
+	if len(values) == 0 {
+		return nil
+	}
+	v := values[0]
+	u, err := url.Parse(v)
+	if len(values) > 1 || err != nil || !u.IsAbs() || strings.Contains(v, "#") || len(v) > maxParamLen || o.Resources == nil {
+		return r.fail("invalid_target", descTarget)
+	}
+	res, ok, err := o.Resources.Resource(ctx, p, r.client, v)
+	switch {
+	case err != nil:
+		return err
+	case !ok:
+		return r.fail("invalid_target", descTarget)
+	}
+	r.resource = &res
+	return nil
 }
 
 func maxLen(param string) int {
@@ -145,8 +203,13 @@ func (r *authRequest) validate(q url.Values) error {
 	case q.Get("response_type") != "code":
 		return r.fail("unsupported_response_type", descResponseType)
 	}
-	r.scopes = grantedScopes(r.client, strings.Fields(q.Get("scope")))
-	if r.scopes == nil {
+	return nil
+}
+
+func (r *authRequest) finish(q url.Values) error {
+	r.scopes = grantedScopes(r.client, r.resource, strings.Fields(q.Get("scope")))
+	// NOTE: qa O1, E3, RFC 6749 §3.3: a named resource needs one of its own scopes left; openid alone doesn't count.
+	if r.scopes == nil || (r.resource != nil && !slices.ContainsFunc(r.scopes, isResourceScope)) {
 		return r.fail("invalid_scope", descScope)
 	}
 	if err := r.pkce(q); err != nil {
@@ -159,22 +222,26 @@ func (r *authRequest) validate(q url.Values) error {
 	return nil
 }
 
-// NOTE: A5, A19: unknown scopes are ignored, offline_access needs refresh, a known scope the client may not use refuses.
-func grantedScopes(c Client, requested []string) []string {
+// NOTE: A5, A19, E3: unknown scopes are ignored, offline_access needs refresh, a known OIDC scope the client may not use refuses,
+// and a resource scope outside the client's pin is narrowed away (RFC 6749 §3.3).
+func grantedScopes(c Client, res *Resource, requested []string) []string {
 	var out []string
 	for _, s := range requested {
+		oidc := slices.Contains(knownScopes, s)
 		switch {
-		case !slices.Contains(knownScopes, s), slices.Contains(out, s):
+		case slices.Contains(out, s), oidc && s == "offline_access" && !c.Refresh:
 			continue
-		case s == "offline_access" && !c.Refresh:
-			continue
-		case !slices.Contains(c.AllowedScopes, s):
+		case oidc && !slices.Contains(c.AllowedScopes, s):
 			return nil
+		case !oidc && (res == nil || !slices.Contains(res.Scopes, s)):
+			continue
 		}
 		out = append(out, s)
 	}
 	return out
 }
+
+func isResourceScope(s string) bool { return !slices.Contains(knownScopes, s) }
 
 func (r *authRequest) pkce(q url.Values) error {
 	r.nonce = q.Get("nonce")
@@ -241,7 +308,7 @@ func (h *Web) authorize(w http.ResponseWriter, r *http.Request, s *site) {
 		}
 		q = r.PostForm
 	}
-	req, err := parseAuthorize(r.Context(), h.clients, s.project(), q)
+	req, err := parseAuthorize(r.Context(), h.oauth, s.project(), q)
 	if !h.authorizeFailed(w, r, s, err) {
 		h.decide(w, r, s, req, q)
 	}
@@ -257,6 +324,8 @@ func (h *Web) authorizeFailed(w http.ResponseWriter, r *http.Request, s *site, e
 		h.refused(w, r, s, page.Code)
 	case errors.As(err, &redirect):
 		h.toClient(w, r, s, redirect.request, url.Values{"error": {redirect.code}, "error_description": {redirect.description}})
+	case layout.IsRateLimitedError(err):
+		h.limited(w, r, s, err)
 	default:
 		h.fail(w, r, s, "hosted: authorize", err)
 	}
@@ -305,7 +374,7 @@ func (h *Web) decide(w http.ResponseWriter, r *http.Request, s *site, req *authR
 		h.interact(w, r, s, req, q, none, "login_required", false)
 		return
 	}
-	since, marked := h.marker.Since(q, req.client.ID)
+	since, marked := h.oauth.Marker.Since(q, req.client.ID)
 	if h.staleLogin(req, active) && (!marked || !after(active.AuthTime, since)) {
 		h.interact(w, r, s, req, q, none, "login_required", true)
 		return
@@ -339,13 +408,13 @@ func (h *Web) hint(ctx context.Context, s *site, req *authRequest, q url.Values)
 		if _, carried := q[HintParam]; !carried {
 			return nil, nil
 		}
-		sub, ok := h.marker.Hinted(q, req.client.ID)
+		sub, ok := h.oauth.Marker.Hinted(q, req.client.ID)
 		if !ok {
 			return nil, req.fail("login_required", descHintGone)
 		}
 		return &Hint{Subject: sub}, nil
 	}
-	hint, ok, err := h.grants.VerifyHint(ctx, s.project(), req.idTokenHint)
+	hint, ok, err := h.oauth.Grants.VerifyHint(ctx, s.project(), req.idTokenHint)
 	switch {
 	case err != nil:
 		return nil, err
@@ -378,7 +447,7 @@ func (h *Web) interact(
 		h.toClient(w, r, s, req, url.Values{"error": {noneError}})
 		return
 	}
-	target, ok := h.reentry(s, req, h.marker.Mark(q, req.client.ID))
+	target, ok := h.reentry(s, req, h.oauth.Marker.Mark(q, req.client.ID))
 	if !ok {
 		h.toClient(w, r, s, req, url.Values{"error": {"invalid_request"}, "error_description": {descTooLong}})
 		return
@@ -403,8 +472,11 @@ func (h *Web) reentry(s *site, req *authRequest, q url.Values) (string, bool) {
 	if v, ok := q[MarkerParam]; ok {
 		out[MarkerParam] = v
 	}
+	if req.resource != nil {
+		out.Set("resource", req.resource.Identifier)
+	}
 	if req.hint != nil {
-		out = h.marker.WithHint(out, req.client.ID, req.hint.Subject)
+		out = h.oauth.Marker.WithHint(out, req.client.ID, req.hint.Subject)
 	}
 	target := s.path + authorizePath + "?" + out.Encode()
 	return target, len(target) <= maxReturnToLen
@@ -431,14 +503,23 @@ func (h *Web) grant(w http.ResponseWriter, r *http.Request, s *site, req *authRe
 		}
 		h.toPage(w, r, s, pageTerms, backTo(target))
 		return
-	case req.client.ConsentRequired:
-		// NOTE: D3, D5: no consent page until M6; an implicit-consent client is admin pre-approved, so prompt=consent is satisfied.
+	}
+	page, _, err := h.consentPage(ctx, s, req, q, a)
+	switch {
+	case err != nil:
+		h.fail(w, r, s, "hosted: consent", err)
+		return
+	case page != consent.PageNone && req.prompt[promptNone]:
 		h.toClient(w, r, s, req, url.Values{"error": {"consent_required"}})
 		return
+	case page != consent.PageNone:
+		h.askConsent(w, r, s, req, q)
+		return
 	}
-	code, err := h.grants.IssueCode(ctx, CodeRequest{
+	code, err := h.oauth.Grants.IssueCode(ctx, CodeRequest{
 		Project: s.project(), ClientID: req.client.ID, RedirectURI: req.redirectURI, Scopes: req.scopes,
 		CodeChallenge: req.challenge, Nonce: req.nonce, UserSession: a.UserSession, EndUser: a.EndUser, AuthTime: a.AuthTime,
+		ResourceServerID: req.resourceID(),
 	})
 	switch {
 	case codeOf(err) == apperror.CodeSignInSessionGone:
@@ -453,45 +534,56 @@ func (h *Web) grant(w http.ResponseWriter, r *http.Request, s *site, req *authRe
 
 type pending struct {
 	client string
+	host   string
 	hint   string
 	reauth bool
 }
 
 func (h *Web) pending(r *http.Request, s *site, returnTo string) pending {
 	u, err := url.Parse(returnTo)
-	if err != nil || h.clients == nil || u.Path != s.path+authorizePath {
+	if err != nil || h.oauth.Clients == nil || u.Path != s.path+authorizePath {
 		return pending{}
 	}
 	q := u.Query()
-	c, ok, err := h.clients.Client(r.Context(), s.project(), q.Get("client_id"))
+	c, ok, err := h.oauth.Clients.Client(r.Context(), s.project(), q.Get("client_id"))
 	if err != nil || !ok {
 		return pending{}
 	}
 	prompt := strings.Fields(q.Get("prompt"))
 	return pending{
-		client: c.Name, hint: q.Get("login_hint"),
+		client: c.Name, host: c.MetadataHost, hint: q.Get("login_hint"),
 		reauth: slices.Contains(prompt, promptLogin) || q.Get("max_age") != "",
 	}
-}
-
-func (h *Web) clientName(r *http.Request, s *site, returnTo string) string {
-	return h.pending(r, s, returnTo).client
 }
 
 // NOTE: A18, N6: declining the terms records nothing; an authorize request hears access_denied, anything else gets a page.
 func (h *Web) declineTerms(w http.ResponseWriter, r *http.Request, s *site, returnTo string) {
 	ctx := r.Context()
-	if u, err := url.Parse(returnTo); err == nil && h.clients != nil && u.Path == s.path+authorizePath {
-		req, err := parseAuthorize(ctx, h.clients, s.project(), u.Query())
-		if err == nil {
-			h.toClient(w, r, s, req, url.Values{"error": {"access_denied"}, "error_description": {"the end user declined the terms"}})
-			return
-		}
-		if h.authorizeFailed(w, r, s, err) {
-			return
-		}
+	if h.declineToClient(w, r, s, returnTo, "the end user declined the terms") {
+		return
 	}
 	d := views.TermsDeclined(ctx, s.views())
 	d.SupportEmail = s.issuer.SupportEmail
 	h.kit.Render(w, r, http.StatusOK, views.Error(h.layout(r, s), d))
+}
+
+func (h *Web) declineToClient(w http.ResponseWriter, r *http.Request, s *site, returnTo, description string) bool {
+	u, err := url.Parse(returnTo)
+	if err != nil || h.oauth.Clients == nil || u.Path != s.path+authorizePath {
+		return false
+	}
+	req, err := parseAuthorize(r.Context(), h.oauth, s.project(), u.Query())
+	if h.authorizeFailed(w, r, s, err) {
+		return true
+	}
+	h.toClient(w, r, s, req, url.Values{"error": {"access_denied"}, "error_description": {description}})
+	return true
+}
+
+func (r *authRequest) resourceID() *uuid.UUID {
+	if r.resource == nil {
+		return nil
+	}
+	id := r.resource.ID
+	return &id
 }

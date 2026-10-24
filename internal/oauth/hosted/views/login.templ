@@ -7,13 +7,14 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// LoginData is the email form's state; Error is a translated message about the email, Notice the bare email just signed out, Client the app asking and Reauth a forced fresh sign-in.
+// LoginData is the email form's state; Error is a translated message about the email, Notice the bare email just signed out, Client the app asking (ClientHost when unregistered) and Reauth a forced fresh sign-in.
 type LoginData struct {
 	Site
 	Email      string
 	Error      string
 	Notice     string
 	Client     string
+	ClientHost string
 	Reauth     bool
 	ReturnTo   string
 	LoginToken string
@@ -26,6 +27,9 @@ templ Login(d layout.LayoutData, v LoginData) {
 		@layout.Card(i18n.T(ctx, "login.title")) {
 			if v.Client != "" {
 				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle_client", "client", v.Client) }</p>
+				if v.ClientHost != "" {
+					<p class="text-xs text-base-content/70">{ i18n.T(ctx, "consent.from_host", "host", v.ClientHost) }</p>
+				}
 			} else {
 				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle", "project", v.Project) }</p>
 			}

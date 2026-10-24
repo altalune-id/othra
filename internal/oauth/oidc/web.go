@@ -69,6 +69,7 @@ func (h *Web) Register(mux *http.ServeMux) {
 	}
 	mux.Handle(issuer+tokenPath, api(http.HandlerFunc(h.token)))
 	mux.Handle(issuer+userinfoPath, api(http.HandlerFunc(h.userinfo)))
+	mux.Handle(issuer+revokePath, http.HandlerFunc(h.revoke))
 }
 
 func (h *Web) document(pick func(*issuerEntry) (document, string)) http.Handler {

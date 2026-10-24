@@ -43,6 +43,8 @@ func TestKey(t *testing.T) {
 
 	a, b := uuid.MustParse("11111111-1111-4111-8111-111111111111"), uuid.MustParse("22222222-2222-4222-8222-222222222222")
 	assert.Equal(t, "login:project:"+a.String()+":ip:192.0.2.1", Key(r, ProjectSubject(a, IPSubject("192.0.2.1"))))
+	assert.Equal(t, "login:host:claude.ai", Key(r, HostSubject("Claude.AI")))
+	assert.Equal(t, "login:url:https://claude.ai/x", Key(r, URLSubject("https://claude.ai/x")))
 	assert.NotEqual(t, Key(r, ProjectSubject(a, want)), Key(r, ProjectSubject(b, want)), "one email is a separate key per project")
 }
 

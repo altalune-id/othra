@@ -185,3 +185,13 @@ func TestLayout_Refresh(t *testing.T) {
 	assert.Less(t, strings.Index(html, "http-equiv"), strings.Index(html, "</head>"))
 	assert.NotContains(t, page(t, t.Context(), LayoutData{Title: "T"}), "http-equiv", "no refresh unless asked")
 }
+
+func TestCardWith_PutsTheLeadInTheTitleRow(t *testing.T) {
+	lead := templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
+		_, err := io.WriteString(w, `<span class="mark">C</span>`)
+		return err
+	})
+	html := render(t, t.Context(), CardWith("Allow it?", lead))
+	assert.Contains(t, html, `<div class="flex items-center gap-3"><span class="mark">C</span><h1 class="card-title text-2xl break-words max-sm:text-xl">Allow it?</h1></div>`)
+	assert.Equal(t, render(t, t.Context(), Card("Plain")), render(t, t.Context(), CardWith("Plain", nil)), "Card is CardWith without a lead")
+}

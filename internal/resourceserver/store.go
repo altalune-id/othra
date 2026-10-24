@@ -11,12 +11,16 @@ import (
 type Store interface {
 	// Insert records r, or returns *IdentifierTakenError.
 	Insert(ctx context.Context, r *ResourceServer) error
-	// Update saves r's name, scopes, verification and trust.
+	// Update saves r's name, scopes and their descriptions, verification, trust and admission.
 	Update(ctx context.Context, r *ResourceServer) error
 	// Delete removes the server id.
 	Delete(ctx context.Context, projectID, id uuid.UUID) error
 	// List returns the project's servers, by name.
 	List(ctx context.Context, projectID uuid.UUID) ([]*ResourceServer, error)
+	// ByIdentifier returns the project's server whose identifier is exactly identifier, or *NotFoundError.
+	ByIdentifier(ctx context.Context, projectID uuid.UUID, identifier string) (*ResourceServer, error)
+	// ByID returns the project's server id, or *NotFoundError.
+	ByID(ctx context.Context, projectID, id uuid.UUID) (*ResourceServer, error)
 	// ByPublicID returns the project's server publicID, or *NotFoundError.
 	ByPublicID(ctx context.Context, projectID uuid.UUID, publicID string) (*ResourceServer, error)
 	// Lock is ByPublicID that also locks the row until the unit of work ends.

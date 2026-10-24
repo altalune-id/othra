@@ -55,7 +55,7 @@ func (h *Web) userinfo(w http.ResponseWriter, r *http.Request) {
 	p := grant.Project{OrgID: e.issuer.OrgID, ID: e.issuer.ProjectID}
 	a, err := h.tokens.Grants.Access(r.Context(), p, token)
 	switch {
-	case grant.IsInvalidTokenError(err):
+	case grant.IsInvalidTokenError(err), err == nil && a.ResourceServerID != nil:
 		bearerFail(w, realm, http.StatusUnauthorized, "invalid_token")
 		return
 	case err != nil:

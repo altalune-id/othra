@@ -214,7 +214,7 @@ func toProto(c *Client) *clientv1.Client {
 		}
 		secrets = append(secrets, out)
 	}
-	return &clientv1.Client{
+	out := &clientv1.Client{
 		Id:                      c.PublicID,
 		Name:                    c.Name,
 		Kind:                    kind,
@@ -230,7 +230,16 @@ func toProto(c *Client) *clientv1.Client {
 		PkceRequired:            c.PKCERequired,
 		CreatedAt:               timestamppb.New(c.CreatedAt),
 		UpdatedAt:               timestamppb.New(c.UpdatedAt),
+		Registration:            clientv1.ClientRegistration_CLIENT_REGISTRATION_REGISTERED,
 	}
+	if c.Managed() {
+		out.Registration = clientv1.ClientRegistration_CLIENT_REGISTRATION_CIMD
+		out.MetadataUrl = c.MetadataURL
+		if c.MetadataFetchedAt != nil {
+			out.MetadataFetchedAt = timestamppb.New(*c.MetadataFetchedAt)
+		}
+	}
+	return out
 }
 
 func authMethodFromProto(m clientv1.AuthMethod) string {

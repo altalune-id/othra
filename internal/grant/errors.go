@@ -48,6 +48,17 @@ func IsInvalidRequestError(err error) bool {
 	return ok
 }
 
+// InvalidTargetError signals a resource the grant is not bound to (RFC 8707 §2).
+type InvalidTargetError struct{}
+
+func (*InvalidTargetError) Error() string { return "grant: invalid target" }
+
+// IsInvalidTargetError reports whether err's tree contains an *InvalidTargetError.
+func IsInvalidTargetError(err error) bool {
+	_, ok := errors.AsType[*InvalidTargetError](err)
+	return ok
+}
+
 // SessionGoneError signals a code asked for a user session that has ended, or a client or end user that is gone.
 type SessionGoneError struct{}
 
@@ -62,5 +73,5 @@ func IsSessionGoneError(err error) bool {
 // IsExpectedError reports whether err is a typed grant error the service returns as-is.
 func IsExpectedError(err error) bool {
 	return IsInvalidGrantError(err) || IsInvalidScopeError(err) || IsInvalidTokenError(err) || IsSessionGoneError(err) ||
-		IsInvalidRequestError(err)
+		IsInvalidRequestError(err) || IsInvalidTargetError(err)
 }

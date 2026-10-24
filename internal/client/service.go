@@ -10,6 +10,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/nanoid"
 )
 
@@ -27,6 +28,12 @@ type Service struct {
 	now        func() time.Time
 	newSecret  func() (plaintext, hash, hint string, err error)
 	log        *slog.Logger
+
+	fetcher          MetadataFetcher
+	links            Links
+	meta             MetadataConfig
+	fetchLimits      layout.Limits
+	onMetadataChange func(ctx context.Context, orgID, projectID, clientID uuid.UUID) error
 }
 
 // NewService builds the Service; issuer locks the project's issuer handle when its first client is created.
@@ -81,8 +88,11 @@ func (s *Service) Update(ctx context.Context, orgID, projectID uuid.UUID, public
 	var out *Client
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		c, err := s.store.Lock(ctx, projectID, publicID, s.now())
-		if err != nil {
+		switch {
+		case err != nil:
 			return err
+		case c.Managed():
+			return &MetadataManagedError{}
 		}
 		if err := c.Apply(settings); err != nil {
 			return err
@@ -123,7 +133,7 @@ func (s *Service) List(ctx context.Context, orgID, projectID uuid.UUID) ([]*Clie
 	return out, nil
 }
 
-// Get returns one client of a project by its client_id, or *NotFoundError.
+// Get returns one client of a project by its client_id, a public id or a stored metadata document URL, or *NotFoundError.
 func (s *Service) Get(ctx context.Context, orgID, projectID uuid.UUID, publicID string) (*Client, error) {
 	ctx = scope(ctx, orgID, projectID)
 	c, err := s.store.ByPublicID(ctx, projectID, publicID, s.now())
@@ -131,6 +141,16 @@ func (s *Service) Get(ctx context.Context, orgID, projectID uuid.UUID, publicID 
 		return nil, s.errOrReport(ctx, "client: get", err)
 	}
 	return c, nil
+}
+
+// ByIDs returns the project's clients with the given ids, metadata document clients included.
+func (s *Service) ByIDs(ctx context.Context, orgID, projectID uuid.UUID, ids []uuid.UUID) ([]*Client, error) {
+	ctx = scope(ctx, orgID, projectID)
+	out, err := s.store.ByIDs(ctx, projectID, ids)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "client: by ids", err)
+	}
+	return out, nil
 }
 
 // Authenticate returns one client of a project by its client_id, able to VerifySecret, or *NotFoundError.
@@ -187,11 +207,8 @@ func (s *Service) issueSecret(
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		now := s.now().UTC()
 		c, err := s.store.Lock(ctx, projectID, publicID, now)
-		if err != nil {
+		if err := secretsAllowed(c, err); err != nil {
 			return err
-		}
-		if !c.UsesSecret() {
-			return &NoSecretError{}
 		}
 		if err := before(ctx, c, now); err != nil {
 			return err
@@ -227,11 +244,8 @@ func (s *Service) RevokeSecret(ctx context.Context, orgID, projectID uuid.UUID, 
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		now := s.now().UTC()
 		c, err := s.store.Lock(ctx, projectID, publicID, now)
-		if err != nil {
+		if err := secretsAllowed(c, err); err != nil {
 			return err
-		}
-		if !c.UsesSecret() {
-			return &NoSecretError{}
 		}
 		var target *Secret
 		for i := range c.Secrets {
@@ -254,6 +268,18 @@ func (s *Service) RevokeSecret(ctx context.Context, orgID, projectID uuid.UUID, 
 	s.log.LogAttrs(ctx, slog.LevelInfo, "client: revoke secret",
 		slog.String("client", publicID), slog.String("secret_id", secretPublicID), slog.Int("live_secrets", len(out.Secrets)))
 	return out, nil
+}
+
+func secretsAllowed(c *Client, err error) error {
+	switch {
+	case err != nil:
+		return err
+	case c.Managed():
+		return &MetadataManagedError{}
+	case !c.UsesSecret():
+		return &NoSecretError{}
+	}
+	return nil
 }
 
 func (s *Service) errOrReport(ctx context.Context, message string, err error) error {

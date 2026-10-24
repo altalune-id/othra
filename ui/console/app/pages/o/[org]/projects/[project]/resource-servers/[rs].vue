@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import type { ResourceServer } from '~~/gen/resourceserver/v1/resourceserver_pb';
 import type { LinkRow } from '~/components/link/LinkList.vue';
+import { timestampDate } from '@bufbuild/protobuf/wkt';
 import { linkDialogLabels, linkListLabels } from '~/components/link/labels';
 import LinkDialog from '~/components/link/LinkDialog.vue';
 import LinkList from '~/components/link/LinkList.vue';
 import { useLinks } from '~/components/link/useLinks';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import { scopeTableLabels, verificationCardLabels, verificationText } from '~/components/resourceserver/labels';
+import CimdCard from '~/components/resourceserver/CimdCard.vue';
+import { cimdCardLabels, scopeTableLabels, verificationCardLabels, verificationText } from '~/components/resourceserver/labels';
 import { isHttpIdentifier } from '~/components/resourceserver/resourceUri';
 import ScopeTable from '~/components/resourceserver/ScopeTable.vue';
+import { admissible, isCimdLink, useCimd } from '~/components/resourceserver/useCimd';
 import { useResourceServer } from '~/components/resourceserver/useResourceServers';
 import { metadataSnippet, verificationName, verificationStates } from '~/components/resourceserver/verification';
 import VerificationCard from '~/components/resourceserver/VerificationCard.vue';
@@ -48,6 +51,7 @@ if (page.notFound.value || !page.server.value) {
 const server = computed(() => page.server.value as ResourceServer);
 const { name, nameError, saving, saved, saveError, verifying, verified, verifyError, trustAsking, trustBusy, trustError, deleting, deleteBusy, deleteError } = page;
 const scopeRows = page.scopes.rows;
+const scopeDescriptions = page.scopes.descriptions;
 const scopeErrors = page.scopes.errors;
 const issuerUrl = computed(() => detail.get(projectId)?.issuerUrl ?? '');
 const urlLabels = computed(() => ({ copyLabel: t('common.copy_label', { label: '{label}' }), openLabel: t('common.open_new_tab', { label: '{label}' }) }));
@@ -61,12 +65,36 @@ const ids = { name: useId(), nameErr: useId() };
 
 const links = useLinks(projectId, { side: 'resourceServer', id: rsId, scopes: server.value.scopes });
 const { editing, targetId, picked, pickError, unlinking, busy: linkBusy, error: linkError, available, target, scopeOptions } = links;
-const linkRows = computed<LinkRow[]>(() => links.links.value.map(l => ({ id: l.clientId, name: l.clientName, detail: l.clientId, scopes: [...l.scopes] })));
+const linkRows = computed<LinkRow[]>(() => links.links.value.filter(l => !isCimdLink(l)).map(l => ({ id: l.clientId, name: l.clientName, detail: l.clientId, scopes: [...l.scopes] })));
+const cimd = useCimd(projectId, rsId, next => page.replace(next), id => links.drop(id));
+cimd.reset(server.value);
+const { accept: cimdAccept, hosts: cimdHosts, allScopes: cimdAllScopes, picked: cimdPicked, revoking: cimdRevoking, revokeBusy: cimdRevokeBusy } = cimd;
+const cimdText = computed(() => cimdCardLabels(t));
+const cimdApps = computed(() => {
+  const day = new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' });
+  return links.links.value.filter(isCimdLink).map(l => ({
+    id: l.clientId,
+    name: l.clientName,
+    url: l.clientMetadataUrl,
+    firstSeen: l.createdAt ? day.format(timestampDate(l.createdAt)) : '',
+    fetched: l.metadataFetchedAt ? moment.value.format(timestampDate(l.metadataFetchedAt)) : '',
+  }));
+});
+
+function revokeApp(app: { id: string }) {
+  const link = links.links.value.find(l => l.clientId === app.id);
+  if (link) {
+    cimd.askRevoke(link);
+  }
+}
 const linkText = computed(() => linkListLabels(t, 'resourceServer'));
 const linkDialogText = computed(() => linkDialogLabels(t, 'resourceServer', editing.value === 'edit'));
 const targetOptions = computed(() => available.value.map(x => ({ value: x.id, label: x.name })));
 const unlinkingName = computed(() => unlinking.value?.clientName ?? '');
-watch(() => server.value.scopes, scopes => links.setOwnerScopes(scopes));
+watch(() => server.value.scopes, (scopes) => {
+  links.setOwnerScopes(scopes);
+  cimd.catalog.value = [...scopes];
+});
 
 function editLink(row: LinkRow) {
   const link = links.links.value.find(l => l.clientId === row.id);
@@ -202,6 +230,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
         <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="page.save('scopes')">
           <ScopeTable
             v-model:rows="scopeRows"
+            v-model:descriptions="scopeDescriptions"
             :errors="scopeErrors"
             :disabled="saving === 'scopes'"
             :full="page.scopes.full.value"
@@ -219,9 +248,27 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
             <SavedNote v-if="saved === 'scopes'" :label="t('common.saved')" />
           </div>
         </form>
-        <ScopeTable v-else :rows="server.scopes" :editable="false" />
+        <ScopeTable v-else :rows="server.scopes" :descriptions="server.scopes.map(s => server.scopeDescriptions[s] ?? '')" :editable="false" />
       </div>
     </section>
+
+    <CimdCard
+      v-model:accept="cimdAccept"
+      v-model:hosts="cimdHosts"
+      v-model:all-scopes="cimdAllScopes"
+      v-model:picked="cimdPicked"
+      :can-edit="canEdit"
+      :locked="!admissible(server)"
+      :catalog="cimd.catalog.value"
+      :apps="cimdApps"
+      :busy="cimd.busy.value"
+      :saved="cimd.saved.value"
+      :error="cimd.error.value"
+      :hosts-error="cimd.hostsError.value"
+      :labels="cimdText"
+      @save="cimd.save()"
+      @revoke="revokeApp"
+    />
 
     <LinkList
       :rows="linkRows"
@@ -280,6 +327,22 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
         <button type="button" class="btn btn-error btn-sm" :disabled="linkBusy" @click="links.confirmUnlink()">
           <span v-if="linkBusy" class="loading loading-spinner loading-xs" />
           {{ t('links.unlink') }}
+        </button>
+      </template>
+    </AppModal>
+
+    <AppModal :open="!!cimdRevoking" :title="t('rs.cimd_revoke_title', { name: cimdRevoking?.clientName ?? '' })" @close="cimd.cancelRevoke()">
+      <p class="text-sm">
+        {{ t('rs.cimd_revoke_body', { name: cimdRevoking?.clientName ?? '' }) }}
+      </p>
+      <ErrorText :error="cimd.revokeError.value" />
+      <template #footer>
+        <button type="button" class="btn btn-ghost btn-sm" :disabled="cimdRevokeBusy" autofocus @click="cimd.cancelRevoke()">
+          {{ t('common.cancel') }}
+        </button>
+        <button type="button" class="btn btn-error btn-sm" :disabled="cimdRevokeBusy" @click="cimd.confirmRevoke()">
+          <span v-if="cimdRevokeBusy" class="loading loading-spinner loading-xs" />
+          {{ t('rs.cimd_revoke') }}
         </button>
       </template>
     </AppModal>

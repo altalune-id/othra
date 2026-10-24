@@ -4,9 +4,11 @@ package grant_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
+	"fmt"
 	"log/slog"
 	"strings"
 	"sync"
@@ -65,8 +67,8 @@ func (f *pgFixture) seed(t *testing.T) seeded {
 	t.Helper()
 	s := seeded{
 		p:      grant.Project{OrgID: uuid.New(), ID: uuid.New()},
-		client: grant.Client{ID: uuid.New(), PublicID: "c" + uuid.NewString()[:12], Refresh: true},
-		other:  grant.Client{ID: uuid.New(), PublicID: "c" + uuid.NewString()[:12], Refresh: true},
+		client: grant.Client{ID: uuid.New(), OAuthID: "c" + uuid.NewString()[:12], Refresh: true},
+		other:  grant.Client{ID: uuid.New(), OAuthID: "c" + uuid.NewString()[:12], Refresh: true},
 		sub:    "e" + uuid.NewString()[:12], userSession: "s" + uuid.NewString()[:12], endUser: uuid.New(), userSessionID: uuid.New(),
 	}
 	browser := uuid.New()
@@ -77,7 +79,7 @@ func (f *pgFixture) seed(t *testing.T) seeded {
 	for _, c := range []grant.Client{s.client, s.other} {
 		f.exec(t, `INSERT INTO oauth_clients (id, public_id, org_id, project_id, name, client_type, application_type, token_endpoint_auth_method, grant_types, allowed_scopes, redirect_uris, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, 'Web', 'confidential', 'web', 'client_secret_basic', '{authorization_code,refresh_token}', '{openid,offline_access}', '{https://a.example/cb}', now(), now())`,
-			c.ID, c.PublicID, s.p.OrgID, s.p.ID)
+			c.ID, c.OAuthID, s.p.OrgID, s.p.ID)
 	}
 	f.exec(t, `INSERT INTO end_users (id, public_id, org_id, project_id, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, now(), now())`,
 		s.endUser, s.sub, s.p.OrgID, s.p.ID, "eu"+uuid.NewString()[:8]+"@example.com")
@@ -97,7 +99,7 @@ func challenge(v string) string {
 
 func (s seeded) codeRequest(scopes ...string) grant.CodeRequest {
 	return grant.CodeRequest{
-		Client: s.client.PublicID, RedirectURI: "https://a.example/cb", Scopes: scopes, CodeChallenge: challenge(verifier),
+		Client: s.client.OAuthID, RedirectURI: "https://a.example/cb", Scopes: scopes, CodeChallenge: challenge(verifier),
 		Nonce: "n-1", UserSession: s.userSession, EndUser: s.sub, AuthTime: time.Now().Add(-time.Minute),
 	}
 }
@@ -434,4 +436,121 @@ func TestPostgres_ParallelRefreshesOfOneToken(t *testing.T) {
 	})
 	require.Equal(t, 1, wins(t, errs))
 	assert.Equal(t, grant.ReasonReuse, f.reason(t, first.Family.PublicID))
+}
+
+type signedTokens struct {
+	n    int
+	last grant.AccessToken
+}
+
+func (s *signedTokens) Sign(_ context.Context, _ grant.Project, t grant.AccessToken) (string, error) {
+	s.n++
+	s.last = t
+	return fmt.Sprintf("jwt-%d-%s", s.n, uuid.NewString()), nil
+}
+
+type audiences struct {
+	identifier string
+	ok         bool
+	scopes     []string
+}
+
+func (a *audiences) Audience(_ context.Context, _ grant.Project, _ uuid.UUID, _ grant.Client, scopes []string) (string, bool, error) {
+	a.scopes = scopes
+	return a.identifier, a.ok, nil
+}
+
+func (f *pgFixture) resourceServer(t *testing.T, s seeded) uuid.UUID {
+	t.Helper()
+	id := uuid.New()
+	f.exec(t, `INSERT INTO resource_servers (id, public_id, org_id, project_id, name, identifier, scopes, verification_state, verified_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, 'API', $5, '{read,write}', 'verified', now(), now(), now())`,
+		id, "r"+id.String()[:12], s.p.OrgID, s.p.ID, "https://api.example/"+id.String()[:8])
+	return id
+}
+
+// RFC 8707 and RFC 9068: a resource-bound grant mints at+jwt for its server only, rechecked at every token, and never a userinfo token.
+func TestPostgres_ResourceBoundGrant(t *testing.T) {
+	f := newPGFixture(t)
+	s := f.seed(t)
+	ctx := t.Context()
+	signer, aud := &signedTokens{}, &audiences{identifier: "https://api.example/mcp", ok: true}
+	f.svc.WithResources(signer, aud)
+	rs := f.resourceServer(t, s)
+	bound := func() string {
+		req := s.codeRequest("openid", "offline_access", "read")
+		req.ResourceServerID = &rs
+		code, err := f.svc.IssueCode(ctx, s.p, req)
+		require.NoError(t, err)
+		return code
+	}
+
+	got, err := f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: bound(), CodeVerifier: verifier})
+	require.NoError(t, err, "no resource at /token falls back to the authorized one")
+	assert.Equal(t, "https://api.example/mcp", got.Audience)
+	assert.Equal(t, []string{"read"}, aud.scopes, "the recheck sees only the server's scopes")
+	assert.Equal(t, grant.AccessToken{
+		Audience: "https://api.example/mcp", Subject: s.sub, ClientID: s.client.OAuthID, SessionID: got.Family.PublicID, Scopes: []string{"read"},
+		AuthTime: got.Family.AuthTime, IssuedAt: f.now, ExpiresAt: f.now.Add(15 * time.Minute),
+	}, signer.last, "owner D4: minimal claims, RFC 9068 §2.2.3: only the server's scopes")
+	assert.Equal(t, []string{"openid", "offline_access", "read"}, got.Scopes, "the response states everything granted")
+	a, err := f.svc.Access(ctx, s.p, got.AccessToken)
+	require.NoError(t, err)
+	require.NotNil(t, a.ResourceServerID, "userinfo refuses it by this column")
+	assert.Equal(t, rs, *a.ResourceServerID)
+
+	_, err = f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: bound(), CodeVerifier: verifier, Resource: "https://other.example/"})
+	assert.True(t, grant.IsInvalidTargetError(err), "R5: a different resource at /token")
+	same, err := f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: bound(), CodeVerifier: verifier, Resource: "https://api.example/mcp"})
+	require.NoError(t, err, "the same resource is fine")
+
+	_, err = f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: same.RefreshToken, Resource: "https://other.example/"})
+	assert.True(t, grant.IsInvalidTargetError(err))
+	aud.ok = false
+	_, err = f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: same.RefreshToken})
+	assert.True(t, grant.IsInvalidGrantError(err), "authl gap 5: an unlinked client or a server no longer admissible can't refresh")
+	aud.ok = true
+	_, err = f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: same.RefreshToken, Scopes: []string{"openid"}})
+	assert.True(t, grant.IsInvalidScopeError(err), "qa O1, E3: narrowing away every server scope is invalid_scope, never scope \"\"")
+	next, err := f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: same.RefreshToken, Scopes: []string{"read"}})
+	require.NoError(t, err, "a refused refresh spent nothing")
+	assert.Equal(t, "https://api.example/mcp", next.Audience)
+
+	plain := f.code(t, s, "openid")
+	_, err = f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: plain, CodeVerifier: verifier, Resource: "https://api.example/mcp"})
+	assert.True(t, grant.IsInvalidTargetError(err), "a sign-in without a resource can't name one at /token")
+
+	f.exec(t, `DELETE FROM oauth_client_resources WHERE resource_server_id = $1`, rs)
+	f.exec(t, `DELETE FROM resource_servers WHERE id = $1`, rs)
+	_, err = f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: next.RefreshToken})
+	assert.True(t, grant.IsInvalidGrantError(err), "E8-2: deleting the server ends its grants")
+}
+
+// RFC 7009: a refresh token revokes its family, an access token only itself, and another client's or an unknown token nothing.
+func TestPostgres_Revoke(t *testing.T) {
+	f := newPGFixture(t)
+	s := f.seed(t)
+	ctx := t.Context()
+	got := f.exchange(t, s, "openid", "offline_access")
+
+	require.NoError(t, f.svc.Revoke(ctx, s.p, s.other, got.AccessToken, ""))
+	_, err := f.svc.Access(ctx, s.p, got.AccessToken)
+	require.NoError(t, err, "another client's revoke does nothing")
+	require.NoError(t, f.svc.Revoke(ctx, s.p, s.client, "unknown", "refresh_token"), "an unknown token answers 200 too")
+
+	require.NoError(t, f.svc.Revoke(ctx, s.p, s.client, got.AccessToken, "refresh_token"), "the hint is only a hint")
+	_, err = f.svc.Access(ctx, s.p, got.AccessToken)
+	assert.True(t, grant.IsInvalidTokenError(err))
+	assert.Empty(t, f.reason(t, got.Family.PublicID), "pm P6: revoking an access token leaves the grant")
+	next, err := f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: got.RefreshToken})
+	require.NoError(t, err)
+	require.NoError(t, f.svc.Revoke(ctx, s.p, s.client, got.AccessToken, ""), "revoking twice is fine")
+
+	require.NoError(t, f.svc.Revoke(ctx, s.p, s.other, next.RefreshToken, "refresh_token"))
+	assert.Empty(t, f.reason(t, got.Family.PublicID))
+	require.NoError(t, f.svc.Revoke(ctx, s.p, s.client, next.RefreshToken, ""))
+	assert.Equal(t, grant.ReasonRevoked, f.reason(t, got.Family.PublicID), "a refresh token revokes its family")
+	_, err = f.svc.Access(ctx, s.p, next.AccessToken)
+	assert.True(t, grant.IsInvalidTokenError(err))
+	assert.Contains(t, f.logs.String(), got.Family.PublicID)
 }

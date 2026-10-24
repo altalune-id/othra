@@ -11,12 +11,14 @@ import (
 
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/client"
+	"altalune.id/othra/internal/consent"
 	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/grant"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/oauth/hosted"
 	"altalune.id/othra/internal/oauth/oidc"
+	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/mailer"
 )
@@ -38,9 +40,15 @@ func buildHosted(cfg config.Config, svcs *Services, kit layout.Kit, resolver *oi
 		LinkTTL:    linkTTL,
 		LogoURL:    svcs.Projects.LogoURL,
 	}).WithLimits(layout.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops})
-	if svcs.Grants != nil && svcs.Clients != nil && svcs.Keys != nil {
-		oauth := hostedOAuth{clients: svcs.Clients, grants: svcs.Grants, hints: keys.NewVerifier(svcs.Keys), users: svcs.EndUsers}
-		web.WithOAuth(oauth, oauth, hosted.NewMarker(purposeKey(svcs.StateSecret, "othra-hosted-marker-v1"), linkTTL))
+	if svcs.Grants != nil && svcs.Clients != nil && svcs.Keys != nil && svcs.ResourceServers != nil && svcs.Consents != nil {
+		oauth := hostedOAuth{
+			clients: svcs.Clients, grants: svcs.Grants, hints: keys.NewVerifier(svcs.Keys), users: svcs.EndUsers,
+			servers: svcs.ResourceServers, consents: svcs.Consents,
+		}
+		web.WithOAuth(hosted.OAuth{
+			Clients: oauth, Resources: oauth, Admissions: oauth, Consents: oauth, Grants: oauth,
+			Marker: hosted.NewMarker(purposeKey(svcs.StateSecret, "othra-hosted-marker-v1"), linkTTL),
+		})
 	}
 	return web
 }
@@ -68,7 +76,8 @@ func endUserProject(p hosted.Project) enduser.Project {
 
 func hostedAccount(a enduser.Account) hosted.Account {
 	return hosted.Account{
-		UserSession: a.PublicID, EndUser: a.Subject, Email: a.Email, Name: a.Name, AuthTime: a.AuthTime, SelectedAt: a.SelectedAt,
+		UserSession: a.PublicID, EndUserID: a.EndUserID, EndUser: a.Subject, Email: a.Email, Name: a.Name, AuthTime: a.AuthTime,
+		SelectedAt: a.SelectedAt,
 	}
 }
 
@@ -164,15 +173,20 @@ func (u hostedUsers) AcceptTerms(ctx context.Context, a hosted.TermsAcceptance) 
 }
 
 type hostedOAuth struct {
-	clients *client.Service
-	grants  *grant.Service
-	hints   *keys.Verifier
-	users   *enduser.Service
+	clients  *client.Service
+	grants   *grant.Service
+	hints    *keys.Verifier
+	users    *enduser.Service
+	servers  *resourceserver.Service
+	consents *consent.Service
 }
 
 var (
-	_ hosted.Clients = hostedOAuth{}
-	_ hosted.Grants  = hostedOAuth{}
+	_ hosted.Clients    = hostedOAuth{}
+	_ hosted.Grants     = hostedOAuth{}
+	_ hosted.Resources  = hostedOAuth{}
+	_ hosted.Admissions = hostedOAuth{}
+	_ hosted.Consents   = hostedOAuth{}
 )
 
 func grantProject(p hosted.Project) grant.Project { return grant.Project{OrgID: p.OrgID, ID: p.ID} }
@@ -185,17 +199,88 @@ func (o hostedOAuth) Client(ctx context.Context, p hosted.Project, id string) (h
 	case err != nil:
 		return hosted.Client{}, false, err
 	}
-	return hosted.Client{
-		ID: c.PublicID, Name: c.Name, Native: c.ApplicationType == client.AppNative, Confidential: c.UsesSecret(),
+	return hostedClient(c), true, nil
+}
+
+func hostedClient(c *client.Client) hosted.Client {
+	out := hosted.Client{
+		ID: c.OAuthID(), RowID: c.ID, Name: c.Name, Native: c.ApplicationType == client.AppNative, Confidential: c.UsesSecret(),
 		RedirectURIs: c.RedirectURIs, PostLogoutRedirectURIs: c.PostLogoutRedirectURIs, AllowedScopes: c.AllowedScopes,
 		Refresh: slices.Contains(c.GrantTypes, client.GrantRefreshToken), PKCERequired: c.PKCERequired,
 		ConsentRequired: c.ConsentPolicy == client.ConsentRequire,
-	}, true, nil
+	}
+	if c.Managed() {
+		out.MetadataHost = hostOf(c.MetadataURL)
+	}
+	return out
+}
+
+func hostedResource(r *resourceserver.ResourceServer, scopes []string) hosted.Resource {
+	return hosted.Resource{
+		ID: r.ID, Identifier: r.Identifier, Name: r.Name, Scopes: scopes, Descriptions: r.Descriptions, Catalog: r.Scopes,
+	}
+}
+
+func (o hostedOAuth) Resource(ctx context.Context, p hosted.Project, c hosted.Client, identifier string) (hosted.Resource, bool, error) {
+	r, pin, ok, err := o.servers.Resolve(ctx, p.OrgID, p.ID, c.RowID, identifier)
+	if err != nil || !ok {
+		return hosted.Resource{}, false, err
+	}
+	return hostedResource(r, pin), true, nil
+}
+
+// SECURITY: M2, ADR-0021 D1: exactly one resource, admitting the client_id host, before any fetch; every miss is the same SIG010.
+func (o hostedOAuth) Admit(
+	ctx context.Context, p hosted.Project, clientURL string, resources []string,
+) (hosted.Client, hosted.Resource, error) {
+	resources = slices.Compact(slices.Clone(resources))
+	host, err := o.clients.MetadataHost(clientURL)
+	if err != nil {
+		return hosted.Client{}, hosted.Resource{}, err
+	}
+	if len(resources) != 1 {
+		return hosted.Client{}, hosted.Resource{}, &client.NotAdmittedError{Reason: client.AdmissionResource}
+	}
+	r, ok, err := o.servers.ForMetadataClient(ctx, p.OrgID, p.ID, resources[0], host)
+	switch {
+	case err != nil:
+		return hosted.Client{}, hosted.Resource{}, err
+	case !ok:
+		return hosted.Client{}, hosted.Resource{}, &client.NotAdmittedError{Reason: client.AdmissionOff}
+	}
+	scopes := r.MetadataClientScopes()
+	c, err := o.clients.Admit(ctx, p.OrgID, p.ID, client.AdmitRequest{URL: clientURL, ResourceServerID: r.ID, Scopes: scopes})
+	if err != nil {
+		return hosted.Client{}, hosted.Resource{}, err
+	}
+	return hostedClient(c), hostedResource(r, scopes), nil
+}
+
+func consentProject(p hosted.Project) consent.Project {
+	return consent.Project{OrgID: p.OrgID, ID: p.ID, PublicID: p.PublicID}
+}
+
+func (o hostedOAuth) Consent(ctx context.Context, p hosted.Project, key consent.Key) (*consent.Consent, error) {
+	return o.consents.Find(ctx, consentProject(p), key)
+}
+
+func (o hostedOAuth) Grant(ctx context.Context, p hosted.Project, req consent.GrantRequest) error {
+	_, err := o.consents.Grant(ctx, consentProject(p), req)
+	return err
 }
 
 func (o hostedOAuth) IssueCode(ctx context.Context, req hosted.CodeRequest) (string, error) {
+	clientID := req.ClientID
+	if client.IsMetadataURL(clientID) {
+		c, err := o.clients.Get(ctx, req.Project.OrgID, req.Project.ID, clientID)
+		if err != nil {
+			return "", err
+		}
+		clientID = c.PublicID
+	}
 	code, err := o.grants.IssueCode(ctx, grantProject(req.Project), grant.CodeRequest{
-		Client: req.ClientID, RedirectURI: req.RedirectURI, Scopes: req.Scopes, CodeChallenge: req.CodeChallenge, Nonce: req.Nonce,
+		Client: clientID, ResourceServerID: req.ResourceServerID, RedirectURI: req.RedirectURI, Scopes: req.Scopes,
+		CodeChallenge: req.CodeChallenge, Nonce: req.Nonce,
 		UserSession: req.UserSession, EndUser: req.EndUser, AuthTime: req.AuthTime,
 	})
 	if grant.IsSessionGoneError(err) {

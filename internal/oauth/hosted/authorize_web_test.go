@@ -300,21 +300,17 @@ func TestTerms_DeclineWithoutAuthorize(t *testing.T) {
 	assert.Contains(t, declined.body, `href="mailto:help@acme.example"`)
 }
 
-// D3, D5: a require-consent client gets consent_required until M6; an implicit one satisfies prompt=consent.
+// D5 retired, C1–C3: prompt=consent asks every client; a require client asks first; prompt=none can only answer consent_required.
 func TestAuthorize_Consent(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
-	q := redirectParams(t, f.get(f.client, authorizeURL("prompt", "consent")))
-	assert.NotEmpty(t, q.Get("code"), "D5: an implicit-consent client is pre-approved, so prompt=consent is satisfied")
-	clients := testClients()
-	c := clients["web"]
-	c.ConsentRequired = true
-	clients["web"] = c
-	f.web.clients = clients
-	q = redirectParams(t, f.get(f.client, authorizeURL()))
+	for _, u := range []string{authorizeURL("prompt", "consent"), authorizeURL("client_id", "req")} {
+		p := f.get(f.client, u)
+		assert.Equal(t, http.StatusSeeOther, p.status, u)
+		assert.True(t, strings.HasPrefix(p.location(), "/p/acme/consent?"), p.location())
+	}
+	q := redirectParams(t, f.get(f.client, authorizeURL("client_id", "req", "prompt", "none")))
 	assert.Equal(t, "consent_required", q.Get("error"))
-	q = redirectParams(t, f.get(f.client, authorizeURL("prompt", "consent")))
-	assert.Equal(t, "consent_required", q.Get("error"), "D3: a require-consent client still has no consent page")
 }
 
 // A12: a hint for another account: prompt=none says login_required, otherwise the picker; a forged hint is invalid_request.

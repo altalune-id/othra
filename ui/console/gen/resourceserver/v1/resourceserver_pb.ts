@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file resourceserver/v1/resourceserver.proto.
  */
 export const file_resourceserver_v1_resourceserver: GenFile = /*@__PURE__*/
-  fileDesc("CiZyZXNvdXJjZXNlcnZlci92MS9yZXNvdXJjZXNlcnZlci5wcm90bxIRcmVzb3VyY2VzZXJ2ZXIudjEi5QMKDlJlc291cmNlU2VydmVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEgoKaWRlbnRpZmllchgDIAEoCRIOCgZzY29wZXMYBCADKAkSNQoFc3RhdGUYBSABKA4yJi5yZXNvdXJjZXNlcnZlci52MS5SZXNvdXJjZVNlcnZlclN0YXRlEg8KB3RydXN0ZWQYBiABKAgSLwoLdmVyaWZpZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjMKD2xhc3RfY2hlY2tlZF9hdBgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASOgoKbGFzdF9lcnJvchgJIAEoCzImLnJlc291cmNlc2VydmVyLnYxLlZlcmlmaWNhdGlvbkZhaWx1cmUSHAoUY29uc2VjdXRpdmVfZmFpbHVyZXMYCiABKAUSFAoMbWV0YWRhdGFfdXJsGAsgASgJEhcKD3RydXN0X2F2YWlsYWJsZRgMIAEoCBIuCgpjcmVhdGVkX2F0GA0gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GA4gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ3ChNWZXJpZmljYXRpb25GYWlsdXJlEg4KBnJlYXNvbhgBIAEoCRIOCgZzdGF0dXMYAiABKAUSEAoIcmVzb3VyY2UYAyABKAkSLgoKY2hlY2tlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAitAIKBExpbmsSEQoJY2xpZW50X2lkGAEgASgJEhMKC2NsaWVudF9uYW1lGAIgASgJEhoKEnJlc291cmNlX3NlcnZlcl9pZBgDIAEoCRIcChRyZXNvdXJjZV9zZXJ2ZXJfbmFtZRgEIAEoCRIiChpyZXNvdXJjZV9zZXJ2ZXJfaWRlbnRpZmllchgFIAEoCRJFChVyZXNvdXJjZV9zZXJ2ZXJfc3RhdGUYBiABKA4yJi5yZXNvdXJjZXNlcnZlci52MS5SZXNvdXJjZVNlcnZlclN0YXRlEh8KF3Jlc291cmNlX3NlcnZlcl90cnVzdGVkGAcgASgIEg4KBnNjb3BlcxgIIAMoCRIuCgpjcmVhdGVkX2F0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCI+ChpMaXN0UmVzb3VyY2VTZXJ2ZXJzUmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgEicwobTGlzdFJlc291cmNlU2VydmVyc1Jlc3BvbnNlEjsKEHJlc291cmNlX3NlcnZlcnMYASADKAsyIS5yZXNvdXJjZXNlcnZlci52MS5SZXNvdXJjZVNlcnZlchIXCg90cnVzdF9hdmFpbGFibGUYAiABKAgiZgoYR2V0UmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0EiAKCnByb2plY3RfaWQYASABKAlCDLpICcgBAXIEiOQyARIoChJyZXNvdXJjZV9zZXJ2ZXJfaWQYAiABKAlCDLpICcgBAXIEiOQyASJXChlHZXRSZXNvdXJjZVNlcnZlclJlc3BvbnNlEjoKD3Jlc291cmNlX3NlcnZlchgBIAEoCzIhLnJlc291cmNlc2VydmVyLnYxLlJlc291cmNlU2VydmVyIuICChtDcmVhdGVSZXNvdXJjZVNlcnZlclJlcXVlc3QSIAoKcHJvamVjdF9pZBgBIAEoCUIMukgJyAEBcgSI5DIBEssBCgRuYW1lGAIgASgJQrwBuki4AboBSgoacmVzb3VyY2Vfc2VydmVyLm5hbWUuYmxhbmsaLHRoaXMudHJpbSgpICE9ICcnID8gJycgOiAnbXVzdCBub3QgYmUgYmxhbmsnugFlCiByZXNvdXJjZV9zZXJ2ZXIubmFtZS5tYXhfbGVuLjEwMBpBdGhpcy50cmltKCkuc2l6ZSgpIDw9IDEwMCA/ICcnIDogJ211c3QgYmUgYXQgbW9zdCAxMDAgY2hhcmFjdGVycyfIAQESHwoKaWRlbnRpZmllchgDIAEoCUILukgIyAEBcgMYgAQSIQoGc2NvcGVzGAQgAygJQhG6SA6SAQsIARBAIgVyAxiAARIPCgd0cnVzdGVkGAUgASgIIloKHENyZWF0ZVJlc291cmNlU2VydmVyUmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXIi2gIKG1VwZGF0ZVJlc291cmNlU2VydmVyUmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESKAoScmVzb3VyY2Vfc2VydmVyX2lkGAIgASgJQgy6SAnIAQFyBIjkMgESywEKBG5hbWUYAyABKAlCvAG6SLgBugFKChpyZXNvdXJjZV9zZXJ2ZXIubmFtZS5ibGFuaxosdGhpcy50cmltKCkgIT0gJycgPyAnJyA6ICdtdXN0IG5vdCBiZSBibGFuaye6AWUKIHJlc291cmNlX3NlcnZlci5uYW1lLm1heF9sZW4uMTAwGkF0aGlzLnRyaW0oKS5zaXplKCkgPD0gMTAwID8gJycgOiAnbXVzdCBiZSBhdCBtb3N0IDEwMCBjaGFyYWN0ZXJzJ8gBARIhCgZzY29wZXMYBCADKAlCEbpIDpIBCwgBEEAiBXIDGIABIloKHFVwZGF0ZVJlc291cmNlU2VydmVyUmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXIiaQobRGVsZXRlUmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0EiAKCnByb2plY3RfaWQYASABKAlCDLpICcgBAXIEiOQyARIoChJyZXNvdXJjZV9zZXJ2ZXJfaWQYAiABKAlCDLpICcgBAXIEiOQyASIeChxEZWxldGVSZXNvdXJjZVNlcnZlclJlc3BvbnNlImkKG1ZlcmlmeVJlc291cmNlU2VydmVyUmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESKAoScmVzb3VyY2Vfc2VydmVyX2lkGAIgASgJQgy6SAnIAQFyBIjkMgEioQEKHFZlcmlmeVJlc291cmNlU2VydmVyUmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXISDgoGcGFzc2VkGAIgASgIEjUKBWVycm9yGAMgASgLMiYucmVzb3VyY2VzZXJ2ZXIudjEuVmVyaWZpY2F0aW9uRmFpbHVyZSJ8Ch1TZXRSZXNvdXJjZVNlcnZlclRydXN0UmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESKAoScmVzb3VyY2Vfc2VydmVyX2lkGAIgASgJQgy6SAnIAQFyBIjkMgESDwoHdHJ1c3RlZBgDIAEoCCJcCh5TZXRSZXNvdXJjZVNlcnZlclRydXN0UmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXIijgEKEExpc3RMaW5rc1JlcXVlc3QSIAoKcHJvamVjdF9pZBgBIAEoCUIMukgJyAEBcgSI5DIBEh4KCWNsaWVudF9pZBgCIAEoCUIJukgGcgSI5DIBSAASJwoScmVzb3VyY2Vfc2VydmVyX2lkGAMgASgJQgm6SAZyBIjkMgFIAEIPCgZ0YXJnZXQSBbpIAggBIjsKEUxpc3RMaW5rc1Jlc3BvbnNlEiYKBWxpbmtzGAEgAygLMhcucmVzb3VyY2VzZXJ2ZXIudjEuTGluayKjAQoRTGlua0NsaWVudFJlcXVlc3QSIAoKcHJvamVjdF9pZBgBIAEoCUIMukgJyAEBcgSI5DIBEh8KCWNsaWVudF9pZBgCIAEoCUIMukgJyAEBcgSI5DIBEigKEnJlc291cmNlX3NlcnZlcl9pZBgDIAEoCUIMukgJyAEBcgSI5DIBEiEKBnNjb3BlcxgEIAMoCUIRukgOkgELCAEQQCIFcgMYgAEiOwoSTGlua0NsaWVudFJlc3BvbnNlEiUKBGxpbmsYASABKAsyFy5yZXNvdXJjZXNlcnZlci52MS5MaW5rIqMBChFVcGRhdGVMaW5rUmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESHwoJY2xpZW50X2lkGAIgASgJQgy6SAnIAQFyBIjkMgESKAoScmVzb3VyY2Vfc2VydmVyX2lkGAMgASgJQgy6SAnIAQFyBIjkMgESIQoGc2NvcGVzGAQgAygJQhG6SA6SAQsIARBAIgVyAxiAASI7ChJVcGRhdGVMaW5rUmVzcG9uc2USJQoEbGluaxgBIAEoCzIXLnJlc291cmNlc2VydmVyLnYxLkxpbmsiggEKE1VubGlua0NsaWVudFJlcXVlc3QSIAoKcHJvamVjdF9pZBgBIAEoCUIMukgJyAEBcgSI5DIBEh8KCWNsaWVudF9pZBgCIAEoCUIMukgJyAEBcgSI5DIBEigKEnJlc291cmNlX3NlcnZlcl9pZBgDIAEoCUIMukgJyAEBcgSI5DIBIhYKFFVubGlua0NsaWVudFJlc3BvbnNlKqUBChNSZXNvdXJjZVNlcnZlclN0YXRlEiUKIVJFU09VUkNFX1NFUlZFUl9TVEFURV9VTlNQRUNJRklFRBAAEiEKHVJFU09VUkNFX1NFUlZFUl9TVEFURV9QRU5ESU5HEAESIgoeUkVTT1VSQ0VfU0VSVkVSX1NUQVRFX1ZFUklGSUVEEAISIAocUkVTT1VSQ0VfU0VSVkVSX1NUQVRFX0ZBSUxFRBADMtEXChVSZXNvdXJjZVNlcnZlclNlcnZpY2US6QEKE0xpc3RSZXNvdXJjZVNlcnZlcnMSLS5yZXNvdXJjZXNlcnZlci52MS5MaXN0UmVzb3VyY2VTZXJ2ZXJzUmVxdWVzdBouLnJlc291cmNlc2VydmVyLnYxLkxpc3RSZXNvdXJjZVNlcnZlcnNSZXNwb25zZSJzyvMYbwoUcmVzb3VyY2Vfc2VydmVyX2xpc3QSS0xpc3QgYSBwcm9qZWN0J3MgcmVzb3VyY2Ugc2VydmVycyB3aXRoIHRoZWlyIHNjb3BlcyBhbmQgdmVyaWZpY2F0aW9uIHN0YXRlLhoKcHJvamVjdF9pZBKAAgoRR2V0UmVzb3VyY2VTZXJ2ZXISKy5yZXNvdXJjZXNlcnZlci52MS5HZXRSZXNvdXJjZVNlcnZlclJlcXVlc3QaLC5yZXNvdXJjZXNlcnZlci52MS5HZXRSZXNvdXJjZVNlcnZlclJlc3BvbnNlIo8ByvMYigEKE3Jlc291cmNlX3NlcnZlcl9nZXQSU0dldCBvbmUgcmVzb3VyY2Ugc2VydmVyIG9mIGEgcHJvamVjdCwgd2l0aCBpdHMgdmVyaWZpY2F0aW9uIHN0YXRlIGFuZCBtZXRhZGF0YSBVUkwuGgpwcm9qZWN0X2lkGhJyZXNvdXJjZV9zZXJ2ZXJfaWQS/QIKFENyZWF0ZVJlc291cmNlU2VydmVyEi4ucmVzb3VyY2VzZXJ2ZXIudjEuQ3JlYXRlUmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0Gi8ucmVzb3VyY2VzZXJ2ZXIudjEuQ3JlYXRlUmVzb3VyY2VTZXJ2ZXJSZXNwb25zZSKDAsrzGP4BChZyZXNvdXJjZV9zZXJ2ZXJfY3JlYXRlErsBUmVnaXN0ZXIgYSByZXNvdXJjZSBzZXJ2ZXI6IGFuIEFQSSBvciBNQ1AgZW5kcG9pbnQgbmFtZWQgYnkgaXRzIGh0dHBzIGlkZW50aWZpZXIsIGV4YWN0bHkgYXMgaXQgY2hlY2tzIHRoZSB0b2tlbidzIGF1ZCwgd2l0aCB0aGUgc2NvcGVzIGFwcHMgY2FuIGFzayBmb3IuIEl0IHN0YXJ0cyBwZW5kaW5nIHVudGlsIHZlcmlmaWVkLhoKcHJvamVjdF9pZBoEbmFtZRoKaWRlbnRpZmllchoGc2NvcGVzIAESxgIKFFVwZGF0ZVJlc291cmNlU2VydmVyEi4ucmVzb3VyY2VzZXJ2ZXIudjEuVXBkYXRlUmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0Gi8ucmVzb3VyY2VzZXJ2ZXIudjEuVXBkYXRlUmVzb3VyY2VTZXJ2ZXJSZXNwb25zZSLMAcrzGMcBChZyZXNvdXJjZV9zZXJ2ZXJfdXBkYXRlEntSZXBsYWNlIGEgcmVzb3VyY2Ugc2VydmVyJ3MgbmFtZSBhbmQgc2NvcGVzLiBUaGUgaWRlbnRpZmllciBjYW4ndCBjaGFuZ2UsIGFuZCBhIHNjb3BlIGEgbGluayBzdGlsbCBhbGxvd3MgY2FuJ3QgYmUgcmVtb3ZlZC4aCnByb2plY3RfaWQaEnJlc291cmNlX3NlcnZlcl9pZBoEbmFtZRoGc2NvcGVzIAEwARKEAgoURGVsZXRlUmVzb3VyY2VTZXJ2ZXISLi5yZXNvdXJjZXNlcnZlci52MS5EZWxldGVSZXNvdXJjZVNlcnZlclJlcXVlc3QaLy5yZXNvdXJjZXNlcnZlci52MS5EZWxldGVSZXNvdXJjZVNlcnZlclJlc3BvbnNlIooByvMYhQEKFnJlc291cmNlX3NlcnZlcl9kZWxldGUSR0RlbGV0ZSBhIHJlc291cmNlIHNlcnZlci4gSXQgaXMgcmVmdXNlZCB3aGlsZSBjbGllbnRzIGFyZSBsaW5rZWQgdG8gaXQuGgpwcm9qZWN0X2lkGhJyZXNvdXJjZV9zZXJ2ZXJfaWQgATABEq4CChRWZXJpZnlSZXNvdXJjZVNlcnZlchIuLnJlc291cmNlc2VydmVyLnYxLlZlcmlmeVJlc291cmNlU2VydmVyUmVxdWVzdBovLnJlc291cmNlc2VydmVyLnYxLlZlcmlmeVJlc291cmNlU2VydmVyUmVzcG9uc2UitAHK8xivAQoWcmVzb3VyY2Vfc2VydmVyX3ZlcmlmeRJzQ2hlY2sgYSByZXNvdXJjZSBzZXJ2ZXIncyBSRkMgOTcyOCBtZXRhZGF0YSBub3cuIEEgcGFzcyB2ZXJpZmllcyBpdDsgYSBmYWlsdXJlIHNob3dzIHRoZSBlcnJvciBhbmQgY2hhbmdlcyBub3RoaW5nLhoKcHJvamVjdF9pZBoScmVzb3VyY2Vfc2VydmVyX2lkIAESfQoWU2V0UmVzb3VyY2VTZXJ2ZXJUcnVzdBIwLnJlc291cmNlc2VydmVyLnYxLlNldFJlc291cmNlU2VydmVyVHJ1c3RSZXF1ZXN0GjEucmVzb3VyY2VzZXJ2ZXIudjEuU2V0UmVzb3VyY2VTZXJ2ZXJUcnVzdFJlc3BvbnNlEo0CCglMaXN0TGlua3MSIy5yZXNvdXJjZXNlcnZlci52MS5MaXN0TGlua3NSZXF1ZXN0GiQucmVzb3VyY2VzZXJ2ZXIudjEuTGlzdExpbmtzUmVzcG9uc2UitAHK8xivAQoZcmVzb3VyY2Vfc2VydmVyX2xpbmtfbGlzdBKFAUxpc3QgdGhlIGxpbmtzIG9mIG9uZSBPQXV0aCBjbGllbnQgb3Igb2Ygb25lIHJlc291cmNlIHNlcnZlciwgd2l0aCB0aGUgc2NvcGVzIGVhY2ggbGluayBhbGxvd3MuIFNlbmQgY2xpZW50X2lkIG9yIHJlc291cmNlX3NlcnZlcl9pZC4aCnByb2plY3RfaWQSnAIKCkxpbmtDbGllbnQSJC5yZXNvdXJjZXNlcnZlci52MS5MaW5rQ2xpZW50UmVxdWVzdBolLnJlc291cmNlc2VydmVyLnYxLkxpbmtDbGllbnRSZXNwb25zZSLAAcrzGLsBChtyZXNvdXJjZV9zZXJ2ZXJfbGlua19jcmVhdGUSZ0xpbmsgYW4gT0F1dGggY2xpZW50IHRvIGEgcmVzb3VyY2Ugc2VydmVyIG9mIHRoZSBzYW1lIHByb2plY3QsIGFsbG93aW5nIGl0IHNvbWUgb2YgdGhlIHNlcnZlcidzIHNjb3Blcy4aCnByb2plY3RfaWQaCWNsaWVudF9pZBoScmVzb3VyY2Vfc2VydmVyX2lkGgZzY29wZXMgARKGAgoKVXBkYXRlTGluaxIkLnJlc291cmNlc2VydmVyLnYxLlVwZGF0ZUxpbmtSZXF1ZXN0GiUucmVzb3VyY2VzZXJ2ZXIudjEuVXBkYXRlTGlua1Jlc3BvbnNlIqoByvMYpQEKG3Jlc291cmNlX3NlcnZlcl9saW5rX3VwZGF0ZRJPUmVwbGFjZSB0aGUgc2NvcGVzIGEgbGluayBiZXR3ZWVuIGFuIE9BdXRoIGNsaWVudCBhbmQgYSByZXNvdXJjZSBzZXJ2ZXIgYWxsb3dzLhoKcHJvamVjdF9pZBoJY2xpZW50X2lkGhJyZXNvdXJjZV9zZXJ2ZXJfaWQaBnNjb3BlcyABMAESkAIKDFVubGlua0NsaWVudBImLnJlc291cmNlc2VydmVyLnYxLlVubGlua0NsaWVudFJlcXVlc3QaJy5yZXNvdXJjZXNlcnZlci52MS5VbmxpbmtDbGllbnRSZXNwb25zZSKuAcrzGKkBChtyZXNvdXJjZV9zZXJ2ZXJfbGlua19kZWxldGUSW1VubGluayBhbiBPQXV0aCBjbGllbnQgZnJvbSBhIHJlc291cmNlIHNlcnZlcjsgdGhlIGNsaWVudCBjYW4gbm8gbG9uZ2VyIGFzayBmb3IgaXRzIHNjb3Blcy4aCnByb2plY3RfaWQaCWNsaWVudF9pZBoScmVzb3VyY2Vfc2VydmVyX2lkIAEwAULOAQoVY29tLnJlc291cmNlc2VydmVyLnYxQhNSZXNvdXJjZXNlcnZlclByb3RvUAFaO2FsdGFsdW5lLmlkL290aHJhL2dlbi9nby9yZXNvdXJjZXNlcnZlci92MTtyZXNvdXJjZXNlcnZlcnYxogIDUlhYqgIRUmVzb3VyY2VzZXJ2ZXIuVjHKAhFSZXNvdXJjZXNlcnZlclxWMeICHVJlc291cmNlc2VydmVyXFYxXEdQQk1ldGFkYXRh6gISUmVzb3VyY2VzZXJ2ZXI6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_google_protobuf_timestamp, file_mcp_v1_annotations, file_othra_v1_rules]);
+  fileDesc("CiZyZXNvdXJjZXNlcnZlci92MS9yZXNvdXJjZXNlcnZlci5wcm90bxIRcmVzb3VyY2VzZXJ2ZXIudjEipQUKDlJlc291cmNlU2VydmVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEgoKaWRlbnRpZmllchgDIAEoCRIOCgZzY29wZXMYBCADKAkSNQoFc3RhdGUYBSABKA4yJi5yZXNvdXJjZXNlcnZlci52MS5SZXNvdXJjZVNlcnZlclN0YXRlEg8KB3RydXN0ZWQYBiABKAgSLwoLdmVyaWZpZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjMKD2xhc3RfY2hlY2tlZF9hdBgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASOgoKbGFzdF9lcnJvchgJIAEoCzImLnJlc291cmNlc2VydmVyLnYxLlZlcmlmaWNhdGlvbkZhaWx1cmUSHAoUY29uc2VjdXRpdmVfZmFpbHVyZXMYCiABKAUSFAoMbWV0YWRhdGFfdXJsGAsgASgJEhcKD3RydXN0X2F2YWlsYWJsZRgMIAEoCBIuCgpjcmVhdGVkX2F0GA0gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GA4gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBJUChJzY29wZV9kZXNjcmlwdGlvbnMYDyADKAsyOC5yZXNvdXJjZXNlcnZlci52MS5SZXNvdXJjZVNlcnZlci5TY29wZURlc2NyaXB0aW9uc0VudHJ5Ei4KBGNpbWQYECABKAsyIC5yZXNvdXJjZXNlcnZlci52MS5DSU1EQWRtaXNzaW9uGjgKFlNjb3BlRGVzY3JpcHRpb25zRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJSCg1DSU1EQWRtaXNzaW9uEg4KBmFjY2VwdBgBIAEoCBINCgVob3N0cxgCIAMoCRISCgphbGxfc2NvcGVzGAMgASgIEg4KBnNjb3BlcxgEIAMoCSJ3ChNWZXJpZmljYXRpb25GYWlsdXJlEg4KBnJlYXNvbhgBIAEoCRIOCgZzdGF0dXMYAiABKAUSEAoIcmVzb3VyY2UYAyABKAkSLgoKY2hlY2tlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiigMKBExpbmsSEQoJY2xpZW50X2lkGAEgASgJEhMKC2NsaWVudF9uYW1lGAIgASgJEhoKEnJlc291cmNlX3NlcnZlcl9pZBgDIAEoCRIcChRyZXNvdXJjZV9zZXJ2ZXJfbmFtZRgEIAEoCRIiChpyZXNvdXJjZV9zZXJ2ZXJfaWRlbnRpZmllchgFIAEoCRJFChVyZXNvdXJjZV9zZXJ2ZXJfc3RhdGUYBiABKA4yJi5yZXNvdXJjZXNlcnZlci52MS5SZXNvdXJjZVNlcnZlclN0YXRlEh8KF3Jlc291cmNlX3NlcnZlcl90cnVzdGVkGAcgASgIEg4KBnNjb3BlcxgIIAMoCRIuCgpjcmVhdGVkX2F0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIbChNjbGllbnRfbWV0YWRhdGFfdXJsGAogASgJEjcKE21ldGFkYXRhX2ZldGNoZWRfYXQYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIj4KGkxpc3RSZXNvdXJjZVNlcnZlcnNSZXF1ZXN0EiAKCnByb2plY3RfaWQYASABKAlCDLpICcgBAXIEiOQyASJzChtMaXN0UmVzb3VyY2VTZXJ2ZXJzUmVzcG9uc2USOwoQcmVzb3VyY2Vfc2VydmVycxgBIAMoCzIhLnJlc291cmNlc2VydmVyLnYxLlJlc291cmNlU2VydmVyEhcKD3RydXN0X2F2YWlsYWJsZRgCIAEoCCJmChhHZXRSZXNvdXJjZVNlcnZlclJlcXVlc3QSIAoKcHJvamVjdF9pZBgBIAEoCUIMukgJyAEBcgSI5DIBEigKEnJlc291cmNlX3NlcnZlcl9pZBgCIAEoCUIMukgJyAEBcgSI5DIBIlcKGUdldFJlc291cmNlU2VydmVyUmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXIimAQKG0NyZWF0ZVJlc291cmNlU2VydmVyUmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESywEKBG5hbWUYAiABKAlCvAG6SLgBugFKChpyZXNvdXJjZV9zZXJ2ZXIubmFtZS5ibGFuaxosdGhpcy50cmltKCkgIT0gJycgPyAnJyA6ICdtdXN0IG5vdCBiZSBibGFuaye6AWUKIHJlc291cmNlX3NlcnZlci5uYW1lLm1heF9sZW4uMTAwGkF0aGlzLnRyaW0oKS5zaXplKCkgPD0gMTAwID8gJycgOiAnbXVzdCBiZSBhdCBtb3N0IDEwMCBjaGFyYWN0ZXJzJ8gBARIfCgppZGVudGlmaWVyGAMgASgJQgu6SAjIAQFyAxiABBIhCgZzY29wZXMYBCADKAlCEbpIDpIBCwgBEEAiBXIDGIABEg8KB3RydXN0ZWQYBSABKAgSegoSc2NvcGVfZGVzY3JpcHRpb25zGAYgAygLMkUucmVzb3VyY2VzZXJ2ZXIudjEuQ3JlYXRlUmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0LlNjb3BlRGVzY3JpcHRpb25zRW50cnlCF7pIFJoBERBAIgVyAxiAASoGcgQQARh4GjgKFlNjb3BlRGVzY3JpcHRpb25zRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJaChxDcmVhdGVSZXNvdXJjZVNlcnZlclJlc3BvbnNlEjoKD3Jlc291cmNlX3NlcnZlchgBIAEoCzIhLnJlc291cmNlc2VydmVyLnYxLlJlc291cmNlU2VydmVyIpAEChtVcGRhdGVSZXNvdXJjZVNlcnZlclJlcXVlc3QSIAoKcHJvamVjdF9pZBgBIAEoCUIMukgJyAEBcgSI5DIBEigKEnJlc291cmNlX3NlcnZlcl9pZBgCIAEoCUIMukgJyAEBcgSI5DIBEssBCgRuYW1lGAMgASgJQrwBuki4AboBSgoacmVzb3VyY2Vfc2VydmVyLm5hbWUuYmxhbmsaLHRoaXMudHJpbSgpICE9ICcnID8gJycgOiAnbXVzdCBub3QgYmUgYmxhbmsnugFlCiByZXNvdXJjZV9zZXJ2ZXIubmFtZS5tYXhfbGVuLjEwMBpBdGhpcy50cmltKCkuc2l6ZSgpIDw9IDEwMCA/ICcnIDogJ211c3QgYmUgYXQgbW9zdCAxMDAgY2hhcmFjdGVycyfIAQESIQoGc2NvcGVzGAQgAygJQhG6SA6SAQsIARBAIgVyAxiAARJ6ChJzY29wZV9kZXNjcmlwdGlvbnMYBSADKAsyRS5yZXNvdXJjZXNlcnZlci52MS5VcGRhdGVSZXNvdXJjZVNlcnZlclJlcXVlc3QuU2NvcGVEZXNjcmlwdGlvbnNFbnRyeUIXukgUmgEREEAiBXIDGIABKgZyBBABGHgaOAoWU2NvcGVEZXNjcmlwdGlvbnNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIloKHFVwZGF0ZVJlc291cmNlU2VydmVyUmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXIiaQobRGVsZXRlUmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0EiAKCnByb2plY3RfaWQYASABKAlCDLpICcgBAXIEiOQyARIoChJyZXNvdXJjZV9zZXJ2ZXJfaWQYAiABKAlCDLpICcgBAXIEiOQyASIeChxEZWxldGVSZXNvdXJjZVNlcnZlclJlc3BvbnNlImkKG1ZlcmlmeVJlc291cmNlU2VydmVyUmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESKAoScmVzb3VyY2Vfc2VydmVyX2lkGAIgASgJQgy6SAnIAQFyBIjkMgEioQEKHFZlcmlmeVJlc291cmNlU2VydmVyUmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXISDgoGcGFzc2VkGAIgASgIEjUKBWVycm9yGAMgASgLMiYucmVzb3VyY2VzZXJ2ZXIudjEuVmVyaWZpY2F0aW9uRmFpbHVyZSJ8Ch1TZXRSZXNvdXJjZVNlcnZlclRydXN0UmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESKAoScmVzb3VyY2Vfc2VydmVyX2lkGAIgASgJQgy6SAnIAQFyBIjkMgESDwoHdHJ1c3RlZBgDIAEoCCJcCh5TZXRSZXNvdXJjZVNlcnZlclRydXN0UmVzcG9uc2USOgoPcmVzb3VyY2Vfc2VydmVyGAEgASgLMiEucmVzb3VyY2VzZXJ2ZXIudjEuUmVzb3VyY2VTZXJ2ZXIi1AEKIVNldFJlc291cmNlU2VydmVyQWRtaXNzaW9uUmVxdWVzdBIgCgpwcm9qZWN0X2lkGAEgASgJQgy6SAnIAQFyBIjkMgESKAoScmVzb3VyY2Vfc2VydmVyX2lkGAIgASgJQgy6SAnIAQFyBIjkMgESDgoGYWNjZXB0GAMgASgIEh4KBWhvc3RzGAQgAygJQg+6SAySAQkQQCIFcgMY/QESEgoKYWxsX3Njb3BlcxgFIAEoCBIfCgZzY29wZXMYBiADKAlCD7pIDJIBCRBAIgVyAxiAASJgCiJTZXRSZXNvdXJjZVNlcnZlckFkbWlzc2lvblJlc3BvbnNlEjoKD3Jlc291cmNlX3NlcnZlchgBIAEoCzIhLnJlc291cmNlc2VydmVyLnYxLlJlc291cmNlU2VydmVyIo4BChBMaXN0TGlua3NSZXF1ZXN0EiAKCnByb2plY3RfaWQYASABKAlCDLpICcgBAXIEiOQyARIeCgljbGllbnRfaWQYAiABKAlCCbpIBnIEiOQyAUgAEicKEnJlc291cmNlX3NlcnZlcl9pZBgDIAEoCUIJukgGcgSI5DIBSABCDwoGdGFyZ2V0EgW6SAIIASI7ChFMaXN0TGlua3NSZXNwb25zZRImCgVsaW5rcxgBIAMoCzIXLnJlc291cmNlc2VydmVyLnYxLkxpbmsiowEKEUxpbmtDbGllbnRSZXF1ZXN0EiAKCnByb2plY3RfaWQYASABKAlCDLpICcgBAXIEiOQyARIfCgljbGllbnRfaWQYAiABKAlCDLpICcgBAXIEiOQyARIoChJyZXNvdXJjZV9zZXJ2ZXJfaWQYAyABKAlCDLpICcgBAXIEiOQyARIhCgZzY29wZXMYBCADKAlCEbpIDpIBCwgBEEAiBXIDGIABIjsKEkxpbmtDbGllbnRSZXNwb25zZRIlCgRsaW5rGAEgASgLMhcucmVzb3VyY2VzZXJ2ZXIudjEuTGluayKjAQoRVXBkYXRlTGlua1JlcXVlc3QSIAoKcHJvamVjdF9pZBgBIAEoCUIMukgJyAEBcgSI5DIBEh8KCWNsaWVudF9pZBgCIAEoCUIMukgJyAEBcgSI5DIBEigKEnJlc291cmNlX3NlcnZlcl9pZBgDIAEoCUIMukgJyAEBcgSI5DIBEiEKBnNjb3BlcxgEIAMoCUIRukgOkgELCAEQQCIFcgMYgAEiOwoSVXBkYXRlTGlua1Jlc3BvbnNlEiUKBGxpbmsYASABKAsyFy5yZXNvdXJjZXNlcnZlci52MS5MaW5rIoIBChNVbmxpbmtDbGllbnRSZXF1ZXN0EiAKCnByb2plY3RfaWQYASABKAlCDLpICcgBAXIEiOQyARIfCgljbGllbnRfaWQYAiABKAlCDLpICcgBAXIEiOQyARIoChJyZXNvdXJjZV9zZXJ2ZXJfaWQYAyABKAlCDLpICcgBAXIEiOQyASIWChRVbmxpbmtDbGllbnRSZXNwb25zZSqlAQoTUmVzb3VyY2VTZXJ2ZXJTdGF0ZRIlCiFSRVNPVVJDRV9TRVJWRVJfU1RBVEVfVU5TUEVDSUZJRUQQABIhCh1SRVNPVVJDRV9TRVJWRVJfU1RBVEVfUEVORElORxABEiIKHlJFU09VUkNFX1NFUlZFUl9TVEFURV9WRVJJRklFRBACEiAKHFJFU09VUkNFX1NFUlZFUl9TVEFURV9GQUlMRUQQAzLdGAoVUmVzb3VyY2VTZXJ2ZXJTZXJ2aWNlEukBChNMaXN0UmVzb3VyY2VTZXJ2ZXJzEi0ucmVzb3VyY2VzZXJ2ZXIudjEuTGlzdFJlc291cmNlU2VydmVyc1JlcXVlc3QaLi5yZXNvdXJjZXNlcnZlci52MS5MaXN0UmVzb3VyY2VTZXJ2ZXJzUmVzcG9uc2Uic8rzGG8KFHJlc291cmNlX3NlcnZlcl9saXN0EktMaXN0IGEgcHJvamVjdCdzIHJlc291cmNlIHNlcnZlcnMgd2l0aCB0aGVpciBzY29wZXMgYW5kIHZlcmlmaWNhdGlvbiBzdGF0ZS4aCnByb2plY3RfaWQSgAIKEUdldFJlc291cmNlU2VydmVyEisucmVzb3VyY2VzZXJ2ZXIudjEuR2V0UmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0GiwucmVzb3VyY2VzZXJ2ZXIudjEuR2V0UmVzb3VyY2VTZXJ2ZXJSZXNwb25zZSKPAcrzGIoBChNyZXNvdXJjZV9zZXJ2ZXJfZ2V0ElNHZXQgb25lIHJlc291cmNlIHNlcnZlciBvZiBhIHByb2plY3QsIHdpdGggaXRzIHZlcmlmaWNhdGlvbiBzdGF0ZSBhbmQgbWV0YWRhdGEgVVJMLhoKcHJvamVjdF9pZBoScmVzb3VyY2Vfc2VydmVyX2lkEv0CChRDcmVhdGVSZXNvdXJjZVNlcnZlchIuLnJlc291cmNlc2VydmVyLnYxLkNyZWF0ZVJlc291cmNlU2VydmVyUmVxdWVzdBovLnJlc291cmNlc2VydmVyLnYxLkNyZWF0ZVJlc291cmNlU2VydmVyUmVzcG9uc2UigwLK8xj+AQoWcmVzb3VyY2Vfc2VydmVyX2NyZWF0ZRK7AVJlZ2lzdGVyIGEgcmVzb3VyY2Ugc2VydmVyOiBhbiBBUEkgb3IgTUNQIGVuZHBvaW50IG5hbWVkIGJ5IGl0cyBodHRwcyBpZGVudGlmaWVyLCBleGFjdGx5IGFzIGl0IGNoZWNrcyB0aGUgdG9rZW4ncyBhdWQsIHdpdGggdGhlIHNjb3BlcyBhcHBzIGNhbiBhc2sgZm9yLiBJdCBzdGFydHMgcGVuZGluZyB1bnRpbCB2ZXJpZmllZC4aCnByb2plY3RfaWQaBG5hbWUaCmlkZW50aWZpZXIaBnNjb3BlcyABEsYCChRVcGRhdGVSZXNvdXJjZVNlcnZlchIuLnJlc291cmNlc2VydmVyLnYxLlVwZGF0ZVJlc291cmNlU2VydmVyUmVxdWVzdBovLnJlc291cmNlc2VydmVyLnYxLlVwZGF0ZVJlc291cmNlU2VydmVyUmVzcG9uc2UizAHK8xjHAQoWcmVzb3VyY2Vfc2VydmVyX3VwZGF0ZRJ7UmVwbGFjZSBhIHJlc291cmNlIHNlcnZlcidzIG5hbWUgYW5kIHNjb3Blcy4gVGhlIGlkZW50aWZpZXIgY2FuJ3QgY2hhbmdlLCBhbmQgYSBzY29wZSBhIGxpbmsgc3RpbGwgYWxsb3dzIGNhbid0IGJlIHJlbW92ZWQuGgpwcm9qZWN0X2lkGhJyZXNvdXJjZV9zZXJ2ZXJfaWQaBG5hbWUaBnNjb3BlcyABMAEShAIKFERlbGV0ZVJlc291cmNlU2VydmVyEi4ucmVzb3VyY2VzZXJ2ZXIudjEuRGVsZXRlUmVzb3VyY2VTZXJ2ZXJSZXF1ZXN0Gi8ucmVzb3VyY2VzZXJ2ZXIudjEuRGVsZXRlUmVzb3VyY2VTZXJ2ZXJSZXNwb25zZSKKAcrzGIUBChZyZXNvdXJjZV9zZXJ2ZXJfZGVsZXRlEkdEZWxldGUgYSByZXNvdXJjZSBzZXJ2ZXIuIEl0IGlzIHJlZnVzZWQgd2hpbGUgY2xpZW50cyBhcmUgbGlua2VkIHRvIGl0LhoKcHJvamVjdF9pZBoScmVzb3VyY2Vfc2VydmVyX2lkIAEwARKuAgoUVmVyaWZ5UmVzb3VyY2VTZXJ2ZXISLi5yZXNvdXJjZXNlcnZlci52MS5WZXJpZnlSZXNvdXJjZVNlcnZlclJlcXVlc3QaLy5yZXNvdXJjZXNlcnZlci52MS5WZXJpZnlSZXNvdXJjZVNlcnZlclJlc3BvbnNlIrQByvMYrwEKFnJlc291cmNlX3NlcnZlcl92ZXJpZnkSc0NoZWNrIGEgcmVzb3VyY2Ugc2VydmVyJ3MgUkZDIDk3MjggbWV0YWRhdGEgbm93LiBBIHBhc3MgdmVyaWZpZXMgaXQ7IGEgZmFpbHVyZSBzaG93cyB0aGUgZXJyb3IgYW5kIGNoYW5nZXMgbm90aGluZy4aCnByb2plY3RfaWQaEnJlc291cmNlX3NlcnZlcl9pZCABEn0KFlNldFJlc291cmNlU2VydmVyVHJ1c3QSMC5yZXNvdXJjZXNlcnZlci52MS5TZXRSZXNvdXJjZVNlcnZlclRydXN0UmVxdWVzdBoxLnJlc291cmNlc2VydmVyLnYxLlNldFJlc291cmNlU2VydmVyVHJ1c3RSZXNwb25zZRKJAQoaU2V0UmVzb3VyY2VTZXJ2ZXJBZG1pc3Npb24SNC5yZXNvdXJjZXNlcnZlci52MS5TZXRSZXNvdXJjZVNlcnZlckFkbWlzc2lvblJlcXVlc3QaNS5yZXNvdXJjZXNlcnZlci52MS5TZXRSZXNvdXJjZVNlcnZlckFkbWlzc2lvblJlc3BvbnNlEo0CCglMaXN0TGlua3MSIy5yZXNvdXJjZXNlcnZlci52MS5MaXN0TGlua3NSZXF1ZXN0GiQucmVzb3VyY2VzZXJ2ZXIudjEuTGlzdExpbmtzUmVzcG9uc2UitAHK8xivAQoZcmVzb3VyY2Vfc2VydmVyX2xpbmtfbGlzdBKFAUxpc3QgdGhlIGxpbmtzIG9mIG9uZSBPQXV0aCBjbGllbnQgb3Igb2Ygb25lIHJlc291cmNlIHNlcnZlciwgd2l0aCB0aGUgc2NvcGVzIGVhY2ggbGluayBhbGxvd3MuIFNlbmQgY2xpZW50X2lkIG9yIHJlc291cmNlX3NlcnZlcl9pZC4aCnByb2plY3RfaWQSnAIKCkxpbmtDbGllbnQSJC5yZXNvdXJjZXNlcnZlci52MS5MaW5rQ2xpZW50UmVxdWVzdBolLnJlc291cmNlc2VydmVyLnYxLkxpbmtDbGllbnRSZXNwb25zZSLAAcrzGLsBChtyZXNvdXJjZV9zZXJ2ZXJfbGlua19jcmVhdGUSZ0xpbmsgYW4gT0F1dGggY2xpZW50IHRvIGEgcmVzb3VyY2Ugc2VydmVyIG9mIHRoZSBzYW1lIHByb2plY3QsIGFsbG93aW5nIGl0IHNvbWUgb2YgdGhlIHNlcnZlcidzIHNjb3Blcy4aCnByb2plY3RfaWQaCWNsaWVudF9pZBoScmVzb3VyY2Vfc2VydmVyX2lkGgZzY29wZXMgARKGAgoKVXBkYXRlTGluaxIkLnJlc291cmNlc2VydmVyLnYxLlVwZGF0ZUxpbmtSZXF1ZXN0GiUucmVzb3VyY2VzZXJ2ZXIudjEuVXBkYXRlTGlua1Jlc3BvbnNlIqoByvMYpQEKG3Jlc291cmNlX3NlcnZlcl9saW5rX3VwZGF0ZRJPUmVwbGFjZSB0aGUgc2NvcGVzIGEgbGluayBiZXR3ZWVuIGFuIE9BdXRoIGNsaWVudCBhbmQgYSByZXNvdXJjZSBzZXJ2ZXIgYWxsb3dzLhoKcHJvamVjdF9pZBoJY2xpZW50X2lkGhJyZXNvdXJjZV9zZXJ2ZXJfaWQaBnNjb3BlcyABMAESkAIKDFVubGlua0NsaWVudBImLnJlc291cmNlc2VydmVyLnYxLlVubGlua0NsaWVudFJlcXVlc3QaJy5yZXNvdXJjZXNlcnZlci52MS5VbmxpbmtDbGllbnRSZXNwb25zZSKuAcrzGKkBChtyZXNvdXJjZV9zZXJ2ZXJfbGlua19kZWxldGUSW1VubGluayBhbiBPQXV0aCBjbGllbnQgZnJvbSBhIHJlc291cmNlIHNlcnZlcjsgdGhlIGNsaWVudCBjYW4gbm8gbG9uZ2VyIGFzayBmb3IgaXRzIHNjb3Blcy4aCnByb2plY3RfaWQaCWNsaWVudF9pZBoScmVzb3VyY2Vfc2VydmVyX2lkIAEwAULOAQoVY29tLnJlc291cmNlc2VydmVyLnYxQhNSZXNvdXJjZXNlcnZlclByb3RvUAFaO2FsdGFsdW5lLmlkL290aHJhL2dlbi9nby9yZXNvdXJjZXNlcnZlci92MTtyZXNvdXJjZXNlcnZlcnYxogIDUlhYqgIRUmVzb3VyY2VzZXJ2ZXIuVjHKAhFSZXNvdXJjZXNlcnZlclxWMeICHVJlc291cmNlc2VydmVyXFYxXEdQQk1ldGFkYXRh6gISUmVzb3VyY2VzZXJ2ZXI6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_google_protobuf_timestamp, file_mcp_v1_annotations, file_othra_v1_rules]);
 
 /**
  * @generated from message resourceserver.v1.ResourceServer
@@ -100,6 +100,20 @@ export type ResourceServer = Message<"resourceserver.v1.ResourceServer"> & {
    * @generated from field: google.protobuf.Timestamp updated_at = 14;
    */
   updatedAt?: Timestamp;
+
+  /**
+   * scope_descriptions says what each scope lets an app do, shown on the consent page; a scope may have none.
+   *
+   * @generated from field: map<string, string> scope_descriptions = 15;
+   */
+  scopeDescriptions: { [key: string]: string };
+
+  /**
+   * cimd is whether apps without registration (CIMD) may ask for this server's scopes.
+   *
+   * @generated from field: resourceserver.v1.CIMDAdmission cimd = 16;
+   */
+  cimd?: CIMDAdmission;
 };
 
 /**
@@ -108,6 +122,46 @@ export type ResourceServer = Message<"resourceserver.v1.ResourceServer"> & {
  */
 export const ResourceServerSchema: GenMessage<ResourceServer> = /*@__PURE__*/
   messageDesc(file_resourceserver_v1_resourceserver, 0);
+
+/**
+ * CIMDAdmission is a resource server's admission of apps that sign in with a Client ID Metadata Document.
+ *
+ * @generated from message resourceserver.v1.CIMDAdmission
+ */
+export type CIMDAdmission = Message<"resourceserver.v1.CIMDAdmission"> & {
+  /**
+   * accept is off by default and can be turned on only while the server is verified or trusted.
+   *
+   * @generated from field: bool accept = 1;
+   */
+  accept: boolean;
+
+  /**
+   * hosts are the lower-case host names a client_id URL may have; empty means any host.
+   *
+   * @generated from field: repeated string hosts = 2;
+   */
+  hosts: string[];
+
+  /**
+   * all_scopes follows the server's scopes; false allows only scopes.
+   *
+   * @generated from field: bool all_scopes = 3;
+   */
+  allScopes: boolean;
+
+  /**
+   * @generated from field: repeated string scopes = 4;
+   */
+  scopes: string[];
+};
+
+/**
+ * Describes the message resourceserver.v1.CIMDAdmission.
+ * Use `create(CIMDAdmissionSchema)` to create a new message.
+ */
+export const CIMDAdmissionSchema: GenMessage<CIMDAdmission> = /*@__PURE__*/
+  messageDesc(file_resourceserver_v1_resourceserver, 1);
 
 /**
  * VerificationFailure is why an RFC 9728 check failed.
@@ -147,7 +201,7 @@ export type VerificationFailure = Message<"resourceserver.v1.VerificationFailure
  * Use `create(VerificationFailureSchema)` to create a new message.
  */
 export const VerificationFailureSchema: GenMessage<VerificationFailure> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 1);
+  messageDesc(file_resourceserver_v1_resourceserver, 2);
 
 /**
  * @generated from message resourceserver.v1.Link
@@ -199,6 +253,20 @@ export type Link = Message<"resourceserver.v1.Link"> & {
    * @generated from field: google.protobuf.Timestamp created_at = 9;
    */
   createdAt?: Timestamp;
+
+  /**
+   * client_metadata_url is the client_id URL of an app without registration (CIMD); empty for a registered client.
+   *
+   * @generated from field: string client_metadata_url = 10;
+   */
+  clientMetadataUrl: string;
+
+  /**
+   * metadata_fetched_at is when Othra last read that app's metadata document.
+   *
+   * @generated from field: google.protobuf.Timestamp metadata_fetched_at = 11;
+   */
+  metadataFetchedAt?: Timestamp;
 };
 
 /**
@@ -206,7 +274,7 @@ export type Link = Message<"resourceserver.v1.Link"> & {
  * Use `create(LinkSchema)` to create a new message.
  */
 export const LinkSchema: GenMessage<Link> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 2);
+  messageDesc(file_resourceserver_v1_resourceserver, 3);
 
 /**
  * @generated from message resourceserver.v1.ListResourceServersRequest
@@ -223,7 +291,7 @@ export type ListResourceServersRequest = Message<"resourceserver.v1.ListResource
  * Use `create(ListResourceServersRequestSchema)` to create a new message.
  */
 export const ListResourceServersRequestSchema: GenMessage<ListResourceServersRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 3);
+  messageDesc(file_resourceserver_v1_resourceserver, 4);
 
 /**
  * @generated from message resourceserver.v1.ListResourceServersResponse
@@ -247,7 +315,7 @@ export type ListResourceServersResponse = Message<"resourceserver.v1.ListResourc
  * Use `create(ListResourceServersResponseSchema)` to create a new message.
  */
 export const ListResourceServersResponseSchema: GenMessage<ListResourceServersResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 4);
+  messageDesc(file_resourceserver_v1_resourceserver, 5);
 
 /**
  * @generated from message resourceserver.v1.GetResourceServerRequest
@@ -269,7 +337,7 @@ export type GetResourceServerRequest = Message<"resourceserver.v1.GetResourceSer
  * Use `create(GetResourceServerRequestSchema)` to create a new message.
  */
 export const GetResourceServerRequestSchema: GenMessage<GetResourceServerRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 5);
+  messageDesc(file_resourceserver_v1_resourceserver, 6);
 
 /**
  * @generated from message resourceserver.v1.GetResourceServerResponse
@@ -286,7 +354,7 @@ export type GetResourceServerResponse = Message<"resourceserver.v1.GetResourceSe
  * Use `create(GetResourceServerResponseSchema)` to create a new message.
  */
 export const GetResourceServerResponseSchema: GenMessage<GetResourceServerResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 6);
+  messageDesc(file_resourceserver_v1_resourceserver, 7);
 
 /**
  * @generated from message resourceserver.v1.CreateResourceServerRequest
@@ -316,6 +384,11 @@ export type CreateResourceServerRequest = Message<"resourceserver.v1.CreateResou
    * @generated from field: bool trusted = 5;
    */
   trusted: boolean;
+
+  /**
+   * @generated from field: map<string, string> scope_descriptions = 6;
+   */
+  scopeDescriptions: { [key: string]: string };
 };
 
 /**
@@ -323,7 +396,7 @@ export type CreateResourceServerRequest = Message<"resourceserver.v1.CreateResou
  * Use `create(CreateResourceServerRequestSchema)` to create a new message.
  */
 export const CreateResourceServerRequestSchema: GenMessage<CreateResourceServerRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 7);
+  messageDesc(file_resourceserver_v1_resourceserver, 8);
 
 /**
  * @generated from message resourceserver.v1.CreateResourceServerResponse
@@ -340,7 +413,7 @@ export type CreateResourceServerResponse = Message<"resourceserver.v1.CreateReso
  * Use `create(CreateResourceServerResponseSchema)` to create a new message.
  */
 export const CreateResourceServerResponseSchema: GenMessage<CreateResourceServerResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 8);
+  messageDesc(file_resourceserver_v1_resourceserver, 9);
 
 /**
  * @generated from message resourceserver.v1.UpdateResourceServerRequest
@@ -365,6 +438,11 @@ export type UpdateResourceServerRequest = Message<"resourceserver.v1.UpdateResou
    * @generated from field: repeated string scopes = 4;
    */
   scopes: string[];
+
+  /**
+   * @generated from field: map<string, string> scope_descriptions = 5;
+   */
+  scopeDescriptions: { [key: string]: string };
 };
 
 /**
@@ -372,7 +450,7 @@ export type UpdateResourceServerRequest = Message<"resourceserver.v1.UpdateResou
  * Use `create(UpdateResourceServerRequestSchema)` to create a new message.
  */
 export const UpdateResourceServerRequestSchema: GenMessage<UpdateResourceServerRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 9);
+  messageDesc(file_resourceserver_v1_resourceserver, 10);
 
 /**
  * @generated from message resourceserver.v1.UpdateResourceServerResponse
@@ -389,7 +467,7 @@ export type UpdateResourceServerResponse = Message<"resourceserver.v1.UpdateReso
  * Use `create(UpdateResourceServerResponseSchema)` to create a new message.
  */
 export const UpdateResourceServerResponseSchema: GenMessage<UpdateResourceServerResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 10);
+  messageDesc(file_resourceserver_v1_resourceserver, 11);
 
 /**
  * @generated from message resourceserver.v1.DeleteResourceServerRequest
@@ -411,7 +489,7 @@ export type DeleteResourceServerRequest = Message<"resourceserver.v1.DeleteResou
  * Use `create(DeleteResourceServerRequestSchema)` to create a new message.
  */
 export const DeleteResourceServerRequestSchema: GenMessage<DeleteResourceServerRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 11);
+  messageDesc(file_resourceserver_v1_resourceserver, 12);
 
 /**
  * @generated from message resourceserver.v1.DeleteResourceServerResponse
@@ -424,7 +502,7 @@ export type DeleteResourceServerResponse = Message<"resourceserver.v1.DeleteReso
  * Use `create(DeleteResourceServerResponseSchema)` to create a new message.
  */
 export const DeleteResourceServerResponseSchema: GenMessage<DeleteResourceServerResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 12);
+  messageDesc(file_resourceserver_v1_resourceserver, 13);
 
 /**
  * @generated from message resourceserver.v1.VerifyResourceServerRequest
@@ -446,7 +524,7 @@ export type VerifyResourceServerRequest = Message<"resourceserver.v1.VerifyResou
  * Use `create(VerifyResourceServerRequestSchema)` to create a new message.
  */
 export const VerifyResourceServerRequestSchema: GenMessage<VerifyResourceServerRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 13);
+  messageDesc(file_resourceserver_v1_resourceserver, 14);
 
 /**
  * @generated from message resourceserver.v1.VerifyResourceServerResponse
@@ -477,7 +555,7 @@ export type VerifyResourceServerResponse = Message<"resourceserver.v1.VerifyReso
  * Use `create(VerifyResourceServerResponseSchema)` to create a new message.
  */
 export const VerifyResourceServerResponseSchema: GenMessage<VerifyResourceServerResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 14);
+  messageDesc(file_resourceserver_v1_resourceserver, 15);
 
 /**
  * @generated from message resourceserver.v1.SetResourceServerTrustRequest
@@ -504,7 +582,7 @@ export type SetResourceServerTrustRequest = Message<"resourceserver.v1.SetResour
  * Use `create(SetResourceServerTrustRequestSchema)` to create a new message.
  */
 export const SetResourceServerTrustRequestSchema: GenMessage<SetResourceServerTrustRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 15);
+  messageDesc(file_resourceserver_v1_resourceserver, 16);
 
 /**
  * @generated from message resourceserver.v1.SetResourceServerTrustResponse
@@ -521,7 +599,66 @@ export type SetResourceServerTrustResponse = Message<"resourceserver.v1.SetResou
  * Use `create(SetResourceServerTrustResponseSchema)` to create a new message.
  */
 export const SetResourceServerTrustResponseSchema: GenMessage<SetResourceServerTrustResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 16);
+  messageDesc(file_resourceserver_v1_resourceserver, 17);
+
+/**
+ * @generated from message resourceserver.v1.SetResourceServerAdmissionRequest
+ */
+export type SetResourceServerAdmissionRequest = Message<"resourceserver.v1.SetResourceServerAdmissionRequest"> & {
+  /**
+   * @generated from field: string project_id = 1;
+   */
+  projectId: string;
+
+  /**
+   * @generated from field: string resource_server_id = 2;
+   */
+  resourceServerId: string;
+
+  /**
+   * @generated from field: bool accept = 3;
+   */
+  accept: boolean;
+
+  /**
+   * @generated from field: repeated string hosts = 4;
+   */
+  hosts: string[];
+
+  /**
+   * @generated from field: bool all_scopes = 5;
+   */
+  allScopes: boolean;
+
+  /**
+   * @generated from field: repeated string scopes = 6;
+   */
+  scopes: string[];
+};
+
+/**
+ * Describes the message resourceserver.v1.SetResourceServerAdmissionRequest.
+ * Use `create(SetResourceServerAdmissionRequestSchema)` to create a new message.
+ */
+export const SetResourceServerAdmissionRequestSchema: GenMessage<SetResourceServerAdmissionRequest> = /*@__PURE__*/
+  messageDesc(file_resourceserver_v1_resourceserver, 18);
+
+/**
+ * @generated from message resourceserver.v1.SetResourceServerAdmissionResponse
+ */
+export type SetResourceServerAdmissionResponse = Message<"resourceserver.v1.SetResourceServerAdmissionResponse"> & {
+  /**
+   * @generated from field: resourceserver.v1.ResourceServer resource_server = 1;
+   */
+  resourceServer?: ResourceServer;
+};
+
+/**
+ * Describes the message resourceserver.v1.SetResourceServerAdmissionResponse.
+ * Use `create(SetResourceServerAdmissionResponseSchema)` to create a new message.
+ */
+export const SetResourceServerAdmissionResponseSchema: GenMessage<SetResourceServerAdmissionResponse> = /*@__PURE__*/
+  messageDesc(file_resourceserver_v1_resourceserver, 19);
 
 /**
  * @generated from message resourceserver.v1.ListLinksRequest
@@ -555,7 +692,7 @@ export type ListLinksRequest = Message<"resourceserver.v1.ListLinksRequest"> & {
  * Use `create(ListLinksRequestSchema)` to create a new message.
  */
 export const ListLinksRequestSchema: GenMessage<ListLinksRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 17);
+  messageDesc(file_resourceserver_v1_resourceserver, 20);
 
 /**
  * @generated from message resourceserver.v1.ListLinksResponse
@@ -572,7 +709,7 @@ export type ListLinksResponse = Message<"resourceserver.v1.ListLinksResponse"> &
  * Use `create(ListLinksResponseSchema)` to create a new message.
  */
 export const ListLinksResponseSchema: GenMessage<ListLinksResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 18);
+  messageDesc(file_resourceserver_v1_resourceserver, 21);
 
 /**
  * @generated from message resourceserver.v1.LinkClientRequest
@@ -604,7 +741,7 @@ export type LinkClientRequest = Message<"resourceserver.v1.LinkClientRequest"> &
  * Use `create(LinkClientRequestSchema)` to create a new message.
  */
 export const LinkClientRequestSchema: GenMessage<LinkClientRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 19);
+  messageDesc(file_resourceserver_v1_resourceserver, 22);
 
 /**
  * @generated from message resourceserver.v1.LinkClientResponse
@@ -621,7 +758,7 @@ export type LinkClientResponse = Message<"resourceserver.v1.LinkClientResponse">
  * Use `create(LinkClientResponseSchema)` to create a new message.
  */
 export const LinkClientResponseSchema: GenMessage<LinkClientResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 20);
+  messageDesc(file_resourceserver_v1_resourceserver, 23);
 
 /**
  * @generated from message resourceserver.v1.UpdateLinkRequest
@@ -653,7 +790,7 @@ export type UpdateLinkRequest = Message<"resourceserver.v1.UpdateLinkRequest"> &
  * Use `create(UpdateLinkRequestSchema)` to create a new message.
  */
 export const UpdateLinkRequestSchema: GenMessage<UpdateLinkRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 21);
+  messageDesc(file_resourceserver_v1_resourceserver, 24);
 
 /**
  * @generated from message resourceserver.v1.UpdateLinkResponse
@@ -670,7 +807,7 @@ export type UpdateLinkResponse = Message<"resourceserver.v1.UpdateLinkResponse">
  * Use `create(UpdateLinkResponseSchema)` to create a new message.
  */
 export const UpdateLinkResponseSchema: GenMessage<UpdateLinkResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 22);
+  messageDesc(file_resourceserver_v1_resourceserver, 25);
 
 /**
  * @generated from message resourceserver.v1.UnlinkClientRequest
@@ -697,7 +834,7 @@ export type UnlinkClientRequest = Message<"resourceserver.v1.UnlinkClientRequest
  * Use `create(UnlinkClientRequestSchema)` to create a new message.
  */
 export const UnlinkClientRequestSchema: GenMessage<UnlinkClientRequest> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 23);
+  messageDesc(file_resourceserver_v1_resourceserver, 26);
 
 /**
  * @generated from message resourceserver.v1.UnlinkClientResponse
@@ -710,7 +847,7 @@ export type UnlinkClientResponse = Message<"resourceserver.v1.UnlinkClientRespon
  * Use `create(UnlinkClientResponseSchema)` to create a new message.
  */
 export const UnlinkClientResponseSchema: GenMessage<UnlinkClientResponse> = /*@__PURE__*/
-  messageDesc(file_resourceserver_v1_resourceserver, 24);
+  messageDesc(file_resourceserver_v1_resourceserver, 27);
 
 /**
  * ResourceServerState is where RFC 9728 verification stands.
@@ -812,6 +949,16 @@ export const ResourceServerService: GenService<{
     methodKind: "unary";
     input: typeof SetResourceServerTrustRequestSchema;
     output: typeof SetResourceServerTrustResponseSchema;
+  },
+  /**
+   * SECURITY: CIMD admission lets unregistered apps ask for this server's scopes; a signed-in person sets it, never MCP.
+   *
+   * @generated from rpc resourceserver.v1.ResourceServerService.SetResourceServerAdmission
+   */
+  setResourceServerAdmission: {
+    methodKind: "unary";
+    input: typeof SetResourceServerAdmissionRequestSchema;
+    output: typeof SetResourceServerAdmissionResponseSchema;
   },
   /**
    * @generated from rpc resourceserver.v1.ResourceServerService.ListLinks

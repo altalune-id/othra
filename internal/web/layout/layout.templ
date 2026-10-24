@@ -34,12 +34,26 @@ templ Layout(d LayoutData) {
 }
 
 templ Card(title string) {
+	@CardWith(title, nil) {
+		{ children... }
+	}
+}
+
+// CardWith is Card with lead (an app mark) beside the title, in the title row.
+templ CardWith(title string, lead templ.Component) {
 	<div class="card w-full max-w-md bg-base-100 shadow-sm">
 		<div class="card-body gap-4">
 			if b := brandFrom(ctx); b != nil {
 				@BrandHeader(b)
 			}
-			<h1 class="card-title text-2xl break-words max-sm:text-xl">{ title }</h1>
+			if lead != nil {
+				<div class="flex items-center gap-3">
+					@lead
+					<h1 class="card-title text-2xl break-words max-sm:text-xl">{ title }</h1>
+				</div>
+			} else {
+				<h1 class="card-title text-2xl break-words max-sm:text-xl">{ title }</h1>
+			}
 			{ children... }
 		</div>
 	</div>

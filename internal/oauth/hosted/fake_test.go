@@ -163,7 +163,7 @@ func (f *fakeUsers) Redeem(_ context.Context, req RedeemRequest) (*Redeemed, err
 	secret := f.next("sec")
 	f.browsers[secret] = b
 	now := f.stamp.now()
-	a := Account{UserSession: f.next("us"), EndUser: sub, Email: l.email, AuthTime: now, SelectedAt: now}
+	a := Account{UserSession: f.next("us"), EndUserID: uuid.NewSHA1(uuid.Nil, []byte(sub)), EndUser: sub, Email: l.email, AuthTime: now, SelectedAt: now}
 	b.accounts = append([]Account{a}, b.accounts...)
 	return &Redeemed{BrowserSecret: secret, ExpiresAt: time.Now().Add(90 * 24 * time.Hour), Account: a, ReturnTo: l.returnTo}, nil
 }

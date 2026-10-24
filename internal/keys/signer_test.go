@@ -213,3 +213,41 @@ func TestVerifier_IDTokenHintIgnoresExpiry(t *testing.T) {
 	_, err = v.VerifyIDTokenHint(context.Background(), h.project, "https://othra.example.com/p/acme", "not.a.jwt")
 	assert.ErrorIs(t, err, ErrInvalidToken)
 }
+
+// RFC 9068 §2.2.1: an access token carries auth_time when the grant has one.
+func TestSigner_AccessTokenCarriesAuthTime(t *testing.T) {
+	h := newHarness(t)
+	h.generate(t)
+	now := time.Now()
+	tok, err := NewSigner(h.svc).Mint(context.Background(), h.project, &MintInput{
+		Issuer: "i", Subject: "u1", Audience: []string{"https://api.example"}, ClientID: "c1", AuthTime: now.Add(-time.Hour),
+		IssuedAt: now, ExpiresAt: now.Add(time.Minute),
+	})
+	require.NoError(t, err)
+	parsed, err := jwt.ParseSigned(tok.Compact, []jose.SignatureAlgorithm{jose.RS256})
+	require.NoError(t, err)
+	var claims Claims
+	require.NoError(t, parsed.UnsafeClaimsWithoutVerification(&claims))
+	assert.Equal(t, now.Add(-time.Hour).Unix(), claims.AuthTime)
+}
+
+// pm P2, RFC 7519 §4.1.3: an access token with one audience sends aud as a string.
+func TestSigner_AccessTokenAudIsAString(t *testing.T) {
+	h := newHarness(t)
+	h.generate(t)
+	now := time.Now()
+	tok, err := NewSigner(h.svc).Mint(context.Background(), h.project, &MintInput{
+		Issuer: "i", Subject: "u1", Audience: []string{"https://api.example/mcp"}, ClientID: "c1", IssuedAt: now, ExpiresAt: now.Add(time.Minute),
+	})
+	require.NoError(t, err)
+	parsed, err := jwt.ParseSigned(tok.Compact, []jose.SignatureAlgorithm{jose.RS256})
+	require.NoError(t, err)
+	var raw map[string]any
+	require.NoError(t, parsed.UnsafeClaimsWithoutVerification(&raw))
+	assert.Equal(t, "https://api.example/mcp", raw["aud"])
+
+	v := NewVerifier(scopedKeys{h.svc}, WithExpectedType(TypeAccessToken))
+	claims, err := v.Verify(context.Background(), h.project, tok.Compact)
+	require.NoError(t, err, "the verifier reads a string aud")
+	assert.Equal(t, []string{"https://api.example/mcp"}, []string(claims.Audience))
+}

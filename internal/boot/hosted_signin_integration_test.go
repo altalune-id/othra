@@ -3,6 +3,7 @@
 package boot
 
 import (
+	"database/sql"
 	"html"
 	"io"
 	"maps"
@@ -31,6 +32,7 @@ type signInFixture struct {
 	srv  *httptest.Server
 	svcs *Services
 	c    *http.Client
+	db   *sql.DB
 }
 
 func newSignInFixture(t *testing.T) *signInFixture {
@@ -49,7 +51,7 @@ func newSignInFixture(t *testing.T) *signInFixture {
 		CSRF:      config.EndUsersCSRFConfig{MaxAge: time.Hour},
 	}
 	cfg.Auth.Genesis = config.GenesisConfig{Email: "root@example.com", Password: "genesis-password"}
-	pool, _, schemaName := pgtest.MigratedRLS(t)
+	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	cfg.Postgres.Schema = schemaName
 	svcs := buildServices(kernel.Kernel{Pool: pool, Reporter: apperror.NewReporter(nil, false)}, cfg)
 	require.NoError(t, buildAuthSecrets(cfg, svcs, testLogger()))
@@ -62,7 +64,7 @@ func newSignInFixture(t *testing.T) *signInFixture {
 		routes: buildRoutes(cfg, svcs, nil, nil), public: public, hosted: hosted,
 		session: buildSessionMiddleware(svcs, nil), installRequired: required,
 	})
-	f := &signInFixture{t: t, srv: srv, svcs: svcs}
+	f := &signInFixture{t: t, srv: srv, svcs: svcs, db: sqlDB}
 	f.c = f.client()
 	return f
 }

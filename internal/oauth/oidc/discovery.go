@@ -9,6 +9,7 @@ const (
 	tokenPath      = "/oauth2/token" //nolint:gosec // G101: an endpoint path, not a credential.
 	userinfoPath   = "/oauth2/userinfo"
 	endSessionPath = "/oauth2/end-session"
+	revokePath     = "/oauth2/revoke"
 )
 
 // Document is an issuer's OpenID Provider and OAuth authorization server metadata; it lists only what the issuer answers.
@@ -34,10 +35,14 @@ type Document struct {
 	RequestURIParameterSupported     bool     `json:"request_uri_parameter_supported"`
 	ClaimsParameterSupported         bool     `json:"claims_parameter_supported"`
 	UILocalesSupported               []string `json:"ui_locales_supported"`
+	RevocationEndpoint               string   `json:"revocation_endpoint"`
+	RevocationAuthMethods            []string `json:"revocation_endpoint_auth_methods_supported"`
+	// ClientIDMetadataDocumentSupported is always sent (CIMD §6); true only while a verified resource server admits CIMD clients.
+	ClientIDMetadataDocumentSupported bool `json:"client_id_metadata_document_supported"`
 }
 
-// Discovery builds the metadata of the issuer at issuerURL.
-func Discovery(issuerURL string) Document {
+// Discovery builds the metadata of the issuer at issuerURL; cimd says whether it admits CIMD clients.
+func Discovery(issuerURL string, cimd bool) Document {
 	return Document{
 		Issuer:                           issuerURL,
 		AuthorizationEndpoint:            issuerURL + authorizePath,
@@ -55,9 +60,12 @@ func Discovery(issuerURL string) Document {
 		ClaimsSupported: []string{
 			"sub", "iss", "aud", "exp", "iat", "auth_time", "nonce", "at_hash", "sid", "email", "email_verified", "name",
 		},
-		TokenEndpointAuthMethods: []string{authBasic, authPost, authNone},
-		PromptValuesSupported:    []string{"none", "login", "select_account"},
-		ISSParameterSupported:    true,
-		UILocalesSupported:       i18n.Locales(),
+		TokenEndpointAuthMethods:          []string{authBasic, authPost, authNone},
+		PromptValuesSupported:             []string{"none", "login", "consent", "select_account"},
+		ISSParameterSupported:             true,
+		UILocalesSupported:                i18n.Locales(),
+		RevocationEndpoint:                issuerURL + revokePath,
+		RevocationAuthMethods:             []string{authBasic, authPost, authNone},
+		ClientIDMetadataDocumentSupported: cimd,
 	}
 }

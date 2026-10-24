@@ -63,6 +63,8 @@ service ResourceServerService {
   }
   // SECURITY: trust skips verification; a signed-in person sets it, never MCP.
   rpc SetResourceServerTrust(SetResourceServerTrustRequest) returns (SetResourceServerTrustResponse);
+  // SECURITY: CIMD admission lets unregistered apps ask for this server's scopes; a signed-in person sets it, never MCP.
+  rpc SetResourceServerAdmission(SetResourceServerAdmissionRequest) returns (SetResourceServerAdmissionResponse);
   rpc ListLinks(ListLinksRequest) returns (ListLinksResponse) {
     option (mcp.v1.tool) = {
       name: "resource_server_link_list"
@@ -129,6 +131,21 @@ message ResourceServer {
   bool trust_available = 12;
   google.protobuf.Timestamp created_at = 13;
   google.protobuf.Timestamp updated_at = 14;
+  // scope_descriptions says what each scope lets an app do, shown on the consent page; a scope may have none.
+  map<string, string> scope_descriptions = 15;
+  // cimd is whether apps without registration (CIMD) may ask for this server's scopes.
+  CIMDAdmission cimd = 16;
+}
+
+// CIMDAdmission is a resource server's admission of apps that sign in with a Client ID Metadata Document.
+message CIMDAdmission {
+  // accept is off by default and can be turned on only while the server is verified or trusted.
+  bool accept = 1;
+  // hosts are the lower-case host names a client_id URL may have; empty means any host.
+  repeated string hosts = 2;
+  // all_scopes follows the server's scopes; false allows only scopes.
+  bool all_scopes = 3;
+  repeated string scopes = 4;
 }
 
 // VerificationFailure is why an RFC 9728 check failed.
@@ -153,6 +170,10 @@ message Link {
   // scopes are the resource server scopes the client may ask for.
   repeated string scopes = 8;
   google.protobuf.Timestamp created_at = 9;
+  // client_metadata_url is the client_id URL of an app without registration (CIMD); empty for a registered client.
+  string client_metadata_url = 10;
+  // metadata_fetched_at is when Othra last read that app's metadata document.
+  google.protobuf.Timestamp metadata_fetched_at = 11;
 }
 
 message ListResourceServersRequest {
@@ -203,6 +224,12 @@ message CreateResourceServerRequest {
     (buf.validate.field).repeated.items.string.max_len = 128
   ];
   bool trusted = 5;
+  map<string, string> scope_descriptions = 6 [
+    (buf.validate.field).map.max_pairs = 64,
+    (buf.validate.field).map.keys.string.max_len = 128,
+    (buf.validate.field).map.values.string.min_len = 1,
+    (buf.validate.field).map.values.string.max_len = 120
+  ];
 }
 
 message CreateResourceServerResponse {
@@ -227,6 +254,12 @@ message UpdateResourceServerRequest {
     (buf.validate.field).repeated.min_items = 1,
     (buf.validate.field).repeated.max_items = 64,
     (buf.validate.field).repeated.items.string.max_len = 128
+  ];
+  map<string, string> scope_descriptions = 5 [
+    (buf.validate.field).map.max_pairs = 64,
+    (buf.validate.field).map.keys.string.max_len = 128,
+    (buf.validate.field).map.values.string.min_len = 1,
+    (buf.validate.field).map.values.string.max_len = 120
   ];
 }
 
@@ -279,6 +312,31 @@ message SetResourceServerTrustRequest {
 }
 
 message SetResourceServerTrustResponse {
+  ResourceServer resource_server = 1;
+}
+
+message SetResourceServerAdmissionRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  bool accept = 3;
+  repeated string hosts = 4 [
+    (buf.validate.field).repeated.max_items = 64,
+    (buf.validate.field).repeated.items.string.max_len = 253
+  ];
+  bool all_scopes = 5;
+  repeated string scopes = 6 [
+    (buf.validate.field).repeated.max_items = 64,
+    (buf.validate.field).repeated.items.string.max_len = 128
+  ];
+}
+
+message SetResourceServerAdmissionResponse {
   ResourceServer resource_server = 1;
 }
 

@@ -48,7 +48,8 @@ func TestBindings(t *testing.T) {
 			[]string{
 				"id", "public_id", "org_id", "project_id", "name", "client_type", "application_type",
 				"token_endpoint_auth_method", "grant_types", "allowed_scopes", "redirect_uris",
-				"post_logout_redirect_uris", "consent_policy", "pkce_required", "created_at", "updated_at",
+				"post_logout_redirect_uris", "consent_policy", "pkce_required", "registration_kind", "metadata_url",
+				"metadata_fetched_at", "metadata_expires_at", "client_uri", "created_at", "updated_at",
 			},
 		},
 		{
@@ -62,7 +63,8 @@ func TestBindings(t *testing.T) {
 			[]string{
 				"id", "public_id", "org_id", "project_id", "name", "identifier", "scopes", "verification_state",
 				"verified_at", "last_checked_at", "last_error", "consecutive_failures", "trusted", "trusted_at",
-				"trusted_by", "created_at", "updated_at",
+				"trusted_by", "accept_cimd_clients", "cimd_client_hosts", "cimd_scopes", "scope_descriptions",
+				"created_at", "updated_at",
 			},
 		},
 		{
@@ -131,7 +133,18 @@ func TestBindings(t *testing.T) {
 		{
 			"access_tokens",
 			func(s, p string) binding { b := entity.NewAccessTokens(s, p); return binding{b, b.AllColumns} },
-			[]string{"id", "org_id", "project_id", "family_id", "token_hash", "scopes", "created_at", "expires_at"},
+			[]string{
+				"id", "org_id", "project_id", "family_id", "token_hash", "scopes", "created_at", "expires_at", "resource_server_id",
+				"revoked_at",
+			},
+		},
+		{
+			"scope_consents",
+			func(s, p string) binding { b := entity.NewScopeConsents(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "end_user_id", "client_id", "resource_server_id", "scopes",
+				"granted_at", "updated_at", "granted_ip", "granted_user_agent",
+			},
 		},
 		{
 			"refresh_tokens",

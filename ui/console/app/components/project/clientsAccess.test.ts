@@ -86,10 +86,9 @@ describe('clients and resource server pages (M3)', () => {
     expect(read('../link/LinkList.vue')).toContain('{{ canEdit ? labels.empty : labels.emptyReadOnly }}');
   });
 
-  it('notes on require-consent clients that end users cannot sign in yet (M5 D3)', () => {
-    expect(read('../client/ClientForm.vue')).toMatch(/<p v-if="fields\.consent === 'require'" :id="ids\.consentNote"[^>]*>\s*<Icon name="lucide:triangle-alert"[^>]*class="[^"]*text-warning"[^>]*\/>\s*\{\{ labels\.consentRequireNote \}\}/);
-    expect(details[0]!.source).toMatch(/<p v-if="client\.consentPolicy !== ConsentPolicy\.IMPLICIT"[^>]*data-testid="consent-require-note"[^>]*>\s*<Icon name="lucide:triangle-alert"[^>]*class="[^"]*text-warning"/);
-    expect(read('../client/ClientForm.vue')).not.toContain('lucide:info');
+  it('no longer warns that require-consent clients cannot sign in, now the consent page exists (M6)', () => {
+    expect(read('../client/ClientForm.vue')).not.toContain('consentRequireNote');
+    expect(details[0]!.source).not.toContain('consent_require_note');
   });
 
   it('offers the secret method and the PKCE switch on web apps only, with a warning when PKCE is off (M5 G11)', () => {
@@ -97,5 +96,32 @@ describe('clients and resource server pages (M3)', () => {
     expect(form).toMatch(/<template v-if="kind\?\.secret">[\s\S]*name="client-auth-method"[\s\S]*labels\.pkceRequired[\s\S]*<\/template>/);
     expect(form).toMatch(/<p v-if="!fields\.pkceRequired" :id="ids\.pkceWarn"[^>]*>\s*<Icon name="lucide:triangle-alert"/);
     expect(details[0]!.source).toMatch(/<template v-if="kind\.secret">[\s\S]*clients\.auth_method[\s\S]*data-testid="client-pkce-off"/);
+  });
+
+  it('shows the CIMD card between Scopes and Clients, and keeps CIMD apps out of the Clients list (M6)', () => {
+    const rs = details[1]!.source;
+    expect(rs.indexOf('data-testid="rs-scopes"')).toBeLessThan(rs.indexOf('<CimdCard'));
+    expect(rs.indexOf('<CimdCard')).toBeLessThan(rs.indexOf('<LinkList'));
+    expect(rs).toContain('links.links.value.filter(l => !isCimdLink(l))');
+    expect(rs).toContain(':locked="!admissible(server)"');
+    expect(read('../resourceserver/CimdCard.vue')).toContain(':disabled="busy || (locked && !accept)"');
+  });
+
+  it('shows a CIMD client as managed by its metadata document: badge, metadata URL, read-only, revoke only (M6)', () => {
+    const page = details[0]!.source;
+    expect(page).toContain('const editable = computed(() => canEdit.value && !cimd.value);');
+    expect(page).toMatch(/<span v-if="cimd"[^>]*data-testid="client-cimd-badge"/);
+    expect(page).toMatch(/<UrlField\s+v-if="cimd"\s+:label="t\('rs\.metadata_url'\)"\s+:value="client\.metadataUrl"/);
+    expect(page).toContain('<template v-if="editable">');
+    expect(page).toMatch(/<ClientSecrets\s+v-if="kind\.secret && !cimd"/);
+    expect(page).toMatch(/<LinkList\s+:rows="linkRows"\s+:can-edit="editable"/);
+    expect(page).toContain('cimd ? t(\'rs.cimd_revoke\') : t(\'common.delete\')');
+  });
+
+  it('labels each scope description visibly and keeps each scope with its description and remove button (M6 MF5)', () => {
+    const table = read('../resourceserver/ScopeTable.vue');
+    expect(table).toMatch(/data-testid="scope-columns"[\s\S]*\{\{ labels\.scope \}\}[\s\S]*\{\{ labels\.description \}\}/);
+    expect(table).toMatch(/<label :for="`\$\{id\}-desc-\$\{i\}`" class="[^"]*sm:sr-only">\{\{ labels\.description \}\}<\/label>/);
+    expect(table).toMatch(/class="rounded-box border border-base-300 p-2 sm:border-0 sm:p-0" data-testid="scope-row"/);
   });
 });

@@ -36,16 +36,18 @@ var unruled = map[string]string{
 	"auth.v1.SignOutEverywhereRequest": "empty request",
 	"org.v1.ListOrgsRequest":           "empty request",
 
-	"apikey.v1.CreateAPIKeyRequest.all_projects":              "a bool; the domain checks it against project_ids (KEY005)",
-	"webhook.v1.UpdateWebhookRequest.active":                  "a bool; false deactivates",
-	"keys.v1.RotateSigningKeyRequest.immediate":               "a bool; true promotes the new key at once",
-	"client.v1.CreateClientRequest.refresh_tokens":            "a bool; true adds the refresh_token grant",
-	"client.v1.UpdateClientRequest.refresh_tokens":            "a bool; true adds the refresh_token grant",
-	"client.v1.CreateClientRequest.pkce_required":             "an optional bool; unset is true, false only for a WEB client (CLT003)",
-	"client.v1.UpdateClientRequest.pkce_required":             "an optional bool; unset is true, false only for a WEB client (CLT003)",
-	"resourceserver.v1.SetResourceServerTrustRequest.trusted": "a bool; the domain refuses it outside self-hosted (RSV007)",
-	"resourceserver.v1.CreateResourceServerRequest.trusted":   "a bool; the domain refuses it outside self-hosted (RSV007) and from a key",
-	"webhook.v1.ListWebhookDeliveriesRequest.limit":           "any int32 works today: clamped to 1..50",
+	"apikey.v1.CreateAPIKeyRequest.all_projects":                     "a bool; the domain checks it against project_ids (KEY005)",
+	"webhook.v1.UpdateWebhookRequest.active":                         "a bool; false deactivates",
+	"keys.v1.RotateSigningKeyRequest.immediate":                      "a bool; true promotes the new key at once",
+	"client.v1.CreateClientRequest.refresh_tokens":                   "a bool; true adds the refresh_token grant",
+	"client.v1.UpdateClientRequest.refresh_tokens":                   "a bool; true adds the refresh_token grant",
+	"client.v1.CreateClientRequest.pkce_required":                    "an optional bool; unset is true, false only for a WEB client (CLT003)",
+	"client.v1.UpdateClientRequest.pkce_required":                    "an optional bool; unset is true, false only for a WEB client (CLT003)",
+	"resourceserver.v1.SetResourceServerTrustRequest.trusted":        "a bool; the domain refuses it outside self-hosted (RSV007)",
+	"resourceserver.v1.SetResourceServerAdmissionRequest.accept":     "a bool; the domain refuses it while the server isn't admissible (RSV011)",
+	"resourceserver.v1.SetResourceServerAdmissionRequest.all_scopes": "a bool; false needs scopes from the catalog (RSV009, RSV005)",
+	"resourceserver.v1.CreateResourceServerRequest.trusted":          "a bool; the domain refuses it outside self-hosted (RSV007) and from a key",
+	"webhook.v1.ListWebhookDeliveriesRequest.limit":                  "any int32 works today: clamped to 1..50",
 }
 
 // SECURITY: every RPC request is checked before its handler; a field with no rule must be allowlisted with a reason.

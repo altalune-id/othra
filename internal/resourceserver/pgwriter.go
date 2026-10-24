@@ -18,11 +18,20 @@ func (s *postgresStore) Insert(ctx context.Context, r *ResourceServer) error {
 	if err != nil {
 		return fmt.Errorf("resourceserver.postgres: Insert: %w", err)
 	}
+	descriptions, err := descriptionsExpr(r.Descriptions)
+	if err != nil {
+		return fmt.Errorf("resourceserver.postgres: Insert: %w", err)
+	}
 	t := s.servers
-	stmt := t.INSERT(t.AllColumns).VALUES(
+	stmt := t.INSERT(
+		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Name, t.Identifier, t.Scopes, t.VerificationState, t.VerifiedAt, t.LastCheckedAt,
+		t.LastError, t.ConsecutiveFailures, t.Trusted, t.TrustedAt, t.TrustedBy, t.CreatedAt, t.UpdatedAt,
+		t.AcceptCIMDClients, t.CIMDClientHosts, t.CIMDScopes, t.ScopeDescriptions,
+	).VALUES(
 		r.ID, r.PublicID, r.OrgID, r.ProjectID, r.Name, r.Identifier, db.TextArray(r.Scopes), string(r.State),
 		timeExpr(r.VerifiedAt), timeExpr(r.LastCheckedAt), lastError, r.ConsecutiveFailures, r.Trusted,
 		timeExpr(r.TrustedAt), nullableUUID(r.TrustedBy), r.CreatedAt.UTC(), r.UpdatedAt.UTC(),
+		r.Admission.Accept, db.TextArray(hostsOf(r.Admission)), nullArray(r.Admission.Scopes), descriptions,
 	)
 	err = db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err })
 	if db.IsUniqueViolation(err) {
@@ -36,9 +45,13 @@ func (s *postgresStore) Insert(ctx context.Context, r *ResourceServer) error {
 	return nil
 }
 
-// Update saves r's name, scopes, verification and trust.
+// Update saves r's name, scopes and their descriptions, verification, trust and admission.
 func (s *postgresStore) Update(ctx context.Context, r *ResourceServer) error {
 	lastError, err := failureExpr(r.LastError)
+	if err != nil {
+		return fmt.Errorf("resourceserver.postgres: Update: %w", err)
+	}
+	descriptions, err := descriptionsExpr(r.Descriptions)
 	if err != nil {
 		return fmt.Errorf("resourceserver.postgres: Update: %w", err)
 	}
@@ -54,6 +67,10 @@ func (s *postgresStore) Update(ctx context.Context, r *ResourceServer) error {
 		t.Trusted.SET(postgres.Bool(r.Trusted)),
 		t.TrustedAt.SET(postgres.TimestampzExp(timeExpr(r.TrustedAt))),
 		t.TrustedBy.SET(postgres.StringExp(uuidExpr(r.TrustedBy))),
+		t.AcceptCIMDClients.SET(postgres.Bool(r.Admission.Accept)),
+		t.CIMDClientHosts.SET(db.TextArray(hostsOf(r.Admission))),
+		t.CIMDScopes.SET(postgres.StringExp(nullArray(r.Admission.Scopes))),
+		t.ScopeDescriptions.SET(descriptions),
 		t.UpdatedAt.SET(postgres.TimestampzT(r.UpdatedAt.UTC())),
 	).WHERE(t.ID.EQ(postgres.UUID(r.ID)).AND(t.ProjectID.EQ(postgres.UUID(r.ProjectID))))
 	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
@@ -167,4 +184,11 @@ func uuidExpr(id uuid.UUID) postgres.Expression {
 		return postgres.NULL
 	}
 	return postgres.UUID(id)
+}
+
+func hostsOf(a Admission) []string {
+	if a.Hosts == nil {
+		return []string{}
+	}
+	return a.Hosts
 }

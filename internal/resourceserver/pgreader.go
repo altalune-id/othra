@@ -17,7 +17,10 @@ func (s *postgresStore) serverColumns() postgres.ProjectionList {
 	return postgres.ProjectionList{
 		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Name, t.Identifier, db.ArrayAsJSON(t.Scopes, "resource_servers.scopes"),
 		t.VerificationState, t.VerifiedAt, t.LastCheckedAt, postgres.CAST(t.LastError).AS_TEXT().AS("resource_servers.last_error"),
-		t.ConsecutiveFailures, t.Trusted, t.TrustedAt, t.TrustedBy, t.CreatedAt, t.UpdatedAt,
+		t.ConsecutiveFailures, t.Trusted, t.TrustedAt, t.TrustedBy, t.CreatedAt, t.UpdatedAt, t.AcceptCIMDClients,
+		db.ArrayAsJSON(t.CIMDClientHosts, "resource_servers.cimd_client_hosts"),
+		db.ArrayAsJSON(t.CIMDScopes, "resource_servers.cimd_scopes"),
+		postgres.CAST(t.ScopeDescriptions).AS_TEXT().AS("resource_servers.scope_descriptions"),
 	}
 }
 
@@ -28,6 +31,20 @@ func (s *postgresStore) List(ctx context.Context, projectID uuid.UUID) ([]*Resou
 		WHERE(t.ProjectID.EQ(postgres.UUID(projectID))).
 		ORDER_BY(t.Name.ASC(), t.CreatedAt.ASC())
 	return s.query(ctx, "List", stmt)
+}
+
+// ByIdentifier returns the project's server whose identifier is exactly identifier, or *NotFoundError.
+func (s *postgresStore) ByIdentifier(ctx context.Context, projectID uuid.UUID, identifier string) (*ResourceServer, error) {
+	t := s.servers
+	return s.one(ctx, "ByIdentifier", postgres.SELECT(s.serverColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.Identifier.EQ(postgres.String(identifier)))))
+}
+
+// ByID returns the project's server id, or *NotFoundError.
+func (s *postgresStore) ByID(ctx context.Context, projectID, id uuid.UUID) (*ResourceServer, error) {
+	t := s.servers
+	return s.one(ctx, "ByID", postgres.SELECT(s.serverColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(id)))))
 }
 
 // ByPublicID returns the project's server publicID, or *NotFoundError.

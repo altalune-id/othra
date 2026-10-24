@@ -33,7 +33,6 @@ export interface ClientFormLabels {
   consentRequire: string;
   consentImplicit: string;
   consentImplicitWarning: string;
-  consentRequireNote: string;
   authMethod: string;
   authMethodBasic: string;
   authMethodPost: string;
@@ -78,7 +77,6 @@ const props = withDefaults(defineProps<{
     consentRequire: 'Ask the end user',
     consentImplicit: 'Skip consent (first-party app)',
     consentImplicitWarning: 'Only for your own apps. End users won\'t see what this app can access.',
-    consentRequireNote: 'End users can\'t sign in to this app yet, because the consent page isn\'t available. For your own apps, use Skip consent.',
     authMethod: 'How the app sends its secret',
     authMethodBasic: 'Authorization header (client_secret_basic)',
     authMethodPost: 'Request body (client_secret_post)',
@@ -102,7 +100,7 @@ const emit = defineEmits<{
   remove: [list: 'redirect' | 'postLogout', index: number],
 }>();
 const fields = defineModel<ClientFields>('fields', { required: true });
-const ids = { name: useId(), nameHelp: useId(), nameErr: useId(), consentWarn: useId(), consentNote: useId(), authHelp: useId(), pkceWarn: useId() };
+const ids = { name: useId(), nameHelp: useId(), nameErr: useId(), consentWarn: useId(), authHelp: useId(), pkceWarn: useId() };
 
 const kind = computed(() => props.kinds.find(k => k.value === fields.value.kind) ?? props.kinds[0]);
 
@@ -257,17 +255,13 @@ function patch(next: Partial<ClientFields>) {
         {{ labels.consent }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
-        <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'require'" :disabled="busy" :aria-describedby="ids.consentNote" @change="patch({ consent: 'require' })">
+        <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'require'" :disabled="busy" @change="patch({ consent: 'require' })">
         {{ labels.consentRequire }}
       </label>
       <label class="flex items-center gap-2 text-sm">
         <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'implicit'" :disabled="busy" :aria-describedby="ids.consentWarn" @change="patch({ consent: 'implicit' })">
         {{ labels.consentImplicit }}
       </label>
-      <p v-if="fields.consent === 'require'" :id="ids.consentNote" class="mt-1 flex items-start gap-1 text-xs text-base-content">
-        <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
-        {{ labels.consentRequireNote }}
-      </p>
       <p v-if="fields.consent === 'implicit'" :id="ids.consentWarn" class="mt-1 flex items-start gap-1 text-xs text-base-content">
         <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
         {{ labels.consentImplicitWarning }}

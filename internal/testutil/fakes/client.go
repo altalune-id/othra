@@ -101,11 +101,28 @@ func (f *ClientStore) List(_ context.Context, projectID uuid.UUID, now time.Time
 	}
 	var out []*client.Client
 	for _, c := range f.clients {
-		if c.ProjectID == projectID {
+		if c.ProjectID == projectID && !c.Managed() {
 			out = append(out, f.withSecrets(c, now))
 		}
 	}
 	slices.SortFunc(out, func(a, b *client.Client) int { return a.CreatedAt.Compare(b.CreatedAt) })
+	return out, nil
+}
+
+// ByIDs implements client.Store.
+func (f *ClientStore) ByIDs(_ context.Context, projectID uuid.UUID, ids []uuid.UUID) ([]*client.Client, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("ByIDs"); err != nil {
+		return nil, err
+	}
+	var out []*client.Client
+	for _, id := range ids {
+		if c, ok := f.clients[id]; ok && c.ProjectID == projectID {
+			cp := *c
+			out = append(out, &cp)
+		}
+	}
 	return out, nil
 }
 
@@ -142,7 +159,7 @@ func (f *ClientStore) find(op string, projectID uuid.UUID, publicID string, now 
 		return nil, err
 	}
 	for _, c := range f.clients {
-		if c.ProjectID == projectID && c.PublicID == publicID {
+		if c.ProjectID == projectID && (c.PublicID == publicID || (c.Managed() && c.MetadataURL == publicID)) {
 			return f.withSecrets(c, now), nil
 		}
 	}
@@ -167,6 +184,43 @@ func (f *ClientStore) withSecrets(c *client.Client, now time.Time) *client.Clien
 		return b.CreatedAt.Compare(a.CreatedAt)
 	})
 	return &cp
+}
+
+// PruneShadows implements client.Store; the fake knows no consents or grants, so every expired shadow goes.
+func (f *ClientStore) PruneShadows(_ context.Context, projectID uuid.UUID, cutoff time.Time) (int, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("PruneShadows"); err != nil {
+		return 0, err
+	}
+	n := 0
+	for id, c := range f.clients {
+		if c.ProjectID == projectID && c.Managed() && c.MetadataExpiresAt != nil && c.MetadataExpiresAt.Before(cutoff) {
+			delete(f.clients, id)
+			n++
+		}
+	}
+	return n, nil
+}
+
+// SaveShadow implements client.Store.
+func (f *ClientStore) SaveShadow(_ context.Context, c *client.Client) (*client.Client, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("SaveShadow"); err != nil {
+		return nil, err
+	}
+	cp := *c
+	cp.Secrets = nil
+	for id, have := range f.clients {
+		if have.ProjectID == c.ProjectID && have.MetadataURL == c.MetadataURL {
+			cp.ID, cp.PublicID, cp.CreatedAt = id, have.PublicID, have.CreatedAt
+		}
+	}
+	f.clients[cp.ID] = &cp
+	out := cp
+	out.Secrets = []client.Secret{}
+	return &out, nil
 }
 
 // InsertSecret implements client.Store.

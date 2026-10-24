@@ -185,6 +185,10 @@ func buildIssuerRoutes(
 		})
 	}
 	svcs.Keys.WithOnChange(resolver.Forget)
+	if svcs.ResourceServers != nil {
+		resolver.WithCIMD(svcs.ResourceServers)
+		svcs.ResourceServers.WithOnAdmissionChange(resolver.Forget)
+	}
 	svcs.Projects.WithOnIssuerChange(resolver.Forget)
 	if svcs.EndUsers == nil {
 		return []web.Registrar{issuers}, nil

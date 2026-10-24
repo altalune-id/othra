@@ -15,6 +15,7 @@ import (
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/oauth/hosted"
 	"altalune.id/othra/internal/oauth/oidc"
+	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/scheduler"
 	"altalune.id/othra/worker"
 )
@@ -135,6 +136,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		return nil, err
 	}
 	svcs.AuthLimiter = lims.auth
+	svcs.Clients.WithFetchLimits(layout.Limits{Limiter: lims.auth, TrustedProxyHops: cfg.HTTP.TrustedProxyHops})
 	if svcs.Validator, err = controlplane.NewValidator(); err != nil {
 		_ = pool.Close()
 		_ = shutdown(ctx)

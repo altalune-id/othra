@@ -1,5 +1,10 @@
 package views
 
+import (
+	"altalune.id/othra/internal/web/i18n"
+	"altalune.id/othra/internal/web/layout"
+)
+
 templ svgIcon(class string) {
 	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class={ "shrink-0", class } aria-hidden="true">
 		{ children... }
@@ -72,11 +77,40 @@ templ alertSuccess() {
 }
 
 templ withEmail(msg, email string) {
-	for _, p := range splitAround(msg, "{email}") {
-		if p == "{email}" {
-			<span class="break-all">{ email }</span>
+	@highlight(msg, "{email}", email, "break-all")
+}
+
+templ highlight(msg, placeholder, value, class string) {
+	for _, p := range splitAround(msg, placeholder) {
+		if p == placeholder {
+			<span class={ class }>{ value }</span>
 		} else {
 			{ p }
 		}
+	}
+}
+
+templ accountTile(d layout.LayoutData, s Site, email, returnTo string) {
+	<div class="flex items-center justify-between gap-3 rounded-box bg-base-200 px-4 py-3 text-sm">
+		<span class="min-w-0">
+			<span class="block text-xs text-base-content/70">{ i18n.T(ctx, "common.signing_in_as") }</span>
+			<span class="block truncate font-medium" title={ email }>{ email }</span>
+		</span>
+		<a class="link shrink-0 text-xs" href={ templ.SafeURL(s.addAccount(d, returnTo)) }>{ i18n.T(ctx, "common.use_another") }</a>
+	</div>
+}
+
+templ iconShieldAlert() {
+	@svgIcon("size-5 text-warning") {
+		<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+		<path d="M12 8v4"></path>
+		<path d="M12 16h.01"></path>
+	}
+}
+
+templ iconReturn() {
+	@svgIcon("mt-0.5 size-4") {
+		<polyline points="9 10 4 15 9 20"></polyline>
+		<path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
 	}
 }

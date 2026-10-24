@@ -118,7 +118,7 @@ func RegisterResourceServerServiceTools(reg *mcp.Registry, h resourceserverv1con
 		Scopes:      permissionsFor(resourceserverv1connect.ResourceServerServiceCreateResourceServerProcedure),
 		Mutation:    true,
 		Destructive: false,
-		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"name":{"type":"string","minLength":1,"maxLength":100},"identifier":{"type":"string","minLength":1,"maxLength":512},"scopes":{"type":"array","items":{"type":"string","maxLength":128},"minItems":1,"maxItems":64},"trusted":{"type":"boolean"}},"required":["projectId","name","identifier","scopes"],"additionalProperties":false}`),
+		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"name":{"type":"string","minLength":1,"maxLength":100},"identifier":{"type":"string","minLength":1,"maxLength":512},"scopes":{"type":"array","items":{"type":"string","maxLength":128},"minItems":1,"maxItems":64},"trusted":{"type":"boolean"},"scopeDescriptions":{"type":"object","additionalProperties":{"type":"string"}}},"required":["projectId","name","identifier","scopes"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
 				input = json.RawMessage(`{}`)
@@ -147,7 +147,7 @@ func RegisterResourceServerServiceTools(reg *mcp.Registry, h resourceserverv1con
 		Scopes:      permissionsFor(resourceserverv1connect.ResourceServerServiceUpdateResourceServerProcedure),
 		Mutation:    true,
 		Destructive: true,
-		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"resourceServerId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"name":{"type":"string","minLength":1,"maxLength":100},"scopes":{"type":"array","items":{"type":"string","maxLength":128},"minItems":1,"maxItems":64}},"required":["projectId","resourceServerId","name","scopes"],"additionalProperties":false}`),
+		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"resourceServerId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"name":{"type":"string","minLength":1,"maxLength":100},"scopes":{"type":"array","items":{"type":"string","maxLength":128},"minItems":1,"maxItems":64},"scopeDescriptions":{"type":"object","additionalProperties":{"type":"string"}}},"required":["projectId","resourceServerId","name","scopes"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
 				input = json.RawMessage(`{}`)

@@ -108,6 +108,29 @@ func (s *fakeStore) ByPublicID(_ context.Context, projectID uuid.UUID, publicID 
 	return nil, &NotFoundError{}
 }
 
+func (s *fakeStore) ByIdentifier(_ context.Context, projectID uuid.UUID, identifier string) (*ResourceServer, error) {
+	return s.find("get", func(r ResourceServer) bool { return r.ProjectID == projectID && r.Identifier == identifier })
+}
+
+func (s *fakeStore) ByID(_ context.Context, projectID, id uuid.UUID) (*ResourceServer, error) {
+	return s.find("get", func(r ResourceServer) bool { return r.ProjectID == projectID && r.ID == id })
+}
+
+func (s *fakeStore) find(op string, match func(ResourceServer) bool) (*ResourceServer, error) {
+	if err := s.fail(op); err != nil {
+		return nil, err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, r := range s.servers {
+		if match(r) {
+			c := clone(&r)
+			return &c, nil
+		}
+	}
+	return nil, &NotFoundError{}
+}
+
 func (s *fakeStore) Lock(ctx context.Context, projectID uuid.UUID, publicID string) (*ResourceServer, error) {
 	if err := s.fail("lock"); err != nil {
 		return nil, err

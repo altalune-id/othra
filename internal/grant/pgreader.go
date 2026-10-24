@@ -16,7 +16,7 @@ func (s *postgresStore) CodeByHash(ctx context.Context, projectID uuid.UUID, has
 	c, us, f := s.codes, s.sessions, s.families
 	stmt := postgres.SELECT(
 		c.ID, c.ClientID, c.EndUserID, c.UserSessionID, c.RedirectURI, db.ArrayAsJSON(c.Scopes, "authorization_codes.scopes"),
-		c.CodeChallenge, c.Nonce, c.AuthTime, c.ExpiresAt, c.UsedAt, c.FamilyID, us.PublicID, f.PublicID,
+		c.CodeChallenge, c.Nonce, c.AuthTime, c.ExpiresAt, c.UsedAt, c.FamilyID, us.PublicID, f.PublicID, c.ResourceServerID,
 	).
 		FROM(c.LEFT_JOIN(us, us.ID.EQ(c.UserSessionID)).LEFT_JOIN(f, f.ID.EQ(c.FamilyID))).
 		WHERE(c.ProjectID.EQ(postgres.UUID(projectID)).AND(c.CodeHash.EQ(postgres.String(hash)))).
@@ -51,13 +51,18 @@ func (s *postgresStore) FamilyBySID(ctx context.Context, projectID uuid.UUID, si
 // AccessByHash returns the access token with hash and its family, or nil.
 func (s *postgresStore) AccessByHash(ctx context.Context, projectID uuid.UUID, hash string) (*Access, error) {
 	a, f := s.access, s.families
-	stmt := postgres.SELECT(s.familyColumns(), db.ArrayAsJSON(a.Scopes, "access_tokens.scopes"), a.ExpiresAt).
+	stmt := postgres.SELECT(
+		s.familyColumns(), a.ID, db.ArrayAsJSON(a.Scopes, "access_tokens.scopes"), a.ExpiresAt, a.ResourceServerID, a.RevokedAt,
+	).
 		FROM(a.INNER_JOIN(f, f.ID.EQ(a.FamilyID))).
 		WHERE(a.ProjectID.EQ(postgres.UUID(projectID)).AND(a.TokenHash.EQ(postgres.String(hash))))
 	var row struct {
-		Family    familyRow
-		Scopes    string    `alias:"access_tokens.scopes"`
-		ExpiresAt time.Time `alias:"access_tokens.expires_at"`
+		Family           familyRow
+		ID               uuid.UUID  `alias:"access_tokens.id"`
+		Scopes           string     `alias:"access_tokens.scopes"`
+		ExpiresAt        time.Time  `alias:"access_tokens.expires_at"`
+		ResourceServerID *uuid.UUID `alias:"access_tokens.resource_server_id"`
+		RevokedAt        *time.Time `alias:"access_tokens.revoked_at"`
 	}
 	err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) })
 	switch {
@@ -74,7 +79,10 @@ func (s *postgresStore) AccessByHash(ctx context.Context, projectID uuid.UUID, h
 	if err != nil {
 		return nil, wrap("AccessByHash", err)
 	}
-	return &Access{Family: fam, Scopes: scopes, ExpiresAt: row.ExpiresAt.UTC()}, nil
+	return &Access{
+		ID: row.ID, Family: fam, Scopes: scopes, ExpiresAt: row.ExpiresAt.UTC(), ResourceServerID: row.ResourceServerID,
+		RevokedAt: utc(row.RevokedAt),
+	}, nil
 }
 
 // RefreshByHash locks and returns the refresh token with hash and its family, or nil.
@@ -103,4 +111,17 @@ func (s *postgresStore) RefreshByHash(ctx context.Context, projectID uuid.UUID, 
 		return nil, nil, err
 	}
 	return &RefreshToken{ID: row.TokenID, FamilyID: row.FamilyID, ExpiresAt: row.ExpiresAt.UTC(), UsedAt: utc(row.UsedAt)}, fam, nil
+}
+
+// Subject returns the public id of the end user endUserID, the sub of an access token.
+func (s *postgresStore) Subject(ctx context.Context, projectID, endUserID uuid.UUID) (string, error) {
+	t := s.users
+	stmt := postgres.SELECT(t.PublicID).FROM(t).WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(endUserID))))
+	var row struct {
+		Subject string `alias:"end_users.public_id"`
+	}
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
+		return "", wrap("Subject", err)
+	}
+	return row.Subject, nil
 }

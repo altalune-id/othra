@@ -41,6 +41,7 @@ type Resolver struct {
 	hops       int
 	cache      *issuerCache
 	now        func() time.Time
+	cimd       CIMDAdmissions
 }
 
 // NewResolver builds the Resolver; publicBase is the scheme, host and base path every issuer URL starts with.
@@ -54,6 +55,12 @@ func NewResolver(issuers Issuers, keys Publisher, publicBase string, unexpected 
 // WithLimiter limits cache-missing lookups per client IP, read through trustedHops proxies.
 func (s *Resolver) WithLimiter(l ratelimit.Limiter, trustedHops int) *Resolver {
 	s.limiter, s.hops = l, trustedHops
+	return s
+}
+
+// WithCIMD reads whether each project admits CIMD clients, for client_id_metadata_document_supported.
+func (s *Resolver) WithCIMD(c CIMDAdmissions) *Resolver {
+	s.cimd = c
 	return s
 }
 
@@ -101,11 +108,18 @@ func (s *Resolver) load(ctx context.Context, handle string) (*issuerEntry, error
 	if err != nil {
 		return nil, err
 	}
-	jwks, err := s.keys.JWKS(tenant.Into(ctx, tenant.Context{OrgID: i.OrgID, ProjectID: i.ProjectID}), i.ProjectID)
+	scoped := tenant.Into(ctx, tenant.Context{OrgID: i.OrgID, ProjectID: i.ProjectID})
+	jwks, err := s.keys.JWKS(scoped, i.ProjectID)
 	if err != nil {
 		return nil, err
 	}
-	discovery, err := json.Marshal(Discovery(project.IssuerURL(s.publicBase, i.Handle)))
+	cimd := false
+	if s.cimd != nil {
+		if cimd, err = s.cimd.AcceptsCIMD(scoped, i.OrgID, i.ProjectID); err != nil {
+			return nil, err
+		}
+	}
+	discovery, err := json.Marshal(Discovery(project.IssuerURL(s.publicBase, i.Handle), cimd))
 	if err != nil {
 		return nil, err
 	}

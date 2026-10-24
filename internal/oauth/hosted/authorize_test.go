@@ -27,6 +27,15 @@ func (f fakeClients) Client(_ context.Context, _ Project, id string) (Client, bo
 }
 
 func testClients() fakeClients {
+	out := baseClients()
+	for id, c := range out {
+		c.RowID = rowID(id)
+		out[id] = c
+	}
+	return out
+}
+
+func baseClients() fakeClients {
 	return fakeClients{
 		"web": {
 			ID: "web", Name: "Openwa Web", Confidential: true, RedirectURIs: []string{webRedirect}, PostLogoutRedirectURIs: []string{byeRedirect},
@@ -43,6 +52,14 @@ func testClients() fakeClients {
 		"conf": {
 			ID: "conf", Name: "Conformance", Confidential: true, RedirectURIs: []string{webRedirect},
 			AllowedScopes: []string{"openid", "profile", "email", "offline_access"}, Refresh: true,
+		},
+		"nat": {
+			ID: "nat", Name: "Native App", Native: true, RedirectURIs: []string{cliRedirect},
+			AllowedScopes: []string{"openid", "profile", "email", "offline_access"}, Refresh: true, PKCERequired: true, ConsentRequired: true,
+		},
+		"req": {
+			ID: "req", Name: "Require App", Confidential: true, RedirectURIs: []string{webRedirect},
+			AllowedScopes: []string{"openid", "profile", "email"}, PKCERequired: true, ConsentRequired: true,
 		},
 	}
 }
@@ -62,9 +79,13 @@ func valid(extra ...string) url.Values {
 	return q
 }
 
+func testOAuth() OAuth {
+	return OAuth{Clients: testClients(), Resources: testResources(), Admissions: &fakeAdmissions{}}
+}
+
 func parse(t *testing.T, q url.Values) (*authRequest, error) {
 	t.Helper()
-	return parseAuthorize(context.Background(), testClients(), Project{}, q)
+	return parseAuthorize(context.Background(), testOAuth(), Project{}, q)
 }
 
 func TestParseAuthorize_Valid(t *testing.T) {
@@ -184,4 +205,84 @@ func TestParseAuthorize_PKCEOffNeedsNonce(t *testing.T) {
 	req, err = parse(t, valid("client_id", "conf"))
 	require.NoError(t, err, "PKCE is still honoured when sent")
 	assert.Equal(t, challenge, req.challenge)
+}
+
+func redirectCode(t *testing.T, name string, err error) string {
+	t.Helper()
+	re, ok := err.(*authorizeError) //nolint:errorlint // parseAuthorize returns it unwrapped.
+	require.True(t, ok, "%s: %v", name, err)
+	assert.NotEmpty(t, re.request, name)
+	return re.code
+}
+
+// E1, R1–R4, R7, E3: one exact resource, linked to the client; its scopes narrowed to the link's pin.
+func TestParseAuthorize_Resource(t *testing.T) {
+	cli := func(extra ...string) url.Values {
+		return valid(append([]string{"client_id", "cli", "redirect_uri", cliRedirect}, extra...)...)
+	}
+	req, err := parse(t, cli("resource", mcpResource, "scope", "openid sample:read sample:write offline_access"))
+	require.NoError(t, err)
+	require.NotNil(t, req.resource)
+	assert.Equal(t, mcpResource, req.resource.Identifier)
+	assert.Equal(t, []string{"openid", "sample:read", "offline_access"}, req.scopes, "P1: sample:write is outside the pin, so narrowed")
+
+	q := cli("scope", "sample:read")
+	q["resource"] = []string{mcpResource, mcpResource}
+	req, err = parse(t, q)
+	require.NoError(t, err, "a repeated identical resource is one")
+	assert.Equal(t, []string{"sample:read"}, req.scopes)
+
+	req, err = parse(t, cli("scope", "openid sample:read"))
+	require.NoError(t, err)
+	assert.Nil(t, req.resource)
+	assert.Equal(t, []string{"openid"}, req.scopes, "without a resource, its scopes are unknown")
+
+	two := cli("scope", "sample:read")
+	two["resource"] = []string{mcpResource, otherRS}
+	for name, q := range map[string]url.Values{
+		"two resources":  two,
+		"unknown":        cli("resource", "https://nope.test/mcp"),
+		"not linked":     cli("resource", otherRS),
+		"trailing slash": cli("resource", mcpResource+"/"),
+		"relative":       cli("resource", "/mcp"),
+		"fragment":       cli("resource", mcpResource+"#f"),
+		"too long":       cli("resource", mcpResource+"/"+strings.Repeat("a", maxParamLen)),
+	} {
+		_, err := parse(t, q)
+		assert.Equal(t, "invalid_target", redirectCode(t, name, err), name)
+	}
+	_, err = parse(t, cli("resource", mcpResource, "scope", "sample:write"))
+	assert.Equal(t, "invalid_scope", redirectCode(t, "only outside the pin", err), "P1: nothing left")
+	_, err = parse(t, cli("resource", mcpResource, "scope", "openid sample:write"))
+	assert.Equal(t, "invalid_scope", redirectCode(t, "only openid left", err), "qa O1, E3: no resource scope left, openid doesn't mask it")
+}
+
+// M2, M8, E5: a client_id URL is admitted through the request's resource before its redirect is trusted.
+func TestParseAuthorize_MetadataClient(t *testing.T) {
+	q := valid("client_id", cimdClient, "redirect_uri", "http://localhost:53999/callback", "resource", mcpResource, "scope", "sample:read")
+	req, err := parse(t, q)
+	require.NoError(t, err)
+	assert.Equal(t, cimdClient, req.client.ID)
+	assert.Equal(t, mcpResource, req.resource.Identifier)
+	assert.Equal(t, []string{"sample:read"}, req.scopes)
+
+	for name, tc := range map[string]struct {
+		q    url.Values
+		code apperror.Code
+	}{
+		"no resource":     {valid("client_id", cimdClient, "redirect_uri", "http://localhost/callback"), apperror.CodeAuthorizeClientNotAdmitted},
+		"not admitted":    {valid("client_id", cimdClient, "redirect_uri", "http://localhost/callback", "resource", otherRS), apperror.CodeAuthorizeClientNotAdmitted},
+		"other document":  {valid("client_id", "https://evil.example/c.json", "redirect_uri", "http://localhost/callback", "resource", mcpResource), apperror.CodeAuthorizeClientNotAdmitted},
+		"redirect not in": {valid("client_id", cimdClient, "redirect_uri", "http://localhost/other", "resource", mcpResource), apperror.CodeAuthorizeRedirectNotRegistered},
+	} {
+		_, err := parse(t, tc.q)
+		assert.Equal(t, tc.code, pageCode(t, err), name)
+	}
+	o := testOAuth()
+	o.Admissions = &fakeAdmissions{fail: apperror.New(apperror.CodeAuthorizeClientMetadataUnusable, "unusable")}
+	_, err = parseAuthorize(context.Background(), o, Project{}, q)
+	assert.Equal(t, apperror.CodeAuthorizeClientMetadataUnusable, pageCode(t, err), "SIG011 is a page too")
+	o.Admissions = &fakeAdmissions{fail: errFake}
+	_, err = parseAuthorize(context.Background(), o, Project{}, q)
+	assert.ErrorIs(t, err, errFake)
 }

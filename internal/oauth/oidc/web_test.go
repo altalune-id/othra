@@ -174,7 +174,7 @@ func TestDiscovery_HasEveryRequiredField(t *testing.T) {
 	assert.NotContains(t, issuer, "?")
 	assert.NotContains(t, issuer, "#")
 	assert.False(t, strings.HasSuffix(issuer, "/"))
-	for _, field := range []string{"authorization_endpoint", "token_endpoint", "jwks_uri", "userinfo_endpoint", "end_session_endpoint"} {
+	for _, field := range []string{"authorization_endpoint", "token_endpoint", "jwks_uri", "userinfo_endpoint", "end_session_endpoint", "revocation_endpoint"} {
 		u, _ := doc[field].(string)
 		assert.True(t, strings.HasPrefix(u, issuer+"/"), "%s lives under the issuer: %s", field, u)
 	}
@@ -184,12 +184,15 @@ func TestDiscovery_HasEveryRequiredField(t *testing.T) {
 	assert.Equal(t, []any{"client_secret_basic", "client_secret_post", "none"}, doc["token_endpoint_auth_methods_supported"])
 	assert.Equal(t, []any{"authorization_code", "refresh_token"}, doc["grant_types_supported"])
 	assert.Equal(t, true, doc["authorization_response_iss_parameter_supported"], "RFC 9207")
-	assert.Equal(t, []any{"none", "login", "select_account"}, doc["prompt_values_supported"], "consent comes with the M6 consent page")
+	assert.Equal(t, []any{"none", "login", "consent", "select_account"}, doc["prompt_values_supported"], "M6: the consent page shows on prompt=consent")
+	assert.Equal(t, issuer+"/oauth2/revoke", doc["revocation_endpoint"])
+	assert.Equal(t, []any{"client_secret_basic", "client_secret_post", "none"}, doc["revocation_endpoint_auth_methods_supported"])
+	assert.Equal(t, false, doc["client_id_metadata_document_supported"], "CIMD §6: always sent, false until a verified server admits CIMD apps")
 	assert.Equal(t, []any{"en-US", "id-ID"}, doc["ui_locales_supported"], "the hosted pages' locales")
 	for _, field := range []string{"request_parameter_supported", "request_uri_parameter_supported", "claims_parameter_supported"} {
 		assert.Equal(t, false, doc[field], "%s: request objects and the claims parameter are refused", field)
 	}
-	assert.Len(t, doc, 21, "nothing is advertised beyond what M5 answers")
+	assert.Len(t, doc, 24, "nothing is advertised beyond what M6 answers")
 }
 
 // K14: every URL a discovery document advertises answers, or answers the spec error; never 404 or 500.
@@ -399,4 +402,31 @@ func TestResolver_ResolveForPages(t *testing.T) {
 	_, err = f.resolver.Resolve(req("acme-web"))
 	require.Error(t, err)
 	assert.NotErrorIs(t, err, oidc.ErrUnknownIssuer)
+}
+
+type cimdProjects struct {
+	accept bool
+	err    error
+	scope  tenant.Context
+}
+
+func (c *cimdProjects) AcceptsCIMD(ctx context.Context, _, _ uuid.UUID) (bool, error) {
+	c.scope, _ = tenant.From(ctx)
+	return c.accept, c.err
+}
+
+// pm P3, CIMD §6: discovery says true only while the project admits CIMD clients, read under the project's scope.
+func TestDiscovery_CIMDFlagFollowsTheProject(t *testing.T) {
+	f := newFixture(t, "")
+	admissions := &cimdProjects{accept: true}
+	f.resolver.WithCIMD(admissions)
+	var doc map[string]any
+	require.NoError(t, json.Unmarshal(f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Body.Bytes(), &doc))
+	assert.Equal(t, true, doc["client_id_metadata_document_supported"])
+	assert.Equal(t, f.acme.ProjectID, admissions.scope.ProjectID)
+
+	f.resolver.Forget(f.acme.ProjectID)
+	admissions.err = errors.New("db down")
+	rec := f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration")
+	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 }

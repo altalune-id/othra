@@ -32,6 +32,7 @@ if (!canEdit.value) {
 const form = useResourceServerCreate(projectId);
 const { name, identifier, scopes, busy, error, errors, trustAvailable, trustPicked, trustRequired, trusted } = form;
 const scopeRows = scopes.rows;
+const scopeDescriptions = scopes.descriptions;
 const scopeErrors = scopes.errors;
 const scopeLabels = computed(() => scopeTableLabels(t));
 const ids = { name: useId(), nameHelp: useId(), nameErr: useId(), uri: useId(), uriHelp: useId(), uriErr: useId(), trust: useId() };
@@ -131,6 +132,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
           </fieldset>
           <ScopeTable
             v-model:rows="scopeRows"
+            v-model:descriptions="scopeDescriptions"
             :errors="scopeErrors"
             :disabled="busy"
             :full="scopes.full.value"

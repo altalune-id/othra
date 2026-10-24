@@ -49,8 +49,16 @@ func (s *failingStore) RevokeFamily(context.Context, uuid.UUID, uuid.UUID, strin
 func (s *failingStore) RevokeUserSession(context.Context, uuid.UUID, string, string, time.Time) error {
 	return s.err
 }
-func (s *failingStore) InsertAccessToken(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, string, []string, time.Time, time.Time) error {
+func (s *failingStore) InsertAccessToken(
+	context.Context, uuid.UUID, uuid.UUID, uuid.UUID, *uuid.UUID, string, []string, time.Time, time.Time,
+) error {
 	return s.err
+}
+func (s *failingStore) RevokeAccessToken(context.Context, uuid.UUID, uuid.UUID, time.Time) error {
+	return s.err
+}
+func (s *failingStore) Subject(context.Context, uuid.UUID, uuid.UUID) (string, error) {
+	return "", s.err
 }
 func (s *failingStore) AccessByHash(context.Context, uuid.UUID, string) (*Access, error) {
 	return nil, s.err
@@ -150,6 +158,7 @@ func TestService_ReportsUnexpectedFailures(t *testing.T) {
 	_, err = svc.RevokeFamily(ctx, p, "sid", ReasonEndSession)
 	assertUnexpected(t, err)
 	assertUnexpected(t, svc.RevokeUserSession(ctx, p, "us", ReasonSignOut))
+	assertUnexpected(t, svc.Revoke(ctx, p, Client{}, "t", ""))
 	_, err = svc.Prune(ctx, p.OrgID, p.ID)
 	assertUnexpected(t, err)
 	assert.Contains(t, logs.String(), "boom")

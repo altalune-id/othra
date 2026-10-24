@@ -170,6 +170,22 @@ func (e *SecretExistsError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeClientSecretExists, "This client already has a secret").WithCause(e)
 }
 
+// MetadataManagedError signals a change to a CIMD client, which only its metadata document defines; it can only be deleted.
+type MetadataManagedError struct{}
+
+func (*MetadataManagedError) Error() string { return "client: managed by its metadata document" }
+
+// IsMetadataManagedError reports whether err's tree contains a *MetadataManagedError.
+func IsMetadataManagedError(err error) bool {
+	_, ok := errors.AsType[*MetadataManagedError](err)
+	return ok
+}
+
+// ToAppError maps MetadataManagedError to CLT008.
+func (e *MetadataManagedError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeClientMetadataManaged, "This app is managed by its metadata document").WithCause(e)
+}
+
 // ProjectNotFoundError signals a project that does not exist or is out of the caller's reach.
 type ProjectNotFoundError struct{}
 
@@ -189,5 +205,6 @@ func (e *ProjectNotFoundError) ToAppError() *apperror.AppError {
 // IsExpectedError reports whether err is a typed client error a service returns as-is.
 func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsInvalidRedirectURIError(err) || IsInvalidSettingsError(err) || IsNoSecretError(err) ||
-		IsSecretPersonOnlyError(err) || IsSecretNotFoundError(err) || IsSecretExistsError(err) || IsProjectNotFoundError(err)
+		IsSecretPersonOnlyError(err) || IsSecretNotFoundError(err) || IsSecretExistsError(err) || IsProjectNotFoundError(err) ||
+		IsMetadataManagedError(err)
 }

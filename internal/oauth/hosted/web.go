@@ -56,9 +56,17 @@ type Web struct {
 	csrf    *CSRF
 	cookies cookies
 	limits  layout.Limits
-	clients Clients
-	grants  Grants
-	marker  *Marker
+	oauth   OAuth
+}
+
+// OAuth is what /oauth2/authorize, /consent and /oauth2/end-session need.
+type OAuth struct {
+	Clients    Clients
+	Resources  Resources
+	Admissions Admissions
+	Consents   Consents
+	Grants     Grants
+	Marker     *Marker
 }
 
 // NewWeb builds the hosted pages over users and issuers.
@@ -69,9 +77,9 @@ func NewWeb(users EndUsers, issuers Issuers, kit layout.Kit, cfg Config) *Web {
 	}
 }
 
-// WithOAuth serves /oauth2/authorize and /oauth2/end-session over clients and grants, with marker for re-entry.
-func (h *Web) WithOAuth(clients Clients, grants Grants, marker *Marker) *Web {
-	h.clients, h.grants, h.marker = clients, grants, marker
+// WithOAuth serves /oauth2/authorize, /consent and /oauth2/end-session over o.
+func (h *Web) WithOAuth(o OAuth) *Web {
+	h.oauth = o
 	return h
 }
 
@@ -96,11 +104,13 @@ func (h *Web) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+p+"/terms", h.page(h.acceptTerms))
 	mux.HandleFunc("GET "+p+"/account/{$}", h.page(h.account))
 	mux.HandleFunc("GET "+p+"/signed-out", h.page(h.signedOut))
-	if h.grants != nil {
+	if h.oauth.Grants != nil {
 		mux.HandleFunc("GET "+p+authorizePath, h.page(h.authorize))
 		mux.HandleFunc("POST "+p+authorizePath, h.page(h.authorize))
 		mux.HandleFunc("GET "+p+endSessionPath, h.page(h.endSession))
 		mux.HandleFunc("POST "+p+endSessionPath, h.page(h.endSession))
+		mux.HandleFunc("GET "+p+string(pageConsent), h.page(h.consent))
+		mux.HandleFunc("POST "+p+string(pageConsent), h.page(h.answerConsent))
 	}
 	mux.HandleFunc(p+"/", h.page(h.notFound))
 }
@@ -219,7 +229,8 @@ func (h *Web) login(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 	pend := h.pending(r, s, returnTo)
 	h.renderLogin(w, r, s, http.StatusOK, views.LoginData{
-		ReturnTo: returnTo, Notice: notice, FromPicker: len(b.Accounts) > 0, Client: pend.client, Reauth: pend.reauth, Email: pend.hint,
+		ReturnTo: returnTo, Notice: notice, FromPicker: len(b.Accounts) > 0,
+		Client: pend.client, ClientHost: pend.host, Reauth: pend.reauth, Email: pend.hint,
 	})
 }
 
@@ -237,8 +248,9 @@ func (h *Web) renderPicker(w http.ResponseWriter, r *http.Request, s *site, b *B
 		h.toPage(w, r, s, pageLogin, backTo(returnTo))
 		return
 	}
+	pend := h.pending(r, s, returnTo)
 	h.kit.Render(w, r, http.StatusOK, views.Picker(h.layout(r, s), views.PickerData{
-		Site: s.views(), Accounts: tiles, ReturnTo: returnTo, Notice: notice, Error: errMsg, Client: h.clientName(r, s, returnTo),
+		Site: s.views(), Accounts: tiles, ReturnTo: returnTo, Notice: notice, Error: errMsg, Client: pend.client, ClientHost: pend.host,
 		SelectToken: h.token(w, r, s, "select"), SignOutToken: h.token(w, r, s, "signout"),
 	}))
 }
@@ -260,9 +272,10 @@ func (h *Web) issue(w http.ResponseWriter, r *http.Request, s *site) {
 			h.fail(w, r, s, "hosted: browser", err)
 			return
 		}
+		pend := h.pending(r, s, returnTo)
 		h.renderLogin(w, r, s, http.StatusUnprocessableEntity, views.LoginData{
 			Email: raw, Error: i18n.T(r.Context(), "login.email_invalid"), ReturnTo: returnTo, FromPicker: len(b.Accounts) > 0,
-			Client: h.clientName(r, s, returnTo), Reauth: h.pending(r, s, returnTo).reauth,
+			Client: pend.client, ClientHost: pend.host, Reauth: pend.reauth,
 		})
 		return
 	}
@@ -635,8 +648,14 @@ func (h *Web) renderError(w http.ResponseWriter, r *http.Request, s *site, statu
 	v := views.ErrorData{Title: title, Message: message, Code: string(code), Reference: reqid.FromContext(r.Context())}
 	if s != nil {
 		v.Site, v.SupportEmail = s.views(), s.issuer.SupportEmail
+		v.NoSignIn = protocolPage(r, s)
 	}
 	h.kit.Render(w, r, status, views.Error(h.layout(r, s), v))
+}
+
+// NOTE: product-design-m6 §6: an error answering /authorize or /end-session leads back to the app, never into sign-in.
+func protocolPage(r *http.Request, s *site) bool {
+	return r.URL.Path == s.path+authorizePath || r.URL.Path == s.path+endSessionPath
 }
 
 type page string
@@ -665,7 +684,7 @@ func (h *Web) toPage(w http.ResponseWriter, r *http.Request, s *site, p page, qu
 func (h *Web) toReturnTo(w http.ResponseWriter, r *http.Request, s *site, raw string) {
 	target := ReturnTo(s.issuerURL, raw)
 	if r.Method == http.MethodPost && strings.HasPrefix(target, s.path+authorizePath+"?") {
-		h.forward(w, r, s, h.clientName(r, s, target), target)
+		h.forward(w, r, s, h.pending(r, s, target).client, target)
 		return
 	}
 	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: target is validated by ReturnTo (H8).

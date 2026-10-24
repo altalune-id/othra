@@ -18,3 +18,8 @@ type Publisher interface {
 	// JWKS returns the project's JSON Web Key Set, read under the tenant scope on ctx; it never holds private key material.
 	JWKS(ctx context.Context, projectID uuid.UUID) ([]byte, error)
 }
+
+// CIMDAdmissions says whether a project has a verified resource server that admits CIMD clients.
+type CIMDAdmissions interface {
+	AcceptsCIMD(ctx context.Context, orgID, projectID uuid.UUID) (bool, error)
+}

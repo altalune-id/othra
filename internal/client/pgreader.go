@@ -20,7 +20,7 @@ func (s *postgresStore) clientColumns() postgres.ProjectionList {
 		db.ArrayAsJSON(t.AllowedScopes, "oauth_clients.allowed_scopes"),
 		db.ArrayAsJSON(t.RedirectURIs, "oauth_clients.redirect_uris"),
 		db.ArrayAsJSON(t.PostLogoutRedirectURIs, "oauth_clients.post_logout_redirect_uris"),
-		t.ConsentPolicy, t.PKCERequired, t.CreatedAt, t.UpdatedAt,
+		t.ConsentPolicy, t.PKCERequired, t.CreatedAt, t.UpdatedAt, t.MetadataURL, t.ClientURI, t.MetadataFetchedAt, t.MetadataExpiresAt,
 	}
 }
 
@@ -28,9 +28,35 @@ func (s *postgresStore) clientColumns() postgres.ProjectionList {
 func (s *postgresStore) List(ctx context.Context, projectID uuid.UUID, now time.Time) ([]*Client, error) {
 	t := s.clients
 	stmt := postgres.SELECT(s.clientColumns()).FROM(t).
-		WHERE(t.ProjectID.EQ(postgres.UUID(projectID))).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.MetadataURL.IS_NULL())).
 		ORDER_BY(t.CreatedAt.ASC(), t.PublicID.ASC())
 	return s.read(ctx, "List", stmt, projectID, now, false)
+}
+
+// ByIDs returns the project's clients with the given ids, shadow clients included, without secrets.
+func (s *postgresStore) ByIDs(ctx context.Context, projectID uuid.UUID, ids []uuid.UUID) ([]*Client, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	t := s.clients
+	in := make([]postgres.Expression, 0, len(ids))
+	for _, id := range ids {
+		in = append(in, postgres.UUID(id))
+	}
+	stmt := postgres.SELECT(s.clientColumns()).FROM(t).WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.IN(in...)))
+	var rows []clientRow
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, fmt.Errorf("client.postgres: ByIDs: %w", err)
+	}
+	out := make([]*Client, 0, len(rows))
+	for i := range rows {
+		c, err := rows[i].toClient()
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, nil
 }
 
 // ByPublicID returns one client with its live secrets at now, the current one first, or *NotFoundError.
@@ -60,8 +86,12 @@ func (s *postgresStore) one(
 	ctx context.Context, op string, projectID uuid.UUID, publicID string, now time.Time, mode readMode,
 ) (*Client, error) {
 	t := s.clients
+	by := t.PublicID
+	if IsMetadataURL(publicID) {
+		by = t.MetadataURL
+	}
 	stmt := postgres.SELECT(s.clientColumns()).FROM(t).
-		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.PublicID.EQ(postgres.String(publicID))))
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(by.EQ(postgres.String(publicID))))
 	if mode == readLocked {
 		stmt = stmt.FOR(postgres.UPDATE())
 	}

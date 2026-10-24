@@ -1,7 +1,7 @@
 import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ClientSchema } from '../../../gen/client/v1/client_pb';
+import { ClientRegistration, ClientSchema } from '../../../gen/client/v1/client_pb';
 import { LinkSchema, ResourceServerSchema, ResourceServerState } from '../../../gen/resourceserver/v1/resourceserver_pb';
 import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
 import { linkUnverified, useLinks } from './useLinks';
@@ -165,5 +165,19 @@ describe('useLinks on a resource server', () => {
     setClient('$resourceServerClient', { listLinks: vi.fn().mockResolvedValue({ links: [] }) });
     const l = useLinks(projectId, { side: 'resourceServer', id: apiId });
     expect(l.scopeOptions.value).toEqual([]);
+  });
+});
+
+describe('useLinks and apps without registration (M6)', () => {
+  it('drops a revoked app from the list and never offers a CIMD client as a link target', async () => {
+    const cimd = create(ClientSchema, { id: 'Cc2n2Xq8RtY5uVw3zA9bC', name: 'Claude Code', registration: ClientRegistration.CIMD });
+    const web = create(ClientSchema, { id: clientId, name: 'Store web', registration: ClientRegistration.REGISTERED });
+    setClient('$clientClient', { listClients: vi.fn().mockResolvedValue({ clients: [cimd, web] }) });
+    setClient('$resourceServerClient', { listLinks: vi.fn().mockResolvedValue({ links: [create(LinkSchema, { clientId: cimd.id, resourceServerId: apiId, clientMetadataUrl: 'https://claude.ai/m' })] }) });
+    const l = useLinks(projectId, { side: 'resourceServer', id: apiId });
+    await l.load();
+    expect(l.available.value.map(x => x.name)).toEqual(['Store web']);
+    l.drop(cimd.id);
+    expect(l.links.value).toEqual([]);
   });
 });

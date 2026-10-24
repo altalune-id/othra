@@ -84,6 +84,15 @@ enum AuthMethod {
   AUTH_METHOD_CLIENT_SECRET_POST = 2;
 }
 
+// ClientRegistration is how a client came to the project.
+enum ClientRegistration {
+  CLIENT_REGISTRATION_UNSPECIFIED = 0;
+  // REGISTERED was created in the console, the API or MCP.
+  CLIENT_REGISTRATION_REGISTERED = 1;
+  // CIMD signed in with a Client ID Metadata Document; it is read-only and its OAuth client_id is metadata_url.
+  CLIENT_REGISTRATION_CIMD = 2;
+}
+
 // SecretGrace is how long the current secret keeps working after a rotation.
 enum SecretGrace {
   // UNSPECIFIED is a day.
@@ -104,7 +113,7 @@ message ClientSecret {
 }
 
 message Client {
-  // id is the OAuth client_id.
+  // id is the client's public id and, for a registered client, its OAuth client_id.
   string id = 1;
   string name = 2;
   ClientKind kind = 3;
@@ -122,6 +131,11 @@ message Client {
   google.protobuf.Timestamp updated_at = 14;
   // pkce_required is false only for a WEB client that can't send PKCE; it must then send a nonce.
   bool pkce_required = 15;
+  ClientRegistration registration = 16;
+  // metadata_url is a CIMD client's OAuth client_id, where its metadata document lives; empty for a registered client.
+  string metadata_url = 17;
+  // metadata_fetched_at is when Othra last read a CIMD client's metadata document.
+  google.protobuf.Timestamp metadata_fetched_at = 18;
 }
 
 message ListClientsRequest {

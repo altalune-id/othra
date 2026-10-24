@@ -31,7 +31,6 @@ export function clientFormLabels(t: Translate, mode: 'create' | 'edit'): ClientF
     consentRequire: t('clients.consent_require'),
     consentImplicit: t('clients.consent_implicit'),
     consentImplicitWarning: t('clients.consent_implicit_warning'),
-    consentRequireNote: t('clients.consent_require_note'),
     authMethod: t('clients.auth_method'),
     authMethodBasic: t('clients.auth_method_basic'),
     authMethodPost: t('clients.auth_method_post'),

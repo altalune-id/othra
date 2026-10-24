@@ -3,6 +3,7 @@ package resourceserver
 import (
 	"context"
 	"log/slog"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +40,8 @@ type Service struct {
 
 	mu     sync.Mutex
 	manual map[uuid.UUID]time.Time
+
+	onAdmissionChange func(projectID uuid.UUID)
 }
 
 // Deps are the Service's collaborators.
@@ -84,6 +87,8 @@ type CreateRequest struct {
 	Trusted bool
 	// Person is the signed-in person, or uuid.Nil for a key; only a person may set Trusted.
 	Person uuid.UUID
+	// Descriptions are optional, one per scope.
+	Descriptions map[string]string
 }
 
 // Create registers a resource server; the project's first one locks its issuer handle in the same unit of work.
@@ -95,6 +100,9 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*ResourceServe
 	if err := ValidateScopes(req.Scopes); err != nil {
 		return nil, err
 	}
+	if err := ValidateDescriptions(req.Scopes, req.Descriptions); err != nil {
+		return nil, err
+	}
 	publicID, err := nanoid.New(publicIDLen)
 	if err != nil {
 		return nil, s.unexpected(ctx, "resourceserver: create", err)
@@ -103,6 +111,7 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*ResourceServe
 	r := &ResourceServer{
 		ID: uuid.New(), PublicID: publicID, OrgID: req.OrgID, ProjectID: req.ProjectID, Name: strings.TrimSpace(req.Name),
 		Identifier: req.Identifier, Scopes: req.Scopes, State: StatePending, CreatedAt: now, UpdatedAt: now,
+		Descriptions: req.Descriptions,
 	}
 	switch {
 	case req.Trusted && !s.cfg.TrustAvailable:
@@ -149,10 +158,15 @@ func (s *Service) Get(ctx context.Context, orgID, projectID uuid.UUID, publicID 
 	return r, nil
 }
 
-// Update replaces a server's name and scopes; removing a scope a link allows is refused.
-func (s *Service) Update(ctx context.Context, orgID, projectID uuid.UUID, publicID, name string, scopes []string) (*ResourceServer, error) {
+// Update replaces a server's name, scopes and their descriptions; removing a scope a link or the admission allows is refused.
+func (s *Service) Update(
+	ctx context.Context, orgID, projectID uuid.UUID, publicID, name string, scopes []string, descriptions map[string]string,
+) (*ResourceServer, error) {
 	ctx = scope(ctx, orgID, projectID)
 	if err := ValidateScopes(scopes); err != nil {
+		return nil, err
+	}
+	if err := ValidateDescriptions(scopes, descriptions); err != nil {
 		return nil, err
 	}
 	var out *ResourceServer
@@ -166,7 +180,7 @@ func (s *Service) Update(ctx context.Context, orgID, projectID uuid.UUID, public
 				return err
 			}
 		}
-		r.Name, r.Scopes, r.UpdatedAt = strings.TrimSpace(name), scopes, s.now().UTC()
+		r.Name, r.Scopes, r.Descriptions, r.UpdatedAt = strings.TrimSpace(name), scopes, descriptions, s.now().UTC()
 		out = r
 		return s.store.Update(ctx, r)
 	})
@@ -177,6 +191,11 @@ func (s *Service) Update(ctx context.Context, orgID, projectID uuid.UUID, public
 }
 
 func (s *Service) refuseRemoval(ctx context.Context, r *ResourceServer, removed []string) error {
+	for _, scope := range removed {
+		if slices.Contains(r.Admission.Scopes, scope) {
+			return &ScopePinnedError{Scope: scope, CIMD: true}
+		}
+	}
 	links, err := s.links(ctx, r.OrgID, r.ProjectID, uuid.Nil, r.ID)
 	if err != nil {
 		return err
@@ -185,7 +204,7 @@ func (s *Service) refuseRemoval(ctx context.Context, r *ResourceServer, removed 
 		var clients []string
 		for _, l := range links {
 			for _, pinned := range l.Scopes {
-				if pinned == scope {
+				if pinned == scope && l.Client.MetadataURL == "" {
 					clients = append(clients, l.Client.Name)
 				}
 			}
@@ -209,11 +228,13 @@ func (s *Service) Delete(ctx context.Context, orgID, projectID uuid.UUID, public
 		if err != nil {
 			return err
 		}
-		if len(links) > 0 {
-			names := make([]string, 0, len(links))
-			for _, l := range links {
+		var names []string
+		for _, l := range links {
+			if l.Client.MetadataURL == "" {
 				names = append(names, l.Client.Name)
 			}
+		}
+		if len(names) > 0 {
 			return &LinkedError{Clients: names}
 		}
 		return s.store.Delete(ctx, projectID, r.ID)
@@ -221,6 +242,7 @@ func (s *Service) Delete(ctx context.Context, orgID, projectID uuid.UUID, public
 	if err != nil {
 		return s.errOrReport(ctx, "resourceserver: delete", err)
 	}
+	s.admissionChanged(projectID)
 	return nil
 }
 
@@ -259,6 +281,9 @@ func (s *Service) Verify(ctx context.Context, orgID, projectID uuid.UUID, public
 	})
 	if err != nil {
 		return nil, nil, s.errOrReport(ctx, "resourceserver: verify", err)
+	}
+	if before != out.State {
+		s.admissionChanged(projectID)
 	}
 	s.logState(ctx, project.PublicID, out, before, "manual")
 	return out, nil, nil
@@ -314,6 +339,7 @@ func (s *Service) SetTrust(
 	}
 	if changed {
 		s.logTrust(ctx, out, trusted, person)
+		s.admissionChanged(projectID)
 	}
 	return out, nil
 }
@@ -360,6 +386,7 @@ func (s *Service) Recheck(ctx context.Context, orgID, projectID uuid.UUID) (int,
 		case locked.State != before && !locked.Trusted:
 			changed++
 			s.logState(ctx, project.PublicID, locked, before, "scheduled")
+			s.admissionChanged(projectID)
 		}
 	}
 	return changed, nil
@@ -408,6 +435,9 @@ func (s *Service) writeLink(
 ) (*Link, error) {
 	ctx = scope(ctx, orgID, projectID)
 	c, err := s.client(ctx, orgID, projectID, clientPublicID)
+	if err == nil && c.MetadataURL != "" {
+		err = &ClientManagedError{}
+	}
 	if err != nil {
 		return nil, s.errOrReport(ctx, "resourceserver: link", err)
 	}
@@ -459,6 +489,9 @@ func (s *Service) reloadLink(ctx context.Context, l *Link) (*Link, error) {
 func (s *Service) UnlinkClient(ctx context.Context, orgID, projectID uuid.UUID, clientPublicID, serverPublicID string) error {
 	ctx = scope(ctx, orgID, projectID)
 	c, err := s.client(ctx, orgID, projectID, clientPublicID)
+	if err == nil && c.MetadataURL != "" {
+		err = &ClientManagedError{}
+	}
 	if err != nil {
 		return s.errOrReport(ctx, "resourceserver: unlink", err)
 	}
@@ -542,4 +575,171 @@ func (s *Service) errOrNil(ctx context.Context, message string, err error) error
 		return nil
 	}
 	return s.errOrReport(ctx, message, err)
+}
+
+// WithOnAdmissionChange sets what runs when a project's CIMD admission may have changed, so its discovery is published again.
+func (s *Service) WithOnAdmissionChange(fn func(projectID uuid.UUID)) *Service {
+	s.onAdmissionChange = fn
+	return s
+}
+
+func (s *Service) admissionChanged(projectID uuid.UUID) {
+	if s.onAdmissionChange != nil {
+		s.onAdmissionChange(projectID)
+	}
+}
+
+// SetAdmission sets whether a server admits metadata document clients (E10); turning it on needs an admissible server.
+func (s *Service) SetAdmission(ctx context.Context, orgID, projectID uuid.UUID, publicID string, a Admission) (*ResourceServer, error) {
+	ctx = scope(ctx, orgID, projectID)
+	if err := ValidateClientHosts(a.Hosts); err != nil {
+		return nil, err
+	}
+	var out *ResourceServer
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		r, err := s.store.Lock(ctx, projectID, publicID)
+		if err != nil {
+			return err
+		}
+		if a.Scopes != nil {
+			if a.Scopes, err = r.LinkScopes(a.Scopes); err != nil {
+				return err
+			}
+		}
+		if a.Accept && !r.Admissible(s.cfg.TrustAvailable) {
+			return &AdmissionUnverifiedError{}
+		}
+		r.Admission, r.UpdatedAt = a, s.now().UTC()
+		if err := s.store.Update(ctx, r); err != nil {
+			return err
+		}
+		out = r
+		return s.repinMetadataClients(ctx, r)
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "resourceserver: admission", err)
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "resourceserver: admission", slog.String("resource_server", out.PublicID),
+		slog.Bool("accept", a.Accept), slog.Int("hosts", len(a.Hosts)), slog.Bool("all_scopes", a.Scopes == nil))
+	s.admissionChanged(projectID)
+	return out, nil
+}
+
+func (s *Service) repinMetadataClients(ctx context.Context, r *ResourceServer) error {
+	links, err := s.links(ctx, r.OrgID, r.ProjectID, uuid.Nil, r.ID)
+	if err != nil {
+		return err
+	}
+	for _, l := range links {
+		if l.Client.MetadataURL == "" {
+			continue
+		}
+		l.Scopes, l.UpdatedAt = r.MetadataClientScopes(), r.UpdatedAt
+		if _, err := s.store.UpdateLink(ctx, l); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Resolve returns the server identifier names exactly and the scopes clientID may ask of it, if admissible and linked (RFC 8707 R4).
+func (s *Service) Resolve(
+	ctx context.Context, orgID, projectID, clientID uuid.UUID, identifier string,
+) (r *ResourceServer, pin []string, ok bool, err error) {
+	ctx = scope(ctx, orgID, projectID)
+	r, err = s.store.ByIdentifier(ctx, projectID, identifier)
+	switch {
+	case IsNotFoundError(err):
+		return nil, nil, false, nil
+	case err != nil:
+		return nil, nil, false, s.errOrReport(ctx, "resourceserver: resolve", err)
+	case !r.Admissible(s.cfg.TrustAvailable):
+		return nil, nil, false, nil
+	}
+	links, err := s.store.Links(ctx, projectID, clientID, r.ID)
+	switch {
+	case err != nil:
+		return nil, nil, false, s.errOrReport(ctx, "resourceserver: resolve", err)
+	case len(links) == 0:
+		return nil, nil, false, nil
+	}
+	return r, links[0].Scopes, true, nil
+}
+
+// ForMetadataClient returns the server identifier names and whether it admits metadata document clients from host.
+func (s *Service) ForMetadataClient(
+	ctx context.Context, orgID, projectID uuid.UUID, identifier, host string,
+) (r *ResourceServer, ok bool, err error) {
+	ctx = scope(ctx, orgID, projectID)
+	r, err = s.store.ByIdentifier(ctx, projectID, identifier)
+	switch {
+	case IsNotFoundError(err):
+		return nil, false, nil
+	case err != nil:
+		return nil, false, s.errOrReport(ctx, "resourceserver: admit", err)
+	}
+	ok = r.AdmitsMetadataClient(host, s.cfg.TrustAvailable)
+	return r, ok, nil
+}
+
+// LinkMetadataClient links an admitted metadata document client to serverID with scopes; it joins the caller's unit of work.
+func (s *Service) LinkMetadataClient(ctx context.Context, orgID, projectID, clientID, serverID uuid.UUID, scopes []string) error {
+	ctx = scope(ctx, orgID, projectID)
+	now := s.now().UTC()
+	return s.store.UpsertLink(ctx, &Link{
+		OrgID: orgID, ProjectID: projectID, ClientID: clientID, ResourceServer: &ResourceServer{ID: serverID}, Scopes: scopes,
+		CreatedAt: now, UpdatedAt: now,
+	})
+}
+
+// SECURITY: R5, authl gap 5: the server must still be admissible and allow every scope; cimdHost is a CIMD client_id host, else "".
+func (s *Service) Admits(
+	ctx context.Context, orgID, projectID, serverID, clientID uuid.UUID, cimdHost string, scopes []string,
+) (identifier string, ok bool, err error) {
+	ctx = scope(ctx, orgID, projectID)
+	r, err := s.store.ByID(ctx, projectID, serverID)
+	switch {
+	case IsNotFoundError(err):
+		return "", false, nil
+	case err != nil:
+		return "", false, s.errOrReport(ctx, "resourceserver: admits", err)
+	case !r.Admissible(s.cfg.TrustAvailable):
+		return "", false, nil
+	}
+	allowed := r.MetadataClientScopes()
+	if cimdHost != "" {
+		if !r.AdmitsMetadataClient(cimdHost, s.cfg.TrustAvailable) {
+			return "", false, nil
+		}
+	} else {
+		links, err := s.store.Links(ctx, projectID, clientID, r.ID)
+		switch {
+		case err != nil:
+			return "", false, s.errOrReport(ctx, "resourceserver: admits", err)
+		case len(links) == 0:
+			return "", false, nil
+		}
+		allowed = links[0].Scopes
+	}
+	for _, sc := range scopes {
+		if !slices.Contains(allowed, sc) {
+			return "", false, nil
+		}
+	}
+	return r.Identifier, true, nil
+}
+
+// AcceptsCIMD reports whether any admissible server of the project admits metadata document clients (CIMD §6, pm P3).
+func (s *Service) AcceptsCIMD(ctx context.Context, orgID, projectID uuid.UUID) (bool, error) {
+	ctx = scope(ctx, orgID, projectID)
+	list, err := s.store.List(ctx, projectID)
+	if err != nil {
+		return false, s.errOrReport(ctx, "resourceserver: accepts cimd", err)
+	}
+	for _, r := range list {
+		if r.Admission.Accept && r.Admissible(s.cfg.TrustAvailable) {
+			return true, nil
+		}
+	}
+	return false, nil
 }

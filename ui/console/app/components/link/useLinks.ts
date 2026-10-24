@@ -1,5 +1,6 @@
 import type { Link } from '~~/gen/resourceserver/v1/resourceserver_pb';
 import type { ShownError } from '~/lib/apperror/message';
+import { ClientRegistration } from '~~/gen/client/v1/client_pb';
 import { ResourceServerState } from '~~/gen/resourceserver/v1/resourceserver_pb';
 import { useErrorMessage } from '~/composables/useErrorMessage';
 
@@ -54,7 +55,7 @@ export function useLinks(projectId: string, owner: LinkOwner) {
       targets.value = res.resourceServers.map(rs => ({ id: rs.id, name: rs.name, detail: rs.identifier, scopes: [...rs.scopes], unverified: linkUnverified(rs.state, rs.trusted) }));
     } else {
       const res = await clientClient.listClients({ projectId });
-      targets.value = res.clients.map(c => ({ id: c.id, name: c.name, detail: c.id, scopes: [], unverified: false }));
+      targets.value = res.clients.filter(c => c.registration !== ClientRegistration.CIMD).map(c => ({ id: c.id, name: c.name, detail: c.id, scopes: [], unverified: false }));
     }
   }
 
@@ -69,6 +70,10 @@ export function useLinks(projectId: string, owner: LinkOwner) {
     } finally {
       loading.value = false;
     }
+  }
+
+  function drop(id: string) {
+    links.value = links.value.filter(l => otherId(l) !== id);
   }
 
   function setOwnerScopes(scopes: string[]) {
@@ -186,6 +191,7 @@ export function useLinks(projectId: string, owner: LinkOwner) {
     busy,
     error,
     load,
+    drop,
     setOwnerScopes,
     askLink,
     pickTarget,

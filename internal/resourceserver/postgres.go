@@ -49,6 +49,10 @@ type serverRow struct {
 	TrustedBy           *uuid.UUID `alias:"resource_servers.trusted_by"`
 	CreatedAt           time.Time  `alias:"resource_servers.created_at"`
 	UpdatedAt           time.Time  `alias:"resource_servers.updated_at"`
+	AcceptCIMD          bool       `alias:"resource_servers.accept_cimd_clients"`
+	CIMDHosts           string     `alias:"resource_servers.cimd_client_hosts"`
+	CIMDScopes          *string    `alias:"resource_servers.cimd_scopes"`
+	Descriptions        string     `alias:"resource_servers.scope_descriptions"`
 }
 
 type linkRow struct {
@@ -72,6 +76,12 @@ func (r *serverRow) toServer() (*ResourceServer, error) {
 	}
 	if r.TrustedBy != nil {
 		out.TrustedBy = *r.TrustedBy
+	}
+	if out.Admission, err = r.admission(); err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal([]byte(r.Descriptions), &out.Descriptions); err != nil {
+		return nil, fmt.Errorf("resourceserver.postgres: scope_descriptions of %s: %w", r.PublicID, err)
 	}
 	if r.LastError != nil {
 		var f Failure
@@ -112,4 +122,39 @@ func timeExpr(t *time.Time) postgres.Expression {
 		return postgres.NULL
 	}
 	return postgres.TimestampzT(t.UTC())
+}
+
+func (r *serverRow) admission() (Admission, error) {
+	a := Admission{Accept: r.AcceptCIMD}
+	hosts, err := db.ParseJSONArray(r.CIMDHosts)
+	if err != nil {
+		return a, fmt.Errorf("resourceserver.postgres: cimd_client_hosts of %s: %w", r.PublicID, err)
+	}
+	if len(hosts) > 0 {
+		a.Hosts = hosts
+	}
+	if r.CIMDScopes != nil {
+		if a.Scopes, err = db.ParseJSONArray(*r.CIMDScopes); err != nil {
+			return a, fmt.Errorf("resourceserver.postgres: cimd_scopes of %s: %w", r.PublicID, err)
+		}
+	}
+	return a, nil
+}
+
+func nullArray(v []string) postgres.Expression {
+	if v == nil {
+		return postgres.NULL
+	}
+	return db.TextArray(v)
+}
+
+func descriptionsExpr(d map[string]string) (postgres.StringExpression, error) {
+	if d == nil {
+		d = map[string]string{}
+	}
+	raw, err := json.Marshal(d)
+	if err != nil {
+		return nil, err
+	}
+	return postgres.StringExp(postgres.CAST(postgres.String(string(raw))).AS("jsonb")), nil
 }

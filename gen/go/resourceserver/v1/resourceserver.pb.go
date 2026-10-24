@@ -101,8 +101,12 @@ type ResourceServer struct {
 	TrustAvailable bool                   `protobuf:"varint,12,opt,name=trust_available,json=trustAvailable,proto3" json:"trust_available,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// scope_descriptions says what each scope lets an app do, shown on the consent page; a scope may have none.
+	ScopeDescriptions map[string]string `protobuf:"bytes,15,rep,name=scope_descriptions,json=scopeDescriptions,proto3" json:"scope_descriptions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// cimd is whether apps without registration (CIMD) may ask for this server's scopes.
+	Cimd          *CIMDAdmission `protobuf:"bytes,16,opt,name=cimd,proto3" json:"cimd,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ResourceServer) Reset() {
@@ -233,6 +237,92 @@ func (x *ResourceServer) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *ResourceServer) GetScopeDescriptions() map[string]string {
+	if x != nil {
+		return x.ScopeDescriptions
+	}
+	return nil
+}
+
+func (x *ResourceServer) GetCimd() *CIMDAdmission {
+	if x != nil {
+		return x.Cimd
+	}
+	return nil
+}
+
+// CIMDAdmission is a resource server's admission of apps that sign in with a Client ID Metadata Document.
+type CIMDAdmission struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// accept is off by default and can be turned on only while the server is verified or trusted.
+	Accept bool `protobuf:"varint,1,opt,name=accept,proto3" json:"accept,omitempty"`
+	// hosts are the lower-case host names a client_id URL may have; empty means any host.
+	Hosts []string `protobuf:"bytes,2,rep,name=hosts,proto3" json:"hosts,omitempty"`
+	// all_scopes follows the server's scopes; false allows only scopes.
+	AllScopes     bool     `protobuf:"varint,3,opt,name=all_scopes,json=allScopes,proto3" json:"all_scopes,omitempty"`
+	Scopes        []string `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CIMDAdmission) Reset() {
+	*x = CIMDAdmission{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CIMDAdmission) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CIMDAdmission) ProtoMessage() {}
+
+func (x *CIMDAdmission) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CIMDAdmission.ProtoReflect.Descriptor instead.
+func (*CIMDAdmission) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *CIMDAdmission) GetAccept() bool {
+	if x != nil {
+		return x.Accept
+	}
+	return false
+}
+
+func (x *CIMDAdmission) GetHosts() []string {
+	if x != nil {
+		return x.Hosts
+	}
+	return nil
+}
+
+func (x *CIMDAdmission) GetAllScopes() bool {
+	if x != nil {
+		return x.AllScopes
+	}
+	return false
+}
+
+func (x *CIMDAdmission) GetScopes() []string {
+	if x != nil {
+		return x.Scopes
+	}
+	return nil
+}
+
 // VerificationFailure is why an RFC 9728 check failed.
 type VerificationFailure struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -249,7 +339,7 @@ type VerificationFailure struct {
 
 func (x *VerificationFailure) Reset() {
 	*x = VerificationFailure{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[1]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -261,7 +351,7 @@ func (x *VerificationFailure) String() string {
 func (*VerificationFailure) ProtoMessage() {}
 
 func (x *VerificationFailure) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[1]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -274,7 +364,7 @@ func (x *VerificationFailure) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerificationFailure.ProtoReflect.Descriptor instead.
 func (*VerificationFailure) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{1}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *VerificationFailure) GetReason() string {
@@ -315,15 +405,19 @@ type Link struct {
 	ResourceServerState      ResourceServerState    `protobuf:"varint,6,opt,name=resource_server_state,json=resourceServerState,proto3,enum=resourceserver.v1.ResourceServerState" json:"resource_server_state,omitempty"`
 	ResourceServerTrusted    bool                   `protobuf:"varint,7,opt,name=resource_server_trusted,json=resourceServerTrusted,proto3" json:"resource_server_trusted,omitempty"`
 	// scopes are the resource server scopes the client may ask for.
-	Scopes        []string               `protobuf:"bytes,8,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Scopes    []string               `protobuf:"bytes,8,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// client_metadata_url is the client_id URL of an app without registration (CIMD); empty for a registered client.
+	ClientMetadataUrl string `protobuf:"bytes,10,opt,name=client_metadata_url,json=clientMetadataUrl,proto3" json:"client_metadata_url,omitempty"`
+	// metadata_fetched_at is when Othra last read that app's metadata document.
+	MetadataFetchedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=metadata_fetched_at,json=metadataFetchedAt,proto3" json:"metadata_fetched_at,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *Link) Reset() {
 	*x = Link{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[2]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -335,7 +429,7 @@ func (x *Link) String() string {
 func (*Link) ProtoMessage() {}
 
 func (x *Link) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[2]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -348,7 +442,7 @@ func (x *Link) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Link.ProtoReflect.Descriptor instead.
 func (*Link) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{2}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Link) GetClientId() string {
@@ -414,6 +508,20 @@ func (x *Link) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Link) GetClientMetadataUrl() string {
+	if x != nil {
+		return x.ClientMetadataUrl
+	}
+	return ""
+}
+
+func (x *Link) GetMetadataFetchedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.MetadataFetchedAt
+	}
+	return nil
+}
+
 type ListResourceServersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProjectId     string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
@@ -423,7 +531,7 @@ type ListResourceServersRequest struct {
 
 func (x *ListResourceServersRequest) Reset() {
 	*x = ListResourceServersRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[3]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -435,7 +543,7 @@ func (x *ListResourceServersRequest) String() string {
 func (*ListResourceServersRequest) ProtoMessage() {}
 
 func (x *ListResourceServersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[3]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -448,7 +556,7 @@ func (x *ListResourceServersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListResourceServersRequest.ProtoReflect.Descriptor instead.
 func (*ListResourceServersRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{3}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListResourceServersRequest) GetProjectId() string {
@@ -469,7 +577,7 @@ type ListResourceServersResponse struct {
 
 func (x *ListResourceServersResponse) Reset() {
 	*x = ListResourceServersResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[4]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -481,7 +589,7 @@ func (x *ListResourceServersResponse) String() string {
 func (*ListResourceServersResponse) ProtoMessage() {}
 
 func (x *ListResourceServersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[4]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -494,7 +602,7 @@ func (x *ListResourceServersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListResourceServersResponse.ProtoReflect.Descriptor instead.
 func (*ListResourceServersResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{4}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListResourceServersResponse) GetResourceServers() []*ResourceServer {
@@ -521,7 +629,7 @@ type GetResourceServerRequest struct {
 
 func (x *GetResourceServerRequest) Reset() {
 	*x = GetResourceServerRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[5]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -533,7 +641,7 @@ func (x *GetResourceServerRequest) String() string {
 func (*GetResourceServerRequest) ProtoMessage() {}
 
 func (x *GetResourceServerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[5]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -546,7 +654,7 @@ func (x *GetResourceServerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResourceServerRequest.ProtoReflect.Descriptor instead.
 func (*GetResourceServerRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{5}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetResourceServerRequest) GetProjectId() string {
@@ -572,7 +680,7 @@ type GetResourceServerResponse struct {
 
 func (x *GetResourceServerResponse) Reset() {
 	*x = GetResourceServerResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[6]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -584,7 +692,7 @@ func (x *GetResourceServerResponse) String() string {
 func (*GetResourceServerResponse) ProtoMessage() {}
 
 func (x *GetResourceServerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[6]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -597,7 +705,7 @@ func (x *GetResourceServerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResourceServerResponse.ProtoReflect.Descriptor instead.
 func (*GetResourceServerResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{6}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetResourceServerResponse) GetResourceServer() *ResourceServer {
@@ -608,19 +716,20 @@ func (x *GetResourceServerResponse) GetResourceServer() *ResourceServer {
 }
 
 type CreateResourceServerRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProjectId     string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Identifier    string                 `protobuf:"bytes,3,opt,name=identifier,proto3" json:"identifier,omitempty"`
-	Scopes        []string               `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	Trusted       bool                   `protobuf:"varint,5,opt,name=trusted,proto3" json:"trusted,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId         string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Identifier        string                 `protobuf:"bytes,3,opt,name=identifier,proto3" json:"identifier,omitempty"`
+	Scopes            []string               `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	Trusted           bool                   `protobuf:"varint,5,opt,name=trusted,proto3" json:"trusted,omitempty"`
+	ScopeDescriptions map[string]string      `protobuf:"bytes,6,rep,name=scope_descriptions,json=scopeDescriptions,proto3" json:"scope_descriptions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *CreateResourceServerRequest) Reset() {
 	*x = CreateResourceServerRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[7]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -632,7 +741,7 @@ func (x *CreateResourceServerRequest) String() string {
 func (*CreateResourceServerRequest) ProtoMessage() {}
 
 func (x *CreateResourceServerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[7]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -645,7 +754,7 @@ func (x *CreateResourceServerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateResourceServerRequest.ProtoReflect.Descriptor instead.
 func (*CreateResourceServerRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{7}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateResourceServerRequest) GetProjectId() string {
@@ -683,6 +792,13 @@ func (x *CreateResourceServerRequest) GetTrusted() bool {
 	return false
 }
 
+func (x *CreateResourceServerRequest) GetScopeDescriptions() map[string]string {
+	if x != nil {
+		return x.ScopeDescriptions
+	}
+	return nil
+}
+
 type CreateResourceServerResponse struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ResourceServer *ResourceServer        `protobuf:"bytes,1,opt,name=resource_server,json=resourceServer,proto3" json:"resource_server,omitempty"`
@@ -692,7 +808,7 @@ type CreateResourceServerResponse struct {
 
 func (x *CreateResourceServerResponse) Reset() {
 	*x = CreateResourceServerResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[8]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -704,7 +820,7 @@ func (x *CreateResourceServerResponse) String() string {
 func (*CreateResourceServerResponse) ProtoMessage() {}
 
 func (x *CreateResourceServerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[8]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -717,7 +833,7 @@ func (x *CreateResourceServerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateResourceServerResponse.ProtoReflect.Descriptor instead.
 func (*CreateResourceServerResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{8}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateResourceServerResponse) GetResourceServer() *ResourceServer {
@@ -728,18 +844,19 @@ func (x *CreateResourceServerResponse) GetResourceServer() *ResourceServer {
 }
 
 type UpdateResourceServerRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	ProjectId        string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
-	ResourceServerId string                 `protobuf:"bytes,2,opt,name=resource_server_id,json=resourceServerId,proto3" json:"resource_server_id,omitempty"`
-	Name             string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Scopes           []string               `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId         string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ResourceServerId  string                 `protobuf:"bytes,2,opt,name=resource_server_id,json=resourceServerId,proto3" json:"resource_server_id,omitempty"`
+	Name              string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Scopes            []string               `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	ScopeDescriptions map[string]string      `protobuf:"bytes,5,rep,name=scope_descriptions,json=scopeDescriptions,proto3" json:"scope_descriptions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *UpdateResourceServerRequest) Reset() {
 	*x = UpdateResourceServerRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[9]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -751,7 +868,7 @@ func (x *UpdateResourceServerRequest) String() string {
 func (*UpdateResourceServerRequest) ProtoMessage() {}
 
 func (x *UpdateResourceServerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[9]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -764,7 +881,7 @@ func (x *UpdateResourceServerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateResourceServerRequest.ProtoReflect.Descriptor instead.
 func (*UpdateResourceServerRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{9}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateResourceServerRequest) GetProjectId() string {
@@ -795,6 +912,13 @@ func (x *UpdateResourceServerRequest) GetScopes() []string {
 	return nil
 }
 
+func (x *UpdateResourceServerRequest) GetScopeDescriptions() map[string]string {
+	if x != nil {
+		return x.ScopeDescriptions
+	}
+	return nil
+}
+
 type UpdateResourceServerResponse struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ResourceServer *ResourceServer        `protobuf:"bytes,1,opt,name=resource_server,json=resourceServer,proto3" json:"resource_server,omitempty"`
@@ -804,7 +928,7 @@ type UpdateResourceServerResponse struct {
 
 func (x *UpdateResourceServerResponse) Reset() {
 	*x = UpdateResourceServerResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[10]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -816,7 +940,7 @@ func (x *UpdateResourceServerResponse) String() string {
 func (*UpdateResourceServerResponse) ProtoMessage() {}
 
 func (x *UpdateResourceServerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[10]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -829,7 +953,7 @@ func (x *UpdateResourceServerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateResourceServerResponse.ProtoReflect.Descriptor instead.
 func (*UpdateResourceServerResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{10}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UpdateResourceServerResponse) GetResourceServer() *ResourceServer {
@@ -849,7 +973,7 @@ type DeleteResourceServerRequest struct {
 
 func (x *DeleteResourceServerRequest) Reset() {
 	*x = DeleteResourceServerRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[11]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -861,7 +985,7 @@ func (x *DeleteResourceServerRequest) String() string {
 func (*DeleteResourceServerRequest) ProtoMessage() {}
 
 func (x *DeleteResourceServerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[11]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -874,7 +998,7 @@ func (x *DeleteResourceServerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteResourceServerRequest.ProtoReflect.Descriptor instead.
 func (*DeleteResourceServerRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{11}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DeleteResourceServerRequest) GetProjectId() string {
@@ -899,7 +1023,7 @@ type DeleteResourceServerResponse struct {
 
 func (x *DeleteResourceServerResponse) Reset() {
 	*x = DeleteResourceServerResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[12]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -911,7 +1035,7 @@ func (x *DeleteResourceServerResponse) String() string {
 func (*DeleteResourceServerResponse) ProtoMessage() {}
 
 func (x *DeleteResourceServerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[12]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -924,7 +1048,7 @@ func (x *DeleteResourceServerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteResourceServerResponse.ProtoReflect.Descriptor instead.
 func (*DeleteResourceServerResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{12}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{13}
 }
 
 type VerifyResourceServerRequest struct {
@@ -937,7 +1061,7 @@ type VerifyResourceServerRequest struct {
 
 func (x *VerifyResourceServerRequest) Reset() {
 	*x = VerifyResourceServerRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[13]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -949,7 +1073,7 @@ func (x *VerifyResourceServerRequest) String() string {
 func (*VerifyResourceServerRequest) ProtoMessage() {}
 
 func (x *VerifyResourceServerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[13]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -962,7 +1086,7 @@ func (x *VerifyResourceServerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyResourceServerRequest.ProtoReflect.Descriptor instead.
 func (*VerifyResourceServerRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{13}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *VerifyResourceServerRequest) GetProjectId() string {
@@ -992,7 +1116,7 @@ type VerifyResourceServerResponse struct {
 
 func (x *VerifyResourceServerResponse) Reset() {
 	*x = VerifyResourceServerResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[14]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1004,7 +1128,7 @@ func (x *VerifyResourceServerResponse) String() string {
 func (*VerifyResourceServerResponse) ProtoMessage() {}
 
 func (x *VerifyResourceServerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[14]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1017,7 +1141,7 @@ func (x *VerifyResourceServerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyResourceServerResponse.ProtoReflect.Descriptor instead.
 func (*VerifyResourceServerResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{14}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *VerifyResourceServerResponse) GetResourceServer() *ResourceServer {
@@ -1052,7 +1176,7 @@ type SetResourceServerTrustRequest struct {
 
 func (x *SetResourceServerTrustRequest) Reset() {
 	*x = SetResourceServerTrustRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[15]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1064,7 +1188,7 @@ func (x *SetResourceServerTrustRequest) String() string {
 func (*SetResourceServerTrustRequest) ProtoMessage() {}
 
 func (x *SetResourceServerTrustRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[15]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1077,7 +1201,7 @@ func (x *SetResourceServerTrustRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetResourceServerTrustRequest.ProtoReflect.Descriptor instead.
 func (*SetResourceServerTrustRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{15}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SetResourceServerTrustRequest) GetProjectId() string {
@@ -1110,7 +1234,7 @@ type SetResourceServerTrustResponse struct {
 
 func (x *SetResourceServerTrustResponse) Reset() {
 	*x = SetResourceServerTrustResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[16]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1122,7 +1246,7 @@ func (x *SetResourceServerTrustResponse) String() string {
 func (*SetResourceServerTrustResponse) ProtoMessage() {}
 
 func (x *SetResourceServerTrustResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[16]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1135,10 +1259,138 @@ func (x *SetResourceServerTrustResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetResourceServerTrustResponse.ProtoReflect.Descriptor instead.
 func (*SetResourceServerTrustResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{16}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *SetResourceServerTrustResponse) GetResourceServer() *ResourceServer {
+	if x != nil {
+		return x.ResourceServer
+	}
+	return nil
+}
+
+type SetResourceServerAdmissionRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId        string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ResourceServerId string                 `protobuf:"bytes,2,opt,name=resource_server_id,json=resourceServerId,proto3" json:"resource_server_id,omitempty"`
+	Accept           bool                   `protobuf:"varint,3,opt,name=accept,proto3" json:"accept,omitempty"`
+	Hosts            []string               `protobuf:"bytes,4,rep,name=hosts,proto3" json:"hosts,omitempty"`
+	AllScopes        bool                   `protobuf:"varint,5,opt,name=all_scopes,json=allScopes,proto3" json:"all_scopes,omitempty"`
+	Scopes           []string               `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *SetResourceServerAdmissionRequest) Reset() {
+	*x = SetResourceServerAdmissionRequest{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetResourceServerAdmissionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetResourceServerAdmissionRequest) ProtoMessage() {}
+
+func (x *SetResourceServerAdmissionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetResourceServerAdmissionRequest.ProtoReflect.Descriptor instead.
+func (*SetResourceServerAdmissionRequest) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *SetResourceServerAdmissionRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *SetResourceServerAdmissionRequest) GetResourceServerId() string {
+	if x != nil {
+		return x.ResourceServerId
+	}
+	return ""
+}
+
+func (x *SetResourceServerAdmissionRequest) GetAccept() bool {
+	if x != nil {
+		return x.Accept
+	}
+	return false
+}
+
+func (x *SetResourceServerAdmissionRequest) GetHosts() []string {
+	if x != nil {
+		return x.Hosts
+	}
+	return nil
+}
+
+func (x *SetResourceServerAdmissionRequest) GetAllScopes() bool {
+	if x != nil {
+		return x.AllScopes
+	}
+	return false
+}
+
+func (x *SetResourceServerAdmissionRequest) GetScopes() []string {
+	if x != nil {
+		return x.Scopes
+	}
+	return nil
+}
+
+type SetResourceServerAdmissionResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ResourceServer *ResourceServer        `protobuf:"bytes,1,opt,name=resource_server,json=resourceServer,proto3" json:"resource_server,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SetResourceServerAdmissionResponse) Reset() {
+	*x = SetResourceServerAdmissionResponse{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetResourceServerAdmissionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetResourceServerAdmissionResponse) ProtoMessage() {}
+
+func (x *SetResourceServerAdmissionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetResourceServerAdmissionResponse.ProtoReflect.Descriptor instead.
+func (*SetResourceServerAdmissionResponse) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *SetResourceServerAdmissionResponse) GetResourceServer() *ResourceServer {
 	if x != nil {
 		return x.ResourceServer
 	}
@@ -1159,7 +1411,7 @@ type ListLinksRequest struct {
 
 func (x *ListLinksRequest) Reset() {
 	*x = ListLinksRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[17]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1171,7 +1423,7 @@ func (x *ListLinksRequest) String() string {
 func (*ListLinksRequest) ProtoMessage() {}
 
 func (x *ListLinksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[17]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1184,7 +1436,7 @@ func (x *ListLinksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListLinksRequest.ProtoReflect.Descriptor instead.
 func (*ListLinksRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{17}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListLinksRequest) GetProjectId() string {
@@ -1244,7 +1496,7 @@ type ListLinksResponse struct {
 
 func (x *ListLinksResponse) Reset() {
 	*x = ListLinksResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[18]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1256,7 +1508,7 @@ func (x *ListLinksResponse) String() string {
 func (*ListLinksResponse) ProtoMessage() {}
 
 func (x *ListLinksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[18]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1269,7 +1521,7 @@ func (x *ListLinksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListLinksResponse.ProtoReflect.Descriptor instead.
 func (*ListLinksResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{18}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ListLinksResponse) GetLinks() []*Link {
@@ -1291,7 +1543,7 @@ type LinkClientRequest struct {
 
 func (x *LinkClientRequest) Reset() {
 	*x = LinkClientRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[19]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1303,7 +1555,7 @@ func (x *LinkClientRequest) String() string {
 func (*LinkClientRequest) ProtoMessage() {}
 
 func (x *LinkClientRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[19]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1316,7 +1568,7 @@ func (x *LinkClientRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LinkClientRequest.ProtoReflect.Descriptor instead.
 func (*LinkClientRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{19}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *LinkClientRequest) GetProjectId() string {
@@ -1356,7 +1608,7 @@ type LinkClientResponse struct {
 
 func (x *LinkClientResponse) Reset() {
 	*x = LinkClientResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[20]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1368,7 +1620,7 @@ func (x *LinkClientResponse) String() string {
 func (*LinkClientResponse) ProtoMessage() {}
 
 func (x *LinkClientResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[20]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1381,7 +1633,7 @@ func (x *LinkClientResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LinkClientResponse.ProtoReflect.Descriptor instead.
 func (*LinkClientResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{20}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *LinkClientResponse) GetLink() *Link {
@@ -1403,7 +1655,7 @@ type UpdateLinkRequest struct {
 
 func (x *UpdateLinkRequest) Reset() {
 	*x = UpdateLinkRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[21]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1415,7 +1667,7 @@ func (x *UpdateLinkRequest) String() string {
 func (*UpdateLinkRequest) ProtoMessage() {}
 
 func (x *UpdateLinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[21]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1428,7 +1680,7 @@ func (x *UpdateLinkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateLinkRequest.ProtoReflect.Descriptor instead.
 func (*UpdateLinkRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{21}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *UpdateLinkRequest) GetProjectId() string {
@@ -1468,7 +1720,7 @@ type UpdateLinkResponse struct {
 
 func (x *UpdateLinkResponse) Reset() {
 	*x = UpdateLinkResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[22]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1480,7 +1732,7 @@ func (x *UpdateLinkResponse) String() string {
 func (*UpdateLinkResponse) ProtoMessage() {}
 
 func (x *UpdateLinkResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[22]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1493,7 +1745,7 @@ func (x *UpdateLinkResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateLinkResponse.ProtoReflect.Descriptor instead.
 func (*UpdateLinkResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{22}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *UpdateLinkResponse) GetLink() *Link {
@@ -1514,7 +1766,7 @@ type UnlinkClientRequest struct {
 
 func (x *UnlinkClientRequest) Reset() {
 	*x = UnlinkClientRequest{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[23]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1526,7 +1778,7 @@ func (x *UnlinkClientRequest) String() string {
 func (*UnlinkClientRequest) ProtoMessage() {}
 
 func (x *UnlinkClientRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[23]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1539,7 +1791,7 @@ func (x *UnlinkClientRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnlinkClientRequest.ProtoReflect.Descriptor instead.
 func (*UnlinkClientRequest) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{23}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UnlinkClientRequest) GetProjectId() string {
@@ -1571,7 +1823,7 @@ type UnlinkClientResponse struct {
 
 func (x *UnlinkClientResponse) Reset() {
 	*x = UnlinkClientResponse{}
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[24]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1583,7 +1835,7 @@ func (x *UnlinkClientResponse) String() string {
 func (*UnlinkClientResponse) ProtoMessage() {}
 
 func (x *UnlinkClientResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[24]
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1596,14 +1848,14 @@ func (x *UnlinkClientResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnlinkClientResponse.ProtoReflect.Descriptor instead.
 func (*UnlinkClientResponse) Descriptor() ([]byte, []int) {
-	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{24}
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{27}
 }
 
 var File_resourceserver_v1_resourceserver_proto protoreflect.FileDescriptor
 
 const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\n" +
-	"&resourceserver/v1/resourceserver.proto\x12\x11resourceserver.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\x81\x05\n" +
+	"&resourceserver/v1/resourceserver.proto\x12\x11resourceserver.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xe6\x06\n" +
 	"\x0eResourceServer\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1e\n" +
@@ -1625,13 +1877,24 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x9c\x01\n" +
+	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12g\n" +
+	"\x12scope_descriptions\x18\x0f \x03(\v28.resourceserver.v1.ResourceServer.ScopeDescriptionsEntryR\x11scopeDescriptions\x124\n" +
+	"\x04cimd\x18\x10 \x01(\v2 .resourceserver.v1.CIMDAdmissionR\x04cimd\x1aD\n" +
+	"\x16ScopeDescriptionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"t\n" +
+	"\rCIMDAdmission\x12\x16\n" +
+	"\x06accept\x18\x01 \x01(\bR\x06accept\x12\x14\n" +
+	"\x05hosts\x18\x02 \x03(\tR\x05hosts\x12\x1d\n" +
+	"\n" +
+	"all_scopes\x18\x03 \x01(\bR\tallScopes\x12\x16\n" +
+	"\x06scopes\x18\x04 \x03(\tR\x06scopes\"\x9c\x01\n" +
 	"\x13VerificationFailure\x12\x16\n" +
 	"\x06reason\x18\x01 \x01(\tR\x06reason\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\x05R\x06status\x12\x1a\n" +
 	"\bresource\x18\x03 \x01(\tR\bresource\x129\n" +
 	"\n" +
-	"checked_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcheckedAt\"\xc9\x03\n" +
+	"checked_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcheckedAt\"\xc5\x04\n" +
 	"\x04Link\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x1f\n" +
 	"\vclient_name\x18\x02 \x01(\tR\n" +
@@ -1643,7 +1906,10 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\x17resource_server_trusted\x18\a \x01(\bR\x15resourceServerTrusted\x12\x16\n" +
 	"\x06scopes\x18\b \x03(\tR\x06scopes\x129\n" +
 	"\n" +
-	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"I\n" +
+	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12.\n" +
+	"\x13client_metadata_url\x18\n" +
+	" \x01(\tR\x11clientMetadataUrl\x12J\n" +
+	"\x13metadata_fetched_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\x11metadataFetchedAt\"I\n" +
 	"\x1aListResourceServersRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\"\x94\x01\n" +
@@ -1655,7 +1921,7 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12:\n" +
 	"\x12resource_server_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\"g\n" +
 	"\x19GetResourceServerResponse\x12J\n" +
-	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\x90\x03\n" +
+	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\xe6\x04\n" +
 	"\x1bCreateResourceServerRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12\xd1\x01\n" +
@@ -1666,9 +1932,13 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"identifier\x18\x03 \x01(\tB\v\xbaH\b\xc8\x01\x01r\x03\x18\x80\x04R\n" +
 	"identifier\x12)\n" +
 	"\x06scopes\x18\x04 \x03(\tB\x11\xbaH\x0e\x92\x01\v\b\x01\x10@\"\x05r\x03\x18\x80\x01R\x06scopes\x12\x18\n" +
-	"\atrusted\x18\x05 \x01(\bR\atrusted\"j\n" +
+	"\atrusted\x18\x05 \x01(\bR\atrusted\x12\x8d\x01\n" +
+	"\x12scope_descriptions\x18\x06 \x03(\v2E.resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x05r\x03\x18\x80\x01*\x06r\x04\x10\x01\x18xR\x11scopeDescriptions\x1aD\n" +
+	"\x16ScopeDescriptionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"j\n" +
 	"\x1cCreateResourceServerResponse\x12J\n" +
-	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\x85\x03\n" +
+	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\xdb\x04\n" +
 	"\x1bUpdateResourceServerRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12:\n" +
@@ -1676,7 +1946,11 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tB\xbc\x01\xbaH\xb8\x01\xba\x01J\n" +
 	"\x1aresource_server.name.blank\x1a,this.trim() != '' ? '' : 'must not be blank'\xba\x01e\n" +
 	" resource_server.name.max_len.100\x1aAthis.trim().size() <= 100 ? '' : 'must be at most 100 characters'\xc8\x01\x01R\x04name\x12)\n" +
-	"\x06scopes\x18\x04 \x03(\tB\x11\xbaH\x0e\x92\x01\v\b\x01\x10@\"\x05r\x03\x18\x80\x01R\x06scopes\"j\n" +
+	"\x06scopes\x18\x04 \x03(\tB\x11\xbaH\x0e\x92\x01\v\b\x01\x10@\"\x05r\x03\x18\x80\x01R\x06scopes\x12\x8d\x01\n" +
+	"\x12scope_descriptions\x18\x05 \x03(\v2E.resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x05r\x03\x18\x80\x01*\x06r\x04\x10\x01\x18xR\x11scopeDescriptions\x1aD\n" +
+	"\x16ScopeDescriptionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"j\n" +
 	"\x1cUpdateResourceServerResponse\x12J\n" +
 	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\x86\x01\n" +
 	"\x1bDeleteResourceServerRequest\x12+\n" +
@@ -1698,6 +1972,17 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\x12resource_server_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\x12\x18\n" +
 	"\atrusted\x18\x03 \x01(\bR\atrusted\"l\n" +
 	"\x1eSetResourceServerTrustResponse\x12J\n" +
+	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\x93\x02\n" +
+	"!SetResourceServerAdmissionRequest\x12+\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12:\n" +
+	"\x12resource_server_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\x12\x16\n" +
+	"\x06accept\x18\x03 \x01(\bR\x06accept\x12%\n" +
+	"\x05hosts\x18\x04 \x03(\tB\x0f\xbaH\f\x92\x01\t\x10@\"\x05r\x03\x18\xfd\x01R\x05hosts\x12\x1d\n" +
+	"\n" +
+	"all_scopes\x18\x05 \x01(\bR\tallScopes\x12'\n" +
+	"\x06scopes\x18\x06 \x03(\tB\x0f\xbaH\f\x92\x01\t\x10@\"\x05r\x03\x18\x80\x01R\x06scopes\"p\n" +
+	"\"SetResourceServerAdmissionResponse\x12J\n" +
 	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\xb5\x01\n" +
 	"\x10ListLinksRequest\x12+\n" +
 	"\n" +
@@ -1733,7 +2018,7 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"!RESOURCE_SERVER_STATE_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dRESOURCE_SERVER_STATE_PENDING\x10\x01\x12\"\n" +
 	"\x1eRESOURCE_SERVER_STATE_VERIFIED\x10\x02\x12 \n" +
-	"\x1cRESOURCE_SERVER_STATE_FAILED\x10\x032\xd1\x17\n" +
+	"\x1cRESOURCE_SERVER_STATE_FAILED\x10\x032\xdd\x18\n" +
 	"\x15ResourceServerService\x12\xe9\x01\n" +
 	"\x13ListResourceServers\x12-.resourceserver.v1.ListResourceServersRequest\x1a..resourceserver.v1.ListResourceServersResponse\"s\xca\xf3\x18o\n" +
 	"\x14resource_server_list\x12KList a project's resource servers with their scopes and verification state.\x1a\n" +
@@ -1754,7 +2039,8 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\x14VerifyResourceServer\x12..resourceserver.v1.VerifyResourceServerRequest\x1a/.resourceserver.v1.VerifyResourceServerResponse\"\xb4\x01\xca\xf3\x18\xaf\x01\n" +
 	"\x16resource_server_verify\x12sCheck a resource server's RFC 9728 metadata now. A pass verifies it; a failure shows the error and changes nothing.\x1a\n" +
 	"project_id\x1a\x12resource_server_id \x01\x12}\n" +
-	"\x16SetResourceServerTrust\x120.resourceserver.v1.SetResourceServerTrustRequest\x1a1.resourceserver.v1.SetResourceServerTrustResponse\x12\x8d\x02\n" +
+	"\x16SetResourceServerTrust\x120.resourceserver.v1.SetResourceServerTrustRequest\x1a1.resourceserver.v1.SetResourceServerTrustResponse\x12\x89\x01\n" +
+	"\x1aSetResourceServerAdmission\x124.resourceserver.v1.SetResourceServerAdmissionRequest\x1a5.resourceserver.v1.SetResourceServerAdmissionResponse\x12\x8d\x02\n" +
 	"\tListLinks\x12#.resourceserver.v1.ListLinksRequest\x1a$.resourceserver.v1.ListLinksResponse\"\xb4\x01\xca\xf3\x18\xaf\x01\n" +
 	"\x19resource_server_link_list\x12\x85\x01List the links of one OAuth client or of one resource server, with the scopes each link allows. Send client_id or resource_server_id.\x1a\n" +
 	"project_id\x12\x9c\x02\n" +
@@ -1784,83 +2070,97 @@ func file_resourceserver_v1_resourceserver_proto_rawDescGZIP() []byte {
 }
 
 var file_resourceserver_v1_resourceserver_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_resourceserver_v1_resourceserver_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_resourceserver_v1_resourceserver_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_resourceserver_v1_resourceserver_proto_goTypes = []any{
-	(ResourceServerState)(0),               // 0: resourceserver.v1.ResourceServerState
-	(*ResourceServer)(nil),                 // 1: resourceserver.v1.ResourceServer
-	(*VerificationFailure)(nil),            // 2: resourceserver.v1.VerificationFailure
-	(*Link)(nil),                           // 3: resourceserver.v1.Link
-	(*ListResourceServersRequest)(nil),     // 4: resourceserver.v1.ListResourceServersRequest
-	(*ListResourceServersResponse)(nil),    // 5: resourceserver.v1.ListResourceServersResponse
-	(*GetResourceServerRequest)(nil),       // 6: resourceserver.v1.GetResourceServerRequest
-	(*GetResourceServerResponse)(nil),      // 7: resourceserver.v1.GetResourceServerResponse
-	(*CreateResourceServerRequest)(nil),    // 8: resourceserver.v1.CreateResourceServerRequest
-	(*CreateResourceServerResponse)(nil),   // 9: resourceserver.v1.CreateResourceServerResponse
-	(*UpdateResourceServerRequest)(nil),    // 10: resourceserver.v1.UpdateResourceServerRequest
-	(*UpdateResourceServerResponse)(nil),   // 11: resourceserver.v1.UpdateResourceServerResponse
-	(*DeleteResourceServerRequest)(nil),    // 12: resourceserver.v1.DeleteResourceServerRequest
-	(*DeleteResourceServerResponse)(nil),   // 13: resourceserver.v1.DeleteResourceServerResponse
-	(*VerifyResourceServerRequest)(nil),    // 14: resourceserver.v1.VerifyResourceServerRequest
-	(*VerifyResourceServerResponse)(nil),   // 15: resourceserver.v1.VerifyResourceServerResponse
-	(*SetResourceServerTrustRequest)(nil),  // 16: resourceserver.v1.SetResourceServerTrustRequest
-	(*SetResourceServerTrustResponse)(nil), // 17: resourceserver.v1.SetResourceServerTrustResponse
-	(*ListLinksRequest)(nil),               // 18: resourceserver.v1.ListLinksRequest
-	(*ListLinksResponse)(nil),              // 19: resourceserver.v1.ListLinksResponse
-	(*LinkClientRequest)(nil),              // 20: resourceserver.v1.LinkClientRequest
-	(*LinkClientResponse)(nil),             // 21: resourceserver.v1.LinkClientResponse
-	(*UpdateLinkRequest)(nil),              // 22: resourceserver.v1.UpdateLinkRequest
-	(*UpdateLinkResponse)(nil),             // 23: resourceserver.v1.UpdateLinkResponse
-	(*UnlinkClientRequest)(nil),            // 24: resourceserver.v1.UnlinkClientRequest
-	(*UnlinkClientResponse)(nil),           // 25: resourceserver.v1.UnlinkClientResponse
-	(*timestamppb.Timestamp)(nil),          // 26: google.protobuf.Timestamp
+	(ResourceServerState)(0),                   // 0: resourceserver.v1.ResourceServerState
+	(*ResourceServer)(nil),                     // 1: resourceserver.v1.ResourceServer
+	(*CIMDAdmission)(nil),                      // 2: resourceserver.v1.CIMDAdmission
+	(*VerificationFailure)(nil),                // 3: resourceserver.v1.VerificationFailure
+	(*Link)(nil),                               // 4: resourceserver.v1.Link
+	(*ListResourceServersRequest)(nil),         // 5: resourceserver.v1.ListResourceServersRequest
+	(*ListResourceServersResponse)(nil),        // 6: resourceserver.v1.ListResourceServersResponse
+	(*GetResourceServerRequest)(nil),           // 7: resourceserver.v1.GetResourceServerRequest
+	(*GetResourceServerResponse)(nil),          // 8: resourceserver.v1.GetResourceServerResponse
+	(*CreateResourceServerRequest)(nil),        // 9: resourceserver.v1.CreateResourceServerRequest
+	(*CreateResourceServerResponse)(nil),       // 10: resourceserver.v1.CreateResourceServerResponse
+	(*UpdateResourceServerRequest)(nil),        // 11: resourceserver.v1.UpdateResourceServerRequest
+	(*UpdateResourceServerResponse)(nil),       // 12: resourceserver.v1.UpdateResourceServerResponse
+	(*DeleteResourceServerRequest)(nil),        // 13: resourceserver.v1.DeleteResourceServerRequest
+	(*DeleteResourceServerResponse)(nil),       // 14: resourceserver.v1.DeleteResourceServerResponse
+	(*VerifyResourceServerRequest)(nil),        // 15: resourceserver.v1.VerifyResourceServerRequest
+	(*VerifyResourceServerResponse)(nil),       // 16: resourceserver.v1.VerifyResourceServerResponse
+	(*SetResourceServerTrustRequest)(nil),      // 17: resourceserver.v1.SetResourceServerTrustRequest
+	(*SetResourceServerTrustResponse)(nil),     // 18: resourceserver.v1.SetResourceServerTrustResponse
+	(*SetResourceServerAdmissionRequest)(nil),  // 19: resourceserver.v1.SetResourceServerAdmissionRequest
+	(*SetResourceServerAdmissionResponse)(nil), // 20: resourceserver.v1.SetResourceServerAdmissionResponse
+	(*ListLinksRequest)(nil),                   // 21: resourceserver.v1.ListLinksRequest
+	(*ListLinksResponse)(nil),                  // 22: resourceserver.v1.ListLinksResponse
+	(*LinkClientRequest)(nil),                  // 23: resourceserver.v1.LinkClientRequest
+	(*LinkClientResponse)(nil),                 // 24: resourceserver.v1.LinkClientResponse
+	(*UpdateLinkRequest)(nil),                  // 25: resourceserver.v1.UpdateLinkRequest
+	(*UpdateLinkResponse)(nil),                 // 26: resourceserver.v1.UpdateLinkResponse
+	(*UnlinkClientRequest)(nil),                // 27: resourceserver.v1.UnlinkClientRequest
+	(*UnlinkClientResponse)(nil),               // 28: resourceserver.v1.UnlinkClientResponse
+	nil,                                        // 29: resourceserver.v1.ResourceServer.ScopeDescriptionsEntry
+	nil,                                        // 30: resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry
+	nil,                                        // 31: resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry
+	(*timestamppb.Timestamp)(nil),              // 32: google.protobuf.Timestamp
 }
 var file_resourceserver_v1_resourceserver_proto_depIdxs = []int32{
 	0,  // 0: resourceserver.v1.ResourceServer.state:type_name -> resourceserver.v1.ResourceServerState
-	26, // 1: resourceserver.v1.ResourceServer.verified_at:type_name -> google.protobuf.Timestamp
-	26, // 2: resourceserver.v1.ResourceServer.last_checked_at:type_name -> google.protobuf.Timestamp
-	2,  // 3: resourceserver.v1.ResourceServer.last_error:type_name -> resourceserver.v1.VerificationFailure
-	26, // 4: resourceserver.v1.ResourceServer.created_at:type_name -> google.protobuf.Timestamp
-	26, // 5: resourceserver.v1.ResourceServer.updated_at:type_name -> google.protobuf.Timestamp
-	26, // 6: resourceserver.v1.VerificationFailure.checked_at:type_name -> google.protobuf.Timestamp
-	0,  // 7: resourceserver.v1.Link.resource_server_state:type_name -> resourceserver.v1.ResourceServerState
-	26, // 8: resourceserver.v1.Link.created_at:type_name -> google.protobuf.Timestamp
-	1,  // 9: resourceserver.v1.ListResourceServersResponse.resource_servers:type_name -> resourceserver.v1.ResourceServer
-	1,  // 10: resourceserver.v1.GetResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	1,  // 11: resourceserver.v1.CreateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	1,  // 12: resourceserver.v1.UpdateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	1,  // 13: resourceserver.v1.VerifyResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	2,  // 14: resourceserver.v1.VerifyResourceServerResponse.error:type_name -> resourceserver.v1.VerificationFailure
-	1,  // 15: resourceserver.v1.SetResourceServerTrustResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	3,  // 16: resourceserver.v1.ListLinksResponse.links:type_name -> resourceserver.v1.Link
-	3,  // 17: resourceserver.v1.LinkClientResponse.link:type_name -> resourceserver.v1.Link
-	3,  // 18: resourceserver.v1.UpdateLinkResponse.link:type_name -> resourceserver.v1.Link
-	4,  // 19: resourceserver.v1.ResourceServerService.ListResourceServers:input_type -> resourceserver.v1.ListResourceServersRequest
-	6,  // 20: resourceserver.v1.ResourceServerService.GetResourceServer:input_type -> resourceserver.v1.GetResourceServerRequest
-	8,  // 21: resourceserver.v1.ResourceServerService.CreateResourceServer:input_type -> resourceserver.v1.CreateResourceServerRequest
-	10, // 22: resourceserver.v1.ResourceServerService.UpdateResourceServer:input_type -> resourceserver.v1.UpdateResourceServerRequest
-	12, // 23: resourceserver.v1.ResourceServerService.DeleteResourceServer:input_type -> resourceserver.v1.DeleteResourceServerRequest
-	14, // 24: resourceserver.v1.ResourceServerService.VerifyResourceServer:input_type -> resourceserver.v1.VerifyResourceServerRequest
-	16, // 25: resourceserver.v1.ResourceServerService.SetResourceServerTrust:input_type -> resourceserver.v1.SetResourceServerTrustRequest
-	18, // 26: resourceserver.v1.ResourceServerService.ListLinks:input_type -> resourceserver.v1.ListLinksRequest
-	20, // 27: resourceserver.v1.ResourceServerService.LinkClient:input_type -> resourceserver.v1.LinkClientRequest
-	22, // 28: resourceserver.v1.ResourceServerService.UpdateLink:input_type -> resourceserver.v1.UpdateLinkRequest
-	24, // 29: resourceserver.v1.ResourceServerService.UnlinkClient:input_type -> resourceserver.v1.UnlinkClientRequest
-	5,  // 30: resourceserver.v1.ResourceServerService.ListResourceServers:output_type -> resourceserver.v1.ListResourceServersResponse
-	7,  // 31: resourceserver.v1.ResourceServerService.GetResourceServer:output_type -> resourceserver.v1.GetResourceServerResponse
-	9,  // 32: resourceserver.v1.ResourceServerService.CreateResourceServer:output_type -> resourceserver.v1.CreateResourceServerResponse
-	11, // 33: resourceserver.v1.ResourceServerService.UpdateResourceServer:output_type -> resourceserver.v1.UpdateResourceServerResponse
-	13, // 34: resourceserver.v1.ResourceServerService.DeleteResourceServer:output_type -> resourceserver.v1.DeleteResourceServerResponse
-	15, // 35: resourceserver.v1.ResourceServerService.VerifyResourceServer:output_type -> resourceserver.v1.VerifyResourceServerResponse
-	17, // 36: resourceserver.v1.ResourceServerService.SetResourceServerTrust:output_type -> resourceserver.v1.SetResourceServerTrustResponse
-	19, // 37: resourceserver.v1.ResourceServerService.ListLinks:output_type -> resourceserver.v1.ListLinksResponse
-	21, // 38: resourceserver.v1.ResourceServerService.LinkClient:output_type -> resourceserver.v1.LinkClientResponse
-	23, // 39: resourceserver.v1.ResourceServerService.UpdateLink:output_type -> resourceserver.v1.UpdateLinkResponse
-	25, // 40: resourceserver.v1.ResourceServerService.UnlinkClient:output_type -> resourceserver.v1.UnlinkClientResponse
-	30, // [30:41] is the sub-list for method output_type
-	19, // [19:30] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	32, // 1: resourceserver.v1.ResourceServer.verified_at:type_name -> google.protobuf.Timestamp
+	32, // 2: resourceserver.v1.ResourceServer.last_checked_at:type_name -> google.protobuf.Timestamp
+	3,  // 3: resourceserver.v1.ResourceServer.last_error:type_name -> resourceserver.v1.VerificationFailure
+	32, // 4: resourceserver.v1.ResourceServer.created_at:type_name -> google.protobuf.Timestamp
+	32, // 5: resourceserver.v1.ResourceServer.updated_at:type_name -> google.protobuf.Timestamp
+	29, // 6: resourceserver.v1.ResourceServer.scope_descriptions:type_name -> resourceserver.v1.ResourceServer.ScopeDescriptionsEntry
+	2,  // 7: resourceserver.v1.ResourceServer.cimd:type_name -> resourceserver.v1.CIMDAdmission
+	32, // 8: resourceserver.v1.VerificationFailure.checked_at:type_name -> google.protobuf.Timestamp
+	0,  // 9: resourceserver.v1.Link.resource_server_state:type_name -> resourceserver.v1.ResourceServerState
+	32, // 10: resourceserver.v1.Link.created_at:type_name -> google.protobuf.Timestamp
+	32, // 11: resourceserver.v1.Link.metadata_fetched_at:type_name -> google.protobuf.Timestamp
+	1,  // 12: resourceserver.v1.ListResourceServersResponse.resource_servers:type_name -> resourceserver.v1.ResourceServer
+	1,  // 13: resourceserver.v1.GetResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	30, // 14: resourceserver.v1.CreateResourceServerRequest.scope_descriptions:type_name -> resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry
+	1,  // 15: resourceserver.v1.CreateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	31, // 16: resourceserver.v1.UpdateResourceServerRequest.scope_descriptions:type_name -> resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry
+	1,  // 17: resourceserver.v1.UpdateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	1,  // 18: resourceserver.v1.VerifyResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	3,  // 19: resourceserver.v1.VerifyResourceServerResponse.error:type_name -> resourceserver.v1.VerificationFailure
+	1,  // 20: resourceserver.v1.SetResourceServerTrustResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	1,  // 21: resourceserver.v1.SetResourceServerAdmissionResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	4,  // 22: resourceserver.v1.ListLinksResponse.links:type_name -> resourceserver.v1.Link
+	4,  // 23: resourceserver.v1.LinkClientResponse.link:type_name -> resourceserver.v1.Link
+	4,  // 24: resourceserver.v1.UpdateLinkResponse.link:type_name -> resourceserver.v1.Link
+	5,  // 25: resourceserver.v1.ResourceServerService.ListResourceServers:input_type -> resourceserver.v1.ListResourceServersRequest
+	7,  // 26: resourceserver.v1.ResourceServerService.GetResourceServer:input_type -> resourceserver.v1.GetResourceServerRequest
+	9,  // 27: resourceserver.v1.ResourceServerService.CreateResourceServer:input_type -> resourceserver.v1.CreateResourceServerRequest
+	11, // 28: resourceserver.v1.ResourceServerService.UpdateResourceServer:input_type -> resourceserver.v1.UpdateResourceServerRequest
+	13, // 29: resourceserver.v1.ResourceServerService.DeleteResourceServer:input_type -> resourceserver.v1.DeleteResourceServerRequest
+	15, // 30: resourceserver.v1.ResourceServerService.VerifyResourceServer:input_type -> resourceserver.v1.VerifyResourceServerRequest
+	17, // 31: resourceserver.v1.ResourceServerService.SetResourceServerTrust:input_type -> resourceserver.v1.SetResourceServerTrustRequest
+	19, // 32: resourceserver.v1.ResourceServerService.SetResourceServerAdmission:input_type -> resourceserver.v1.SetResourceServerAdmissionRequest
+	21, // 33: resourceserver.v1.ResourceServerService.ListLinks:input_type -> resourceserver.v1.ListLinksRequest
+	23, // 34: resourceserver.v1.ResourceServerService.LinkClient:input_type -> resourceserver.v1.LinkClientRequest
+	25, // 35: resourceserver.v1.ResourceServerService.UpdateLink:input_type -> resourceserver.v1.UpdateLinkRequest
+	27, // 36: resourceserver.v1.ResourceServerService.UnlinkClient:input_type -> resourceserver.v1.UnlinkClientRequest
+	6,  // 37: resourceserver.v1.ResourceServerService.ListResourceServers:output_type -> resourceserver.v1.ListResourceServersResponse
+	8,  // 38: resourceserver.v1.ResourceServerService.GetResourceServer:output_type -> resourceserver.v1.GetResourceServerResponse
+	10, // 39: resourceserver.v1.ResourceServerService.CreateResourceServer:output_type -> resourceserver.v1.CreateResourceServerResponse
+	12, // 40: resourceserver.v1.ResourceServerService.UpdateResourceServer:output_type -> resourceserver.v1.UpdateResourceServerResponse
+	14, // 41: resourceserver.v1.ResourceServerService.DeleteResourceServer:output_type -> resourceserver.v1.DeleteResourceServerResponse
+	16, // 42: resourceserver.v1.ResourceServerService.VerifyResourceServer:output_type -> resourceserver.v1.VerifyResourceServerResponse
+	18, // 43: resourceserver.v1.ResourceServerService.SetResourceServerTrust:output_type -> resourceserver.v1.SetResourceServerTrustResponse
+	20, // 44: resourceserver.v1.ResourceServerService.SetResourceServerAdmission:output_type -> resourceserver.v1.SetResourceServerAdmissionResponse
+	22, // 45: resourceserver.v1.ResourceServerService.ListLinks:output_type -> resourceserver.v1.ListLinksResponse
+	24, // 46: resourceserver.v1.ResourceServerService.LinkClient:output_type -> resourceserver.v1.LinkClientResponse
+	26, // 47: resourceserver.v1.ResourceServerService.UpdateLink:output_type -> resourceserver.v1.UpdateLinkResponse
+	28, // 48: resourceserver.v1.ResourceServerService.UnlinkClient:output_type -> resourceserver.v1.UnlinkClientResponse
+	37, // [37:49] is the sub-list for method output_type
+	25, // [25:37] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_resourceserver_v1_resourceserver_proto_init() }
@@ -1868,7 +2168,7 @@ func file_resourceserver_v1_resourceserver_proto_init() {
 	if File_resourceserver_v1_resourceserver_proto != nil {
 		return
 	}
-	file_resourceserver_v1_resourceserver_proto_msgTypes[17].OneofWrappers = []any{
+	file_resourceserver_v1_resourceserver_proto_msgTypes[20].OneofWrappers = []any{
 		(*ListLinksRequest_ClientId)(nil),
 		(*ListLinksRequest_ResourceServerId)(nil),
 	}
@@ -1878,7 +2178,7 @@ func file_resourceserver_v1_resourceserver_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_resourceserver_v1_resourceserver_proto_rawDesc), len(file_resourceserver_v1_resourceserver_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   25,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -129,20 +129,20 @@ func TestUpdate_RefusesRemovingAPinnedScope(t *testing.T) {
 	_, err = h.svc.LinkClient(ctx, h.org, h.project, cli.PublicID, r.PublicID, []string{"write"})
 	require.NoError(t, err)
 
-	_, err = h.svc.Update(ctx, h.org, h.project, r.PublicID, "API", []string{"read"})
+	_, err = h.svc.Update(ctx, h.org, h.project, r.PublicID, "API", []string{"read"}, nil)
 	require.True(t, IsScopePinnedError(err), "%v", err)
 	pinned := asError[*ScopePinnedError](t, err)
 	assert.Equal(t, "write", pinned.Scope)
 	assert.ElementsMatch(t, []string{"Web", "CLI"}, pinned.Clients)
 
-	updated, err := h.svc.Update(ctx, h.org, h.project, r.PublicID, " Renamed ", []string{"read", "write", "extra"})
+	updated, err := h.svc.Update(ctx, h.org, h.project, r.PublicID, " Renamed ", []string{"read", "write", "extra"}, nil)
 	require.NoError(t, err, "removing admin, which nothing pins, is fine")
 	assert.Equal(t, "Renamed", updated.Name)
 	assert.Equal(t, []string{"read", "write", "extra"}, h.store.server(r.ID).Scopes)
 
-	_, err = h.svc.Update(ctx, h.org, h.project, r.PublicID, "API", []string{"openid"})
+	_, err = h.svc.Update(ctx, h.org, h.project, r.PublicID, "API", []string{"openid"}, nil)
 	assert.True(t, IsInvalidScopeError(err))
-	_, err = h.svc.Update(ctx, h.org, h.project, "nope", "API", []string{"read"})
+	_, err = h.svc.Update(ctx, h.org, h.project, "nope", "API", []string{"read"}, nil)
 	assert.True(t, IsNotFoundError(err))
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"altalune.id/othra/internal/consent"
 	"altalune.id/othra/mailer"
 )
 
@@ -43,6 +44,7 @@ type IssueRequest struct {
 // Account is one end user signed in on this browser: a live user session.
 type Account struct {
 	UserSession string
+	EndUserID   uuid.UUID
 	EndUser     string
 	Email       string
 	Name        string
@@ -139,6 +141,8 @@ type EndUsers interface {
 // Client is what /authorize and end-session need to know about a registered OAuth client.
 type Client struct {
 	ID                     string
+	RowID                  uuid.UUID
+	MetadataHost           string
 	Name                   string
 	Native                 bool
 	Confidential           bool
@@ -152,8 +156,38 @@ type Client struct {
 
 // Clients reads the project's OAuth clients.
 type Clients interface {
-	// Client returns the project's client id; ok is false when there is none.
+	// Client returns the project's client id, a metadata document client only when Admit already stored it; ok is false when there is none.
 	Client(ctx context.Context, p Project, id string) (c Client, ok bool, err error)
+}
+
+// Resource is the resource server an authorization request names, with the scopes this client may ask of it.
+type Resource struct {
+	ID           uuid.UUID
+	Identifier   string
+	Name         string
+	Scopes       []string
+	Descriptions map[string]string
+	// Catalog is every scope the server has, so a stored consent drops the ones it no longer has (R-6).
+	Catalog []string
+}
+
+// Resources resolves a request's resource for a registered client.
+type Resources interface {
+	// Resource returns the server identifier names exactly; ok is false when it is unknown, not admissible or not linked to c.
+	Resource(ctx context.Context, p Project, c Client, identifier string) (r Resource, ok bool, err error)
+}
+
+// Admissions admits Client ID Metadata Document clients (CIMD -02, ADR-0021).
+type Admissions interface {
+	// Admit returns the client of the document at clientURL and the one resource that admits it, fetching the document
+	// when no fresh copy is stored; it fails with SIG010 or SIG011 before any redirect is trusted.
+	Admit(ctx context.Context, p Project, clientURL string, resources []string) (Client, Resource, error)
+}
+
+// Consents reads and records what end users approved.
+type Consents interface {
+	Consent(ctx context.Context, p Project, key consent.Key) (*consent.Consent, error)
+	Grant(ctx context.Context, p Project, req consent.GrantRequest) error
 }
 
 // CodeRequest is an authorization code to issue for a signed-in account.
@@ -167,6 +201,8 @@ type CodeRequest struct {
 	UserSession   string
 	EndUser       string
 	AuthTime      time.Time
+	// ResourceServerID is the server the code's access tokens are for, nil for an OIDC-only request (RFC 8707).
+	ResourceServerID *uuid.UUID
 }
 
 // Hint is a verified id_token_hint: an ID token this issuer signed, expired or not.

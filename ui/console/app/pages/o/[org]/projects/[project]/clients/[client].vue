@@ -6,7 +6,7 @@ import { ConsentPolicy, SecretGrace } from '~~/gen/client/v1/client_pb';
 import ClientForm from '~/components/client/ClientForm.vue';
 import ClientSecretDialog from '~/components/client/ClientSecretDialog.vue';
 import ClientSecrets from '~/components/client/ClientSecrets.vue';
-import { clientKinds, kindName } from '~/components/client/kinds';
+import { clientKinds, isCimdClient, kindName } from '~/components/client/kinds';
 import { clientFormLabels, kindOptions, rotateLabels, secretDialogLabels, secretsLabels } from '~/components/client/labels';
 import RotateSecretDialog from '~/components/client/RotateSecretDialog.vue';
 import { useClientForm } from '~/components/client/useClientForm';
@@ -52,10 +52,13 @@ if (page.notFound.value || !page.client.value) {
 }
 const client = computed(() => page.client.value as Client);
 const kind = computed(() => clientKinds[kindName(client.value.kind)]);
+const cimd = computed(() => isCimdClient(client.value));
+const editable = computed(() => canEdit.value && !cimd.value);
 const issuerUrl = computed(() => detail.get(projectId)?.issuerUrl ?? '');
 const urlLabels = computed(() => ({ copyLabel: t('common.copy_label', { label: '{label}' }), openLabel: t('common.open_new_tab', { label: '{label}' }) }));
 const day = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }));
 const moment = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }));
+const fetched = computed(() => (client.value.metadataFetchedAt ? moment.value.format(timestampDate(client.value.metadataFetchedAt)) : ''));
 const created = computed(() => (client.value.createdAt ? day.value.format(timestampDate(client.value.createdAt)) : ''));
 const consentLabel = computed(() => t(client.value.consentPolicy === ConsentPolicy.IMPLICIT ? 'clients.consent_implicit' : 'clients.consent_require'));
 
@@ -165,13 +168,14 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
           <Icon name="lucide:chevron-left" size="14" />
           {{ t('clients.title') }}
         </NuxtLink>
-        <h1 class="mt-1 text-2xl font-bold break-words">
+        <h1 class="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold break-words">
           {{ client.name }}
+          <span v-if="cimd" class="badge badge-soft badge-warning badge-sm font-normal" data-testid="client-cimd-badge">{{ t('clients.cimd_badge') }}</span>
         </h1>
       </div>
       <button v-if="canEdit" type="button" class="btn btn-ghost btn-sm max-sm:btn-block" @click="page.askDelete()">
-        <Icon name="lucide:trash-2" size="16" class="text-error" />
-        {{ t('common.delete') }}
+        <Icon :name="cimd ? 'lucide:ban' : 'lucide:trash-2'" size="16" class="text-error" />
+        {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
       </button>
     </div>
     <ProjectReadOnlyNote v-if="!canEdit" />
@@ -181,7 +185,17 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
         <h2 class="card-title text-base">
           {{ t('clients.details') }}
         </h2>
-        <UrlField :label="t('clients.client_id')" :value="client.id" :help="t('clients.client_id_help')" size="sm" testid="client-id" v-bind="urlLabels" />
+        <UrlField
+          v-if="cimd"
+          :label="t('rs.metadata_url')"
+          :value="client.metadataUrl"
+          :help="fetched ? `${t('rs.cimd_fetched')} ${fetched}` : ''"
+          size="sm"
+          open
+          testid="client-metadata-url"
+          v-bind="urlLabels"
+        />
+        <UrlField v-else :label="t('clients.client_id')" :value="client.id" :help="t('clients.client_id_help')" size="sm" testid="client-id" v-bind="urlLabels" />
         <UrlField v-if="issuerUrl" :label="t('clients.issuer')" :value="issuerUrl" size="sm" v-bind="urlLabels" />
         <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt class="text-base-content/60">
@@ -223,7 +237,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
         <h2 class="card-title text-base">
           {{ t('clients.settings_title') }}
         </h2>
-        <template v-if="canEdit">
+        <template v-if="editable">
           <ClientForm
             v-model:fields="fields"
             mode="edit"
@@ -274,19 +288,13 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
           <dt class="text-base-content/60">
             {{ t('clients.consent') }}
           </dt>
-          <dd>
-            {{ consentLabel }}
-            <p v-if="client.consentPolicy !== ConsentPolicy.IMPLICIT" class="mt-1 flex items-start gap-1 text-xs text-base-content" data-testid="consent-require-note">
-              <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
-              {{ t('clients.consent_require_note') }}
-            </p>
-          </dd>
+          <dd>{{ consentLabel }}</dd>
         </dl>
       </div>
     </section>
 
     <ClientSecrets
-      v-if="kind.secret"
+      v-if="kind.secret && !cimd"
       ref="secretsCard"
       :rows="rows"
       :can-edit="canEdit"
@@ -300,7 +308,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
 
     <LinkList
       :rows="linkRows"
-      :can-edit="canEdit"
+      :can-edit="editable"
       :loading="links.loading.value"
       :load-error="links.loadError.value"
       :labels="linkText"
@@ -380,9 +388,9 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
       </template>
     </AppModal>
 
-    <AppModal :open="page.deleting.value" :title="t('clients.delete_title', { name: client.name })" @close="page.cancelDelete()">
+    <AppModal :open="page.deleting.value" :title="cimd ? t('rs.cimd_revoke_title', { name: client.name }) : t('clients.delete_title', { name: client.name })" @close="page.cancelDelete()">
       <p class="text-sm">
-        {{ t('clients.delete_body') }}
+        {{ cimd ? t('rs.cimd_revoke_body', { name: client.name }) : t('clients.delete_body') }}
       </p>
       <ErrorText :error="page.error.value" />
       <template #footer>
@@ -391,7 +399,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
         </button>
         <button type="button" class="btn btn-error btn-sm" :disabled="page.busy.value" @click="remove">
           <span v-if="page.busy.value" class="loading loading-spinner loading-xs" />
-          {{ t('common.delete') }}
+          {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
         </button>
       </template>
     </AppModal>

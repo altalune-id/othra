@@ -11,7 +11,6 @@ describe('client labels', () => {
     expect(create.postLogoutList.remove).toBe('clients.post_logout_uri_remove');
     const edit = clientFormLabels(t, 'edit');
     expect([edit.submit, edit.submitting]).toEqual(['common.save', 'common.saving']);
-    expect(create.consentRequireNote).toBe('clients.consent_require_note');
     expect([create.authMethodPost, create.pkceOffWarning]).toEqual(['clients.auth_method_post', 'clients.pkce_off_warning']);
   });
 

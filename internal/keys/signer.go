@@ -23,18 +23,19 @@ const (
 	TypeIDToken     jose.ContentType = "JWT"
 )
 
-// Claims is the RFC 9068 access token claim set.
+// Claims is the RFC 9068 access token claim set; a single aud is sent as a string (RFC 7519 §4.1.3).
 type Claims struct {
-	Issuer    string   `json:"iss"`
-	Subject   string   `json:"sub"`
-	Audience  []string `json:"aud"`
-	ExpiresAt int64    `json:"exp"`
-	IssuedAt  int64    `json:"iat"`
-	NotBefore int64    `json:"nbf,omitempty"`
-	JWTID     string   `json:"jti"`
-	ClientID  string   `json:"client_id,omitempty"`
-	SessionID string   `json:"sid,omitempty"`
-	Scope     string   `json:"scope,omitempty"`
+	Issuer    string       `json:"iss"`
+	Subject   string       `json:"sub"`
+	Audience  jwt.Audience `json:"aud"`
+	ExpiresAt int64        `json:"exp"`
+	IssuedAt  int64        `json:"iat"`
+	NotBefore int64        `json:"nbf,omitempty"`
+	JWTID     string       `json:"jti"`
+	ClientID  string       `json:"client_id,omitempty"`
+	SessionID string       `json:"sid,omitempty"`
+	Scope     string       `json:"scope,omitempty"`
+	AuthTime  int64        `json:"auth_time,omitempty"`
 }
 
 // MintInput is one access token to sign.
@@ -45,6 +46,7 @@ type MintInput struct {
 	ClientID  string
 	SessionID string
 	Scope     string
+	AuthTime  time.Time
 	IssuedAt  time.Time
 	ExpiresAt time.Time
 }
@@ -119,6 +121,9 @@ func (s *Signer) Mint(ctx context.Context, projectID uuid.UUID, in *MintInput) (
 		Issuer: in.Issuer, Subject: in.Subject, Audience: in.Audience,
 		ExpiresAt: in.ExpiresAt.Unix(), IssuedAt: in.IssuedAt.Unix(), NotBefore: in.IssuedAt.Unix(),
 		JWTID: jti, ClientID: in.ClientID, SessionID: in.SessionID, Scope: in.Scope,
+	}
+	if !in.AuthTime.IsZero() {
+		claims.AuthTime = in.AuthTime.Unix()
 	}
 	return s.sign(ctx, projectID, TypeAccessToken, claims, in.ExpiresAt)
 }

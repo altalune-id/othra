@@ -3,6 +3,7 @@ package client_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -202,4 +203,29 @@ func TestRefsFailure(t *testing.T) {
 	cp := client.NewControlPlane(h.svc, refs)
 	_, err := cp.ListClients(context.Background(), connect.NewRequest(&clientv1.ListClientsRequest{ProjectId: "abcdefghjkmnpqrstuvwx"}))
 	assert.ErrorIs(t, err, assert.AnError)
+}
+
+// The console's kind badge: GetClient names a CIMD shadow with its metadata URL and fetch time, and a registered client as registered.
+func TestGetClient_CIMDFields(t *testing.T) {
+	f := newCPFixture(t)
+	fetched := time.Date(2026, 10, 23, 9, 0, 0, 0, time.UTC)
+	shadow := &client.Client{
+		ID: uuid.New(), PublicID: "shadow0000000000000aa", OrgID: f.h.org, ProjectID: f.h.project, Name: "Claude Code",
+		ClientType: "public", ApplicationType: client.AppNative, TokenEndpointAuthMethod: client.AuthNone,
+		GrantTypes: []string{"authorization_code", "refresh_token"}, ConsentPolicy: client.ConsentRequire,
+		MetadataURL: "https://claude.ai/oauth/claude-code-client-metadata", MetadataFetchedAt: &fetched,
+	}
+	require.NoError(t, f.h.store.Insert(context.Background(), shadow))
+
+	got, err := f.cp.GetClient(f.key, connect.NewRequest(&clientv1.GetClientRequest{ProjectId: f.projectPub, ClientId: shadow.PublicID}))
+	require.NoError(t, err)
+	c := got.Msg.GetClient()
+	assert.Equal(t, clientv1.ClientRegistration_CLIENT_REGISTRATION_CIMD, c.GetRegistration())
+	assert.Equal(t, shadow.MetadataURL, c.GetMetadataUrl())
+	assert.Equal(t, fetched, c.GetMetadataFetchedAt().AsTime())
+
+	web := f.createWeb(t, f.key)
+	assert.Equal(t, clientv1.ClientRegistration_CLIENT_REGISTRATION_REGISTERED, web.GetRegistration())
+	assert.Empty(t, web.GetMetadataUrl())
+	assert.Nil(t, web.GetMetadataFetchedAt())
 }

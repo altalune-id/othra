@@ -26,6 +26,7 @@ func TestErrors_CarryTheirCodes(t *testing.T) {
 		{&SecretPersonOnlyError{}, apperror.CodeClientSecretPersonOnly, IsSecretPersonOnlyError},
 		{&SecretNotFoundError{}, apperror.CodeClientSecretNotFound, IsSecretNotFoundError},
 		{&SecretExistsError{}, apperror.CodeClientSecretExists, IsSecretExistsError},
+		{&MetadataManagedError{}, apperror.CodeClientMetadataManaged, IsMetadataManagedError},
 		{&ProjectNotFoundError{}, apperror.CodeProjectNotFound, IsProjectNotFoundError},
 	} {
 		assert.Equal(t, tt.code, tt.err.ToAppError().Code(), "%T", tt.err)

@@ -32,9 +32,7 @@ func (v TermsData) key(base string) string {
 templ Terms(d layout.LayoutData, v TermsData) {
 	@layout.Layout(titled(withoutLegalFooter(d), i18n.T(ctx, v.key("terms.title")))) {
 		@layout.Card(i18n.T(ctx, v.key("terms.title"))) {
-			<p class="text-sm text-base-content/70">
-				@withEmail(i18n.T(ctx, "terms.signing_in_as"), v.Email)
-			</p>
+			@accountTile(d, v.Site, v.Email, v.ReturnTo)
 			<p>{ i18n.T(ctx, v.key("terms.body"), "project", v.Project) }</p>
 			if v.Error != "" {
 				@alertError(v.Error)
@@ -50,7 +48,6 @@ templ Terms(d layout.LayoutData, v TermsData) {
 				<button class="btn btn-primary btn-block" type="submit">{ i18n.T(ctx, v.key("terms.submit")) }</button>
 				<button class="btn btn-ghost btn-block" type="submit" name="decline" value="1" formnovalidate>{ i18n.T(ctx, "terms.decline") }</button>
 			</form>
-			<p class="text-sm"><a class="link" href={ templ.SafeURL(v.addAccount(d, v.ReturnTo)) }>{ i18n.T(ctx, "terms.use_another") }</a></p>
 		}
 	}
 }

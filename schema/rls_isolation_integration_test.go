@@ -148,6 +148,11 @@ func rlsInserts() []rlsInsert {
 		{"refresh_tokens", func(s string) string {
 			return `INSERT INTO ` + s + `.refresh_tokens (id, org_id, project_id, family_id, token_hash, created_at, expires_at) VALUES ($1, $2, $3, $4, encode(sha256(convert_to($5, 'UTF8')), 'hex'), $6::timestamptz, $6::timestamptz + interval '30 days')`
 		}, func(tn rlsTenant, _ string) []any { return []any{uuid.New(), tn.org, tn.project, tn.family, id(), now} }},
+		{"scope_consents", func(s string) string {
+			return `INSERT INTO ` + s + `.scope_consents (id, public_id, org_id, project_id, end_user_id, client_id, resource_server_id, scopes, granted_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, '{openid,read}', $8, $8)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), "k" + id()[:12], tn.org, tn.project, tn.endUser, tn.client, tn.rs, now}
+		}},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
 		}, func(tn rlsTenant, _ string) []any {
@@ -337,7 +342,7 @@ var clientTables = []string{"oauth_clients", "oauth_client_secrets", "resource_s
 var endUserTables = []string{"end_users", "browser_sessions", "user_sessions", "end_user_terms", "magic_links"}
 
 //nolint:gochecknoglobals // the project-owned M5 tables.
-var grantTables = []string{"grant_families", "authorization_codes", "access_tokens", "refresh_tokens"}
+var grantTables = []string{"grant_families", "authorization_codes", "access_tokens", "refresh_tokens", "scope_consents"}
 
 func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
 	t.Helper()
@@ -612,4 +617,78 @@ func TestSchema_GrantConstraints(t *testing.T) {
 		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
 		assert.Zero(t, n, table)
 	}
+}
+
+// One remembered consent per end user, client and resource server (an OIDC-only one included); deleting a resource server ends its grants and consents.
+func TestSchema_ConsentsAndResourceTokens(t *testing.T) {
+	f := newRLSFixture(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	consent := func(rs any) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.scope_consents (id, public_id, org_id, project_id, end_user_id, client_id, resource_server_id, scopes, granted_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, '{openid}', $8, $8)`,
+			uuid.New(), "k"+uuid.NewString()[:12], f.a.org, f.a.project, f.a.endUser, f.a.client, rs, now)
+		return err
+	}
+	assert.Equal(t, "23505", pgCode(consent(f.a.rs)), "one consent per end user, client and resource server")
+	require.NoError(t, consent(nil), "an OIDC-only consent has no resource server")
+	assert.Equal(t, "23505", pgCode(consent(nil)), "NULLS NOT DISTINCT: one OIDC-only consent too")
+
+	_, err := f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.access_tokens SET resource_server_id = $1, revoked_at = $2 WHERE family_id = $3`, f.a.rs, now, f.a.family)
+	require.NoError(t, err)
+	_, err = f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.grant_families SET resource_server_id = $1, revoked_at = $2, revoked_reason = 'revoked' WHERE id = $3`, f.a.rs, now, f.a.family)
+	require.NoError(t, err, "RFC 7009 revocation is a reason")
+
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.oauth_client_resources WHERE resource_server_id = $1`, f.a.rs)
+	require.NoError(t, err)
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.resource_servers WHERE id = $1`, f.a.rs)
+	require.NoError(t, err)
+	for _, table := range []string{"grant_families", "access_tokens", "refresh_tokens"} {
+		var n int
+		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
+		assert.Zero(t, n, "%s: a deleted resource server takes its grants with it", table)
+	}
+	var consents int
+	require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.scope_consents WHERE project_id = $1`, f.a.project).Scan(&consents))
+	assert.Equal(t, 1, consents, "only the OIDC-only consent survives")
+}
+
+// A CIMD shadow client is public, native, auth none and always asks for consent, with its metadata URL; resource servers hold their admission.
+func TestSchema_CIMDColumns(t *testing.T) {
+	f := newRLSFixture(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	shadow := func(clientType, app, method, consent string, url, fetched any) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.oauth_clients (id, public_id, org_id, project_id, name, client_type, application_type, token_endpoint_auth_method,
+			   grant_types, allowed_scopes, redirect_uris, consent_policy, registration_kind, metadata_url, metadata_fetched_at, metadata_expires_at, created_at, updated_at)
+			 VALUES ($1, $2, $3, $4, 'Claude', $5, $6, $7, '{authorization_code,refresh_token}', '{openid}', '{http://localhost/cb}', $8, 'cimd', $9, $10, $11, $11, $11)`,
+			uuid.New(), "c"+uuid.NewString()[:12], f.a.org, f.a.project, clientType, app, method, consent, url, fetched, now)
+		return err
+	}
+	url := "https://claude.ai/oauth/claude-code-client-metadata"
+	require.NoError(t, shadow("public", "native", "none", "require", url, now))
+	assert.Equal(t, "23505", pgCode(shadow("public", "native", "none", "require", url, now)), "one shadow per metadata URL in a project")
+	other := "https://other.example/client"
+	for name, err := range map[string]error{
+		"confidential":     shadow("confidential", "web", "client_secret_basic", "require", other, now),
+		"implicit consent": shadow("public", "native", "none", "implicit", other, now),
+		"no metadata url":  shadow("public", "native", "none", "require", nil, now),
+		"not fetched":      shadow("public", "native", "none", "require", other, nil),
+		"http":             shadow("public", "native", "none", "require", "http://other.example/client", now),
+	} {
+		assert.Equal(t, "23514", pgCode(err), name)
+	}
+	_, err := f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.oauth_clients SET metadata_url = $1 WHERE id = $2`, other, f.a.client)
+	assert.Equal(t, "23514", pgCode(err), "a registered client has no metadata URL")
+
+	for name, stmt := range map[string]string{
+		"no scopes pinned":   `UPDATE ` + f.schema + `.resource_servers SET cimd_scopes = '{}' WHERE id = $1`,
+		"descriptions array": `UPDATE ` + f.schema + `.resource_servers SET scope_descriptions = '[]' WHERE id = $1`,
+	} {
+		_, err := f.admin.ExecContext(ctx, stmt, f.a.rs)
+		assert.Equal(t, "23514", pgCode(err), name)
+	}
+	_, err = f.admin.ExecContext(ctx,
+		`UPDATE `+f.schema+`.resource_servers SET accept_cimd_clients = true, cimd_client_hosts = '{claude.ai}', cimd_scopes = '{read}', scope_descriptions = '{"read":"Read"}' WHERE id = $1`, f.a.rs)
+	assert.NoError(t, err)
 }

@@ -72,7 +72,7 @@ describe('useResourceServerCreate', () => {
     c.identifier.value = ' https://store.example/mcp ';
     c.scopes.rows.value = ['posts:read', '', 'posts:write'];
     expect(await c.submit()).toBe(rs);
-    expect(createResourceServer).toHaveBeenCalledWith({ projectId, name: 'Store MCP', identifier: 'https://store.example/mcp', scopes: ['posts:read', 'posts:write'], trusted: false });
+    expect(createResourceServer).toHaveBeenCalledWith({ projectId, name: 'Store MCP', identifier: 'https://store.example/mcp', scopes: ['posts:read', 'posts:write'], scopeDescriptions: {}, trusted: false });
   });
 
   it('offers trust only where it is available, and requires it for an http identifier', async () => {
@@ -87,7 +87,7 @@ describe('useResourceServerCreate', () => {
     c.name.value = 'Local tools';
     c.scopes.rows.value = ['tools:run'];
     await c.submit();
-    expect(createResourceServer).toHaveBeenLastCalledWith({ projectId, name: 'Local tools', identifier: 'http://127.0.0.1:8080/mcp', scopes: ['tools:run'], trusted: true });
+    expect(createResourceServer).toHaveBeenLastCalledWith({ projectId, name: 'Local tools', identifier: 'http://127.0.0.1:8080/mcp', scopes: ['tools:run'], scopeDescriptions: {}, trusted: true });
     c.identifier.value = 'https://store.example/mcp';
     expect([c.trustRequired.value, c.trusted.value]).toEqual([false, false]);
     c.trustPicked.value = true;
@@ -204,11 +204,11 @@ describe('useResourceServer', () => {
     r.name.value = 'Renamed';
     r.scopes.rows.value = ['posts:read', 'draft:x'];
     await r.save('name');
-    expect(api.updateResourceServer).toHaveBeenLastCalledWith({ projectId, resourceServerId: rsId, name: 'Renamed', scopes: ['posts:read', 'posts:write'] });
+    expect(api.updateResourceServer).toHaveBeenLastCalledWith({ projectId, resourceServerId: rsId, name: 'Renamed', scopes: ['posts:read', 'posts:write'], scopeDescriptions: {} });
     expect([r.saved.value, r.server.value?.name, r.scopes.rows.value]).toEqual(['name', 'Renamed', ['posts:read', 'draft:x']]);
     r.name.value = 'Draft name';
     await r.save('scopes');
-    expect(api.updateResourceServer).toHaveBeenLastCalledWith({ projectId, resourceServerId: rsId, name: 'Renamed', scopes: ['posts:read', 'draft:x'] });
+    expect(api.updateResourceServer).toHaveBeenLastCalledWith({ projectId, resourceServerId: rsId, name: 'Renamed', scopes: ['posts:read', 'draft:x'], scopeDescriptions: {} });
     expect([r.saved.value, r.name.value]).toEqual(['scopes', 'Draft name']);
   });
 
@@ -345,5 +345,57 @@ describe('useResourceServer', () => {
     expect(r.deleting.value).toBe(true);
     pending.resolve({});
     expect(await first).toBe(true);
+  });
+});
+
+describe('scope descriptions (M6)', () => {
+  it('keeps descriptions aligned with their rows through add, remove and reset', () => {
+    const s = useScopeRows(['a:read', 'b:write'], { 'b:write': 'Write b' });
+    expect(s.descriptions.value).toEqual(['', 'Write b']);
+    s.add();
+    expect(s.descriptions.value).toEqual(['', 'Write b', '']);
+    s.remove(0);
+    expect([s.rows.value, s.descriptions.value]).toEqual([['b:write', ''], ['Write b', '']]);
+    s.remove(0);
+    s.remove(0);
+    expect([s.rows.value, s.descriptions.value]).toEqual([[''], ['']]);
+    s.reset(['c:x'], { 'c:x': 'See c', 'gone': 'dropped' });
+    expect(s.descriptions.value).toEqual(['See c']);
+  });
+
+  it('sends trimmed descriptions keyed by scope, drops empty ones, and refuses one over 120 characters', () => {
+    const s = useScopeRows(['a:read', '', 'b:write', 'c:x'], { 'a:read': '  Read a  ', 'c:x': '' });
+    s.descriptions.value[2] = 'Write b';
+    const list = s.check()!;
+    expect(s.describe(list)).toEqual({ 'a:read': 'Read a', 'b:write': 'Write b' });
+    s.descriptions.value[3] = 'x'.repeat(121);
+    expect(s.check()).toBeNull();
+    expect(s.errors.value[3]).toBe('apperror.RSV004_description|{"scope":"c:x"}');
+  });
+
+  it('creates and updates with the descriptions, and keeps the stored ones on a name save', async () => {
+    const createResourceServer = vi.fn().mockResolvedValue({ resourceServer: rs });
+    setClient('$resourceServerClient', { createResourceServer });
+    const c = useResourceServerCreate(projectId);
+    c.name.value = 'Store MCP';
+    c.identifier.value = 'https://store.example/mcp';
+    c.scopes.rows.value = ['posts:read'];
+    c.scopes.descriptions.value = ['Read your posts'];
+    await c.submit();
+    expect(createResourceServer.mock.calls[0]![0].scopeDescriptions).toEqual({ 'posts:read': 'Read your posts' });
+
+    const described = { ...rs, scopeDescriptions: { 'posts:read': 'Read your posts' } };
+    const updateResourceServer = vi.fn(async (req: { name: string, scopes: string[], scopeDescriptions: Record<string, string> }) => ({ resourceServer: { ...described, name: req.name, scopes: req.scopes, scopeDescriptions: req.scopeDescriptions } }));
+    setClient('$resourceServerClient', { getResourceServer: vi.fn().mockResolvedValue({ resourceServer: described }), updateResourceServer });
+    const r = useResourceServer(projectId, rsId);
+    await r.load();
+    expect(r.scopes.descriptions.value).toEqual(['Read your posts', '']);
+    r.scopes.descriptions.value = ['Draft', ''];
+    r.name.value = 'Renamed';
+    await r.save('name');
+    expect(updateResourceServer.mock.calls[0]![0].scopeDescriptions).toEqual({ 'posts:read': 'Read your posts' });
+    expect(r.scopes.descriptions.value).toEqual(['Draft', '']);
+    await r.save('scopes');
+    expect(updateResourceServer.mock.calls[1]![0].scopeDescriptions).toEqual({ 'posts:read': 'Draft' });
   });
 });

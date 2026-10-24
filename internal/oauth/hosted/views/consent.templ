@@ -1,0 +1,170 @@
+package views
+
+import (
+	"context"
+	"slices"
+
+	"altalune.id/othra/internal/web/i18n"
+	"altalune.id/othra/internal/web/layout"
+)
+
+// ConsentData is the consent page: the app, the resource it asks for, the scopes, where the browser goes back to, and whether the person allowed it before.
+type ConsentData struct {
+	Site
+	Client       string
+	ClientHost   string
+	RS           string
+	RSIdentifier string
+	Email        string
+	UserSession  string
+	ReturnTo     string
+	ConsentToken string
+	Scopes       []ConsentScope
+	RedirectHost string
+	Loopback     bool
+	Remembered   bool
+}
+
+// ConsentScope is one requested scope: its catalog description, and whether the person allowed it before.
+type ConsentScope struct {
+	Scope         string
+	Description   string
+	AllowedBefore bool
+}
+
+func (s ConsentScope) label(ctx context.Context) string {
+	switch s.Scope {
+	case "openid":
+		return i18n.T(ctx, "scope.openid")
+	case "profile":
+		return i18n.T(ctx, "scope.profile")
+	case "email":
+		return i18n.T(ctx, "scope.email")
+	case "offline_access":
+		return i18n.T(ctx, "scope.offline_access")
+	}
+	if s.Description != "" {
+		return s.Description
+	}
+	return s.Scope
+}
+
+func (v ConsentData) ordered() []ConsentScope {
+	out := slices.Clone(v.Scopes)
+	slices.SortStableFunc(out, func(a, b ConsentScope) int {
+		switch {
+		case a.AllowedBefore == b.AllowedBefore:
+			return 0
+		case a.AllowedBefore:
+			return 1
+		default:
+			return -1
+		}
+	})
+	return out
+}
+
+func (v ConsentData) title(ctx context.Context) string {
+	switch {
+	case v.Remembered:
+		return i18n.T(ctx, "consent.remembered_title", "client", v.Client)
+	case v.RS != "":
+		return i18n.T(ctx, "consent.title_rs", "client", v.Client, "rs", v.RS)
+	default:
+		return i18n.T(ctx, "consent.title_account", "client", v.Client, "project", v.Project)
+	}
+}
+
+func (v ConsentData) rs() string {
+	if v.RS != "" {
+		return v.RS
+	}
+	return v.Project
+}
+
+func (v ConsentData) returnKey() string {
+	if v.Remembered {
+		return "consent.remembered_return"
+	}
+	return "consent.redirect_notice"
+}
+
+func (v ConsentData) allowLabel(ctx context.Context) string {
+	if v.Remembered {
+		return i18n.T(ctx, "continue.action", "client", v.Client)
+	}
+	return i18n.T(ctx, "consent.allow")
+}
+
+templ appMark(client string) {
+	<span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-base-300 text-lg font-semibold" aria-hidden="true">{ initial(client) }</span>
+}
+
+// Consent asks the signed-in account to allow an app the requested scopes, or, when it allowed them before, to continue in one click.
+templ Consent(d layout.LayoutData, v ConsentData) {
+	@layout.Layout(titled(d, v.title(ctx))) {
+		@layout.CardWith(v.title(ctx), appMark(v.Client)) {
+			if v.RS != "" && !v.Remembered {
+				<p class="text-sm">
+					<span class="font-medium">{ v.RS }</span>
+					if v.RSIdentifier != "" {
+						<span class="block font-mono text-xs break-all text-base-content/70">{ v.RSIdentifier }</span>
+					}
+				</p>
+			}
+			if v.Remembered {
+				<p class="break-words">{ i18n.T(ctx, "consent.remembered_body", "client", v.Client, "rs", v.rs()) }</p>
+				if v.ClientHost != "" {
+					<p class="text-xs text-base-content/70">{ i18n.T(ctx, "consent.from_host", "host", v.ClientHost) }</p>
+				}
+			}
+			@accountTile(d, v.Site, v.Email, v.ReturnTo)
+			if !v.Remembered {
+				if v.ClientHost != "" {
+					<div role="note" class="alert alert-warning alert-soft items-start">
+						@iconShieldAlert()
+						<span class="min-w-0 break-words">
+							<span class="block font-medium">{ i18n.T(ctx, "consent.unverified_title") }</span>
+							<span class="block">{ i18n.T(ctx, "consent.unverified_body", "project", v.Project, "host", v.ClientHost) }</span>
+						</span>
+					</div>
+				}
+				<ul class="divide-y divide-base-content/10 rounded-box bg-base-200">
+					for _, s := range v.ordered() {
+						<li class="flex flex-wrap items-start justify-between gap-2 px-4 py-3">
+							<span class="min-w-0">
+								<span class="block text-sm font-medium">{ s.label(ctx) }</span>
+								if s.label(ctx) != s.Scope {
+									<span class="block font-mono text-xs text-base-content/70">{ s.Scope }</span>
+								}
+							</span>
+							if s.AllowedBefore {
+								<span class="badge badge-ghost badge-sm">{ i18n.T(ctx, "consent.allowed_before") }</span>
+							}
+						</li>
+					}
+				</ul>
+			}
+			<div class="flex items-start gap-1.5 text-sm text-base-content/70">
+				@iconReturn()
+				<div class="min-w-0 break-words">
+					<p>
+						@highlight(i18n.T(ctx, v.returnKey()), "{host}", v.RedirectHost, "font-medium")
+					</p>
+					if v.Loopback {
+						<p class="font-medium">{ i18n.T(ctx, "consent.loopback_warning") }</p>
+					}
+				</div>
+			</div>
+			<form method="post" action={ v.href(d, "/consent") } class="flex flex-col gap-2">
+				@layout.CSRFInput(v.ConsentToken)
+				<input type="hidden" name="user_session" value={ v.UserSession }/>
+				if v.ReturnTo != "" {
+					<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+				}
+				<button class="btn btn-primary btn-block" type="submit">{ v.allowLabel(ctx) }</button>
+				<button class="btn btn-ghost btn-block" type="submit" name="deny" value="1" formnovalidate>{ i18n.T(ctx, "consent.deny") }</button>
+			</form>
+		}
+	}
+}

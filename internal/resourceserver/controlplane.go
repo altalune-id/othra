@@ -74,7 +74,7 @@ func (s *ResourceServerService) CreateResourceServer(
 	}
 	r, err := s.svc.Create(ctx, CreateRequest{
 		OrgID: orgID, ProjectID: projectID, Name: req.Msg.GetName(), Identifier: req.Msg.GetIdentifier(),
-		Scopes: req.Msg.GetScopes(), Trusted: req.Msg.GetTrusted(), Person: person(ctx),
+		Scopes: req.Msg.GetScopes(), Trusted: req.Msg.GetTrusted(), Person: person(ctx), Descriptions: req.Msg.GetScopeDescriptions(),
 	})
 	if err != nil {
 		return nil, err
@@ -90,7 +90,9 @@ func (s *ResourceServerService) UpdateResourceServer(
 	if err != nil {
 		return nil, err
 	}
-	r, err := s.svc.Update(ctx, orgID, projectID, req.Msg.GetResourceServerId(), req.Msg.GetName(), req.Msg.GetScopes())
+	r, err := s.svc.Update(
+		ctx, orgID, projectID, req.Msg.GetResourceServerId(), req.Msg.GetName(), req.Msg.GetScopes(), req.Msg.GetScopeDescriptions(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -145,6 +147,25 @@ func (s *ResourceServerService) SetResourceServerTrust(
 		return nil, err
 	}
 	return connect.NewResponse(&resourceserverv1.SetResourceServerTrustResponse{ResourceServer: s.toProto(r)}), nil
+}
+
+// SetResourceServerAdmission sets whether a resource server admits apps without registration (CIMD), from which hosts, with which scopes.
+func (s *ResourceServerService) SetResourceServerAdmission(
+	ctx context.Context, req *connect.Request[resourceserverv1.SetResourceServerAdmissionRequest],
+) (*connect.Response[resourceserverv1.SetResourceServerAdmissionResponse], error) {
+	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	if err != nil {
+		return nil, err
+	}
+	a := Admission{Accept: req.Msg.GetAccept(), Hosts: req.Msg.GetHosts()}
+	if !req.Msg.GetAllScopes() {
+		a.Scopes = append([]string{}, req.Msg.GetScopes()...)
+	}
+	r, err := s.svc.SetAdmission(ctx, orgID, projectID, req.Msg.GetResourceServerId(), a)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&resourceserverv1.SetResourceServerAdmissionResponse{ResourceServer: s.toProto(r)}), nil
 }
 
 // ListLinks lists the links of one client or of one resource server.
@@ -236,7 +257,10 @@ func (s *ResourceServerService) toProto(r *ResourceServer) *resourceserverv1.Res
 		Id: r.PublicID, Name: r.Name, Identifier: r.Identifier, Scopes: r.Scopes, State: stateToProto(r.State),
 		Trusted: r.Trusted, VerifiedAt: ts(r.VerifiedAt), LastCheckedAt: ts(r.LastCheckedAt), LastError: failureToProto(r.LastError),
 		ConsecutiveFailures: r.ConsecutiveFailures, TrustAvailable: s.svc.TrustAvailable(),
-		CreatedAt: timestamppb.New(r.CreatedAt), UpdatedAt: timestamppb.New(r.UpdatedAt),
+		CreatedAt: timestamppb.New(r.CreatedAt), UpdatedAt: timestamppb.New(r.UpdatedAt), ScopeDescriptions: r.Descriptions,
+		Cimd: &resourceserverv1.CIMDAdmission{
+			Accept: r.Admission.Accept, Hosts: r.Admission.Hosts, AllScopes: r.Admission.Scopes == nil, Scopes: r.Admission.Scopes,
+		},
 	}
 	if !IsLoopbackHTTP(r.Identifier) {
 		out.MetadataUrl = MetadataURL(r.Identifier)
@@ -249,7 +273,8 @@ func linkToProto(l *Link) *resourceserverv1.Link {
 		ClientId: l.Client.PublicID, ClientName: l.Client.Name, ResourceServerId: l.ResourceServer.PublicID,
 		ResourceServerName: l.ResourceServer.Name, ResourceServerIdentifier: l.ResourceServer.Identifier,
 		ResourceServerState: stateToProto(l.ResourceServer.State), ResourceServerTrusted: l.ResourceServer.Trusted,
-		Scopes: l.Scopes, CreatedAt: timestamppb.New(l.CreatedAt),
+		Scopes: l.Scopes, CreatedAt: timestamppb.New(l.CreatedAt), ClientMetadataUrl: l.Client.MetadataURL,
+		MetadataFetchedAt: ts(l.Client.MetadataFetchedAt),
 	}
 }
 

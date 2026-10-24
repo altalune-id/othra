@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 
+	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
 )
@@ -16,6 +17,18 @@ type ErrorData struct {
 	Reference    string
 	SupportEmail string
 	NoSignIn     bool
+}
+
+// AuthorizeError is the error page for an authorize request that can't be trusted with a redirect: never a way back to sign in.
+func AuthorizeError(ctx context.Context, s Site, code apperror.Code, reference string) ErrorData {
+	return ErrorData{
+		Site:      s,
+		Title:     i18n.T(ctx, "error.authorize_title"),
+		Message:   i18n.Error(ctx, code),
+		Code:      string(code),
+		Reference: reference,
+		NoSignIn:  true,
+	}
 }
 
 // TermsDeclined is the error page for an account that declined the project's terms outside an app's sign-in.

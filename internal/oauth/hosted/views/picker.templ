@@ -21,6 +21,7 @@ type PickerData struct {
 	Notice       string
 	Error        string
 	Client       string
+	ClientHost   string
 }
 
 // Picker lists the browser's signed-in accounts: continue as one, sign one out, or use another account.
@@ -29,6 +30,9 @@ templ Picker(d layout.LayoutData, v PickerData) {
 		@layout.Card(i18n.T(ctx, "picker.title")) {
 			if v.Client != "" {
 				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle_client", "client", v.Client) }</p>
+				if v.ClientHost != "" {
+					<p class="text-xs text-base-content/70">{ i18n.T(ctx, "consent.from_host", "host", v.ClientHost) }</p>
+				}
 			} else {
 				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle", "project", v.Project) }</p>
 			}

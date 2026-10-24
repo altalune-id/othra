@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -23,6 +24,7 @@ import (
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/oauth/hosted"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/resourceserver"
 )
 
 func postForm(t *testing.T, target string, form url.Values, header ...string) (int, http.Header, map[string]any) {
@@ -133,6 +135,21 @@ func TestTokenFlowThroughBoot(t *testing.T) {
 	}, "Authorization", auth)
 	assert.Equal(t, http.StatusBadRequest, status)
 	assert.Equal(t, "invalid_grant", body["error"], "a code works once")
+
+	status, header, body = postForm(t, ts.URL+"/p/acme-web/oauth2/revoke", url.Values{"token": {"unknown"}}, "Authorization", auth)
+	assert.Equal(t, http.StatusOK, status, "RFC 7009 §2.2: an unknown token is fine: %v", body)
+	assert.Equal(t, "no-store", header.Get("Cache-Control"))
+
+	jwt, err := accessTokenSigner{signer: keys.NewSigner(svcs.Keys)}.Sign(ctx, grant.Project{OrgID: sys.ID, ID: p.ID, IssuerURL: issuer}, grant.AccessToken{
+		Audience: "https://api.example/mcp", Subject: "sub-1", ClientID: c.PublicID, SessionID: "sid-1", Scopes: []string{"read", "write"},
+		AuthTime: time.Now().Add(-time.Minute), IssuedAt: time.Now(), ExpiresAt: time.Now().Add(5 * time.Minute),
+	})
+	require.NoError(t, err)
+	at, err := keys.NewVerifier(svcs.Keys, keys.WithExpectedIssuer(issuer), keys.WithExpectedType(keys.TypeAccessToken)).Verify(scoped, p.ID, jwt)
+	require.NoError(t, err, "RFC 9068 §4: typ at+jwt, this issuer, the project's key")
+	assert.Equal(t, []string{"https://api.example/mcp"}, []string(at.Audience))
+	assert.Equal(t, "read write", at.Scope)
+	assert.Len(t, at.JWTID, 21)
 }
 
 // OIDC Core §11 and S9 through the hosted adapters: sign-out keeps offline_access grants; end-session ends the hinted one whatever its scope.
@@ -165,7 +182,7 @@ func TestSignOutKeepsOfflineGrantsThroughBoot(t *testing.T) {
 			UserSession: r.Account.PublicID, EndUser: r.Account.Subject, AuthTime: r.Account.AuthTime,
 		})
 		require.NoError(t, err)
-		got, err := svcs.Grants.Exchange(ctx, gp, grant.ExchangeRequest{Client: grant.Client{ID: c.ID, PublicID: c.PublicID, Refresh: true}, Code: code})
+		got, err := svcs.Grants.Exchange(ctx, gp, grant.ExchangeRequest{Client: grant.Client{ID: c.ID, OAuthID: c.PublicID, Refresh: true}, Code: code})
 		require.NoError(t, err)
 		return got
 	}
@@ -188,4 +205,90 @@ func TestSignOutKeepsOfflineGrantsThroughBoot(t *testing.T) {
 	require.NoError(t, oauth.EndSession(ctx, hp, hinted.Family.PublicID, bob.Account.PublicID))
 	assert.False(t, live(hinted.Family.PublicID), "end-session ends the hinted grant whatever its scope")
 	assert.True(t, live(other.Family.PublicID), "another offline_access grant of that session survives")
+}
+
+// RFC 8707, RFC 9068 and CIMD §6 through boot: a linked, trusted server gets an at+jwt for itself only, rechecked at refresh; discovery follows admission.
+func TestResourceBoundTokenThroughBoot(t *testing.T) {
+	ts, svcs := newIssuerServer(t, "")
+	ctx := t.Context()
+	sys, err := svcs.Orgs.System(ctx)
+	require.NoError(t, err)
+	p, err := svcs.Projects.Create(ctx, project.CreateRequest{OrgID: sys.ID, Slug: "web", Name: "Web", IssuerHandle: "acme-web"})
+	require.NoError(t, err)
+	issuer := "https://id.example.test/p/acme-web"
+	scoped := tenant.Into(ctx, tenant.Context{OrgID: sys.ID, ProjectID: p.ID})
+
+	c, err := svcs.Clients.Create(ctx, sys.ID, p.ID, client.KindWeb, client.Settings{
+		Name: "App", RedirectURIs: []string{"https://app.example/cb"}, RefreshTokens: true, ConsentPolicy: client.ConsentImplicit,
+	})
+	require.NoError(t, err)
+	_, secret, err := svcs.Clients.GenerateSecret(ctx, sys.ID, p.ID, c.PublicID)
+	require.NoError(t, err)
+	rs, err := svcs.ResourceServers.Create(ctx, resourceserver.CreateRequest{
+		OrgID: sys.ID, ProjectID: p.ID, Name: "MCP", Identifier: "https://api.example.test/mcp", Scopes: []string{"read", "write"},
+		Trusted: true, Person: uuid.New(),
+	})
+	require.NoError(t, err)
+	_, err = svcs.ResourceServers.LinkClient(ctx, sys.ID, p.ID, c.PublicID, rs.PublicID, []string{"read"})
+	require.NoError(t, err)
+
+	discovery := func() map[string]any {
+		_, body := fetch(t, http.MethodGet, ts.URL+"/p/acme-web/.well-known/openid-configuration")
+		var doc map[string]any
+		require.NoError(t, json.Unmarshal([]byte(body), &doc))
+		return doc
+	}
+	assert.Equal(t, false, discovery()["client_id_metadata_document_supported"])
+	_, err = svcs.ResourceServers.SetAdmission(ctx, sys.ID, p.ID, rs.PublicID, resourceserver.Admission{Accept: true})
+	require.NoError(t, err)
+	assert.Equal(t, true, discovery()["client_id_metadata_document_supported"], "pm P3: admission drops the 30 s discovery cache at once")
+
+	eu := enduser.Project{OrgID: sys.ID, ID: p.ID, IssuerURL: issuer, EmailLink: true}
+	link, err := svcs.EndUsers.IssueLink(ctx, eu, enduser.LinkRequest{Email: "ada@example.com", ReturnTo: "/p/acme-web/account/"})
+	require.NoError(t, err)
+	u, err := url.Parse(link.URL)
+	require.NoError(t, err)
+	signed, err := svcs.EndUsers.Redeem(ctx, eu, enduser.RedeemRequest{Token: u.Query().Get("t")})
+	require.NoError(t, err)
+	code, err := svcs.Grants.IssueCode(ctx, grant.Project{OrgID: sys.ID, ID: p.ID}, grant.CodeRequest{
+		Client: c.PublicID, RedirectURI: "https://app.example/cb", Scopes: []string{"openid", "offline_access", "read"},
+		UserSession: signed.Account.PublicID, EndUser: signed.Account.Subject, AuthTime: signed.Account.AuthTime, ResourceServerID: &rs.ID,
+	})
+	require.NoError(t, err)
+
+	tokenURL := ts.URL + "/p/acme-web/oauth2/token"
+	auth := "Basic " + base64.StdEncoding.EncodeToString([]byte(c.PublicID+":"+url.QueryEscape(secret)))
+	status, _, body := postForm(t, tokenURL, url.Values{
+		"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {"https://app.example/cb"}, "resource": {rs.Identifier},
+	}, "Authorization", auth)
+	require.Equal(t, http.StatusOK, status, "%v", body)
+	access, _ := body["access_token"].(string)
+	refresh, _ := body["refresh_token"].(string)
+	assert.Equal(t, "openid offline_access read", body["scope"])
+	assert.NotEmpty(t, body["id_token"], "openid with a resource still gets an ID token")
+
+	claims, err := keys.NewVerifier(svcs.Keys, keys.WithExpectedIssuer(issuer), keys.WithExpectedType(keys.TypeAccessToken)).Verify(scoped, p.ID, access)
+	require.NoError(t, err, "RFC 9068 §4")
+	assert.Equal(t, []string{rs.Identifier}, []string(claims.Audience))
+	assert.Equal(t, "read", claims.Scope, "only the server's scopes")
+	assert.Equal(t, c.PublicID, claims.ClientID)
+	assert.Equal(t, signed.Account.Subject, claims.Subject)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ts.URL+"/p/acme-web/oauth2/userinfo", nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+access)
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	require.NoError(t, resp.Body.Close())
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode, "an at+jwt for a resource server is not a userinfo token")
+
+	status, _, body = postForm(t, tokenURL, url.Values{"grant_type": {"refresh_token"}, "refresh_token": {refresh}, "resource": {"https://other.example/"}},
+		"Authorization", auth)
+	assert.Equal(t, http.StatusBadRequest, status)
+	assert.Equal(t, "invalid_target", body["error"])
+
+	require.NoError(t, svcs.ResourceServers.UnlinkClient(ctx, sys.ID, p.ID, c.PublicID, rs.PublicID))
+	status, _, body = postForm(t, tokenURL, url.Values{"grant_type": {"refresh_token"}, "refresh_token": {refresh}}, "Authorization", auth)
+	assert.Equal(t, http.StatusBadRequest, status)
+	assert.Equal(t, "invalid_grant", body["error"], "authl gap 5: an unlinked client can't refresh")
 }

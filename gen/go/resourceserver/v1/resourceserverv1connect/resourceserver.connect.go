@@ -54,6 +54,9 @@ const (
 	// ResourceServerServiceSetResourceServerTrustProcedure is the fully-qualified name of the
 	// ResourceServerService's SetResourceServerTrust RPC.
 	ResourceServerServiceSetResourceServerTrustProcedure = "/resourceserver.v1.ResourceServerService/SetResourceServerTrust"
+	// ResourceServerServiceSetResourceServerAdmissionProcedure is the fully-qualified name of the
+	// ResourceServerService's SetResourceServerAdmission RPC.
+	ResourceServerServiceSetResourceServerAdmissionProcedure = "/resourceserver.v1.ResourceServerService/SetResourceServerAdmission"
 	// ResourceServerServiceListLinksProcedure is the fully-qualified name of the
 	// ResourceServerService's ListLinks RPC.
 	ResourceServerServiceListLinksProcedure = "/resourceserver.v1.ResourceServerService/ListLinks"
@@ -78,6 +81,8 @@ type ResourceServerServiceClient interface {
 	VerifyResourceServer(context.Context, *connect.Request[v1.VerifyResourceServerRequest]) (*connect.Response[v1.VerifyResourceServerResponse], error)
 	// SECURITY: trust skips verification; a signed-in person sets it, never MCP.
 	SetResourceServerTrust(context.Context, *connect.Request[v1.SetResourceServerTrustRequest]) (*connect.Response[v1.SetResourceServerTrustResponse], error)
+	// SECURITY: CIMD admission lets unregistered apps ask for this server's scopes; a signed-in person sets it, never MCP.
+	SetResourceServerAdmission(context.Context, *connect.Request[v1.SetResourceServerAdmissionRequest]) (*connect.Response[v1.SetResourceServerAdmissionResponse], error)
 	ListLinks(context.Context, *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error)
 	LinkClient(context.Context, *connect.Request[v1.LinkClientRequest]) (*connect.Response[v1.LinkClientResponse], error)
 	UpdateLink(context.Context, *connect.Request[v1.UpdateLinkRequest]) (*connect.Response[v1.UpdateLinkResponse], error)
@@ -137,6 +142,12 @@ func NewResourceServerServiceClient(httpClient connect.HTTPClient, baseURL strin
 			connect.WithSchema(resourceServerServiceMethods.ByName("SetResourceServerTrust")),
 			connect.WithClientOptions(opts...),
 		),
+		setResourceServerAdmission: connect.NewClient[v1.SetResourceServerAdmissionRequest, v1.SetResourceServerAdmissionResponse](
+			httpClient,
+			baseURL+ResourceServerServiceSetResourceServerAdmissionProcedure,
+			connect.WithSchema(resourceServerServiceMethods.ByName("SetResourceServerAdmission")),
+			connect.WithClientOptions(opts...),
+		),
 		listLinks: connect.NewClient[v1.ListLinksRequest, v1.ListLinksResponse](
 			httpClient,
 			baseURL+ResourceServerServiceListLinksProcedure,
@@ -166,17 +177,18 @@ func NewResourceServerServiceClient(httpClient connect.HTTPClient, baseURL strin
 
 // resourceServerServiceClient implements ResourceServerServiceClient.
 type resourceServerServiceClient struct {
-	listResourceServers    *connect.Client[v1.ListResourceServersRequest, v1.ListResourceServersResponse]
-	getResourceServer      *connect.Client[v1.GetResourceServerRequest, v1.GetResourceServerResponse]
-	createResourceServer   *connect.Client[v1.CreateResourceServerRequest, v1.CreateResourceServerResponse]
-	updateResourceServer   *connect.Client[v1.UpdateResourceServerRequest, v1.UpdateResourceServerResponse]
-	deleteResourceServer   *connect.Client[v1.DeleteResourceServerRequest, v1.DeleteResourceServerResponse]
-	verifyResourceServer   *connect.Client[v1.VerifyResourceServerRequest, v1.VerifyResourceServerResponse]
-	setResourceServerTrust *connect.Client[v1.SetResourceServerTrustRequest, v1.SetResourceServerTrustResponse]
-	listLinks              *connect.Client[v1.ListLinksRequest, v1.ListLinksResponse]
-	linkClient             *connect.Client[v1.LinkClientRequest, v1.LinkClientResponse]
-	updateLink             *connect.Client[v1.UpdateLinkRequest, v1.UpdateLinkResponse]
-	unlinkClient           *connect.Client[v1.UnlinkClientRequest, v1.UnlinkClientResponse]
+	listResourceServers        *connect.Client[v1.ListResourceServersRequest, v1.ListResourceServersResponse]
+	getResourceServer          *connect.Client[v1.GetResourceServerRequest, v1.GetResourceServerResponse]
+	createResourceServer       *connect.Client[v1.CreateResourceServerRequest, v1.CreateResourceServerResponse]
+	updateResourceServer       *connect.Client[v1.UpdateResourceServerRequest, v1.UpdateResourceServerResponse]
+	deleteResourceServer       *connect.Client[v1.DeleteResourceServerRequest, v1.DeleteResourceServerResponse]
+	verifyResourceServer       *connect.Client[v1.VerifyResourceServerRequest, v1.VerifyResourceServerResponse]
+	setResourceServerTrust     *connect.Client[v1.SetResourceServerTrustRequest, v1.SetResourceServerTrustResponse]
+	setResourceServerAdmission *connect.Client[v1.SetResourceServerAdmissionRequest, v1.SetResourceServerAdmissionResponse]
+	listLinks                  *connect.Client[v1.ListLinksRequest, v1.ListLinksResponse]
+	linkClient                 *connect.Client[v1.LinkClientRequest, v1.LinkClientResponse]
+	updateLink                 *connect.Client[v1.UpdateLinkRequest, v1.UpdateLinkResponse]
+	unlinkClient               *connect.Client[v1.UnlinkClientRequest, v1.UnlinkClientResponse]
 }
 
 // ListResourceServers calls resourceserver.v1.ResourceServerService.ListResourceServers.
@@ -214,6 +226,12 @@ func (c *resourceServerServiceClient) SetResourceServerTrust(ctx context.Context
 	return c.setResourceServerTrust.CallUnary(ctx, req)
 }
 
+// SetResourceServerAdmission calls
+// resourceserver.v1.ResourceServerService.SetResourceServerAdmission.
+func (c *resourceServerServiceClient) SetResourceServerAdmission(ctx context.Context, req *connect.Request[v1.SetResourceServerAdmissionRequest]) (*connect.Response[v1.SetResourceServerAdmissionResponse], error) {
+	return c.setResourceServerAdmission.CallUnary(ctx, req)
+}
+
 // ListLinks calls resourceserver.v1.ResourceServerService.ListLinks.
 func (c *resourceServerServiceClient) ListLinks(ctx context.Context, req *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error) {
 	return c.listLinks.CallUnary(ctx, req)
@@ -245,6 +263,8 @@ type ResourceServerServiceHandler interface {
 	VerifyResourceServer(context.Context, *connect.Request[v1.VerifyResourceServerRequest]) (*connect.Response[v1.VerifyResourceServerResponse], error)
 	// SECURITY: trust skips verification; a signed-in person sets it, never MCP.
 	SetResourceServerTrust(context.Context, *connect.Request[v1.SetResourceServerTrustRequest]) (*connect.Response[v1.SetResourceServerTrustResponse], error)
+	// SECURITY: CIMD admission lets unregistered apps ask for this server's scopes; a signed-in person sets it, never MCP.
+	SetResourceServerAdmission(context.Context, *connect.Request[v1.SetResourceServerAdmissionRequest]) (*connect.Response[v1.SetResourceServerAdmissionResponse], error)
 	ListLinks(context.Context, *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error)
 	LinkClient(context.Context, *connect.Request[v1.LinkClientRequest]) (*connect.Response[v1.LinkClientResponse], error)
 	UpdateLink(context.Context, *connect.Request[v1.UpdateLinkRequest]) (*connect.Response[v1.UpdateLinkResponse], error)
@@ -300,6 +320,12 @@ func NewResourceServerServiceHandler(svc ResourceServerServiceHandler, opts ...c
 		connect.WithSchema(resourceServerServiceMethods.ByName("SetResourceServerTrust")),
 		connect.WithHandlerOptions(opts...),
 	)
+	resourceServerServiceSetResourceServerAdmissionHandler := connect.NewUnaryHandler(
+		ResourceServerServiceSetResourceServerAdmissionProcedure,
+		svc.SetResourceServerAdmission,
+		connect.WithSchema(resourceServerServiceMethods.ByName("SetResourceServerAdmission")),
+		connect.WithHandlerOptions(opts...),
+	)
 	resourceServerServiceListLinksHandler := connect.NewUnaryHandler(
 		ResourceServerServiceListLinksProcedure,
 		svc.ListLinks,
@@ -340,6 +366,8 @@ func NewResourceServerServiceHandler(svc ResourceServerServiceHandler, opts ...c
 			resourceServerServiceVerifyResourceServerHandler.ServeHTTP(w, r)
 		case ResourceServerServiceSetResourceServerTrustProcedure:
 			resourceServerServiceSetResourceServerTrustHandler.ServeHTTP(w, r)
+		case ResourceServerServiceSetResourceServerAdmissionProcedure:
+			resourceServerServiceSetResourceServerAdmissionHandler.ServeHTTP(w, r)
 		case ResourceServerServiceListLinksProcedure:
 			resourceServerServiceListLinksHandler.ServeHTTP(w, r)
 		case ResourceServerServiceLinkClientProcedure:
@@ -383,6 +411,10 @@ func (UnimplementedResourceServerServiceHandler) VerifyResourceServer(context.Co
 
 func (UnimplementedResourceServerServiceHandler) SetResourceServerTrust(context.Context, *connect.Request[v1.SetResourceServerTrustRequest]) (*connect.Response[v1.SetResourceServerTrustResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("resourceserver.v1.ResourceServerService.SetResourceServerTrust is not implemented"))
+}
+
+func (UnimplementedResourceServerServiceHandler) SetResourceServerAdmission(context.Context, *connect.Request[v1.SetResourceServerAdmissionRequest]) (*connect.Response[v1.SetResourceServerAdmissionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("resourceserver.v1.ResourceServerService.SetResourceServerAdmission is not implemented"))
 }
 
 func (UnimplementedResourceServerServiceHandler) ListLinks(context.Context, *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error) {

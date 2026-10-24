@@ -1,5 +1,6 @@
 import type { Client } from '~~/gen/client/v1/client_pb';
 import type { ShownError } from '~/lib/apperror/message';
+import { ClientRegistration } from '~~/gen/client/v1/client_pb';
 import { useErrorMessage } from '~/composables/useErrorMessage';
 import { errorCode } from '~/lib/apperror/message';
 
@@ -16,7 +17,7 @@ export function useClientList(projectId: string) {
     loadError.value = null;
     try {
       const res = await client.listClients({ projectId });
-      clients.value = [...res.clients];
+      clients.value = res.clients.filter(c => c.registration !== ClientRegistration.CIMD);
     } catch (e) {
       loadError.value = errorMessage(e, 'error.load_clients');
     } finally {

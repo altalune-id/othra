@@ -192,7 +192,7 @@ func TestPostgres_Lifecycle(t *testing.T) {
 	assert.False(t, reread.Trusted)
 	assert.Equal(t, resourceserver.StatePending, reread.State)
 
-	updated, err := f.svc.Update(ctx, org, project, r.PublicID, "Renamed", []string{"devices:read"})
+	updated, err := f.svc.Update(ctx, org, project, r.PublicID, "Renamed", []string{"devices:read"}, nil)
 	require.NoError(t, err)
 	assert.Equal(t, "Renamed", updated.Name)
 
@@ -298,7 +298,7 @@ func TestPostgres_Links(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, byServer, 2)
 
-	_, err = f.svc.Update(ctx, org, project, a.PublicID, "API", []string{"read"})
+	_, err = f.svc.Update(ctx, org, project, a.PublicID, "API", []string{"read"}, nil)
 	require.True(t, resourceserver.IsScopePinnedError(err), "%v", err)
 	assert.Contains(t, apperrorMeta(err)["clients"], "Web")
 	assert.Contains(t, apperrorMeta(err)["clients"], "CLI")
@@ -403,4 +403,51 @@ func TestPostgres_AMismatchFailsAPendingServer(t *testing.T) {
 	assert.Equal(t, resourceserver.StateFailed, got.State)
 	assert.Nil(t, got.VerifiedAt)
 	assert.Equal(t, "https://elsewhere", got.LastError.Resource)
+}
+
+// E10, A16, 026: admission and scope descriptions persist; Resolve and Admits read them; turning admission off is immediate.
+func TestPostgres_AdmissionAndDescriptions(t *testing.T) {
+	f := newPGFixture(t)
+	org, project := f.seed(t)
+	ctx := t.Context()
+	r, err := f.svc.Create(ctx, resourceserver.CreateRequest{
+		OrgID: org, ProjectID: project, Name: "MCP", Identifier: "https://mcp.example.com/mcp", Scopes: []string{"read", "write"},
+		Descriptions: map[string]string{"read": "Read your messages"},
+	})
+	require.NoError(t, err)
+	_, f2, err := f.svc.Verify(ctx, org, project, r.PublicID)
+	require.NoError(t, err)
+	require.Nil(t, f2)
+
+	got, err := f.svc.SetAdmission(ctx, org, project, r.PublicID,
+		resourceserver.Admission{Accept: true, Hosts: []string{"claude.ai"}, Scopes: []string{"read"}})
+	require.NoError(t, err)
+	reread, err := f.svc.Get(ctx, org, project, r.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, got.Admission, reread.Admission)
+	assert.Equal(t, map[string]string{"read": "Read your messages"}, reread.Descriptions)
+
+	c := f.client(t, org, project, "Claude Code")
+	require.NoError(t, f.svc.LinkMetadataClient(ctx, org, project, c.ID, r.ID, reread.MetadataClientScopes()))
+	aud, ok, err := f.svc.Admits(ctx, org, project, r.ID, c.ID, "claude.ai", []string{"read"})
+	require.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, r.Identifier, aud)
+	_, pin, ok, err := f.svc.Resolve(ctx, org, project, c.ID, r.Identifier)
+	require.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, []string{"read"}, pin)
+	accepts, err := f.svc.AcceptsCIMD(ctx, org, project)
+	require.NoError(t, err)
+	assert.True(t, accepts)
+
+	all, err := f.svc.SetAdmission(ctx, org, project, r.PublicID, resourceserver.Admission{})
+	require.NoError(t, err)
+	assert.Nil(t, all.Admission.Scopes)
+	reread, err = f.svc.Get(ctx, org, project, r.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, resourceserver.Admission{}, reread.Admission, "NULL scopes read back as the whole catalog")
+	_, ok, err = f.svc.Admits(ctx, org, project, r.ID, c.ID, "claude.ai", []string{"read"})
+	require.NoError(t, err)
+	assert.False(t, ok, "admission off: refresh refused")
 }

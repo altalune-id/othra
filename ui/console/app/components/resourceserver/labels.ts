@@ -1,4 +1,5 @@
 import type { ResourceServer, VerificationFailure } from '~~/gen/resourceserver/v1/resourceserver_pb';
+import type { CimdCardLabels } from './CimdCard.vue';
 import type { ResourceServerListLabels } from './ResourceServerList.vue';
 import type { ScopeTableLabels } from './ScopeTable.vue';
 import type { VerificationName } from './verification';
@@ -12,8 +13,40 @@ export function resourceServerListLabels(t: Translate): ResourceServerListLabels
   return { name: t('common.name'), identifier: t('rs.uri'), status: t('rs.col_verification'), checked: t('rs.col_checked') };
 }
 
+export function cimdCardLabels(t: Translate): CimdCardLabels {
+  return {
+    title: t('rs.cimd_title'),
+    accept: t('rs.cimd_accept'),
+    acceptHelp: t('rs.cimd_accept_help'),
+    locked: t('rs.cimd_locked'),
+    hosts: t('rs.cimd_hosts'),
+    hostsHelp: t('rs.cimd_hosts_help'),
+    hostsAny: t('rs.cimd_hosts_any'),
+    scopes: t('rs.cimd_scopes'),
+    scopesAll: t('rs.cimd_scopes_all'),
+    scopesSome: t('rs.cimd_scopes_some'),
+    save: t('common.save'),
+    saved: t('common.saved'),
+    apps: t('rs.cimd_apps'),
+    appsEmpty: t('rs.cimd_apps_empty'),
+    firstSeen: t('links.first_seen'),
+    fetched: t('rs.cimd_fetched'),
+    revoke: t('rs.cimd_revoke'),
+    on: t('rs.cimd_on'),
+    off: t('rs.cimd_off'),
+  };
+}
+
 export function scopeTableLabels(t: Translate): ScopeTableLabels {
-  return { legend: t('rs.scopes'), help: t('rs.scopes_help'), scope: t('rs.scope_n'), remove: t('rs.scope_remove'), add: t('rs.add_scope') };
+  return {
+    legend: t('rs.scopes'),
+    help: t('rs.scopes_help'),
+    scope: t('rs.scope_n'),
+    remove: t('rs.scope_remove'),
+    add: t('rs.add_scope'),
+    description: t('rs.scope_description'),
+    descriptionPlaceholder: t('rs.scope_description_placeholder'),
+  };
 }
 
 export function verificationCardLabels(t: Translate): VerificationCardLabels {

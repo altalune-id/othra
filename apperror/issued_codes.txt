@@ -86,3 +86,8 @@ SIG006 AuthorizeRedirectNotRegistered
 SIG007 AuthorizeRequestInvalid
 SIG008 SignOutHintInvalid
 SIG009 SignOutRedirectNotRegistered
+CLT008 ClientMetadataManaged
+RSV010 ResourceServerInvalidClientHost
+RSV011 ResourceServerAdmissionUnverified
+SIG010 AuthorizeClientNotAdmitted
+SIG011 AuthorizeClientMetadataUnusable

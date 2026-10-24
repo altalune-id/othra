@@ -31,16 +31,18 @@ import (
 )
 
 type webFixture struct {
-	t       *testing.T
-	srv     *httptest.Server
-	web     *Web
-	users   *fakeUsers
-	issuers *fakeIssuers
-	acme    *project.Issuer
-	beta    *project.Issuer
-	client  *http.Client
-	reports []string
-	grants  *fakeGrants
+	t          *testing.T
+	srv        *httptest.Server
+	web        *Web
+	users      *fakeUsers
+	issuers    *fakeIssuers
+	acme       *project.Issuer
+	beta       *project.Issuer
+	client     *http.Client
+	reports    []string
+	grants     *fakeGrants
+	admissions *fakeAdmissions
+	consents   *fakeConsents
 }
 
 func newIssuer(handle, name string) *project.Issuer {
@@ -74,7 +76,10 @@ func newWebFixture(t *testing.T) *webFixture {
 	f.grants = newFakeGrants(f.users)
 	marker := NewMarker([]byte("marker-key-marker-key-marker-key"), 15*time.Minute)
 	marker.now = f.users.stamp.now
-	f.web.WithOAuth(testClients(), f.grants, marker)
+	f.admissions, f.consents = &fakeAdmissions{}, newFakeConsents(f.users.stamp.now)
+	f.web.WithOAuth(OAuth{
+		Clients: testClients(), Resources: testResources(), Admissions: f.admissions, Consents: f.consents, Grants: f.grants, Marker: marker,
+	})
 	f.web.Register(mux)
 	f.client = f.newClient()
 	return f
@@ -503,6 +508,7 @@ func TestWeb_RateLimits(t *testing.T) {
 	assert.Contains(t, limited.body, "Try again in "+limited.header.Get("Retry-After")+" seconds.", "B3: the title is not repeated in the body")
 	assert.NotContains(t, limited.body, "Too many attempts. Try again", "the shared AUT003 sentence is not used")
 	assert.Contains(t, limited.body, "AUT003")
+	assert.Contains(t, limited.body, "Back to sign in", "the sign-in flow's own 429 keeps its way back")
 	assert.Equal(t, http.StatusSeeOther, send("beta", "y@example.com").status, "limits are per project")
 }
 

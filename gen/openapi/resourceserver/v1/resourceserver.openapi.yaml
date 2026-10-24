@@ -212,6 +212,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/resourceserver.v1.ListResourceServersResponse'
+  /resourceserver.v1.ResourceServerService/SetResourceServerAdmission:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: SetResourceServerAdmission
+      description: 'SECURITY: CIMD admission lets unregistered apps ask for this server''s scopes; a signed-in person sets it, never MCP.'
+      operationId: resourceserver.v1.ResourceServerService.SetResourceServerAdmission
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.SetResourceServerAdmissionRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.SetResourceServerAdmissionResponse'
   /resourceserver.v1.ResourceServerService/SetResourceServerTrust:
     post:
       tags:
@@ -555,6 +591,31 @@ components:
          the Joda Time's [`ISODateTimeFormat.dateTime()`](
          http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
          ) to obtain a formatter capable of generating timestamps in this format.
+    resourceserver.v1.CIMDAdmission:
+      type: object
+      properties:
+        accept:
+          type: boolean
+          title: accept
+          description: accept is off by default and can be turned on only while the server is verified or trusted.
+        hosts:
+          type: array
+          items:
+            type: string
+          title: hosts
+          description: hosts are the lower-case host names a client_id URL may have; empty means any host.
+        allScopes:
+          type: boolean
+          title: all_scopes
+          description: all_scopes follows the server's scopes; false allows only scopes.
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+      title: CIMDAdmission
+      additionalProperties: false
+      description: CIMDAdmission is a resource server's admission of apps that sign in with a Client ID Metadata Document.
     resourceserver.v1.CreateResourceServerRequest:
       type: object
       properties:
@@ -584,11 +645,31 @@ components:
         trusted:
           type: boolean
           title: trusted
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          maxProperties: 64
+          additionalProperties:
+            type: string
+            title: value
+            maxLength: 120
+            minLength: 1
       title: CreateResourceServerRequest
       required:
         - projectId
         - name
         - identifier
+      additionalProperties: false
+    resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
       additionalProperties: false
     resourceserver.v1.CreateResourceServerResponse:
       type: object
@@ -678,6 +759,14 @@ components:
           description: scopes are the resource server scopes the client may ask for.
         createdAt:
           title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        clientMetadataUrl:
+          type: string
+          title: client_metadata_url
+          description: client_metadata_url is the client_id URL of an app without registration (CIMD); empty for a registered client.
+        metadataFetchedAt:
+          title: metadata_fetched_at
+          description: metadata_fetched_at is when Othra last read that app's metadata document.
           $ref: '#/components/schemas/google.protobuf.Timestamp'
       title: Link
       additionalProperties: false
@@ -844,7 +933,29 @@ components:
         updatedAt:
           title: updated_at
           $ref: '#/components/schemas/google.protobuf.Timestamp'
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          additionalProperties:
+            type: string
+            title: value
+          description: scope_descriptions says what each scope lets an app do, shown on the consent page; a scope may have none.
+        cimd:
+          title: cimd
+          description: cimd is whether apps without registration (CIMD) may ask for this server's scopes.
+          $ref: '#/components/schemas/resourceserver.v1.CIMDAdmission'
       title: ResourceServer
+      additionalProperties: false
+    resourceserver.v1.ResourceServer.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
       additionalProperties: false
     resourceserver.v1.ResourceServerState:
       type: string
@@ -855,6 +966,52 @@ components:
         - RESOURCE_SERVER_STATE_VERIFIED
         - RESOURCE_SERVER_STATE_FAILED
       description: ResourceServerState is where RFC 9728 verification stands.
+    resourceserver.v1.SetResourceServerAdmissionRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        accept:
+          type: boolean
+          title: accept
+        hosts:
+          type: array
+          items:
+            type: string
+            maxLength: 253
+          title: hosts
+          maxItems: 64
+        allScopes:
+          type: boolean
+          title: all_scopes
+        scopes:
+          type: array
+          items:
+            type: string
+            maxLength: 128
+          title: scopes
+          maxItems: 64
+      title: SetResourceServerAdmissionRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.SetResourceServerAdmissionResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: SetResourceServerAdmissionResponse
+      additionalProperties: false
     resourceserver.v1.SetResourceServerTrustRequest:
       type: object
       properties:
@@ -979,11 +1136,31 @@ components:
           title: scopes
           maxItems: 64
           minItems: 1
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          maxProperties: 64
+          additionalProperties:
+            type: string
+            title: value
+            maxLength: 120
+            minLength: 1
       title: UpdateResourceServerRequest
       required:
         - projectId
         - resourceServerId
         - name
+      additionalProperties: false
+    resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
       additionalProperties: false
     resourceserver.v1.UpdateResourceServerResponse:
       type: object

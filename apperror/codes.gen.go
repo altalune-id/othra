@@ -86,6 +86,7 @@ const (
 	CodeClientSecretPersonOnly   Code = "CLT005"
 	CodeClientSecretNotFound     Code = "CLT006"
 	CodeClientSecretExists       Code = "CLT007"
+	CodeClientMetadataManaged    Code = "CLT008"
 
 	CodeResourceServerNotFound            Code = "RSV001"
 	CodeResourceServerInvalidIdentifier   Code = "RSV002"
@@ -96,16 +97,20 @@ const (
 	CodeResourceServerTrustSelfHostedOnly Code = "RSV007"
 	CodeResourceServerVerifyTooSoon       Code = "RSV008"
 	CodeResourceServerInvalidLinkScopes   Code = "RSV009"
+	CodeResourceServerInvalidClientHost   Code = "RSV010"
+	CodeResourceServerAdmissionUnverified Code = "RSV011"
 
-	CodeSignInLinkNotUsable            Code = "SIG001"
-	CodeSignInEmailDisabled            Code = "SIG002"
-	CodeSignInSessionGone              Code = "SIG003"
-	CodeSignInFormExpired              Code = "SIG004"
-	CodeAuthorizeClientUnknown         Code = "SIG005"
-	CodeAuthorizeRedirectNotRegistered Code = "SIG006"
-	CodeAuthorizeRequestInvalid        Code = "SIG007"
-	CodeSignOutHintInvalid             Code = "SIG008"
-	CodeSignOutRedirectNotRegistered   Code = "SIG009"
+	CodeSignInLinkNotUsable             Code = "SIG001"
+	CodeSignInEmailDisabled             Code = "SIG002"
+	CodeSignInSessionGone               Code = "SIG003"
+	CodeSignInFormExpired               Code = "SIG004"
+	CodeAuthorizeClientUnknown          Code = "SIG005"
+	CodeAuthorizeRedirectNotRegistered  Code = "SIG006"
+	CodeAuthorizeRequestInvalid         Code = "SIG007"
+	CodeSignOutHintInvalid              Code = "SIG008"
+	CodeSignOutRedirectNotRegistered    Code = "SIG009"
+	CodeAuthorizeClientNotAdmitted      Code = "SIG010"
+	CodeAuthorizeClientMetadataUnusable Code = "SIG011"
 )
 
 var kinds = map[Code]Kind{
@@ -191,6 +196,7 @@ var kinds = map[Code]Kind{
 	CodeClientSecretPersonOnly:   KindForbidden,
 	CodeClientSecretNotFound:     KindNotFound,
 	CodeClientSecretExists:       KindFailedPrecondition,
+	CodeClientMetadataManaged:    KindFailedPrecondition,
 
 	CodeResourceServerNotFound:            KindNotFound,
 	CodeResourceServerInvalidIdentifier:   KindInvalid,
@@ -201,14 +207,18 @@ var kinds = map[Code]Kind{
 	CodeResourceServerTrustSelfHostedOnly: KindFailedPrecondition,
 	CodeResourceServerVerifyTooSoon:       KindResourceExhausted,
 	CodeResourceServerInvalidLinkScopes:   KindInvalid,
+	CodeResourceServerInvalidClientHost:   KindInvalid,
+	CodeResourceServerAdmissionUnverified: KindFailedPrecondition,
 
-	CodeSignInLinkNotUsable:            KindFailedPrecondition,
-	CodeSignInEmailDisabled:            KindFailedPrecondition,
-	CodeSignInSessionGone:              KindFailedPrecondition,
-	CodeSignInFormExpired:              KindForbidden,
-	CodeAuthorizeClientUnknown:         KindNotFound,
-	CodeAuthorizeRedirectNotRegistered: KindInvalid,
-	CodeAuthorizeRequestInvalid:        KindInvalid,
-	CodeSignOutHintInvalid:             KindInvalid,
-	CodeSignOutRedirectNotRegistered:   KindInvalid,
+	CodeSignInLinkNotUsable:             KindFailedPrecondition,
+	CodeSignInEmailDisabled:             KindFailedPrecondition,
+	CodeSignInSessionGone:               KindFailedPrecondition,
+	CodeSignInFormExpired:               KindForbidden,
+	CodeAuthorizeClientUnknown:          KindNotFound,
+	CodeAuthorizeRedirectNotRegistered:  KindInvalid,
+	CodeAuthorizeRequestInvalid:         KindInvalid,
+	CodeSignOutHintInvalid:              KindInvalid,
+	CodeSignOutRedirectNotRegistered:    KindInvalid,
+	CodeAuthorizeClientNotAdmitted:      KindNotFound,
+	CodeAuthorizeClientMetadataUnusable: KindFailedPrecondition,
 }

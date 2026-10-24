@@ -21,6 +21,10 @@ type ResourceServers struct {
 	Trusted             postgres.ColumnBool
 	TrustedAt           postgres.ColumnTimestampz
 	TrustedBy           postgres.ColumnString
+	AcceptCIMDClients   postgres.ColumnBool
+	CIMDClientHosts     postgres.ColumnString
+	CIMDScopes          postgres.ColumnString
+	ScopeDescriptions   postgres.ColumnString
 	CreatedAt           postgres.ColumnTimestampz
 	UpdatedAt           postgres.ColumnTimestampz
 
@@ -48,11 +52,16 @@ func NewResourceServers(schema, tablePrefix string) *ResourceServers {
 		trusted             = postgres.BoolColumn("trusted")
 		trustedAt           = postgres.TimestampzColumn("trusted_at")
 		trustedBy           = postgres.StringColumn("trusted_by")
+		acceptCIMDClients   = postgres.BoolColumn("accept_cimd_clients")
+		cimdClientHosts     = postgres.StringColumn("cimd_client_hosts")
+		cimdScopes          = postgres.StringColumn("cimd_scopes")
+		scopeDescriptions   = postgres.StringColumn("scope_descriptions")
 		createdAt           = postgres.TimestampzColumn("created_at")
 		updatedAt           = postgres.TimestampzColumn("updated_at")
 		all                 = postgres.ColumnList{
-			id, publicID, orgID, projectID, name, identifier, scopes, verificationState, verifiedAt,
-			lastCheckedAt, lastError, consecutiveFailures, trusted, trustedAt, trustedBy, createdAt, updatedAt,
+			id, publicID, orgID, projectID, name, identifier, scopes, verificationState,
+			verifiedAt, lastCheckedAt, lastError, consecutiveFailures, trusted, trustedAt, trustedBy, acceptCIMDClients,
+			cimdClientHosts, cimdScopes, scopeDescriptions, createdAt, updatedAt,
 		}
 	)
 	return &ResourceServers{
@@ -72,6 +81,10 @@ func NewResourceServers(schema, tablePrefix string) *ResourceServers {
 		Trusted:             trusted,
 		TrustedAt:           trustedAt,
 		TrustedBy:           trustedBy,
+		AcceptCIMDClients:   acceptCIMDClients,
+		CIMDClientHosts:     cimdClientHosts,
+		CIMDScopes:          cimdScopes,
+		ScopeDescriptions:   scopeDescriptions,
 		CreatedAt:           createdAt,
 		UpdatedAt:           updatedAt,
 		AllColumns:          all,

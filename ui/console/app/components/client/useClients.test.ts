@@ -1,7 +1,7 @@
 import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ClientSchema } from '../../../gen/client/v1/client_pb';
+import { ClientRegistration, ClientSchema } from '../../../gen/client/v1/client_pb';
 import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
 import { useClient, useClientList } from './useClients';
 
@@ -86,5 +86,14 @@ describe('useClient', () => {
     pending.resolve({});
     expect(await first).toBe(true);
     expect(deleteClient).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useClientList and apps without registration (M6)', () => {
+  it('lists registered clients only', async () => {
+    setClient('$clientClient', { listClients: vi.fn().mockResolvedValue({ clients: [web, create(ClientSchema, { id: 'c', name: 'Claude Code', registration: ClientRegistration.CIMD })] }) });
+    const l = useClientList(projectId);
+    await l.load();
+    expect(l.clients.value.map(c => c.name)).toEqual(['Store web']);
   });
 });

@@ -19,11 +19,12 @@ func (s *postgresStore) InsertCode(ctx context.Context, projectID uuid.UUID, c N
 		method = nullString(MethodS256)
 	}
 	stmt := t.INSERT(t.ID, t.OrgID, t.ProjectID, t.CodeHash, t.ClientID, t.EndUserID, t.UserSessionID, t.RedirectURI, t.Scopes,
-		t.CodeChallenge, t.CodeChallengeMethod, t.Nonce, t.AuthTime, t.CreatedAt, t.ExpiresAt).
+		t.CodeChallenge, t.CodeChallengeMethod, t.Nonce, t.AuthTime, t.CreatedAt, t.ExpiresAt, t.ResourceServerID).
 		QUERY(postgres.SELECT(
 			postgres.UUID(c.ID), cl.OrgID, cl.ProjectID, postgres.String(c.Hash), cl.ID, us.EndUserID, us.ID,
 			postgres.String(c.RedirectURI), db.TextArray(c.Scopes), nullString(c.CodeChallenge), method, nullString(c.Nonce),
 			postgres.TimestampzT(c.AuthTime.UTC()), postgres.TimestampzT(c.CreatedAt.UTC()), postgres.TimestampzT(c.ExpiresAt.UTC()),
+			nullUUID(c.ResourceServerID),
 		).
 			FROM(cl.INNER_JOIN(us, us.ProjectID.EQ(cl.ProjectID)).INNER_JOIN(eu, eu.ID.EQ(us.EndUserID))).
 			WHERE(cl.ProjectID.EQ(project).AND(cl.PublicID.EQ(postgres.String(c.Client))).
@@ -49,9 +50,9 @@ func (s *postgresStore) UseCode(ctx context.Context, projectID, codeID, familyID
 func (s *postgresStore) InsertFamily(ctx context.Context, orgID, projectID uuid.UUID, f *Family) error {
 	t := s.families
 	stmt := t.INSERT(t.ID, t.PublicID, t.OrgID, t.ProjectID, t.ClientID, t.EndUserID, t.UserSessionID, t.UserSessionPublicID, t.Scopes,
-		t.AuthTime, t.CreatedAt, t.LastUsedAt, t.AbsoluteExpiresAt).
+		t.AuthTime, t.CreatedAt, t.LastUsedAt, t.AbsoluteExpiresAt, t.ResourceServerID).
 		VALUES(f.ID, f.PublicID, orgID, projectID, f.ClientID, f.EndUserID, f.UserSessionID, f.UserSession, db.TextArray(f.Scopes),
-			f.AuthTime.UTC(), f.CreatedAt.UTC(), f.LastUsedAt.UTC(), f.AbsoluteExpiresAt.UTC())
+			f.AuthTime.UTC(), f.CreatedAt.UTC(), f.LastUsedAt.UTC(), f.AbsoluteExpiresAt.UTC(), nullUUID(f.ResourceServerID))
 	_, err := s.exec(ctx, "InsertFamily", stmt)
 	return err
 }
@@ -91,14 +92,24 @@ func (s *postgresStore) RevokeUserSession(ctx context.Context, projectID uuid.UU
 	return err
 }
 
-// InsertAccessToken stores an access token of the family by its hash.
+// InsertAccessToken stores an access token of the family, bound to resourceServerID or nil, by its hash.
 func (s *postgresStore) InsertAccessToken(
-	ctx context.Context, orgID, projectID, familyID uuid.UUID, hash string, scopes []string, now, expires time.Time,
+	ctx context.Context, orgID, projectID, familyID uuid.UUID, resourceServerID *uuid.UUID, hash string, scopes []string,
+	now, expires time.Time,
 ) error {
 	t := s.access
-	stmt := t.INSERT(t.ID, t.OrgID, t.ProjectID, t.FamilyID, t.TokenHash, t.Scopes, t.CreatedAt, t.ExpiresAt).
-		VALUES(uuid.New(), orgID, projectID, familyID, hash, db.TextArray(scopes), now.UTC(), expires.UTC())
+	stmt := t.INSERT(t.ID, t.OrgID, t.ProjectID, t.FamilyID, t.TokenHash, t.Scopes, t.CreatedAt, t.ExpiresAt, t.ResourceServerID).
+		VALUES(uuid.New(), orgID, projectID, familyID, hash, db.TextArray(scopes), now.UTC(), expires.UTC(), nullUUID(resourceServerID))
 	_, err := s.exec(ctx, "InsertAccessToken", stmt)
+	return err
+}
+
+// RevokeAccessToken revokes the access token tokenID alone at now.
+func (s *postgresStore) RevokeAccessToken(ctx context.Context, projectID, tokenID uuid.UUID, now time.Time) error {
+	t := s.access
+	stmt := t.UPDATE(t.RevokedAt).SET(postgres.TimestampzT(now.UTC())).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(tokenID))).AND(t.RevokedAt.IS_NULL()))
+	_, err := s.exec(ctx, "RevokeAccessToken", stmt)
 	return err
 }
 

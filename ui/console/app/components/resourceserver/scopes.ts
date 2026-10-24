@@ -2,6 +2,7 @@ export type ScopeReason = 'required' | 'format' | 'reserved' | 'duplicate';
 
 export const reservedScopes = ['openid', 'profile', 'email', 'offline_access'];
 export const maxScopes = 64;
+export const maxDescription = 120;
 const token = /^[\x21\x23-\x5B\x5D-\x7E]{1,128}$/;
 
 // scopeProblem applies the RFC 6749 §3.3 scope-token grammar, the 128-character limit and the built-in names.

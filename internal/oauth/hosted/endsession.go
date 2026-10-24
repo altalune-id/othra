@@ -56,7 +56,7 @@ func (h *Web) endSession(w http.ResponseWriter, r *http.Request, s *site) {
 		h.formExpired(w, r, s)
 		return
 	}
-	userSession, live, err := h.grants.SessionOf(r.Context(), s.project(), es.sid)
+	userSession, live, err := h.oauth.Grants.SessionOf(r.Context(), s.project(), es.sid)
 	if err != nil {
 		h.fail(w, r, s, "hosted: end session", err)
 		return
@@ -75,7 +75,7 @@ func (h *Web) endSession(w http.ResponseWriter, r *http.Request, s *site) {
 		h.afterLogout(w, r, s, es)
 		return
 	}
-	if err := h.grants.EndSession(r.Context(), s.project(), es.sid, userSession); err != nil {
+	if err := h.oauth.Grants.EndSession(r.Context(), s.project(), es.sid, userSession); err != nil {
 		h.fail(w, r, s, "hosted: end session", err)
 		return
 	}
@@ -87,14 +87,14 @@ func (h *Web) parseEndSession(r *http.Request, s *site, q url.Values) (*endSessi
 	if raw == "" || len(raw) > maxHintLen {
 		return nil, apperror.CodeSignOutHintInvalid, nil
 	}
-	hint, ok, err := h.grants.VerifyHint(r.Context(), s.project(), raw)
+	hint, ok, err := h.oauth.Grants.VerifyHint(r.Context(), s.project(), raw)
 	if err != nil || !ok || len(hint.Audience) == 0 {
 		return nil, apperror.CodeSignOutHintInvalid, err
 	}
 	if id := q.Get("client_id"); id != "" && !slices.Contains(hint.Audience, id) {
 		return nil, apperror.CodeSignOutHintInvalid, nil
 	}
-	c, ok, err := h.clients.Client(r.Context(), s.project(), hint.Audience[0])
+	c, ok, err := h.oauth.Clients.Client(r.Context(), s.project(), hint.Audience[0])
 	if err != nil || !ok {
 		return nil, apperror.CodeSignOutHintInvalid, err
 	}

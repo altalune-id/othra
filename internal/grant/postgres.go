@@ -56,6 +56,7 @@ type familyRow struct {
 	LastUsedAt        time.Time  `alias:"grant_families.last_used_at"`
 	AbsoluteExpiresAt time.Time  `alias:"grant_families.absolute_expires_at"`
 	RevokedAt         *time.Time `alias:"grant_families.revoked_at"`
+	ResourceServerID  *uuid.UUID `alias:"grant_families.resource_server_id"`
 }
 
 func (r *familyRow) toFamily() (*Family, error) {
@@ -67,6 +68,7 @@ func (r *familyRow) toFamily() (*Family, error) {
 		ID: r.ID, PublicID: r.PublicID, ClientID: r.ClientID, EndUserID: r.EndUserID, UserSessionID: r.UserSessionID,
 		UserSession: r.UserSession, Scopes: scopes, AuthTime: r.AuthTime.UTC(), CreatedAt: r.CreatedAt.UTC(),
 		LastUsedAt: r.LastUsedAt.UTC(), AbsoluteExpiresAt: r.AbsoluteExpiresAt.UTC(), RevokedAt: utc(r.RevokedAt),
+		ResourceServerID: r.ResourceServerID,
 	}, nil
 }
 
@@ -85,6 +87,7 @@ type codeRow struct {
 	FamilyID      *uuid.UUID `alias:"authorization_codes.family_id"`
 	UserSession   *string    `alias:"user_sessions.public_id"`
 	FamilySID     *string    `alias:"grant_families.public_id"`
+	ResourceID    *uuid.UUID `alias:"authorization_codes.resource_server_id"`
 }
 
 func (r *codeRow) toCode() (*Code, error) {
@@ -96,7 +99,7 @@ func (r *codeRow) toCode() (*Code, error) {
 		ID: r.ID, ClientID: r.ClientID, EndUserID: r.EndUserID, UserSessionID: r.UserSessionID, UserSession: deref(r.UserSession),
 		RedirectURI: r.RedirectURI, Scopes: scopes, CodeChallenge: deref(r.CodeChallenge), Nonce: deref(r.Nonce),
 		AuthTime: r.AuthTime.UTC(), ExpiresAt: r.ExpiresAt.UTC(), UsedAt: utc(r.UsedAt), FamilyID: r.FamilyID,
-		FamilySID: deref(r.FamilySID),
+		FamilySID: deref(r.FamilySID), ResourceServerID: r.ResourceID,
 	}, nil
 }
 
@@ -105,6 +108,7 @@ func (s *postgresStore) familyColumns() postgres.ProjectionList {
 	return postgres.ProjectionList{
 		t.ID, t.PublicID, t.ClientID, t.EndUserID, t.UserSessionID, t.UserSessionPublicID,
 		db.ArrayAsJSON(t.Scopes, "grant_families.scopes"), t.AuthTime, t.CreatedAt, t.LastUsedAt, t.AbsoluteExpiresAt, t.RevokedAt,
+		t.ResourceServerID,
 	}
 }
 
@@ -129,6 +133,13 @@ func nullString(v string) postgres.Expression {
 		return postgres.NULL
 	}
 	return postgres.String(v)
+}
+
+func nullUUID(v *uuid.UUID) postgres.Expression {
+	if v == nil {
+		return postgres.NULL
+	}
+	return postgres.UUID(*v)
 }
 
 func deref(v *string) string {

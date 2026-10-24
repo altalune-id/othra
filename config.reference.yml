@@ -155,6 +155,17 @@ nats:
 oauth:
   # env: OTHRA_OAUTH_ACCESS_TOKEN_TTL
   accessTokenTTL: 15m
+  cimd:
+    # env: OTHRA_OAUTH_CIMD_ALLOW_PRIVATE_HOSTS
+    allowPrivateHosts: false
+    # env: OTHRA_OAUTH_CIMD_CACHE_MAX
+    cacheMax: 24h
+    # env: OTHRA_OAUTH_CIMD_CACHE_MIN
+    cacheMin: 5m
+    # env: OTHRA_OAUTH_CIMD_FETCH_TIMEOUT
+    fetchTimeout: 5s
+    # env: OTHRA_OAUTH_CIMD_MAX_BYTES
+    maxBytes: 5120
   # env: OTHRA_OAUTH_CODE_TTL
   codeTTL: 60s
   # env: OTHRA_OAUTH_ID_TOKEN_TTL

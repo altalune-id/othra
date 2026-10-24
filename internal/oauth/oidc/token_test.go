@@ -45,6 +45,7 @@ type grants struct {
 	tokens   *grant.Tokens
 	access   *grant.Access
 	err      error
+	revoked  []string
 }
 
 func (g *grants) Exchange(_ context.Context, _ grant.Project, req grant.ExchangeRequest) (*grant.Tokens, error) {
@@ -55,6 +56,11 @@ func (g *grants) Exchange(_ context.Context, _ grant.Project, req grant.Exchange
 func (g *grants) Refresh(_ context.Context, _ grant.Project, req grant.RefreshRequest) (*grant.Tokens, error) {
 	g.refresh = &req
 	return g.tokens, g.err
+}
+
+func (g *grants) Revoke(_ context.Context, _ grant.Project, c grant.Client, token, hint string) error {
+	g.revoked = append(g.revoked, c.OAuthID+" "+token+" "+hint)
+	return g.err
 }
 
 func (g *grants) Access(context.Context, grant.Project, string) (*grant.Access, error) {
@@ -182,7 +188,7 @@ func TestToken_CodeGrantWithBasic(t *testing.T) {
 	assert.Equal(t, grant.ExchangeRequest{
 		Client: f.grants.exchange.Client, Code: "c-1", RedirectURI: "https://a.example/cb", CodeVerifier: "v-1",
 	}, *f.grants.exchange)
-	assert.Equal(t, "basic", f.grants.exchange.Client.PublicID)
+	assert.Equal(t, "basic", f.grants.exchange.Client.OAuthID)
 	assert.True(t, f.grants.exchange.Client.Refresh)
 
 	in := f.idTokens.in
@@ -410,4 +416,115 @@ func TestUserinfo(t *testing.T) {
 	rec = f.userinfo(t, http.MethodDelete, "")
 	assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
 	assert.Equal(t, "GET, POST, OPTIONS", rec.Header().Get("Allow"))
+}
+
+// RFC 8707 §2: a resource the grant isn't bound to is invalid_target; the resource reaches the grant on code and refresh.
+func TestToken_Resource(t *testing.T) {
+	f := newTokenFixture(t)
+	auth := []string{"Authorization", basic("basic", secret)}
+	rec := f.post(t, tokenURL, codeForm("resource", "https://api.example/mcp"), auth...)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "https://api.example/mcp", f.grants.exchange.Resource)
+
+	rec = f.post(t, tokenURL, url.Values{"grant_type": {"refresh_token"}, "refresh_token": {"r"}, "resource": {"https://api.example/mcp"}}, auth...)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "https://api.example/mcp", f.grants.refresh.Resource)
+
+	f.grants.err = &grant.InvalidTargetError{}
+	rec = f.post(t, tokenURL, codeForm("resource", "https://other.example/"), auth...)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Equal(t, "invalid_target", oauthErr(t, rec))
+}
+
+// E8-3: a refresh that narrows openid away gets no ID token.
+func TestToken_RefreshWithoutOpenIDGetsNoIDToken(t *testing.T) {
+	f := newTokenFixture(t)
+	f.grants.tokens.Scopes = []string{"offline_access"}
+	f.grants.tokens.Nonce = ""
+	rec := f.post(t, tokenURL, url.Values{"grant_type": {"refresh_token"}, "refresh_token": {"r"}, "scope": {"offline_access"}},
+		"Authorization", basic("basic", secret))
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assert.Nil(t, f.idTokens.in, "the family still holds openid, but this request narrowed it away")
+	assert.NotContains(t, rec.Body.String(), "id_token")
+}
+
+// RFC 6750 §3.1: a token bound to a resource server is not a userinfo token.
+func TestUserinfo_RefusesResourceTokens(t *testing.T) {
+	f := newTokenFixture(t)
+	rs := uuid.New()
+	f.grants.access = &grant.Access{Family: f.grants.tokens.Family, Scopes: []string{"openid"}, ResourceServerID: &rs}
+	rec := f.userinfo(t, http.MethodGet, "", "Authorization", "Bearer at-1")
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Contains(t, rec.Header().Get("WWW-Authenticate"), `error="invalid_token"`)
+}
+
+const revokeURL = "/p/acme-web/oauth2/revoke"
+
+// RFC 7009: the /token client authentication, token required, 200 with no body whatever happened.
+func TestRevoke(t *testing.T) {
+	f := newTokenFixture(t)
+	rec := f.post(t, revokeURL, url.Values{"token": {"rt-1"}, "token_type_hint": {"refresh_token"}}, "Authorization", basic("basic", secret))
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Empty(t, rec.Body.String())
+	assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"))
+	assert.Equal(t, []string{"basic rt-1 refresh_token"}, f.grants.revoked)
+
+	rec = f.post(t, revokeURL, url.Values{"token": {"at-1"}, "client_id": {"cli"}})
+	assert.Equal(t, http.StatusOK, rec.Code, "a public client revokes with its client_id")
+
+	rec = f.post(t, revokeURL, url.Values{"token": {"at-1"}, "client_id": {"basic"}, "client_secret": {"wrong"}})
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Equal(t, "invalid_client", oauthErr(t, rec))
+
+	rec = f.post(t, revokeURL, url.Values{"client_id": {"cli"}})
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Equal(t, "invalid_request", oauthErr(t, rec))
+
+	f.grants.err = errors.New("db down")
+	rec = f.post(t, revokeURL, url.Values{"token": {"x"}, "client_id": {"cli"}})
+	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
+
+	get := f.do(t, http.MethodGet, revokeURL)
+	assert.Equal(t, http.StatusMethodNotAllowed, get.Code)
+}
+
+// CIMD: a shadow client authenticates with none; its OAuth client_id is its metadata URL, in the ID token aud and to the grant.
+func TestToken_CIMDClient(t *testing.T) {
+	f := newTokenFixture(t)
+	metadata := "https://claude.ai/oauth/claude-code-client-metadata"
+	f.web.WithTokens(oidc.Tokens{
+		Clients: clients{metadata: {
+			ID: uuid.New(), PublicID: "shadow", MetadataURL: metadata, TokenEndpointAuthMethod: client.AuthNone,
+			GrantTypes: []string{"authorization_code", "refresh_token"},
+		}},
+		Grants: f.grants, EndUsers: f.users, IDTokens: f.idTokens, Limits: layout.Limits{Limiter: f.limiter},
+	})
+	f.mux = http.NewServeMux()
+	f.web.Register(f.mux)
+	rec := f.post(t, tokenURL, codeForm("client_id", metadata))
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assert.Equal(t, metadata, f.grants.exchange.Client.OAuthID)
+	assert.Equal(t, "claude.ai", f.grants.exchange.Client.CIMDHost)
+	assert.Equal(t, []string{metadata}, f.idTokens.in.Audience)
+}
+
+// R-8, RFC 8707 §2: two different resources at /token or refresh are invalid_target; a repeated equal one counts once.
+func TestToken_RepeatedResource(t *testing.T) {
+	f := newTokenFixture(t)
+	auth := []string{"Authorization", basic("basic", secret)}
+	for name, form := range map[string]url.Values{
+		"code":    codeForm(),
+		"refresh": {"grant_type": {"refresh_token"}, "refresh_token": {"r"}},
+	} {
+		form["resource"] = []string{"https://a.example/mcp", "https://b.example/mcp"}
+		rec := f.post(t, tokenURL, form, auth...)
+		assert.Equal(t, http.StatusBadRequest, rec.Code, name)
+		assert.Equal(t, "invalid_target", oauthErr(t, rec), name)
+
+		form["resource"] = []string{"https://a.example/mcp", "https://a.example/mcp"}
+		rec = f.post(t, tokenURL, form, auth...)
+		assert.Equal(t, http.StatusOK, rec.Code, "%s: %s", name, rec.Body.String())
+	}
+	assert.Equal(t, "https://a.example/mcp", f.grants.exchange.Resource)
+	assert.Equal(t, "https://a.example/mcp", f.grants.refresh.Resource)
 }

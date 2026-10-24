@@ -20,6 +20,11 @@ type OAuthClients struct {
 	PostLogoutRedirectURIs  postgres.ColumnString
 	ConsentPolicy           postgres.ColumnString
 	PKCERequired            postgres.ColumnBool
+	RegistrationKind        postgres.ColumnString
+	MetadataURL             postgres.ColumnString
+	MetadataFetchedAt       postgres.ColumnTimestampz
+	MetadataExpiresAt       postgres.ColumnTimestampz
+	ClientURI               postgres.ColumnString
 	CreatedAt               postgres.ColumnTimestampz
 	UpdatedAt               postgres.ColumnTimestampz
 
@@ -46,11 +51,17 @@ func NewOAuthClients(schema, tablePrefix string) *OAuthClients {
 		postLogoutRedirectURIs  = postgres.StringColumn("post_logout_redirect_uris")
 		consentPolicy           = postgres.StringColumn("consent_policy")
 		pkceRequired            = postgres.BoolColumn("pkce_required")
+		registrationKind        = postgres.StringColumn("registration_kind")
+		metadataURL             = postgres.StringColumn("metadata_url")
+		metadataFetchedAt       = postgres.TimestampzColumn("metadata_fetched_at")
+		metadataExpiresAt       = postgres.TimestampzColumn("metadata_expires_at")
+		clientURI               = postgres.StringColumn("client_uri")
 		createdAt               = postgres.TimestampzColumn("created_at")
 		updatedAt               = postgres.TimestampzColumn("updated_at")
 		all                     = postgres.ColumnList{
 			id, publicID, orgID, projectID, name, clientType, applicationType, tokenEndpointAuthMethod,
-			grantTypes, allowedScopes, redirectURIs, postLogoutRedirectURIs, consentPolicy, pkceRequired, createdAt, updatedAt,
+			grantTypes, allowedScopes, redirectURIs, postLogoutRedirectURIs, consentPolicy, pkceRequired, registrationKind, metadataURL,
+			metadataFetchedAt, metadataExpiresAt, clientURI, createdAt, updatedAt,
 		}
 	)
 	return &OAuthClients{
@@ -69,6 +80,11 @@ func NewOAuthClients(schema, tablePrefix string) *OAuthClients {
 		PostLogoutRedirectURIs:  postLogoutRedirectURIs,
 		ConsentPolicy:           consentPolicy,
 		PKCERequired:            pkceRequired,
+		RegistrationKind:        registrationKind,
+		MetadataURL:             metadataURL,
+		MetadataFetchedAt:       metadataFetchedAt,
+		MetadataExpiresAt:       metadataExpiresAt,
+		ClientURI:               clientURI,
 		CreatedAt:               createdAt,
 		UpdatedAt:               updatedAt,
 		AllColumns:              all,

@@ -81,7 +81,7 @@ const (
 	hintLen     = 4
 )
 
-// Client is a registered OAuth client; its PublicID is the OAuth client_id.
+// Client is an OAuth client of a project; OAuthID is its client_id.
 type Client struct {
 	ID                      uuid.UUID
 	PublicID                string
@@ -97,9 +97,14 @@ type Client struct {
 	PostLogoutRedirectURIs  []string
 	ConsentPolicy           ConsentPolicy
 	PKCERequired            bool
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
-	Secrets                 []Secret
+	// MetadataURL is set on a Client ID Metadata Document client, a read-only shadow row its document defines (ADR-0021 D2).
+	MetadataURL       string
+	ClientURI         string
+	MetadataFetchedAt *time.Time
+	MetadataExpiresAt *time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Secrets           []Secret
 }
 
 // Secret is one of a client's live secrets; the plaintext is never kept.
@@ -143,6 +148,17 @@ func (c *Client) Preset(kind Kind) {
 	}
 	c.ClientType, c.ApplicationType, c.TokenEndpointAuthMethod = TypeConfidential, AppWeb, AuthClientSecretBasic
 }
+
+// OAuthID is the client_id on the wire: the metadata document URL of a shadow client, else the public id.
+func (c *Client) OAuthID() string {
+	if c.MetadataURL != "" {
+		return c.MetadataURL
+	}
+	return c.PublicID
+}
+
+// Managed reports whether the client is defined by its metadata document and so can't be changed here.
+func (c *Client) Managed() bool { return c.MetadataURL != "" }
 
 // Kind is the preset the client's application type came from.
 func (c *Client) Kind() Kind {

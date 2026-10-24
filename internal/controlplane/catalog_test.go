@@ -199,6 +199,7 @@ func samples() []error {
 		&client.SecretPersonOnlyError{},
 		&client.SecretNotFoundError{},
 		&client.SecretExistsError{},
+		&client.MetadataManagedError{},
 
 		&resourceserver.NotFoundError{},
 		&resourceserver.InvalidIdentifierError{Identifier: "https://A.example", Reason: resourceserver.IdentifierNotCanonical, Canonical: "https://a.example"},
@@ -214,7 +215,14 @@ func samples() []error {
 		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeReserved},
 		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeDuplicate},
 		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeTooMany},
+		&resourceserver.InvalidScopeError{Scope: "x", Reason: resourceserver.ScopeDescription},
 		&resourceserver.ScopePinnedError{Scope: "read", Clients: []string{"Web"}},
+		&resourceserver.ScopePinnedError{Scope: "read", CIMD: true},
+		&resourceserver.InvalidClientHostError{Host: "x", Reason: resourceserver.HostFormat},
+		&resourceserver.InvalidClientHostError{Host: "x", Reason: resourceserver.HostIPLiteral},
+		&resourceserver.InvalidClientHostError{Host: "x", Reason: resourceserver.HostDuplicate},
+		&resourceserver.InvalidClientHostError{Host: "x", Reason: resourceserver.HostTooMany},
+		&resourceserver.AdmissionUnverifiedError{},
 		&resourceserver.LinkedError{Clients: []string{"Web"}},
 		&resourceserver.TrustSelfHostedOnlyError{},
 		&resourceserver.VerifyTooSoonError{RetryAt: time.Unix(0, 0)},
@@ -230,6 +238,8 @@ func samples() []error {
 		&hosted.RefusedError{Code: apperror.CodeAuthorizeRequestInvalid},
 		&hosted.RefusedError{Code: apperror.CodeSignOutHintInvalid},
 		&hosted.RefusedError{Code: apperror.CodeSignOutRedirectNotRegistered},
+		&hosted.RefusedError{Code: apperror.CodeAuthorizeClientNotAdmitted},
+		&hosted.RefusedError{Code: apperror.CodeAuthorizeClientMetadataUnusable},
 	}
 }
 

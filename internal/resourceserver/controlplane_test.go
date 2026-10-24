@@ -328,3 +328,50 @@ func TestControlPlane_RefsFailure(t *testing.T) {
 	_, err := cp.ListResourceServers(context.Background(), connect.NewRequest(&resourceserverv1.ListResourceServersRequest{ProjectId: "abcdefghjkmnpqrstuvwx"}))
 	assert.ErrorIs(t, err, errFake)
 }
+
+// E10: SetResourceServerAdmission saves admission; the server and its links show it; out of reach is not-found.
+func TestControlPlane_Admission(t *testing.T) {
+	f := newCPFixture(t, true)
+	rs := f.create(t, f.owner, "http://127.0.0.1:8080/mcp")
+	req := &resourceserverv1.SetResourceServerAdmissionRequest{
+		ProjectId: f.projectPub, ResourceServerId: rs.GetId(), Accept: true, Hosts: []string{"claude.ai"}, Scopes: []string{"read"},
+	}
+	resp, err := f.cp.SetResourceServerAdmission(f.key, connect.NewRequest(req))
+	require.NoError(t, err)
+	cimd := resp.Msg.GetResourceServer().GetCimd()
+	assert.True(t, cimd.GetAccept())
+	assert.Equal(t, []string{"claude.ai"}, cimd.GetHosts())
+	assert.False(t, cimd.GetAllScopes())
+	assert.Equal(t, []string{"read"}, cimd.GetScopes())
+
+	req.AllScopes, req.Scopes = true, nil
+	resp, err = f.cp.SetResourceServerAdmission(f.key, connect.NewRequest(req))
+	require.NoError(t, err)
+	assert.True(t, resp.Msg.GetResourceServer().GetCimd().GetAllScopes())
+
+	managed := f.h.clients.addManaged("Claude Code", "https://claude.ai/oauth/claude-code-client-metadata")
+	server, err := f.h.svc.Get(context.Background(), f.h.org, f.h.project, rs.GetId())
+	require.NoError(t, err)
+	require.NoError(t, f.h.svc.LinkMetadataClient(context.Background(), f.h.org, f.h.project, managed.ID, server.ID, []string{"read"}))
+	links, err := f.cp.ListLinks(f.owner, connect.NewRequest(&resourceserverv1.ListLinksRequest{
+		ProjectId: f.projectPub, Target: &resourceserverv1.ListLinksRequest_ResourceServerId{ResourceServerId: rs.GetId()},
+	}))
+	require.NoError(t, err)
+	require.Len(t, links.Msg.GetLinks(), 1)
+	assert.Equal(t, managed.MetadataURL, links.Msg.GetLinks()[0].GetClientMetadataUrl())
+	assert.NotNil(t, links.Msg.GetLinks()[0].GetMetadataFetchedAt())
+
+	req.ProjectId = f.foreignPub
+	_, err = f.cp.SetResourceServerAdmission(f.owner, connect.NewRequest(req))
+	assert.True(t, IsProjectNotFoundError(err), "%v", err)
+	req.ProjectId, req.Hosts = f.projectPub, []string{"203.0.113.9"}
+	_, err = f.cp.SetResourceServerAdmission(f.owner, connect.NewRequest(req))
+	assert.True(t, IsInvalidClientHostError(err), "%v", err)
+
+	updated, err := f.cp.UpdateResourceServer(f.owner, connect.NewRequest(&resourceserverv1.UpdateResourceServerRequest{
+		ProjectId: f.projectPub, ResourceServerId: rs.GetId(), Name: "MCP", Scopes: []string{"read", "write"},
+		ScopeDescriptions: map[string]string{"read": "Read your orders"},
+	}))
+	require.NoError(t, err)
+	assert.Equal(t, map[string]string{"read": "Read your orders"}, updated.Msg.GetResourceServer().GetScopeDescriptions())
+}

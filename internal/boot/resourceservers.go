@@ -80,23 +80,23 @@ func (c rsClients) Lookup(ctx context.Context, orgID, projectID uuid.UUID, publi
 	case err != nil:
 		return resourceserver.ClientRef{}, false, err
 	}
-	return resourceserver.ClientRef{ID: got.ID, PublicID: got.PublicID, Name: got.Name}, true, nil
+	return clientRef(got), true, nil
+}
+
+func clientRef(c *client.Client) resourceserver.ClientRef {
+	return resourceserver.ClientRef{
+		ID: c.ID, PublicID: c.PublicID, Name: c.Name, MetadataURL: c.MetadataURL, MetadataFetchedAt: c.MetadataFetchedAt,
+	}
 }
 
 func (c rsClients) Refs(ctx context.Context, orgID, projectID uuid.UUID, ids []uuid.UUID) (map[uuid.UUID]resourceserver.ClientRef, error) {
-	list, err := c.clients.List(ctx, orgID, projectID)
+	list, err := c.clients.ByIDs(ctx, orgID, projectID, ids)
 	if err != nil {
 		return nil, err
 	}
-	want := make(map[uuid.UUID]bool, len(ids))
-	for _, id := range ids {
-		want[id] = true
-	}
-	out := make(map[uuid.UUID]resourceserver.ClientRef, len(ids))
+	out := make(map[uuid.UUID]resourceserver.ClientRef, len(list))
 	for _, got := range list {
-		if want[got.ID] {
-			out[got.ID] = resourceserver.ClientRef{ID: got.ID, PublicID: got.PublicID, Name: got.Name}
-		}
+		out[got.ID] = clientRef(got)
 	}
 	return out, nil
 }

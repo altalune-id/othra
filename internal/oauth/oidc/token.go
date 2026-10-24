@@ -40,6 +40,7 @@ const (
 	errInvalidClient    = "invalid_client"
 	errInvalidGrant     = "invalid_grant"
 	errInvalidScope     = "invalid_scope"
+	errInvalidTarget    = "invalid_target"
 	errUnauthorized     = "unauthorized_client"
 	errUnsupportedGrant = "unsupported_grant_type"
 	errServer           = "server_error"
@@ -66,6 +67,7 @@ type Grants interface {
 	Exchange(ctx context.Context, p grant.Project, req grant.ExchangeRequest) (*grant.Tokens, error)
 	Refresh(ctx context.Context, p grant.Project, req grant.RefreshRequest) (*grant.Tokens, error)
 	Access(ctx context.Context, p grant.Project, token string) (*grant.Access, error)
+	Revoke(ctx context.Context, p grant.Project, c grant.Client, token, hint string) error
 }
 
 // EndUsers reads the end user a grant names.
@@ -134,7 +136,11 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	form, err := postForm(w, r)
-	if err != nil {
+	switch {
+	case errors.Is(err, errResourceRepeat):
+		h.oauthFail(w, http.StatusBadRequest, errInvalidTarget, err.Error())
+		return
+	case err != nil:
 		h.oauthFail(w, http.StatusBadRequest, errInvalidRequest, err.Error())
 		return
 	}
@@ -155,8 +161,8 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request) {
 		h.oauthFail(w, http.StatusBadRequest, errUnauthorized, "")
 		return
 	}
-	p := grant.Project{OrgID: e.issuer.OrgID, ID: e.issuer.ProjectID}
-	who := grant.Client{ID: c.ID, PublicID: c.PublicID, Refresh: c.RefreshTokens()}
+	p := grant.Project{OrgID: e.issuer.OrgID, ID: e.issuer.ProjectID, IssuerURL: issuer}
+	who := grantClient(c)
 	var issued *grant.Tokens
 	if grantType == grantTypeCode {
 		if form.Get("code") == "" {
@@ -165,6 +171,7 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request) {
 		}
 		issued, err = h.tokens.Grants.Exchange(r.Context(), p, grant.ExchangeRequest{
 			Client: who, Code: form.Get("code"), RedirectURI: form.Get("redirect_uri"), CodeVerifier: form.Get("code_verifier"),
+			Resource: form.Get("resource"),
 		})
 	} else {
 		if form.Get("refresh_token") == "" {
@@ -176,7 +183,7 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request) {
 			scopes = strings.Fields(form.Get("scope"))
 		}
 		issued, err = h.tokens.Grants.Refresh(r.Context(), p, grant.RefreshRequest{
-			Client: who, RefreshToken: form.Get("refresh_token"), Scopes: scopes,
+			Client: who, RefreshToken: form.Get("refresh_token"), Scopes: scopes, Resource: form.Get("resource"),
 		})
 	}
 	switch {
@@ -185,6 +192,9 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request) {
 		return
 	case grant.IsInvalidScopeError(err):
 		h.oauthFail(w, http.StatusBadRequest, errInvalidScope, "")
+		return
+	case grant.IsInvalidTargetError(err):
+		h.oauthFail(w, http.StatusBadRequest, errInvalidTarget, "")
 		return
 	case grant.IsInvalidRequestError(err):
 		h.oauthFail(w, http.StatusBadRequest, errInvalidRequest, "code_verifier was sent for a code without a code_challenge")
@@ -246,6 +256,16 @@ func (h *Web) authenticate(req *tokenRequest) (*client.Client, bool) {
 	return c, true
 }
 
+func grantClient(c *client.Client) grant.Client {
+	gc := grant.Client{ID: c.ID, OAuthID: c.OAuthID(), Refresh: c.RefreshTokens()}
+	if c.Managed() {
+		if u, err := url.Parse(c.MetadataURL); err == nil {
+			gc.CIMDHost = u.Hostname()
+		}
+	}
+	return gc
+}
+
 func (h *Web) clientFail(req *tokenRequest) bool {
 	if req.basic {
 		req.w.Header().Set("WWW-Authenticate", `Basic realm="`+req.issuer+`"`)
@@ -260,7 +280,7 @@ func (h *Web) respondTokens(req *tokenRequest, c *client.Client, issued *grant.T
 		AccessToken: issued.AccessToken, TokenType: tokenTypeBearer, Scope: strings.Join(issued.Scopes, " "),
 		ExpiresIn: max(int64(time.Until(issued.ExpiresAt).Seconds()), 1), RefreshToken: issued.RefreshToken,
 	}
-	if slices.Contains(f.Scopes, grant.ScopeOpenID) {
+	if slices.Contains(issued.Scopes, grant.ScopeOpenID) {
 		u, err := h.tokens.EndUsers.EndUser(ctx, enduser.Project{OrgID: e.issuer.OrgID, ID: e.issuer.ProjectID}, f.EndUserID)
 		if err != nil || u == nil {
 			h.report(ctx, "oidc: id token end user", errors.Join(err, errEndUserGone))
@@ -274,7 +294,7 @@ func (h *Web) respondTokens(req *tokenRequest, c *client.Client, issued *grant.T
 		}
 		scoped := tenant.Into(ctx, tenant.Context{OrgID: e.issuer.OrgID, ProjectID: e.issuer.ProjectID})
 		id, err := h.tokens.IDTokens.MintIDToken(scoped, e.issuer.ProjectID, &keys.MintIDTokenInput{
-			Issuer: req.issuer, Subject: u.Subject, Audience: []string{c.PublicID}, ClientID: c.PublicID, Nonce: issued.Nonce,
+			Issuer: req.issuer, Subject: u.Subject, Audience: []string{c.OAuthID()}, ClientID: c.OAuthID(), Nonce: issued.Nonce,
 			AccessToken: issued.AccessToken, SessionID: f.PublicID, AuthTime: f.AuthTime, IssuedAt: now, ExpiresAt: now.Add(ttl),
 			Profile: profile(u, issued.Scopes),
 		})
@@ -295,10 +315,11 @@ func (h *Web) respondTokens(req *tokenRequest, c *client.Client, issued *grant.T
 
 // SECURITY: every error_description is fixed text, never a value or a parameter name from the request.
 var (
-	errEndUserGone = errors.New("oidc: end user gone")
-	errFormType    = errors.New("the request body must be application/x-www-form-urlencoded")
-	errFormBody    = errors.New("the request body is not a valid form")
-	errFormRepeat  = errors.New("a request parameter appears more than once")
+	errEndUserGone    = errors.New("oidc: end user gone")
+	errFormType       = errors.New("the request body must be application/x-www-form-urlencoded")
+	errFormBody       = errors.New("the request body is not a valid form")
+	errFormRepeat     = errors.New("a request parameter appears more than once")
+	errResourceRepeat = errors.New("a token is issued for one resource")
 )
 
 func profile(u *enduser.EndUser, scopes []string) *keys.Profile {
@@ -334,8 +355,14 @@ func postForm(w http.ResponseWriter, r *http.Request) (url.Values, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, errFormBody
 	}
-	for _, v := range r.PostForm {
-		if len(v) > 1 {
+	for k, v := range r.PostForm {
+		switch {
+		case len(v) < 2:
+		case k == "resource" && !slices.ContainsFunc(v, func(s string) bool { return s != v[0] }):
+			r.PostForm[k] = v[:1]
+		case k == "resource":
+			return nil, errResourceRepeat
+		default:
 			return nil, errFormRepeat
 		}
 	}
