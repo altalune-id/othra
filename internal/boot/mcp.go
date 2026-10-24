@@ -3,6 +3,7 @@ package boot
 import (
 	"log/slog"
 	"net/http"
+	"net/url"
 
 	"altalune.id/othra/config"
 	authv1mcp "altalune.id/othra/gen/go/auth/v1/authv1mcp"
@@ -30,8 +31,8 @@ import (
 	"altalune.id/othra/version"
 )
 
-// NOTE: nil when mcp.enabled is off.
-func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *rootmcp.Server {
+// NOTE: nil when mcp.enabled is off; allowedHosts may arrive on loopback connections through a same-host proxy.
+func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger, allowedHosts ...string) *rootmcp.Server {
 	if !cfg.Enabled {
 		return nil
 	}
@@ -57,6 +58,7 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *roo
 		rootmcp.WithErrorMapper(mcpinternal.ErrorPayload),
 		rootmcp.WithLogger(log),
 		rootmcp.WithUI(cfg.AppsUI),
+		rootmcp.WithAllowedHosts(allowedHosts...),
 	)
 	if cfg.AppsUI {
 		srv.AddUIResource(rootmcp.UIResource{
@@ -68,6 +70,14 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger) *roo
 		})
 	}
 	return srv
+}
+
+func mcpPublicHost(c config.HTTPConfig) []string {
+	u, err := url.Parse(c.BaseURL)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	return []string{u.Hostname()}
 }
 
 func mcpHTTPHandler(srv *rootmcp.Server) http.Handler {

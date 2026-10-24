@@ -169,7 +169,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	}
 	consoleHandler := buildConsoleHandler(cfg.HTTP.BasePath)
 	issuerPublic, hostedPages := buildIssuerRoutes(cfg, svcs, log, k.Reporter.Unexpected)
-	mcpServer := buildMCPServer(cfg.MCP, svcs, log)
+	mcpServer := buildMCPServer(cfg.MCP, svcs, log, mcpPublicHost(cfg.HTTP)...)
 
 	sup := worker.New(log)
 	sup.Register(httpserver.New(
