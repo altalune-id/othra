@@ -183,3 +183,12 @@ func TestFormExpiredError(t *testing.T) {
 	assert.Equal(t, apperror.CodeSignInFormExpired, app.Code())
 	assert.Empty(t, app.Meta(), "the reason never reaches the page")
 }
+
+func TestCSRF_OneCookiePerResponse(t *testing.T) {
+	f := newCSRFFixture(t)
+	rec := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/p/acme/login", nil)
+	first, second := f.csrf.Cookie(rec, r, testPath), f.csrf.Cookie(rec, r, testPath)
+	assert.Equal(t, first, second, "two forms on one fresh page share the cookie their tokens are bound to")
+	assert.Len(t, rec.Result().Cookies(), 1)
+}

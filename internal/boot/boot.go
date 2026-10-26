@@ -158,6 +158,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		return nil, err
 	}
 	warnSampleLegal(cfg, log, logsInstallURL(o))
+	warnUpstreamSwitches(cfg.Upstreams, log)
 	dbHealth := buildDBHealth(k, cfg, log)
 	apiHandler := buildAPIHandler(svcs, k.Reporter.Unexpected, cfg.API, cfg.HTTP.BasePath, log)
 	crossSite := slices.Concat(hosted.CrossSitePOSTs(cfg.HTTP.BasePath), oidc.CrossSitePOSTs(cfg.HTTP.BasePath))

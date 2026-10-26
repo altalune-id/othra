@@ -45,6 +45,7 @@ func TestKey(t *testing.T) {
 	assert.Equal(t, "login:project:"+a.String()+":ip:192.0.2.1", Key(r, ProjectSubject(a, IPSubject("192.0.2.1"))))
 	assert.Equal(t, "login:host:claude.ai", Key(r, HostSubject("Claude.AI")))
 	assert.Equal(t, "login:url:https://claude.ai/x", Key(r, URLSubject("https://claude.ai/x")))
+	assert.Equal(t, "login:us:us1", Key(r, UserSessionSubject("us1")))
 	assert.NotEqual(t, Key(r, ProjectSubject(a, want)), Key(r, ProjectSubject(b, want)), "one email is a separate key per project")
 }
 

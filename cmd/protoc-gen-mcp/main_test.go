@@ -23,6 +23,7 @@ import (
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	projectv1 "altalune.id/othra/gen/go/project/v1"
 	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
+	upstreamv1 "altalune.id/othra/gen/go/upstream/v1"
 	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 )
 
@@ -38,6 +39,7 @@ func committedFiles() []protoreflect.FileDescriptor {
 		orgv1.File_org_v1_org_proto,
 		projectv1.File_project_v1_project_proto,
 		resourceserverv1.File_resourceserver_v1_resourceserver_proto,
+		upstreamv1.File_upstream_v1_upstream_proto,
 		webhookv1.File_webhook_v1_webhook_proto,
 	}
 }

@@ -32,6 +32,11 @@ func FormIPRule() ratelimit.Rule {
 	return ratelimit.Rule{Name: "hosted-form-ip", Rate: 60, Per: time.Hour, Burst: 60}
 }
 
+// LinkSessionRule limits starting to link an upstream per signed-in account (user session) and project: 10 an hour.
+func LinkSessionRule() ratelimit.Rule {
+	return ratelimit.Rule{Name: "hosted-link-session", Rate: 10, Per: time.Hour, Burst: 10}
+}
+
 // AuthorizeIPRule limits authorization requests per client IP and project: 60 a minute.
 func AuthorizeIPRule() ratelimit.Rule {
 	return ratelimit.Rule{Name: "hosted-authorize-ip", Rate: 60, Per: time.Minute, Burst: 60}

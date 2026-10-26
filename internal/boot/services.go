@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/internal/consent"
 	"altalune.id/othra/internal/controlplane"
 	"altalune.id/othra/internal/enduser"
+	"altalune.id/othra/internal/federation"
 	"altalune.id/othra/internal/grant"
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel"
@@ -32,6 +33,7 @@ import (
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
+	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/webhook"
 	"altalune.id/othra/mailer"
@@ -79,6 +81,8 @@ type Services struct {
 	EndUsers        *enduser.Service
 	Grants          *grant.Service
 	Consents        *consent.Service
+	Upstreams       *upstream.Service
+	Federation      *federation.Service
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -172,10 +176,16 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Clients: client.NewService(client.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, projects, k.Reporter.Unexpected).
 			WithLogger(orDiscard(k.Log)),
 	}
-	svcs.EndUsers = buildEndUsers(k, cfg, uow, mailQueue)
+	svcs.EndUsers = buildEndUsers(k, cfg, uow, mailQueue).WithSignInSwitch(projects)
 	svcs.IssuerResolver = oidc.NewResolver(projects, signingKeys, publicBase(cfg.HTTP), k.Reporter.Unexpected)
 	svcs.ResourceServers = buildResourceServers(k, cfg, uow, projects, users, svcs.Clients)
 	svcs.Consents = buildConsents(k, cfg, svcs)
+	svcs.Upstreams = buildUpstreams(k, cfg, uow, sl, projects)
+	installer.WithProjectSeed(seedUpstreams(cfg.Upstreams, svcs.Upstreams))
+	if svcs.Upstreams != nil {
+		svcs.Federation = buildFederation(k, cfg, uow, svcs.Upstreams, svcs.EndUsers, projects)
+	}
+	projects.WithSignInMethods(projectSignInMethods{upstreams: svcs.Upstreams, linked: svcs.Federation})
 	svcs.Grants = buildGrants(k, cfg, uow, signingKeys, grantAudiences{servers: svcs.ResourceServers})
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
 		Store:      auth.NewResetStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),

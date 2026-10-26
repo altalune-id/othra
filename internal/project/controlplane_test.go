@@ -143,6 +143,12 @@ func TestProjectService_IssuerRPCs(t *testing.T) {
 	assert.Equal(t, int32(2), bumped.Msg.GetVersion())
 	assert.NotNil(t, bumped.Msg.GetPublishedAt())
 
+	_, err = c.UpdateProjectSignIn(ctx, connect.NewRequest(&projectv1.UpdateProjectSignInRequest{Id: p.PublicID, EmailLink: false}))
+	assert.ErrorContains(t, err, "keep at least one sign-in method", "PRJ010: no other sign-in method")
+	on, err := c.UpdateProjectSignIn(ctx, connect.NewRequest(&projectv1.UpdateProjectSignInRequest{Id: p.PublicID, EmailLink: true}))
+	require.NoError(t, err)
+	assert.True(t, on.Msg.GetProject().GetSigninEmailLink())
+
 	deleted, err := c.DeleteProjectLogo(ctx, connect.NewRequest(&projectv1.DeleteProjectLogoRequest{Id: p.PublicID}))
 	require.NoError(t, err)
 	assert.Empty(t, deleted.Msg.GetProject().GetLogoUrl(), "no logo answers an empty URL")

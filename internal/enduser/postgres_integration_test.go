@@ -36,6 +36,7 @@ func (m *mailbox) Enqueue(_ context.Context, msg mailer.Message) (uuid.UUID, err
 }
 
 type pgFixture struct {
+	pool db.Pool
 	db   *sql.DB
 	svc  *enduser.Service
 	mail *mailbox
@@ -46,7 +47,7 @@ type pgFixture struct {
 func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
-	f := &pgFixture{db: sqlDB, mail: &mailbox{}, now: time.Now().UTC().Truncate(time.Microsecond), logs: &bytes.Buffer{}}
+	f := &pgFixture{pool: pool, db: sqlDB, mail: &mailbox{}, now: time.Now().UTC().Truncate(time.Microsecond), logs: &bytes.Buffer{}}
 	reporter := apperror.NewReporter(slog.New(slog.NewJSONHandler(f.logs, nil)), false)
 	cfg := enduser.Config{LinkTTL: 15 * time.Minute, ResendAfter: time.Minute, Idle: 30 * 24 * time.Hour, Absolute: 90 * 24 * time.Hour, MaxAccounts: 2}
 	f.svc = enduser.NewService(enduser.NewStore(pool, schemaName, ""), db.NewTransactor(pool), f.mail, cfg, reporter.Unexpected).

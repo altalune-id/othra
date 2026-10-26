@@ -32,6 +32,8 @@ type Writer interface {
 	SetIssuerHandle(ctx context.Context, id uuid.UUID, handle string) error
 	// LockIssuerHandle freezes the handle of the project id at at; a locked handle keeps its first lock time.
 	LockIssuerHandle(ctx context.Context, id uuid.UUID, at time.Time) error
+	// LockSignIn locks the project id's row until the unit of work ends and returns its email-link switch.
+	LockSignIn(ctx context.Context, id uuid.UUID) (emailLink bool, err error)
 	// SetLogoFile points the project id's logo at fileID, or at none when nil, and returns the file it pointed at before.
 	SetLogoFile(ctx context.Context, id uuid.UUID, fileID *uuid.UUID) (previous *uuid.UUID, err error)
 }

@@ -32,12 +32,14 @@ type fakeUser struct {
 	id, project uuid.UUID
 	subject     string
 	email       string
+	name        string
 	verifiedAt  *time.Time
 }
 
 type fakeSession struct {
 	id, project, browser, endUser uuid.UUID
 	publicID                      string
+	method                        string
 	authTime, selectedAt          time.Time
 	ended                         bool
 }
@@ -212,7 +214,7 @@ func (f *fakeStore) Accounts(_ context.Context, projectID, browserID uuid.UUID) 
 			if u.id == s.endUser {
 				out = append(out, Account{
 					UserSessionID: s.id, PublicID: s.publicID, EndUserID: u.id, Subject: u.subject, Email: u.email,
-					AuthTime: s.authTime, SelectedAt: s.selectedAt,
+					AuthTime: s.authTime, SelectedAt: s.selectedAt, Method: s.method,
 				})
 			}
 		}
@@ -221,21 +223,49 @@ func (f *fakeStore) Accounts(_ context.Context, projectID, browserID uuid.UUID) 
 	return out, nil
 }
 
-func (f *fakeStore) SignIn(_ context.Context, _, projectID, browserID, endUserID uuid.UUID, now time.Time) error {
+func (f *fakeStore) SignIn(_ context.Context, _, projectID, browserID, endUserID uuid.UUID, method string, now time.Time) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, s := range f.sessions {
 		if s.browser == browserID && s.endUser == endUserID && !s.ended {
-			s.authTime, s.selectedAt = now, now
+			s.authTime, s.selectedAt, s.method = now, now, method
 			return nil
 		}
 	}
 	f.n++
 	f.sessions = append(f.sessions, &fakeSession{
 		id: uuid.New(), project: projectID, browser: browserID, endUser: endUserID, publicID: "us" + uuid.NewString()[:8],
-		authTime: now, selectedAt: now,
+		authTime: now, selectedAt: now, method: method,
 	})
 	return nil
+}
+
+func (f *fakeStore) EndUserIDByEmail(_ context.Context, projectID uuid.UUID, email string) (uuid.UUID, bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, u := range f.users {
+		if u.project == projectID && u.email == email {
+			return u.id, true, f.fail("EndUserIDByEmail")
+		}
+	}
+	return uuid.Nil, false, f.fail("EndUserIDByEmail")
+}
+
+func (f *fakeStore) CreateEndUser(_ context.Context, _, projectID uuid.UUID, email, name string, now time.Time) (uuid.UUID, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("CreateEndUser"); err != nil {
+		return uuid.Nil, err
+	}
+	for _, u := range f.users {
+		if u.project == projectID && u.email == email {
+			return uuid.Nil, ErrEmailTaken
+		}
+	}
+	f.n++
+	u := &fakeUser{id: uuid.New(), project: projectID, subject: "sub" + string(rune('a'+f.n)), email: email, verifiedAt: &now, name: name}
+	f.users = append(f.users, u)
+	return u.id, nil
 }
 
 func (f *fakeStore) live(projectID, browserID uuid.UUID, publicID string) *fakeSession {
@@ -367,4 +397,18 @@ func (m *fakeMail) Enqueue(_ context.Context, msg mailer.Message) (uuid.UUID, er
 	}
 	m.sent = append(m.sent, msg)
 	return uuid.New(), nil
+}
+
+func (f *fakeStore) FillName(_ context.Context, projectID, endUserID uuid.UUID, name string, _ time.Time) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("FillName"); err != nil {
+		return err
+	}
+	for _, u := range f.users {
+		if u.project == projectID && u.id == endUserID && u.name == "" {
+			u.name = name
+		}
+	}
+	return nil
 }

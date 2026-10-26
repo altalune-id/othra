@@ -25,6 +25,7 @@ import (
 type rlsTenant struct {
 	org, project, user, key, endpoint, client, rs uuid.UUID
 	endUser, browser, userSession, family         uuid.UUID
+	upstream                                      uuid.UUID
 }
 
 type rlsFixture struct {
@@ -47,6 +48,7 @@ func (f *rlsFixture) seed(t *testing.T, tag string) rlsTenant {
 	tn := rlsTenant{
 		org: uuid.New(), project: uuid.New(), user: uuid.New(), key: uuid.New(), endpoint: uuid.New(),
 		client: uuid.New(), rs: uuid.New(), endUser: uuid.New(), browser: uuid.New(), userSession: uuid.New(), family: uuid.New(),
+		upstream: uuid.New(),
 	}
 	for _, ins := range rlsInserts() {
 		_, err := f.admin.ExecContext(t.Context(), ins.sql(f.schema), ins.args(tn, tag)...)
@@ -152,6 +154,16 @@ func rlsInserts() []rlsInsert {
 			return `INSERT INTO ` + s + `.scope_consents (id, public_id, org_id, project_id, end_user_id, client_id, resource_server_id, scopes, granted_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, '{openid,read}', $8, $8)`
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{uuid.New(), "k" + id()[:12], tn.org, tn.project, tn.endUser, tn.client, tn.rs, now}
+		}},
+		{"upstream_providers", func(s string) string {
+			return `INSERT INTO ` + s + `.upstream_providers (id, public_id, org_id, project_id, kind, client_id, client_secret_sealed, created_at, updated_at) VALUES ($1, $2, $3, $4, 'google', 'cid.apps.googleusercontent.com', decode(repeat('ab', 40), 'hex'), $5, $5)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{tn.upstream, "u" + id()[:12], tn.org, tn.project, now}
+		}},
+		{"end_user_identities", func(s string) string {
+			return `INSERT INTO ` + s + `.end_user_identities (id, public_id, org_id, project_id, end_user_id, upstream_provider_id, issuer, subject, email, email_verified, linked_at, last_used_at) VALUES ($1, $2, $3, $4, $5, $6, 'https://accounts.google.com', $7, 'g@example.com', true, $8, $8)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), "i" + id()[:12], tn.org, tn.project, tn.endUser, tn.upstream, "sub-" + id(), now}
 		}},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
@@ -344,6 +356,9 @@ var endUserTables = []string{"end_users", "browser_sessions", "user_sessions", "
 //nolint:gochecknoglobals // the project-owned M5 tables.
 var grantTables = []string{"grant_families", "authorization_codes", "access_tokens", "refresh_tokens", "scope_consents"}
 
+//nolint:gochecknoglobals // the project-owned M7 tables.
+var federationTables = []string{"upstream_providers", "end_user_identities"}
+
 func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
 	t.Helper()
 	sibling := uuid.New()
@@ -365,7 +380,7 @@ func TestRLS_ProjectOwnedTablesAreProjectScoped(t *testing.T) {
 	for _, ins := range rlsInserts() {
 		byTable[ins.table] = ins
 	}
-	for _, table := range slices.Concat(clientTables, endUserTables, grantTables) {
+	for _, table := range slices.Concat(clientTables, endUserTables, grantTables, federationTables) {
 		t.Run(table, func(t *testing.T) {
 			assert.Equal(t, []uuid.UUID{f.a.org}, f.visible(t, own, table))
 			assert.Empty(t, f.visible(t, other, table), "another project of the same org sees none")
@@ -374,6 +389,7 @@ func TestRLS_ProjectOwnedTablesAreProjectScoped(t *testing.T) {
 			mine := f.a
 			mine.client, mine.rs = uuid.New(), uuid.New()
 			mine.endUser, mine.browser, mine.userSession, mine.family = uuid.New(), uuid.New(), uuid.New(), uuid.New()
+			mine.upstream = uuid.New()
 			err := db.RunInTx(other, f.svc, func(ctx context.Context) error {
 				tx, _ := db.CurrentTx(ctx)
 				_, err := tx.ExecContext(ctx, byTable[table].sql(f.schema), byTable[table].args(mine, "x")...)
@@ -691,4 +707,47 @@ func TestSchema_CIMDColumns(t *testing.T) {
 	_, err = f.admin.ExecContext(ctx,
 		`UPDATE `+f.schema+`.resource_servers SET accept_cimd_clients = true, cimd_client_hosts = '{claude.ai}', cimd_scopes = '{read}', scope_descriptions = '{"read":"Read"}' WHERE id = $1`, f.a.rs)
 	assert.NoError(t, err)
+}
+
+// OIDC §5.7: one Othra end user per upstream (iss, sub), one identity per upstream per end user; an upstream with identities can't be deleted alone.
+func TestSchema_FederationConstraints(t *testing.T) {
+	f := newRLSFixture(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	identity := func(endUser uuid.UUID, subject string) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.end_user_identities (id, public_id, org_id, project_id, end_user_id, upstream_provider_id, issuer, subject, linked_at, last_used_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, 'https://accounts.google.com', $7, $8, $8)`,
+			uuid.New(), "i"+uuid.NewString()[:12], f.a.org, f.a.project, endUser, f.a.upstream, subject, now)
+		return err
+	}
+	var sub string
+	require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT subject FROM `+f.schema+`.end_user_identities WHERE end_user_id = $1`, f.a.endUser).Scan(&sub))
+	other := uuid.New()
+	_, err := f.admin.ExecContext(ctx, `INSERT INTO `+f.schema+`.end_users (id, public_id, org_id, project_id, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6)`,
+		other, "e"+other.String()[:12], f.a.org, f.a.project, "other@example.com", now)
+	require.NoError(t, err)
+	assert.Equal(t, "23505", pgCode(identity(other, sub)), "one end user per (iss, sub)")
+	assert.Equal(t, "23505", pgCode(identity(f.a.endUser, "another-sub")), "one Google identity per end user")
+	require.NoError(t, identity(other, "another-sub"))
+
+	_, err = f.admin.ExecContext(ctx, `INSERT INTO `+f.schema+`.upstream_providers (id, public_id, org_id, project_id, kind, client_id, client_secret_sealed, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, 'google', 'x', decode(repeat('ab', 40), 'hex'), $5, $5)`, uuid.New(), "u"+uuid.NewString()[:12], f.a.org, f.a.project, now)
+	assert.Equal(t, "23505", pgCode(err), "one Google per project")
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.upstream_providers WHERE id = $1`, f.a.upstream)
+	assert.Equal(t, "23503", pgCode(err), "P6: an upstream with linked identities can't be deleted")
+
+	_, err = f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.user_sessions SET method = 'google' WHERE id = $1`, f.a.userSession)
+	assert.NoError(t, err, "a federated session")
+	_, err = f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.user_sessions SET method = 'github' WHERE id = $1`, f.a.userSession)
+	assert.Equal(t, "23514", pgCode(err))
+	_, err = f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.magic_links SET pending_identity = '[]' WHERE project_id = $1`, f.a.project)
+	assert.Equal(t, "23514", pgCode(err), "a pending identity is an object")
+
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.projects WHERE id = $1`, f.a.project)
+	require.NoError(t, err, "a project delete still removes the upstream and its identities")
+	for _, table := range federationTables {
+		var n int
+		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
+		assert.Zero(t, n, table)
+	}
 }

@@ -55,6 +55,9 @@ func (e *SessionGoneError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeSignInSessionGone, "That account isn't signed in on this browser anymore").WithCause(e)
 }
 
+// ErrEmailTaken reports a new end user whose email another end user of the project already has.
+var ErrEmailTaken = errors.New("enduser: the email belongs to another end user")
+
 // ErrLiveLink reports a concurrent request that issued the email's one live link first; the caller answers it as a cooldown.
 var ErrLiveLink = errors.New("enduser: the email already has a live link")
 

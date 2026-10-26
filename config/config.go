@@ -31,6 +31,7 @@ type Config struct {
 	ResourceServers ResourceServersConfig `yaml:"resourceServers" mapstructure:"resourceServers"`
 	EndUsers        EndUsersConfig        `yaml:"endUsers"        mapstructure:"endUsers"`
 	OAuth           OAuthConfig           `yaml:"oauth"           mapstructure:"oauth"`
+	Upstreams       UpstreamsConfig       `yaml:"upstreams"       mapstructure:"upstreams"`
 }
 
 // CLIConfig configures the Othra CLI; SessionFile may start with "~/", expanded when used.
@@ -167,6 +168,7 @@ func (c *Config) Validate() error {
 		c.validateKeys,
 		c.validateResourceServers,
 		c.validateEndUsers,
+		c.validateUpstreams,
 	} {
 		if err := check(); err != nil {
 			return err

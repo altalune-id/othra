@@ -83,7 +83,7 @@ func Sent(d layout.LayoutData, v SentData) templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Err = iconMail().Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = iconMail("size-6").Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

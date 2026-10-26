@@ -10,6 +10,7 @@ import { MemberService } from '~~/gen/member/v1/member_pb';
 import { OrgService } from '~~/gen/org/v1/org_pb';
 import { ProjectService } from '~~/gen/project/v1/project_pb';
 import { ResourceServerService } from '~~/gen/resourceserver/v1/resourceserver_pb';
+import { UpstreamService } from '~~/gen/upstream/v1/upstream_pb';
 import { WebhookService } from '~~/gen/webhook/v1/webhook_pb';
 import { createRedirectOnce, isUnauthenticated } from '~/lib/auth/unauthenticated';
 import { loginURL } from '~/lib/auth/urls';
@@ -50,6 +51,7 @@ export default defineNuxtPlugin({
         signingKeyClient: createClient(SigningKeyService, transport),
         clientClient: createClient(ClientService, transport),
         resourceServerClient: createClient(ResourceServerService, transport),
+        upstreamClient: createClient(UpstreamService, transport),
         authClient: createClient(AuthService, whoamiTransport),
       },
     };

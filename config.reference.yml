@@ -340,3 +340,14 @@ telemetry:
     enabled: ""
     # env: OTHRA_TELEMETRY_TRACING_SAMPLE_RATIO
     sampleRatio: ""
+
+upstreams:
+  # env: OTHRA_UPSTREAMS_ALLOW_PRIVATE_HOSTS
+  allowPrivateHosts: ""
+  google:
+    # env: OTHRA_UPSTREAMS_GOOGLE_CLIENT_ID
+    clientId: ""
+    # [secret] env: OTHRA_UPSTREAMS_GOOGLE_CLIENT_SECRET
+    clientSecret: ""
+    # env: OTHRA_UPSTREAMS_GOOGLE_ISSUER_OVERRIDE
+    issuerOverride: ""

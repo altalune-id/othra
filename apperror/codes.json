@@ -21,6 +21,7 @@
   { "code": "PRJ007", "name": "ProjectIssuerHandleLocked", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "PRJ008", "name": "ProjectInvalidLogo", "kind": "invalid", "params": ["max"], "reasons": ["type", "size"] },
   { "code": "PRJ009", "name": "ProjectTermsNotSet", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "PRJ010", "name": "ProjectSignInLastMethod", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "KEY001", "name": "APIKeyNotFound", "kind": "not_found", "params": [], "reasons": [] },
   { "code": "KEY002", "name": "APIKeyInvalidName", "kind": "invalid", "params": ["max"], "reasons": ["required", "length"] },
   { "code": "KEY003", "name": "APIKeyInvalidScope", "kind": "invalid", "params": ["scope"], "reasons": ["unknown", "level"] },
@@ -91,5 +92,17 @@
   { "code": "SIG008", "name": "SignOutHintInvalid", "kind": "invalid", "params": [], "reasons": [] },
   { "code": "SIG009", "name": "SignOutRedirectNotRegistered", "kind": "invalid", "params": [], "reasons": [] },
   { "code": "SIG010", "name": "AuthorizeClientNotAdmitted", "kind": "not_found", "params": [], "reasons": [] },
-  { "code": "SIG011", "name": "AuthorizeClientMetadataUnusable", "kind": "failed_precondition", "params": [], "reasons": [] }
+  { "code": "SIG011", "name": "AuthorizeClientMetadataUnusable", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG012", "name": "SignInUpstreamCancelled", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG013", "name": "SignInUpstreamEmailUnverified", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG015", "name": "SignInUpstreamUnavailable", "kind": "internal", "params": [], "reasons": [] },
+  { "code": "SIG016", "name": "SignInUpstreamResponseInvalid", "kind": "invalid", "params": [], "reasons": [] },
+  { "code": "SIG017", "name": "SignInUpstreamDisabled", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG018", "name": "SignInUpstreamLinkedElsewhere", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG019", "name": "SignInLastMethod", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "SIG020", "name": "SignInUpstreamEmailTaken", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "UPS001", "name": "UpstreamNotFound", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "UPS002", "name": "UpstreamInvalidConfig", "kind": "invalid", "params": [], "reasons": ["client_id", "client_secret"] },
+  { "code": "UPS003", "name": "UpstreamExists", "kind": "already_exists", "params": [], "reasons": [] },
+  { "code": "UPS004", "name": "UpstreamHasIdentities", "kind": "failed_precondition", "params": [], "reasons": [] }
 ]

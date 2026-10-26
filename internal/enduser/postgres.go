@@ -49,12 +49,14 @@ type linkRow struct {
 	ExpiresAt        time.Time  `alias:"magic_links.expires_at"`
 	UsedAt           *time.Time `alias:"magic_links.used_at"`
 	BrowserSessionID *uuid.UUID `alias:"magic_links.browser_session_id"`
+	PendingIdentity  *string    `alias:"magic_links.pending_identity"`
 }
 
 func (r *linkRow) toLink() *Link {
 	return &Link{
 		ID: r.ID, PublicID: r.PublicID, Email: r.Email, ReturnTo: r.ReturnTo, CreatedAt: r.CreatedAt.UTC(),
 		ExpiresAt: r.ExpiresAt.UTC(), UsedAt: utc(r.UsedAt), BrowserSessionID: r.BrowserSessionID,
+		Pending: pendingBytes(r.PendingIdentity),
 	}
 }
 
@@ -70,6 +72,7 @@ type accountRow struct {
 	PublicID      string    `alias:"user_sessions.public_id"`
 	AuthTime      time.Time `alias:"user_sessions.auth_time"`
 	SelectedAt    time.Time `alias:"user_sessions.selected_at"`
+	Method        string    `alias:"user_sessions.method"`
 	EndUserID     uuid.UUID `alias:"end_users.id"`
 	Subject       string    `alias:"end_users.public_id"`
 	Email         string    `alias:"end_users.email"`
@@ -80,6 +83,7 @@ func (r *accountRow) toAccount() Account {
 	return Account{
 		UserSessionID: r.UserSessionID, PublicID: r.PublicID, EndUserID: r.EndUserID, Subject: r.Subject,
 		Email: r.Email, Name: r.Name, AuthTime: r.AuthTime.UTC(), SelectedAt: r.SelectedAt.UTC(),
+		Method: r.Method,
 	}
 }
 
@@ -100,6 +104,20 @@ func inet(ip string) postgres.Expression {
 		return postgres.CAST(postgres.String(ip)).AS("inet")
 	}
 	return postgres.NULL
+}
+
+func pendingValue(pending []byte) postgres.Expression {
+	if pending == nil {
+		return postgres.NULL
+	}
+	return postgres.CAST(postgres.String(string(pending))).AS("jsonb")
+}
+
+func pendingBytes(raw *string) []byte {
+	if raw == nil {
+		return nil
+	}
+	return []byte(*raw)
 }
 
 func wrap(op string, err error) error {

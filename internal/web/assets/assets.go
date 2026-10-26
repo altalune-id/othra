@@ -54,7 +54,7 @@ func Load(fsys fs.FS) (Files, error) {
 			bases = append(bases, strings.TrimSuffix(name, ext))
 			return nil
 		}
-		files[name] = &Asset{name: name, ctype: mime.TypeByExtension(ext), plain: newVariant("", b)}
+		files[name] = &Asset{name: name, ctype: contentType(ext), plain: newVariant("", b)}
 		return nil
 	})
 	if err != nil {
@@ -76,7 +76,7 @@ func Load(fsys fs.FS) (Files, error) {
 
 // New builds an asset from bytes, adding an in-memory gzip variant when b is over 1 KiB and gzip shrinks it.
 func New(name string, b []byte) *Asset {
-	a := &Asset{name: name, ctype: mime.TypeByExtension(path.Ext(name)), plain: newVariant("", b)}
+	a := &Asset{name: name, ctype: contentType(path.Ext(name)), plain: newVariant("", b)}
 	if len(b) <= minCompressSize {
 		return a
 	}
@@ -89,6 +89,13 @@ func New(name string, b []byte) *Asset {
 		a.gzip = &gz
 	}
 	return a
+}
+
+func contentType(ext string) string {
+	if ext == ".woff2" {
+		return "font/woff2"
+	}
+	return mime.TypeByExtension(ext)
 }
 
 func siblingEncoding(ext string) string {

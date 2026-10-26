@@ -91,3 +91,16 @@ RSV010 ResourceServerInvalidClientHost
 RSV011 ResourceServerAdmissionUnverified
 SIG010 AuthorizeClientNotAdmitted
 SIG011 AuthorizeClientMetadataUnusable
+PRJ010 ProjectSignInLastMethod
+SIG012 SignInUpstreamCancelled
+SIG013 SignInUpstreamEmailUnverified
+SIG015 SignInUpstreamUnavailable
+SIG016 SignInUpstreamResponseInvalid
+SIG017 SignInUpstreamDisabled
+SIG018 SignInUpstreamLinkedElsewhere
+SIG019 SignInLastMethod
+SIG020 SignInUpstreamEmailTaken
+UPS001 UpstreamNotFound
+UPS002 UpstreamInvalidConfig
+UPS003 UpstreamExists
+UPS004 UpstreamHasIdentities

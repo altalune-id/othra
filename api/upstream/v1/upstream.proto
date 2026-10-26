@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package upstream.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "altalune.id/othra/gen/go/upstream/v1;upstreamv1";
+
+// UpstreamService configures a project's upstream IdPs, through which its end users sign in (Google first). Every id is a public id.
+service UpstreamService {
+  rpc ListUpstreams(ListUpstreamsRequest) returns (ListUpstreamsResponse) {
+    option (mcp.v1.tool) = {
+      name: "upstream_list"
+      description: "List a project's upstream IdPs (Google) with their client IDs, redirect URIs and whether they are on. Secrets are never shown."
+      required: ["project_id"]
+    };
+  }
+  rpc GetUpstream(GetUpstreamRequest) returns (GetUpstreamResponse) {
+    option (mcp.v1.tool) = {
+      name: "upstream_get"
+      description: "Get one upstream IdP of a project, with the redirect URI to register at the upstream. The secret is never shown."
+      required: ["project_id", "upstream_id"]
+    };
+  }
+  // SECURITY: create and update carry the upstream's client secret; a signed-in person sends them, never MCP.
+  rpc CreateUpstream(CreateUpstreamRequest) returns (CreateUpstreamResponse);
+  rpc UpdateUpstream(UpdateUpstreamRequest) returns (UpdateUpstreamResponse);
+  rpc SetUpstreamEnabled(SetUpstreamEnabledRequest) returns (SetUpstreamEnabledResponse) {
+    option (mcp.v1.tool) = {
+      name: "upstream_set_enabled"
+      description: "Turn an upstream IdP on or off. Off hides its sign-in button. It is refused while it would leave the project with no sign-in method."
+      required: ["project_id", "upstream_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+  rpc DeleteUpstream(DeleteUpstreamRequest) returns (DeleteUpstreamResponse) {
+    option (mcp.v1.tool) = {
+      name: "upstream_delete"
+      description: "Remove an upstream IdP. It is refused while any end user has linked it; turn it off instead."
+      required: ["project_id", "upstream_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+}
+
+// UpstreamKind is the upstream IdP; its issuer and endpoints are fixed in Othra.
+enum UpstreamKind {
+  UPSTREAM_KIND_UNSPECIFIED = 0;
+  UPSTREAM_KIND_GOOGLE = 1;
+}
+
+message Upstream {
+  string id = 1;
+  UpstreamKind kind = 2;
+  // client_id is the project's OAuth client at the upstream.
+  string client_id = 3;
+  // secret_set is true once a client secret is stored; the secret itself is never returned.
+  bool secret_set = 4;
+  bool enabled = 5;
+  // redirect_uri is the exact URI to register at the upstream.
+  string redirect_uri = 6;
+  // identities_linked is true while any end user has linked this upstream, which blocks its removal.
+  bool identities_linked = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message ListUpstreamsRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message ListUpstreamsResponse {
+  repeated Upstream upstreams = 1;
+}
+
+message GetUpstreamRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string upstream_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GetUpstreamResponse {
+  Upstream upstream = 1;
+}
+
+message CreateUpstreamRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  UpstreamKind kind = 2 [
+    (buf.validate.field).enum.defined_only = true,
+    (buf.validate.field).enum.not_in = 0
+  ];
+  string client_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 255
+  ];
+  string client_secret = 4 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 512
+  ];
+  bool enabled = 5;
+}
+
+message CreateUpstreamResponse {
+  Upstream upstream = 1;
+}
+
+message UpdateUpstreamRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string upstream_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 255
+  ];
+  string client_secret = 4 [(buf.validate.field).string.max_len = 512];
+}
+
+message UpdateUpstreamResponse {
+  Upstream upstream = 1;
+}
+
+message SetUpstreamEnabledRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string upstream_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  bool enabled = 3;
+}
+
+message SetUpstreamEnabledResponse {
+  Upstream upstream = 1;
+}
+
+message DeleteUpstreamRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string upstream_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message DeleteUpstreamResponse {}

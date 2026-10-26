@@ -28,6 +28,7 @@ const (
 	CodeProjectIssuerHandleLocked  Code = "PRJ007"
 	CodeProjectInvalidLogo         Code = "PRJ008"
 	CodeProjectTermsNotSet         Code = "PRJ009"
+	CodeProjectSignInLastMethod    Code = "PRJ010"
 
 	CodeAPIKeyNotFound             Code = "KEY001"
 	CodeAPIKeyInvalidName          Code = "KEY002"
@@ -111,6 +112,19 @@ const (
 	CodeSignOutRedirectNotRegistered    Code = "SIG009"
 	CodeAuthorizeClientNotAdmitted      Code = "SIG010"
 	CodeAuthorizeClientMetadataUnusable Code = "SIG011"
+	CodeSignInUpstreamCancelled         Code = "SIG012"
+	CodeSignInUpstreamEmailUnverified   Code = "SIG013"
+	CodeSignInUpstreamUnavailable       Code = "SIG015"
+	CodeSignInUpstreamResponseInvalid   Code = "SIG016"
+	CodeSignInUpstreamDisabled          Code = "SIG017"
+	CodeSignInUpstreamLinkedElsewhere   Code = "SIG018"
+	CodeSignInLastMethod                Code = "SIG019"
+	CodeSignInUpstreamEmailTaken        Code = "SIG020"
+
+	CodeUpstreamNotFound      Code = "UPS001"
+	CodeUpstreamInvalidConfig Code = "UPS002"
+	CodeUpstreamExists        Code = "UPS003"
+	CodeUpstreamHasIdentities Code = "UPS004"
 )
 
 var kinds = map[Code]Kind{
@@ -138,6 +152,7 @@ var kinds = map[Code]Kind{
 	CodeProjectIssuerHandleLocked:  KindFailedPrecondition,
 	CodeProjectInvalidLogo:         KindInvalid,
 	CodeProjectTermsNotSet:         KindFailedPrecondition,
+	CodeProjectSignInLastMethod:    KindFailedPrecondition,
 
 	CodeAPIKeyNotFound:             KindNotFound,
 	CodeAPIKeyInvalidName:          KindInvalid,
@@ -221,4 +236,17 @@ var kinds = map[Code]Kind{
 	CodeSignOutRedirectNotRegistered:    KindInvalid,
 	CodeAuthorizeClientNotAdmitted:      KindNotFound,
 	CodeAuthorizeClientMetadataUnusable: KindFailedPrecondition,
+	CodeSignInUpstreamCancelled:         KindFailedPrecondition,
+	CodeSignInUpstreamEmailUnverified:   KindFailedPrecondition,
+	CodeSignInUpstreamUnavailable:       KindInternal,
+	CodeSignInUpstreamResponseInvalid:   KindInvalid,
+	CodeSignInUpstreamDisabled:          KindFailedPrecondition,
+	CodeSignInUpstreamLinkedElsewhere:   KindFailedPrecondition,
+	CodeSignInLastMethod:                KindFailedPrecondition,
+	CodeSignInUpstreamEmailTaken:        KindFailedPrecondition,
+
+	CodeUpstreamNotFound:      KindNotFound,
+	CodeUpstreamInvalidConfig: KindInvalid,
+	CodeUpstreamExists:        KindAlreadyExists,
+	CodeUpstreamHasIdentities: KindFailedPrecondition,
 }

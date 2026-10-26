@@ -18,6 +18,7 @@ type MagicLinks struct {
 	ExpiresAt        postgres.ColumnTimestampz
 	UsedAt           postgres.ColumnTimestampz
 	BrowserSessionID postgres.ColumnString
+	PendingIdentity  postgres.ColumnString
 
 	AllColumns postgres.ColumnList
 }
@@ -40,9 +41,10 @@ func NewMagicLinks(schema, tablePrefix string) *MagicLinks {
 		expiresAt        = postgres.TimestampzColumn("expires_at")
 		usedAt           = postgres.TimestampzColumn("used_at")
 		browserSessionID = postgres.StringColumn("browser_session_id")
+		pendingIdentity  = postgres.StringColumn("pending_identity")
 		all              = postgres.ColumnList{
 			id, publicID, orgID, projectID, tokenHash, email, returnTo, requestIP,
-			createdAt, expiresAt, usedAt, browserSessionID,
+			createdAt, expiresAt, usedAt, browserSessionID, pendingIdentity,
 		}
 	)
 	return &MagicLinks{
@@ -59,6 +61,7 @@ func NewMagicLinks(schema, tablePrefix string) *MagicLinks {
 		ExpiresAt:        expiresAt,
 		UsedAt:           usedAt,
 		BrowserSessionID: browserSessionID,
+		PendingIdentity:  pendingIdentity,
 		AllColumns:       all,
 	}
 }

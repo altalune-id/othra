@@ -40,6 +40,7 @@ service ProjectService {
   rpc UpdateProjectIssuer(UpdateProjectIssuerRequest) returns (UpdateProjectIssuerResponse);
   rpc UpdateProjectBranding(UpdateProjectBrandingRequest) returns (UpdateProjectBrandingResponse);
   rpc UpdateProjectTerms(UpdateProjectTermsRequest) returns (UpdateProjectTermsResponse);
+  rpc UpdateProjectSignIn(UpdateProjectSignInRequest) returns (UpdateProjectSignInResponse);
   rpc BumpTermsVersion(BumpTermsVersionRequest) returns (BumpTermsVersionResponse);
   rpc CheckIssuerHandle(CheckIssuerHandleRequest) returns (CheckIssuerHandleResponse);
   rpc CreateProjectLogoUpload(CreateProjectLogoUploadRequest) returns (CreateProjectLogoUploadResponse);
@@ -190,6 +191,18 @@ message UpdateProjectTermsRequest {
 }
 
 message UpdateProjectTermsResponse {
+  Project project = 1;
+}
+
+message UpdateProjectSignInRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  bool email_link = 2;
+}
+
+message UpdateProjectSignInResponse {
   Project project = 1;
 }
 

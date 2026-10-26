@@ -102,6 +102,14 @@ func (f *ProjectStore) SetIssuerHandle(_ context.Context, _ uuid.UUID, handle st
 	return f.Err
 }
 
+// LockSignIn implements project.Store and returns Project's email-link switch.
+func (f *ProjectStore) LockSignIn(context.Context, uuid.UUID) (bool, error) {
+	if f.Err != nil {
+		return false, f.Err
+	}
+	return f.Project.SignInEmailLink, nil
+}
+
 // LockIssuerHandle implements project.Store and records the lock time.
 func (f *ProjectStore) LockIssuerHandle(_ context.Context, _ uuid.UUID, at time.Time) error {
 	f.LockedAt = &at

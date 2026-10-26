@@ -299,3 +299,24 @@ func TestInstall_RecordsAcceptedTerms(t *testing.T) {
 	require.NotNil(t, stored.TermsAcceptedAt)
 	assert.True(t, stored.TermsAcceptedAt.After(before))
 }
+
+// M7 F13: the project install creates is seeded once (the upstream IdP from config); a refused install seeds nothing.
+func TestInstall_SeedsTheDefaultProjectOnce(t *testing.T) {
+	f := newInstallFixture(t)
+	ctx := t.Context()
+	var seeded []uuid.UUID
+	f.svc.WithProjectSeed(func(_ context.Context, _, projectID uuid.UUID) error {
+		seeded = append(seeded, projectID)
+		return nil
+	})
+	_, err := f.svc.Install(ctx, install.Request{Email: "ada@example.com", Password: "a-good-password", OrgName: "Acme"})
+	require.NoError(t, err)
+	sys, err := f.orgs.System(ctx)
+	require.NoError(t, err)
+	p, err := f.projects.BySlug(ctx, sys.ID, project.DefaultSlug)
+	require.NoError(t, err)
+	assert.Equal(t, []uuid.UUID{p.ID}, seeded)
+	_, err = f.svc.Install(ctx, install.Request{Email: "eve@example.com", Password: "a-good-password"})
+	assert.True(t, install.IsAlreadyInstalledError(err))
+	assert.Len(t, seeded, 1)
+}

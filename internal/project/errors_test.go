@@ -78,6 +78,7 @@ func TestIssuerErrors(t *testing.T) {
 		{&IssuerHandleLockedError{}, IsIssuerHandleLockedError, apperror.CodeProjectIssuerHandleLocked, nil, ""},
 		{&InvalidLogoError{Reason: LogoSize}, IsInvalidLogoError, apperror.CodeProjectInvalidLogo, map[string]string{"max": "256"}, "size"},
 		{&TermsNotSetError{}, IsTermsNotSetError, apperror.CodeProjectTermsNotSet, nil, ""},
+		{&SignInLastMethodError{}, IsSignInLastMethodError, apperror.CodeProjectSignInLastMethod, nil, ""},
 	}
 	for _, c := range cases {
 		assert.NotEmpty(t, c.err.Error())

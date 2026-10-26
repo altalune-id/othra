@@ -8,15 +8,28 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// VerifyData is the magic link's confirm page; the link token itself stays in its cookie, out of the page.
+// VerifyData is the magic link's confirm page; the link token itself stays in its cookie, out of the page, and LinkEmail is the pending Google account to add.
 type VerifyData struct {
 	Site
 	Email       string
 	VerifyToken string
+	LinkEmail   string
+	// SignUpEmail is the Google account a sign-up link finishes creating the account with (P8).
+	SignUpEmail string
 }
 
 // Verify asks the person to continue before the link is used, so a mail scanner's GET signs nobody in.
 templ Verify(d layout.LayoutData, v VerifyData) {
+	if v.SignUpEmail != "" {
+		@verifySignUp(d, v)
+	} else if v.LinkEmail != "" {
+		@verifyLink(d, v)
+	} else {
+		@verifySignIn(d, v)
+	}
+}
+
+templ verifySignIn(d layout.LayoutData, v VerifyData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "verify.tab"))) {
 		@layout.Card(i18n.T(ctx, "verify.title", "project", v.Project)) {
 			if v.Email != "" {
@@ -28,6 +41,37 @@ templ Verify(d layout.LayoutData, v VerifyData) {
 			<form method="post" action={ v.href(d, "/login/verify") }>
 				@layout.CSRFInput(v.VerifyToken)
 				<button class="btn btn-primary btn-block" type="submit" autofocus>{ i18n.T(ctx, "common.continue") }</button>
+			</form>
+		}
+	}
+}
+
+templ verifySignUp(d layout.LayoutData, v VerifyData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "link.sign_up_title", "project", v.Project))) {
+		@layout.Card(i18n.T(ctx, "link.sign_up_title", "project", v.Project)) {
+			<p class="break-words">
+				@highlight(i18n.T(ctx, "link.sign_up_body", "project", v.Project), "{google_email}", v.SignUpEmail, "break-all font-medium")
+			</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "verify.warning") }</p>
+			<form method="post" action={ v.href(d, "/login/verify") }>
+				@layout.CSRFInput(v.VerifyToken)
+				<button class="btn btn-primary btn-block" type="submit" autofocus>{ i18n.T(ctx, "link.sign_up_continue") }</button>
+			</form>
+		}
+	}
+}
+
+templ verifyLink(d layout.LayoutData, v VerifyData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "link.confirm_title"))) {
+		@layout.Card(i18n.T(ctx, "link.confirm_title")) {
+			<p class="break-words">
+				@highlight(i18n.T(ctx, "link.confirm_body", "project", v.Project, "email", v.Email), "{google_email}", v.LinkEmail, "break-all font-medium")
+			</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "verify.warning") }</p>
+			<form method="post" action={ v.href(d, "/login/verify") } class="flex flex-col gap-2">
+				@layout.CSRFInput(v.VerifyToken)
+				<button class="btn btn-primary btn-block" type="submit" autofocus>{ i18n.T(ctx, "link.confirm_add") }</button>
+				<button class="btn btn-ghost btn-block" type="submit" name="skip" value="1">{ i18n.T(ctx, "link.confirm_skip") }</button>
 			</form>
 		}
 	}

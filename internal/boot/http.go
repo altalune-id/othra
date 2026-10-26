@@ -74,6 +74,7 @@ func buildAPIHandler(
 		Clients:  svcs.Clients,
 
 		ResourceServers: svcs.ResourceServers,
+		Upstreams:       svcs.Upstreams,
 		Refs:            newPublicIDs(svcs),
 		FileUploads:     svcs.Caps.FileUploads,
 	}, unexpected, opts).Handler(basePath)

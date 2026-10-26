@@ -73,6 +73,7 @@ func TestError(t *testing.T) {
 	assert.Equal(t, T(en, "apperror.GEN900"), Error(en, apperror.CodeUnexpected))
 	assert.Equal(t, T(id, "apperror.SIG005"), Error(id, apperror.CodeAuthorizeClientUnknown))
 	assert.NotEqual(t, Error(en, apperror.CodeAuthorizeClientUnknown), Error(id, apperror.CodeAuthorizeClientUnknown))
+	assert.Equal(t, T(en, "apperror.GEN900", "project", "Acme"), Error(en, apperror.CodeUnexpected, "project", "Acme"))
 }
 
 var placeholder = regexp.MustCompile(`\{[a-z_]+\}`)

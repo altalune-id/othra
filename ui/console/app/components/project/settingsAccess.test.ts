@@ -231,3 +231,57 @@ describe('m2 design review contrast', () => {
     expect(list.match(/'text-base-content\/60': row\.status === 'retired'/g)).toHaveLength(2);
   });
 });
+
+describe('sign-in methods page (M7)', () => {
+  const page = () => read('../../pages/o/[org]/projects/[project]/settings/sign-in.vue');
+  const card = () => read('./signin/GoogleUpstreamCard.vue');
+
+  it('has its own sidebar item after Issuer', () => {
+    const sidebar = read('./ProjectSettingsSidebar.vue');
+    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'sign-in\''));
+    expect(sidebar).toContain('signin.title');
+  });
+
+  it('gives editing controls to editors only and tells others why', () => {
+    expect(page()).toContain('<ProjectReadOnlyNote v-if="!canEdit"');
+    expect(page()).toContain('<template v-if="canEdit">');
+    expect(page()).toContain(':can-edit="canEdit"');
+    expect(card()).toContain('<form v-if="canEdit"');
+    expect(card()).toContain('v-if="canEdit && google"');
+  });
+
+  it('never shows the client secret: a password input while typing, then only "Set"', () => {
+    expect(card()).toMatch(/v-model="secret"\s+type="password"/);
+    expect(card()).toContain('google?.secretSet && !replacingSecret');
+    expect(card()).not.toMatch(/\{\{\s*secret\s*\}\}/);
+  });
+
+  it('shows the last-method and linked locks as notes beside disabled controls', () => {
+    expect(page()).toContain(':aria-disabled="emailLocked"');
+    expect(card()).toContain(':aria-disabled="locked"');
+    expect(card()).toContain(':disabled="busy || locked || removeLocked"');
+    expect(page()).not.toContain('role="alert"');
+    expect(card()).not.toContain('role="alert"');
+  });
+
+  it('puts a refused switch back to the server value and shows the email refusal in its own card (A4)', () => {
+    expect(page()).toMatch(/const wanted = input\.checked;\s+input\.checked = emailLink\.value;/);
+    expect(card()).toMatch(/emit\('toggle', input\.checked\);\s+input\.checked = google\?\.enabled \?\? false;/);
+    expect(page()).toContain('<ErrorText :error="emailError" />');
+    expect(page()).toContain(':toggle-error="toggleError"');
+    expect(page()).toContain('signin.email_locked_unlinked');
+  });
+
+  it('keeps a locked toggle looking On: aria-disabled and a prevented click, never disabled (MF1)', () => {
+    for (const source of [page(), card()]) {
+      expect(source).not.toMatch(/:disabled="busy \|\| (?:emailLocked|locked)"/);
+      expect(source).toMatch(/@click="(?:emailLocked|locked) && \$event\.preventDefault\(\)"/);
+      expect(source).toContain('\'cursor-not-allowed\'');
+    }
+  });
+
+  it('only suggests turning Google off when that is allowed (MF4)', () => {
+    expect(card()).toMatch(/google\.enabled && !locked \? `\$\{labels\.removeLocked\} \$\{labels\.turnOffInstead\}` : labels\.removeLocked/);
+    expect(read('./signin/labels.ts')).not.toContain('apperror.UPS004');
+  });
+});

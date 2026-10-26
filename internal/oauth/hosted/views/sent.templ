@@ -22,7 +22,7 @@ templ Sent(d layout.LayoutData, v SentData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "sent.title"))) {
 		@layout.Card(i18n.T(ctx, "sent.title")) {
 			@iconCircle() {
-				@iconMail()
+				@iconMail("size-6")
 			}
 			if v.Resent {
 				@alertSuccess() {

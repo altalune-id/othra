@@ -14,6 +14,7 @@ import (
 	orgv1mcp "altalune.id/othra/gen/go/org/v1/orgv1mcp"
 	projectv1mcp "altalune.id/othra/gen/go/project/v1/projectv1mcp"
 	resourceserverv1mcp "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1mcp"
+	upstreamv1mcp "altalune.id/othra/gen/go/upstream/v1/upstreamv1mcp"
 	webhookv1mcp "altalune.id/othra/gen/go/webhook/v1/webhookv1mcp"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/client"
@@ -26,6 +27,7 @@ import (
 	"altalune.id/othra/internal/permission"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
+	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/internal/webhook"
 	rootmcp "altalune.id/othra/mcp"
 	"altalune.id/othra/version"
@@ -48,6 +50,9 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger, allo
 	clientv1mcp.RegisterClientServiceTools(registry, client.NewControlPlane(svcs.Clients, refs), permission.For, validate)
 	rsCP := resourceserver.NewControlPlane(svcs.ResourceServers, refs)
 	resourceserverv1mcp.RegisterResourceServerServiceTools(registry, rsCP, permission.For, validate)
+	if svcs.Upstreams != nil {
+		upstreamv1mcp.RegisterUpstreamServiceTools(registry, upstream.NewControlPlane(svcs.Upstreams, refs), permission.For, validate)
+	}
 	authSvc := auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users).WithFileUploads(svcs.Caps.FileUploads)
 	authv1mcp.RegisterAuthServiceTools(registry, authSvc, permission.For, validate)
 

@@ -18,6 +18,7 @@ import (
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
 	resourceserverv1connect "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
+	upstreamv1connect "altalune.id/othra/gen/go/upstream/v1/upstreamv1connect"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
@@ -29,6 +30,7 @@ import (
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
+	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/webhook"
 )
@@ -56,6 +58,7 @@ type Services struct {
 	Clients  *client.Service
 
 	ResourceServers *resourceserver.Service
+	Upstreams       *upstream.Service
 	Refs            Refs
 	// FileUploads is true when the deployment has file storage.
 	FileUploads bool
@@ -72,6 +75,7 @@ type Refs interface {
 	keys.Refs
 	client.Refs
 	resourceserver.Refs
+	upstream.Refs
 }
 
 // Server holds the wired Connect handlers.
@@ -81,16 +85,17 @@ type Server struct {
 	APIKeys  *apikey.Service
 	Webhooks *webhook.Service
 
-	OrgSvc     *org.OrgService
-	ProjectSvc *project.ProjectService
-	APIKeySvc  *apikey.APIKeyService
-	WebhookSvc *webhook.WebhookControlPlane
-	AuthSvc    *auth.AuthService
-	MemberSvc  *member.MemberService
-	InviteSvc  *invite.InviteService
-	KeySvc     *keys.SigningKeyService
-	ClientSvc  *client.ClientService
-	RSSvc      *resourceserver.ResourceServerService
+	OrgSvc      *org.OrgService
+	ProjectSvc  *project.ProjectService
+	APIKeySvc   *apikey.APIKeyService
+	WebhookSvc  *webhook.WebhookControlPlane
+	AuthSvc     *auth.AuthService
+	MemberSvc   *member.MemberService
+	InviteSvc   *invite.InviteService
+	KeySvc      *keys.SigningKeyService
+	ClientSvc   *client.ClientService
+	RSSvc       *resourceserver.ResourceServerService
+	UpstreamSvc *upstream.UpstreamService
 
 	OpenAPIEnabled   bool
 	OpenAPIBasicAuth *BasicAuth
@@ -131,6 +136,9 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 	}
 	if svcs.ResourceServers != nil {
 		s.RSSvc = resourceserver.NewControlPlane(svcs.ResourceServers, svcs.Refs)
+	}
+	if svcs.Upstreams != nil {
+		s.UpstreamSvc = upstream.NewControlPlane(svcs.Upstreams, svcs.Refs)
 	}
 	if svcs.Members != nil {
 		s.MemberSvc = member.NewControlPlane(svcs.Members, svcs.Refs)
@@ -180,6 +188,10 @@ func (s *Server) Handler(basePath string) http.Handler {
 	if s.RSSvc != nil {
 		rsPath, rsHandler := resourceserverv1connect.NewResourceServerServiceHandler(s.RSSvc, s.handlerOptions()...)
 		inner.Handle(rsPath, rsHandler)
+	}
+	if s.UpstreamSvc != nil {
+		upstreamPath, upstreamHandler := upstreamv1connect.NewUpstreamServiceHandler(s.UpstreamSvc, s.handlerOptions()...)
+		inner.Handle(upstreamPath, upstreamHandler)
 	}
 
 	if s.AuthSvc != nil {

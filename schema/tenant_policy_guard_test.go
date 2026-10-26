@@ -77,7 +77,7 @@ var appendOnly = map[string]bool{"end_user_terms": true}
 func TestMigrations_ProjectOwnedTablesCheckTheProject(t *testing.T) {
 	all := strings.Join(mapValues(migrationSources(t)), "\n")
 	scope := `org_id = {{.Schema}}.{{.TablePrefix}}current_org_id() AND project_id = {{.Schema}}.{{.TablePrefix}}current_project_id()`
-	for _, table := range []string{"signing_keys", "oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources", "end_users", "browser_sessions", "user_sessions", "end_user_terms", "magic_links", "grant_families", "authorization_codes", "access_tokens", "refresh_tokens", "scope_consents"} {
+	for _, table := range []string{"signing_keys", "oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources", "end_users", "browser_sessions", "user_sessions", "end_user_terms", "magic_links", "grant_families", "authorization_codes", "access_tokens", "refresh_tokens", "scope_consents", "upstream_providers", "end_user_identities"} {
 		target := `{{.Schema}}.{{.TablePrefix}}` + table
 		want := "CREATE POLICY {{.TablePrefix}}" + table + "_tenant ON " + target + "\n  FOR ALL\n  USING (" + scope + ")\n  WITH CHECK (" + scope + ");"
 		if appendOnly[table] {

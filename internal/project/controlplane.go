@@ -135,6 +135,19 @@ func (s *ProjectService) UpdateProjectBranding(
 	return connect.NewResponse(&projectv1.UpdateProjectBrandingResponse{Project: out}), nil
 }
 
+// UpdateProjectSignIn turns a project's email link on or off; turning off the last sign-in method answers PRJ010.
+func (s *ProjectService) UpdateProjectSignIn(
+	ctx context.Context, req *connect.Request[projectv1.UpdateProjectSignInRequest],
+) (*connect.Response[projectv1.UpdateProjectSignInResponse], error) {
+	out, err := s.update(ctx, req.Msg.GetId(), func(p *Project) (*Project, error) {
+		return s.projects.SetSignInEmailLink(ctx, p.ID, req.Msg.GetEmailLink())
+	})
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&projectv1.UpdateProjectSignInResponse{Project: out}), nil
+}
+
 // UpdateProjectTerms sets a project's terms and privacy links.
 func (s *ProjectService) UpdateProjectTerms(
 	ctx context.Context,

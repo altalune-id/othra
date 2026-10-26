@@ -9,6 +9,8 @@ import (
 	"slices"
 	"time"
 
+	"github.com/google/uuid"
+
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/consent"
@@ -50,7 +52,7 @@ func buildHosted(cfg config.Config, svcs *Services, kit layout.Kit, resolver *oi
 			Marker: hosted.NewMarker(purposeKey(svcs.StateSecret, "othra-hosted-marker-v1"), linkTTL),
 		})
 	}
-	return web
+	return wireFederation(web, svcs)
 }
 
 // SECURITY: one key per purpose, derived from http.stateSecret, so a value signed for one use never verifies for another.
@@ -77,12 +79,14 @@ func endUserProject(p hosted.Project) enduser.Project {
 func hostedAccount(a enduser.Account) hosted.Account {
 	return hosted.Account{
 		UserSession: a.PublicID, EndUserID: a.EndUserID, EndUser: a.Subject, Email: a.Email, Name: a.Name, AuthTime: a.AuthTime,
-		SelectedAt: a.SelectedAt,
+		SelectedAt: a.SelectedAt, Method: a.Method,
 	}
 }
 
 func (u hostedUsers) IssueLink(ctx context.Context, req hosted.IssueRequest) (hosted.Link, bool, error) {
-	p, lr := endUserProject(req.Project), enduser.LinkRequest{Email: req.Email, ReturnTo: req.ReturnTo, IP: req.IP, Allow: req.Allow}
+	p, lr := endUserProject(req.Project), enduser.LinkRequest{
+		Email: req.Email, ReturnTo: req.ReturnTo, IP: req.IP, Allow: req.Allow, Pending: req.Pending,
+	}
 	var issued enduser.IssuedLink
 	var err error
 	if req.Compose == nil {
@@ -99,7 +103,7 @@ func (u hostedUsers) IssueLink(ctx context.Context, req hosted.IssueRequest) (ho
 }
 
 func hostedLink(l enduser.IssuedLink) hosted.Link {
-	return hosted.Link{Email: l.Email, URL: l.URL, SignUp: l.SignUp}
+	return hosted.Link{ID: l.PublicID, Email: l.Email, URL: l.URL, SignUp: l.SignUp}
 }
 
 func (u hostedUsers) LinkByToken(ctx context.Context, p hosted.Project, token string) (hosted.LinkRef, error) {
@@ -107,19 +111,31 @@ func (u hostedUsers) LinkByToken(ctx context.Context, p hosted.Project, token st
 	if err != nil {
 		return hosted.LinkRef{}, err
 	}
-	return hosted.LinkRef{ID: l.PublicID, Email: l.Email}, nil
+	return hostedLinkRef(l), nil
+}
+
+func hostedLinkRef(l *enduser.Link) hosted.LinkRef {
+	return hosted.LinkRef{ID: l.PublicID, Email: l.Email, Pending: l.Pending}
 }
 
 func (u hostedUsers) Redeem(ctx context.Context, req hosted.RedeemRequest) (*hosted.Redeemed, error) {
-	got, err := u.users.Redeem(ctx, endUserProject(req.Project), enduser.RedeemRequest{
-		Token: req.Token, BrowserSecret: req.BrowserSecret, UserAgent: req.UserAgent, IP: req.IP,
-	})
+	rr := enduser.RedeemRequest{Token: req.Token, BrowserSecret: req.BrowserSecret, UserAgent: req.UserAgent, IP: req.IP}
+	if req.Confirm != nil {
+		rr.Confirm = func(ctx context.Context, l *enduser.Link, endUserID uuid.UUID, created bool) (bool, error) {
+			return req.Confirm(ctx, hostedLinkRef(l), endUserID, created)
+		}
+	}
+	got, err := u.users.Redeem(ctx, endUserProject(req.Project), rr)
 	if err != nil {
 		return nil, err
 	}
 	return &hosted.Redeemed{
 		BrowserSecret: got.Secret, ExpiresAt: got.ExpiresAt, Account: hostedAccount(got.Account), ReturnTo: got.ReturnTo,
 	}, nil
+}
+
+func (u hostedUsers) FillName(ctx context.Context, p hosted.Project, endUserID uuid.UUID, name string) error {
+	return u.users.FillName(ctx, endUserProject(p), endUserID, name)
 }
 
 func (u hostedUsers) Browser(ctx context.Context, p hosted.Project, secret string) (*hosted.Browser, error) {

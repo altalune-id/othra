@@ -387,6 +387,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/project.v1.UpdateProjectIssuerResponse'
+  /project.v1.ProjectService/UpdateProjectSignIn:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectSignIn
+      operationId: project.v1.ProjectService.UpdateProjectSignIn
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectSignInRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectSignInResponse'
   /project.v1.ProjectService/UpdateProjectTerms:
     post:
       tags:
@@ -997,6 +1032,29 @@ components:
           title: project
           $ref: '#/components/schemas/project.v1.Project'
       title: UpdateProjectResponse
+      additionalProperties: false
+    project.v1.UpdateProjectSignInRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        emailLink:
+          type: boolean
+          title: email_link
+      title: UpdateProjectSignInRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.UpdateProjectSignInResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectSignInResponse
       additionalProperties: false
     project.v1.UpdateProjectTermsRequest:
       type: object

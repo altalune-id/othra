@@ -190,11 +190,22 @@ func IsTermsNotSetError(err error) bool {
 	return ok
 }
 
+// SignInLastMethodError signals a change that would leave a project's end users with no sign-in method.
+type SignInLastMethodError struct{}
+
+func (*SignInLastMethodError) Error() string { return "project: keep at least one sign-in method on" }
+
+// IsSignInLastMethodError reports whether err wraps a *SignInLastMethodError.
+func IsSignInLastMethodError(err error) bool {
+	_, ok := errors.AsType[*SignInLastMethodError](err)
+	return ok
+}
+
 // IsExpectedError reports whether err is a typed domain error a service returns as-is.
 func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsAlreadyExistsError(err) || IsInvalidSlugError(err) || IsInvalidNameError(err) ||
 		IsIssuerHandleTakenError(err) || IsInvalidIssuerHandleError(err) || IsIssuerHandleLockedError(err) ||
-		IsInvalidLogoError(err) || IsTermsNotSetError(err)
+		IsInvalidLogoError(err) || IsTermsNotSetError(err) || IsSignInLastMethodError(err)
 }
 
 // ToAppError maps NotFoundError to the canonical NotFound envelope.
@@ -252,4 +263,9 @@ func (e *InvalidLogoError) ToAppError() *apperror.AppError {
 // ToAppError maps TermsNotSetError to its own code.
 func (e *TermsNotSetError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeProjectTermsNotSet, "No terms link: add one before publishing a new terms version.").WithCause(e)
+}
+
+// ToAppError maps SignInLastMethodError to PRJ010.
+func (e *SignInLastMethodError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectSignInLastMethod, "Keep at least one sign-in method on").WithCause(e)
 }

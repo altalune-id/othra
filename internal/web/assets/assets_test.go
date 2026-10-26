@@ -157,6 +157,12 @@ func TestLoad(t *testing.T) {
 		assert.Empty(t, rec.Header().Get("Vary"))
 	})
 
+	t.Run("a web font gets its font type", func(t *testing.T) {
+		t.Parallel()
+		f := load(t, fstest.MapFS{"font.woff2": {Data: []byte("wOF2")}})
+		assert.Equal(t, "font/woff2", serve(t, f["font.woff2"], nil).Header().Get("Content-Type"))
+	})
+
 	t.Run("a file with no known type is served plain only", func(t *testing.T) {
 		t.Parallel()
 		rec := serve(t, files["data.nope"], http.Header{"Accept-Encoding": {"gzip"}})

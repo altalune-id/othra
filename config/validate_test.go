@@ -157,6 +157,14 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"oauth.cimd.cacheMax below cacheMin", func(c *Config) { c.OAuth.CIMD.CacheMax = time.Minute }, invalidSetting("oauth.cimd.cacheMax")},
 		{"oauth.cimd.allowPrivateHosts in development", func(c *Config) { c.Env = EnvDevelopment; c.OAuth.CIMD.AllowPrivateHosts = true }, valid},
 		{"oauth.cimd.allowPrivateHosts in production", func(c *Config) { c.OAuth.CIMD.AllowPrivateHosts = true }, invalidSetting("oauth.cimd.allowPrivateHosts")},
+		{"upstreams.google seeded", func(c *Config) { c.Upstreams.Google = UpstreamsGoogleConfig{ClientID: "id", ClientSecret: "s"} }, valid},
+		{"upstreams.google.clientSecret missing", func(c *Config) { c.Upstreams.Google.ClientID = "id" }, missingSetting("upstreams.google.clientId, upstreams.google.clientSecret")},
+		{"upstreams.google.issuerOverride https in development", func(c *Config) {
+			c.Env = EnvDevelopment
+			c.Upstreams.Google.IssuerOverride = "https://idp.test"
+		}, valid},
+		{"upstreams.google.issuerOverride in production", func(c *Config) { c.Upstreams.Google.IssuerOverride = "https://idp.test" }, invalidSetting("upstreams")},
+		{"upstreams.allowPrivateHosts in production", func(c *Config) { c.Upstreams.AllowPrivateHosts = true }, invalidSetting("upstreams")},
 		{"redis used", redisFeature, valid},
 		{"redis.url empty when used", func(c *Config) { redisFeature(c); c.Redis.URL = "" }, missingSetting("redis.url")},
 		{"redis.url wrong scheme when used", func(c *Config) { redisFeature(c); c.Redis.URL = "http://localhost" }, invalidSetting("redis.url")},
@@ -264,7 +272,8 @@ func TestValidate_NoSecretInMessages(t *testing.T) {
 			c.Auth.Mode = AuthModeBasic
 			c.Auth.Basic = BasicConfig{User: "ops", Password: "hunter2"}
 		},
-		"mail.from": func(c *Config) { c.Mail.From = secret },
+		"mail.from":                     func(c *Config) { c.Mail.From = secret },
+		"upstreams.google.clientSecret": func(c *Config) { c.Upstreams.Google.ClientSecret = secret },
 	} {
 		t.Run(name, func(t *testing.T) {
 			c := validConfig(t)

@@ -16,7 +16,9 @@ import (
 
 func TestOpen_RealServer(t *testing.T) {
 	h := redistest.New(t)
-	c, err := Open(t.Context(), testConfig(h.URL), nooptrace.NewTracerProvider())
+	cfg := testConfig(h.URL)
+	cfg.ConnectTimeout = 5 * time.Second
+	c, err := Open(t.Context(), cfg, nooptrace.NewTracerProvider())
 	require.NoError(t, err)
 	require.NoError(t, c.Set(t.Context(), h.Prefix+"k", "v", time.Minute).Err())
 	assert.Equal(t, "v", c.Get(t.Context(), h.Prefix+"k").Val())

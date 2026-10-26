@@ -11,6 +11,7 @@ import (
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
 	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
 	resourceserverv1connect "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
+	upstreamv1connect "altalune.id/othra/gen/go/upstream/v1/upstreamv1connect"
 	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/scope"
@@ -31,6 +32,7 @@ func Table() map[string][]string {
 		projectv1connect.ProjectServiceUpdateProjectIssuerProcedure:       {scope.ProjectWrite},
 		projectv1connect.ProjectServiceUpdateProjectBrandingProcedure:     {scope.ProjectWrite},
 		projectv1connect.ProjectServiceUpdateProjectTermsProcedure:        {scope.ProjectWrite},
+		projectv1connect.ProjectServiceUpdateProjectSignInProcedure:       {scope.ProjectWrite},
 		projectv1connect.ProjectServiceBumpTermsVersionProcedure:          {scope.ProjectWrite},
 		projectv1connect.ProjectServiceCreateProjectLogoUploadProcedure:   {scope.ProjectWrite},
 		projectv1connect.ProjectServiceCompleteProjectLogoUploadProcedure: {scope.ProjectWrite},
@@ -57,6 +59,12 @@ func Table() map[string][]string {
 		resourceserverv1connect.ResourceServerServiceVerifyResourceServerProcedure:       {scope.ProjectWrite},
 		resourceserverv1connect.ResourceServerServiceSetResourceServerTrustProcedure:     {scope.ProjectWrite},
 		resourceserverv1connect.ResourceServerServiceSetResourceServerAdmissionProcedure: {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceListUpstreamsProcedure:                          {scope.ProjectRead},
+		upstreamv1connect.UpstreamServiceGetUpstreamProcedure:                            {scope.ProjectRead},
+		upstreamv1connect.UpstreamServiceCreateUpstreamProcedure:                         {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceUpdateUpstreamProcedure:                         {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceSetUpstreamEnabledProcedure:                     {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceDeleteUpstreamProcedure:                         {scope.ProjectWrite},
 		resourceserverv1connect.ResourceServerServiceListLinksProcedure:                  {scope.ProjectRead},
 		resourceserverv1connect.ResourceServerServiceLinkClientProcedure:                 {scope.ProjectWrite},
 		resourceserverv1connect.ResourceServerServiceUpdateLinkProcedure:                 {scope.ProjectWrite},

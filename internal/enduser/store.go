@@ -33,6 +33,12 @@ type Store interface {
 
 	// EndUserByID returns the end user id, or nil.
 	EndUserByID(ctx context.Context, projectID, id uuid.UUID) (*EndUser, error)
+	// EndUserIDByEmail returns the id of the project's end user with email; ok is false when there is none.
+	EndUserIDByEmail(ctx context.Context, projectID uuid.UUID, email string) (id uuid.UUID, ok bool, err error)
+	// CreateEndUser inserts a verified end user with email and name, or returns ErrEmailTaken; it never updates an existing one.
+	CreateEndUser(ctx context.Context, orgID, projectID uuid.UUID, email, name string, now time.Time) (uuid.UUID, error)
+	// FillName sets the end user's name at now only while it is empty.
+	FillName(ctx context.Context, projectID, endUserID uuid.UUID, name string, now time.Time) error
 	// EndUserExists reports whether the project has an end user with email.
 	EndUserExists(ctx context.Context, projectID uuid.UUID, email string) (bool, error)
 	// SaveEndUser finds or creates the end user with email, verifying it and recording a sign-in at now.
@@ -40,8 +46,8 @@ type Store interface {
 
 	// Accounts returns the browser's live accounts, the most recently selected first.
 	Accounts(ctx context.Context, projectID, browserID uuid.UUID) ([]Account, error)
-	// SignIn starts, or refreshes, the user session of endUserID on the browser and selects it at now.
-	SignIn(ctx context.Context, orgID, projectID, browserID, endUserID uuid.UUID, now time.Time) error
+	// SignIn starts, or refreshes, the user session of endUserID on the browser by method and selects it at now.
+	SignIn(ctx context.Context, orgID, projectID, browserID, endUserID uuid.UUID, method string, now time.Time) error
 	// Select marks the live user session publicID of the browser selected at now, reporting whether it was live.
 	Select(ctx context.Context, projectID, browserID uuid.UUID, publicID string, now time.Time) (bool, error)
 	// EndUserSession ends the live user session publicID of the browser at now.

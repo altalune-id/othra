@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,6 +30,7 @@ type Service struct {
 	now        func() time.Time
 	newSecret  func() (string, error)
 	log        *slog.Logger
+	signIn     SignInSwitch
 }
 
 // NewService builds the Service over store; mail enqueues sign-in emails in the same unit of work as their link.
@@ -42,6 +44,12 @@ func NewService(store Store, uow db.Transactor, mail MailQueue, cfg Config, unex
 // WithLogger sets where sign-ins and terms acceptances are logged.
 func (s *Service) WithLogger(log *slog.Logger) *Service {
 	s.log = log
+	return s
+}
+
+// WithSignInSwitch makes a redeem re-read the project's email-link switch before it creates an end user.
+func (s *Service) WithSignInSwitch(sw SignInSwitch) *Service {
+	s.signIn = sw
 	return s
 }
 
@@ -75,7 +83,7 @@ func (s *Service) SendLink(ctx context.Context, p Project, req LinkRequest, comp
 func (s *Service) issue(
 	ctx context.Context, p Project, req LinkRequest, after func(context.Context, IssuedLink) error,
 ) (IssuedLink, error) {
-	if !p.EmailLink {
+	if !p.EmailLink && req.Pending == nil {
 		return IssuedLink{}, &EmailDisabledError{}
 	}
 	email, err := emailaddr.Normalize(req.Email)
@@ -88,6 +96,9 @@ func (s *Service) issue(
 	var allowErr error
 	err = s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		since := now.Add(-s.cfg.ResendAfter)
+		if req.Pending != nil {
+			since = now
+		}
 		recent, err := s.store.HasRecentLink(ctx, p.ID, email, since)
 		if err != nil || recent {
 			return err
@@ -114,7 +125,10 @@ func (s *Service) issue(
 		if err != nil {
 			return err
 		}
-		l := &Link{ID: uuid.New(), PublicID: publicID, Email: email, ReturnTo: req.ReturnTo, CreatedAt: now, ExpiresAt: now.Add(s.cfg.LinkTTL)}
+		l := &Link{
+			ID: uuid.New(), PublicID: publicID, Email: email, ReturnTo: req.ReturnTo, CreatedAt: now, ExpiresAt: now.Add(s.cfg.LinkTTL),
+			Pending: req.Pending,
+		}
 		if err := s.store.InsertLink(ctx, p.OrgID, p.ID, l, nanoid.HashToken(token), req.IP); err != nil {
 			return err
 		}
@@ -123,7 +137,8 @@ func (s *Service) issue(
 			return err
 		}
 		out = IssuedLink{
-			URL: p.IssuerURL + "/login/verify?t=" + url.QueryEscape(token), Email: email, ExpiresAt: l.ExpiresAt, Issued: true, SignUp: !known,
+			PublicID: publicID, URL: p.IssuerURL + "/login/verify?t=" + url.QueryEscape(token), Email: email, ExpiresAt: l.ExpiresAt,
+			Issued: true, SignUp: !known,
 		}
 		if after == nil {
 			return nil
@@ -198,25 +213,32 @@ func (s *Service) Redeem(ctx context.Context, p Project, req RedeemRequest) (*Re
 		if err != nil {
 			return err
 		}
+		pending := req.Confirm != nil && l.Pending != nil
+		known, gated, err := s.signUpGated(ctx, p, l.Email)
+		if err != nil {
+			return err
+		}
+		if gated && !pending {
+			return &EmailDisabledError{}
+		}
 		endUserID, err := s.store.SaveEndUser(ctx, p.OrgID, p.ID, l.Email, now)
 		if err != nil {
 			return err
 		}
-		if err := s.store.SignIn(ctx, p.OrgID, p.ID, b.ID, endUserID, now); err != nil {
-			return err
+		if pending {
+			linked, err := req.Confirm(ctx, l, endUserID, !known)
+			if err != nil {
+				return err
+			}
+			if gated && !linked {
+				return &EmailDisabledError{}
+			}
 		}
-		if err := s.store.KeepNewest(ctx, p.ID, b.ID, s.cfg.MaxAccounts, now); err != nil {
-			return err
+		out, err = s.signInBrowser(ctx, p, secret, b, endUserID, MethodMagicLink, now)
+		if out != nil {
+			out.ReturnTo = l.ReturnTo
 		}
-		accounts, err := s.store.Accounts(ctx, p.ID, b.ID)
-		if err != nil {
-			return err
-		}
-		if len(accounts) == 0 {
-			return &SessionGoneError{}
-		}
-		out = &Redeemed{Secret: secret, ExpiresAt: b.ExpiresAt(s.cfg.Idle), Account: accounts[0], ReturnTo: l.ReturnTo}
-		return nil
+		return err
 	})
 	if err != nil {
 		return nil, s.errOrReport(ctx, "enduser: redeem", err)
@@ -225,6 +247,109 @@ func (s *Service) Redeem(ctx context.Context, p Project, req RedeemRequest) (*Re
 		slog.String("end_user", out.Account.Subject), slog.String("user_session", out.Account.PublicID),
 		slog.String("method", MethodMagicLink), slog.Bool("repeat", repeated))
 	return out, nil
+}
+
+// SECURITY: R-2, F8, P8: with the email link off, a redeem creates an end user only if it links the pending Google identity it carries.
+func (s *Service) signUpGated(ctx context.Context, p Project, email string) (known, gated bool, err error) {
+	_, known, err = s.store.EndUserIDByEmail(ctx, p.ID, email)
+	if err != nil || known {
+		return known, false, err
+	}
+	on := p.EmailLink
+	if s.signIn != nil {
+		if on, err = s.signIn.LockEmailLink(ctx, p.ID); err != nil {
+			return false, false, err
+		}
+	}
+	return false, !on, nil
+}
+
+func (s *Service) signInBrowser(
+	ctx context.Context, p Project, secret string, b *Browser, endUserID uuid.UUID, method string, now time.Time,
+) (*Redeemed, error) {
+	if err := s.store.SignIn(ctx, p.OrgID, p.ID, b.ID, endUserID, method, now); err != nil {
+		return nil, err
+	}
+	if err := s.store.KeepNewest(ctx, p.ID, b.ID, s.cfg.MaxAccounts, now); err != nil {
+		return nil, err
+	}
+	accounts, err := s.store.Accounts(ctx, p.ID, b.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(accounts) == 0 {
+		return nil, &SessionGoneError{}
+	}
+	return &Redeemed{Secret: secret, ExpiresAt: b.ExpiresAt(s.cfg.Idle), Account: accounts[0]}, nil
+}
+
+// FederatedSignIn signs EndUserID in on the browser of BrowserSecret after an upstream IdP vouched for them; Method is the upstream kind.
+type FederatedSignIn struct {
+	EndUserID     uuid.UUID
+	Method        string
+	BrowserSecret string
+	UserAgent     string
+}
+
+// SignInFederated starts the user session the way Redeem does, in the unit of work on ctx, rotating the browser secret.
+func (s *Service) SignInFederated(ctx context.Context, p Project, req FederatedSignIn) (*Redeemed, error) {
+	ctx = scope(ctx, p)
+	now := s.now()
+	var out *Redeemed
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		current, err := s.browser(ctx, p, req.BrowserSecret, now)
+		if err != nil {
+			return err
+		}
+		secret, b, err := s.startBrowser(ctx, p, current, req.UserAgent, now)
+		if err != nil {
+			return err
+		}
+		out, err = s.signInBrowser(ctx, p, secret, b, req.EndUserID, req.Method, now)
+		return err
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "enduser: federated sign-in", err)
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "enduser: signed in", slog.String("project", p.PublicID),
+		slog.String("end_user", out.Account.Subject), slog.String("user_session", out.Account.PublicID), slog.String("method", req.Method))
+	return out, nil
+}
+
+// EndUserIDByEmail returns the id of the project's end user with email; ok is false when there is none.
+func (s *Service) EndUserIDByEmail(ctx context.Context, p Project, email string) (uuid.UUID, bool, error) {
+	ctx = scope(ctx, p)
+	id, ok, err := s.store.EndUserIDByEmail(ctx, p.ID, email)
+	if err != nil {
+		return uuid.Nil, false, s.errOrReport(ctx, "enduser: by email", err)
+	}
+	return id, ok, nil
+}
+
+// CreateFederated creates a verified end user from an upstream IdP's verified email, or returns ErrEmailTaken.
+func (s *Service) CreateFederated(ctx context.Context, p Project, email, name string) (uuid.UUID, error) {
+	ctx = scope(ctx, p)
+	id, err := s.store.CreateEndUser(ctx, p.OrgID, p.ID, email, clip(name, nameMax), s.now())
+	if errors.Is(err, ErrEmailTaken) {
+		return uuid.Nil, err
+	}
+	if err != nil {
+		return uuid.Nil, s.errOrReport(ctx, "enduser: create federated", err)
+	}
+	return id, nil
+}
+
+// FillName gives the end user an upstream IdP's name, in the unit of work on ctx, only while they have none (Q9, P12).
+func (s *Service) FillName(ctx context.Context, p Project, endUserID uuid.UUID, name string) error {
+	name = clip(strings.TrimSpace(name), nameMax)
+	if name == "" {
+		return nil
+	}
+	ctx = scope(ctx, p)
+	if err := s.store.FillName(ctx, p.ID, endUserID, name, s.now()); err != nil {
+		return s.errOrReport(ctx, "enduser: fill name", err)
+	}
+	return nil
 }
 
 // NOTE: H23, a second Continue from the browser that already redeemed the link signs nobody new in but succeeds.

@@ -13,7 +13,9 @@ import (
 
 func (s *postgresStore) linkColumns() postgres.ProjectionList {
 	t := s.links
-	return postgres.ProjectionList{t.ID, t.PublicID, t.Email, t.ReturnTo, t.CreatedAt, t.ExpiresAt, t.UsedAt, t.BrowserSessionID}
+	return postgres.ProjectionList{
+		t.ID, t.PublicID, t.Email, t.ReturnTo, t.CreatedAt, t.ExpiresAt, t.UsedAt, t.BrowserSessionID, t.PendingIdentity,
+	}
 }
 
 // HasRecentLink reports whether email has an unused link created after since.
@@ -75,7 +77,7 @@ func (s *postgresStore) BrowserBySecretHash(ctx context.Context, projectID uuid.
 // Accounts returns the browser's live accounts, the most recently selected first.
 func (s *postgresStore) Accounts(ctx context.Context, projectID, browserID uuid.UUID) ([]Account, error) {
 	us, eu := s.sessions, s.users
-	stmt := postgres.SELECT(us.ID, us.PublicID, us.AuthTime, us.SelectedAt, eu.ID, eu.PublicID, eu.Email, eu.Name).
+	stmt := postgres.SELECT(us.ID, us.PublicID, us.AuthTime, us.SelectedAt, us.Method, eu.ID, eu.PublicID, eu.Email, eu.Name).
 		FROM(us.INNER_JOIN(eu, eu.ID.EQ(us.EndUserID).AND(eu.ProjectID.EQ(us.ProjectID)))).
 		WHERE(us.ProjectID.EQ(postgres.UUID(projectID)).AND(us.BrowserSessionID.EQ(postgres.UUID(browserID))).AND(us.EndedAt.IS_NULL())).
 		ORDER_BY(us.SelectedAt.DESC(), us.ID.ASC())
@@ -141,4 +143,21 @@ func (s *postgresStore) EndUserByID(ctx context.Context, projectID, id uuid.UUID
 		return nil, wrap("EndUserByID", err)
 	}
 	return &EndUser{ID: row.ID, Subject: row.Subject, Email: row.Email, EmailVerified: row.VerifiedAt != nil, Name: row.Name}, nil
+}
+
+// EndUserIDByEmail returns the id of the project's end user with email; ok is false when there is none.
+func (s *postgresStore) EndUserIDByEmail(ctx context.Context, projectID uuid.UUID, email string) (uuid.UUID, bool, error) {
+	t := s.users
+	stmt := postgres.SELECT(t.ID).FROM(t).WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.Email.EQ(postgres.String(email))))
+	var row struct {
+		ID uuid.UUID `alias:"end_users.id"`
+	}
+	err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) })
+	switch {
+	case db.IsNoRows(err):
+		return uuid.Nil, false, nil
+	case err != nil:
+		return uuid.Nil, false, wrap("EndUserIDByEmail", err)
+	}
+	return row.ID, true, nil
 }

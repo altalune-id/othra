@@ -32,11 +32,18 @@ type Service struct {
 	members  Owners
 	projects DefaultProjects
 	terms    Terms
+	seed     func(ctx context.Context, orgID, projectID uuid.UUID) error
 }
 
 // NewService builds a Service over the domain services it writes through.
 func NewService(uow db.Transactor, users UserCreator, orgs SystemOrgs, members Owners, projects DefaultProjects) *Service {
 	return &Service{uow: uow, users: users, orgs: orgs, members: members, projects: projects}
+}
+
+// WithProjectSeed runs seed once, on the project install creates, such as the upstream IdP from config (M7 F13).
+func (s *Service) WithProjectSeed(seed func(ctx context.Context, orgID, projectID uuid.UUID) error) *Service {
+	s.seed = seed
+	return s
 }
 
 // WithTerms records the owner's acceptance of the terms through t.
@@ -179,6 +186,9 @@ func (s *Service) ensureDefaultProject(ctx context.Context, orgID uuid.UUID) err
 	if err == nil || !project.IsNotFoundError(err) {
 		return err
 	}
-	_, err = s.projects.Create(ctx, project.CreateRequest{OrgID: orgID, Slug: project.DefaultSlug, Name: project.DefaultName})
-	return err
+	p, err := s.projects.Create(ctx, project.CreateRequest{OrgID: orgID, Slug: project.DefaultSlug, Name: project.DefaultName})
+	if err != nil || s.seed == nil {
+		return err
+	}
+	return s.seed(ctx, orgID, p.ID)
 }

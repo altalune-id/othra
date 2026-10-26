@@ -35,7 +35,7 @@ type signInFixture struct {
 	db   *sql.DB
 }
 
-func newSignInFixture(t *testing.T) *signInFixture {
+func newSignInFixture(t *testing.T, opts ...func(*config.Config)) *signInFixture {
 	t.Helper()
 	srv := httptest.NewUnstartedServer(nil)
 	srv.StartTLS()
@@ -51,6 +51,9 @@ func newSignInFixture(t *testing.T) *signInFixture {
 		CSRF:      config.EndUsersCSRFConfig{MaxAge: time.Hour},
 	}
 	cfg.Auth.Genesis = config.GenesisConfig{Email: "root@example.com", Password: "genesis-password"}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	cfg.Postgres.Schema = schemaName
 	svcs := buildServices(kernel.Kernel{Pool: pool, Reporter: apperror.NewReporter(nil, false)}, cfg)

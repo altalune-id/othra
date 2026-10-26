@@ -65,7 +65,7 @@ var probeStrings = map[protoreflect.Name]string{
 	"name": "Probe", "description": "probe", "url": "https://example.com/probe",
 	"email": "probe@example.com", "role": "member", "kind": "org", "issuer_handle": "probe-issuer",
 	"content_type": "image/png", "upload_id": "prbeprbeprbeprbeprbe2", "secret_id": "prbeprbeprbeprbeprbe3",
-	"identifier": "https://probe.invalid",
+	"identifier": "https://probe.invalid", "client_secret": "probe-secret",
 }
 
 func (f *apiFixture) callForResponse(

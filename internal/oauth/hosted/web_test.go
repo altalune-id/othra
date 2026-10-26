@@ -450,7 +450,7 @@ func TestWeb_Indonesian(t *testing.T) {
 	login := f.get(f.client, "/p/acme/login", "Accept-Language", "id-ID,id;q=0.9")
 	assert.Contains(t, login.body, `lang="id-ID"`)
 	assert.Contains(t, login.body, "Masuk untuk melanjutkan ke Acme.")
-	assert.Contains(t, login.body, "Lanjut dengan email")
+	assert.Contains(t, login.body, "Lanjutkan dengan email")
 }
 
 // D4, H13: the mail is from the project's name at mail.from, with Reply-To the support email, in the request's language.
@@ -809,4 +809,14 @@ func TestWeb_LastTileSignOutShowsTheNotice(t *testing.T) {
 	assert.Contains(t, form.body, "Continue with email", "no tile left: the email form")
 	assert.Equal(t, 1, strings.Count(plain(form.body), "ana@example.com is signed out on this browser."))
 	assert.NotContains(t, f.get(f.client, out.location()).body, "is signed out", "once")
+}
+
+func TestWeb_CodeErrorNamesTheProject(t *testing.T) {
+	f := newWebFixture(t)
+	s := f.web.site(f.acme)
+	rec := httptest.NewRecorder()
+	f.web.codeError(rec, httptest.NewRequest(http.MethodGet, "/", nil), s, http.StatusForbidden, apperror.CodeSignInUpstreamDisabled)
+	body := rec.Body.String()
+	assert.Contains(t, body, s.views().Project)
+	assert.NotContains(t, body, "{project}")
 }

@@ -5,10 +5,11 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// AccountTile is one signed-in account of the browser: its user session's public id and its email.
+// AccountTile is one signed-in account of the browser: its user session's public id, its email and whether that session signed in with Google.
 type AccountTile struct {
 	SessionID string
 	Email     string
+	Google    bool
 }
 
 // PickerData is the account picker's state; Notice is the bare email just signed out, which the view translates.
@@ -55,7 +56,16 @@ templ Picker(d layout.LayoutData, v PickerData) {
 							}
 							<button type="submit" class="flex min-h-12 w-full items-center gap-3 rounded-box px-4 py-3 text-left" aria-label={ i18n.T(ctx, "picker.continue_as", "email", a.Email) }>
 								<span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-base-300 text-sm font-semibold" aria-hidden="true">{ initial(a.Email) }</span>
-								<span class="min-w-0 grow truncate font-medium" title={ a.Email }>{ a.Email }</span>
+								<span class="min-w-0 grow">
+									<span class="block truncate font-medium" title={ a.Email }>{ a.Email }</span>
+									<span class="block text-xs text-base-content/70">
+										if a.Google {
+											{ i18n.T(ctx, "picker.via_google") }
+										} else {
+											{ i18n.T(ctx, "picker.via_email") }
+										}
+									</span>
+								</span>
 								@iconChevron()
 							</button>
 						</form>

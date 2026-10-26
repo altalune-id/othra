@@ -64,8 +64,8 @@ func Locale(ctx context.Context) string {
 }
 
 // Error returns the message for an error code in the locale on ctx.
-func Error(ctx context.Context, code apperror.Code) string {
-	return T(ctx, errorKeyPrefix+string(code))
+func Error(ctx context.Context, code apperror.Code, args ...string) string {
+	return T(ctx, errorKeyPrefix+string(code), args...)
 }
 
 const errorKeyPrefix = "apperror."

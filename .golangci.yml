@@ -227,7 +227,7 @@ linters:
         domain-boundary:
           list-mode: lax
           files:
-            - "**/internal/{apikey,auth,install,legal,org,project,user,webhook}/**"
+            - "**/internal/{apikey,auth,federation,install,legal,org,project,upstream,user,webhook}/**"
             - "!**/*_test.go"
           deny:
             - pkg: "altalune.id/othra/internal/cli"
@@ -295,6 +295,7 @@ linters:
             - "**/migrator/**"
             - "**/nanoid/**"
             - "**/nats/**"
+            - "**/oidcrp/**"
             - "**/password/**"
             - "**/pg/**"
             - "**/redis/**"

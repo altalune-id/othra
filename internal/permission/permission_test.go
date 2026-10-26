@@ -16,6 +16,7 @@ import (
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	projectv1 "altalune.id/othra/gen/go/project/v1"
 	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
+	upstreamv1 "altalune.id/othra/gen/go/upstream/v1"
 	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/scope"
@@ -32,6 +33,7 @@ func allProcedures() []string {
 		memberv1.File_member_v1_member_proto,
 		orgv1.File_org_v1_org_proto,
 		projectv1.File_project_v1_project_proto,
+		upstreamv1.File_upstream_v1_upstream_proto,
 		resourceserverv1.File_resourceserver_v1_resourceserver_proto,
 		webhookv1.File_webhook_v1_webhook_proto,
 	} {
@@ -48,7 +50,7 @@ func allProcedures() []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 68, "Org 4, Project 12, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 12")
+	require.Len(t, procs, 75, "Org 4, Project 13, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 12, Upstream 6")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]
@@ -71,6 +73,13 @@ func TestPermissionTable_Spec15(t *testing.T) {
 		"/org.v1.OrgService/ListOrgs":                                         "org:read",
 		"/org.v1.OrgService/UpdateOrg":                                        "org:write",
 		"/project.v1.ProjectService/UpdateProject":                            "project:write",
+		"/project.v1.ProjectService/UpdateProjectSignIn":                      "project:write",
+		"/upstream.v1.UpstreamService/ListUpstreams":                          "project:read",
+		"/upstream.v1.UpstreamService/GetUpstream":                            "project:read",
+		"/upstream.v1.UpstreamService/CreateUpstream":                         "project:write",
+		"/upstream.v1.UpstreamService/UpdateUpstream":                         "project:write",
+		"/upstream.v1.UpstreamService/SetUpstreamEnabled":                     "project:write",
+		"/upstream.v1.UpstreamService/DeleteUpstream":                         "project:write",
 		"/project.v1.ProjectService/ListProjects":                             "project:read",
 		"/keys.v1.SigningKeyService/ListSigningKeys":                          "project:read",
 		"/keys.v1.SigningKeyService/RotateSigningKey":                         "project:write",

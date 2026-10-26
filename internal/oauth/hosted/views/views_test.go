@@ -64,7 +64,7 @@ func TestLogin_ErrorAndBackToAccounts(t *testing.T) {
 	assert.Contains(t, out, `aria-invalid="true" aria-describedby="email-error"`)
 	assert.Contains(t, out, `<p id="email-error" class="flex items-start gap-1.5 text-sm text-base-content">`)
 	assert.Contains(t, out, `href="/id/p/acme/login?return_to=%2Fid%2Fp%2Facme%2Faccount%2F">← Kembali ke daftar akun</a>`)
-	assert.Contains(t, out, "Lanjut dengan email")
+	assert.Contains(t, out, "Lanjutkan dengan email")
 	assert.NotContains(t, out, `name="csrf"`, "no token, no field")
 }
 
@@ -292,7 +292,7 @@ func TestContinue(t *testing.T) {
 
 	id := html(t, ctxIn(t, i18n.Indonesian), Continue(page(), ContinueData{Site: site, Target: "/id/p/acme/oauth2/authorize?client_id=x"}))
 	assert.Contains(t, id, "Melanjutkan ke Acme Store", "no client name falls back to the project")
-	assert.Contains(t, id, ">Lanjut ke Acme Store</a>")
+	assert.Contains(t, id, ">Lanjutkan ke Acme Store</a>")
 }
 
 func TestEndSession(t *testing.T) {
@@ -524,4 +524,195 @@ func TestConsent_AppMarkSitsInTheTitleRow(t *testing.T) {
 	}
 	first := strings.ReplaceAll(html(t, en, Consent(page(), consentData())), "> <", "><")
 	assert.Contains(t, first, `</h1></div><p class="text-sm"><span class="font-medium">Openwa MCP</span><span class="block font-mono text-xs break-all text-base-content/70">https://openwa.example.com/mcp</span></p>`, "the resource line is text only, under the title")
+}
+
+func TestLogin_Google(t *testing.T) {
+	both := html(t, ctxIn(t, i18n.English), Login(page(), LoginData{Site: site, ReturnTo: "/id/p/acme/account/", LoginToken: "tok-login", Google: true, GoogleToken: "tok-google"}))
+	assert.Contains(t, both, `<form method="post" action="/id/p/acme/federation/google/start"><input type="hidden" name="csrf" value="tok-google"><input type="hidden" name="return_to" value="/id/p/acme/account/">`)
+	assert.Contains(t, both, `<button class="btn-google" type="submit"><svg`)
+	assert.Contains(t, both, `<span>Continue with Google</span></button>`)
+	assert.Contains(t, both, "or continue with email")
+	assert.Less(t, strings.Index(both, "btn-google"), strings.Index(both, `name="email"`), "Google first, then the email form")
+
+	only := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Google: true, EmailOff: true}))
+	assert.Contains(t, only, "Lanjutkan dengan Google", "MF5: Google's own Indonesian wording")
+	assert.NotContains(t, only, `name="email"`)
+	assert.NotContains(t, only, "atau lanjut dengan email")
+
+	plain := html(t, ctxIn(t, i18n.English), Login(page(), LoginData{Site: site, EmailOff: true}))
+	assert.Contains(t, plain, `name="email"`, "no Google, so the email form stays")
+	assert.NotContains(t, plain, "btn-google")
+}
+
+func TestCollision(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Collision(page(), CollisionData{Site: site, Email: "ana@acme.test", Minutes: 15, ReturnTo: "/id/p/acme/account/"}))
+	assert.Contains(t, out, "<title>This email already has an account · Acme Store</title>")
+	assert.Contains(t, out, `<span class="break-all">ana@acme.test</span> already signs in to Acme Store with an email link.`)
+	assert.Contains(t, out, "The link works once, for 15 minutes. Until then, nothing changes.")
+	assert.Contains(t, out, `href="/id/p/acme/login?add=1&amp;return_to=%2Fid%2Fp%2Facme%2Faccount%2F">Use a different account</a>`)
+	assert.NotContains(t, out, "<form", "no resend: a plain link would drop the pending Google identity")
+
+	id := html(t, ctxIn(t, i18n.Indonesian), Collision(page(), CollisionData{Site: site, Minutes: 15}))
+	assert.Contains(t, id, "Email akun Google Anda sudah dipakai untuk masuk ke Acme Store")
+	assert.NotContains(t, id, "break-all\">")
+}
+
+func TestVerify_LinkMode(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Verify(page(), VerifyData{Site: site, Email: "ana@acme.test", VerifyToken: "tok-verify", LinkEmail: "ana.s@gmail.com"}))
+	assert.Contains(t, out, "<title>Add Google to your account? · Acme Store</title>")
+	assert.Contains(t, out, `You&#39;re signing in to Acme Store as ana@acme.test. After this, you can also sign in with Google as <span class="break-all font-medium">ana.s@gmail.com</span>.`)
+	assert.Contains(t, out, `<button class="btn btn-primary btn-block" type="submit" autofocus>Add Google and continue</button>`)
+	assert.Contains(t, out, `<button class="btn btn-ghost btn-block" type="submit" name="skip" value="1">Continue without Google</button>`)
+	assert.Contains(t, out, "Only continue if you asked for this link.")
+
+	plain := html(t, ctxIn(t, i18n.English), Verify(page(), VerifyData{Site: site, Email: "ana@acme.test"}))
+	assert.NotContains(t, plain, "Google")
+	assert.NotContains(t, plain, `name="skip"`)
+}
+
+func TestPicker_SignInMethod(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Picker(page(), PickerData{Site: site, Accounts: []AccountTile{{SessionID: "s1", Email: "ana@acme.test", Google: true}, {SessionID: "s2", Email: "budi@example.com"}}}))
+	assert.Less(t, strings.Index(out, "ana@acme.test"), strings.Index(out, "Signed in with Google"))
+	assert.Less(t, strings.Index(out, "Signed in with Google"), strings.Index(out, "budi@example.com"))
+	assert.Less(t, strings.Index(out, "budi@example.com"), strings.Index(out, "Signed in with an email link"))
+}
+
+func TestAccount_SignInMethods(t *testing.T) {
+	en := ctxIn(t, i18n.English)
+	none := html(t, en, Account(page(), AccountData{Site: site, Email: "ana@acme.test"}))
+	assert.NotContains(t, none, "Sign-in methods", "no Google anywhere, no card")
+
+	linked := html(t, en, Account(page(), AccountData{Site: site, Email: "ana@acme.test", Google: &GoogleMethod{Identity: "idn1", Email: "ana.s@gmail.com", Token: "tok-unlink"}, Linked: true}))
+	assert.Contains(t, linked, `<h2 id="methods-title" class="text-sm font-semibold">Sign-in methods</h2>`)
+	assert.Contains(t, linked, "Email link")
+	assert.Contains(t, linked, `<form method="post" action="/id/p/acme/account/unlink"><input type="hidden" name="csrf" value="tok-unlink"><input type="hidden" name="identity" value="idn1">`)
+	assert.Contains(t, linked, `aria-label="Disconnect Google">Disconnect</button>`)
+	assert.Contains(t, linked, `role="status"`)
+	assert.Contains(t, linked, "Google is connected.")
+	assert.NotContains(t, linked, "Connect Google")
+
+	open := html(t, ctxIn(t, i18n.Indonesian), Account(page(), AccountData{Site: site, Email: "ana@acme.test", Google: &GoogleMethod{Token: "tok-link"}, Unlinked: true}))
+	assert.Contains(t, open, `<form method="post" action="/id/p/acme/federation/google/start"><input type="hidden" name="csrf" value="tok-link"><input type="hidden" name="intent" value="link">`)
+	assert.Contains(t, open, "Hubungkan Google")
+	assert.Contains(t, open, "Belum terhubung")
+	assert.Contains(t, open, "Anda tetap bisa masuk dengan tautan email.")
+
+	googleOnly := html(t, en, Account(page(), AccountData{Site: site, Email: "ana@acme.test", EmailLinkOff: true, Google: &GoogleMethod{Identity: "idn1", Email: "ana@acme.test"}, Unlinked: true, Error: "You can't remove your only way to sign in."}))
+	assert.NotContains(t, googleOnly, "Email link")
+	assert.NotContains(t, googleOnly, "You can still sign in with an email link.")
+	assert.Contains(t, googleOnly, `role="alert"`)
+}
+
+func TestUpstreamError_KeepsReturnTo(t *testing.T) {
+	ctx := ctxIn(t, i18n.English)
+	v := UpstreamError(ctx, site, apperror.CodeUnexpected, "ref-1", "/id/p/acme/account/")
+	out := html(t, ctx, Error(page(), v))
+	assert.Contains(t, out, "<title>Couldn&#39;t sign in with Google · Acme Store</title>")
+	assert.Contains(t, out, `href="/id/p/acme/login?return_to=%2Fid%2Fp%2Facme%2Faccount%2F">Back to sign in</a>`)
+
+	bare := html(t, ctx, Error(page(), ErrorData{Site: site, Message: "x"}))
+	assert.Contains(t, bare, `href="/id/p/acme/login">Back to sign in</a>`)
+}
+
+func TestContinue_ToGoogle(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.English), Continue(page(), ContinueData{Site: site, Client: "Google", Target: "https://accounts.google.com/o/oauth2/v2/auth?client_id=c&state=s"}))
+	assert.Contains(t, out, `<meta http-equiv="refresh" content="0;url=https://accounts.google.com/o/oauth2/v2/auth?client_id=c&amp;state=s">`)
+	assert.Contains(t, out, "Continuing to Google")
+	assert.Contains(t, out, `href="https://accounts.google.com/o/oauth2/v2/auth?client_id=c&amp;state=s">Continue to Google</a>`)
+}
+
+// A18, N2: the collision link's email says it adds Google, in both locales.
+func TestMail_AddGoogle(t *testing.T) {
+	m := MailData{Project: "Acme Store", Link: "https://x.test/v", Minutes: 15, GoogleEmail: "ana@gmail.com"}
+	en := ctxIn(t, i18n.English)
+	assert.Equal(t, "Add Google to your Acme Store account", MailSubject(en, m))
+	assert.Equal(t, "Someone tried to sign in to Acme Store with Google as ana@gmail.com. This email already has an account.\n\n"+
+		"Open this link to add Google to your account. It works once, for 15 minutes:\n"+
+		"https://x.test/v\n\n"+
+		"If this wasn't you, ignore this email. Nothing changes without the link.\n\n"+
+		"Sent by Othra for Acme Store.\n", MailText(en, m))
+	out := html(t, en, MailHTML(m))
+	assert.Contains(t, out, ">Add Google</a>")
+	assert.Contains(t, out, "with Google as ana@gmail.com")
+
+	id := ctxIn(t, i18n.Indonesian)
+	assert.Equal(t, "Tambahkan Google ke akun Acme Store Anda", MailSubject(id, m))
+	assert.Contains(t, MailText(id, m), "dengan Google sebagai ana@gmail.com")
+	assert.Contains(t, html(t, id, MailHTML(m)), ">Tambahkan Google</a>")
+}
+
+func TestUpstreamError_NamesTheProject(t *testing.T) {
+	for _, code := range []apperror.Code{apperror.CodeSignInUpstreamDisabled, apperror.CodeSignInUpstreamLinkedElsewhere, apperror.CodeSignInUpstreamEmailTaken} {
+		for _, locale := range []string{i18n.English, i18n.Indonesian} {
+			ctx := ctxIn(t, locale)
+			out := html(t, ctx, Error(page(), UpstreamError(ctx, site, code, "", "")))
+			assert.Contains(t, out, "Acme Store", "MF6 %s %s", code, locale)
+			assert.NotContains(t, out, "{project}", "%s %s", code, locale)
+			assert.NotContains(t, out, "this project", "%s %s", code, locale)
+			assert.NotContains(t, out, "proyek ini", "%s %s", code, locale)
+		}
+	}
+}
+
+func TestVerify_LinkModeIndonesian(t *testing.T) {
+	out := html(t, ctxIn(t, i18n.Indonesian), Verify(page(), VerifyData{Site: site, Email: "ana@acme.test", LinkEmail: "ana.s@gmail.com"}))
+	assert.Contains(t, out, "Tambahkan Google dan lanjutkan")
+	assert.Contains(t, out, "Lanjutkan tanpa Google")
+	login := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Google: true}))
+	assert.Contains(t, login, "atau lanjutkan dengan email")
+}
+
+// MF7: a failed Connect Google is titled as a connect and leads back to the account, never to sign in.
+func TestLinkUpstreamError(t *testing.T) {
+	ctx := ctxIn(t, i18n.English)
+	out := html(t, ctx, Error(page(), LinkUpstreamError(ctx, site, apperror.CodeSignInUpstreamLinkedElsewhere, "ref-1")))
+	assert.Contains(t, out, "<title>Couldn&#39;t connect Google · Acme Store</title>")
+	assert.Contains(t, out, `href="/id/p/acme/account/">Back to your account</a>`)
+	assert.NotContains(t, out, "Back to sign in")
+
+	id := ctxIn(t, i18n.Indonesian)
+	out = html(t, id, Error(page(), LinkUpstreamError(id, site, apperror.CodeSignInUpstreamCancelled, "")))
+	assert.Contains(t, out, "Tidak bisa menghubungkan Google")
+	assert.Contains(t, out, "Kembali ke akun Anda")
+	assert.Contains(t, out, "Menghubungkan Google dibatalkan. Tidak ada yang berubah.", "BL-3: the connect sentence")
+	assert.NotContains(t, out, "cara masuk lain")
+
+	for code, want := range map[apperror.Code]string{
+		apperror.CodeSignInUpstreamCancelled:       "Connecting Google was cancelled. Nothing changed.",
+		apperror.CodeSignInUpstreamResponseInvalid: "We couldn&#39;t verify the answer from Google. Nothing changed; try connecting again.",
+		apperror.CodeSignInUpstreamLinkedElsewhere: "This Google account already signs in to a different Acme Store account.",
+	} {
+		got := html(t, ctx, Error(page(), LinkUpstreamError(ctx, site, code, "")))
+		assert.Contains(t, got, want, code)
+		assert.NotContains(t, got, "sign in.", "%s: no sign-in sentence on a connect", code)
+	}
+}
+
+// P8 = A: the Google sign-up link's email and page, in both locales.
+func TestMailAndPage_GoogleSignUp(t *testing.T) {
+	m := MailData{Project: "Acme Store", Link: "https://x.test/v", Minutes: 15, GoogleEmail: "budi@acme.test", GoogleSignUp: true}
+	en, id := ctxIn(t, i18n.English), ctxIn(t, i18n.Indonesian)
+	assert.Equal(t, "Finish signing up to Acme Store with Google", MailSubject(en, m))
+	assert.Contains(t, MailText(en, m), "creating your Acme Store account with Google as budi@acme.test")
+	assert.Contains(t, html(t, en, MailHTML(m)), ">Finish signing up</a>")
+	assert.Equal(t, "Selesaikan pendaftaran di Acme Store dengan Google", MailSubject(id, m))
+
+	v := CollisionData{Site: site, Email: "budi@acme.test", Minutes: 15, SignUp: true}
+	out := html(t, en, Collision(page(), v))
+	assert.Contains(t, out, "Check your inbox to finish signing up with Google")
+	assert.NotContains(t, out, "already has an account")
+	assert.Contains(t, html(t, id, Collision(page(), v)), "Cek kotak masuk")
+}
+
+// O11, P8: a sign-up link's confirm page says it finishes the Google sign-up, in both locales.
+func TestVerify_GoogleSignUp(t *testing.T) {
+	v := VerifyData{Site: site, Email: "budi@acme.test", VerifyToken: "tok", SignUpEmail: "budi@acme.test"}
+	out := html(t, ctxIn(t, i18n.English), Verify(page(), v))
+	assert.Contains(t, out, "Finish signing up to Acme Store with Google")
+	assert.Contains(t, out, "with Google as")
+	assert.Contains(t, out, "budi@acme.test")
+	assert.Contains(t, out, ">Finish signing up</button>")
+	assert.NotContains(t, out, "Sign in to Acme Store")
+	assert.NotContains(t, out, `name="skip"`)
+	assert.Contains(t, html(t, ctxIn(t, i18n.Indonesian), Verify(page(), v)), "Selesaikan pendaftaran di Acme Store dengan Google")
 }

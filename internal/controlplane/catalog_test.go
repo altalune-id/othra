@@ -41,6 +41,7 @@ import (
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
+	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/internal/webhook"
@@ -92,6 +93,7 @@ func samples() []error {
 		&project.InvalidLogoError{Reason: project.LogoType},
 		&project.InvalidLogoError{Reason: project.LogoSize},
 		&project.TermsNotSetError{},
+		&project.SignInLastMethodError{},
 
 		&apikey.NotFoundError{ID: "x"},
 		apikey.ValidateName(""),
@@ -240,6 +242,19 @@ func samples() []error {
 		&hosted.RefusedError{Code: apperror.CodeSignOutRedirectNotRegistered},
 		&hosted.RefusedError{Code: apperror.CodeAuthorizeClientNotAdmitted},
 		&hosted.RefusedError{Code: apperror.CodeAuthorizeClientMetadataUnusable},
+		&hosted.RefusedError{Code: apperror.CodeSignInUpstreamCancelled},
+		&hosted.RefusedError{Code: apperror.CodeSignInUpstreamEmailUnverified},
+		&hosted.RefusedError{Code: apperror.CodeSignInUpstreamUnavailable},
+		&hosted.RefusedError{Code: apperror.CodeSignInUpstreamResponseInvalid},
+		&hosted.RefusedError{Code: apperror.CodeSignInUpstreamDisabled},
+		&hosted.RefusedError{Code: apperror.CodeSignInUpstreamLinkedElsewhere},
+		&hosted.RefusedError{Code: apperror.CodeSignInLastMethod},
+		&hosted.RefusedError{Code: apperror.CodeSignInUpstreamEmailTaken},
+		&upstream.NotFoundError{},
+		&upstream.InvalidConfigError{Reason: upstream.ConfigClientID},
+		&upstream.InvalidConfigError{Reason: upstream.ConfigClientSecret},
+		&upstream.ExistsError{},
+		&upstream.HasIdentitiesError{},
 	}
 }
 

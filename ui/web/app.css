@@ -39,3 +39,42 @@
 [data-brand] .checkbox {
   border-color: var(--color-base-content);
 }
+
+@font-face {
+  font-family: 'Google Sans Flex';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('google-sans-flex-500.woff2') format('woff2');
+}
+
+.btn-google {
+  display: flex;
+  width: 100%;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid #747775;
+  border-radius: var(--radius-field);
+  background: #ffffff;
+  color: #1f1f1f;
+  font-family: 'Google Sans Flex', Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow:
+      0 1px 2px 0 rgb(60 64 67 / 30%),
+      0 1px 3px 1px rgb(60 64 67 / 15%);
+  }
+
+  @variant dark {
+    border-color: #8e918f;
+    background: #131314;
+    color: #e3e3e3;
+  }
+}

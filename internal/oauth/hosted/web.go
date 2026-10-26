@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/mail"
@@ -18,10 +19,12 @@ import (
 	"altalune.id/othra/internal/oauth/hosted/views"
 	"altalune.id/othra/internal/oauth/oidc"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/mailer"
 	"altalune.id/othra/reqid"
+	"altalune.id/othra/sealer"
 )
 
 const (
@@ -57,6 +60,8 @@ type Web struct {
 	cookies cookies
 	limits  layout.Limits
 	oauth   OAuth
+	fed     Federation
+	fedSeal sealer.Sealer
 }
 
 // OAuth is what /oauth2/authorize, /consent and /oauth2/end-session need.
@@ -103,6 +108,10 @@ func (h *Web) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET "+p+"/terms", h.page(h.terms))
 	mux.HandleFunc("POST "+p+"/terms", h.page(h.acceptTerms))
 	mux.HandleFunc("GET "+p+"/account/{$}", h.page(h.account))
+	if h.fed != nil {
+		mux.HandleFunc("POST "+p+"/account/unlink", h.page(h.unlink))
+		mux.HandleFunc("GET "+p+string(linkingPage), h.page(h.linking))
+	}
 	mux.HandleFunc("GET "+p+"/signed-out", h.page(h.signedOut))
 	if h.oauth.Grants != nil {
 		mux.HandleFunc("GET "+p+authorizePath, h.page(h.authorize))
@@ -112,6 +121,7 @@ func (h *Web) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET "+p+string(pageConsent), h.page(h.consent))
 		mux.HandleFunc("POST "+p+string(pageConsent), h.page(h.answerConsent))
 	}
+	h.registerFederation(mux, p)
 	mux.HandleFunc(p+"/", h.page(h.notFound))
 }
 
@@ -223,7 +233,8 @@ func (h *Web) login(w http.ResponseWriter, r *http.Request, s *site) {
 		h.renderPicker(w, r, s, b, returnTo, notice, "")
 		return
 	}
-	if !s.issuer.SignInEmailLink {
+	google := h.googleOn(r, s)
+	if !s.issuer.SignInEmailLink && !google {
 		h.codeError(w, r, s, http.StatusForbidden, apperror.CodeSignInEmailDisabled)
 		return
 	}
@@ -235,14 +246,17 @@ func (h *Web) login(w http.ResponseWriter, r *http.Request, s *site) {
 }
 
 func (h *Web) renderLogin(w http.ResponseWriter, r *http.Request, s *site, status int, v views.LoginData) {
-	v.Site, v.LoginToken = s.views(), h.token(w, r, s, "login")
+	v.Site, v.LoginToken, v.EmailOff = s.views(), h.token(w, r, s, "login"), !s.issuer.SignInEmailLink
+	if h.googleOn(r, s) {
+		v.Google, v.GoogleToken = true, h.token(w, r, s, federationForm)
+	}
 	h.kit.Render(w, r, status, views.Login(h.layout(r, s), v))
 }
 
 func (h *Web) renderPicker(w http.ResponseWriter, r *http.Request, s *site, b *Browser, returnTo, notice, errMsg string) {
 	tiles := make([]views.AccountTile, 0, len(b.Accounts))
 	for _, a := range b.Accounts {
-		tiles = append(tiles, views.AccountTile{SessionID: a.UserSession, Email: a.Email})
+		tiles = append(tiles, views.AccountTile{SessionID: a.UserSession, Email: a.Email, Google: a.Method == string(upstream.KindGoogle)})
 	}
 	if len(tiles) == 0 {
 		h.toPage(w, r, s, pageLogin, backTo(returnTo))
@@ -279,7 +293,7 @@ func (h *Web) issue(w http.ResponseWriter, r *http.Request, s *site) {
 		})
 		return
 	}
-	if !h.sendLink(w, r, s, email, returnTo) {
+	if _, ok := h.sendLink(w, r, s, email, returnTo, nil); !ok {
 		return
 	}
 	h.cookies.flash(sentCookie, s.path+"/login").Set(w, email, time.Now().Add(flashTTL))
@@ -287,7 +301,17 @@ func (h *Web) issue(w http.ResponseWriter, r *http.Request, s *site) {
 }
 
 // SECURITY: S5, S11: the per-email limit runs after the cooldown, so a cooled-down request spends nothing; both answer as sent.
-func (h *Web) sendLink(w http.ResponseWriter, r *http.Request, s *site, email, returnTo string) bool {
+func (h *Web) sendLink(
+	w http.ResponseWriter, r *http.Request, s *site, email, returnTo string, pending *pendingLink,
+) (Link, bool) {
+	var raw []byte
+	if pending != nil {
+		var err error
+		if raw, err = json.Marshal(pending); err != nil {
+			h.fail(w, r, s, "hosted: pending identity", err)
+			return Link{}, false
+		}
+	}
 	var limiterErr error
 	allow := func(context.Context) (bool, error) {
 		err := h.allow(r, ratelimit.ProjectSubject(s.issuer.ProjectID, ratelimit.EmailSubject(email)), IssueEmailRules()...)
@@ -300,26 +324,29 @@ func (h *Web) sendLink(w http.ResponseWriter, r *http.Request, s *site, email, r
 		}
 		return true, nil
 	}
-	_, _, err := h.users.IssueLink(r.Context(), IssueRequest{
+	l, _, err := h.users.IssueLink(r.Context(), IssueRequest{
 		Project: s.project(), Email: email, ReturnTo: returnTo, IP: layout.ClientIP(r, h.limits.TrustedProxyHops),
-		Compose: func(l Link) (mailer.Message, error) { return h.compose(r, s, l) },
-		Allow:   allow,
+		Compose: func(l Link) (mailer.Message, error) { return h.compose(r, s, l, pending) },
+		Allow:   allow, Pending: raw,
 	})
 	switch {
 	case limiterErr != nil:
 		h.limited(w, r, s, limiterErr)
-		return false
+		return Link{}, false
 	case err != nil:
 		h.fail(w, r, s, "hosted: issue link", err)
-		return false
+		return Link{}, false
 	}
-	return true
+	return l, true
 }
 
-func (h *Web) compose(r *http.Request, s *site, l Link) (mailer.Message, error) {
+func (h *Web) compose(r *http.Request, s *site, l Link, pending *pendingLink) (mailer.Message, error) {
 	m := views.MailData{
 		Project: s.name, Link: l.URL, Minutes: int(h.cfg.LinkTTL / time.Minute), SignUp: l.SignUp,
 		HasReplyTo: s.issuer.SupportEmail != "", Primary: s.issuer.PrimaryColor,
+	}
+	if pending != nil {
+		m.GoogleEmail, m.GoogleSignUp = cmp.Or(pending.Email, l.Email), pending.SignUp
 	}
 	var html bytes.Buffer
 	if err := views.MailHTML(m).Render(r.Context(), &html); err != nil {
@@ -358,7 +385,7 @@ func (h *Web) resend(w http.ResponseWriter, r *http.Request, s *site) {
 		h.toPage(w, r, s, pageLogin, backTo(returnTo))
 		return
 	}
-	if !h.sendLink(w, r, s, email, returnTo) {
+	if _, ok := h.sendLink(w, r, s, email, returnTo, nil); !ok {
 		return
 	}
 	h.toPage(w, r, s, pageSent, url.Values{"resent": {"1"}, "return_to": {returnTo}})
@@ -375,9 +402,13 @@ func (h *Web) verify(w http.ResponseWriter, r *http.Request, s *site) {
 		h.linkFailed(w, r, s, err)
 		return
 	}
-	h.kit.Render(w, r, http.StatusOK, views.Verify(h.layout(r, s), views.VerifyData{
-		Site: s.views(), Email: l.Email, VerifyToken: h.token(w, r, s, "verify"),
-	}))
+	v := views.VerifyData{Site: s.views(), Email: l.Email, VerifyToken: h.token(w, r, s, "verify")}
+	if pend, ok := h.pendingIdentity(r, l); ok && pend.SignUp {
+		v.SignUpEmail = cmp.Or(pend.Email, l.Email)
+	} else if ok {
+		v.LinkEmail = pend.Email
+	}
+	h.kit.Render(w, r, http.StatusOK, views.Verify(h.layout(r, s), v))
 }
 
 func (h *Web) redeem(w http.ResponseWriter, r *http.Request, s *site) {
@@ -390,13 +421,24 @@ func (h *Web) redeem(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 	got, err := h.users.Redeem(r.Context(), RedeemRequest{
 		Project: s.project(), Token: h.cookies.link(r), BrowserSecret: h.cookies.browser(r),
-		IP: layout.ClientIP(r, h.limits.TrustedProxyHops), UserAgent: userAgent(r),
+		IP: layout.ClientIP(r, h.limits.TrustedProxyHops), UserAgent: userAgent(r), Confirm: h.confirmPending(r, s),
 	})
+	switch codeOf(err) {
+	case apperror.CodeSignInUpstreamLinkedElsewhere:
+		h.upstreamFailed(w, r, s, h.returnTo(s, ""), err)
+		return
+	case apperror.CodeSignInEmailDisabled:
+		h.cookies.clearLink(w, s.verifyPath())
+		h.cookies.clearBinding(w, s.verifyPath())
+		h.codeError(w, r, s, http.StatusForbidden, apperror.CodeSignInEmailDisabled)
+		return
+	}
 	if err != nil {
 		h.linkFailed(w, r, s, err)
 		return
 	}
 	h.cookies.clearLink(w, s.path+"/login/verify")
+	h.cookies.clearBinding(w, s.verifyPath())
 	h.cookies.setBrowser(w, s.path+"/", got.BrowserSecret, got.ExpiresAt)
 	h.csrf.Renew(w, s.path+"/")
 	h.next(w, r, s, got.BrowserSecret, got.Account, h.returnTo(s, got.ReturnTo))
@@ -593,9 +635,8 @@ func (h *Web) account(w http.ResponseWriter, r *http.Request, s *site) {
 		h.toPage(w, r, s, pageTerms, backTo(here))
 		return
 	}
-	h.kit.Render(w, r, http.StatusOK, views.Account(h.layout(r, s), views.AccountData{
-		Site: s.views(), Email: a.Email, UserSession: a.UserSession, ReturnTo: here, SignOutToken: h.token(w, r, s, "signout"),
-	}))
+	q := r.URL.Query()
+	h.renderAccount(w, r, s, http.StatusOK, a, views.AccountData{Linked: q.Get("linked") == "1", Unlinked: q.Get("unlinked") == "1"})
 }
 
 func (h *Web) signedOut(w http.ResponseWriter, r *http.Request, s *site) {
@@ -641,7 +682,11 @@ func (h *Web) fail(w http.ResponseWriter, r *http.Request, s *site, msg string, 
 }
 
 func (h *Web) codeError(w http.ResponseWriter, r *http.Request, s *site, status int, code apperror.Code) {
-	h.renderError(w, r, s, status, "", i18n.Error(r.Context(), code), code)
+	var args []string
+	if s != nil {
+		args = []string{"project", s.views().Project}
+	}
+	h.renderError(w, r, s, status, "", i18n.Error(r.Context(), code, args...), code)
 }
 
 func (h *Web) renderError(w http.ResponseWriter, r *http.Request, s *site, status int, title, message string, code apperror.Code) {

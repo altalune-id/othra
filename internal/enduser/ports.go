@@ -18,5 +18,10 @@ type Projects interface {
 	Each(ctx context.Context, fn func(ctx context.Context, orgID, projectID uuid.UUID) error) error
 }
 
+// SignInSwitch reads a project's email-link switch and locks the project row until the unit of work on ctx ends.
+type SignInSwitch interface {
+	LockEmailLink(ctx context.Context, projectID uuid.UUID) (bool, error)
+}
+
 // ComposeFunc builds the sign-in email for a freshly issued link.
 type ComposeFunc func(ctx context.Context, link IssuedLink) (mailer.Message, error)

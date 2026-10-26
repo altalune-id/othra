@@ -23,6 +23,7 @@ type fakeLink struct {
 	email    string
 	returnTo string
 	used     bool
+	pending  []byte
 }
 
 type fakeBrowser struct {
@@ -45,6 +46,7 @@ type fakeUsers struct {
 	redeems  int
 	failOn   string
 	seq      int
+	names    map[uuid.UUID]string
 }
 
 const fakeCooldown = time.Minute
@@ -97,8 +99,11 @@ func (f *fakeUsers) IssueLink(ctx context.Context, req IssueRequest) (Link, bool
 	if f.failOn == "issue" {
 		return Link{}, false, errFake
 	}
+	if !req.Project.EmailLink && req.Pending == nil {
+		return Link{}, false, apperror.New(apperror.CodeSignInEmailDisabled, "Email sign-in is off")
+	}
 	k, now := key(req.Project, req.Email), f.now()
-	if last, ok := f.last[k]; ok && now.Sub(last) < fakeCooldown {
+	if last, ok := f.last[k]; ok && now.Sub(last) < fakeCooldown && req.Pending == nil {
 		return Link{}, false, nil
 	}
 	if req.Allow != nil {
@@ -111,8 +116,8 @@ func (f *fakeUsers) IssueLink(ctx context.Context, req IssueRequest) (Link, bool
 	f.issued = append(f.issued, req)
 	token := f.next("tok")
 	_, known := f.users[key(req.Project, req.Email)]
-	l := Link{Email: req.Email, URL: req.Project.IssuerURL + "/login/verify?t=" + token, SignUp: !known}
-	f.links[token] = &fakeLink{project: req.Project, email: req.Email, returnTo: req.ReturnTo}
+	l := Link{ID: "id-" + token, Email: req.Email, URL: req.Project.IssuerURL + "/login/verify?t=" + token, SignUp: !known}
+	f.links[token] = &fakeLink{project: req.Project, email: req.Email, returnTo: req.ReturnTo, pending: req.Pending}
 	if req.Compose != nil {
 		m, err := req.Compose(l)
 		if err != nil {
@@ -135,10 +140,10 @@ func (f *fakeUsers) LinkByToken(_ context.Context, p Project, token string) (Lin
 	if !ok || l.used || l.project.ID != p.ID {
 		return LinkRef{}, notUsable()
 	}
-	return LinkRef{ID: "id-" + token, Email: l.email}, nil
+	return LinkRef{ID: "id-" + token, Email: l.email, Pending: l.pending}, nil
 }
 
-func (f *fakeUsers) Redeem(_ context.Context, req RedeemRequest) (*Redeemed, error) {
+func (f *fakeUsers) Redeem(ctx context.Context, req RedeemRequest) (*Redeemed, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.failOn == "redeem" {
@@ -148,13 +153,28 @@ func (f *fakeUsers) Redeem(_ context.Context, req RedeemRequest) (*Redeemed, err
 	if !ok || l.used || l.project.ID != req.Project.ID {
 		return nil, notUsable()
 	}
+	sub, known := f.users[key(req.Project, l.email)]
+	gated, pending := !known && !req.Project.EmailLink, req.Confirm != nil && l.pending != nil
+	disabled := apperror.New(apperror.CodeSignInEmailDisabled, "Email sign-in is off")
+	if gated && !pending {
+		return nil, disabled
+	}
+	if !known {
+		sub = f.next("sub")
+	}
+	if pending {
+		ref := LinkRef{ID: "id-" + req.Token, Email: l.email, Pending: l.pending}
+		linked, err := req.Confirm(ctx, ref, uuid.NewSHA1(uuid.Nil, []byte(sub)), !known)
+		if err != nil {
+			return nil, err
+		}
+		if gated && !linked {
+			return nil, disabled
+		}
+	}
 	l.used = true
 	f.redeems++
-	sub, ok := f.users[key(req.Project, l.email)]
-	if !ok {
-		sub = f.next("sub")
-		f.users[key(req.Project, l.email)] = sub
-	}
+	f.users[key(req.Project, l.email)] = sub
 	b := f.browsers[req.BrowserSecret]
 	if b == nil || b.project.ID != req.Project.ID {
 		b = &fakeBrowser{project: req.Project}
@@ -166,6 +186,20 @@ func (f *fakeUsers) Redeem(_ context.Context, req RedeemRequest) (*Redeemed, err
 	a := Account{UserSession: f.next("us"), EndUserID: uuid.NewSHA1(uuid.Nil, []byte(sub)), EndUser: sub, Email: l.email, AuthTime: now, SelectedAt: now}
 	b.accounts = append([]Account{a}, b.accounts...)
 	return &Redeemed{BrowserSecret: secret, ExpiresAt: time.Now().Add(90 * 24 * time.Hour), Account: a, ReturnTo: l.returnTo}, nil
+}
+
+// NOTE: Confirm calls FillName while Redeem holds f.mu, so it takes no lock of its own.
+func (f *fakeUsers) FillName(_ context.Context, _ Project, endUserID uuid.UUID, name string) error {
+	if f.failOn == "name" {
+		return errFake
+	}
+	if f.names == nil {
+		f.names = map[uuid.UUID]string{}
+	}
+	if f.names[endUserID] == "" {
+		f.names[endUserID] = name
+	}
+	return nil
 }
 
 func (f *fakeUsers) browser(p Project, secret string) *fakeBrowser {

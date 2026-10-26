@@ -7,7 +7,10 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/internal/consent"
+	"altalune.id/othra/internal/federation"
+	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/mailer"
+	"altalune.id/othra/oidcrp"
 )
 
 // Project is the project a hosted request runs for, with the settings sign-in follows; every EndUsers call is scoped to it.
@@ -24,6 +27,7 @@ type Project struct {
 
 // Link is a magic link just issued: URL holds the plaintext token, so it only goes into the mail.
 type Link struct {
+	ID     string
 	Email  string
 	URL    string
 	SignUp bool
@@ -39,6 +43,8 @@ type IssueRequest struct {
 	Compose func(Link) (mailer.Message, error)
 	// Allow runs once the resend cooldown has passed, before the link is stored; false issues nothing, silently. Nil allows.
 	Allow func(ctx context.Context) (bool, error)
+	// Pending is an upstream identity, as JSON, that redeeming the link on this browser may add to its end user (N2).
+	Pending []byte
 }
 
 // Account is one end user signed in on this browser: a live user session.
@@ -50,6 +56,7 @@ type Account struct {
 	Name        string
 	AuthTime    time.Time
 	SelectedAt  time.Time
+	Method      string
 }
 
 // Browser is the browser session a cookie names, with its live accounts, the active one first.
@@ -80,8 +87,9 @@ func (b *Browser) Find(userSession string) (Account, bool) {
 
 // LinkRef is a live magic link: its public id and the email it signs in.
 type LinkRef struct {
-	ID    string
-	Email string
+	ID      string
+	Email   string
+	Pending []byte
 }
 
 // RedeemRequest spends the link Token for the browser that holds BrowserSecret ("" when it has none).
@@ -91,6 +99,9 @@ type RedeemRequest struct {
 	BrowserSecret string
 	IP            string
 	UserAgent     string
+	// Confirm runs in the redeem's unit of work for a link with a pending identity, created telling whether this redeem created the
+	// end user, and reports whether it linked the identity; an error rolls the redeem back.
+	Confirm func(ctx context.Context, l LinkRef, endUserID uuid.UUID, created bool) (linked bool, err error)
 }
 
 // Redeemed is a spent link: the browser's rotated secret, the account now active and where to go next.
@@ -134,6 +145,8 @@ type EndUsers interface {
 	SignOut(ctx context.Context, p Project, secret, userSession string) error
 	// TermsState reports whether the account of userSession on this browser still has to accept the project's terms.
 	TermsState(ctx context.Context, p Project, secret, userSession string) (TermsState, error)
+	// FillName gives the end user name, in the unit of work on ctx, only while they have none.
+	FillName(ctx context.Context, p Project, endUserID uuid.UUID, name string) error
 	// AcceptTerms appends the acceptance: *enduser.SessionGoneError for an account not on this browser, ErrTermsChanged for moved terms.
 	AcceptTerms(ctx context.Context, a TermsAcceptance) error
 }
@@ -222,4 +235,26 @@ type Grants interface {
 	SessionOf(ctx context.Context, p Project, sid string) (userSession string, live bool, err error)
 	// EndSession revokes the grant family sid and ends userSession with its grants; anything already ended is no error.
 	EndSession(ctx context.Context, p Project, sid, userSession string) error
+}
+
+// Federation is the round trip with the project's upstream IdPs; boot plugs in federation.Service.
+type Federation interface {
+	// Enabled reports whether the project's upstream of kind is on.
+	Enabled(ctx context.Context, p federation.Project, kind upstream.Kind) (bool, error)
+	// Start makes one attempt's state, nonce and PKCE verifier; loginHint is the active account's linked upstream email, or empty (P7).
+	Start(ctx context.Context, p federation.Project, kind upstream.Kind, loginHint string) (oidcrp.AuthRequest, error)
+	// AuthURL is where the browser goes to sign in at the upstream.
+	AuthURL(ctx context.Context, p federation.Project, kind upstream.Kind, redirectURI string, req oidcrp.AuthRequest) (string, error)
+	// Complete checks the callback against req and returns the upstream identity, or *federation.UpstreamError.
+	Complete(
+		ctx context.Context, p federation.Project, kind upstream.Kind, redirectURI string, cb oidcrp.Callback, req oidcrp.AuthRequest,
+	) (federation.Identity, error)
+	// SignIn signs the identity's end user in, or returns *federation.CollisionError when its email has another end user.
+	SignIn(ctx context.Context, p federation.Project, id federation.Identity, req federation.SessionRequest) (*federation.Session, error)
+	// Link links the identity to endUserID, or returns *federation.LinkedElsewhereError.
+	Link(ctx context.Context, p federation.Project, endUserID uuid.UUID, id federation.Identity) error
+	// Unlink removes the end user's identity, or returns *federation.LastMethodError or *federation.IdentityNotFoundError.
+	Unlink(ctx context.Context, p federation.Project, endUserID uuid.UUID, identityPublicID string) error
+	// Identities returns the end user's linked identities.
+	Identities(ctx context.Context, p federation.Project, endUserID uuid.UUID) ([]federation.Identity, error)
 }

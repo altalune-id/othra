@@ -14,6 +14,7 @@ const MethodMagicLink = "magic_link"
 const (
 	publicIDLen  = 21
 	userAgentMax = 512
+	nameMax      = 200
 )
 
 // Config holds the end-user sign-in limits.
@@ -47,6 +48,9 @@ type LinkRequest struct {
 	IP       string
 	// Allow runs only after the cooldown passes, right before issuing: false issues nothing, an error is returned as is.
 	Allow func(ctx context.Context) (bool, error)
+	// Pending is an upstream identity, as JSON, that redeeming the link may add to its end user (N2, P8); it skips the resend cooldown
+	// and the email-link switch.
+	Pending []byte
 }
 
 // Link is a magic link as stored; the token itself is never kept.
@@ -59,6 +63,7 @@ type Link struct {
 	ExpiresAt        time.Time
 	UsedAt           *time.Time
 	BrowserSessionID *uuid.UUID
+	Pending          []byte
 }
 
 // Usable reports whether l can still be redeemed at now.
@@ -66,6 +71,7 @@ func (l *Link) Usable(now time.Time) bool { return l.UsedAt == nil && now.Before
 
 // IssuedLink is a fresh link; URL holds the token and is shown or mailed once. A resend inside the cooldown issues nothing.
 type IssuedLink struct {
+	PublicID  string
 	URL       string
 	Email     string
 	ExpiresAt time.Time
@@ -80,6 +86,9 @@ type RedeemRequest struct {
 	BrowserSecret string
 	UserAgent     string
 	IP            string
+	// Confirm runs in the redeem's unit of work for a link with a pending identity, created telling whether this redeem created the
+	// end user, and reports whether it linked the identity; an error rolls the redeem back.
+	Confirm func(ctx context.Context, l *Link, endUserID uuid.UUID, created bool) (linked bool, err error)
 }
 
 // Redeemed is a successful redeem: Secret is the browser's cookie secret to set, rotated unless the redeem was a repeat.
@@ -100,6 +109,7 @@ type Account struct {
 	Name          string
 	AuthTime      time.Time
 	SelectedAt    time.Time
+	Method        string
 }
 
 // EndUser is a project's end user as an ID token and userinfo describe it; Subject is the sub claim.

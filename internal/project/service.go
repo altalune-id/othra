@@ -26,7 +26,20 @@ type Service struct {
 	members     Members
 	afterCreate func(ctx context.Context, p *Project) error
 	onIssuer    func(projectID uuid.UUID)
+	methods     SignInMethods
 	now         func() time.Time
+}
+
+// SignInMethods says what else a project's end users can sign in with, for the email-link guard (F8).
+type SignInMethods interface {
+	UpstreamEnabled(ctx context.Context, orgID, projectID uuid.UUID) (bool, error)
+	AnyEndUserUnlinked(ctx context.Context, orgID, projectID uuid.UUID) (bool, error)
+}
+
+// WithSignInMethods lets the email link be turned off; without it, turning it off is always refused.
+func (s *Service) WithSignInMethods(m SignInMethods) *Service {
+	s.methods = m
+	return s
 }
 
 // NewService builds a Service over store, without file storage until WithStorage.
@@ -242,6 +255,67 @@ func (s *Service) LockIssuerHandle(ctx context.Context, id uuid.UUID) error {
 		return s.errOrReport(ctx, "project: lock issuer", err)
 	}
 	return nil
+}
+
+// SECURITY: F8, R1: with the project row locked, the email link goes off only while every end user can sign in another way.
+func (s *Service) SetSignInEmailLink(ctx context.Context, id uuid.UUID, on bool) (*Project, error) {
+	var out *Project
+	err := s.inTx(ctx, func(ctx context.Context) error {
+		if _, err := s.store.LockSignIn(ctx, id); err != nil {
+			return err
+		}
+		p, err := s.store.ByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if !on {
+			if err := s.othersRemain(ctx, p); err != nil {
+				return err
+			}
+		}
+		p.SignInEmailLink = on
+		out = p
+		return s.store.Save(ctx, p)
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "project: sign-in", err)
+	}
+	return s.issuerChanged(out, nil)
+}
+
+func (s *Service) othersRemain(ctx context.Context, p *Project) error {
+	if s.methods == nil {
+		return &SignInLastMethodError{}
+	}
+	scoped := tenant.WithProject(tenant.WithOrg(ctx, p.OrgID), p.ID)
+	enabled, err := s.methods.UpstreamEnabled(scoped, p.OrgID, p.ID)
+	if err != nil {
+		return err
+	}
+	unlinked, err := s.methods.AnyEndUserUnlinked(scoped, p.OrgID, p.ID)
+	switch {
+	case err != nil:
+		return err
+	case !enabled || unlinked:
+		return &SignInLastMethodError{}
+	}
+	return nil
+}
+
+// LockEmailLink locks the project id's row until the caller's unit of work ends and reports whether its email link is on.
+func (s *Service) LockEmailLink(ctx context.Context, id uuid.UUID) (bool, error) {
+	on, err := s.store.LockSignIn(ctx, id)
+	if err != nil {
+		return false, s.errOrReport(ctx, "project: lock sign-in", err)
+	}
+	return on, nil
+}
+
+func (s *Service) inTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	if s.tx == nil {
+		return fn(ctx)
+	}
+	return s.tx.RunInTx(ctx, fn)
 }
 
 // UpdateBranding sets a project's display name, primary colour and support email.

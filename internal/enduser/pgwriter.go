@@ -24,8 +24,12 @@ func (s *postgresStore) DeleteUnusedLinks(ctx context.Context, projectID uuid.UU
 // InsertLink records l by the hash of its token.
 func (s *postgresStore) InsertLink(ctx context.Context, orgID, projectID uuid.UUID, l *Link, tokenHash, ip string) error {
 	t := s.links
-	stmt := t.INSERT(t.ID, t.PublicID, t.OrgID, t.ProjectID, t.TokenHash, t.Email, t.ReturnTo, t.RequestIP, t.CreatedAt, t.ExpiresAt).
-		VALUES(l.ID, l.PublicID, orgID, projectID, tokenHash, l.Email, l.ReturnTo, inet(ip), l.CreatedAt.UTC(), l.ExpiresAt.UTC())
+	stmt := t.INSERT(
+		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.TokenHash, t.Email, t.ReturnTo, t.RequestIP, t.CreatedAt, t.ExpiresAt, t.PendingIdentity,
+	).VALUES(
+		l.ID, l.PublicID, orgID, projectID, tokenHash, l.Email, l.ReturnTo, inet(ip), l.CreatedAt.UTC(), l.ExpiresAt.UTC(),
+		pendingValue(l.Pending),
+	)
 	_, err := s.exec(ctx, "InsertLink", stmt)
 	if name, ok := db.ViolatedConstraint(err); ok && name == s.liveLink {
 		return ErrLiveLink
@@ -106,7 +110,7 @@ func (s *postgresStore) SaveEndUser(ctx context.Context, orgID, projectID uuid.U
 }
 
 // SignIn starts, or refreshes, the user session of endUserID on the browser and selects it at now.
-func (s *postgresStore) SignIn(ctx context.Context, orgID, projectID, browserID, endUserID uuid.UUID, now time.Time) error {
+func (s *postgresStore) SignIn(ctx context.Context, orgID, projectID, browserID, endUserID uuid.UUID, method string, now time.Time) error {
 	publicID, err := nanoid.New(publicIDLen)
 	if err != nil {
 		return err
@@ -115,8 +119,9 @@ func (s *postgresStore) SignIn(ctx context.Context, orgID, projectID, browserID,
 	at := postgres.TimestampzT(now.UTC())
 	stmt := t.INSERT(t.ID, t.PublicID, t.OrgID, t.ProjectID, t.BrowserSessionID, t.EndUserID, t.Method, t.AuthTime, t.SelectedAt,
 		t.CreatedAt, t.LastSeenAt).
-		VALUES(uuid.New(), publicID, orgID, projectID, browserID, endUserID, MethodMagicLink, at, at, at, at).
+		VALUES(uuid.New(), publicID, orgID, projectID, browserID, endUserID, method, at, at, at, at).
 		ON_CONFLICT(t.BrowserSessionID, t.EndUserID).WHERE(t.EndedAt.IS_NULL()).DO_UPDATE(postgres.SET(
+		t.Method.SET(postgres.String(method)),
 		t.AuthTime.SET(at),
 		t.SelectedAt.SET(at),
 		t.LastSeenAt.SET(at),
@@ -218,4 +223,33 @@ func (s *postgresStore) exec(ctx context.Context, op string, stmt postgres.State
 		return 0, wrap(op, err)
 	}
 	return n, nil
+}
+
+// CreateEndUser inserts a verified end user with email and name, or returns ErrEmailTaken; it never updates an existing one.
+func (s *postgresStore) CreateEndUser(
+	ctx context.Context, orgID, projectID uuid.UUID, email, name string, now time.Time,
+) (uuid.UUID, error) {
+	publicID, err := nanoid.New(publicIDLen)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	id := uuid.New()
+	t := s.users
+	at := now.UTC()
+	stmt := t.INSERT(t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Email, t.EmailVerifiedAt, t.Name, t.LastSignInAt, t.CreatedAt, t.UpdatedAt).
+		VALUES(id, publicID, orgID, projectID, email, at, name, at, at, at)
+	_, err = s.exec(ctx, "CreateEndUser", stmt)
+	if db.IsUniqueViolation(err) {
+		return uuid.Nil, ErrEmailTaken
+	}
+	return id, err
+}
+
+// FillName sets the end user's name at now only while it is empty.
+func (s *postgresStore) FillName(ctx context.Context, projectID, endUserID uuid.UUID, name string, now time.Time) error {
+	t := s.users
+	stmt := t.UPDATE(t.Name, t.UpdatedAt).SET(postgres.String(name), postgres.TimestampzT(now.UTC())).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(endUserID))).AND(t.Name.EQ(postgres.String(""))))
+	_, err := s.exec(ctx, "FillName", stmt)
+	return err
 }

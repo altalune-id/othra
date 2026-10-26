@@ -16,6 +16,9 @@ func ProjectSubject(projectID uuid.UUID, subject string) string {
 	return "project:" + projectID.String() + ":" + subject
 }
 
+// UserSessionSubject is the subject for a signed-in end user's session, by its public id.
+func UserSessionSubject(publicID string) string { return "us:" + publicID }
+
 // IPSubject is the subject for a client IP.
 func IPSubject(ip string) string { return "ip:" + ip }
 

@@ -23,6 +23,8 @@ internal/web/static/*
 !internal/web/static/apple-touch-icon.png
 !internal/web/static/favicon-32x32.png
 !internal/web/static/favicon.ico
+!internal/web/static/google-sans-flex-500.woff2
+!internal/web/static/google-sans-flex-OFL.txt
 
 # SDD workspace (scratch, not shipped)
 /.superpowers/

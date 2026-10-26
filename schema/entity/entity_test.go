@@ -109,7 +109,22 @@ func TestBindings(t *testing.T) {
 			func(s, p string) binding { b := entity.NewMagicLinks(s, p); return binding{b, b.AllColumns} },
 			[]string{
 				"id", "public_id", "org_id", "project_id", "token_hash", "email", "return_to", "request_ip",
-				"created_at", "expires_at", "used_at", "browser_session_id",
+				"created_at", "expires_at", "used_at", "browser_session_id", "pending_identity",
+			},
+		},
+		{
+			"upstream_providers",
+			func(s, p string) binding { b := entity.NewUpstreamProviders(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "kind", "client_id", "client_secret_sealed", "enabled", "created_at", "updated_at",
+			},
+		},
+		{
+			"end_user_identities",
+			func(s, p string) binding { b := entity.NewEndUserIdentities(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "end_user_id", "upstream_provider_id", "issuer", "subject", "email",
+				"email_verified", "linked_at", "last_used_at",
 			},
 		},
 		{

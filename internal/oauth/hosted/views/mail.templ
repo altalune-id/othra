@@ -10,7 +10,7 @@ import (
 // MailHTML is the HTML part of the magic-link email in ctx's locale, with the button in the project's colour.
 templ MailHTML(m MailData) {
 	@layout.Mail(i18n.Locale(ctx), MailSubject(ctx, m)) {
-		<p style="margin:0 0 12px;">{ i18n.T(ctx, m.key("mail.intro"), "project", m.Project) }</p>
+		<p style="margin:0 0 12px;">{ m.intro(ctx) }</p>
 		<p style="margin:0 0 12px;">{ i18n.T(ctx, m.key("mail.action"), "minutes", strconv.Itoa(m.Minutes)) }</p>
 		<p style="margin:0 0 20px;">
 			@layout.MailButton(m.Link, i18n.T(ctx, m.key("mail.button")), m.Primary)

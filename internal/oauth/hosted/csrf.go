@@ -38,7 +38,9 @@ func (c *CSRF) Cookie(w http.ResponseWriter, r *http.Request, path string) strin
 	if got, err := r.Cookie(CSRFCookie); err == nil && got.Value != "" {
 		return got.Value
 	}
-	return c.Renew(w, path)
+	value := c.Renew(w, path)
+	r.AddCookie(&http.Cookie{Name: CSRFCookie, Value: value, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	return value
 }
 
 // Renew sets a new CSRF cookie at path, so tokens issued before it stop verifying; sign-in calls it.
