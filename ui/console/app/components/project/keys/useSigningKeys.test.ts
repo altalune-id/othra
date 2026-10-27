@@ -2,8 +2,8 @@ import { create } from '@bufbuild/protobuf';
 import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SigningKeySchema, SigningKeyStatus } from '../../../../gen/keys/v1/keys_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
+import { SigningKeySchema, SigningKeyStatus } from '#gen/keys/v1/keys_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { formatWhen, shortKid, useSigningKeys } from './useSigningKeys';
 
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';

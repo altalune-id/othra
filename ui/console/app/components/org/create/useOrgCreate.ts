@@ -1,8 +1,8 @@
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 
 import { create } from '@bufbuild/protobuf';
-import { CreateOrgRequestSchema } from '~~/gen/org/v1/org_pb';
-import { useValidation } from '~/composables/useValidation';
+import { useValidation } from '#base/composables/useValidation';
+import { CreateOrgRequestSchema } from '#gen/org/v1/org_pb';
 import { useOrgsStore } from '~/stores/orgs';
 import { useUIStore } from '~/stores/ui';
 

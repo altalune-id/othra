@@ -60,17 +60,6 @@ func emailKey(email string, rule ratelimit.Rule) string {
 	return ratelimit.Key(rule, ratelimit.EmailSubject(email))
 }
 
-// RateLimitedError signals too many attempts; it says nothing about whether the account exists.
-type RateLimitedError struct{ RetryAfter time.Duration }
-
-func (*RateLimitedError) Error() string { return "auth: rate limited" }
-
-// IsRateLimitedError reports whether err wraps a *RateLimitedError.
-func IsRateLimitedError(err error) bool {
-	_, ok := errors.AsType[*RateLimitedError](err)
-	return ok
-}
-
 // RetryAfterSeconds is RetryAfter rounded up to whole seconds, for a Retry-After header.
 func (e *RateLimitedError) RetryAfterSeconds() int {
 	return int((e.RetryAfter + time.Second - 1) / time.Second)

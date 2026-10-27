@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import type { ClientRow } from '~/components/client/ClientList.vue';
-import { timestampDate } from '@bufbuild/protobuf/wkt';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import { useDates } from '#base/composables/useDates';
 import ClientList from '~/components/client/ClientList.vue';
 import { clientKinds, kindName } from '~/components/client/kinds';
 import { useClientList } from '~/components/client/useClients';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import ErrorText from '~/components/ui/ErrorText.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { date } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const canEdit = useCanEditProject();
@@ -28,12 +29,11 @@ const base = computed(() => `/o/${route.params.org}/projects/${route.params.proj
 const list = useClientList(listed.value.id);
 const { loading, loadError } = list;
 const rows = computed<ClientRow[]>(() => {
-  const day = new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' });
   return list.clients.value.map(c => ({
     id: c.id,
     name: c.name,
     kind: t(clientKinds[kindName(c.kind)].labelKey),
-    created: c.createdAt ? day.format(timestampDate(c.createdAt)) : '',
+    created: date(c.createdAt),
     to: `${base.value}/${c.id}`,
   }));
 });

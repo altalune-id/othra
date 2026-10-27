@@ -21,3 +21,5 @@ func IsAlreadyInstalledError(err error) bool {
 func (e *AlreadyInstalledError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeInstallAlreadyDone, "This instance is already installed").WithCause(e)
 }
+
+var errSystemOrgMoved = errors.New("install: the system org was created by another process")

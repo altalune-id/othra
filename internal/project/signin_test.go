@@ -66,11 +66,16 @@ func TestService_SetSignInEmailLink(t *testing.T) {
 	on, err := svc.LockEmailLink(context.Background(), store.Project.ID)
 	require.NoError(t, err)
 	assert.True(t, on)
+	on, err = svc.EmailLink(context.Background(), store.Project.ID)
+	require.NoError(t, err)
+	assert.True(t, on, "the unlocked read sees the same switch")
 
 	svc, store = newSvc(methods{err: errors.New("down")})
 	_, err = svc.SetSignInEmailLink(context.Background(), store.Project.ID, false)
 	assert.Error(t, err)
 	store.Err = errors.New("db down")
 	_, err = svc.LockEmailLink(context.Background(), store.Project.ID)
+	assert.Error(t, err)
+	_, err = svc.EmailLink(context.Background(), store.Project.ID)
 	assert.Error(t, err)
 }

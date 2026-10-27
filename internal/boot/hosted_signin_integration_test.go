@@ -4,6 +4,7 @@ package boot
 
 import (
 	"database/sql"
+	"encoding/json"
 	"html"
 	"io"
 	"maps"
@@ -22,9 +23,11 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/kernel"
+	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/pgtest"
+	"altalune.id/othra/internal/web/layout"
 )
 
 type signInFixture struct {
@@ -33,6 +36,7 @@ type signInFixture struct {
 	svcs *Services
 	c    *http.Client
 	db   *sql.DB
+	pool db.Pool
 }
 
 func newSignInFixture(t *testing.T, opts ...func(*config.Config)) *signInFixture {
@@ -67,7 +71,7 @@ func newSignInFixture(t *testing.T, opts ...func(*config.Config)) *signInFixture
 		routes: buildRoutes(cfg, svcs, nil, nil), public: public, hosted: hosted,
 		session: buildSessionMiddleware(svcs, nil), installRequired: required,
 	})
-	f := &signInFixture{t: t, srv: srv, svcs: svcs, db: sqlDB}
+	f := &signInFixture{t: t, srv: srv, svcs: svcs, db: sqlDB, pool: pool}
 	f.c = f.client()
 	return f
 }
@@ -114,6 +118,39 @@ func (f *signInFixture) do(c *http.Client, method, path string, form url.Values)
 	b, err := io.ReadAll(resp.Body)
 	require.NoError(f.t, err)
 	return signInPage{status: resp.StatusCode, body: string(b), header: resp.Header}
+}
+
+type portalProfile struct {
+	Profile struct {
+		Email string `json:"email"`
+	} `json:"profile"`
+	SignOutToken     string `json:"signOutToken"`
+	CurrentSessionID string `json:"currentSessionId"`
+}
+
+// NOTE: the portal's own calls: who account.v1 says is signed in on c, and its hosted sign-out with the token GetProfile hands out.
+func (f *signInFixture) profile(c *http.Client, base string) (int, portalProfile) {
+	f.t.Helper()
+	req, err := http.NewRequestWithContext(f.t.Context(), http.MethodPost, f.srv.URL+base+"/api/account.v1.AccountService/GetProfile", strings.NewReader("{}"))
+	require.NoError(f.t, err)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.Do(req)
+	require.NoError(f.t, err)
+	defer func() { _ = resp.Body.Close() }()
+	var out portalProfile
+	if resp.StatusCode == http.StatusOK {
+		require.NoError(f.t, json.NewDecoder(resp.Body).Decode(&out))
+	}
+	return resp.StatusCode, out
+}
+
+func (f *signInFixture) portalSignOut(c *http.Client, base string) signInPage {
+	f.t.Helper()
+	status, me := f.profile(c, base)
+	require.Equal(f.t, http.StatusOK, status)
+	return f.do(c, http.MethodPost, base+"/login/signout", url.Values{
+		layout.CSRFField: {me.SignOutToken}, "user_session": {me.CurrentSessionID}, "next": {"signed_out"},
+	})
 }
 
 var (
@@ -174,9 +211,13 @@ func TestHosted_MagicLinkEndToEnd(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, twice.status, "H23: a second Continue from the same browser still succeeds")
 
 	account := f.do(phone, http.MethodGet, base+"/account/", nil)
-	require.Equal(t, http.StatusOK, account.status, account.body)
-	assert.Contains(t, account.body, "ana@example.com")
+	assert.NotEqual(t, http.StatusSeeOther, account.status, "the portal is served to the signed-in phone, not sent to sign in")
+	status, me := f.profile(phone, base)
+	require.Equal(t, http.StatusOK, status)
+	assert.Equal(t, "ana@example.com", me.Profile.Email, "account.v1 acts as the account the link signed in")
 	assert.Equal(t, http.StatusSeeOther, f.do(f.c, http.MethodGet, base+"/account/", nil).status, "D1: the asking laptop is not signed in")
+	laptop, _ := f.profile(f.c, base)
+	assert.Equal(t, http.StatusUnauthorized, laptop, "D1: and account.v1 agrees")
 
 	other := f.client()
 	again := f.do(other, http.MethodGet, strings.TrimPrefix(link, f.srv.URL), nil)
@@ -187,7 +228,7 @@ func TestHosted_MagicLinkEndToEnd(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, f.do(phone, http.MethodGet, "/p/"+blog.IssuerHandle+"/account/", nil).status,
 		"S6: another project's pages see no session")
 
-	out := f.submit(phone, account, "/login/signout", url.Values{"next": {"signed_out"}})
+	out := f.portalSignOut(phone, base)
 	assert.Equal(t, base+"/signed-out", out.header.Get("Location"))
 	assert.Equal(t, http.StatusSeeOther, f.do(phone, http.MethodGet, base+"/account/", nil).status)
 }

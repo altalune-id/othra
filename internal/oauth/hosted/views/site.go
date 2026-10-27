@@ -2,9 +2,11 @@
 package views
 
 import (
+	"context"
 	"net/url"
 	"strings"
 
+	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
 )
 
@@ -41,6 +43,13 @@ func withoutLegalFooter(d layout.LayoutData) layout.LayoutData {
 		d.Brand = &b
 	}
 	return d
+}
+
+func loginTitle(ctx context.Context, v LoginData) string {
+	if v.Reauth && v.Client == "" {
+		return i18n.T(ctx, "login.title_reauth")
+	}
+	return i18n.T(ctx, "login.title")
 }
 
 func titled(d layout.LayoutData, title string) layout.LayoutData {

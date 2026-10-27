@@ -10,6 +10,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+
+	"altalune.id/othra/internal/kernel/secret"
 )
 
 // The limits on a resource server.
@@ -80,8 +82,41 @@ type ResourceServer struct {
 	Admission           Admission
 	// Descriptions are what each scope lets an app do, shown on the consent page; a scope may have none.
 	Descriptions map[string]string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	// AcceptPersonalTokens lets end users mint personal tokens for the server; they work only while it has a live introspection secret.
+	AcceptPersonalTokens bool
+	// IntrospectionSecrets are the live RFC 7662 caller secrets; only Get, List and the secret calls fill them.
+	IntrospectionSecrets []secret.Stored
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+}
+
+// IntrospectionSecretPrefix starts every resource-server introspection secret, so secret scanners can find a leaked one.
+const IntrospectionSecretPrefix = "othra_rs_" //nolint:gosec // G101: a prefix, not a credential.
+
+// IntrospectionSecretScheme mints introspection secrets: the prefix and 256 random bits, the client-secret format.
+var IntrospectionSecretScheme = secret.Scheme{Prefix: IntrospectionSecretPrefix} //nolint:gochecknoglobals // the format, fixed.
+
+// TakesPersonalTokens reports whether personal tokens for r work at now: admissible, switched on, with a live introspection secret.
+func (r *ResourceServer) TakesPersonalTokens(now time.Time, trustAvailable bool) bool {
+	if !r.AcceptPersonalTokens || !r.Admissible(trustAvailable) {
+		return false
+	}
+	for _, s := range r.IntrospectionSecrets {
+		if s.Live(now) {
+			return true
+		}
+	}
+	return false
+}
+
+// CurrentIntrospectionSecret returns the server's current introspection secret, if it has one.
+func (r *ResourceServer) CurrentIntrospectionSecret() (secret.Stored, bool) {
+	for _, s := range r.IntrospectionSecrets {
+		if s.Current() {
+			return s, true
+		}
+	}
+	return secret.Stored{}, false
 }
 
 // Pass records a check that passed at now.

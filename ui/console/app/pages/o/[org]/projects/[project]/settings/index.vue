@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
+import CopyButton from '#base/components/ui/CopyButton.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import CopyButton from '~/components/ui/CopyButton.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
-import { useErrorMessage } from '~/composables/useErrorMessage';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';

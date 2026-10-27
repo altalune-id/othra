@@ -17,6 +17,7 @@ import (
 
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	clientv1 "altalune.id/othra/gen/go/client/v1"
+	enduserv1 "altalune.id/othra/gen/go/enduser/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
 	keysv1 "altalune.id/othra/gen/go/keys/v1"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
@@ -33,6 +34,7 @@ func committedFiles() []protoreflect.FileDescriptor {
 	return []protoreflect.FileDescriptor{
 		authv1.File_auth_v1_auth_proto,
 		clientv1.File_client_v1_client_proto,
+		enduserv1.File_enduser_v1_enduser_proto,
 		invitev1.File_invite_v1_invite_proto,
 		keysv1.File_keys_v1_keys_proto,
 		memberv1.File_member_v1_member_proto,

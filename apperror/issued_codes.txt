@@ -89,6 +89,7 @@ SIG009 SignOutRedirectNotRegistered
 CLT008 ClientMetadataManaged
 RSV010 ResourceServerInvalidClientHost
 RSV011 ResourceServerAdmissionUnverified
+RSV012 ResourceServerIntrospectionRequired
 SIG010 AuthorizeClientNotAdmitted
 SIG011 AuthorizeClientMetadataUnusable
 PRJ010 ProjectSignInLastMethod
@@ -104,3 +105,14 @@ UPS001 UpstreamNotFound
 UPS002 UpstreamInvalidConfig
 UPS003 UpstreamExists
 UPS004 UpstreamHasIdentities
+ACC001 AccountSignedOut
+ACC002 AccountSessionNotFound
+ACC003 AccountAppNotConnected
+ACC004 AccountTokenNotFound
+ACC005 AccountTokenInvalid
+ACC006 AccountTokenServerClosed
+ACC007 AccountTokenLimit
+ACC008 AccountCurrentSession
+ACC009 AccountReauthRequired
+ACC010 AccountTermsRequired
+EUS001 EndUserNotFound

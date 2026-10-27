@@ -1,9 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
 import { useProjectCreate } from './useProjectCreate';
 
 const project = { id: 'x6MH9WPWjktMwCBKHy4pF', orgId: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'web', name: 'Web' };

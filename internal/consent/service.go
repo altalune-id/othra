@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/nanoid"
 )
@@ -22,6 +23,14 @@ type Project struct {
 	OrgID    uuid.UUID
 	ID       uuid.UUID
 	PublicID string
+}
+
+// Connection is the end user and client a Disconnect is for, by id and by the public ids its audit line carries.
+type Connection struct {
+	EndUserID       uuid.UUID
+	EndUserPublicID string
+	ClientID        uuid.UUID
+	ClientOAuthID   string
 }
 
 // GrantRequest is an end user approving Scopes for Key, from IP with UserAgent.
@@ -38,6 +47,7 @@ type GrantRequest struct {
 type Service struct {
 	store      Store
 	grants     Grants
+	uow        db.Transactor
 	unexpected apperror.UnexpectedFunc
 	now        func() time.Time
 	log        *slog.Logger
@@ -50,9 +60,9 @@ func NewService(store Store, unexpected apperror.UnexpectedFunc) *Service {
 	}
 }
 
-// WithGrants sets what Revoke withdraws from the client besides the consent.
-func (s *Service) WithGrants(g Grants) *Service {
-	s.grants = g
+// WithGrants sets the grants ConnectedApps lists and Disconnect revokes, in units of work from uow.
+func (s *Service) WithGrants(g Grants, uow db.Transactor) *Service {
+	s.grants, s.uow = g, uow
 	return s
 }
 
@@ -115,22 +125,53 @@ func (s *Service) ForgetClient(ctx context.Context, p Project, clientID uuid.UUI
 	return nil
 }
 
-// Revoke deletes the consent key names and revokes what the client holds for it; a missing consent is no error.
-func (s *Service) Revoke(ctx context.Context, p Project, key Key) error {
+// ConnectedApps returns every client the end user has a consent or a live grant with, grouped by client (profile §2.5).
+func (s *Service) ConnectedApps(ctx context.Context, p Project, endUserID uuid.UUID) ([]App, error) {
 	ctx = scope(ctx, p)
-	deleted, err := s.store.Delete(ctx, p.ID, key)
+	consents, err := s.store.ListByEndUser(ctx, p.ID, endUserID)
 	if err != nil {
-		return s.unexpected(ctx, "consent: revoke", err)
+		return nil, s.unexpected(ctx, "consent: connected apps", err)
 	}
-	if s.grants != nil {
-		if err := s.grants.RevokeConsent(ctx, p, key); err != nil {
+	families, err := s.grants.LiveFamilies(ctx, p, endUserID)
+	if err != nil {
+		return nil, err
+	}
+	return Apps(consents, families, s.grants.ResourceScopes), nil
+}
+
+// Disconnect drops the end user's consents for clientID and revokes its grants in one unit of work (R-5), or *AppNotConnectedError.
+func (s *Service) Disconnect(ctx context.Context, p Project, c Connection) error {
+	ctx = scope(ctx, p)
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		deleted, err := s.store.DeleteEndUserClient(ctx, p.ID, c.EndUserID, c.ClientID)
+		if err != nil {
 			return err
 		}
+		revoked, err := s.grants.RevokeClient(ctx, p, c.EndUserID, c.ClientID)
+		if err != nil {
+			return err
+		}
+		if deleted == 0 && !revoked {
+			return &AppNotConnectedError{}
+		}
+		return nil
+	})
+	if IsAppNotConnectedError(err) {
+		return err
 	}
-	if deleted {
-		s.log.LogAttrs(ctx, slog.LevelInfo, "consent.revoked", slog.String("project", p.PublicID))
+	if err != nil {
+		return s.errOrReport(ctx, "consent: disconnect", err)
 	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "consent.disconnected", slog.String("project", p.PublicID),
+		slog.String("end_user", c.EndUserPublicID), slog.String("client_id", c.ClientOAuthID))
 	return nil
+}
+
+func (s *Service) errOrReport(ctx context.Context, message string, err error) error {
+	if _, ok := apperror.AsAppError(err); ok {
+		return err
+	}
+	return s.unexpected(ctx, message, err)
 }
 
 func clip(s string, n int) string {

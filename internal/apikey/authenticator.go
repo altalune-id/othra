@@ -2,7 +2,6 @@ package apikey
 
 import (
 	"context"
-	"crypto/sha256"
 	"slices"
 	"strings"
 	"time"
@@ -11,7 +10,10 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/authn"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/tenant"
+	"altalune.id/othra/internal/kernel/usage"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/scope"
 )
@@ -19,7 +21,7 @@ import (
 // Authenticator verifies an API key and builds its Principal.
 type Authenticator struct {
 	store      Reader
-	usage      *UsageWorker
+	usage      *usage.Worker
 	scheme     Scheme
 	owners     OwnerRoles
 	unexpected apperror.UnexpectedFunc
@@ -28,17 +30,17 @@ type Authenticator struct {
 
 var _ authn.Authenticator = (*Authenticator)(nil)
 
-// NewAuthenticator binds an Authenticator to its store, usage recorder, scheme and owner roles; usage and unexpected may be nil.
+// NewAuthenticator binds an Authenticator to its store, usage recorder, scheme and owner roles; recorder and unexpected may be nil.
 func NewAuthenticator(
 	store Reader,
-	usage *UsageWorker,
+	recorder *usage.Worker,
 	scheme Scheme,
 	owners OwnerRoles,
 	unexpected apperror.UnexpectedFunc,
 ) *Authenticator {
 	return &Authenticator{
 		store:      store,
-		usage:      usage,
+		usage:      recorder,
 		scheme:     scheme,
 		owners:     owners,
 		unexpected: unexpected,
@@ -52,7 +54,7 @@ func (a *Authenticator) Authenticate(ctx context.Context, c authn.Credential) (s
 		return session.Principal{}, &authn.UnauthorizedError{}
 	}
 	now := a.now()
-	k, err := a.store.BySecretHash(ctx, sha256.Sum256([]byte(c.Token)))
+	k, err := a.store.BySecretHash(ctx, secret.Sum(c.Token))
 	if err != nil {
 		if !IsNotFoundError(err) && a.unexpected != nil {
 			_ = a.unexpected(ctx, "apikey: authenticate", err)
@@ -69,7 +71,7 @@ func (a *Authenticator) Authenticate(ctx context.Context, c authn.Credential) (s
 		}
 	}
 	if a.usage != nil {
-		a.usage.Record(k.OrgID, k.ID, now)
+		a.usage.Record(tenant.Context{OrgID: k.OrgID}, k.ID, now)
 	}
 	return p, nil
 }

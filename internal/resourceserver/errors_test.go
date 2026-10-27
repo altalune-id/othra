@@ -27,7 +27,7 @@ func TestErrors_CarryTheirCodes(t *testing.T) {
 		{&LinkedError{Clients: []string{"Web"}}, apperror.CodeResourceServerLinked, IsLinkedError},
 		{&TrustSelfHostedOnlyError{}, apperror.CodeResourceServerTrustSelfHostedOnly, IsTrustSelfHostedOnlyError},
 		{&InvalidClientHostError{Host: "x", Reason: HostFormat}, apperror.CodeResourceServerInvalidClientHost, IsInvalidClientHostError},
-		{&AdmissionUnverifiedError{}, apperror.CodeResourceServerAdmissionUnverified, IsAdmissionUnverifiedError},
+		{&AdmissionUnverifiedError{Reason: UnverifiedCIMD}, apperror.CodeResourceServerAdmissionUnverified, IsAdmissionUnverifiedError},
 		{&VerifyTooSoonError{RetryAt: time.Unix(0, 0)}, apperror.CodeResourceServerVerifyTooSoon, IsVerifyTooSoonError},
 		{&InvalidLinkScopesError{Scope: "x", Reason: LinkScopesNotInCatalog}, apperror.CodeResourceServerInvalidLinkScopes, IsInvalidLinkScopesError},
 		{&ClientNotFoundError{}, apperror.CodeClientNotFound, IsClientNotFoundError},

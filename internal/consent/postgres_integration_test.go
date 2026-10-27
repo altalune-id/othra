@@ -3,6 +3,7 @@
 package consent_test
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -13,6 +14,7 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/consent"
+	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/testutil/pgtest"
 )
 
@@ -51,7 +53,7 @@ func TestPostgres_GrantFindRevoke(t *testing.T) {
 	pool, db, schemaName := pgtest.MigratedRLS(t)
 	now := time.Now().UTC().Truncate(time.Microsecond)
 	svc := consent.NewService(consent.NewStore(pool, schemaName, ""), apperror.NewReporter(nil, false).Unexpected).
-		WithClock(func() time.Time { return now })
+		WithClock(func() time.Time { return now }).WithGrants(noGrants{}, nil)
 	s := seed(t, db)
 	ctx := t.Context()
 	rsKey := consent.Key{EndUserID: s.endUser, ClientID: s.client, ResourceServerID: &s.server}
@@ -95,11 +97,13 @@ func TestPostgres_GrantFindRevoke(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, got, "RLS: another project's scope sees none of these rows")
 
-	require.NoError(t, svc.Revoke(ctx, s.p, rsKey))
-	got, err = svc.Find(ctx, s.p, rsKey)
+	apps, err := svc.ConnectedApps(ctx, s.p, s.endUser)
 	require.NoError(t, err)
-	assert.Nil(t, got)
-	require.NoError(t, svc.Revoke(ctx, s.p, rsKey))
+	require.Len(t, apps, 1)
+	assert.Len(t, apps[0].Resources, 2, "the resource server and the OIDC-only consent")
+	none, err := svc.ConnectedApps(ctx, other.p, s.endUser)
+	require.NoError(t, err)
+	assert.Empty(t, none, "RLS: another project lists nothing")
 
 	require.NoError(t, svc.ForgetClient(ctx, other.p, s.client), "another project's scope deletes nothing")
 	got, err = svc.Find(ctx, s.p, oidcKey)
@@ -117,4 +121,36 @@ func TestPostgres_GrantFindRevoke(t *testing.T) {
 	got, err = svc.Find(ctx, s.p, oidcKey)
 	require.NoError(t, err)
 	assert.Nil(t, got, "a deleted client takes its consents")
+}
+
+type noGrants struct{}
+
+func (noGrants) LiveFamilies(context.Context, consent.Project, uuid.UUID) ([]consent.Family, error) {
+	return nil, nil
+}
+
+func (noGrants) RevokeClient(context.Context, consent.Project, uuid.UUID, uuid.UUID) (bool, error) {
+	return false, nil
+}
+
+func (noGrants) ResourceScopes(scopes []string) []string { return scopes }
+
+// R-5: Disconnect deletes every consent of the client across resource servers in its unit of work, and a second one is ACC003.
+func TestPostgres_Disconnect(t *testing.T) {
+	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
+	svc := consent.NewService(consent.NewStore(pool, schemaName, ""), apperror.NewReporter(nil, false).Unexpected).
+		WithGrants(noGrants{}, db.NewTransactor(pool))
+	s := seed(t, sqlDB)
+	ctx := t.Context()
+	for _, k := range []consent.Key{
+		{EndUserID: s.endUser, ClientID: s.client, ResourceServerID: &s.server}, {EndUserID: s.endUser, ClientID: s.client},
+	} {
+		_, err := svc.Grant(ctx, s.p, consent.GrantRequest{Key: k, Scopes: []string{"openid"}})
+		require.NoError(t, err)
+	}
+	require.NoError(t, svc.Disconnect(ctx, s.p, consent.Connection{EndUserID: s.endUser, ClientID: s.client}))
+	var rows int
+	require.NoError(t, sqlDB.QueryRowContext(ctx, `SELECT count(*) FROM scope_consents WHERE project_id = $1`, s.p.ID).Scan(&rows))
+	assert.Zero(t, rows)
+	assert.True(t, consent.IsAppNotConnectedError(svc.Disconnect(ctx, s.p, consent.Connection{EndUserID: s.endUser, ClientID: s.client})))
 }

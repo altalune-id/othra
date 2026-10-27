@@ -22,6 +22,7 @@ type ServerOpts struct {
 	APIHandler   http.Handler // optional Connect-RPC surface mounted at BasePath+"/api"
 	MCPHandler   http.Handler // optional MCP surface mounted at BasePath+"/mcp"
 	Console      http.Handler // optional console SPA mounted at BasePath+"/console"
+	PortalAssets http.Handler // optional end-user portal build files mounted at BasePath+"/portal/"
 	Routes       []Registrar  // optional server-rendered routes; their mux also answers every unknown path
 	PublicRoutes []Registrar  // optional cookie-less public documents: no session, CSRF check or no-store
 	HostedPages  []Registrar  // optional end-user pages under BasePath+"/p/": never the admin Session or SessionGate
@@ -71,6 +72,10 @@ func NewServer(opts ServerOpts) http.Handler {
 			spa = opts.ConsoleGate(spa)
 		}
 		outer.Handle(console+"/", withSession(spa))
+	}
+	if opts.PortalAssets != nil {
+		assets := layout.Path(opts.BasePath, "/portal") + "/"
+		outer.Handle("GET "+assets, http.StripPrefix(assets, opts.PortalAssets))
 	}
 	if len(opts.HostedPages) > 0 {
 		outer.Handle(layout.Path(opts.BasePath, "/p")+"/", hostedHandler(opts, cop))

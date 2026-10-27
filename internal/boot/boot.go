@@ -169,6 +169,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		return nil, err
 	}
 	consoleHandler := buildConsoleHandler(cfg.HTTP.BasePath)
+	_, portalAssets := buildPortal(cfg.HTTP.BasePath)
 	issuerPublic, hostedPages := buildIssuerRoutes(cfg, svcs, log, k.Reporter.Unexpected)
 	mcpServer := buildMCPServer(cfg.MCP, svcs, log, mcpPublicHost(cfg.HTTP)...)
 
@@ -182,6 +183,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 			basePath:   cfg.HTTP.BasePath,
 			api:        apiHandler,
 			console:    consoleHandler,
+			portal:     portalAssets,
 			mcp:        buildMCPHandler(mcpServer, svcs, log),
 			routes:     buildRoutes(cfg, svcs, log, k.Reporter.Unexpected),
 			public:     issuerPublic,
@@ -211,6 +213,9 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	sup.Register(buildOutboxWorker(svcs, log))
 	sup.Register(buildMailWorker(svcs, log))
 	sup.Register(svcs.KeyUsage)
+	if svcs.TokenUsage != nil {
+		sup.Register(svcs.TokenUsage)
+	}
 	if lims.janitor != nil {
 		sup.Register(lims.janitor)
 	}

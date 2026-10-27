@@ -1,11 +1,11 @@
-import type { Upstream } from '~~/gen/upstream/v1/upstream_pb';
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { Upstream } from '#gen/upstream/v1/upstream_pb';
 import { create } from '@bufbuild/protobuf';
 import { watch } from 'vue';
-import { CreateUpstreamRequestSchema, UpdateUpstreamRequestSchema, UpstreamKind } from '~~/gen/upstream/v1/upstream_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useValidation } from '~/composables/useValidation';
-import { errorCode, errorMeta } from '~/lib/apperror/message';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useValidation } from '#base/composables/useValidation';
+import { errorCode, errorMeta } from '#base/lib/apperror/message';
+import { CreateUpstreamRequestSchema, UpdateUpstreamRequestSchema, UpstreamKind } from '#gen/upstream/v1/upstream_pb';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 
 // googleRedirectUri is the callback a project's Google client must register, under the project's issuer.

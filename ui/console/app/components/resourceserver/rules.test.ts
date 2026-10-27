@@ -1,9 +1,9 @@
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
-import { ResourceServerState, VerificationFailureSchema } from '../../../gen/resourceserver/v1/resourceserver_pb';
+import { ResourceServerState, VerificationFailureSchema } from '#gen/resourceserver/v1/resourceserver_pb';
+import { t } from '#test/nuxt-globals';
 import enUS from '../../../i18n/locales/en-US.json';
-import { t } from '../../../test/nuxt-globals';
 import { identifierProblem, isHttpIdentifier } from './resourceUri';
 import { checkScopes, scopeMessageKey, scopeProblem } from './scopes';
 import { failureReasons, failureText, metadataSnippet, relativeTime, verificationDot, verificationName, verificationStates } from './verification';

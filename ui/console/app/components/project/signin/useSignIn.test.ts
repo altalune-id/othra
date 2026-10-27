@@ -2,10 +2,10 @@ import { create } from '@bufbuild/protobuf';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ProjectSchema } from '#gen/project/v1/project_pb';
+import { UpstreamKind, UpstreamSchema } from '#gen/upstream/v1/upstream_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useProjectDetailStore } from '~/stores/projectDetail';
-import { ProjectSchema } from '../../../../gen/project/v1/project_pb';
-import { UpstreamKind, UpstreamSchema } from '../../../../gen/upstream/v1/upstream_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
 import { googleRedirectUri, useSignIn } from './useSignIn';
 
 const id = 'x6MH9WPWjktMwCBKHy4pF';

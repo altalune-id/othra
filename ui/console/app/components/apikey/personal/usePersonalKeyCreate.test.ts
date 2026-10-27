@@ -3,9 +3,9 @@ import scopes from '@shared/scope/scopes.json';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { connectError, navigateTo, runtimeConfig, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
+import { mcpSnippet } from '#base/lib/tokens/mcpSnippet';
+import { connectError, navigateTo, runtimeConfig, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { mintableForMe } from './grants';
-import { mcpSnippet } from './mcpSnippet';
 import { usePersonalKeyCreate } from './usePersonalKeyCreate';
 import { createdKeyState } from './usePersonalKeys';
 

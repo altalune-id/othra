@@ -45,7 +45,7 @@ describe('project settings markup (M1 review)', () => {
       expect(source, name).not.toContain('{{ t(\'common.saved\') }}');
       expect(source, name).toContain('<SavedNote v-if="saved"');
     }
-    expect(read('../ui/SavedNote.vue')).toContain('text-base-content/70');
+    expect(read('../../../../base/app/components/ui/SavedNote.vue')).toContain('text-base-content/70');
   });
 
   it('labels the bump versions and the clear-terms action', () => {

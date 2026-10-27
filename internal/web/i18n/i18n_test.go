@@ -146,3 +146,23 @@ func TestCatalogs_HaveEveryUsedKey(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, missing)
 }
+
+// NOTE: the hosted pages name the project where the console's shared catalog (ui/base) says "this project"; every other error text is the same.
+func TestCatalogs_ErrorsMatchTheSharedUICatalog(t *testing.T) {
+	for _, locale := range Locales() {
+		raw, err := os.ReadFile(filepath.Join("..", "..", "..", "ui", "base", "i18n", "locales", locale+".json"))
+		require.NoError(t, err)
+		var shared map[string]string
+		require.NoError(t, json.Unmarshal(raw, &shared))
+		for key, msg := range catalogs()[locale] {
+			if !strings.HasPrefix(key, "apperror.") {
+				continue
+			}
+			want, ok := shared[key]
+			if !assert.True(t, ok, "%s %s is not in ui/base", locale, key) || strings.Contains(msg, "{project}") {
+				continue
+			}
+			assert.Equal(t, want, msg, "%s %s differs from ui/base", locale, key)
+		}
+	}
+}

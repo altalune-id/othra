@@ -3,9 +3,9 @@ import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { APIKeySchema } from '#gen/apikey/v1/apikey_pb';
+import { connectError, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useAPIKeysStore } from '~/stores/apiKeys';
-import { APIKeySchema } from '../../../../gen/apikey/v1/apikey_pb';
-import { connectError, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
 import { createdKeyState, usePersonalKeys } from './usePersonalKeys';
 
 const acme = { id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme' };

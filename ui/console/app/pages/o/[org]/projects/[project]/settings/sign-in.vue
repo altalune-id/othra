@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import AppModal from '#base/components/ui/AppModal.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import GoogleUpstreamCard from '~/components/project/signin/GoogleUpstreamCard.vue';
 import { googleUpstreamCardLabels } from '~/components/project/signin/labels';
 import { useSignIn } from '~/components/project/signin/useSignIn';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import AppModal from '~/components/ui/AppModal.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';

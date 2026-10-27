@@ -51,6 +51,11 @@ type Store interface {
 	RevokeFamily(ctx context.Context, projectID, familyID uuid.UUID, reason string, now time.Time) error
 	// RevokeUserSession revokes the live families of the user session userSession without offline_access, and drops its unused codes.
 	RevokeUserSession(ctx context.Context, projectID uuid.UUID, userSession, reason string, now time.Time) error
+	// LiveFamilies returns the end user's families that are neither revoked nor expired at now, newest first.
+	LiveFamilies(ctx context.Context, projectID, endUserID uuid.UUID, now time.Time) ([]*Family, error)
+	// RevokeClient revokes every live family of the end user and client and their access tokens for reason at now, drops their unused
+	// codes, and returns the families' public ids.
+	RevokeClient(ctx context.Context, projectID, endUserID, clientID uuid.UUID, reason string, now time.Time) ([]string, error)
 
 	// InsertAccessToken stores an access token of the family, bound to resourceServerID or nil, by its hash.
 	InsertAccessToken(

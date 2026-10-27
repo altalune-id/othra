@@ -3,19 +3,15 @@ package hosted
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/federation"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/oauth/hosted/views"
-	"altalune.id/othra/internal/upstream"
-	"altalune.id/othra/internal/web/i18n"
 )
 
 const (
@@ -131,66 +127,4 @@ func (h *Web) confirmPending(
 		}
 		return true, nil
 	}
-}
-
-func (h *Web) unlink(w http.ResponseWriter, r *http.Request, s *site) {
-	if !h.guard(w, r, s, federationForm, FormIPRule()) {
-		return
-	}
-	here := s.path + string(pageAccount)
-	a, ok := h.active(w, r, s, here)
-	if !ok {
-		return
-	}
-	err := h.fed.Unlink(r.Context(), fedProject(s), a.EndUserID, r.PostFormValue("identity"))
-	switch {
-	case err == nil:
-		h.toPage(w, r, s, pageAccount, url.Values{"unlinked": {"1"}})
-	case isType[*federation.IdentityNotFoundError](err):
-		h.toPage(w, r, s, pageAccount, nil)
-	case codeOf(err) == apperror.CodeSignInLastMethod:
-		h.renderAccount(w, r, s, http.StatusConflict, a, views.AccountData{Error: i18n.Error(r.Context(), apperror.CodeSignInLastMethod)})
-	default:
-		h.fail(w, r, s, "hosted: unlink", err)
-	}
-}
-
-func isType[T error](err error) bool {
-	_, ok := errors.AsType[T](err)
-	return ok
-}
-
-func (h *Web) renderAccount(w http.ResponseWriter, r *http.Request, s *site, status int, a Account, v views.AccountData) {
-	v.Site, v.Email, v.UserSession, v.ReturnTo = s.views(), a.Email, a.UserSession, s.path+string(pageAccount)
-	v.SignOutToken, v.EmailLinkOff = h.token(w, r, s, "signout"), !s.issuer.SignInEmailLink
-	google, err := h.googleMethod(w, r, s, a)
-	if err != nil {
-		h.fail(w, r, s, "hosted: identities", err)
-		return
-	}
-	v.Google = google
-	h.kit.Render(w, r, status, views.Account(h.layout(r, s), v))
-}
-
-// NOTE: the Google row shows while the upstream is on, or while the account still has a Google identity to disconnect.
-func (h *Web) googleMethod(w http.ResponseWriter, r *http.Request, s *site, a Account) (*views.GoogleMethod, error) {
-	if h.fed == nil {
-		return nil, nil
-	}
-	ids, err := h.fed.Identities(r.Context(), fedProject(s), a.EndUserID)
-	if err != nil {
-		return nil, err
-	}
-	m := &views.GoogleMethod{}
-	for _, id := range ids {
-		if id.Kind == upstream.KindGoogle {
-			m.Identity, m.Email = id.PublicID, id.Email
-			break
-		}
-	}
-	if m.Identity == "" && !h.googleOn(r, s) {
-		return nil, nil
-	}
-	m.Token = h.token(w, r, s, federationForm)
-	return m, nil
 }

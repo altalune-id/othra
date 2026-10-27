@@ -1,6 +1,7 @@
-import type { SigningKey } from '~~/gen/keys/v1/keys_pb';
+import type { SigningKey } from '#gen/keys/v1/keys_pb';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
-import { SigningKeyStatus } from '~~/gen/keys/v1/keys_pb';
+import { formatDate } from '#base/lib/format/date';
+import { SigningKeyStatus } from '#gen/keys/v1/keys_pb';
 import { formatWhen, shortKid } from './useSigningKeys';
 
 export type KeyStatus = 'next' | 'active' | 'retiring' | 'retired' | 'unknown';
@@ -31,7 +32,6 @@ const statusNames: Partial<Record<SigningKeyStatus, KeyStatus>> = {
 
 // keyRows formats signing keys for the table and the mobile list.
 export function keyRows(keys: SigningKey[], { t, locale, now = new Date() }: KeyRowFormat): KeyRow[] {
-  const day = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
   return keys.map((k) => {
     const status = statusNames[k.status] ?? 'unknown';
     const retireAfter = k.retireAfter ? timestampDate(k.retireAfter) : undefined;
@@ -39,7 +39,7 @@ export function keyRows(keys: SigningKey[], { t, locale, now = new Date() }: Key
     if (status === 'next' && k.activatesAt) {
       help = t('keys.next_help', { time: formatWhen(timestampDate(k.activatesAt), locale, now) });
     } else if (status === 'retiring' && retireAfter) {
-      help = t('keys.retiring_help', { date: day.format(retireAfter) });
+      help = t('keys.retiring_help', { date: formatDate(retireAfter, locale) });
     }
     return {
       id: k.publicId,
@@ -48,8 +48,8 @@ export function keyRows(keys: SigningKey[], { t, locale, now = new Date() }: Key
       alg: k.alg,
       status,
       help,
-      created: k.createdAt ? day.format(timestampDate(k.createdAt)) : '',
-      retires: retireAfter && (status === 'retiring' || status === 'retired') ? day.format(retireAfter) : '',
+      created: formatDate(k.createdAt, locale),
+      retires: retireAfter && (status === 'retiring' || status === 'retired') ? formatDate(retireAfter, locale) : '',
     };
   });
 }

@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import FieldError from '#base/components/ui/FieldError.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import { scopeTableLabels } from '~/components/resourceserver/labels';
 import ScopeTable from '~/components/resourceserver/ScopeTable.vue';
 import { useResourceServerCreate } from '~/components/resourceserver/useResourceServers';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import FieldError from '~/components/ui/FieldError.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';

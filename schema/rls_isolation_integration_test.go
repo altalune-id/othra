@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -164,6 +165,16 @@ func rlsInserts() []rlsInsert {
 			return `INSERT INTO ` + s + `.end_user_identities (id, public_id, org_id, project_id, end_user_id, upstream_provider_id, issuer, subject, email, email_verified, linked_at, last_used_at) VALUES ($1, $2, $3, $4, $5, $6, 'https://accounts.google.com', $7, 'g@example.com', true, $8, $8)`
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{uuid.New(), "i" + id()[:12], tn.org, tn.project, tn.endUser, tn.upstream, "sub-" + id(), now}
+		}},
+		{"resource_server_secrets", func(s string) string {
+			return `INSERT INTO ` + s + `.resource_server_secrets (id, public_id, org_id, project_id, resource_server_id, secret_hash, hint, created_at) VALUES ($1, $2, $3, $4, $5, 'sha256$' || encode(sha256(convert_to($6, 'UTF8')), 'hex'), 'abcd', $7)`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), "r" + id()[:12], tn.org, tn.project, tn.rs, id(), now}
+		}},
+		{"personal_tokens", func(s string) string {
+			return `INSERT INTO ` + s + `.personal_tokens (id, public_id, org_id, project_id, end_user_id, resource_server_id, name, token_hash, hint, scopes, created_at, expires_at) VALUES ($1, $2, $3, $4, $5, $6, 'cli', 'sha256$' || encode(sha256(convert_to($7, 'UTF8')), 'hex'), 'abcd', '{read}', $8::timestamptz, $8::timestamptz + interval '30 days')`
+		}, func(tn rlsTenant, _ string) []any {
+			return []any{uuid.New(), "t" + id()[:12], tn.org, tn.project, tn.endUser, tn.rs, id(), now}
 		}},
 		{"invites", func(s string) string {
 			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
@@ -359,6 +370,9 @@ var grantTables = []string{"grant_families", "authorization_codes", "access_toke
 //nolint:gochecknoglobals // the project-owned M7 tables.
 var federationTables = []string{"upstream_providers", "end_user_identities"}
 
+//nolint:gochecknoglobals // the project-owned M8 tables.
+var portalTables = []string{"resource_server_secrets", "personal_tokens"}
+
 func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
 	t.Helper()
 	sibling := uuid.New()
@@ -380,7 +394,7 @@ func TestRLS_ProjectOwnedTablesAreProjectScoped(t *testing.T) {
 	for _, ins := range rlsInserts() {
 		byTable[ins.table] = ins
 	}
-	for _, table := range slices.Concat(clientTables, endUserTables, grantTables, federationTables) {
+	for _, table := range slices.Concat(clientTables, endUserTables, grantTables, federationTables, portalTables) {
 		t.Run(table, func(t *testing.T) {
 			assert.Equal(t, []uuid.UUID{f.a.org}, f.visible(t, own, table))
 			assert.Empty(t, f.visible(t, other, table), "another project of the same org sees none")
@@ -748,6 +762,52 @@ func TestSchema_FederationConstraints(t *testing.T) {
 	for _, table := range federationTables {
 		var n int
 		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE project_id = $1`, f.a.project).Scan(&n))
+		assert.Zero(t, n, table)
+	}
+}
+
+// M8 G4, P6: a personal token lives at most 90 days, has a name, scopes and a versioned hash; one current secret per resource server.
+func TestSchema_PortalConstraints(t *testing.T) {
+	f := newRLSFixture(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	token := func(name, hash, scopes string, lifetime time.Duration) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.personal_tokens (id, public_id, org_id, project_id, end_user_id, resource_server_id, name, token_hash, hint, scopes, created_at, expires_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'abcd', $9::text[], $10::timestamptz, $10::timestamptz + $11::interval)`,
+			uuid.New(), "t"+uuid.NewString()[:12], f.a.org, f.a.project, f.a.endUser, f.a.rs, name, hash, scopes, now,
+			fmt.Sprintf("%d seconds", int(lifetime.Seconds())))
+		return err
+	}
+	require.NoError(t, token("cli", "sha256$"+strings.Repeat("a", 64), "{read}", 90*24*time.Hour), "exactly 90 days")
+	assert.Equal(t, "23514", pgCode(token("cli", "sha256$"+strings.Repeat("b", 64), "{read}", 90*24*time.Hour+time.Second)), "over 90 days")
+	assert.Equal(t, "23514", pgCode(token("cli", "sha256$"+strings.Repeat("c", 64), "{read}", 0)), "already expired")
+	assert.Equal(t, "23514", pgCode(token("", "sha256$"+strings.Repeat("d", 64), "{read}", time.Hour)), "a name")
+	assert.Equal(t, "23514", pgCode(token("cli", "sha256$"+strings.Repeat("e", 64), "{}", time.Hour)), "at least one scope")
+	assert.Equal(t, "23514", pgCode(token("cli", strings.Repeat("f", 64), "{read}", time.Hour)), "the versioned hash form")
+	assert.Equal(t, "23505", pgCode(token("cli", "sha256$"+strings.Repeat("a", 64), "{read}", time.Hour)), "one row per hash")
+
+	var accept bool
+	require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT accept_personal_tokens FROM `+f.schema+`.resource_servers WHERE id = $1`, f.a.rs).Scan(&accept))
+	assert.False(t, accept, "a resource server accepts personal tokens only when switched on")
+
+	secret := func(expires *time.Time) error {
+		_, err := f.admin.ExecContext(ctx,
+			`INSERT INTO `+f.schema+`.resource_server_secrets (id, public_id, org_id, project_id, resource_server_id, secret_hash, hint, created_at, expires_at)
+			 VALUES ($1, $2, $3, $4, $5, 'sha256$' || encode(sha256(convert_to($6, 'UTF8')), 'hex'), 'abcd', $7, $8)`,
+			uuid.New(), "r"+uuid.NewString()[:12], f.a.org, f.a.project, f.a.rs, uuid.NewString(), now, expires)
+		return err
+	}
+	grace := now.Add(time.Hour)
+	require.NoError(t, secret(&grace), "a rotated secret in its grace period")
+	assert.Equal(t, "23505", pgCode(secret(nil)), "the fixture already has one current secret")
+
+	_, err := f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.oauth_client_resources WHERE resource_server_id = $1`, f.a.rs)
+	require.NoError(t, err, "a linked server is unlinked before it can be deleted")
+	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.resource_servers WHERE id = $1`, f.a.rs)
+	require.NoError(t, err, "deleting the resource server removes its secrets and tokens")
+	for _, table := range portalTables {
+		var n int
+		require.NoError(t, f.admin.QueryRowContext(ctx, `SELECT count(*) FROM `+f.schema+`.`+table+` WHERE resource_server_id = $1`, f.a.rs).Scan(&n))
 		assert.Zero(t, n, table)
 	}
 }

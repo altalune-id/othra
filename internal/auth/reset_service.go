@@ -7,9 +7,9 @@ import (
 
 	"altalune.id/othra/internal/auth/views"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/mailer"
-	"altalune.id/othra/nanoid"
 	"altalune.id/othra/password"
 )
 
@@ -89,7 +89,7 @@ func (s *Resets) Lookup(ctx context.Context, rawToken string) (*Reset, error) {
 	if rawToken == "" {
 		return nil, &ResetNotUsableError{Reason: ResetNotFound}
 	}
-	r, err := s.d.Store.ByTokenHash(ctx, nanoid.HashToken(rawToken))
+	r, err := s.d.Store.ByTokenHash(ctx, secret.Hex(rawToken))
 	if err != nil {
 		return nil, err
 	}

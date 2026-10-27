@@ -57,6 +57,18 @@ const (
 	// ResourceServerServiceSetResourceServerAdmissionProcedure is the fully-qualified name of the
 	// ResourceServerService's SetResourceServerAdmission RPC.
 	ResourceServerServiceSetResourceServerAdmissionProcedure = "/resourceserver.v1.ResourceServerService/SetResourceServerAdmission"
+	// ResourceServerServiceSetPersonalTokenAccessProcedure is the fully-qualified name of the
+	// ResourceServerService's SetPersonalTokenAccess RPC.
+	ResourceServerServiceSetPersonalTokenAccessProcedure = "/resourceserver.v1.ResourceServerService/SetPersonalTokenAccess"
+	// ResourceServerServiceGenerateIntrospectionSecretProcedure is the fully-qualified name of the
+	// ResourceServerService's GenerateIntrospectionSecret RPC.
+	ResourceServerServiceGenerateIntrospectionSecretProcedure = "/resourceserver.v1.ResourceServerService/GenerateIntrospectionSecret"
+	// ResourceServerServiceRotateIntrospectionSecretProcedure is the fully-qualified name of the
+	// ResourceServerService's RotateIntrospectionSecret RPC.
+	ResourceServerServiceRotateIntrospectionSecretProcedure = "/resourceserver.v1.ResourceServerService/RotateIntrospectionSecret"
+	// ResourceServerServiceRevokeIntrospectionSecretProcedure is the fully-qualified name of the
+	// ResourceServerService's RevokeIntrospectionSecret RPC.
+	ResourceServerServiceRevokeIntrospectionSecretProcedure = "/resourceserver.v1.ResourceServerService/RevokeIntrospectionSecret"
 	// ResourceServerServiceListLinksProcedure is the fully-qualified name of the
 	// ResourceServerService's ListLinks RPC.
 	ResourceServerServiceListLinksProcedure = "/resourceserver.v1.ResourceServerService/ListLinks"
@@ -83,6 +95,11 @@ type ResourceServerServiceClient interface {
 	SetResourceServerTrust(context.Context, *connect.Request[v1.SetResourceServerTrustRequest]) (*connect.Response[v1.SetResourceServerTrustResponse], error)
 	// SECURITY: CIMD admission lets unregistered apps ask for this server's scopes; a signed-in person sets it, never MCP.
 	SetResourceServerAdmission(context.Context, *connect.Request[v1.SetResourceServerAdmissionRequest]) (*connect.Response[v1.SetResourceServerAdmissionResponse], error)
+	// SECURITY: personal tokens and the RFC 7662 introspection secret are set by a signed-in person, never MCP; a secret is shown once.
+	SetPersonalTokenAccess(context.Context, *connect.Request[v1.SetPersonalTokenAccessRequest]) (*connect.Response[v1.SetPersonalTokenAccessResponse], error)
+	GenerateIntrospectionSecret(context.Context, *connect.Request[v1.GenerateIntrospectionSecretRequest]) (*connect.Response[v1.GenerateIntrospectionSecretResponse], error)
+	RotateIntrospectionSecret(context.Context, *connect.Request[v1.RotateIntrospectionSecretRequest]) (*connect.Response[v1.RotateIntrospectionSecretResponse], error)
+	RevokeIntrospectionSecret(context.Context, *connect.Request[v1.RevokeIntrospectionSecretRequest]) (*connect.Response[v1.RevokeIntrospectionSecretResponse], error)
 	ListLinks(context.Context, *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error)
 	LinkClient(context.Context, *connect.Request[v1.LinkClientRequest]) (*connect.Response[v1.LinkClientResponse], error)
 	UpdateLink(context.Context, *connect.Request[v1.UpdateLinkRequest]) (*connect.Response[v1.UpdateLinkResponse], error)
@@ -148,6 +165,30 @@ func NewResourceServerServiceClient(httpClient connect.HTTPClient, baseURL strin
 			connect.WithSchema(resourceServerServiceMethods.ByName("SetResourceServerAdmission")),
 			connect.WithClientOptions(opts...),
 		),
+		setPersonalTokenAccess: connect.NewClient[v1.SetPersonalTokenAccessRequest, v1.SetPersonalTokenAccessResponse](
+			httpClient,
+			baseURL+ResourceServerServiceSetPersonalTokenAccessProcedure,
+			connect.WithSchema(resourceServerServiceMethods.ByName("SetPersonalTokenAccess")),
+			connect.WithClientOptions(opts...),
+		),
+		generateIntrospectionSecret: connect.NewClient[v1.GenerateIntrospectionSecretRequest, v1.GenerateIntrospectionSecretResponse](
+			httpClient,
+			baseURL+ResourceServerServiceGenerateIntrospectionSecretProcedure,
+			connect.WithSchema(resourceServerServiceMethods.ByName("GenerateIntrospectionSecret")),
+			connect.WithClientOptions(opts...),
+		),
+		rotateIntrospectionSecret: connect.NewClient[v1.RotateIntrospectionSecretRequest, v1.RotateIntrospectionSecretResponse](
+			httpClient,
+			baseURL+ResourceServerServiceRotateIntrospectionSecretProcedure,
+			connect.WithSchema(resourceServerServiceMethods.ByName("RotateIntrospectionSecret")),
+			connect.WithClientOptions(opts...),
+		),
+		revokeIntrospectionSecret: connect.NewClient[v1.RevokeIntrospectionSecretRequest, v1.RevokeIntrospectionSecretResponse](
+			httpClient,
+			baseURL+ResourceServerServiceRevokeIntrospectionSecretProcedure,
+			connect.WithSchema(resourceServerServiceMethods.ByName("RevokeIntrospectionSecret")),
+			connect.WithClientOptions(opts...),
+		),
 		listLinks: connect.NewClient[v1.ListLinksRequest, v1.ListLinksResponse](
 			httpClient,
 			baseURL+ResourceServerServiceListLinksProcedure,
@@ -177,18 +218,22 @@ func NewResourceServerServiceClient(httpClient connect.HTTPClient, baseURL strin
 
 // resourceServerServiceClient implements ResourceServerServiceClient.
 type resourceServerServiceClient struct {
-	listResourceServers        *connect.Client[v1.ListResourceServersRequest, v1.ListResourceServersResponse]
-	getResourceServer          *connect.Client[v1.GetResourceServerRequest, v1.GetResourceServerResponse]
-	createResourceServer       *connect.Client[v1.CreateResourceServerRequest, v1.CreateResourceServerResponse]
-	updateResourceServer       *connect.Client[v1.UpdateResourceServerRequest, v1.UpdateResourceServerResponse]
-	deleteResourceServer       *connect.Client[v1.DeleteResourceServerRequest, v1.DeleteResourceServerResponse]
-	verifyResourceServer       *connect.Client[v1.VerifyResourceServerRequest, v1.VerifyResourceServerResponse]
-	setResourceServerTrust     *connect.Client[v1.SetResourceServerTrustRequest, v1.SetResourceServerTrustResponse]
-	setResourceServerAdmission *connect.Client[v1.SetResourceServerAdmissionRequest, v1.SetResourceServerAdmissionResponse]
-	listLinks                  *connect.Client[v1.ListLinksRequest, v1.ListLinksResponse]
-	linkClient                 *connect.Client[v1.LinkClientRequest, v1.LinkClientResponse]
-	updateLink                 *connect.Client[v1.UpdateLinkRequest, v1.UpdateLinkResponse]
-	unlinkClient               *connect.Client[v1.UnlinkClientRequest, v1.UnlinkClientResponse]
+	listResourceServers         *connect.Client[v1.ListResourceServersRequest, v1.ListResourceServersResponse]
+	getResourceServer           *connect.Client[v1.GetResourceServerRequest, v1.GetResourceServerResponse]
+	createResourceServer        *connect.Client[v1.CreateResourceServerRequest, v1.CreateResourceServerResponse]
+	updateResourceServer        *connect.Client[v1.UpdateResourceServerRequest, v1.UpdateResourceServerResponse]
+	deleteResourceServer        *connect.Client[v1.DeleteResourceServerRequest, v1.DeleteResourceServerResponse]
+	verifyResourceServer        *connect.Client[v1.VerifyResourceServerRequest, v1.VerifyResourceServerResponse]
+	setResourceServerTrust      *connect.Client[v1.SetResourceServerTrustRequest, v1.SetResourceServerTrustResponse]
+	setResourceServerAdmission  *connect.Client[v1.SetResourceServerAdmissionRequest, v1.SetResourceServerAdmissionResponse]
+	setPersonalTokenAccess      *connect.Client[v1.SetPersonalTokenAccessRequest, v1.SetPersonalTokenAccessResponse]
+	generateIntrospectionSecret *connect.Client[v1.GenerateIntrospectionSecretRequest, v1.GenerateIntrospectionSecretResponse]
+	rotateIntrospectionSecret   *connect.Client[v1.RotateIntrospectionSecretRequest, v1.RotateIntrospectionSecretResponse]
+	revokeIntrospectionSecret   *connect.Client[v1.RevokeIntrospectionSecretRequest, v1.RevokeIntrospectionSecretResponse]
+	listLinks                   *connect.Client[v1.ListLinksRequest, v1.ListLinksResponse]
+	linkClient                  *connect.Client[v1.LinkClientRequest, v1.LinkClientResponse]
+	updateLink                  *connect.Client[v1.UpdateLinkRequest, v1.UpdateLinkResponse]
+	unlinkClient                *connect.Client[v1.UnlinkClientRequest, v1.UnlinkClientResponse]
 }
 
 // ListResourceServers calls resourceserver.v1.ResourceServerService.ListResourceServers.
@@ -232,6 +277,29 @@ func (c *resourceServerServiceClient) SetResourceServerAdmission(ctx context.Con
 	return c.setResourceServerAdmission.CallUnary(ctx, req)
 }
 
+// SetPersonalTokenAccess calls resourceserver.v1.ResourceServerService.SetPersonalTokenAccess.
+func (c *resourceServerServiceClient) SetPersonalTokenAccess(ctx context.Context, req *connect.Request[v1.SetPersonalTokenAccessRequest]) (*connect.Response[v1.SetPersonalTokenAccessResponse], error) {
+	return c.setPersonalTokenAccess.CallUnary(ctx, req)
+}
+
+// GenerateIntrospectionSecret calls
+// resourceserver.v1.ResourceServerService.GenerateIntrospectionSecret.
+func (c *resourceServerServiceClient) GenerateIntrospectionSecret(ctx context.Context, req *connect.Request[v1.GenerateIntrospectionSecretRequest]) (*connect.Response[v1.GenerateIntrospectionSecretResponse], error) {
+	return c.generateIntrospectionSecret.CallUnary(ctx, req)
+}
+
+// RotateIntrospectionSecret calls
+// resourceserver.v1.ResourceServerService.RotateIntrospectionSecret.
+func (c *resourceServerServiceClient) RotateIntrospectionSecret(ctx context.Context, req *connect.Request[v1.RotateIntrospectionSecretRequest]) (*connect.Response[v1.RotateIntrospectionSecretResponse], error) {
+	return c.rotateIntrospectionSecret.CallUnary(ctx, req)
+}
+
+// RevokeIntrospectionSecret calls
+// resourceserver.v1.ResourceServerService.RevokeIntrospectionSecret.
+func (c *resourceServerServiceClient) RevokeIntrospectionSecret(ctx context.Context, req *connect.Request[v1.RevokeIntrospectionSecretRequest]) (*connect.Response[v1.RevokeIntrospectionSecretResponse], error) {
+	return c.revokeIntrospectionSecret.CallUnary(ctx, req)
+}
+
 // ListLinks calls resourceserver.v1.ResourceServerService.ListLinks.
 func (c *resourceServerServiceClient) ListLinks(ctx context.Context, req *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error) {
 	return c.listLinks.CallUnary(ctx, req)
@@ -265,6 +333,11 @@ type ResourceServerServiceHandler interface {
 	SetResourceServerTrust(context.Context, *connect.Request[v1.SetResourceServerTrustRequest]) (*connect.Response[v1.SetResourceServerTrustResponse], error)
 	// SECURITY: CIMD admission lets unregistered apps ask for this server's scopes; a signed-in person sets it, never MCP.
 	SetResourceServerAdmission(context.Context, *connect.Request[v1.SetResourceServerAdmissionRequest]) (*connect.Response[v1.SetResourceServerAdmissionResponse], error)
+	// SECURITY: personal tokens and the RFC 7662 introspection secret are set by a signed-in person, never MCP; a secret is shown once.
+	SetPersonalTokenAccess(context.Context, *connect.Request[v1.SetPersonalTokenAccessRequest]) (*connect.Response[v1.SetPersonalTokenAccessResponse], error)
+	GenerateIntrospectionSecret(context.Context, *connect.Request[v1.GenerateIntrospectionSecretRequest]) (*connect.Response[v1.GenerateIntrospectionSecretResponse], error)
+	RotateIntrospectionSecret(context.Context, *connect.Request[v1.RotateIntrospectionSecretRequest]) (*connect.Response[v1.RotateIntrospectionSecretResponse], error)
+	RevokeIntrospectionSecret(context.Context, *connect.Request[v1.RevokeIntrospectionSecretRequest]) (*connect.Response[v1.RevokeIntrospectionSecretResponse], error)
 	ListLinks(context.Context, *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error)
 	LinkClient(context.Context, *connect.Request[v1.LinkClientRequest]) (*connect.Response[v1.LinkClientResponse], error)
 	UpdateLink(context.Context, *connect.Request[v1.UpdateLinkRequest]) (*connect.Response[v1.UpdateLinkResponse], error)
@@ -326,6 +399,30 @@ func NewResourceServerServiceHandler(svc ResourceServerServiceHandler, opts ...c
 		connect.WithSchema(resourceServerServiceMethods.ByName("SetResourceServerAdmission")),
 		connect.WithHandlerOptions(opts...),
 	)
+	resourceServerServiceSetPersonalTokenAccessHandler := connect.NewUnaryHandler(
+		ResourceServerServiceSetPersonalTokenAccessProcedure,
+		svc.SetPersonalTokenAccess,
+		connect.WithSchema(resourceServerServiceMethods.ByName("SetPersonalTokenAccess")),
+		connect.WithHandlerOptions(opts...),
+	)
+	resourceServerServiceGenerateIntrospectionSecretHandler := connect.NewUnaryHandler(
+		ResourceServerServiceGenerateIntrospectionSecretProcedure,
+		svc.GenerateIntrospectionSecret,
+		connect.WithSchema(resourceServerServiceMethods.ByName("GenerateIntrospectionSecret")),
+		connect.WithHandlerOptions(opts...),
+	)
+	resourceServerServiceRotateIntrospectionSecretHandler := connect.NewUnaryHandler(
+		ResourceServerServiceRotateIntrospectionSecretProcedure,
+		svc.RotateIntrospectionSecret,
+		connect.WithSchema(resourceServerServiceMethods.ByName("RotateIntrospectionSecret")),
+		connect.WithHandlerOptions(opts...),
+	)
+	resourceServerServiceRevokeIntrospectionSecretHandler := connect.NewUnaryHandler(
+		ResourceServerServiceRevokeIntrospectionSecretProcedure,
+		svc.RevokeIntrospectionSecret,
+		connect.WithSchema(resourceServerServiceMethods.ByName("RevokeIntrospectionSecret")),
+		connect.WithHandlerOptions(opts...),
+	)
 	resourceServerServiceListLinksHandler := connect.NewUnaryHandler(
 		ResourceServerServiceListLinksProcedure,
 		svc.ListLinks,
@@ -368,6 +465,14 @@ func NewResourceServerServiceHandler(svc ResourceServerServiceHandler, opts ...c
 			resourceServerServiceSetResourceServerTrustHandler.ServeHTTP(w, r)
 		case ResourceServerServiceSetResourceServerAdmissionProcedure:
 			resourceServerServiceSetResourceServerAdmissionHandler.ServeHTTP(w, r)
+		case ResourceServerServiceSetPersonalTokenAccessProcedure:
+			resourceServerServiceSetPersonalTokenAccessHandler.ServeHTTP(w, r)
+		case ResourceServerServiceGenerateIntrospectionSecretProcedure:
+			resourceServerServiceGenerateIntrospectionSecretHandler.ServeHTTP(w, r)
+		case ResourceServerServiceRotateIntrospectionSecretProcedure:
+			resourceServerServiceRotateIntrospectionSecretHandler.ServeHTTP(w, r)
+		case ResourceServerServiceRevokeIntrospectionSecretProcedure:
+			resourceServerServiceRevokeIntrospectionSecretHandler.ServeHTTP(w, r)
 		case ResourceServerServiceListLinksProcedure:
 			resourceServerServiceListLinksHandler.ServeHTTP(w, r)
 		case ResourceServerServiceLinkClientProcedure:
@@ -415,6 +520,22 @@ func (UnimplementedResourceServerServiceHandler) SetResourceServerTrust(context.
 
 func (UnimplementedResourceServerServiceHandler) SetResourceServerAdmission(context.Context, *connect.Request[v1.SetResourceServerAdmissionRequest]) (*connect.Response[v1.SetResourceServerAdmissionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("resourceserver.v1.ResourceServerService.SetResourceServerAdmission is not implemented"))
+}
+
+func (UnimplementedResourceServerServiceHandler) SetPersonalTokenAccess(context.Context, *connect.Request[v1.SetPersonalTokenAccessRequest]) (*connect.Response[v1.SetPersonalTokenAccessResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("resourceserver.v1.ResourceServerService.SetPersonalTokenAccess is not implemented"))
+}
+
+func (UnimplementedResourceServerServiceHandler) GenerateIntrospectionSecret(context.Context, *connect.Request[v1.GenerateIntrospectionSecretRequest]) (*connect.Response[v1.GenerateIntrospectionSecretResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("resourceserver.v1.ResourceServerService.GenerateIntrospectionSecret is not implemented"))
+}
+
+func (UnimplementedResourceServerServiceHandler) RotateIntrospectionSecret(context.Context, *connect.Request[v1.RotateIntrospectionSecretRequest]) (*connect.Response[v1.RotateIntrospectionSecretResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("resourceserver.v1.ResourceServerService.RotateIntrospectionSecret is not implemented"))
+}
+
+func (UnimplementedResourceServerServiceHandler) RevokeIntrospectionSecret(context.Context, *connect.Request[v1.RevokeIntrospectionSecretRequest]) (*connect.Response[v1.RevokeIntrospectionSecretResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("resourceserver.v1.ResourceServerService.RevokeIntrospectionSecret is not implemented"))
 }
 
 func (UnimplementedResourceServerServiceHandler) ListLinks(context.Context, *connect.Request[v1.ListLinksRequest]) (*connect.Response[v1.ListLinksResponse], error) {

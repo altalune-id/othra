@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -341,7 +342,7 @@ func (f *fakeStore) EndUserByID(_ context.Context, projectID, id uuid.UUID) (*En
 	defer f.mu.Unlock()
 	for _, u := range f.users {
 		if u.project == projectID && u.id == id {
-			return &EndUser{ID: u.id, Subject: u.subject, Email: u.email, EmailVerified: u.verifiedAt != nil}, f.fail("EndUserByID")
+			return &EndUser{ID: u.id, Subject: u.subject, Email: u.email, EmailVerified: u.verifiedAt != nil, Name: u.name}, f.fail("EndUserByID")
 		}
 	}
 	return nil, f.fail("EndUserByID")
@@ -411,4 +412,84 @@ func (f *fakeStore) FillName(_ context.Context, projectID, endUserID uuid.UUID, 
 		}
 	}
 	return nil
+}
+
+func (f *fakeStore) EndOwnedSession(_ context.Context, projectID, endUserID uuid.UUID, publicID string, _ time.Time) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("EndOwnedSession"); err != nil {
+		return false, err
+	}
+	for _, s := range f.sessions {
+		if s.project == projectID && s.endUser == endUserID && s.publicID == publicID && !s.ended {
+			s.ended = true
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (f *fakeStore) LiveSessions(_ context.Context, projectID, endUserID uuid.UUID) ([]LiveSession, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("LiveSessions"); err != nil {
+		return nil, err
+	}
+	var out []LiveSession
+	for _, s := range f.sessions {
+		if s.project == projectID && s.endUser == endUserID && !s.ended {
+			out = append(out, LiveSession{PublicID: s.publicID, Method: s.method, AuthTime: s.authTime, LastSeenAt: s.selectedAt})
+		}
+	}
+	return out, nil
+}
+
+func (f *fakeStore) UpdateName(_ context.Context, projectID, endUserID uuid.UUID, name string, _ time.Time) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("UpdateName"); err != nil {
+		return false, err
+	}
+	for _, u := range f.users {
+		if u.project == projectID && u.id == endUserID {
+			u.name = name
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (f *fakeStore) ListEndUsers(_ context.Context, projectID uuid.UUID, prefix, after string, limit int) ([]*EndUser, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("ListEndUsers"); err != nil {
+		return nil, err
+	}
+	var out []*EndUser
+	started := after == ""
+	for i := len(f.users) - 1; i >= 0 && len(out) < limit; i-- {
+		u := f.users[i]
+		if u.project != projectID {
+			continue
+		}
+		if !started {
+			started = u.subject == after
+			continue
+		}
+		if strings.HasPrefix(u.email, prefix) {
+			out = append(out, &EndUser{ID: u.id, Subject: u.subject, Email: u.email, Name: u.name, EmailVerified: u.verifiedAt != nil})
+		}
+	}
+	return out, nil
+}
+
+func (f *fakeStore) EndUserByPublicID(_ context.Context, projectID uuid.UUID, publicID string) (*EndUser, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, u := range f.users {
+		if u.project == projectID && u.subject == publicID {
+			return &EndUser{ID: u.id, Subject: u.subject, Email: u.email, EmailVerified: u.verifiedAt != nil, Name: u.name}, f.fail("EndUserByPublicID")
+		}
+	}
+	return nil, f.fail("EndUserByPublicID")
 }

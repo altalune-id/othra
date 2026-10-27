@@ -37,6 +37,7 @@ func TestService_SetAdmission(t *testing.T) {
 	pending := h.create(t, "https://pending.example.com/mcp")
 	_, err := h.svc.SetAdmission(ctx, h.org, h.project, pending.PublicID, Admission{Accept: true})
 	assert.Equal(t, apperror.CodeResourceServerAdmissionUnverified, codeOf(err))
+	assert.Equal(t, "cimd", reasonOf(err), "design 9: CIMD wording")
 	off, err := h.svc.SetAdmission(ctx, h.org, h.project, pending.PublicID, Admission{})
 	require.NoError(t, err, "turning off is always allowed")
 	assert.False(t, off.Admission.Accept)
@@ -135,7 +136,8 @@ func TestService_ManagedClientLinks(t *testing.T) {
 	assert.Equal(t, apperror.CodeClientMetadataManaged, codeOf(err))
 	assert.Equal(t, apperror.CodeClientMetadataManaged, codeOf(h.svc.UnlinkClient(ctx, h.org, h.project, cimd.PublicID, r.PublicID)))
 	require.NoError(t, h.svc.LinkMetadataClient(ctx, h.org, h.project, cimd.ID, r.ID, []string{"read"}))
-	require.NoError(t, h.svc.Delete(ctx, h.org, h.project, r.PublicID), "CIMD links cascade with the server")
+	require.NoError(t, h.svc.Delete(ctx, h.org, h.project, r.PublicID), "qa F-3: CIMD links go with the server")
+	assert.Empty(t, h.store.links)
 }
 
 // RSV004 description: a description names a scope of the server and has 1 to 120 characters.

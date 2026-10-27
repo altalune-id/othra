@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -16,9 +15,6 @@ import (
 
 // DefaultClockSkew absorbs clock drift between the host that signed and the host that verifies.
 const DefaultClockSkew = 30 * time.Second
-
-// ErrInvalidToken is the cause of every token Verify refuses.
-var ErrInvalidToken = errors.New("keys: invalid token")
 
 // PublishedKeys returns a project's published keys; ctx carries the project's tenant scope.
 type PublishedKeys interface {

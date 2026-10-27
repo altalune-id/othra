@@ -2,9 +2,13 @@
 package permission
 
 import (
+	"time"
+
+	accountv1connect "altalune.id/othra/gen/go/account/v1/accountv1connect"
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	clientv1connect "altalune.id/othra/gen/go/client/v1/clientv1connect"
+	enduserv1connect "altalune.id/othra/gen/go/enduser/v1/enduserv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
 	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
@@ -51,24 +55,34 @@ func Table() map[string][]string {
 		clientv1connect.ClientServiceRotateClientSecretProcedure:   {scope.ProjectWrite},
 		clientv1connect.ClientServiceRevokeClientSecretProcedure:   {scope.ProjectWrite},
 
-		resourceserverv1connect.ResourceServerServiceListResourceServersProcedure:        {scope.ProjectRead},
-		resourceserverv1connect.ResourceServerServiceGetResourceServerProcedure:          {scope.ProjectRead},
-		resourceserverv1connect.ResourceServerServiceCreateResourceServerProcedure:       {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceUpdateResourceServerProcedure:       {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceDeleteResourceServerProcedure:       {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceVerifyResourceServerProcedure:       {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceSetResourceServerTrustProcedure:     {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceSetResourceServerAdmissionProcedure: {scope.ProjectWrite},
-		upstreamv1connect.UpstreamServiceListUpstreamsProcedure:                          {scope.ProjectRead},
-		upstreamv1connect.UpstreamServiceGetUpstreamProcedure:                            {scope.ProjectRead},
-		upstreamv1connect.UpstreamServiceCreateUpstreamProcedure:                         {scope.ProjectWrite},
-		upstreamv1connect.UpstreamServiceUpdateUpstreamProcedure:                         {scope.ProjectWrite},
-		upstreamv1connect.UpstreamServiceSetUpstreamEnabledProcedure:                     {scope.ProjectWrite},
-		upstreamv1connect.UpstreamServiceDeleteUpstreamProcedure:                         {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceListLinksProcedure:                  {scope.ProjectRead},
-		resourceserverv1connect.ResourceServerServiceLinkClientProcedure:                 {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceUpdateLinkProcedure:                 {scope.ProjectWrite},
-		resourceserverv1connect.ResourceServerServiceUnlinkClientProcedure:               {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceListResourceServersProcedure:         {scope.ProjectRead},
+		resourceserverv1connect.ResourceServerServiceGetResourceServerProcedure:           {scope.ProjectRead},
+		resourceserverv1connect.ResourceServerServiceCreateResourceServerProcedure:        {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceUpdateResourceServerProcedure:        {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceDeleteResourceServerProcedure:        {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceVerifyResourceServerProcedure:        {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceSetResourceServerTrustProcedure:      {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceSetResourceServerAdmissionProcedure:  {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceSetPersonalTokenAccessProcedure:      {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceGenerateIntrospectionSecretProcedure: {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceRotateIntrospectionSecretProcedure:   {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceRevokeIntrospectionSecretProcedure:   {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceListUpstreamsProcedure:                           {scope.ProjectRead},
+		upstreamv1connect.UpstreamServiceGetUpstreamProcedure:                             {scope.ProjectRead},
+		upstreamv1connect.UpstreamServiceCreateUpstreamProcedure:                          {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceUpdateUpstreamProcedure:                          {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceSetUpstreamEnabledProcedure:                      {scope.ProjectWrite},
+		upstreamv1connect.UpstreamServiceDeleteUpstreamProcedure:                          {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceListLinksProcedure:                   {scope.ProjectRead},
+		resourceserverv1connect.ResourceServerServiceLinkClientProcedure:                  {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceUpdateLinkProcedure:                  {scope.ProjectWrite},
+		resourceserverv1connect.ResourceServerServiceUnlinkClientProcedure:                {scope.ProjectWrite},
+
+		enduserv1connect.EndUserServiceListEndUsersProcedure:         {scope.EndUserRead},
+		enduserv1connect.EndUserServiceGetEndUserProcedure:           {scope.EndUserRead},
+		enduserv1connect.EndUserServiceRevokeEndUserSessionProcedure: {scope.EndUserRevoke},
+		enduserv1connect.EndUserServiceDisconnectEndUserAppProcedure: {scope.EndUserRevoke},
+		enduserv1connect.EndUserServiceRevokeEndUserTokenProcedure:   {scope.EndUserRevoke},
 
 		apikeyv1connect.APIKeyServiceListAPIKeysProcedure:  {scope.ApikeyRead},
 		apikeyv1connect.APIKeyServiceCreateAPIKeyProcedure: {authz.AnyAuthenticated},
@@ -104,6 +118,34 @@ func Table() map[string][]string {
 		authv1connect.AuthServiceUpdateProfileProcedure:     {authz.PersonOnly},
 		authv1connect.AuthServiceChangePasswordProcedure:    {authz.PersonOnly},
 		authv1connect.AuthServiceSignOutEverywhereProcedure: {authz.PersonOnly},
+	}
+}
+
+// The end-user plane's markers: Self is the signed-in end user on their own rows; SelfRecent also needs a sign-in in the last 10 minutes.
+const (
+	Self       = "self"
+	SelfRecent = "self:recent"
+)
+
+// RecentSignIn is how fresh the sign-in behind a SelfRecent call must be (pm M8 P7).
+const RecentSignIn = 10 * time.Minute
+
+// EndUserTable maps each end user's own procedure at /p/<handle>/api/ to Self or SelfRecent. SECURITY: Table never names them.
+func EndUserTable() map[string]string {
+	return map[string]string{
+		accountv1connect.AccountServiceGetProfileProcedure:          Self,
+		accountv1connect.AccountServiceUpdateProfileProcedure:       Self,
+		accountv1connect.AccountServiceGetSignInMethodsProcedure:    Self,
+		accountv1connect.AccountServiceUnlinkIdentityProcedure:      Self,
+		accountv1connect.AccountServiceListSessionsProcedure:        Self,
+		accountv1connect.AccountServiceEndSessionProcedure:          Self,
+		accountv1connect.AccountServiceEndOtherSessionsProcedure:    Self,
+		accountv1connect.AccountServiceListConnectedAppsProcedure:   Self,
+		accountv1connect.AccountServiceDisconnectAppProcedure:       Self,
+		accountv1connect.AccountServiceListTokenServersProcedure:    Self,
+		accountv1connect.AccountServiceListPersonalTokensProcedure:  Self,
+		accountv1connect.AccountServiceCreatePersonalTokenProcedure: SelfRecent,
+		accountv1connect.AccountServiceRevokePersonalTokenProcedure: Self,
 	}
 }
 

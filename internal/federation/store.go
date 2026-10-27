@@ -2,7 +2,6 @@ package federation
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,8 +24,3 @@ type Store interface {
 	// EveryEndUserLinked reports whether every end user of the project has an identity.
 	EveryEndUserLinked(ctx context.Context, projectID uuid.UUID) (bool, error)
 }
-
-var (
-	errSubjectTaken  = errors.New("federation: the (issuer, subject) is linked")
-	errUpstreamTaken = errors.New("federation: the end user already has an identity of this upstream")
-)

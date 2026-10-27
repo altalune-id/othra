@@ -25,6 +25,7 @@ const (
 	ReasonEndSession     = "end_session"
 	ReasonSignOut        = "sign_out"
 	ReasonRevoked        = "revoked"
+	ReasonConsentRevoked = "consent_revoked"
 )
 
 //nolint:gochecknoglobals // the OpenID Connect scopes, granted to the end user rather than to a resource server.
@@ -116,6 +117,7 @@ type Access struct {
 	ID               uuid.UUID
 	Family           *Family
 	Scopes           []string
+	IssuedAt         time.Time
 	ExpiresAt        time.Time
 	ResourceServerID *uuid.UUID
 	RevokedAt        *time.Time

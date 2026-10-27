@@ -53,8 +53,9 @@ message CreateAPIKeyRequest {
     (buf.validate.field).cel = {id: "apikey.name.blank", expression: "this.trim() != '' ? '' : 'must not be blank'"},
     (buf.validate.field).cel = {id: "apikey.name.max_len.100", expression: "this.trim().size() <= 100 ? '' : 'must be at most 100 characters'"}
   ];
+  // The catalog's shape; the service checks each scope against scope/scopes.json, the one list.
   repeated string scopes = 5 [
-    (buf.validate.field).repeated.items.string.pattern = "^[a-z]+:(read|write)$"
+    (buf.validate.field).repeated.items.string.pattern = "^[a-z][a-z_]*:[a-z]+$"
   ];
   repeated string project_ids = 6 [
     (buf.validate.field).repeated.items.string.(othra.v1.public_id) = true

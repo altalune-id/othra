@@ -1,8 +1,8 @@
-import type { Client } from '~~/gen/client/v1/client_pb';
-import type { ShownError } from '~/lib/apperror/message';
-import { ClientRegistration } from '~~/gen/client/v1/client_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { errorCode } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { Client } from '#gen/client/v1/client_pb';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { errorCode } from '#base/lib/apperror/message';
+import { ClientRegistration } from '#gen/client/v1/client_pb';
 
 // useClientList loads a project's OAuth clients.
 export function useClientList(projectId: string) {

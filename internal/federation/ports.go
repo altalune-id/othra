@@ -2,7 +2,6 @@ package federation
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 
@@ -11,8 +10,8 @@ import (
 
 // Upstreams reads a project's upstream IdPs.
 type Upstreams interface {
-	// List returns the project's upstreams, enabled or not.
-	List(ctx context.Context, orgID, projectID uuid.UUID) ([]*upstream.Upstream, error)
+	// Offered returns the kinds of the project's enabled upstreams.
+	Offered(ctx context.Context, orgID, projectID uuid.UUID) ([]upstream.Kind, error)
 	// Credentials returns the enabled upstream of kind with its secret opened, or *upstream.NotFoundError.
 	Credentials(ctx context.Context, orgID, projectID uuid.UUID, kind upstream.Kind) (*upstream.Credentials, error)
 }
@@ -27,10 +26,10 @@ type EndUsers interface {
 	SignIn(ctx context.Context, p Project, req SessionRequest) (*Session, error)
 }
 
-// SignInSwitch reads a project's email-link switch and locks the project row until the unit of work on ctx ends.
+// SignInSwitch reads a project's email-link switch.
 type SignInSwitch interface {
+	// LockEmailLink reads it and locks the project row until the unit of work on ctx ends, for a guard.
 	LockEmailLink(ctx context.Context, projectID uuid.UUID) (bool, error)
+	// EmailLink reads it without a lock, for a display.
+	EmailLink(ctx context.Context, projectID uuid.UUID) (bool, error)
 }
-
-// ErrEmailTaken reports a Create whose email another end user just took; federation answers it as a collision.
-var ErrEmailTaken = errors.New("federation: the email belongs to another end user")

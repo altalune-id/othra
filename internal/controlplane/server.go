@@ -12,6 +12,7 @@ import (
 	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
 	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
 	clientv1connect "altalune.id/othra/gen/go/client/v1/clientv1connect"
+	enduserv1connect "altalune.id/othra/gen/go/enduser/v1/enduserv1connect"
 	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
 	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
 	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
@@ -23,6 +24,8 @@ import (
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/client"
+	"altalune.id/othra/internal/enduser"
+	"altalune.id/othra/internal/federation"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/org"
@@ -59,7 +62,11 @@ type Services struct {
 
 	ResourceServers *resourceserver.Service
 	Upstreams       *upstream.Service
-	Refs            Refs
+	EndUsers        *enduser.Service
+	Federation      *federation.Service
+	// Account is the slices of account.v1 the admin end-user view reuses.
+	Account AccountSlices
+	Refs    Refs
 	// FileUploads is true when the deployment has file storage.
 	FileUploads bool
 }
@@ -96,6 +103,7 @@ type Server struct {
 	ClientSvc   *client.ClientService
 	RSSvc       *resourceserver.ResourceServerService
 	UpstreamSvc *upstream.UpstreamService
+	EndUserSvc  *EndUserService
 
 	OpenAPIEnabled   bool
 	OpenAPIBasicAuth *BasicAuth
@@ -139,6 +147,9 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 	}
 	if svcs.Upstreams != nil {
 		s.UpstreamSvc = upstream.NewControlPlane(svcs.Upstreams, svcs.Refs)
+	}
+	if svcs.EndUsers != nil && svcs.Federation != nil && svcs.Account.Complete() {
+		s.EndUserSvc = NewEndUserService(svcs.EndUsers, svcs.Federation, svcs.Account, svcs.Refs)
 	}
 	if svcs.Members != nil {
 		s.MemberSvc = member.NewControlPlane(svcs.Members, svcs.Refs)
@@ -192,6 +203,10 @@ func (s *Server) Handler(basePath string) http.Handler {
 	if s.UpstreamSvc != nil {
 		upstreamPath, upstreamHandler := upstreamv1connect.NewUpstreamServiceHandler(s.UpstreamSvc, s.handlerOptions()...)
 		inner.Handle(upstreamPath, upstreamHandler)
+	}
+	if s.EndUserSvc != nil {
+		endUserPath, endUserHandler := enduserv1connect.NewEndUserServiceHandler(s.EndUserSvc, s.handlerOptions()...)
+		inner.Handle(endUserPath, endUserHandler)
 	}
 
 	if s.AuthSvc != nil {

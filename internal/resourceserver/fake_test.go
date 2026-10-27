@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/secret"
 )
 
 var errFake = errors.New("fake failure")
@@ -21,11 +22,17 @@ type fakeStore struct {
 	mu      sync.Mutex
 	servers map[uuid.UUID]ResourceServer
 	links   map[[2]uuid.UUID]Link
+	secrets map[uuid.UUID][]fakeSecret
 	failOn  string
 }
 
+type fakeSecret struct {
+	stored secret.Stored
+	hash   string
+}
+
 func newFakeStore() *fakeStore {
-	return &fakeStore{servers: map[uuid.UUID]ResourceServer{}, links: map[[2]uuid.UUID]Link{}}
+	return &fakeStore{servers: map[uuid.UUID]ResourceServer{}, links: map[[2]uuid.UUID]Link{}, secrets: map[uuid.UUID][]fakeSecret{}}
 }
 
 func (s *fakeStore) fail(op string) error {
@@ -53,7 +60,62 @@ func (s *fakeStore) Insert(_ context.Context, r *ResourceServer) error {
 func clone(r *ResourceServer) ResourceServer {
 	c := *r
 	c.Scopes = slices.Clone(r.Scopes)
+	c.IntrospectionSecrets = nil
 	return c
+}
+
+func (s *fakeStore) IntrospectionSecrets(
+	_ context.Context, _ uuid.UUID, ids []uuid.UUID, now time.Time, withHash bool,
+) (map[uuid.UUID][]secret.Stored, error) {
+	if err := s.fail("secrets"); err != nil {
+		return nil, err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := map[uuid.UUID][]secret.Stored{}
+	for _, id := range ids {
+		for _, f := range s.secrets[id] {
+			if !f.stored.Live(now) {
+				continue
+			}
+			st := f.stored
+			if withHash {
+				st = st.WithHash(f.hash)
+			}
+			out[id] = append(out[id], st)
+		}
+	}
+	return out, nil
+}
+
+func (s *fakeStore) InsertIntrospectionSecret(_ context.Context, r *ResourceServer, st secret.Stored, hash string) error {
+	if err := s.fail("insert secret"); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.secrets[r.ID] = append(s.secrets[r.ID], fakeSecret{stored: st, hash: hash})
+	return nil
+}
+
+func (s *fakeStore) ExpireIntrospectionSecret(_ context.Context, _, serverID, id uuid.UUID, at time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for i := range s.secrets[serverID] {
+		if s.secrets[serverID][i].stored.ID == id {
+			s.secrets[serverID][i].stored.ExpiresAt = &at
+		}
+	}
+	return nil
+}
+
+func (s *fakeStore) DeleteIntrospectionSecrets(_ context.Context, _, serverID uuid.UUID, ids []uuid.UUID, now time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.secrets[serverID] = slices.DeleteFunc(s.secrets[serverID], func(f fakeSecret) bool {
+		return slices.Contains(ids, f.stored.ID) || !f.stored.Live(now)
+	})
+	return nil
 }
 
 func (s *fakeStore) Update(_ context.Context, r *ResourceServer) error {
@@ -72,6 +134,11 @@ func (s *fakeStore) Delete(_ context.Context, _, id uuid.UUID) error {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	for _, l := range s.links {
+		if l.ResourceServer.ID == id {
+			return errors.New("fake: oauth_client_resources_resource_server_fkey (NO ACTION)")
+		}
+	}
 	delete(s.servers, id)
 	return nil
 }
@@ -356,6 +423,13 @@ func (h *harness) create(t *testing.T, identifier string, scopes ...string) *Res
 	})
 	require.NoError(t, err)
 	return r
+}
+
+func reasonOf(err error) string {
+	if app, ok := apperror.AsAppError(err); ok {
+		return app.Meta()["reason"]
+	}
+	return ""
 }
 
 func codeOf(err error) apperror.Code {

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -11,22 +10,6 @@ import (
 // RLSConfig tunes the boot row-level-security guard.
 type RLSConfig struct {
 	AllowBypass bool
-}
-
-// RLSError lists every reason a pool may not serve requests.
-type RLSError struct {
-	Pool    string
-	Reasons []string
-}
-
-func (e *RLSError) Error() string {
-	return fmt.Sprintf("db: the %s pool would not enforce row-level security: %s", e.Pool, strings.Join(e.Reasons, "; "))
-}
-
-// IsRLSError reports whether err's tree holds an *RLSError.
-func IsRLSError(err error) bool {
-	_, ok := errors.AsType[*RLSError](err)
-	return ok
 }
 
 // CheckRLS refuses a pool that row-level security would not hold; AllowBypass turns only a bypassing role into a warning.

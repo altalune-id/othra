@@ -92,5 +92,87 @@ func (e *InvalidEmailError) ToAppError() *apperror.AppError {
 
 // IsExpectedError reports whether err is a typed end-user error a service returns as-is.
 func IsExpectedError(err error) bool {
-	return IsLinkNotUsableError(err) || IsEmailDisabledError(err) || IsSessionGoneError(err) || IsInvalidEmailError(err)
+	return IsLinkNotUsableError(err) || IsEmailDisabledError(err) || IsSessionGoneError(err) || IsInvalidEmailError(err) ||
+		IsSignedOutError(err) || IsSessionNotFoundError(err) || IsCurrentSessionError(err) || IsEndUserNotFoundError(err) ||
+		IsTermsRequiredError(err)
+}
+
+// SignedOutError signals an account.v1 call whose browser has no live signed-in account.
+type SignedOutError struct{}
+
+func (*SignedOutError) Error() string { return "enduser: signed out" }
+
+// IsSignedOutError reports whether err's tree contains a *SignedOutError.
+func IsSignedOutError(err error) bool {
+	_, ok := errors.AsType[*SignedOutError](err)
+	return ok
+}
+
+// ToAppError maps SignedOutError to ACC001.
+func (e *SignedOutError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAccountSignedOut, "Your session ended").WithCause(e)
+}
+
+// SessionNotFoundError signals a user session that is not the end user's or already ended.
+type SessionNotFoundError struct{}
+
+func (*SessionNotFoundError) Error() string { return "enduser: session not found" }
+
+// IsSessionNotFoundError reports whether err's tree contains a *SessionNotFoundError.
+func IsSessionNotFoundError(err error) bool {
+	_, ok := errors.AsType[*SessionNotFoundError](err)
+	return ok
+}
+
+// ToAppError maps SessionNotFoundError to ACC002.
+func (e *SessionNotFoundError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAccountSessionNotFound, "That session is already signed out").WithCause(e)
+}
+
+// CurrentSessionError signals an end user ending the session of this very request; Sign out does that.
+type CurrentSessionError struct{}
+
+func (*CurrentSessionError) Error() string { return "enduser: the current session" }
+
+// IsCurrentSessionError reports whether err's tree contains a *CurrentSessionError.
+func IsCurrentSessionError(err error) bool {
+	_, ok := errors.AsType[*CurrentSessionError](err)
+	return ok
+}
+
+// ToAppError maps CurrentSessionError to ACC008.
+func (e *CurrentSessionError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAccountCurrentSession, "Use Sign out for this device").WithCause(e)
+}
+
+// EndUserNotFoundError signals an end user that does not exist in the project.
+type EndUserNotFoundError struct{}
+
+func (*EndUserNotFoundError) Error() string { return "enduser: end user not found" }
+
+// IsEndUserNotFoundError reports whether err's tree contains an *EndUserNotFoundError.
+func IsEndUserNotFoundError(err error) bool {
+	_, ok := errors.AsType[*EndUserNotFoundError](err)
+	return ok
+}
+
+// ToAppError maps EndUserNotFoundError to EUS001.
+func (e *EndUserNotFoundError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeEndUserNotFound, "End user not found").WithCause(e)
+}
+
+// TermsRequiredError signals an account.v1 call from an end user who still has to accept the project's current terms.
+type TermsRequiredError struct{}
+
+func (*TermsRequiredError) Error() string { return "enduser: terms required" }
+
+// IsTermsRequiredError reports whether err's tree contains a *TermsRequiredError.
+func IsTermsRequiredError(err error) bool {
+	_, ok := errors.AsType[*TermsRequiredError](err)
+	return ok
+}
+
+// ToAppError maps TermsRequiredError to ACC010.
+func (e *TermsRequiredError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAccountTermsRequired, "Accept the updated terms to continue").WithCause(e)
 }

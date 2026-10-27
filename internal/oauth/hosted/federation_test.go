@@ -211,7 +211,7 @@ func TestFederation_SignIn(t *testing.T) {
 	done := f.callback(f.client, url.Values{"code": {"c"}, "state": {authURL.Query().Get("state")}})
 	require.Equal(t, http.StatusSeeOther, done.status, done.body)
 	assert.Equal(t, "/p/acme/account/", done.location())
-	assert.Contains(t, f.get(f.client, "/p/acme/account/").body, "ana@gmail.com")
+	assert.Equal(t, http.StatusOK, f.get(f.client, "/p/acme/account/").status, "signed in with Google")
 
 	replay := f.callback(f.client, url.Values{"code": {"c"}, "state": {authURL.Query().Get("state")}})
 	assert.Equal(t, http.StatusBadRequest, replay.status, "the cookie is spent")
@@ -336,7 +336,7 @@ func TestFederation_Link(t *testing.T) {
 	}
 	done := link()
 	require.Equal(t, http.StatusSeeOther, done.status, done.body)
-	assert.Equal(t, "/p/acme/account/?linked=1", done.location())
+	assert.Equal(t, "/p/acme/account/sign-in?linked=1", done.location(), "back to the portal's sign-in methods")
 	assert.Equal(t, []uuid.UUID{ana.EndUserID}, fed.linked, "the identity goes to the account that asked")
 	assert.Equal(t, []string{""}, fed.hints, "P7: linking sends no hint")
 

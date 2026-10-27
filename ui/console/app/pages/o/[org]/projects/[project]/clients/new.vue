@@ -99,7 +99,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
     </section>
     <ClientSecretDialog
       :open="!!revealed"
-      :client-id="revealed?.clientId ?? ''"
+      :owner-id="revealed?.clientId ?? ''"
       :secret="revealed?.secret ?? ''"
       :labels="dialogLabels"
       @done="secretSaved"

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ShownError } from '../../lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import type { VerificationName } from '../resourceserver/verification';
+import ErrorText from '#base/components/ui/ErrorText.vue';
 import VerificationStatus from '../resourceserver/VerificationStatus.vue';
-import ErrorText from '../ui/ErrorText.vue';
 
 export interface LinkRow {
   id: string;

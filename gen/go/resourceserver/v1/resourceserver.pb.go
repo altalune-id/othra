@@ -7,6 +7,7 @@
 package resourceserverv1
 
 import (
+	v1 "altalune.id/othra/gen/go/client/v1"
 	_ "altalune.id/othra/gen/go/mcp/v1"
 	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
@@ -104,9 +105,13 @@ type ResourceServer struct {
 	// scope_descriptions says what each scope lets an app do, shown on the consent page; a scope may have none.
 	ScopeDescriptions map[string]string `protobuf:"bytes,15,rep,name=scope_descriptions,json=scopeDescriptions,proto3" json:"scope_descriptions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// cimd is whether apps without registration (CIMD) may ask for this server's scopes.
-	Cimd          *CIMDAdmission `protobuf:"bytes,16,opt,name=cimd,proto3" json:"cimd,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Cimd *CIMDAdmission `protobuf:"bytes,16,opt,name=cimd,proto3" json:"cimd,omitempty"`
+	// accept_personal_tokens lets end users mint personal tokens for this server; it needs an introspection secret.
+	AcceptPersonalTokens bool `protobuf:"varint,17,opt,name=accept_personal_tokens,json=acceptPersonalTokens,proto3" json:"accept_personal_tokens,omitempty"`
+	// introspection_secrets are the credentials this server introspects with (RFC 7662 §2.1): the current one and any in its grace.
+	IntrospectionSecrets []*v1.ClientSecret `protobuf:"bytes,18,rep,name=introspection_secrets,json=introspectionSecrets,proto3" json:"introspection_secrets,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *ResourceServer) Reset() {
@@ -247,6 +252,20 @@ func (x *ResourceServer) GetScopeDescriptions() map[string]string {
 func (x *ResourceServer) GetCimd() *CIMDAdmission {
 	if x != nil {
 		return x.Cimd
+	}
+	return nil
+}
+
+func (x *ResourceServer) GetAcceptPersonalTokens() bool {
+	if x != nil {
+		return x.AcceptPersonalTokens
+	}
+	return false
+}
+
+func (x *ResourceServer) GetIntrospectionSecrets() []*v1.ClientSecret {
+	if x != nil {
+		return x.IntrospectionSecrets
 	}
 	return nil
 }
@@ -1851,11 +1870,437 @@ func (*UnlinkClientResponse) Descriptor() ([]byte, []int) {
 	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{27}
 }
 
+type SetPersonalTokenAccessRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId        string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ResourceServerId string                 `protobuf:"bytes,2,opt,name=resource_server_id,json=resourceServerId,proto3" json:"resource_server_id,omitempty"`
+	Accept           bool                   `protobuf:"varint,3,opt,name=accept,proto3" json:"accept,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *SetPersonalTokenAccessRequest) Reset() {
+	*x = SetPersonalTokenAccessRequest{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetPersonalTokenAccessRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetPersonalTokenAccessRequest) ProtoMessage() {}
+
+func (x *SetPersonalTokenAccessRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetPersonalTokenAccessRequest.ProtoReflect.Descriptor instead.
+func (*SetPersonalTokenAccessRequest) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *SetPersonalTokenAccessRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *SetPersonalTokenAccessRequest) GetResourceServerId() string {
+	if x != nil {
+		return x.ResourceServerId
+	}
+	return ""
+}
+
+func (x *SetPersonalTokenAccessRequest) GetAccept() bool {
+	if x != nil {
+		return x.Accept
+	}
+	return false
+}
+
+type SetPersonalTokenAccessResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ResourceServer *ResourceServer        `protobuf:"bytes,1,opt,name=resource_server,json=resourceServer,proto3" json:"resource_server,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SetPersonalTokenAccessResponse) Reset() {
+	*x = SetPersonalTokenAccessResponse{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetPersonalTokenAccessResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetPersonalTokenAccessResponse) ProtoMessage() {}
+
+func (x *SetPersonalTokenAccessResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetPersonalTokenAccessResponse.ProtoReflect.Descriptor instead.
+func (*SetPersonalTokenAccessResponse) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *SetPersonalTokenAccessResponse) GetResourceServer() *ResourceServer {
+	if x != nil {
+		return x.ResourceServer
+	}
+	return nil
+}
+
+type GenerateIntrospectionSecretRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId        string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ResourceServerId string                 `protobuf:"bytes,2,opt,name=resource_server_id,json=resourceServerId,proto3" json:"resource_server_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GenerateIntrospectionSecretRequest) Reset() {
+	*x = GenerateIntrospectionSecretRequest{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateIntrospectionSecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateIntrospectionSecretRequest) ProtoMessage() {}
+
+func (x *GenerateIntrospectionSecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateIntrospectionSecretRequest.ProtoReflect.Descriptor instead.
+func (*GenerateIntrospectionSecretRequest) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *GenerateIntrospectionSecretRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *GenerateIntrospectionSecretRequest) GetResourceServerId() string {
+	if x != nil {
+		return x.ResourceServerId
+	}
+	return ""
+}
+
+type GenerateIntrospectionSecretResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ResourceServer *ResourceServer        `protobuf:"bytes,1,opt,name=resource_server,json=resourceServer,proto3" json:"resource_server,omitempty"`
+	// secret is the one-time secret. It is never present on any other response.
+	Secret        string `protobuf:"bytes,2,opt,name=secret,proto3" json:"secret,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateIntrospectionSecretResponse) Reset() {
+	*x = GenerateIntrospectionSecretResponse{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateIntrospectionSecretResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateIntrospectionSecretResponse) ProtoMessage() {}
+
+func (x *GenerateIntrospectionSecretResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateIntrospectionSecretResponse.ProtoReflect.Descriptor instead.
+func (*GenerateIntrospectionSecretResponse) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *GenerateIntrospectionSecretResponse) GetResourceServer() *ResourceServer {
+	if x != nil {
+		return x.ResourceServer
+	}
+	return nil
+}
+
+func (x *GenerateIntrospectionSecretResponse) GetSecret() string {
+	if x != nil {
+		return x.Secret
+	}
+	return ""
+}
+
+type RotateIntrospectionSecretRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId        string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ResourceServerId string                 `protobuf:"bytes,2,opt,name=resource_server_id,json=resourceServerId,proto3" json:"resource_server_id,omitempty"`
+	Grace            v1.SecretGrace         `protobuf:"varint,3,opt,name=grace,proto3,enum=client.v1.SecretGrace" json:"grace,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *RotateIntrospectionSecretRequest) Reset() {
+	*x = RotateIntrospectionSecretRequest{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RotateIntrospectionSecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RotateIntrospectionSecretRequest) ProtoMessage() {}
+
+func (x *RotateIntrospectionSecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RotateIntrospectionSecretRequest.ProtoReflect.Descriptor instead.
+func (*RotateIntrospectionSecretRequest) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *RotateIntrospectionSecretRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *RotateIntrospectionSecretRequest) GetResourceServerId() string {
+	if x != nil {
+		return x.ResourceServerId
+	}
+	return ""
+}
+
+func (x *RotateIntrospectionSecretRequest) GetGrace() v1.SecretGrace {
+	if x != nil {
+		return x.Grace
+	}
+	return v1.SecretGrace(0)
+}
+
+type RotateIntrospectionSecretResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ResourceServer *ResourceServer        `protobuf:"bytes,1,opt,name=resource_server,json=resourceServer,proto3" json:"resource_server,omitempty"`
+	// secret is the new one-time secret. It is never present on any other response.
+	Secret        string `protobuf:"bytes,2,opt,name=secret,proto3" json:"secret,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RotateIntrospectionSecretResponse) Reset() {
+	*x = RotateIntrospectionSecretResponse{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RotateIntrospectionSecretResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RotateIntrospectionSecretResponse) ProtoMessage() {}
+
+func (x *RotateIntrospectionSecretResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RotateIntrospectionSecretResponse.ProtoReflect.Descriptor instead.
+func (*RotateIntrospectionSecretResponse) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *RotateIntrospectionSecretResponse) GetResourceServer() *ResourceServer {
+	if x != nil {
+		return x.ResourceServer
+	}
+	return nil
+}
+
+func (x *RotateIntrospectionSecretResponse) GetSecret() string {
+	if x != nil {
+		return x.Secret
+	}
+	return ""
+}
+
+type RevokeIntrospectionSecretRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId        string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ResourceServerId string                 `protobuf:"bytes,2,opt,name=resource_server_id,json=resourceServerId,proto3" json:"resource_server_id,omitempty"`
+	SecretId         string                 `protobuf:"bytes,3,opt,name=secret_id,json=secretId,proto3" json:"secret_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *RevokeIntrospectionSecretRequest) Reset() {
+	*x = RevokeIntrospectionSecretRequest{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeIntrospectionSecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeIntrospectionSecretRequest) ProtoMessage() {}
+
+func (x *RevokeIntrospectionSecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeIntrospectionSecretRequest.ProtoReflect.Descriptor instead.
+func (*RevokeIntrospectionSecretRequest) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *RevokeIntrospectionSecretRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *RevokeIntrospectionSecretRequest) GetResourceServerId() string {
+	if x != nil {
+		return x.ResourceServerId
+	}
+	return ""
+}
+
+func (x *RevokeIntrospectionSecretRequest) GetSecretId() string {
+	if x != nil {
+		return x.SecretId
+	}
+	return ""
+}
+
+type RevokeIntrospectionSecretResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ResourceServer *ResourceServer        `protobuf:"bytes,1,opt,name=resource_server,json=resourceServer,proto3" json:"resource_server,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RevokeIntrospectionSecretResponse) Reset() {
+	*x = RevokeIntrospectionSecretResponse{}
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeIntrospectionSecretResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeIntrospectionSecretResponse) ProtoMessage() {}
+
+func (x *RevokeIntrospectionSecretResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_resourceserver_v1_resourceserver_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeIntrospectionSecretResponse.ProtoReflect.Descriptor instead.
+func (*RevokeIntrospectionSecretResponse) Descriptor() ([]byte, []int) {
+	return file_resourceserver_v1_resourceserver_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *RevokeIntrospectionSecretResponse) GetResourceServer() *ResourceServer {
+	if x != nil {
+		return x.ResourceServer
+	}
+	return nil
+}
+
 var File_resourceserver_v1_resourceserver_proto protoreflect.FileDescriptor
 
 const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\n" +
-	"&resourceserver/v1/resourceserver.proto\x12\x11resourceserver.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xe6\x06\n" +
+	"&resourceserver/v1/resourceserver.proto\x12\x11resourceserver.v1\x1a\x1bbuf/validate/validate.proto\x1a\x16client/v1/client.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xea\a\n" +
 	"\x0eResourceServer\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1e\n" +
@@ -1879,7 +2324,9 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12g\n" +
 	"\x12scope_descriptions\x18\x0f \x03(\v28.resourceserver.v1.ResourceServer.ScopeDescriptionsEntryR\x11scopeDescriptions\x124\n" +
-	"\x04cimd\x18\x10 \x01(\v2 .resourceserver.v1.CIMDAdmissionR\x04cimd\x1aD\n" +
+	"\x04cimd\x18\x10 \x01(\v2 .resourceserver.v1.CIMDAdmissionR\x04cimd\x124\n" +
+	"\x16accept_personal_tokens\x18\x11 \x01(\bR\x14acceptPersonalTokens\x12L\n" +
+	"\x15introspection_secrets\x18\x12 \x03(\v2\x17.client.v1.ClientSecretR\x14introspectionSecrets\x1aD\n" +
 	"\x16ScopeDescriptionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"t\n" +
@@ -2013,12 +2460,41 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12)\n" +
 	"\tclient_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\bclientId\x12:\n" +
 	"\x12resource_server_id\x18\x03 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\"\x16\n" +
-	"\x14UnlinkClientResponse*\xa5\x01\n" +
+	"\x14UnlinkClientResponse\"\xa0\x01\n" +
+	"\x1dSetPersonalTokenAccessRequest\x12+\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12:\n" +
+	"\x12resource_server_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\x12\x16\n" +
+	"\x06accept\x18\x03 \x01(\bR\x06accept\"l\n" +
+	"\x1eSetPersonalTokenAccessResponse\x12J\n" +
+	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\"\x8d\x01\n" +
+	"\"GenerateIntrospectionSecretRequest\x12+\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12:\n" +
+	"\x12resource_server_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\"\x8e\x01\n" +
+	"#GenerateIntrospectionSecretResponse\x12J\n" +
+	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\x12\x1b\n" +
+	"\x06secret\x18\x02 \x01(\tB\x03\x80\x01\x01R\x06secret\"\xc3\x01\n" +
+	" RotateIntrospectionSecretRequest\x12+\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12:\n" +
+	"\x12resource_server_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\x126\n" +
+	"\x05grace\x18\x03 \x01(\x0e2\x16.client.v1.SecretGraceB\b\xbaH\x05\x82\x01\x02\x10\x01R\x05grace\"\x8c\x01\n" +
+	"!RotateIntrospectionSecretResponse\x12J\n" +
+	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer\x12\x1b\n" +
+	"\x06secret\x18\x02 \x01(\tB\x03\x80\x01\x01R\x06secret\"\xb6\x01\n" +
+	" RevokeIntrospectionSecretRequest\x12+\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12:\n" +
+	"\x12resource_server_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x10resourceServerId\x12)\n" +
+	"\tsecret_id\x18\x03 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\bsecretId\"o\n" +
+	"!RevokeIntrospectionSecretResponse\x12J\n" +
+	"\x0fresource_server\x18\x01 \x01(\v2!.resourceserver.v1.ResourceServerR\x0eresourceServer*\xa5\x01\n" +
 	"\x13ResourceServerState\x12%\n" +
 	"!RESOURCE_SERVER_STATE_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dRESOURCE_SERVER_STATE_PENDING\x10\x01\x12\"\n" +
 	"\x1eRESOURCE_SERVER_STATE_VERIFIED\x10\x02\x12 \n" +
-	"\x1cRESOURCE_SERVER_STATE_FAILED\x10\x032\xdd\x18\n" +
+	"\x1cRESOURCE_SERVER_STATE_FAILED\x10\x032\xfd\x1c\n" +
 	"\x15ResourceServerService\x12\xe9\x01\n" +
 	"\x13ListResourceServers\x12-.resourceserver.v1.ListResourceServersRequest\x1a..resourceserver.v1.ListResourceServersResponse\"s\xca\xf3\x18o\n" +
 	"\x14resource_server_list\x12KList a project's resource servers with their scopes and verification state.\x1a\n" +
@@ -2040,7 +2516,11 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"\x16resource_server_verify\x12sCheck a resource server's RFC 9728 metadata now. A pass verifies it; a failure shows the error and changes nothing.\x1a\n" +
 	"project_id\x1a\x12resource_server_id \x01\x12}\n" +
 	"\x16SetResourceServerTrust\x120.resourceserver.v1.SetResourceServerTrustRequest\x1a1.resourceserver.v1.SetResourceServerTrustResponse\x12\x89\x01\n" +
-	"\x1aSetResourceServerAdmission\x124.resourceserver.v1.SetResourceServerAdmissionRequest\x1a5.resourceserver.v1.SetResourceServerAdmissionResponse\x12\x8d\x02\n" +
+	"\x1aSetResourceServerAdmission\x124.resourceserver.v1.SetResourceServerAdmissionRequest\x1a5.resourceserver.v1.SetResourceServerAdmissionResponse\x12}\n" +
+	"\x16SetPersonalTokenAccess\x120.resourceserver.v1.SetPersonalTokenAccessRequest\x1a1.resourceserver.v1.SetPersonalTokenAccessResponse\x12\x8c\x01\n" +
+	"\x1bGenerateIntrospectionSecret\x125.resourceserver.v1.GenerateIntrospectionSecretRequest\x1a6.resourceserver.v1.GenerateIntrospectionSecretResponse\x12\x86\x01\n" +
+	"\x19RotateIntrospectionSecret\x123.resourceserver.v1.RotateIntrospectionSecretRequest\x1a4.resourceserver.v1.RotateIntrospectionSecretResponse\x12\x86\x01\n" +
+	"\x19RevokeIntrospectionSecret\x123.resourceserver.v1.RevokeIntrospectionSecretRequest\x1a4.resourceserver.v1.RevokeIntrospectionSecretResponse\x12\x8d\x02\n" +
 	"\tListLinks\x12#.resourceserver.v1.ListLinksRequest\x1a$.resourceserver.v1.ListLinksResponse\"\xb4\x01\xca\xf3\x18\xaf\x01\n" +
 	"\x19resource_server_link_list\x12\x85\x01List the links of one OAuth client or of one resource server, with the scopes each link allows. Send client_id or resource_server_id.\x1a\n" +
 	"project_id\x12\x9c\x02\n" +
@@ -2070,97 +2550,121 @@ func file_resourceserver_v1_resourceserver_proto_rawDescGZIP() []byte {
 }
 
 var file_resourceserver_v1_resourceserver_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_resourceserver_v1_resourceserver_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_resourceserver_v1_resourceserver_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
 var file_resourceserver_v1_resourceserver_proto_goTypes = []any{
-	(ResourceServerState)(0),                   // 0: resourceserver.v1.ResourceServerState
-	(*ResourceServer)(nil),                     // 1: resourceserver.v1.ResourceServer
-	(*CIMDAdmission)(nil),                      // 2: resourceserver.v1.CIMDAdmission
-	(*VerificationFailure)(nil),                // 3: resourceserver.v1.VerificationFailure
-	(*Link)(nil),                               // 4: resourceserver.v1.Link
-	(*ListResourceServersRequest)(nil),         // 5: resourceserver.v1.ListResourceServersRequest
-	(*ListResourceServersResponse)(nil),        // 6: resourceserver.v1.ListResourceServersResponse
-	(*GetResourceServerRequest)(nil),           // 7: resourceserver.v1.GetResourceServerRequest
-	(*GetResourceServerResponse)(nil),          // 8: resourceserver.v1.GetResourceServerResponse
-	(*CreateResourceServerRequest)(nil),        // 9: resourceserver.v1.CreateResourceServerRequest
-	(*CreateResourceServerResponse)(nil),       // 10: resourceserver.v1.CreateResourceServerResponse
-	(*UpdateResourceServerRequest)(nil),        // 11: resourceserver.v1.UpdateResourceServerRequest
-	(*UpdateResourceServerResponse)(nil),       // 12: resourceserver.v1.UpdateResourceServerResponse
-	(*DeleteResourceServerRequest)(nil),        // 13: resourceserver.v1.DeleteResourceServerRequest
-	(*DeleteResourceServerResponse)(nil),       // 14: resourceserver.v1.DeleteResourceServerResponse
-	(*VerifyResourceServerRequest)(nil),        // 15: resourceserver.v1.VerifyResourceServerRequest
-	(*VerifyResourceServerResponse)(nil),       // 16: resourceserver.v1.VerifyResourceServerResponse
-	(*SetResourceServerTrustRequest)(nil),      // 17: resourceserver.v1.SetResourceServerTrustRequest
-	(*SetResourceServerTrustResponse)(nil),     // 18: resourceserver.v1.SetResourceServerTrustResponse
-	(*SetResourceServerAdmissionRequest)(nil),  // 19: resourceserver.v1.SetResourceServerAdmissionRequest
-	(*SetResourceServerAdmissionResponse)(nil), // 20: resourceserver.v1.SetResourceServerAdmissionResponse
-	(*ListLinksRequest)(nil),                   // 21: resourceserver.v1.ListLinksRequest
-	(*ListLinksResponse)(nil),                  // 22: resourceserver.v1.ListLinksResponse
-	(*LinkClientRequest)(nil),                  // 23: resourceserver.v1.LinkClientRequest
-	(*LinkClientResponse)(nil),                 // 24: resourceserver.v1.LinkClientResponse
-	(*UpdateLinkRequest)(nil),                  // 25: resourceserver.v1.UpdateLinkRequest
-	(*UpdateLinkResponse)(nil),                 // 26: resourceserver.v1.UpdateLinkResponse
-	(*UnlinkClientRequest)(nil),                // 27: resourceserver.v1.UnlinkClientRequest
-	(*UnlinkClientResponse)(nil),               // 28: resourceserver.v1.UnlinkClientResponse
-	nil,                                        // 29: resourceserver.v1.ResourceServer.ScopeDescriptionsEntry
-	nil,                                        // 30: resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry
-	nil,                                        // 31: resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry
-	(*timestamppb.Timestamp)(nil),              // 32: google.protobuf.Timestamp
+	(ResourceServerState)(0),                    // 0: resourceserver.v1.ResourceServerState
+	(*ResourceServer)(nil),                      // 1: resourceserver.v1.ResourceServer
+	(*CIMDAdmission)(nil),                       // 2: resourceserver.v1.CIMDAdmission
+	(*VerificationFailure)(nil),                 // 3: resourceserver.v1.VerificationFailure
+	(*Link)(nil),                                // 4: resourceserver.v1.Link
+	(*ListResourceServersRequest)(nil),          // 5: resourceserver.v1.ListResourceServersRequest
+	(*ListResourceServersResponse)(nil),         // 6: resourceserver.v1.ListResourceServersResponse
+	(*GetResourceServerRequest)(nil),            // 7: resourceserver.v1.GetResourceServerRequest
+	(*GetResourceServerResponse)(nil),           // 8: resourceserver.v1.GetResourceServerResponse
+	(*CreateResourceServerRequest)(nil),         // 9: resourceserver.v1.CreateResourceServerRequest
+	(*CreateResourceServerResponse)(nil),        // 10: resourceserver.v1.CreateResourceServerResponse
+	(*UpdateResourceServerRequest)(nil),         // 11: resourceserver.v1.UpdateResourceServerRequest
+	(*UpdateResourceServerResponse)(nil),        // 12: resourceserver.v1.UpdateResourceServerResponse
+	(*DeleteResourceServerRequest)(nil),         // 13: resourceserver.v1.DeleteResourceServerRequest
+	(*DeleteResourceServerResponse)(nil),        // 14: resourceserver.v1.DeleteResourceServerResponse
+	(*VerifyResourceServerRequest)(nil),         // 15: resourceserver.v1.VerifyResourceServerRequest
+	(*VerifyResourceServerResponse)(nil),        // 16: resourceserver.v1.VerifyResourceServerResponse
+	(*SetResourceServerTrustRequest)(nil),       // 17: resourceserver.v1.SetResourceServerTrustRequest
+	(*SetResourceServerTrustResponse)(nil),      // 18: resourceserver.v1.SetResourceServerTrustResponse
+	(*SetResourceServerAdmissionRequest)(nil),   // 19: resourceserver.v1.SetResourceServerAdmissionRequest
+	(*SetResourceServerAdmissionResponse)(nil),  // 20: resourceserver.v1.SetResourceServerAdmissionResponse
+	(*ListLinksRequest)(nil),                    // 21: resourceserver.v1.ListLinksRequest
+	(*ListLinksResponse)(nil),                   // 22: resourceserver.v1.ListLinksResponse
+	(*LinkClientRequest)(nil),                   // 23: resourceserver.v1.LinkClientRequest
+	(*LinkClientResponse)(nil),                  // 24: resourceserver.v1.LinkClientResponse
+	(*UpdateLinkRequest)(nil),                   // 25: resourceserver.v1.UpdateLinkRequest
+	(*UpdateLinkResponse)(nil),                  // 26: resourceserver.v1.UpdateLinkResponse
+	(*UnlinkClientRequest)(nil),                 // 27: resourceserver.v1.UnlinkClientRequest
+	(*UnlinkClientResponse)(nil),                // 28: resourceserver.v1.UnlinkClientResponse
+	(*SetPersonalTokenAccessRequest)(nil),       // 29: resourceserver.v1.SetPersonalTokenAccessRequest
+	(*SetPersonalTokenAccessResponse)(nil),      // 30: resourceserver.v1.SetPersonalTokenAccessResponse
+	(*GenerateIntrospectionSecretRequest)(nil),  // 31: resourceserver.v1.GenerateIntrospectionSecretRequest
+	(*GenerateIntrospectionSecretResponse)(nil), // 32: resourceserver.v1.GenerateIntrospectionSecretResponse
+	(*RotateIntrospectionSecretRequest)(nil),    // 33: resourceserver.v1.RotateIntrospectionSecretRequest
+	(*RotateIntrospectionSecretResponse)(nil),   // 34: resourceserver.v1.RotateIntrospectionSecretResponse
+	(*RevokeIntrospectionSecretRequest)(nil),    // 35: resourceserver.v1.RevokeIntrospectionSecretRequest
+	(*RevokeIntrospectionSecretResponse)(nil),   // 36: resourceserver.v1.RevokeIntrospectionSecretResponse
+	nil,                           // 37: resourceserver.v1.ResourceServer.ScopeDescriptionsEntry
+	nil,                           // 38: resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry
+	nil,                           // 39: resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry
+	(*timestamppb.Timestamp)(nil), // 40: google.protobuf.Timestamp
+	(*v1.ClientSecret)(nil),       // 41: client.v1.ClientSecret
+	(v1.SecretGrace)(0),           // 42: client.v1.SecretGrace
 }
 var file_resourceserver_v1_resourceserver_proto_depIdxs = []int32{
 	0,  // 0: resourceserver.v1.ResourceServer.state:type_name -> resourceserver.v1.ResourceServerState
-	32, // 1: resourceserver.v1.ResourceServer.verified_at:type_name -> google.protobuf.Timestamp
-	32, // 2: resourceserver.v1.ResourceServer.last_checked_at:type_name -> google.protobuf.Timestamp
+	40, // 1: resourceserver.v1.ResourceServer.verified_at:type_name -> google.protobuf.Timestamp
+	40, // 2: resourceserver.v1.ResourceServer.last_checked_at:type_name -> google.protobuf.Timestamp
 	3,  // 3: resourceserver.v1.ResourceServer.last_error:type_name -> resourceserver.v1.VerificationFailure
-	32, // 4: resourceserver.v1.ResourceServer.created_at:type_name -> google.protobuf.Timestamp
-	32, // 5: resourceserver.v1.ResourceServer.updated_at:type_name -> google.protobuf.Timestamp
-	29, // 6: resourceserver.v1.ResourceServer.scope_descriptions:type_name -> resourceserver.v1.ResourceServer.ScopeDescriptionsEntry
+	40, // 4: resourceserver.v1.ResourceServer.created_at:type_name -> google.protobuf.Timestamp
+	40, // 5: resourceserver.v1.ResourceServer.updated_at:type_name -> google.protobuf.Timestamp
+	37, // 6: resourceserver.v1.ResourceServer.scope_descriptions:type_name -> resourceserver.v1.ResourceServer.ScopeDescriptionsEntry
 	2,  // 7: resourceserver.v1.ResourceServer.cimd:type_name -> resourceserver.v1.CIMDAdmission
-	32, // 8: resourceserver.v1.VerificationFailure.checked_at:type_name -> google.protobuf.Timestamp
-	0,  // 9: resourceserver.v1.Link.resource_server_state:type_name -> resourceserver.v1.ResourceServerState
-	32, // 10: resourceserver.v1.Link.created_at:type_name -> google.protobuf.Timestamp
-	32, // 11: resourceserver.v1.Link.metadata_fetched_at:type_name -> google.protobuf.Timestamp
-	1,  // 12: resourceserver.v1.ListResourceServersResponse.resource_servers:type_name -> resourceserver.v1.ResourceServer
-	1,  // 13: resourceserver.v1.GetResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	30, // 14: resourceserver.v1.CreateResourceServerRequest.scope_descriptions:type_name -> resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry
-	1,  // 15: resourceserver.v1.CreateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	31, // 16: resourceserver.v1.UpdateResourceServerRequest.scope_descriptions:type_name -> resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry
-	1,  // 17: resourceserver.v1.UpdateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	1,  // 18: resourceserver.v1.VerifyResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	3,  // 19: resourceserver.v1.VerifyResourceServerResponse.error:type_name -> resourceserver.v1.VerificationFailure
-	1,  // 20: resourceserver.v1.SetResourceServerTrustResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	1,  // 21: resourceserver.v1.SetResourceServerAdmissionResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
-	4,  // 22: resourceserver.v1.ListLinksResponse.links:type_name -> resourceserver.v1.Link
-	4,  // 23: resourceserver.v1.LinkClientResponse.link:type_name -> resourceserver.v1.Link
-	4,  // 24: resourceserver.v1.UpdateLinkResponse.link:type_name -> resourceserver.v1.Link
-	5,  // 25: resourceserver.v1.ResourceServerService.ListResourceServers:input_type -> resourceserver.v1.ListResourceServersRequest
-	7,  // 26: resourceserver.v1.ResourceServerService.GetResourceServer:input_type -> resourceserver.v1.GetResourceServerRequest
-	9,  // 27: resourceserver.v1.ResourceServerService.CreateResourceServer:input_type -> resourceserver.v1.CreateResourceServerRequest
-	11, // 28: resourceserver.v1.ResourceServerService.UpdateResourceServer:input_type -> resourceserver.v1.UpdateResourceServerRequest
-	13, // 29: resourceserver.v1.ResourceServerService.DeleteResourceServer:input_type -> resourceserver.v1.DeleteResourceServerRequest
-	15, // 30: resourceserver.v1.ResourceServerService.VerifyResourceServer:input_type -> resourceserver.v1.VerifyResourceServerRequest
-	17, // 31: resourceserver.v1.ResourceServerService.SetResourceServerTrust:input_type -> resourceserver.v1.SetResourceServerTrustRequest
-	19, // 32: resourceserver.v1.ResourceServerService.SetResourceServerAdmission:input_type -> resourceserver.v1.SetResourceServerAdmissionRequest
-	21, // 33: resourceserver.v1.ResourceServerService.ListLinks:input_type -> resourceserver.v1.ListLinksRequest
-	23, // 34: resourceserver.v1.ResourceServerService.LinkClient:input_type -> resourceserver.v1.LinkClientRequest
-	25, // 35: resourceserver.v1.ResourceServerService.UpdateLink:input_type -> resourceserver.v1.UpdateLinkRequest
-	27, // 36: resourceserver.v1.ResourceServerService.UnlinkClient:input_type -> resourceserver.v1.UnlinkClientRequest
-	6,  // 37: resourceserver.v1.ResourceServerService.ListResourceServers:output_type -> resourceserver.v1.ListResourceServersResponse
-	8,  // 38: resourceserver.v1.ResourceServerService.GetResourceServer:output_type -> resourceserver.v1.GetResourceServerResponse
-	10, // 39: resourceserver.v1.ResourceServerService.CreateResourceServer:output_type -> resourceserver.v1.CreateResourceServerResponse
-	12, // 40: resourceserver.v1.ResourceServerService.UpdateResourceServer:output_type -> resourceserver.v1.UpdateResourceServerResponse
-	14, // 41: resourceserver.v1.ResourceServerService.DeleteResourceServer:output_type -> resourceserver.v1.DeleteResourceServerResponse
-	16, // 42: resourceserver.v1.ResourceServerService.VerifyResourceServer:output_type -> resourceserver.v1.VerifyResourceServerResponse
-	18, // 43: resourceserver.v1.ResourceServerService.SetResourceServerTrust:output_type -> resourceserver.v1.SetResourceServerTrustResponse
-	20, // 44: resourceserver.v1.ResourceServerService.SetResourceServerAdmission:output_type -> resourceserver.v1.SetResourceServerAdmissionResponse
-	22, // 45: resourceserver.v1.ResourceServerService.ListLinks:output_type -> resourceserver.v1.ListLinksResponse
-	24, // 46: resourceserver.v1.ResourceServerService.LinkClient:output_type -> resourceserver.v1.LinkClientResponse
-	26, // 47: resourceserver.v1.ResourceServerService.UpdateLink:output_type -> resourceserver.v1.UpdateLinkResponse
-	28, // 48: resourceserver.v1.ResourceServerService.UnlinkClient:output_type -> resourceserver.v1.UnlinkClientResponse
-	37, // [37:49] is the sub-list for method output_type
-	25, // [25:37] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	41, // 8: resourceserver.v1.ResourceServer.introspection_secrets:type_name -> client.v1.ClientSecret
+	40, // 9: resourceserver.v1.VerificationFailure.checked_at:type_name -> google.protobuf.Timestamp
+	0,  // 10: resourceserver.v1.Link.resource_server_state:type_name -> resourceserver.v1.ResourceServerState
+	40, // 11: resourceserver.v1.Link.created_at:type_name -> google.protobuf.Timestamp
+	40, // 12: resourceserver.v1.Link.metadata_fetched_at:type_name -> google.protobuf.Timestamp
+	1,  // 13: resourceserver.v1.ListResourceServersResponse.resource_servers:type_name -> resourceserver.v1.ResourceServer
+	1,  // 14: resourceserver.v1.GetResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	38, // 15: resourceserver.v1.CreateResourceServerRequest.scope_descriptions:type_name -> resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry
+	1,  // 16: resourceserver.v1.CreateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	39, // 17: resourceserver.v1.UpdateResourceServerRequest.scope_descriptions:type_name -> resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry
+	1,  // 18: resourceserver.v1.UpdateResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	1,  // 19: resourceserver.v1.VerifyResourceServerResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	3,  // 20: resourceserver.v1.VerifyResourceServerResponse.error:type_name -> resourceserver.v1.VerificationFailure
+	1,  // 21: resourceserver.v1.SetResourceServerTrustResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	1,  // 22: resourceserver.v1.SetResourceServerAdmissionResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	4,  // 23: resourceserver.v1.ListLinksResponse.links:type_name -> resourceserver.v1.Link
+	4,  // 24: resourceserver.v1.LinkClientResponse.link:type_name -> resourceserver.v1.Link
+	4,  // 25: resourceserver.v1.UpdateLinkResponse.link:type_name -> resourceserver.v1.Link
+	1,  // 26: resourceserver.v1.SetPersonalTokenAccessResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	1,  // 27: resourceserver.v1.GenerateIntrospectionSecretResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	42, // 28: resourceserver.v1.RotateIntrospectionSecretRequest.grace:type_name -> client.v1.SecretGrace
+	1,  // 29: resourceserver.v1.RotateIntrospectionSecretResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	1,  // 30: resourceserver.v1.RevokeIntrospectionSecretResponse.resource_server:type_name -> resourceserver.v1.ResourceServer
+	5,  // 31: resourceserver.v1.ResourceServerService.ListResourceServers:input_type -> resourceserver.v1.ListResourceServersRequest
+	7,  // 32: resourceserver.v1.ResourceServerService.GetResourceServer:input_type -> resourceserver.v1.GetResourceServerRequest
+	9,  // 33: resourceserver.v1.ResourceServerService.CreateResourceServer:input_type -> resourceserver.v1.CreateResourceServerRequest
+	11, // 34: resourceserver.v1.ResourceServerService.UpdateResourceServer:input_type -> resourceserver.v1.UpdateResourceServerRequest
+	13, // 35: resourceserver.v1.ResourceServerService.DeleteResourceServer:input_type -> resourceserver.v1.DeleteResourceServerRequest
+	15, // 36: resourceserver.v1.ResourceServerService.VerifyResourceServer:input_type -> resourceserver.v1.VerifyResourceServerRequest
+	17, // 37: resourceserver.v1.ResourceServerService.SetResourceServerTrust:input_type -> resourceserver.v1.SetResourceServerTrustRequest
+	19, // 38: resourceserver.v1.ResourceServerService.SetResourceServerAdmission:input_type -> resourceserver.v1.SetResourceServerAdmissionRequest
+	29, // 39: resourceserver.v1.ResourceServerService.SetPersonalTokenAccess:input_type -> resourceserver.v1.SetPersonalTokenAccessRequest
+	31, // 40: resourceserver.v1.ResourceServerService.GenerateIntrospectionSecret:input_type -> resourceserver.v1.GenerateIntrospectionSecretRequest
+	33, // 41: resourceserver.v1.ResourceServerService.RotateIntrospectionSecret:input_type -> resourceserver.v1.RotateIntrospectionSecretRequest
+	35, // 42: resourceserver.v1.ResourceServerService.RevokeIntrospectionSecret:input_type -> resourceserver.v1.RevokeIntrospectionSecretRequest
+	21, // 43: resourceserver.v1.ResourceServerService.ListLinks:input_type -> resourceserver.v1.ListLinksRequest
+	23, // 44: resourceserver.v1.ResourceServerService.LinkClient:input_type -> resourceserver.v1.LinkClientRequest
+	25, // 45: resourceserver.v1.ResourceServerService.UpdateLink:input_type -> resourceserver.v1.UpdateLinkRequest
+	27, // 46: resourceserver.v1.ResourceServerService.UnlinkClient:input_type -> resourceserver.v1.UnlinkClientRequest
+	6,  // 47: resourceserver.v1.ResourceServerService.ListResourceServers:output_type -> resourceserver.v1.ListResourceServersResponse
+	8,  // 48: resourceserver.v1.ResourceServerService.GetResourceServer:output_type -> resourceserver.v1.GetResourceServerResponse
+	10, // 49: resourceserver.v1.ResourceServerService.CreateResourceServer:output_type -> resourceserver.v1.CreateResourceServerResponse
+	12, // 50: resourceserver.v1.ResourceServerService.UpdateResourceServer:output_type -> resourceserver.v1.UpdateResourceServerResponse
+	14, // 51: resourceserver.v1.ResourceServerService.DeleteResourceServer:output_type -> resourceserver.v1.DeleteResourceServerResponse
+	16, // 52: resourceserver.v1.ResourceServerService.VerifyResourceServer:output_type -> resourceserver.v1.VerifyResourceServerResponse
+	18, // 53: resourceserver.v1.ResourceServerService.SetResourceServerTrust:output_type -> resourceserver.v1.SetResourceServerTrustResponse
+	20, // 54: resourceserver.v1.ResourceServerService.SetResourceServerAdmission:output_type -> resourceserver.v1.SetResourceServerAdmissionResponse
+	30, // 55: resourceserver.v1.ResourceServerService.SetPersonalTokenAccess:output_type -> resourceserver.v1.SetPersonalTokenAccessResponse
+	32, // 56: resourceserver.v1.ResourceServerService.GenerateIntrospectionSecret:output_type -> resourceserver.v1.GenerateIntrospectionSecretResponse
+	34, // 57: resourceserver.v1.ResourceServerService.RotateIntrospectionSecret:output_type -> resourceserver.v1.RotateIntrospectionSecretResponse
+	36, // 58: resourceserver.v1.ResourceServerService.RevokeIntrospectionSecret:output_type -> resourceserver.v1.RevokeIntrospectionSecretResponse
+	22, // 59: resourceserver.v1.ResourceServerService.ListLinks:output_type -> resourceserver.v1.ListLinksResponse
+	24, // 60: resourceserver.v1.ResourceServerService.LinkClient:output_type -> resourceserver.v1.LinkClientResponse
+	26, // 61: resourceserver.v1.ResourceServerService.UpdateLink:output_type -> resourceserver.v1.UpdateLinkResponse
+	28, // 62: resourceserver.v1.ResourceServerService.UnlinkClient:output_type -> resourceserver.v1.UnlinkClientResponse
+	47, // [47:63] is the sub-list for method output_type
+	31, // [31:47] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_resourceserver_v1_resourceserver_proto_init() }
@@ -2178,7 +2682,7 @@ func file_resourceserver_v1_resourceserver_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_resourceserver_v1_resourceserver_proto_rawDesc), len(file_resourceserver_v1_resourceserver_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   31,
+			NumMessages:   39,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

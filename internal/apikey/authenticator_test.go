@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/kernel/usage"
 	"altalune.id/othra/internal/testutil/fakes"
 )
 
@@ -145,15 +146,15 @@ func TestAuthenticator_StripsPersonOnlyScopes(t *testing.T) {
 func TestAuthenticator_RecordsUsage(t *testing.T) {
 	k, plain := mintOrgKey(t, []string{"webhook:read"})
 	store := &fakes.APIKeyStore{Key: k}
-	usage := apikey.NewUsageWorker(store, time.Hour, nil)
-	a := apikey.NewAuthenticator(store, usage, apikey.NewScheme(""), nil, nil)
+	recorder := usage.New("apikey-usage", store, time.Hour, nil)
+	a := apikey.NewAuthenticator(store, recorder, apikey.NewScheme(""), nil, nil)
 
 	_, err := a.Authenticate(context.Background(), keyCred(plain))
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	require.ErrorIs(t, usage.Run(ctx), context.Canceled)
+	require.ErrorIs(t, recorder.Run(ctx), context.Canceled)
 
 	batches := store.Batches()
 	require.Len(t, batches, 1)

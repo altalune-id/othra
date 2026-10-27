@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { t } from '../../../test/nuxt-globals';
+import { t } from '#test/nuxt-globals';
 import { clientFormLabels, kindOptions, rotateLabels, secretDialogLabels, secretsLabels } from './labels';
 
 describe('client labels', () => {

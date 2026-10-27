@@ -225,18 +225,25 @@ func (s *Service) keepsAMethod(ctx context.Context, projectID uuid.UUID) error {
 	return nil
 }
 
-// AnyEnabled reports whether the project has an enabled upstream, so its end users can sign in without the email link.
-func (s *Service) AnyEnabled(ctx context.Context, orgID, projectID uuid.UUID) (bool, error) {
+// Offered returns the kinds of the project's enabled upstreams: the one read of which upstream IdPs end users may sign in with.
+func (s *Service) Offered(ctx context.Context, orgID, projectID uuid.UUID) ([]Kind, error) {
 	list, err := s.List(ctx, orgID, projectID)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
+	var out []Kind
 	for _, u := range list {
 		if u.Enabled {
-			return true, nil
+			out = append(out, u.Kind)
 		}
 	}
-	return false, nil
+	return out, nil
+}
+
+// AnyEnabled reports whether the project offers an upstream IdP, so its end users can sign in without the email link.
+func (s *Service) AnyEnabled(ctx context.Context, orgID, projectID uuid.UUID) (bool, error) {
+	kinds, err := s.Offered(ctx, orgID, projectID)
+	return len(kinds) > 0, err
 }
 
 // Credentials returns the project's enabled upstream of kind with its secret opened, or *NotFoundError.

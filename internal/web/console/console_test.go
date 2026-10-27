@@ -14,6 +14,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"altalune.id/othra/internal/web/spa"
 )
 
 const indexHTML = `<script>window.__NUXT__.config={public:{apiUrl:"",appVersion:""},app:{baseURL:"/",buildAssetsDir:"/_nuxt/"}}</script><script src="/_nuxt/app.js"></script>`
@@ -165,8 +167,8 @@ func TestSPA_IndexETagFollowsConfig(t *testing.T) {
 
 func TestRebase(t *testing.T) {
 	t.Parallel()
-	assert.Equal(t, indexHTML, rebase(indexHTML, "/", "/api", "1.2.3"))
-	got := rebase(indexHTML, "/oa/console/", "/oa/api", "")
+	assert.Equal(t, indexHTML, spa.Rebase(indexHTML, rebase("/", "/api", "1.2.3")...))
+	got := spa.Rebase(indexHTML, rebase("/oa/console/", "/oa/api", "")...)
 	assert.Contains(t, got, `src="/oa/console/_nuxt/app.js"`)
 	assert.Contains(t, got, `baseURL:"/oa/console/"`)
 	assert.Contains(t, got, `apiUrl:"/oa/api"`)

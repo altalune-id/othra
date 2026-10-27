@@ -67,3 +67,14 @@ func origin(base string) string {
 	}
 	return u.Scheme + "://" + u.Host
 }
+
+// AllowNonceScripts lets a page under HostedCSP run the inline scripts that carry nonce, the response's style nonce.
+func AllowNonceScripts(w http.ResponseWriter, nonce string) {
+	h := w.Header()
+	policy := h.Get("Content-Security-Policy")
+	if policy == "" || nonce == "" {
+		return
+	}
+	scripts := "default-src 'self'; script-src 'self' 'nonce-" + nonce + "';"
+	h.Set("Content-Security-Policy", strings.Replace(policy, "default-src 'self';", scripts, 1))
+}

@@ -3,7 +3,6 @@ package member
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/go-jet/jet/v2/postgres"
@@ -12,8 +11,6 @@ import (
 
 	"altalune.id/othra/internal/kernel/db"
 )
-
-var errLockOutsideTx = errors.New("member.postgres: a row lock needs a transaction")
 
 // Add inserts m; a second membership for the same org and user is an *AlreadyMemberError.
 func (s *postgresStore) Add(ctx context.Context, m *Membership) error {

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"altalune.id/othra/internal/kernel/secret"
 )
 
 // Store is the driven port for the resource_servers and oauth_client_resources tables; every call runs under the org and project on ctx.
@@ -35,4 +37,14 @@ type Store interface {
 	UpdateLink(ctx context.Context, l *Link) (bool, error)
 	// DeleteLink removes the link between clientID and serverID, if any.
 	DeleteLink(ctx context.Context, projectID, clientID, serverID uuid.UUID) error
+	// IntrospectionSecrets returns the servers' live introspection secrets at now, oldest first; withHash only to authenticate.
+	IntrospectionSecrets(
+		ctx context.Context, projectID uuid.UUID, ids []uuid.UUID, now time.Time, withHash bool,
+	) (map[uuid.UUID][]secret.Stored, error)
+	// InsertIntrospectionSecret records secret s of server r by its Versioned hash.
+	InsertIntrospectionSecret(ctx context.Context, r *ResourceServer, s secret.Stored, hash string) error
+	// ExpireIntrospectionSecret makes the secret id of server serverID stop working at at.
+	ExpireIntrospectionSecret(ctx context.Context, projectID, serverID, id uuid.UUID, at time.Time) error
+	// DeleteIntrospectionSecrets removes the server's secrets ids and every one that expired at or before now.
+	DeleteIntrospectionSecrets(ctx context.Context, projectID, serverID uuid.UUID, ids []uuid.UUID, now time.Time) error
 }

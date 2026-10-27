@@ -208,29 +208,16 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request) {
 
 // SECURITY: RFC 6749 §2.3.1 and §3.2.1, one authentication method per request, the one the client registered; 401 for every failure.
 func (h *Web) authenticate(req *tokenRequest) (*client.Client, bool) {
-	r, form := req.r, req.form
-	id, secret, basic := r.BasicAuth()
-	method := authNone
-	if basic {
-		req.basic = true
-		var idErr, secretErr error
-		id, idErr = url.QueryUnescape(id)
-		secret, secretErr = url.QueryUnescape(secret)
-		if idErr != nil || secretErr != nil {
-			return nil, h.clientFail(req)
-		}
-	}
+	r := req.r
+	creds, err := readCredentials(req)
 	switch {
-	case basic && (form.Has("client_secret") || form.Get("client_id") != "" && form.Get("client_id") != id):
-		h.oauthFail(req.w, http.StatusBadRequest, errInvalidRequest, "use one client authentication method")
+	case errors.Is(err, errMixedAuth):
+		h.oauthFail(req.w, http.StatusBadRequest, errInvalidRequest, err.Error())
 		return nil, false
-	case basic:
-		method = authBasic
-	case form.Has("client_secret"):
-		id, secret, method = form.Get("client_id"), form.Get("client_secret"), authPost
-	default:
-		id = form.Get("client_id")
+	case err != nil:
+		return nil, h.clientFail(req)
 	}
+	id, secret, method := creds.id, creds.secret, creds.method
 	if id == "" {
 		return nil, h.clientFail(req)
 	}
@@ -254,6 +241,34 @@ func (h *Web) authenticate(req *tokenRequest) (*client.Client, bool) {
 		return nil, h.clientFail(req)
 	}
 	return c, true
+}
+
+type credentials struct {
+	id, secret, method string
+}
+
+// SECURITY: RFC 6749 §2.3.1, Basic credentials are form-encoded; Basic with client_secret or another client_id in the body is refused.
+func readCredentials(req *tokenRequest) (credentials, error) {
+	form := req.form
+	id, secret, basic := req.r.BasicAuth()
+	if basic {
+		req.basic = true
+		var idErr, secretErr error
+		id, idErr = url.QueryUnescape(id)
+		secret, secretErr = url.QueryUnescape(secret)
+		if idErr != nil || secretErr != nil {
+			return credentials{}, errBadCredentials
+		}
+	}
+	switch {
+	case basic && (form.Has("client_secret") || form.Get("client_id") != "" && form.Get("client_id") != id):
+		return credentials{}, errMixedAuth
+	case basic:
+		return credentials{id: id, secret: secret, method: authBasic}, nil
+	case form.Has("client_secret"):
+		return credentials{id: form.Get("client_id"), secret: form.Get("client_secret"), method: authPost}, nil
+	}
+	return credentials{id: form.Get("client_id"), method: authNone}, nil
 }
 
 func grantClient(c *client.Client) grant.Client {
@@ -312,15 +327,6 @@ func (h *Web) respondTokens(req *tokenRequest, c *client.Client, issued *grant.T
 	}
 	writeJSON(req.w, http.StatusOK, body)
 }
-
-// SECURITY: every error_description is fixed text, never a value or a parameter name from the request.
-var (
-	errEndUserGone    = errors.New("oidc: end user gone")
-	errFormType       = errors.New("the request body must be application/x-www-form-urlencoded")
-	errFormBody       = errors.New("the request body is not a valid form")
-	errFormRepeat     = errors.New("a request parameter appears more than once")
-	errResourceRepeat = errors.New("a token is issued for one resource")
-)
 
 func profile(u *enduser.EndUser, scopes []string) *keys.Profile {
 	return &keys.Profile{

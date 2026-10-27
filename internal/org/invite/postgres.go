@@ -1,13 +1,9 @@
 package invite
 
 import (
-	"errors"
-
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/schema/entity"
 )
-
-var errLockOutsideTx = errors.New("invite.postgres: a row lock needs a transaction")
 
 // NOTE: definers are set-returning functions in FROM position, which go-jet cannot build; the aliases mirror jet's so inviteRow maps.
 const inviteFuncSelect = `SELECT i.id AS "invites.id", i.public_id AS "invites.public_id", i.org_id AS "invites.org_id", ` +

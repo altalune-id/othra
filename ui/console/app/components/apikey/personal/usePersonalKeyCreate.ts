@@ -1,13 +1,13 @@
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import scopes from '@shared/scope/scopes.json';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useScopeLabel } from '~/composables/useScopeLabel';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useScopeLabel } from '#base/composables/useScopeLabel';
+import { mcpSnippet } from '#base/lib/tokens/mcpSnippet';
 import { mcpURL } from '~/lib/auth/urls';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { mintableForMe } from './grants';
-import { mcpSnippet } from './mcpSnippet';
 import { createdKeyState } from './usePersonalKeys';
 
 export const expiryOptions = [

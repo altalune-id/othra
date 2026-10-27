@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/nanoid"
 )
@@ -78,7 +79,7 @@ func newInvite(orgID uuid.UUID, email string, role member.Role, invitedBy uuid.U
 }
 
 func (i *Invite) issue(now time.Time) (string, error) {
-	raw, hash, err := nanoid.NewToken()
+	raw, hash, err := secret.NewToken()
 	if err != nil {
 		return "", err
 	}

@@ -156,6 +156,16 @@ func (s *postgresStore) EndUserSessionAnywhere(ctx context.Context, projectID uu
 	return err
 }
 
+// EndOwnedSession ends the live user session publicID of endUserID at now, reporting whether it was live and theirs.
+func (s *postgresStore) EndOwnedSession(ctx context.Context, projectID, endUserID uuid.UUID, publicID string, now time.Time) (bool, error) {
+	t := s.sessions
+	stmt := t.UPDATE(t.EndedAt).SET(postgres.TimestampzT(now.UTC())).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.EndUserID.EQ(postgres.UUID(endUserID))).
+			AND(t.PublicID.EQ(postgres.String(publicID))).AND(t.EndedAt.IS_NULL()))
+	n, err := s.exec(ctx, "EndOwnedSession", stmt)
+	return n > 0, err
+}
+
 func (s *postgresStore) liveSession(projectID, browserID uuid.UUID, publicID string) postgres.BoolExpression {
 	t := s.sessions
 	return t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.BrowserSessionID.EQ(postgres.UUID(browserID))).
@@ -252,4 +262,13 @@ func (s *postgresStore) FillName(ctx context.Context, projectID, endUserID uuid.
 		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(endUserID))).AND(t.Name.EQ(postgres.String(""))))
 	_, err := s.exec(ctx, "FillName", stmt)
 	return err
+}
+
+// UpdateName sets the end user's name at now, reporting whether the end user exists.
+func (s *postgresStore) UpdateName(ctx context.Context, projectID, endUserID uuid.UUID, name string, now time.Time) (bool, error) {
+	t := s.users
+	stmt := t.UPDATE(t.Name, t.UpdatedAt).SET(postgres.String(name), postgres.TimestampzT(now.UTC())).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(endUserID))))
+	n, err := s.exec(ctx, "UpdateName", stmt)
+	return n > 0, err
 }

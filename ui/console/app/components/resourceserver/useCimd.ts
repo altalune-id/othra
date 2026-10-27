@@ -1,9 +1,9 @@
-import type { Link, ResourceServer } from '~~/gen/resourceserver/v1/resourceserver_pb';
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { Link, ResourceServer } from '#gen/resourceserver/v1/resourceserver_pb';
 import { create } from '@bufbuild/protobuf';
-import { ResourceServerState, SetResourceServerAdmissionRequestSchema } from '~~/gen/resourceserver/v1/resourceserver_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useValidation } from '~/composables/useValidation';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useValidation } from '#base/composables/useValidation';
+import { ResourceServerState, SetResourceServerAdmissionRequestSchema } from '#gen/resourceserver/v1/resourceserver_pb';
 
 // admissible reports whether a resource server may accept apps without registration: verified, or trusted without verification.
 export function admissible(rs: Pick<ResourceServer, 'state' | 'trusted'>): boolean {

@@ -1,6 +1,6 @@
-import type { Client } from '~~/gen/client/v1/client_pb';
+import type { Client } from '#gen/client/v1/client_pb';
 import type { ClientKindName } from './kinds';
-import { AuthMethod, ConsentPolicy } from '~~/gen/client/v1/client_pb';
+import { AuthMethod, ConsentPolicy } from '#gen/client/v1/client_pb';
 import { kindName } from './kinds';
 
 export type ConsentName = 'require' | 'implicit';

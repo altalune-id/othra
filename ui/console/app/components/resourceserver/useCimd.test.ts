@@ -1,8 +1,8 @@
 import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CIMDAdmissionSchema, LinkSchema, ResourceServerSchema, ResourceServerState } from '../../../gen/resourceserver/v1/resourceserver_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
+import { CIMDAdmissionSchema, LinkSchema, ResourceServerSchema, ResourceServerState } from '#gen/resourceserver/v1/resourceserver_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { admissible, isCimdLink, parseHosts, useCimd } from './useCimd';
 
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';

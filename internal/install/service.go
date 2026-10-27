@@ -17,8 +17,6 @@ import (
 	"altalune.id/othra/internal/user"
 )
 
-var errSystemOrgMoved = errors.New("install: the system org was created by another process")
-
 const (
 	lockName       = "othra.install"
 	defaultOrgName = "Default"

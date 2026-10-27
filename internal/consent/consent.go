@@ -3,6 +3,7 @@ package consent
 
 import (
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -105,4 +106,138 @@ func Decide(c *Consent, r Request) Page {
 	default:
 		return PageRemembered
 	}
+}
+
+// Family is a live grant a client holds for an end user, as Grants reports it.
+type Family struct {
+	ClientID         uuid.UUID
+	ResourceServerID *uuid.UUID
+	Scopes           []string
+	CreatedAt        time.Time
+	LastUsedAt       time.Time
+}
+
+// App is one client an end user is connected to through a consent, a live grant, or both (profile §2.5).
+type App struct {
+	ClientID    uuid.UUID
+	Resources   []Resource
+	Consented   bool
+	Offline     bool
+	ConnectedAt time.Time
+	LastUsedAt  time.Time
+}
+
+// Resource is what an App may use at one resource server, or the OIDC scopes alone when ResourceServerID is nil.
+type Resource struct {
+	ResourceServerID *uuid.UUID
+	Scopes           []string
+}
+
+const scopeOfflineAccess = "offline_access"
+
+// Apps groups the end user's consents and live families by client, newest use first; resourceScopes splits off the OIDC scopes.
+func Apps(consents []*Consent, families []Family, resourceScopes func([]string) []string) []App {
+	byClient := map[uuid.UUID]*App{}
+	var order []uuid.UUID
+	app := func(id uuid.UUID, at time.Time) *App {
+		a, ok := byClient[id]
+		if !ok {
+			a = &App{ClientID: id, ConnectedAt: at}
+			byClient[id] = a
+			order = append(order, id)
+		}
+		if at.Before(a.ConnectedAt) {
+			a.ConnectedAt = at
+		}
+		return a
+	}
+	for _, c := range consents {
+		a := app(c.Key.ClientID, c.GrantedAt)
+		a.Consented = true
+		a.add(c.Key.ResourceServerID, c.Scopes, resourceScopes)
+	}
+	for _, f := range families {
+		a := app(f.ClientID, f.CreatedAt)
+		a.Offline = a.Offline || slices.Contains(f.Scopes, scopeOfflineAccess)
+		if f.LastUsedAt.After(a.LastUsedAt) {
+			a.LastUsedAt = f.LastUsedAt
+		}
+		a.add(f.ResourceServerID, f.Scopes, resourceScopes)
+	}
+	out := make([]App, 0, len(order))
+	for _, id := range order {
+		a := *byClient[id]
+		slices.SortStableFunc(a.Resources, compareResources)
+		out = append(out, a)
+	}
+	slices.SortStableFunc(out, func(x, y App) int { return y.lastActive().Compare(x.lastActive()) })
+	return out
+}
+
+func (a *App) add(rs *uuid.UUID, scopes []string, resourceScopes func([]string) []string) {
+	if rs == nil {
+		a.addScopes(nil, scopes)
+		return
+	}
+	at := resourceScopes(scopes)
+	a.addScopes(rs, at)
+	if signIn := slices.DeleteFunc(slices.Clone(scopes), func(s string) bool { return slices.Contains(at, s) }); len(signIn) > 0 {
+		a.addScopes(nil, signIn)
+	}
+}
+
+func (a *App) addScopes(rs *uuid.UUID, scopes []string) {
+	for i := range a.Resources {
+		if sameResource(a.Resources[i].ResourceServerID, rs) {
+			a.Resources[i].Scopes = sortedUnion(a.Resources[i].Scopes, scopes)
+			return
+		}
+	}
+	a.Resources = append(a.Resources, Resource{ResourceServerID: rs, Scopes: sortedUnion(nil, scopes)})
+}
+
+// NOTE: sorted, so the order shown never depends on which of two equal-time consents was read first.
+func sortedUnion(have, add []string) []string {
+	out := Union(have, add)
+	slices.Sort(out)
+	return out
+}
+
+func (a App) lastActive() time.Time {
+	if a.LastUsedAt.After(a.ConnectedAt) {
+		return a.LastUsedAt
+	}
+	return a.ConnectedAt
+}
+
+// NOTE: resource servers first, by id, then the OIDC-only scopes, so the order never depends on equal timestamps.
+func compareResources(x, y Resource) int {
+	switch {
+	case x.ResourceServerID == nil && y.ResourceServerID == nil:
+		return 0
+	case x.ResourceServerID == nil:
+		return 1
+	case y.ResourceServerID == nil:
+		return -1
+	}
+	return strings.Compare(x.ResourceServerID.String(), y.ResourceServerID.String())
+}
+
+func sameResource(a, b *uuid.UUID) bool {
+	return (a == nil && b == nil) || (a != nil && b != nil && *a == *b)
+}
+
+// ClientInfo is how a connected app is shown: its client_id, name, and the host of its metadata document when it has one.
+type ClientInfo struct {
+	OAuthID      string
+	Name         string
+	MetadataHost string
+}
+
+// ServerInfo is how a resource server is shown with what an app may do there.
+type ServerInfo struct {
+	PublicID     string
+	Name         string
+	Identifier   string
+	Descriptions map[string]string
 }

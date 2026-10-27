@@ -2,9 +2,10 @@ import { create } from '@bufbuild/protobuf';
 import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ClientKind, ClientSchema, ClientSecretSchema, SecretGrace } from '../../../gen/client/v1/client_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
-import { graceOptions, secretRows, useClientSecrets } from './useClientSecrets';
+import { ClientKind, ClientSchema, ClientSecretSchema, SecretGrace } from '#gen/client/v1/client_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
+import { secretRows } from '../secret/useSecrets';
+import { useClientSecrets } from './useClientSecrets';
 
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';
 const clientId = 'dPm7fmQRJKPVw8PxrgdrN';
@@ -12,19 +13,6 @@ const at = (iso: string) => timestampFromDate(new Date(iso));
 const current = create(ClientSecretSchema, { id: 'sec_new_000000000000001', hint: 'Xk3Q', createdAt: at('2026-10-20T14:02:00Z') });
 const old = create(ClientSecretSchema, { id: 'sec_old_000000000000001', hint: 'p7Lm', createdAt: at('2026-10-01T09:00:00Z'), expiresAt: at('2026-10-21T14:02:00Z') });
 const rotated = create(ClientSchema, { id: clientId, kind: ClientKind.WEB, secrets: [old, current] });
-
-describe('secretRows', () => {
-  it('puts the current secret first and the old one after it with its end', () => {
-    const rows = secretRows([old, current, create(ClientSecretSchema, { id: 'x', hint: 'zzzz' })]);
-    expect(rows.map(r => [r.hint, r.old])).toEqual([['Xk3Q', false], ['zzzz', false], ['p7Lm', true]]);
-    expect(rows[2]!.expires).toEqual(new Date('2026-10-21T14:02:00Z'));
-    expect(rows[1]!.created).toBeNull();
-  });
-
-  it('offers Now, 1 hour, 1 day and 7 days', () => {
-    expect(graceOptions.map(o => o.value)).toEqual([SecretGrace.NOW, SecretGrace.HOUR, SecretGrace.DAY, SecretGrace.WEEK]);
-  });
-});
 
 describe('useClientSecrets', () => {
   let generateClientSecret: ReturnType<typeof vi.fn>;
@@ -45,7 +33,7 @@ describe('useClientSecrets', () => {
     await s.generate();
     expect(generateClientSecret).toHaveBeenCalledWith({ projectId, clientId });
     expect(onClient).toHaveBeenCalledTimes(1);
-    expect(s.revealed.value).toEqual({ clientId, secret: 'othra_cs_first' });
+    expect(s.revealed.value).toEqual({ ownerId: clientId, secret: 'othra_cs_first' });
     s.forget();
     expect(s.revealed.value).toBeNull();
   });

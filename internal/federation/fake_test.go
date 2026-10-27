@@ -112,15 +112,17 @@ func (f *fakeStore) EveryEndUserLinked(context.Context, uuid.UUID) (bool, error)
 }
 
 type fakeUpstreams struct {
-	creds *upstream.Credentials
-	err   error
+	creds   *upstream.Credentials
+	err     error
+	offered int
 }
 
-func (f *fakeUpstreams) List(context.Context, uuid.UUID, uuid.UUID) ([]*upstream.Upstream, error) {
-	if f.creds == nil {
+func (f *fakeUpstreams) Offered(context.Context, uuid.UUID, uuid.UUID) ([]upstream.Kind, error) {
+	f.offered++
+	if f.creds == nil || !f.creds.Upstream.Enabled {
 		return nil, f.err
 	}
-	return []*upstream.Upstream{&f.creds.Upstream}, f.err
+	return []upstream.Kind{f.creds.Upstream.Kind}, f.err
 }
 
 func (f *fakeUpstreams) Credentials(context.Context, uuid.UUID, uuid.UUID, upstream.Kind) (*upstream.Credentials, error) {
@@ -186,3 +188,5 @@ func (f *fakeSwitch) LockEmailLink(context.Context, uuid.UUID) (bool, error) {
 	f.locked++
 	return f.on, f.err
 }
+
+func (f *fakeSwitch) EmailLink(context.Context, uuid.UUID) (bool, error) { return f.on, f.err }

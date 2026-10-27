@@ -2,7 +2,6 @@ package tenant
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 
@@ -12,22 +11,6 @@ import (
 // ProjectResolver finds the org a project belongs to.
 type ProjectResolver interface {
 	OrgOf(ctx context.Context, projectID uuid.UUID) (uuid.UUID, error)
-}
-
-// ProjectOutsideOrgError signals a project id that is not in the request's org, or does not exist.
-type ProjectOutsideOrgError struct{}
-
-func (*ProjectOutsideOrgError) Error() string { return "tenant: project is not in this organization" }
-
-// IsProjectOutsideOrgError reports whether err wraps a *ProjectOutsideOrgError.
-func IsProjectOutsideOrgError(err error) bool {
-	_, ok := errors.AsType[*ProjectOutsideOrgError](err)
-	return ok
-}
-
-// ToAppError maps ProjectOutsideOrgError to the validation envelope.
-func (e *ProjectOutsideOrgError) ToAppError() *apperror.AppError {
-	return apperror.New(apperror.CodeProjectNotInOrg, "Project is not in this organization").WithCause(e)
 }
 
 // RequireProjectInOrg fails unless projectID belongs to orgID; nil r skips it. SECURITY: a missing project gives the same error.

@@ -1,10 +1,10 @@
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import { create } from '@bufbuild/protobuf';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
 import { watch } from 'vue';
-import { UpdateProjectTermsRequestSchema } from '~~/gen/project/v1/project_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useValidation } from '~/composables/useValidation';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useValidation } from '#base/composables/useValidation';
+import { UpdateProjectTermsRequestSchema } from '#gen/project/v1/project_pb';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 
 // useLegal edits a project's terms and privacy links and publishes new terms versions.

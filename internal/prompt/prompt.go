@@ -30,9 +30,6 @@ func Secret(cmd *cobra.Command, in *bufio.Reader, label string, fromStdin bool) 
 	return Line(in)
 }
 
-// ErrMismatch reports that the two answers to a confirmed secret differ.
-var ErrMismatch = errors.New("the passwords do not match")
-
 // NewSecret asks label then again on a terminal and fails when they differ; a pipe or fromStdin gives one line.
 func NewSecret(cmd *cobra.Command, in *bufio.Reader, label, again string, fromStdin bool) (string, error) {
 	if read, ok := terminal(cmd, fromStdin); ok {
@@ -56,9 +53,6 @@ func Confirm(read func(label string) (string, error), label, again string) (stri
 	}
 	return first, nil
 }
-
-// ErrCancelled reports a yes/no question answered with anything but yes, including no answer at all.
-var ErrCancelled = errors.New("cancelled")
 
 // YesNo asks question on stderr and reads one line from stdin; only y or yes agree, anything else is ErrCancelled.
 func YesNo(cmd *cobra.Command, question string) error {

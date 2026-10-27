@@ -22,6 +22,7 @@ import (
 	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
+	"altalune.id/othra/internal/web/portal"
 	"altalune.id/othra/mailer"
 	"altalune.id/othra/reqid"
 	"altalune.id/othra/sealer"
@@ -62,6 +63,8 @@ type Web struct {
 	oauth   OAuth
 	fed     Federation
 	fedSeal sealer.Sealer
+
+	portalPage *portal.Page
 }
 
 // OAuth is what /oauth2/authorize, /consent and /oauth2/end-session need.
@@ -107,9 +110,8 @@ func (h *Web) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+p+"/login/signout", h.page(h.signOut))
 	mux.HandleFunc("GET "+p+"/terms", h.page(h.terms))
 	mux.HandleFunc("POST "+p+"/terms", h.page(h.acceptTerms))
-	mux.HandleFunc("GET "+p+"/account/{$}", h.page(h.account))
+	mux.HandleFunc("GET "+p+"/account/{rest...}", h.page(h.portal))
 	if h.fed != nil {
-		mux.HandleFunc("POST "+p+"/account/unlink", h.page(h.unlink))
 		mux.HandleFunc("GET "+p+string(linkingPage), h.page(h.linking))
 	}
 	mux.HandleFunc("GET "+p+"/signed-out", h.page(h.signedOut))
@@ -229,7 +231,8 @@ func (h *Web) login(w http.ResponseWriter, r *http.Request, s *site) {
 	if notice != "" {
 		h.cookies.flash(noticeCookie, s.path+"/login").Clear(w)
 	}
-	if len(b.Accounts) > 0 && r.URL.Query().Get("add") != "1" {
+	reauth := h.portalReauth(r, s, returnTo)
+	if len(b.Accounts) > 0 && r.URL.Query().Get("add") != "1" && !reauth {
 		h.renderPicker(w, r, s, b, returnTo, notice, "")
 		return
 	}
@@ -239,10 +242,19 @@ func (h *Web) login(w http.ResponseWriter, r *http.Request, s *site) {
 		return
 	}
 	pend := h.pending(r, s, returnTo)
+	if a, ok := b.Active(); ok && reauth {
+		pend.reauth, pend.hint = true, a.Email
+	}
 	h.renderLogin(w, r, s, http.StatusOK, views.LoginData{
 		ReturnTo: returnTo, Notice: notice, FromPicker: len(b.Accounts) > 0,
 		Client: pend.client, ClientHost: pend.host, Reauth: pend.reauth, Email: pend.hint,
 	})
+}
+
+// NOTE: M8 G5, P7: the portal asks prompt=login before it creates a token; a new sign-in here refreshes the account's auth_time.
+func (h *Web) portalReauth(r *http.Request, s *site, returnTo string) bool {
+	u, err := url.Parse(returnTo)
+	return err == nil && r.URL.Query().Get("prompt") == promptLogin && strings.HasPrefix(u.Path, s.path+string(pageAccount))
 }
 
 func (h *Web) renderLogin(w http.ResponseWriter, r *http.Request, s *site, status int, v views.LoginData) {
@@ -620,25 +632,6 @@ func (h *Web) active(w http.ResponseWriter, r *http.Request, s *site, returnTo s
 	return a, ok
 }
 
-func (h *Web) account(w http.ResponseWriter, r *http.Request, s *site) {
-	here := s.path + "/account/"
-	a, ok := h.active(w, r, s, here)
-	if !ok {
-		return
-	}
-	state, err := h.users.TermsState(r.Context(), s.project(), h.cookies.browser(r), a.UserSession)
-	if err != nil {
-		h.fail(w, r, s, "hosted: terms state", err)
-		return
-	}
-	if state.Needed {
-		h.toPage(w, r, s, pageTerms, backTo(here))
-		return
-	}
-	q := r.URL.Query()
-	h.renderAccount(w, r, s, http.StatusOK, a, views.AccountData{Linked: q.Get("linked") == "1", Unlinked: q.Get("unlinked") == "1"})
-}
-
 func (h *Web) signedOut(w http.ResponseWriter, r *http.Request, s *site) {
 	h.kit.Render(w, r, http.StatusOK, views.SignedOut(h.layout(r, s), views.SignedOutData{Site: s.views()}))
 }
@@ -711,6 +704,7 @@ const (
 	pageVerify    page = "/login/verify"
 	pageTerms     page = "/terms"
 	pageAccount   page = "/account/"
+	pageSignIn    page = "/account/sign-in"
 	pageSignedOut page = "/signed-out"
 )
 

@@ -1,18 +1,19 @@
 import type { Interceptor } from '@connectrpc/connect';
 import { createClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
-import { APIKeyService } from '~~/gen/apikey/v1/apikey_pb';
-import { AuthService } from '~~/gen/auth/v1/auth_pb';
-import { ClientService } from '~~/gen/client/v1/client_pb';
-import { InviteService } from '~~/gen/invite/v1/invite_pb';
-import { SigningKeyService } from '~~/gen/keys/v1/keys_pb';
-import { MemberService } from '~~/gen/member/v1/member_pb';
-import { OrgService } from '~~/gen/org/v1/org_pb';
-import { ProjectService } from '~~/gen/project/v1/project_pb';
-import { ResourceServerService } from '~~/gen/resourceserver/v1/resourceserver_pb';
-import { UpstreamService } from '~~/gen/upstream/v1/upstream_pb';
-import { WebhookService } from '~~/gen/webhook/v1/webhook_pb';
-import { createRedirectOnce, isUnauthenticated } from '~/lib/auth/unauthenticated';
+import { createRedirectOnce, isUnauthenticated } from '#base/lib/auth/unauthenticated';
+import { APIKeyService } from '#gen/apikey/v1/apikey_pb';
+import { AuthService } from '#gen/auth/v1/auth_pb';
+import { ClientService } from '#gen/client/v1/client_pb';
+import { EndUserService } from '#gen/enduser/v1/enduser_pb';
+import { InviteService } from '#gen/invite/v1/invite_pb';
+import { SigningKeyService } from '#gen/keys/v1/keys_pb';
+import { MemberService } from '#gen/member/v1/member_pb';
+import { OrgService } from '#gen/org/v1/org_pb';
+import { ProjectService } from '#gen/project/v1/project_pb';
+import { ResourceServerService } from '#gen/resourceserver/v1/resourceserver_pb';
+import { UpstreamService } from '#gen/upstream/v1/upstream_pb';
+import { WebhookService } from '#gen/webhook/v1/webhook_pb';
 import { loginURL } from '~/lib/auth/urls';
 
 // One Connect transport for every client: same origin as the app and cookie-bearing. A 401 sends the
@@ -52,6 +53,7 @@ export default defineNuxtPlugin({
         clientClient: createClient(ClientService, transport),
         resourceServerClient: createClient(ResourceServerService, transport),
         upstreamClient: createClient(UpstreamService, transport),
+        endUserClient: createClient(EndUserService, transport),
         authClient: createClient(AuthService, whoamiTransport),
       },
     };

@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { connectError, deferred, setClient, setKnownKeys } from '../../test/nuxt-globals';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useAPIKeysStore } from './apiKeys';
 import { useProjectsStore } from './projects';
 import { useWebhooksStore } from './webhooks';

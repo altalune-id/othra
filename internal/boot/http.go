@@ -75,6 +75,9 @@ func buildAPIHandler(
 
 		ResourceServers: svcs.ResourceServers,
 		Upstreams:       svcs.Upstreams,
+		EndUsers:        svcs.EndUsers,
+		Federation:      svcs.Federation,
+		Account:         accountSlices(svcs),
 		Refs:            newPublicIDs(svcs),
 		FileUploads:     svcs.Caps.FileUploads,
 	}, unexpected, opts).Handler(basePath)
@@ -184,6 +187,10 @@ func buildIssuerRoutes(
 			IDTokenTTL: cfg.OAuth.IDTokenTTL, CORS: middleware.BearerCORS,
 			Limits: layout.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops},
 		})
+		if in := buildIntrospection(svcs); in != nil {
+			issuers.WithIntrospection(*in)
+			resolver.WithIntrospection()
+		}
 	}
 	svcs.Keys.WithOnChange(resolver.Forget)
 	if svcs.ResourceServers != nil {
@@ -194,7 +201,11 @@ func buildIssuerRoutes(
 	if svcs.EndUsers == nil {
 		return []web.Registrar{issuers}, nil
 	}
-	return []web.Registrar{issuers}, []web.Registrar{buildHosted(cfg, svcs, kit, resolver)}
+	pages := buildHosted(cfg, svcs, kit, resolver)
+	if plane := buildAccountPlane(cfg.HTTP.BasePath, svcs, pages, unexpected); plane != nil {
+		return []web.Registrar{issuers}, []web.Registrar{pages, plane}
+	}
+	return []web.Registrar{issuers}, []web.Registrar{pages}
 }
 
 func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc) []web.Registrar {
@@ -281,6 +292,7 @@ type httpSurfaces struct {
 	basePath   string
 	api        http.Handler
 	console    http.Handler
+	portal     http.Handler
 	mcp        http.Handler
 	routes     []web.Registrar
 	public     []web.Registrar
@@ -301,6 +313,7 @@ func buildHTTPHandler(s httpSurfaces) http.Handler {
 		APIHandler:   s.api,
 		MCPHandler:   s.mcp,
 		Console:      s.console,
+		PortalAssets: s.portal,
 		Routes:       s.routes,
 		PublicRoutes: s.public,
 		HostedPages:  s.hosted,

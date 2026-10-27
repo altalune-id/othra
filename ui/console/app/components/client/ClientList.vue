@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CopyButton from '../ui/CopyButton.vue';
+import CopyButton from '#base/components/ui/CopyButton.vue';
 
 export interface ClientRow {
   id: string;

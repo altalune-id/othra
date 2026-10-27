@@ -195,3 +195,10 @@ func TestCardWith_PutsTheLeadInTheTitleRow(t *testing.T) {
 	assert.Contains(t, html, `<div class="flex items-center gap-3"><span class="mark">C</span><h1 class="card-title text-2xl break-words max-sm:text-xl">Allow it?</h1></div>`)
 	assert.Equal(t, render(t, t.Context(), Card("Plain")), render(t, t.Context(), CardWith("Plain", nil)), "Card is CardWith without a lead")
 }
+
+func TestBrand_CSS(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t, ":root{--color-primary:#1e3a8a;--color-primary-content:#ffffff}", NewBrand("Acme", "", "#1e3a8a").CSS())
+	assert.Empty(t, NewBrand("Acme", "", "red").CSS())
+	assert.Empty(t, (*Brand)(nil).CSS())
+}

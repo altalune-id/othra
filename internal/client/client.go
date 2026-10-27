@@ -2,11 +2,6 @@
 package client
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"slices"
@@ -18,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/oauth/redirecturi"
 )
 
@@ -74,12 +70,7 @@ const (
 // SecretPrefix starts every client secret, so secret scanners can find a leaked one.
 const SecretPrefix = "othra_cs_" //nolint:gosec // G101: a prefix, not a credential.
 
-const (
-	maxNameLen  = 100
-	secretBytes = 32
-	hashPrefix  = "sha256$"
-	hintLen     = 4
-)
+const maxNameLen = 100
 
 // Client is an OAuth client of a project; OAuthID is its client_id.
 type Client struct {
@@ -108,23 +99,7 @@ type Client struct {
 }
 
 // Secret is one of a client's live secrets; the plaintext is never kept.
-type Secret struct {
-	ID        uuid.UUID
-	PublicID  string
-	Hint      string
-	CreatedAt time.Time
-	ExpiresAt *time.Time
-	hash      string
-}
-
-// WithHash returns s carrying its stored hash, for a store answering Store.ForAuthentication only.
-func (s Secret) WithHash(hash string) Secret {
-	s.hash = hash
-	return s
-}
-
-// Current reports whether s is the client's current secret rather than an old one in its grace period.
-func (s Secret) Current() bool { return s.ExpiresAt == nil }
+type Secret = secret.Stored
 
 // Settings are the fields of a client a person sets.
 type Settings struct {
@@ -268,40 +243,19 @@ func (c *Client) CurrentSecret() (Secret, bool) {
 	return Secret{}, false
 }
 
+// SecretScheme mints client secrets: "othra_cs_" and 256 random bits, so secret scanners can find a leaked one.
+var SecretScheme = secret.Scheme{Prefix: SecretPrefix} //nolint:gochecknoglobals // the client-secret format, fixed.
+
 // NewSecret returns a fresh plaintext secret, its stored hash and its hint.
 func NewSecret() (plaintext, hash, hint string, err error) {
-	raw := make([]byte, secretBytes)
-	if _, err := rand.Read(raw); err != nil {
+	m, err := SecretScheme.Mint()
+	if err != nil {
 		return "", "", "", err
 	}
-	plaintext = SecretPrefix + base64.RawURLEncoding.EncodeToString(raw)
-	return plaintext, HashSecret(plaintext), plaintext[len(plaintext)-hintLen:], nil
-}
-
-// HashSecret returns the stored form of a secret: "sha256$" and its hex SHA-256.
-func HashSecret(plaintext string) string {
-	sum := sha256.Sum256([]byte(plaintext))
-	return hashPrefix + hex.EncodeToString(sum[:])
+	return m.Plaintext, secret.Versioned(m.Plaintext), m.Hint, nil
 }
 
 // VerifySecret reports whether presented matches a secret of the client that is live at now; every live secret is compared.
 func (c *Client) VerifySecret(presented string, now time.Time) bool {
-	if !c.UsesSecret() || presented == "" {
-		return false
-	}
-	ok := false
-	for _, s := range c.Secrets {
-		if s.hash == "" || s.ExpiresAt != nil && !now.Before(*s.ExpiresAt) {
-			continue
-		}
-		if SecretMatches(s.hash, presented) {
-			ok = true
-		}
-	}
-	return ok
-}
-
-// SecretMatches compares a presented secret with a stored hash in constant time.
-func SecretMatches(hash, presented string) bool {
-	return subtle.ConstantTimeCompare([]byte(hash), []byte(HashSecret(presented))) == 1
+	return c.UsesSecret() && secret.MatchesAny(c.Secrets, presented, now)
 }

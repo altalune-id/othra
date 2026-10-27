@@ -1,7 +1,7 @@
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import type { APIKey } from '~/stores/apiKeys';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useScopeLabel } from '~/composables/useScopeLabel';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useScopeLabel } from '#base/composables/useScopeLabel';
 import { toAPIKey } from '~/stores/apiKeys';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';

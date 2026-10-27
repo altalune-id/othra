@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	accountv1 "altalune.id/othra/gen/go/account/v1"
 	upstreamv1 "altalune.id/othra/gen/go/upstream/v1"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/session"
@@ -98,4 +99,9 @@ func TestControlPlane_OutOfReach(t *testing.T) {
 	assert.True(t, IsNotFoundError(err))
 	_, err = f.cp.CreateUpstream(f.owner, connect.NewRequest(&upstreamv1.CreateUpstreamRequest{ProjectId: f.projectPub, ClientId: "c", ClientSecret: "s"}))
 	assert.True(t, IsInvalidConfigError(err), "an unspecified kind")
+}
+
+func TestMethodProto(t *testing.T) {
+	assert.Equal(t, accountv1.SignInMethodKind_SIGN_IN_METHOD_KIND_GOOGLE, MethodProto(KindGoogle))
+	assert.Equal(t, accountv1.SignInMethodKind_SIGN_IN_METHOD_KIND_UNSPECIFIED, MethodProto("other"))
 }

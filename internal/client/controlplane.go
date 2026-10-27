@@ -11,6 +11,7 @@ import (
 	clientv1 "altalune.id/othra/gen/go/client/v1"
 	clientv1connect "altalune.id/othra/gen/go/client/v1/clientv1connect"
 	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/session"
 )
 
@@ -134,11 +135,11 @@ func (s *ClientService) GenerateClientSecret(
 	if err != nil {
 		return nil, err
 	}
-	c, secret, err := s.clients.GenerateSecret(ctx, orgID, projectID, req.Msg.GetClientId())
+	c, plaintext, err := s.clients.GenerateSecret(ctx, orgID, projectID, req.Msg.GetClientId())
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.GenerateClientSecretResponse{Client: toProto(c), Secret: secret}), nil
+	return connect.NewResponse(&clientv1.GenerateClientSecretResponse{Client: toProto(c), Secret: plaintext}), nil
 }
 
 // RotateClientSecret makes a new current secret, shown once; the old one keeps working for the grace.
@@ -149,11 +150,11 @@ func (s *ClientService) RotateClientSecret(
 	if err != nil {
 		return nil, err
 	}
-	c, secret, err := s.clients.RotateSecret(ctx, orgID, projectID, req.Msg.GetClientId(), graceFromProto(req.Msg.GetGrace()))
+	c, plaintext, err := s.clients.RotateSecret(ctx, orgID, projectID, req.Msg.GetClientId(), graceFromProto(req.Msg.GetGrace()))
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.RotateClientSecretResponse{Client: toProto(c), Secret: secret}), nil
+	return connect.NewResponse(&clientv1.RotateClientSecretResponse{Client: toProto(c), Secret: plaintext}), nil
 }
 
 // RevokeClientSecret ends one of a client's secrets at once.
@@ -263,12 +264,12 @@ func consentFromProto(p clientv1.ConsentPolicy) ConsentPolicy {
 func graceFromProto(g clientv1.SecretGrace) time.Duration {
 	switch g {
 	case clientv1.SecretGrace_SECRET_GRACE_NOW:
-		return 0
+		return secret.GraceNow
 	case clientv1.SecretGrace_SECRET_GRACE_HOUR:
-		return time.Hour
+		return secret.GraceHour
 	case clientv1.SecretGrace_SECRET_GRACE_WEEK:
-		return MaxGrace
+		return secret.MaxGrace
 	default:
-		return 24 * time.Hour
+		return secret.GraceDay
 	}
 }

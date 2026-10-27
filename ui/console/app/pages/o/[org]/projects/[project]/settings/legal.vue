@@ -1,17 +1,19 @@
 <script setup lang="ts">
+import AppModal from '#base/components/ui/AppModal.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import FieldError from '#base/components/ui/FieldError.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
+import { useDates } from '#base/composables/useDates';
 import { useLegal } from '~/components/project/legal/useLegal';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import AppModal from '~/components/ui/AppModal.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import FieldError from '~/components/ui/FieldError.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { date } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 
@@ -24,7 +26,7 @@ if (!listed.value) {
 const legal = useLegal(listed.value.id);
 const { termsUrl, privacyUrl, hasTerms, version, nextVersion, publishedAt, urlChangedHint, busy, saved, clearing, bumping, bumpedTo, error, fieldErrors } = legal;
 const ids = { terms: useId(), termsHint: useId(), termsErr: useId(), privacy: useId(), privacyHelp: useId(), privacyErr: useId() };
-const published = computed(() => (publishedAt.value ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(publishedAt.value) : ''));
+const published = computed(() => date(publishedAt.value));
 
 const canEdit = useCanEditProject();
 await Promise.all([legal.load(), useAuthStore().load()]);

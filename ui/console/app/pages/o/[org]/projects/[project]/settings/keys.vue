@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import AppModal from '#base/components/ui/AppModal.vue';
+import CopyButton from '#base/components/ui/CopyButton.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
 import { keyRows } from '~/components/project/keys/keyRows';
 import SigningKeyList from '~/components/project/keys/SigningKeyList.vue';
 import { formatWhen, shortKid, useSigningKeys } from '~/components/project/keys/useSigningKeys';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import AppModal from '~/components/ui/AppModal.vue';
-import CopyButton from '~/components/ui/CopyButton.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';

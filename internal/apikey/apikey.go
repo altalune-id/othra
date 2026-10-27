@@ -2,10 +2,6 @@
 package apikey
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/base64"
 	"fmt"
 	"slices"
 	"strings"
@@ -13,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/scope"
 )
 
@@ -20,7 +17,6 @@ import (
 const DefaultPrefix = "othra_"
 
 const (
-	secretBytes   = 32
 	secretHintLen = 4
 	nameMaxLen    = 100
 )
@@ -167,17 +163,17 @@ func (sc Scheme) mint(orgID uuid.UUID, name string, scopes []string, expiresAt *
 	if err := validateLifetime(expiresAt, now); err != nil {
 		return nil, "", err
 	}
-	buf := make([]byte, secretBytes)
-	if _, err := rand.Read(buf); err != nil {
+	m, err := secret.Scheme{Prefix: sc.Prefix(), HintLen: secretHintLen}.Mint()
+	if err != nil {
 		return nil, "", err
 	}
-	plaintext := sc.Prefix() + base64.RawURLEncoding.EncodeToString(buf)
+	plaintext := m.Plaintext
 	return &APIKey{
 		ID:         uuid.New(),
 		OrgID:      orgID,
 		Name:       strings.TrimSpace(name),
-		SecretHash: sha256.Sum256([]byte(plaintext)),
-		SecretHint: plaintext[len(plaintext)-secretHintLen:],
+		SecretHash: secret.Sum(plaintext),
+		SecretHint: m.Hint,
 		Scopes:     slices.Clone(scopes),
 		CreatedAt:  now,
 		ExpiresAt:  expiresAt,
@@ -222,8 +218,7 @@ func (k *APIKey) ReachableProjects() []uuid.UUID {
 
 // Matches reports whether plaintext hashes to this key's secret, in constant time.
 func (k *APIKey) Matches(plaintext string) bool {
-	sum := sha256.Sum256([]byte(plaintext))
-	return subtle.ConstantTimeCompare(sum[:], k.SecretHash[:]) == 1
+	return secret.SumMatches(k.SecretHash, plaintext)
 }
 
 // Usable reports whether the key is neither revoked nor expired at now.

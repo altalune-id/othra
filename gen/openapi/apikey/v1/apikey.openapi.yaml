@@ -192,8 +192,9 @@ components:
           type: array
           items:
             type: string
-            pattern: ^[a-z]+:(read|write)$
+            pattern: ^[a-z][a-z_]*:[a-z]+$
           title: scopes
+          description: The catalog's shape; the service checks each scope against scope/scopes.json, the one list.
         projectIds:
           type: array
           items:

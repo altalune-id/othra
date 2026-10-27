@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { t } from '../../../../test/nuxt-globals';
+import { t } from '#test/nuxt-globals';
 import { googleUpstreamCardLabels } from './labels';
 
 describe('sign-in labels', () => {

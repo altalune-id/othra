@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	accountv1 "altalune.id/othra/gen/go/account/v1"
 	upstreamv1 "altalune.id/othra/gen/go/upstream/v1"
 	upstreamv1connect "altalune.id/othra/gen/go/upstream/v1/upstreamv1connect"
 	"altalune.id/othra/internal/kernel/authz"
@@ -184,4 +185,12 @@ func (s *UpstreamService) toProto(ctx context.Context, u *Upstream) (*upstreamv1
 		Id: u.PublicID, Kind: kind, ClientId: u.ClientID, SecretSet: true, Enabled: u.Enabled, RedirectUri: redirect,
 		IdentitiesLinked: u.IdentitiesLinked, CreatedAt: timestamppb.New(u.CreatedAt), UpdatedAt: timestamppb.New(u.UpdatedAt),
 	}, nil
+}
+
+// MethodProto is the account.v1 sign-in method of an upstream IdP of kind.
+func MethodProto(k Kind) accountv1.SignInMethodKind {
+	if k == KindGoogle {
+		return accountv1.SignInMethodKind_SIGN_IN_METHOD_KIND_GOOGLE
+	}
+	return accountv1.SignInMethodKind_SIGN_IN_METHOD_KIND_UNSPECIFIED
 }

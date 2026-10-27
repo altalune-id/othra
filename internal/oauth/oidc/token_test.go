@@ -19,6 +19,7 @@ import (
 	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/grant"
+	ksecret "altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/oauth/oidc"
 	"altalune.id/othra/internal/web/layout"
@@ -103,7 +104,7 @@ type tokenFixture struct {
 func webClient(id, method string, grantTypes ...string) *client.Client {
 	return &client.Client{
 		ID: uuid.New(), PublicID: id, TokenEndpointAuthMethod: method, GrantTypes: grantTypes,
-		Secrets: []client.Secret{(client.Secret{}).WithHash(client.HashSecret(secret))},
+		Secrets: []client.Secret{(client.Secret{}).WithHash(ksecret.Versioned(secret))},
 	}
 }
 
@@ -121,7 +122,7 @@ func newTokenFixture(t *testing.T) *tokenFixture {
 			"post":  webClient("post", client.AuthClientSecretPost, "authorization_code"),
 			"pct": {
 				ID: uuid.New(), PublicID: "pct", TokenEndpointAuthMethod: client.AuthClientSecretBasic, GrantTypes: []string{"authorization_code"},
-				Secrets: []client.Secret{(client.Secret{}).WithHash(client.HashSecret("a%zz"))},
+				Secrets: []client.Secret{(client.Secret{}).WithHash(ksecret.Versioned("a%zz"))},
 			},
 			"cli": {ID: uuid.New(), PublicID: "cli", TokenEndpointAuthMethod: client.AuthNone, GrantTypes: []string{"authorization_code", "refresh_token"}},
 		},

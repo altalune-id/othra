@@ -3,7 +3,6 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
@@ -17,14 +16,6 @@ import (
 )
 
 const cacheTTL = 30 * time.Second
-
-// ErrUnknownIssuer is an unknown, reserved or malformed issuer handle; every surface answers it with one identical not-found.
-var ErrUnknownIssuer = errors.New("oidc: unknown issuer")
-
-// LookupLimitedError refuses a cache-missing issuer lookup over LookupIPRule.
-type LookupLimitedError struct{ RetryAfter int }
-
-func (*LookupLimitedError) Error() string { return "oidc: issuer lookup rate limited" }
 
 // LookupIPRule limits issuer lookups that miss the cache per client IP: 120 a minute, 60 at once.
 func LookupIPRule() ratelimit.Rule {
@@ -42,6 +33,7 @@ type Resolver struct {
 	cache      *issuerCache
 	now        func() time.Time
 	cimd       CIMDAdmissions
+	introspect bool
 }
 
 // NewResolver builds the Resolver; publicBase is the scheme, host and base path every issuer URL starts with.
@@ -61,6 +53,12 @@ func (s *Resolver) WithLimiter(l ratelimit.Limiter, trustedHops int) *Resolver {
 // WithCIMD reads whether each project admits CIMD clients, for client_id_metadata_document_supported.
 func (s *Resolver) WithCIMD(c CIMDAdmissions) *Resolver {
 	s.cimd = c
+	return s
+}
+
+// WithIntrospection advertises the introspection endpoint in every issuer's metadata.
+func (s *Resolver) WithIntrospection() *Resolver {
+	s.introspect = true
 	return s
 }
 
@@ -119,7 +117,7 @@ func (s *Resolver) load(ctx context.Context, handle string) (*issuerEntry, error
 			return nil, err
 		}
 	}
-	discovery, err := json.Marshal(Discovery(project.IssuerURL(s.publicBase, i.Handle), cimd))
+	discovery, err := json.Marshal(Discovery(project.IssuerURL(s.publicBase, i.Handle), Features{CIMD: cimd, Introspection: s.introspect}))
 	if err != nil {
 		return nil, err
 	}

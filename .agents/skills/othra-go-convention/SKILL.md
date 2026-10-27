@@ -74,5 +74,5 @@ Then open what you changed: a console page in the browser, a CLI command in a te
 
 - Commit, stage or push. The user commits.
 - Add AI attribution anywhere.
-- Edit generated code (`gen/`, `ui/console/gen/`, `*_templ.go`) by hand.
+- Edit generated code (`gen/`, `ui/base/gen/`, `*_templ.go`) by hand.
 - Weaken a linter, a coverage floor or a test to get green.

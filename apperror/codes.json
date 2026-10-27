@@ -81,7 +81,8 @@
   { "code": "RSV008", "name": "ResourceServerVerifyTooSoon", "kind": "resource_exhausted", "params": ["time"], "reasons": [] },
   { "code": "RSV009", "name": "ResourceServerInvalidLinkScopes", "kind": "invalid", "params": ["scope"], "reasons": ["empty", "not_in_catalog"] },
   { "code": "RSV010", "name": "ResourceServerInvalidClientHost", "kind": "invalid", "params": ["host"], "reasons": ["format", "ip_literal", "duplicate", "too_many"] },
-  { "code": "RSV011", "name": "ResourceServerAdmissionUnverified", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "RSV011", "name": "ResourceServerAdmissionUnverified", "kind": "failed_precondition", "params": [], "reasons": ["cimd", "personal_tokens"] },
+  { "code": "RSV012", "name": "ResourceServerIntrospectionRequired", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "SIG001", "name": "SignInLinkNotUsable", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "SIG002", "name": "SignInEmailDisabled", "kind": "failed_precondition", "params": [], "reasons": [] },
   { "code": "SIG003", "name": "SignInSessionGone", "kind": "failed_precondition", "params": [], "reasons": [] },
@@ -104,5 +105,16 @@
   { "code": "UPS001", "name": "UpstreamNotFound", "kind": "not_found", "params": [], "reasons": [] },
   { "code": "UPS002", "name": "UpstreamInvalidConfig", "kind": "invalid", "params": [], "reasons": ["client_id", "client_secret"] },
   { "code": "UPS003", "name": "UpstreamExists", "kind": "already_exists", "params": [], "reasons": [] },
-  { "code": "UPS004", "name": "UpstreamHasIdentities", "kind": "failed_precondition", "params": [], "reasons": [] }
+  { "code": "UPS004", "name": "UpstreamHasIdentities", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "ACC001", "name": "AccountSignedOut", "kind": "unauthenticated", "params": [], "reasons": [] },
+  { "code": "ACC002", "name": "AccountSessionNotFound", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "ACC003", "name": "AccountAppNotConnected", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "ACC004", "name": "AccountTokenNotFound", "kind": "not_found", "params": [], "reasons": [] },
+  { "code": "ACC005", "name": "AccountTokenInvalid", "kind": "invalid", "params": [], "reasons": ["name", "server", "scopes", "expiry"] },
+  { "code": "ACC006", "name": "AccountTokenServerClosed", "kind": "failed_precondition", "params": ["project"], "reasons": [] },
+  { "code": "ACC007", "name": "AccountTokenLimit", "kind": "resource_exhausted", "params": ["max"], "reasons": [] },
+  { "code": "ACC008", "name": "AccountCurrentSession", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "ACC009", "name": "AccountReauthRequired", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "ACC010", "name": "AccountTermsRequired", "kind": "failed_precondition", "params": [], "reasons": [] },
+  { "code": "EUS001", "name": "EndUserNotFound", "kind": "not_found", "params": [], "reasons": [] }
 ]

@@ -33,12 +33,19 @@ type Store interface {
 
 	// EndUserByID returns the end user id, or nil.
 	EndUserByID(ctx context.Context, projectID, id uuid.UUID) (*EndUser, error)
+	// EndUserByPublicID returns the end user publicID, or nil.
+	EndUserByPublicID(ctx context.Context, projectID uuid.UUID, publicID string) (*EndUser, error)
 	// EndUserIDByEmail returns the id of the project's end user with email; ok is false when there is none.
 	EndUserIDByEmail(ctx context.Context, projectID uuid.UUID, email string) (id uuid.UUID, ok bool, err error)
 	// CreateEndUser inserts a verified end user with email and name, or returns ErrEmailTaken; it never updates an existing one.
 	CreateEndUser(ctx context.Context, orgID, projectID uuid.UUID, email, name string, now time.Time) (uuid.UUID, error)
 	// FillName sets the end user's name at now only while it is empty.
 	FillName(ctx context.Context, projectID, endUserID uuid.UUID, name string, now time.Time) error
+	// UpdateName sets the end user's name at now, reporting whether the end user exists.
+	UpdateName(ctx context.Context, projectID, endUserID uuid.UUID, name string, now time.Time) (bool, error)
+	// ListEndUsers returns up to limit end users, newest first, after the one with public id after (none: from the start), whose
+	// email starts with prefix.
+	ListEndUsers(ctx context.Context, projectID uuid.UUID, prefix, after string, limit int) ([]*EndUser, error)
 	// EndUserExists reports whether the project has an end user with email.
 	EndUserExists(ctx context.Context, projectID uuid.UUID, email string) (bool, error)
 	// SaveEndUser finds or creates the end user with email, verifying it and recording a sign-in at now.
@@ -54,6 +61,10 @@ type Store interface {
 	EndUserSession(ctx context.Context, projectID, browserID uuid.UUID, publicID string, now time.Time) error
 	// EndUserSessionAnywhere ends the live user session publicID at now, on whichever browser holds it.
 	EndUserSessionAnywhere(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) error
+	// EndOwnedSession ends the live user session publicID of endUserID at now, reporting whether it was live and theirs.
+	EndOwnedSession(ctx context.Context, projectID, endUserID uuid.UUID, publicID string, now time.Time) (bool, error)
+	// LiveSessions returns the end user's live user sessions on every browser, the most recently seen first.
+	LiveSessions(ctx context.Context, projectID, endUserID uuid.UUID) ([]LiveSession, error)
 	// KeepNewest ends every live user session of the browser beyond the keep most recently selected.
 	KeepNewest(ctx context.Context, projectID, browserID uuid.UUID, keep int, now time.Time) error
 

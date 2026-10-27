@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import type { Client } from '~~/gen/client/v1/client_pb';
+import type { Client } from '#gen/client/v1/client_pb';
 import type { LinkRow } from '~/components/link/LinkList.vue';
-import { timestampDate } from '@bufbuild/protobuf/wkt';
-import { ConsentPolicy, SecretGrace } from '~~/gen/client/v1/client_pb';
+import AppModal from '#base/components/ui/AppModal.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
+import UrlField from '#base/components/ui/UrlField.vue';
+import { useDates } from '#base/composables/useDates';
+import { ConsentPolicy, SecretGrace } from '#gen/client/v1/client_pb';
 import ClientForm from '~/components/client/ClientForm.vue';
 import ClientSecretDialog from '~/components/client/ClientSecretDialog.vue';
 import ClientSecrets from '~/components/client/ClientSecrets.vue';
@@ -11,7 +15,7 @@ import { clientFormLabels, kindOptions, rotateLabels, secretDialogLabels, secret
 import RotateSecretDialog from '~/components/client/RotateSecretDialog.vue';
 import { useClientForm } from '~/components/client/useClientForm';
 import { useClient } from '~/components/client/useClients';
-import { graceOptions, secretRows, useClientSecrets } from '~/components/client/useClientSecrets';
+import { useClientSecrets } from '~/components/client/useClientSecrets';
 import { linkDialogLabels, linkListLabels } from '~/components/link/labels';
 import LinkDialog from '~/components/link/LinkDialog.vue';
 import LinkList from '~/components/link/LinkList.vue';
@@ -19,17 +23,15 @@ import { useLinks } from '~/components/link/useLinks';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import { verificationName, verificationStates } from '~/components/resourceserver/verification';
-import AppModal from '~/components/ui/AppModal.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
-import UrlField from '~/components/ui/UrlField.vue';
+import { graceOptions, secretRows } from '~/components/secret/useSecrets';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { date, moment } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const detail = useProjectDetailStore();
@@ -56,10 +58,8 @@ const cimd = computed(() => isCimdClient(client.value));
 const editable = computed(() => canEdit.value && !cimd.value);
 const issuerUrl = computed(() => detail.get(projectId)?.issuerUrl ?? '');
 const urlLabels = computed(() => ({ copyLabel: t('common.copy_label', { label: '{label}' }), openLabel: t('common.open_new_tab', { label: '{label}' }) }));
-const day = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }));
-const moment = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }));
-const fetched = computed(() => (client.value.metadataFetchedAt ? moment.value.format(timestampDate(client.value.metadataFetchedAt)) : ''));
-const created = computed(() => (client.value.createdAt ? day.value.format(timestampDate(client.value.createdAt)) : ''));
+const fetched = computed(() => moment(client.value.metadataFetchedAt));
+const created = computed(() => date(client.value.createdAt));
 const consentLabel = computed(() => t(client.value.consentPolicy === ConsentPolicy.IMPLICIT ? 'clients.consent_implicit' : 'clients.consent_require'));
 
 const form = useClientForm(projectId, client.value);
@@ -81,8 +81,8 @@ const rows = computed(() => secretRows(client.value.secrets).map(r => ({
   id: r.id,
   hint: r.hint,
   old: r.old,
-  created: r.created ? moment.value.format(r.created) : '',
-  expires: r.expires ? moment.value.format(r.expires) : '',
+  created: moment(r.created),
+  expires: moment(r.expires),
 })));
 const oldHint = computed(() => rows.value.find(r => r.old)?.hint ?? '');
 const options = computed(() => graceOptions.map(o => ({ value: o.value, label: t(o.labelKey) })));
@@ -348,7 +348,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
 
     <ClientSecretDialog
       :open="!!revealed"
-      :client-id="client.id"
+      :owner-id="client.id"
       :secret="revealed?.secret ?? ''"
       :labels="dialogText"
       @done="secretSaved"

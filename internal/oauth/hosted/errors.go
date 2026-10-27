@@ -49,3 +49,12 @@ func IsFormExpiredError(err error) bool {
 func (e *FormExpiredError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeSignInFormExpired, "This page expired").WithCause(e)
 }
+
+// NOTE: E2: the client hears about this failure by redirect, with state and iss.
+type authorizeError struct {
+	code        string
+	description string
+	request     *authRequest
+}
+
+func (e *authorizeError) Error() string { return "hosted: authorize error " + e.code }

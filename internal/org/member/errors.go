@@ -131,3 +131,7 @@ func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsAlreadyMemberError(err) || IsInvalidRoleError(err) ||
 		IsLastOwnerError(err) || IsRoleNotAllowedError(err) || IsSelfChangeError(err) || authz.IsForbiddenError(err)
 }
+
+var errLockOutsideTx = errors.New("member.postgres: a row lock needs a transaction")
+
+var errNoDirectory = errors.New("member: no directory wired")

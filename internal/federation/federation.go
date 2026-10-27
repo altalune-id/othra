@@ -30,6 +30,16 @@ type Identity struct {
 	PublicID     string
 	Kind         upstream.Kind
 	LinkedAt     time.Time
+	LastUsedAt   time.Time
+}
+
+// SignInMethod is one way an end user signs in: the project's email link (an empty Kind), or an upstream IdP, linked or linkable.
+type SignInMethod struct {
+	Kind       upstream.Kind
+	Linked     bool
+	Identity   Identity
+	CanRemove  bool
+	LastMethod bool
 }
 
 // Config is what federation needs from the deployment; boot maps upstreams.* into it.

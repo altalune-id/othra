@@ -116,3 +116,5 @@ func IsExpectedError(err error) bool {
 		IsNotFoundError(err) || IsPendingError(err) ||
 		member.IsExpectedError(err) || user.IsExpectedError(err) || password.IsPolicyError(err) || authz.IsForbiddenError(err)
 }
+
+var errLockOutsideTx = errors.New("invite.postgres: a row lock needs a transaction")

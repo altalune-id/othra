@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/schema/entity"
 )
 
@@ -16,6 +17,7 @@ type postgresStore struct {
 	pool          db.Pool
 	servers       *entity.ResourceServers
 	links         *entity.OAuthClientResources
+	secrets       *entity.ResourceServerSecrets
 	identifierKey string
 	clientFKey    string
 }
@@ -26,6 +28,7 @@ var _ Store = (*postgresStore)(nil)
 func NewStore(pool db.Pool, schema, tablePrefix string) *postgresStore {
 	return &postgresStore{
 		pool: pool, servers: entity.NewResourceServers(schema, tablePrefix), links: entity.NewOAuthClientResources(schema, tablePrefix),
+		secrets:       entity.NewResourceServerSecrets(schema, tablePrefix),
 		identifierKey: tablePrefix + "resource_servers_identifier_key",
 		clientFKey:    tablePrefix + "oauth_client_resources_client_fkey",
 	}
@@ -53,6 +56,25 @@ type serverRow struct {
 	CIMDHosts           string     `alias:"resource_servers.cimd_client_hosts"`
 	CIMDScopes          *string    `alias:"resource_servers.cimd_scopes"`
 	Descriptions        string     `alias:"resource_servers.scope_descriptions"`
+	AcceptPersonal      bool       `alias:"resource_servers.accept_personal_tokens"`
+}
+
+type secretRow struct {
+	ID        uuid.UUID  `alias:"resource_server_secrets.id"`
+	PublicID  string     `alias:"resource_server_secrets.public_id"`
+	ServerID  uuid.UUID  `alias:"resource_server_secrets.resource_server_id"`
+	Hint      string     `alias:"resource_server_secrets.hint"`
+	CreatedAt time.Time  `alias:"resource_server_secrets.created_at"`
+	ExpiresAt *time.Time `alias:"resource_server_secrets.expires_at"`
+	Hash      string     `alias:"resource_server_secrets.secret_hash"`
+}
+
+func (r *secretRow) toStored(withHash bool) secret.Stored {
+	s := secret.Stored{ID: r.ID, PublicID: r.PublicID, Hint: r.Hint, CreatedAt: r.CreatedAt.UTC(), ExpiresAt: utc(r.ExpiresAt)}
+	if withHash {
+		s = s.WithHash(r.Hash)
+	}
+	return s
 }
 
 type linkRow struct {
@@ -72,7 +94,7 @@ func (r *serverRow) toServer() (*ResourceServer, error) {
 		ID: r.ID, PublicID: r.PublicID, OrgID: r.OrgID, ProjectID: r.ProjectID, Name: r.Name, Identifier: r.Identifier,
 		Scopes: scopes, State: State(r.VerificationState), VerifiedAt: utc(r.VerifiedAt), LastCheckedAt: utc(r.LastCheckedAt),
 		ConsecutiveFailures: r.ConsecutiveFailures, Trusted: r.Trusted, TrustedAt: utc(r.TrustedAt),
-		CreatedAt: r.CreatedAt.UTC(), UpdatedAt: r.UpdatedAt.UTC(),
+		CreatedAt: r.CreatedAt.UTC(), UpdatedAt: r.UpdatedAt.UTC(), AcceptPersonalTokens: r.AcceptPersonal,
 	}
 	if r.TrustedBy != nil {
 		out.TrustedBy = *r.TrustedBy

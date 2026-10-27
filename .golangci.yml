@@ -126,8 +126,8 @@ linters:
         domain-purity:
           list-mode: strict
           files:
-            - "**/internal/{apikey,auth,client,enduser,install,legal,org,project,resourceserver,user,webhook}/{apikey,auth,client,enduser,install,legal,org,project,resourceserver,user,webhook}.go"
-            - "**/internal/{apikey,auth,client,enduser,install,legal,org,project,resourceserver,user,webhook}/{store,errors}.go"
+            - "**/internal/{apikey,auth,client,enduser,install,legal,org,pat,project,resourceserver,user,webhook}/{apikey,auth,client,enduser,install,legal,org,pat,project,resourceserver,user,webhook}.go"
+            - "**/internal/{apikey,auth,client,enduser,install,legal,org,pat,project,resourceserver,user,webhook}/{store,errors}.go"
             # org/member and org/invite are excluded: they share role and error types with their parent domain.
           allow:
             - $gostd
@@ -137,6 +137,8 @@ linters:
             - altalune.id/othra/emailaddr
             - altalune.id/othra/gen/go
             - altalune.id/othra/internal/kernel/events
+            - altalune.id/othra/internal/kernel/secret
+            - altalune.id/othra/internal/kernel/usage
             - altalune.id/othra/internal/oauth/redirecturi
             - altalune.id/othra/nanoid
             - altalune.id/othra/scope
@@ -227,7 +229,7 @@ linters:
         domain-boundary:
           list-mode: lax
           files:
-            - "**/internal/{apikey,auth,federation,install,legal,org,project,upstream,user,webhook}/**"
+            - "**/internal/{apikey,auth,federation,install,legal,org,pat,project,upstream,user,webhook}/**"
             - "!**/*_test.go"
           deny:
             - pkg: "altalune.id/othra/internal/cli"

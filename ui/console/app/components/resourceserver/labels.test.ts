@@ -2,9 +2,9 @@ import { create } from '@bufbuild/protobuf';
 import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { describe, expect, it } from 'vitest';
 
-import { ResourceServerSchema, ResourceServerState, VerificationFailureSchema } from '../../../gen/resourceserver/v1/resourceserver_pb';
-import { t } from '../../../test/nuxt-globals';
-import { cimdCardLabels, resourceServerListLabels, scopeTableLabels, verificationCardLabels, verificationText } from './labels';
+import { ResourceServerSchema, ResourceServerState, VerificationFailureSchema } from '#gen/resourceserver/v1/resourceserver_pb';
+import { t } from '#test/nuxt-globals';
+import { cimdCardLabels, introspectionSecretLabels, resourceServerListLabels, scopeTableLabels, verificationCardLabels, verificationText } from './labels';
 
 const at = (iso: string) => timestampFromDate(new Date(iso));
 const format = (when: Date) => when.toISOString().slice(0, 10);
@@ -67,5 +67,13 @@ describe('resource server labels', () => {
     const failing = create(ResourceServerSchema, { lastError: create(VerificationFailureSchema, { reason: 'odd' }) });
     expect(verificationText(failing, 'pending', issuer, t, format).failure).toBe('rs.last_error|{"date":"","reason":"rs.reason_unknown"}');
     expect(verificationText(failing, 'trusted', issuer, t, format, { passed: false, failure: null })).toEqual({ body: 'rs.trusted_body', lastCheck: '', verifiedAt: '', failure: '', recheck: '', passed: '' });
+  });
+
+  it('words the introspection secret for a resource server, never a client (M8 design 10)', () => {
+    const l = introspectionSecretLabels(t);
+    expect(l.card.title).toBe('rs.pat_secret_title');
+    expect(l.rotate).toMatchObject({ title: 'rs.pat_rotate_title', body: 'rs.pat_rotate_body', nowWarning: 'rs.pat_now_warning' });
+    expect(l.dialog).toMatchObject({ body: 'rs.pat_dialog_body', ownerId: 'rs.pat_server_id', secret: 'rs.pat_secret_label' });
+    expect(l.revokeTitle).toBe('rs.pat_revoke_title');
   });
 });

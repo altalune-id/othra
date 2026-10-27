@@ -3,6 +3,7 @@ package enduser
 import (
 	"fmt"
 	"net/netip"
+	"strings"
 	"time"
 
 	"github.com/go-jet/jet/v2/postgres"
@@ -58,6 +59,32 @@ func (r *linkRow) toLink() *Link {
 		ExpiresAt: r.ExpiresAt.UTC(), UsedAt: utc(r.UsedAt), BrowserSessionID: r.BrowserSessionID,
 		Pending: pendingBytes(r.PendingIdentity),
 	}
+}
+
+type endUserRow struct {
+	ID           uuid.UUID  `alias:"end_users.id"`
+	Subject      string     `alias:"end_users.public_id"`
+	Email        string     `alias:"end_users.email"`
+	VerifiedAt   *time.Time `alias:"end_users.email_verified_at"`
+	Name         string     `alias:"end_users.name"`
+	CreatedAt    time.Time  `alias:"end_users.created_at"`
+	LastSignInAt *time.Time `alias:"end_users.last_sign_in_at"`
+}
+
+func (r *endUserRow) toEndUser() *EndUser {
+	return &EndUser{
+		ID: r.ID, Subject: r.Subject, Email: r.Email, EmailVerified: r.VerifiedAt != nil, Name: r.Name, CreatedAt: r.CreatedAt.UTC(),
+		LastSignInAt: utc(r.LastSignInAt),
+	}
+}
+
+func (s *postgresStore) endUserColumns() postgres.ProjectionList {
+	t := s.users
+	return postgres.ProjectionList{t.ID, t.PublicID, t.Email, t.EmailVerifiedAt, t.Name, t.CreatedAt, t.LastSignInAt}
+}
+
+func escapeLike(s string) string {
+	return strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(s)
 }
 
 type browserRow struct {

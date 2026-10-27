@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-jet/jet/v2/postgres"
+	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
 	"altalune.id/othra/internal/kernel/db"
@@ -90,6 +91,39 @@ func (s *postgresStore) RevokeUserSession(ctx context.Context, projectID uuid.UU
 	)))
 	_, err := s.exec(ctx, "RevokeUserSession", drop)
 	return err
+}
+
+// RevokeClient revokes every live family of the end user and client for reason at now, drops their unused codes, and counts them.
+func (s *postgresStore) RevokeClient(
+	ctx context.Context, projectID, endUserID, clientID uuid.UUID, reason string, now time.Time,
+) ([]string, error) {
+	f, a, c := s.families, s.access, s.codes
+	project, user, client, at := postgres.UUID(projectID), postgres.UUID(endUserID), postgres.UUID(clientID), postgres.TimestampzT(now.UTC())
+	revoke := f.UPDATE(f.RevokedAt, f.RevokedReason).SET(at, postgres.String(reason)).
+		WHERE(f.ProjectID.EQ(project).AND(f.EndUserID.EQ(user)).AND(f.ClientID.EQ(client)).AND(f.RevokedAt.IS_NULL())).
+		RETURNING(f.ID, f.PublicID)
+	var rows []struct {
+		ID       uuid.UUID `alias:"grant_families.id"`
+		PublicID string    `alias:"grant_families.public_id"`
+	}
+	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { return revoke.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, wrap("RevokeClient", err)
+	}
+	ids, sids := make([]postgres.Expression, 0, len(rows)), make([]string, 0, len(rows))
+	for _, r := range rows {
+		ids, sids = append(ids, postgres.UUID(r.ID)), append(sids, r.PublicID)
+	}
+	if len(ids) > 0 {
+		stamp := a.UPDATE(a.RevokedAt).SET(at).WHERE(a.ProjectID.EQ(project).AND(a.FamilyID.IN(ids...)).AND(a.RevokedAt.IS_NULL()))
+		if _, err := s.exec(ctx, "RevokeClient", stamp); err != nil {
+			return nil, err
+		}
+	}
+	drop := c.DELETE().WHERE(c.ProjectID.EQ(project).AND(c.EndUserID.EQ(user)).AND(c.ClientID.EQ(client)).AND(c.UsedAt.IS_NULL()))
+	if _, err := s.exec(ctx, "RevokeClient", drop); err != nil {
+		return nil, err
+	}
+	return sids, nil
 }
 
 // InsertAccessToken stores an access token of the family, bound to resourceServerID or nil, by its hash.

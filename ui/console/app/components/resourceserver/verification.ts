@@ -1,5 +1,5 @@
-import type { ResourceServer, VerificationFailure } from '~~/gen/resourceserver/v1/resourceserver_pb';
-import { ResourceServerState } from '~~/gen/resourceserver/v1/resourceserver_pb';
+import type { ResourceServer, VerificationFailure } from '#gen/resourceserver/v1/resourceserver_pb';
+import { ResourceServerState } from '#gen/resourceserver/v1/resourceserver_pb';
 
 export type VerificationName = 'pending' | 'verified' | 'failed' | 'trusted';
 

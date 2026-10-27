@@ -13,6 +13,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/emailaddr"
 	"altalune.id/othra/internal/kernel/db"
+	ksecret "altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/nanoid"
@@ -31,6 +32,7 @@ type Service struct {
 	newSecret  func() (string, error)
 	log        *slog.Logger
 	signIn     SignInSwitch
+	grants     Grants
 }
 
 // NewService builds the Service over store; mail enqueues sign-in emails in the same unit of work as their link.
@@ -44,6 +46,12 @@ func NewService(store Store, uow db.Transactor, mail MailQueue, cfg Config, unex
 // WithLogger sets where sign-ins and terms acceptances are logged.
 func (s *Service) WithLogger(log *slog.Logger) *Service {
 	s.log = log
+	return s
+}
+
+// WithGrants sets what revokes a user session's grants in the unit of work that ends the session.
+func (s *Service) WithGrants(g Grants) *Service {
+	s.grants = g
 	return s
 }
 
@@ -129,7 +137,7 @@ func (s *Service) issue(
 			ID: uuid.New(), PublicID: publicID, Email: email, ReturnTo: req.ReturnTo, CreatedAt: now, ExpiresAt: now.Add(s.cfg.LinkTTL),
 			Pending: req.Pending,
 		}
-		if err := s.store.InsertLink(ctx, p.OrgID, p.ID, l, nanoid.HashToken(token), req.IP); err != nil {
+		if err := s.store.InsertLink(ctx, p.OrgID, p.ID, l, ksecret.Hex(token), req.IP); err != nil {
 			return err
 		}
 		known, err := s.store.EndUserExists(ctx, p.ID, email)
@@ -163,7 +171,7 @@ func (s *Service) LinkByToken(ctx context.Context, p Project, token string) (*Li
 		return nil, &LinkNotUsableError{}
 	}
 	ctx = scope(ctx, p)
-	l, err := s.store.LinkByTokenHash(ctx, p.ID, nanoid.HashToken(token))
+	l, err := s.store.LinkByTokenHash(ctx, p.ID, ksecret.Hex(token))
 	return s.usable(ctx, l, err)
 }
 
@@ -191,7 +199,7 @@ func (s *Service) Redeem(ctx context.Context, p Project, req RedeemRequest) (*Re
 	}
 	ctx = scope(ctx, p)
 	now := s.now()
-	hash := nanoid.HashToken(req.Token)
+	hash := ksecret.Hex(req.Token)
 	var out *Redeemed
 	repeated := false
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
@@ -380,14 +388,14 @@ func (s *Service) startBrowser(ctx context.Context, p Project, b *Browser, userA
 		return "", nil, err
 	}
 	if b != nil {
-		if err := s.store.RotateBrowser(ctx, p.ID, b.ID, nanoid.HashToken(secret), now); err != nil {
+		if err := s.store.RotateBrowser(ctx, p.ID, b.ID, ksecret.Hex(secret), now); err != nil {
 			return "", nil, err
 		}
 		b.LastSeenAt = now
 		return secret, b, nil
 	}
 	b = &Browser{ID: uuid.New(), CreatedAt: now, LastSeenAt: now, AbsoluteEnd: now.Add(s.cfg.Absolute)}
-	if err := s.store.InsertBrowser(ctx, p.OrgID, p.ID, b, nanoid.HashToken(secret), clip(userAgent, userAgentMax)); err != nil {
+	if err := s.store.InsertBrowser(ctx, p.OrgID, p.ID, b, ksecret.Hex(secret), clip(userAgent, userAgentMax)); err != nil {
 		return "", nil, err
 	}
 	return secret, b, nil
@@ -397,7 +405,7 @@ func (s *Service) browser(ctx context.Context, p Project, secret string, now tim
 	if secret == "" {
 		return nil, nil
 	}
-	b, err := s.store.BrowserBySecretHash(ctx, p.ID, nanoid.HashToken(secret))
+	b, err := s.store.BrowserBySecretHash(ctx, p.ID, ksecret.Hex(secret))
 	if err != nil || b == nil || !b.Live(now, s.cfg.Idle) {
 		return nil, err
 	}
@@ -475,12 +483,141 @@ func (s *Service) SignOut(ctx context.Context, p Project, secret, publicID strin
 		if err != nil || b == nil {
 			return err
 		}
-		return s.store.EndUserSession(ctx, p.ID, b.ID, publicID, now)
+		if err := s.store.EndUserSession(ctx, p.ID, b.ID, publicID, now); err != nil {
+			return err
+		}
+		return s.revoke(ctx, p, publicID, EndSignOut)
 	})
 	if err != nil {
 		return s.errOrReport(ctx, "enduser: sign out", err)
 	}
 	return nil
+}
+
+// NOTE: G16, P9: every way a user session ends revokes its grants in the same unit of work; Grants keeps offline_access ones.
+func (s *Service) revoke(ctx context.Context, p Project, publicID string, reason EndReason) error {
+	if s.grants == nil {
+		return nil
+	}
+	return s.grants.RevokeUserSession(ctx, p, publicID, reason)
+}
+
+// EndUserSession ends the end user's live session publicID with its grants in one unit of work, or returns *SessionNotFoundError.
+func (s *Service) EndUserSession(ctx context.Context, p Project, endUserID uuid.UUID, publicID string) error {
+	ctx = scope(ctx, p)
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error { return s.endOwned(ctx, p, endUserID, publicID) })
+	if err != nil {
+		return s.errOrReport(ctx, "enduser: end user session", err)
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "enduser: session ended", slog.String("project", p.PublicID), slog.String("user_session", publicID))
+	return nil
+}
+
+func (s *Service) endOwned(ctx context.Context, p Project, endUserID uuid.UUID, publicID string) error {
+	ended, err := s.store.EndOwnedSession(ctx, p.ID, endUserID, publicID, s.now())
+	switch {
+	case err != nil:
+		return err
+	case !ended:
+		return &SessionNotFoundError{}
+	}
+	return s.revoke(ctx, p, publicID, EndSignOut)
+}
+
+// EndOtherSessions ends every live user session of the end user but keep, with their grants, in one unit of work, and counts them.
+func (s *Service) EndOtherSessions(ctx context.Context, p Project, endUserID uuid.UUID, keep string) (int, error) {
+	ctx = scope(ctx, p)
+	ended := 0
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		live, err := s.store.LiveSessions(ctx, p.ID, endUserID)
+		if err != nil {
+			return err
+		}
+		for _, ls := range live {
+			if ls.PublicID == keep {
+				continue
+			}
+			if err := s.endOwned(ctx, p, endUserID, ls.PublicID); err != nil && !IsSessionNotFoundError(err) {
+				return err
+			}
+			ended++
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, s.errOrReport(ctx, "enduser: end other sessions", err)
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "enduser: other sessions ended", slog.String("project", p.PublicID), slog.Int("ended", ended))
+	return ended, nil
+}
+
+// Sessions returns the end user's live user sessions on every browser, the most recently seen first.
+func (s *Service) Sessions(ctx context.Context, p Project, endUserID uuid.UUID) ([]LiveSession, error) {
+	ctx = scope(ctx, p)
+	out, err := s.store.LiveSessions(ctx, p.ID, endUserID)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "enduser: sessions", err)
+	}
+	return out, nil
+}
+
+// Profile returns the end user, or *EndUserNotFoundError when they are gone.
+func (s *Service) Profile(ctx context.Context, p Project, endUserID uuid.UUID) (*EndUser, error) {
+	u, err := s.EndUser(ctx, p, endUserID)
+	switch {
+	case err != nil:
+		return nil, err
+	case u == nil:
+		return nil, &EndUserNotFoundError{}
+	}
+	return u, nil
+}
+
+// ByPublicID returns the project's end user publicID, or *EndUserNotFoundError.
+func (s *Service) ByPublicID(ctx context.Context, p Project, publicID string) (*EndUser, error) {
+	ctx = scope(ctx, p)
+	u, err := s.store.EndUserByPublicID(ctx, p.ID, publicID)
+	switch {
+	case err != nil:
+		return nil, s.errOrReport(ctx, "enduser: by public id", err)
+	case u == nil:
+		return nil, &EndUserNotFoundError{}
+	}
+	return u, nil
+}
+
+// UpdateName sets the name the end user goes by, trimmed and clipped; an empty name clears it.
+func (s *Service) UpdateName(ctx context.Context, p Project, endUserID uuid.UUID, name string) (*EndUser, error) {
+	ctx = scope(ctx, p)
+	found, err := s.store.UpdateName(ctx, p.ID, endUserID, clip(strings.TrimSpace(name), nameMax), s.now())
+	switch {
+	case err != nil:
+		return nil, s.errOrReport(ctx, "enduser: update name", err)
+	case !found:
+		return nil, &EndUserNotFoundError{}
+	}
+	u, err := s.Profile(ctx, p, endUserID)
+	if err != nil {
+		return nil, err
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "enduser: profile updated", slog.String("project", p.PublicID), slog.String("end_user", u.Subject))
+	return u, nil
+}
+
+// ListEndUsers pages the project's end users newest first by email prefix query after the end user after; next is set on a full page.
+func (s *Service) ListEndUsers(ctx context.Context, p Project, query, after string, limit int) (users []*EndUser, next string, err error) {
+	ctx = scope(ctx, p)
+	if limit <= 0 || limit > MaxListLimit {
+		limit = MaxListLimit
+	}
+	users, err = s.store.ListEndUsers(ctx, p.ID, strings.ToLower(strings.TrimSpace(query)), after, limit)
+	if err != nil {
+		return nil, "", s.errOrReport(ctx, "enduser: list", err)
+	}
+	if len(users) == limit {
+		next = users[len(users)-1].Subject
+	}
+	return users, next, nil
 }
 
 // EndUser returns the project's end user id for an ID token or userinfo, or nil when it is gone.
@@ -493,10 +630,16 @@ func (s *Service) EndUser(ctx context.Context, p Project, id uuid.UUID) (*EndUse
 	return u, nil
 }
 
-// EndSession ends the user session publicID on whichever browser holds it, for an RP-initiated logout; an ended one is no error.
+// EndSession ends the user session publicID on any browser with its grants, for an RP-initiated logout; an ended one is no error.
 func (s *Service) EndSession(ctx context.Context, p Project, publicID string) error {
 	ctx = scope(ctx, p)
-	if err := s.store.EndUserSessionAnywhere(ctx, p.ID, publicID, s.now()); err != nil {
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		if err := s.store.EndUserSessionAnywhere(ctx, p.ID, publicID, s.now()); err != nil {
+			return err
+		}
+		return s.revoke(ctx, p, publicID, EndLogout)
+	})
+	if err != nil {
 		return s.errOrReport(ctx, "enduser: end session", err)
 	}
 	return nil

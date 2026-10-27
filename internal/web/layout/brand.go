@@ -68,6 +68,14 @@ func luminance(hex string) float64 {
 	return 0.2126*channel(1) + 0.7152*channel(3) + 0.0722*channel(5)
 }
 
+// CSS is the brand colours as daisyUI variables, or empty without a valid primary. SECURITY: only re-checked hex reaches the CSS.
+func (b *Brand) CSS() string {
+	if b == nil || !hexColor.MatchString(b.Primary) {
+		return ""
+	}
+	return ":root{--color-primary:" + b.Primary + ";--color-primary-content:" + ReadableOn(b.Primary) + "}"
+}
+
 func (b *Brand) initial() string {
 	for _, r := range b.Name {
 		return strings.ToUpper(string(r))
@@ -75,13 +83,12 @@ func (b *Brand) initial() string {
 	return ""
 }
 
-// brandStyle writes the brand colours as CSS variables in a nonce style element; SECURITY: only re-checked hex reaches the CSS.
 func brandStyle(b *Brand) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		if b == nil || !hexColor.MatchString(b.Primary) {
+		css := b.CSS()
+		if css == "" {
 			return nil
 		}
-		css := ":root{--color-primary:" + b.Primary + ";--color-primary-content:" + ReadableOn(b.Primary) + "}"
 		_, err := io.WriteString(w, `<style nonce="`+html.EscapeString(templ.GetNonce(ctx))+`">`+css+`</style>`)
 		return err
 	})

@@ -2,7 +2,6 @@ package grant
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"slices"
 	"time"
@@ -11,6 +10,7 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/nanoid"
@@ -82,7 +82,7 @@ func (s *Service) IssueCode(ctx context.Context, p Project, req CodeRequest) (st
 	}
 	now := s.now()
 	err = s.store.InsertCode(ctx, p.ID, NewCode{
-		ID: uuid.New(), Hash: nanoid.HashToken(code), Client: req.Client, UserSession: req.UserSession, EndUser: req.EndUser,
+		ID: uuid.New(), Hash: secret.Hex(code), Client: req.Client, UserSession: req.UserSession, EndUser: req.EndUser,
 		RedirectURI: req.RedirectURI, Scopes: req.Scopes, CodeChallenge: req.CodeChallenge, Nonce: req.Nonce,
 		AuthTime: req.AuthTime.UTC(), CreatedAt: now, ExpiresAt: now.Add(s.cfg.CodeTTL), ResourceServerID: req.ResourceServerID,
 	})
@@ -108,7 +108,7 @@ func (s *Service) Exchange(ctx context.Context, p Project, req ExchangeRequest) 
 	var out *Tokens
 	var replayed string
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
-		c, err := s.store.CodeByHash(ctx, p.ID, nanoid.HashToken(req.Code))
+		c, err := s.store.CodeByHash(ctx, p.ID, secret.Hex(req.Code))
 		switch {
 		case err != nil:
 			return err
@@ -184,7 +184,7 @@ func (s *Service) Refresh(ctx context.Context, p Project, req RefreshRequest) (*
 	var revoked *Family
 	var reason string
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
-		rt, f, err := s.store.RefreshByHash(ctx, p.ID, nanoid.HashToken(req.RefreshToken))
+		rt, f, err := s.store.RefreshByHash(ctx, p.ID, secret.Hex(req.RefreshToken))
 		switch {
 		case err != nil:
 			return err
@@ -261,8 +261,6 @@ func (s *Service) audience(ctx context.Context, p Project, rsID *uuid.UUID, c Cl
 	return aud, nil
 }
 
-var errNoResources = errors.New("grant: no access token signer for resource-bound grants")
-
 type issueRequest struct {
 	client   Client
 	scopes   []string
@@ -277,7 +275,7 @@ func (s *Service) issue(ctx context.Context, p Project, f *Family, req issueRequ
 		return nil, err
 	}
 	out.AccessToken = access
-	err = s.store.InsertAccessToken(ctx, p.OrgID, p.ID, f.ID, f.ResourceServerID, nanoid.HashToken(access), req.scopes, now, out.ExpiresAt)
+	err = s.store.InsertAccessToken(ctx, p.OrgID, p.ID, f.ID, f.ResourceServerID, secret.Hex(access), req.scopes, now, out.ExpiresAt)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +289,7 @@ func (s *Service) issue(ctx context.Context, p Project, f *Family, req issueRequ
 	if f.AbsoluteExpiresAt.Before(expires) {
 		expires = f.AbsoluteExpiresAt
 	}
-	if err := s.store.InsertRefreshToken(ctx, p.OrgID, p.ID, f.ID, nanoid.HashToken(out.RefreshToken), now, expires); err != nil {
+	if err := s.store.InsertRefreshToken(ctx, p.OrgID, p.ID, f.ID, secret.Hex(out.RefreshToken), now, expires); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -318,7 +316,7 @@ func (s *Service) accessToken(ctx context.Context, p Project, f *Family, req iss
 func (s *Service) Access(ctx context.Context, p Project, token string) (*Access, error) {
 	ctx = scope(ctx, p)
 	now := s.now()
-	a, err := s.store.AccessByHash(ctx, p.ID, nanoid.HashToken(token))
+	a, err := s.store.AccessByHash(ctx, p.ID, secret.Hex(token))
 	switch {
 	case err != nil:
 		return nil, s.errOrReport(ctx, "grant: access", err)
@@ -332,7 +330,7 @@ func (s *Service) Access(ctx context.Context, p Project, token string) (*Access,
 func (s *Service) Revoke(ctx context.Context, p Project, c Client, token, hint string) error {
 	ctx = scope(ctx, p)
 	now := s.now()
-	hash := nanoid.HashToken(token)
+	hash := secret.Hex(token)
 	var family string
 	access := func(ctx context.Context) (bool, error) {
 		a, err := s.store.AccessByHash(ctx, p.ID, hash)
@@ -428,6 +426,34 @@ func (s *Service) RevokeUserSession(ctx context.Context, p Project, userSession,
 		return s.errOrReport(ctx, "grant: revoke user session", err)
 	}
 	return nil
+}
+
+// LiveFamilies returns the end user's live grant families, newest first.
+func (s *Service) LiveFamilies(ctx context.Context, p Project, endUserID uuid.UUID) ([]*Family, error) {
+	ctx = scope(ctx, p)
+	fs, err := s.store.LiveFamilies(ctx, p.ID, endUserID, s.now())
+	if err != nil {
+		return nil, s.errOrReport(ctx, "grant: live families", err)
+	}
+	return fs, nil
+}
+
+// RevokeClient revokes every grant of the end user's client, offline too, and its unused codes (R-5), reporting whether any was live.
+func (s *Service) RevokeClient(ctx context.Context, p Project, endUserID, clientID uuid.UUID) (bool, error) {
+	ctx = scope(ctx, p)
+	var sids []string
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		var err error
+		sids, err = s.store.RevokeClient(ctx, p.ID, endUserID, clientID, ReasonConsentRevoked, s.now())
+		return err
+	})
+	if err != nil {
+		return false, s.errOrReport(ctx, "grant: revoke client", err)
+	}
+	for _, sid := range sids {
+		s.revoked(ctx, sid, ReasonConsentRevoked)
+	}
+	return len(sids) > 0, nil
 }
 
 // Prune deletes the project's expired codes and tokens, used codes past a day, and families revoked a week ago or idle past refresh.

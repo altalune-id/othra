@@ -70,7 +70,7 @@ func TestBoot_RateLimitOnRedis(t *testing.T) {
 	assert.IsType(t, &ratelimitredis.Store{}, app.Services.AuthLimiter)
 	assert.Contains(t, workerNames(app), "redis-health")
 	assert.NotContains(t, workerNames(app), "ratelimit.janitor")
-	assert.Len(t, app.Supervisor.Workers(), 6) // the default five + redis-health
+	assert.Len(t, app.Supervisor.Workers(), 7) // the default six + redis-health
 	require.NoError(t, app.Close(context.Background()))
 }
 
@@ -88,7 +88,7 @@ func TestBoot_RateLimitAuthEnabled(t *testing.T) {
 	}, testLogger())
 	require.NoError(t, err)
 	assert.Contains(t, workerNames(app), "ratelimit.janitor")
-	assert.Len(t, app.Supervisor.Workers(), 6) // the default five + ratelimit.janitor
+	assert.Len(t, app.Supervisor.Workers(), 7) // the default six + ratelimit.janitor
 	assert.IsType(t, &memory.Store{}, app.Services.AuthLimiter)
 	require.NoError(t, app.Close(context.Background()))
 }

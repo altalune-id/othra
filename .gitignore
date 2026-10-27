@@ -17,6 +17,8 @@ node_modules/
 ui/*/dist/
 internal/web/console/public/*
 !internal/web/console/public/.gitkeep
+internal/web/portal/public/*
+!internal/web/portal/public/.gitkeep
 internal/mcp/ui/assets/app.html
 internal/web/static/*
 !internal/web/static/altalune-logo.png

@@ -1,8 +1,8 @@
 import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthMethod, ClientKind, ClientSchema, ConsentPolicy } from '../../../gen/client/v1/client_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
+import { AuthMethod, ClientKind, ClientSchema, ConsentPolicy } from '#gen/client/v1/client_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useClientForm } from './useClientForm';
 
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';

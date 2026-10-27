@@ -64,7 +64,20 @@ func TestBindings(t *testing.T) {
 				"id", "public_id", "org_id", "project_id", "name", "identifier", "scopes", "verification_state",
 				"verified_at", "last_checked_at", "last_error", "consecutive_failures", "trusted", "trusted_at",
 				"trusted_by", "accept_cimd_clients", "cimd_client_hosts", "cimd_scopes", "scope_descriptions",
-				"created_at", "updated_at",
+				"accept_personal_tokens", "created_at", "updated_at",
+			},
+		},
+		{
+			"resource_server_secrets",
+			func(s, p string) binding { b := entity.NewResourceServerSecrets(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "org_id", "project_id", "resource_server_id", "secret_hash", "hint", "created_at", "expires_at"},
+		},
+		{
+			"personal_tokens",
+			func(s, p string) binding { b := entity.NewPersonalTokens(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "end_user_id", "resource_server_id", "name", "token_hash", "hint",
+				"scopes", "created_at", "expires_at", "last_used_at", "revoked_at",
 			},
 		},
 		{

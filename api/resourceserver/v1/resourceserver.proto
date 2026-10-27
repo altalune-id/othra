@@ -3,6 +3,7 @@ syntax = "proto3";
 package resourceserver.v1;
 
 import "buf/validate/validate.proto";
+import "client/v1/client.proto";
 import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
@@ -65,6 +66,11 @@ service ResourceServerService {
   rpc SetResourceServerTrust(SetResourceServerTrustRequest) returns (SetResourceServerTrustResponse);
   // SECURITY: CIMD admission lets unregistered apps ask for this server's scopes; a signed-in person sets it, never MCP.
   rpc SetResourceServerAdmission(SetResourceServerAdmissionRequest) returns (SetResourceServerAdmissionResponse);
+  // SECURITY: personal tokens and the RFC 7662 introspection secret are set by a signed-in person, never MCP; a secret is shown once.
+  rpc SetPersonalTokenAccess(SetPersonalTokenAccessRequest) returns (SetPersonalTokenAccessResponse);
+  rpc GenerateIntrospectionSecret(GenerateIntrospectionSecretRequest) returns (GenerateIntrospectionSecretResponse);
+  rpc RotateIntrospectionSecret(RotateIntrospectionSecretRequest) returns (RotateIntrospectionSecretResponse);
+  rpc RevokeIntrospectionSecret(RevokeIntrospectionSecretRequest) returns (RevokeIntrospectionSecretResponse);
   rpc ListLinks(ListLinksRequest) returns (ListLinksResponse) {
     option (mcp.v1.tool) = {
       name: "resource_server_link_list"
@@ -135,6 +141,10 @@ message ResourceServer {
   map<string, string> scope_descriptions = 15;
   // cimd is whether apps without registration (CIMD) may ask for this server's scopes.
   CIMDAdmission cimd = 16;
+  // accept_personal_tokens lets end users mint personal tokens for this server; it needs an introspection secret.
+  bool accept_personal_tokens = 17;
+  // introspection_secrets are the credentials this server introspects with (RFC 7662 §2.1): the current one and any in its grace.
+  repeated client.v1.ClientSecret introspection_secrets = 18;
 }
 
 // CIMDAdmission is a resource server's admission of apps that sign in with a Client ID Metadata Document.
@@ -420,3 +430,73 @@ message UnlinkClientRequest {
 }
 
 message UnlinkClientResponse {}
+
+message SetPersonalTokenAccessRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  bool accept = 3;
+}
+
+message SetPersonalTokenAccessResponse {
+  ResourceServer resource_server = 1;
+}
+
+message GenerateIntrospectionSecretRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GenerateIntrospectionSecretResponse {
+  ResourceServer resource_server = 1;
+  // secret is the one-time secret. It is never present on any other response.
+  string secret = 2 [debug_redact = true];
+}
+
+message RotateIntrospectionSecretRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  client.v1.SecretGrace grace = 3 [(buf.validate.field).enum.defined_only = true];
+}
+
+message RotateIntrospectionSecretResponse {
+  ResourceServer resource_server = 1;
+  // secret is the new one-time secret. It is never present on any other response.
+  string secret = 2 [debug_redact = true];
+}
+
+message RevokeIntrospectionSecretRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string resource_server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string secret_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message RevokeIntrospectionSecretResponse {
+  ResourceServer resource_server = 1;
+}

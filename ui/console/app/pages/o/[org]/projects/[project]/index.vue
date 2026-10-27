@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import CopyButton from '#base/components/ui/CopyButton.vue';
+import UrlField from '#base/components/ui/UrlField.vue';
 import { discoveryUrls } from '~/components/project/issuer/discovery';
-import CopyButton from '~/components/ui/CopyButton.vue';
-import UrlField from '~/components/ui/UrlField.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';

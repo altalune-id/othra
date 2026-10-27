@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useId } from 'vue';
-import FieldError from '../ui/FieldError.vue';
+import FieldError from '#base/components/ui/FieldError.vue';
 
 export interface RedirectUriListLabels {
   uri: string;

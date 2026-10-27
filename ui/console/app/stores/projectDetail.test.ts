@@ -2,8 +2,8 @@ import { create } from '@bufbuild/protobuf';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ProjectSchema } from '../../gen/project/v1/project_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../test/nuxt-globals';
+import { ProjectSchema } from '#gen/project/v1/project_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useProjectDetailStore } from './projectDetail';
 
 const id = 'x6MH9WPWjktMwCBKHy4pF';

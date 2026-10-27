@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 )
 
 func (s *postgresStore) serverColumns() postgres.ProjectionList {
@@ -20,7 +21,7 @@ func (s *postgresStore) serverColumns() postgres.ProjectionList {
 		t.ConsecutiveFailures, t.Trusted, t.TrustedAt, t.TrustedBy, t.CreatedAt, t.UpdatedAt, t.AcceptCIMDClients,
 		db.ArrayAsJSON(t.CIMDClientHosts, "resource_servers.cimd_client_hosts"),
 		db.ArrayAsJSON(t.CIMDScopes, "resource_servers.cimd_scopes"),
-		postgres.CAST(t.ScopeDescriptions).AS_TEXT().AS("resource_servers.scope_descriptions"),
+		postgres.CAST(t.ScopeDescriptions).AS_TEXT().AS("resource_servers.scope_descriptions"), t.AcceptPersonalTokens,
 	}
 }
 
@@ -122,6 +123,33 @@ func (s *postgresStore) query(ctx context.Context, op string, stmt postgres.Sele
 			return nil, err
 		}
 		out = append(out, r)
+	}
+	return out, nil
+}
+
+// IntrospectionSecrets returns the live introspection secrets of the servers ids at now, by server, oldest first.
+func (s *postgresStore) IntrospectionSecrets(
+	ctx context.Context, projectID uuid.UUID, ids []uuid.UUID, now time.Time, withHash bool,
+) (map[uuid.UUID][]secret.Stored, error) {
+	out := map[uuid.UUID][]secret.Stored{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	t := s.secrets
+	servers := make([]postgres.Expression, len(ids))
+	for i, id := range ids {
+		servers[i] = postgres.UUID(id)
+	}
+	stmt := postgres.SELECT(t.ID, t.PublicID, t.ResourceServerID, t.Hint, t.CreatedAt, t.ExpiresAt, t.SecretHash).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ResourceServerID.IN(servers...)).
+			AND(t.ExpiresAt.IS_NULL().OR(t.ExpiresAt.GT(postgres.TimestampzT(now.UTC()))))).
+		ORDER_BY(t.CreatedAt.ASC(), t.PublicID.ASC())
+	var rows []secretRow
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, fmt.Errorf("resourceserver.postgres: IntrospectionSecrets: %w", err)
+	}
+	for i := range rows {
+		out[rows[i].ServerID] = append(out[rows[i].ServerID], rows[i].toStored(withHash))
 	}
 	return out, nil
 }

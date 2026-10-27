@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { ShownError } from '../../lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import type { VerificationName } from './verification';
 import { ref, useId } from 'vue';
-import CopyButton from '../ui/CopyButton.vue';
-import ErrorText from '../ui/ErrorText.vue';
-import UrlField from '../ui/UrlField.vue';
+import CopyButton from '#base/components/ui/CopyButton.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import UrlField from '#base/components/ui/UrlField.vue';
 import VerificationStatus from './VerificationStatus.vue';
 
 export interface VerificationCardLabels {

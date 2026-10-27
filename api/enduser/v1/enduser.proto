@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package enduser.v1;
+
+import "account/v1/account.proto";
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "altalune.id/othra/gen/go/enduser/v1;enduserv1";
+
+// EndUserService lets project admins look at a project's end users and revoke their sessions, apps and tokens. Every id is a public id.
+service EndUserService {
+  rpc ListEndUsers(ListEndUsersRequest) returns (ListEndUsersResponse) {
+    option (mcp.v1.tool) = {
+      name: "end_user_list"
+      description: "List a project's end users, newest first, optionally filtered by email."
+      required: ["project_id"]
+    };
+  }
+  rpc GetEndUser(GetEndUserRequest) returns (GetEndUserResponse) {
+    option (mcp.v1.tool) = {
+      name: "end_user_get"
+      description: "Get one end user with their sign-in methods, live sessions, connected apps and personal tokens."
+      required: ["project_id", "end_user_id"]
+    };
+  }
+  rpc RevokeEndUserSession(RevokeEndUserSessionRequest) returns (RevokeEndUserSessionResponse) {
+    option (mcp.v1.tool) = {
+      name: "end_user_session_revoke"
+      description: "Sign an end user out of one session. Apps signed in through it lose access, except offline access."
+      required: ["project_id", "end_user_id", "session_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+  rpc DisconnectEndUserApp(DisconnectEndUserAppRequest) returns (DisconnectEndUserAppResponse) {
+    option (mcp.v1.tool) = {
+      name: "end_user_app_disconnect"
+      description: "Disconnect an app from an end user: its consents and tokens are revoked; access it already has ends within 15 minutes."
+      required: ["project_id", "end_user_id", "client_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+  rpc RevokeEndUserToken(RevokeEndUserTokenRequest) returns (RevokeEndUserTokenResponse) {
+    option (mcp.v1.tool) = {
+      name: "end_user_token_revoke"
+      description: "Revoke one of an end user's personal tokens; it stops working at once."
+      required: ["project_id", "end_user_id", "token_id"]
+      mutation: true
+      destructive: true
+    };
+  }
+}
+
+message EndUser {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+  // last_sign_in_at is the latest sign-in of any live session; unset when none.
+  google.protobuf.Timestamp last_sign_in_at = 5;
+}
+
+message ListEndUsersRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string query = 2 [(buf.validate.field).string.max_len = 254];
+  int32 limit = 3 [(buf.validate.field).int32 = {
+    gte: 0
+    lte: 100
+  }];
+  string after = 4 [(buf.validate.field).string.(othra.v1.public_id) = true];
+}
+
+message ListEndUsersResponse {
+  repeated EndUser end_users = 1;
+  // next is the after value for the next page; empty on the last page.
+  string next = 2;
+}
+
+message GetEndUserRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string end_user_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GetEndUserResponse {
+  EndUser end_user = 1;
+  repeated account.v1.SignInMethod methods = 2;
+  repeated account.v1.Session sessions = 3;
+  repeated account.v1.ConnectedApp apps = 4;
+  repeated account.v1.PersonalToken tokens = 5;
+}
+
+message RevokeEndUserSessionRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string end_user_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string session_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message RevokeEndUserSessionResponse {}
+
+message DisconnectEndUserAppRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string end_user_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string client_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 2048
+  ];
+}
+
+message DisconnectEndUserAppResponse {}
+
+message RevokeEndUserTokenRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string end_user_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string token_id = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message RevokeEndUserTokenResponse {}

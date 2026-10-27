@@ -1,7 +1,16 @@
 <script setup lang="ts">
-import type { ResourceServer } from '~~/gen/resourceserver/v1/resourceserver_pb';
+import type { ResourceServer } from '#gen/resourceserver/v1/resourceserver_pb';
 import type { LinkRow } from '~/components/link/LinkList.vue';
-import { timestampDate } from '@bufbuild/protobuf/wkt';
+import AppModal from '#base/components/ui/AppModal.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import FieldError from '#base/components/ui/FieldError.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
+import UrlField from '#base/components/ui/UrlField.vue';
+import { useDates } from '#base/composables/useDates';
+import { SecretGrace } from '#gen/client/v1/client_pb';
+import ClientSecretDialog from '~/components/client/ClientSecretDialog.vue';
+import ClientSecrets from '~/components/client/ClientSecrets.vue';
+import RotateSecretDialog from '~/components/client/RotateSecretDialog.vue';
 import { linkDialogLabels, linkListLabels } from '~/components/link/labels';
 import LinkDialog from '~/components/link/LinkDialog.vue';
 import LinkList from '~/components/link/LinkList.vue';
@@ -9,25 +18,24 @@ import { useLinks } from '~/components/link/useLinks';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import CimdCard from '~/components/resourceserver/CimdCard.vue';
-import { cimdCardLabels, scopeTableLabels, verificationCardLabels, verificationText } from '~/components/resourceserver/labels';
+import { cimdCardLabels, introspectionSecretLabels, scopeTableLabels, verificationCardLabels, verificationText } from '~/components/resourceserver/labels';
+import PersonalTokenCard from '~/components/resourceserver/PersonalTokenCard.vue';
 import { isHttpIdentifier } from '~/components/resourceserver/resourceUri';
 import ScopeTable from '~/components/resourceserver/ScopeTable.vue';
 import { admissible, isCimdLink, useCimd } from '~/components/resourceserver/useCimd';
+import { introspectionEndpoint, usePersonalTokenAccess } from '~/components/resourceserver/usePersonalTokenAccess';
 import { useResourceServer } from '~/components/resourceserver/useResourceServers';
 import { metadataSnippet, verificationName, verificationStates } from '~/components/resourceserver/verification';
 import VerificationCard from '~/components/resourceserver/VerificationCard.vue';
-import AppModal from '~/components/ui/AppModal.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import FieldError from '~/components/ui/FieldError.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
-import UrlField from '~/components/ui/UrlField.vue';
+import { graceOptions, secretRows } from '~/components/secret/useSecrets';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { date, moment } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const detail = useProjectDetailStore();
@@ -55,9 +63,8 @@ const scopeDescriptions = page.scopes.descriptions;
 const scopeErrors = page.scopes.errors;
 const issuerUrl = computed(() => detail.get(projectId)?.issuerUrl ?? '');
 const urlLabels = computed(() => ({ copyLabel: t('common.copy_label', { label: '{label}' }), openLabel: t('common.open_new_tab', { label: '{label}' }) }));
-const moment = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }));
 const status = computed(() => verificationName(server.value.state, server.value.trusted));
-const text = computed(() => verificationText(server.value, status.value, issuerUrl.value, t, d => moment.value.format(d), verified.value));
+const text = computed(() => verificationText(server.value, status.value, issuerUrl.value, t, moment, verified.value));
 const snippet = computed(() => (status.value === 'verified' || !issuerUrl.value ? '' : metadataSnippet(server.value.identifier, issuerUrl.value)));
 const cardLabels = computed(() => verificationCardLabels(t));
 const scopeLabels = computed(() => scopeTableLabels(t));
@@ -71,13 +78,12 @@ cimd.reset(server.value);
 const { accept: cimdAccept, hosts: cimdHosts, allScopes: cimdAllScopes, picked: cimdPicked, revoking: cimdRevoking, revokeBusy: cimdRevokeBusy } = cimd;
 const cimdText = computed(() => cimdCardLabels(t));
 const cimdApps = computed(() => {
-  const day = new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' });
   return links.links.value.filter(isCimdLink).map(l => ({
     id: l.clientId,
     name: l.clientName,
     url: l.clientMetadataUrl,
-    firstSeen: l.createdAt ? day.format(timestampDate(l.createdAt)) : '',
-    fetched: l.metadataFetchedAt ? moment.value.format(timestampDate(l.metadataFetchedAt)) : '',
+    firstSeen: date(l.createdAt),
+    fetched: moment(l.metadataFetchedAt),
   }));
 });
 
@@ -87,6 +93,20 @@ function revokeApp(app: { id: string }) {
     cimd.askRevoke(link);
   }
 }
+const pat = usePersonalTokenAccess(projectId, rsId, () => server.value, next => page.replace(next));
+const patSecrets = pat.secrets;
+const { rotating: patRotating, grace: patGrace, revoking: patRevoking, busy: patSecretBusy, error: patSecretError, revealed: patRevealed } = patSecrets;
+const patRows = computed(() => secretRows(server.value.introspectionSecrets).map(r => ({
+  id: r.id,
+  hint: r.hint,
+  old: r.old,
+  created: moment(r.created),
+  expires: moment(r.expires),
+})));
+const patOldHint = computed(() => patRows.value.find(r => r.old)?.hint ?? '');
+const graceText = computed(() => graceOptions.map(o => ({ value: o.value, label: t(o.labelKey) })));
+const patText = computed(() => introspectionSecretLabels(t));
+
 const linkText = computed(() => linkListLabels(t, 'resourceServer'));
 const linkDialogText = computed(() => linkDialogLabels(t, 'resourceServer', editing.value === 'edit'));
 const targetOptions = computed(() => available.value.map(x => ({ value: x.id, label: x.name })));
@@ -268,6 +288,64 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
       :labels="cimdText"
       @save="cimd.save()"
       @revoke="revokeApp"
+    />
+
+    <PersonalTokenCard
+      :accept="server.acceptPersonalTokens"
+      :can-edit="canEdit"
+      :lock-reason="pat.lockReason.value"
+      :busy="pat.busy.value"
+      :error="pat.error.value"
+      :endpoint="introspectionEndpoint(issuerUrl)"
+      :copy-label="urlLabels.copyLabel"
+      @set="pat.setAccept"
+    />
+
+    <ClientSecrets
+      :rows="patRows"
+      :can-edit="canEdit"
+      :busy="patSecretBusy && !patRotating && !patRevoking"
+      :error="patRotating || patRevoking ? null : patSecretError"
+      :labels="patText.card"
+      @generate="patSecrets.generate()"
+      @rotate="patSecrets.askRotate()"
+      @revoke="patSecrets.askRevoke"
+    />
+
+    <RotateSecretDialog
+      v-model:grace="patGrace"
+      :open="patRotating"
+      :options="graceText"
+      :now-value="SecretGrace.NOW"
+      :old-hint="patOldHint"
+      :busy="patSecretBusy"
+      :error="patSecretError"
+      :labels="patText.rotate"
+      @confirm="patSecrets.confirmRotate()"
+      @close="patSecrets.cancelRotate()"
+    />
+
+    <AppModal :open="!!patRevoking" :title="patText.revokeTitle" @close="patSecrets.cancelRevoke()">
+      <p class="text-sm">
+        {{ patText.revokeBody.replace('{hint}', patRevoking?.hint ?? '') }}
+      </p>
+      <ErrorText :error="patSecretError" />
+      <template #footer>
+        <button type="button" class="btn btn-ghost btn-sm" :disabled="patSecretBusy" @click="patSecrets.cancelRevoke()">
+          {{ t('common.cancel') }}
+        </button>
+        <button type="button" class="btn btn-error btn-sm" :disabled="patSecretBusy" @click="patSecrets.confirmRevoke()">
+          {{ t('secrets.revoke_old') }}
+        </button>
+      </template>
+    </AppModal>
+
+    <ClientSecretDialog
+      :open="!!patRevealed"
+      :owner-id="patRevealed?.ownerId ?? server.id"
+      :secret="patRevealed?.secret ?? ''"
+      :labels="patText.dialog"
+      @done="patSecrets.forget()"
     />
 
     <LinkList

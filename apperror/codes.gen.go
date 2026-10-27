@@ -89,17 +89,18 @@ const (
 	CodeClientSecretExists       Code = "CLT007"
 	CodeClientMetadataManaged    Code = "CLT008"
 
-	CodeResourceServerNotFound            Code = "RSV001"
-	CodeResourceServerInvalidIdentifier   Code = "RSV002"
-	CodeResourceServerIdentifierTaken     Code = "RSV003"
-	CodeResourceServerInvalidScope        Code = "RSV004"
-	CodeResourceServerScopePinned         Code = "RSV005"
-	CodeResourceServerLinked              Code = "RSV006"
-	CodeResourceServerTrustSelfHostedOnly Code = "RSV007"
-	CodeResourceServerVerifyTooSoon       Code = "RSV008"
-	CodeResourceServerInvalidLinkScopes   Code = "RSV009"
-	CodeResourceServerInvalidClientHost   Code = "RSV010"
-	CodeResourceServerAdmissionUnverified Code = "RSV011"
+	CodeResourceServerNotFound              Code = "RSV001"
+	CodeResourceServerInvalidIdentifier     Code = "RSV002"
+	CodeResourceServerIdentifierTaken       Code = "RSV003"
+	CodeResourceServerInvalidScope          Code = "RSV004"
+	CodeResourceServerScopePinned           Code = "RSV005"
+	CodeResourceServerLinked                Code = "RSV006"
+	CodeResourceServerTrustSelfHostedOnly   Code = "RSV007"
+	CodeResourceServerVerifyTooSoon         Code = "RSV008"
+	CodeResourceServerInvalidLinkScopes     Code = "RSV009"
+	CodeResourceServerInvalidClientHost     Code = "RSV010"
+	CodeResourceServerAdmissionUnverified   Code = "RSV011"
+	CodeResourceServerIntrospectionRequired Code = "RSV012"
 
 	CodeSignInLinkNotUsable             Code = "SIG001"
 	CodeSignInEmailDisabled             Code = "SIG002"
@@ -125,6 +126,19 @@ const (
 	CodeUpstreamInvalidConfig Code = "UPS002"
 	CodeUpstreamExists        Code = "UPS003"
 	CodeUpstreamHasIdentities Code = "UPS004"
+
+	CodeAccountSignedOut         Code = "ACC001"
+	CodeAccountSessionNotFound   Code = "ACC002"
+	CodeAccountAppNotConnected   Code = "ACC003"
+	CodeAccountTokenNotFound     Code = "ACC004"
+	CodeAccountTokenInvalid      Code = "ACC005"
+	CodeAccountTokenServerClosed Code = "ACC006"
+	CodeAccountTokenLimit        Code = "ACC007"
+	CodeAccountCurrentSession    Code = "ACC008"
+	CodeAccountReauthRequired    Code = "ACC009"
+	CodeAccountTermsRequired     Code = "ACC010"
+
+	CodeEndUserNotFound Code = "EUS001"
 )
 
 var kinds = map[Code]Kind{
@@ -213,17 +227,18 @@ var kinds = map[Code]Kind{
 	CodeClientSecretExists:       KindFailedPrecondition,
 	CodeClientMetadataManaged:    KindFailedPrecondition,
 
-	CodeResourceServerNotFound:            KindNotFound,
-	CodeResourceServerInvalidIdentifier:   KindInvalid,
-	CodeResourceServerIdentifierTaken:     KindAlreadyExists,
-	CodeResourceServerInvalidScope:        KindInvalid,
-	CodeResourceServerScopePinned:         KindFailedPrecondition,
-	CodeResourceServerLinked:              KindFailedPrecondition,
-	CodeResourceServerTrustSelfHostedOnly: KindFailedPrecondition,
-	CodeResourceServerVerifyTooSoon:       KindResourceExhausted,
-	CodeResourceServerInvalidLinkScopes:   KindInvalid,
-	CodeResourceServerInvalidClientHost:   KindInvalid,
-	CodeResourceServerAdmissionUnverified: KindFailedPrecondition,
+	CodeResourceServerNotFound:              KindNotFound,
+	CodeResourceServerInvalidIdentifier:     KindInvalid,
+	CodeResourceServerIdentifierTaken:       KindAlreadyExists,
+	CodeResourceServerInvalidScope:          KindInvalid,
+	CodeResourceServerScopePinned:           KindFailedPrecondition,
+	CodeResourceServerLinked:                KindFailedPrecondition,
+	CodeResourceServerTrustSelfHostedOnly:   KindFailedPrecondition,
+	CodeResourceServerVerifyTooSoon:         KindResourceExhausted,
+	CodeResourceServerInvalidLinkScopes:     KindInvalid,
+	CodeResourceServerInvalidClientHost:     KindInvalid,
+	CodeResourceServerAdmissionUnverified:   KindFailedPrecondition,
+	CodeResourceServerIntrospectionRequired: KindFailedPrecondition,
 
 	CodeSignInLinkNotUsable:             KindFailedPrecondition,
 	CodeSignInEmailDisabled:             KindFailedPrecondition,
@@ -249,4 +264,17 @@ var kinds = map[Code]Kind{
 	CodeUpstreamInvalidConfig: KindInvalid,
 	CodeUpstreamExists:        KindAlreadyExists,
 	CodeUpstreamHasIdentities: KindFailedPrecondition,
+
+	CodeAccountSignedOut:         KindUnauthenticated,
+	CodeAccountSessionNotFound:   KindNotFound,
+	CodeAccountAppNotConnected:   KindNotFound,
+	CodeAccountTokenNotFound:     KindNotFound,
+	CodeAccountTokenInvalid:      KindInvalid,
+	CodeAccountTokenServerClosed: KindFailedPrecondition,
+	CodeAccountTokenLimit:        KindResourceExhausted,
+	CodeAccountCurrentSession:    KindFailedPrecondition,
+	CodeAccountReauthRequired:    KindFailedPrecondition,
+	CodeAccountTermsRequired:     KindFailedPrecondition,
+
+	CodeEndUserNotFound: KindNotFound,
 }

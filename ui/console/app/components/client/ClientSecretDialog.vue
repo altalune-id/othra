@@ -1,32 +1,32 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import AppModal from '../ui/AppModal.vue';
-import CopyButton from '../ui/CopyButton.vue';
-import SecretField from '../ui/SecretField.vue';
+import AppModal from '#base/components/ui/AppModal.vue';
+import CopyButton from '#base/components/ui/CopyButton.vue';
+import SecretField from '#base/components/ui/SecretField.vue';
 
 export interface ClientSecretDialogLabels {
   title: string;
   body: string;
-  clientId: string;
+  ownerId: string;
   secret: string;
-  copyClientId: string;
+  copyOwnerId: string;
   copySecret: string;
   confirm: string;
   closeDisabled: string;
   done: string;
 }
 
-const { open, clientId, secret, labels = {
+const { open, ownerId, secret, labels = {
   title: 'Store this secret now',
   body: 'This is the only time it is shown. Put it in your app\'s config. If you lose it, rotate the secret.',
-  clientId: 'Client ID',
+  ownerId: 'Client ID',
   secret: 'Client secret',
-  copyClientId: 'Copy client ID',
+  copyOwnerId: 'Copy client ID',
   copySecret: 'Copy client secret',
   confirm: 'I\'ve stored this secret somewhere safe',
   closeDisabled: 'Tick the box above to close.',
   done: 'Done',
-} } = defineProps<{ open: boolean, clientId: string, secret: string, labels?: ClientSecretDialogLabels }>();
+} } = defineProps<{ open: boolean, ownerId: string, secret: string, labels?: ClientSecretDialogLabels }>();
 
 const emit = defineEmits<{ done: [] }>();
 const stored = ref(false);
@@ -50,8 +50,8 @@ function done() {
         {{ labels.body }}
       </p>
       <div class="space-y-1">
-        <span class="block text-xs font-medium text-base-content/70">{{ labels.clientId }}</span>
-        <SecretField :value="clientId" :label="labels.copyClientId" />
+        <span class="block text-xs font-medium text-base-content/70">{{ labels.ownerId }}</span>
+        <SecretField :value="ownerId" :label="labels.copyOwnerId" />
       </div>
       <div class="space-y-1">
         <span class="block text-xs font-medium text-base-content/70">{{ labels.secret }}</span>

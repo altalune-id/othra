@@ -27,6 +27,7 @@ import (
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/client"
+	"altalune.id/othra/internal/consent"
 	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/install"
 	"altalune.id/othra/internal/kernel/authn"
@@ -39,6 +40,7 @@ import (
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/pat"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/upstream"
@@ -224,7 +226,8 @@ func samples() []error {
 		&resourceserver.InvalidClientHostError{Host: "x", Reason: resourceserver.HostIPLiteral},
 		&resourceserver.InvalidClientHostError{Host: "x", Reason: resourceserver.HostDuplicate},
 		&resourceserver.InvalidClientHostError{Host: "x", Reason: resourceserver.HostTooMany},
-		&resourceserver.AdmissionUnverifiedError{},
+		&resourceserver.AdmissionUnverifiedError{Reason: resourceserver.UnverifiedCIMD},
+		&resourceserver.AdmissionUnverifiedError{Reason: resourceserver.UnverifiedPersonalTokens},
 		&resourceserver.LinkedError{Clients: []string{"Web"}},
 		&resourceserver.TrustSelfHostedOnlyError{},
 		&resourceserver.VerifyTooSoonError{RetryAt: time.Unix(0, 0)},
@@ -255,6 +258,21 @@ func samples() []error {
 		&upstream.InvalidConfigError{Reason: upstream.ConfigClientSecret},
 		&upstream.ExistsError{},
 		&upstream.HasIdentitiesError{},
+		&resourceserver.IntrospectionRequiredError{},
+		&pat.NotFoundError{},
+		&pat.InvalidError{Reason: pat.InvalidName},
+		&pat.InvalidError{Reason: pat.InvalidServer},
+		&pat.InvalidError{Reason: pat.InvalidScopes},
+		&pat.InvalidError{Reason: pat.InvalidExpiry},
+		&pat.ServerClosedError{Project: "Acme"},
+		&pat.LimitError{Max: pat.MaxLive},
+		&pat.ReauthRequiredError{},
+		&enduser.SignedOutError{},
+		&enduser.SessionNotFoundError{},
+		&enduser.CurrentSessionError{},
+		&enduser.TermsRequiredError{},
+		&enduser.EndUserNotFoundError{},
+		&consent.AppNotConnectedError{},
 	}
 }
 
@@ -422,7 +440,7 @@ func TestEveryInvalidFieldHasALabel(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, fields)
 
-	locales, err := filepath.Glob("../../ui/console/i18n/locales/*.json")
+	locales, err := filepath.Glob("../../ui/base/i18n/locales/*.json")
 	require.NoError(t, err)
 	require.NotEmpty(t, locales)
 	for _, path := range locales {

@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import type { ResourceServerRow } from '~/components/resourceserver/ResourceServerList.vue';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import { useDates } from '#base/composables/useDates';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import { resourceServerListLabels } from '~/components/resourceserver/labels';
 import ResourceServerList from '~/components/resourceserver/ResourceServerList.vue';
 import { useResourceServerList } from '~/components/resourceserver/useResourceServers';
 import { relativeTime, verificationName, verificationStates } from '~/components/resourceserver/verification';
-import ErrorText from '~/components/ui/ErrorText.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
 const { t, locale } = useI18n();
+const { moment } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const canEdit = useCanEditProject();
@@ -29,7 +31,6 @@ const base = computed(() => `/o/${route.params.org}/projects/${route.params.proj
 const list = useResourceServerList(listed.value.id);
 const { loading, loadError } = list;
 const rows = computed<ResourceServerRow[]>(() => {
-  const full = new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' });
   return list.servers.value.map((rs) => {
     const status = verificationName(rs.state, rs.trusted);
     const checked = rs.lastCheckedAt && !rs.trusted ? timestampDate(rs.lastCheckedAt) : null;
@@ -40,7 +41,7 @@ const rows = computed<ResourceServerRow[]>(() => {
       status,
       statusLabel: t(verificationStates[status].labelKey),
       checked: checked ? relativeTime(checked, locale.value) : '',
-      checkedTitle: checked ? full.format(checked) : '',
+      checkedTitle: moment(checked),
       to: `${base.value}/${rs.id}`,
     };
   });

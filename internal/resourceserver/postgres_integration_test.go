@@ -56,7 +56,7 @@ func (c clients) Lookup(ctx context.Context, _, projectID uuid.UUID, publicID st
 }
 
 func (c clients) Refs(ctx context.Context, _, projectID uuid.UUID, ids []uuid.UUID) (map[uuid.UUID]resourceserver.ClientRef, error) {
-	rows, err := c.db.QueryContext(ctx, `SELECT id, public_id, name FROM oauth_clients WHERE project_id = $1`, projectID)
+	rows, err := c.db.QueryContext(ctx, `SELECT id, public_id, name, coalesce(metadata_url, '') FROM oauth_clients WHERE project_id = $1`, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c clients) Refs(ctx context.Context, _, projectID uuid.UUID, ids []uuid.UU
 	out := map[uuid.UUID]resourceserver.ClientRef{}
 	for rows.Next() {
 		var r resourceserver.ClientRef
-		if err := rows.Scan(&r.ID, &r.PublicID, &r.Name); err != nil {
+		if err := rows.Scan(&r.ID, &r.PublicID, &r.Name, &r.MetadataURL); err != nil {
 			return nil, err
 		}
 		for _, id := range ids {
@@ -450,4 +450,94 @@ func TestPostgres_AdmissionAndDescriptions(t *testing.T) {
 	_, ok, err = f.svc.Admits(ctx, org, project, r.ID, c.ID, "claude.ai", []string{"read"})
 	require.NoError(t, err)
 	assert.False(t, ok, "admission off: refresh refused")
+}
+
+// pm P3, A1, A12: introspection secrets authenticate per server and project, rotate with grace, revoke, and go with their server.
+func TestPostgres_IntrospectionSecrets(t *testing.T) {
+	f := newPGFixture(t)
+	org, project := f.seed(t)
+	ctx := t.Context()
+	r := create(t, f, org, project, "https://mcp.example.com/mcp", "read")
+	auth := func(publicID, presented string) bool {
+		t.Helper()
+		_, ok, err := f.svc.Authenticate(ctx, org, project, publicID, presented)
+		require.NoError(t, err)
+		return ok
+	}
+
+	_, err := f.svc.SetPersonalTokenAccess(ctx, org, project, r.PublicID, true)
+	assert.True(t, resourceserver.IsAdmissionUnverifiedError(err), "R-1: a pending server takes no personal tokens")
+	_, _, err = f.svc.Verify(ctx, org, project, r.PublicID)
+	require.NoError(t, err)
+	_, err = f.svc.SetPersonalTokenAccess(ctx, org, project, r.PublicID, true)
+	assert.True(t, resourceserver.IsIntrospectionRequiredError(err), "no credential yet")
+
+	got, first, err := f.svc.GenerateIntrospectionSecret(ctx, org, project, r.PublicID)
+	require.NoError(t, err)
+	require.Len(t, got.IntrospectionSecrets, 1)
+	assert.True(t, strings.HasPrefix(first, resourceserver.IntrospectionSecretPrefix))
+	_, _, err = f.svc.GenerateIntrospectionSecret(ctx, org, project, r.PublicID)
+	assert.True(t, resourceserver.IsIntrospectionSecretExistsError(err))
+	assert.True(t, auth(r.PublicID, first))
+	assert.False(t, auth(r.PublicID, first+"x"))
+	assert.False(t, auth("r-unknown", first))
+
+	got, err = f.svc.SetPersonalTokenAccess(ctx, org, project, r.PublicID, true)
+	require.NoError(t, err)
+	assert.True(t, got.TakesPersonalTokens(time.Now(), true))
+
+	_, second, err := f.svc.RotateIntrospectionSecret(ctx, org, project, r.PublicID, time.Hour)
+	require.NoError(t, err)
+	assert.True(t, auth(r.PublicID, first), "the old secret works through its grace")
+	assert.True(t, auth(r.PublicID, second))
+	got, third, err := f.svc.RotateIntrospectionSecret(ctx, org, project, r.PublicID, 0)
+	require.NoError(t, err)
+	assert.False(t, auth(r.PublicID, first), "a secret already in its grace ends at once")
+	assert.False(t, auth(r.PublicID, second), "no grace")
+	assert.True(t, auth(r.PublicID, third))
+	require.Len(t, got.IntrospectionSecrets, 1)
+
+	_, err = f.svc.RevokeIntrospectionSecret(ctx, org, project, r.PublicID, got.IntrospectionSecrets[0].PublicID)
+	require.NoError(t, err)
+	assert.False(t, auth(r.PublicID, third))
+	got, err = f.svc.Get(ctx, org, project, r.PublicID)
+	require.NoError(t, err)
+	assert.False(t, got.TakesPersonalTokens(time.Now(), true), "no live secret: closed to personal tokens")
+
+	otherOrg, otherProject := f.seed(t)
+	_, fourth, err := f.svc.GenerateIntrospectionSecret(ctx, org, project, r.PublicID)
+	require.NoError(t, err)
+	_, ok, err := f.svc.Authenticate(ctx, otherOrg, otherProject, r.PublicID, fourth)
+	require.NoError(t, err)
+	assert.False(t, ok, "another project's endpoint")
+
+	require.NoError(t, f.svc.Delete(ctx, org, project, r.PublicID))
+	var left int
+	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT count(*) FROM resource_server_secrets WHERE resource_server_id = $1`, r.ID).Scan(&left))
+	assert.Zero(t, left, "deleting the server deletes its secrets")
+}
+
+// qa F-3: a server with an admitted metadata document client deletes cleanly, its link with it; never a raw SQL error.
+func TestPostgres_DeleteWithACIMDLink(t *testing.T) {
+	f := newPGFixture(t)
+	org, project := f.seed(t)
+	ctx := t.Context()
+	r := create(t, f, org, project, "https://mcp.example.com/mcp", "read")
+	cimd := uuid.New()
+	_, err := f.db.ExecContext(ctx, `INSERT INTO oauth_clients (id, public_id, org_id, project_id, name, client_type, application_type,
+		token_endpoint_auth_method, grant_types, allowed_scopes, redirect_uris, consent_policy, registration_kind, metadata_url,
+		metadata_fetched_at, metadata_expires_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, 'Claude Code', 'public', 'native', 'none', '{authorization_code}', '{openid}', '{http://127.0.0.1/callback}',
+		'require', 'cimd', 'https://claude.ai/oauth/claude-code-client-metadata', now(), now() + interval '1 day', now(), now())`,
+		cimd, "c"+strings.ReplaceAll(uuid.NewString(), "-", "")[:20], org, project)
+	require.NoError(t, err)
+	require.NoError(t, f.svc.LinkMetadataClient(ctx, org, project, cimd, r.ID, []string{"read"}))
+
+	require.NoError(t, f.svc.Delete(ctx, org, project, r.PublicID))
+	var left int
+	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT count(*) FROM oauth_client_resources WHERE resource_server_id = $1`, r.ID).Scan(&left))
+	assert.Zero(t, left)
+	var clients int
+	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT count(*) FROM oauth_clients WHERE id = $1`, cimd).Scan(&clients))
+	assert.Equal(t, 1, clients, "the client stays; the shadow prune owns it")
 }

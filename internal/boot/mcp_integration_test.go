@@ -103,7 +103,8 @@ func TestMCP_ToolResultsHoldNoUUID(t *testing.T) {
 		"delivery_id": s.pub.delivery, "name": "Probe", "email": "probe@example.com", "role": "member",
 		"url": "https://example.com/probe", "event_types": []string{"invite.created"},
 		"client_id": s.pub.client, "kind": "CLIENT_KIND_WEB", "redirect_uris": []string{"https://example.com/probe"},
-		"consent_policy": "CONSENT_POLICY_REQUIRE",
+		"consent_policy": "CONSENT_POLICY_REQUIRE", "end_user_id": s.pub.endUser, "resource_server_id": s.pub.resourceServer,
+		"upstream_id": s.pub.upstream,
 	}
 	ids := map[string]string{"org": s.pub.org, "project": s.pub.project, "webhook": s.pub.webhook}
 	answered := 0
@@ -125,6 +126,8 @@ func TestMCP_ToolResultsHoldNoUUID(t *testing.T) {
 		require.Equal(t, http.StatusOK, status, "%s: %s", tool.Name, body)
 		if !strings.Contains(string(body), `"isError":true`) {
 			answered++
+		} else {
+			t.Logf("%s refused: %s", tool.Name, body)
 		}
 		assert.Empty(t, uuidShaped.FindAllString(string(body), -1), "%s answered with a UUID: %s", tool.Name, body)
 	}

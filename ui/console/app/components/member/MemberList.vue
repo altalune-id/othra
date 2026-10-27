@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { ShownError } from '../../lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import { computed } from 'vue';
-import AppModal from '../ui/AppModal.vue';
-import ErrorText from '../ui/ErrorText.vue';
+import AppDropdown from '#base/components/ui/AppDropdown.vue';
+import AppModal from '#base/components/ui/AppModal.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
 import { displayName } from './names';
 
 export interface MemberListRow {
@@ -183,10 +184,10 @@ function onRole(m: MemberListRow, event: Event) {
                     {{ labels.leave }}
                   </button>
                 </div>
-                <div class="dropdown dropdown-left sm:hidden">
-                  <button type="button" class="btn btn-ghost btn-sm btn-square" :aria-label="labels.actions.replace('{name}', displayName(m))" :disabled="busy">
+                <AppDropdown class="dropdown-left sm:hidden" :label="labels.actions.replace('{name}', displayName(m))" :disabled="busy" trigger-class="btn-square">
+                  <template #trigger>
                     <Icon name="lucide:ellipsis" size="16" />
-                  </button>
+                  </template>
                   <ul tabindex="-1" class="dropdown-content menu z-10 w-52 rounded-box border border-base-300 bg-base-100 p-1 shadow">
                     <li v-if="m.removable">
                       <button type="button" @click="emit('remove', m.userId)">
@@ -201,7 +202,7 @@ function onRole(m: MemberListRow, event: Event) {
                       </button>
                     </li>
                   </ul>
-                </div>
+                </AppDropdown>
               </template>
             </td>
           </tr>

@@ -32,7 +32,7 @@ const (
 
 func buildHosted(cfg config.Config, svcs *Services, kit layout.Kit, resolver *oidc.Resolver) *hosted.Web {
 	linkTTL := cmp.Or(cfg.EndUsers.MagicLink.TTL, defaultLinkTTL)
-	web := hosted.NewWeb(hostedUsers{users: svcs.EndUsers, grants: svcs.Grants}, resolver, kit, hosted.Config{
+	web := hosted.NewWeb(hostedUsers{users: svcs.EndUsers}, resolver, kit, hosted.Config{
 		BasePath:   cfg.HTTP.BasePath,
 		PublicBase: publicBase(cfg.HTTP),
 		MailFrom:   cfg.Mail.From,
@@ -42,6 +42,9 @@ func buildHosted(cfg config.Config, svcs *Services, kit layout.Kit, resolver *oi
 		LinkTTL:    linkTTL,
 		LogoURL:    svcs.Projects.LogoURL,
 	}).WithLimits(layout.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops})
+	if page, _ := buildPortal(cfg.HTTP.BasePath); page != nil {
+		web.WithPortal(page)
+	}
 	if svcs.Grants != nil && svcs.Clients != nil && svcs.Keys != nil && svcs.ResourceServers != nil && svcs.Consents != nil {
 		oauth := hostedOAuth{
 			clients: svcs.Clients, grants: svcs.Grants, hints: keys.NewVerifier(svcs.Keys), users: svcs.EndUsers,
@@ -63,8 +66,7 @@ func purposeKey(secret []byte, purpose string) []byte {
 }
 
 type hostedUsers struct {
-	users  *enduser.Service
-	grants *grant.Service
+	users *enduser.Service
 }
 
 var _ hosted.EndUsers = hostedUsers{}
@@ -158,12 +160,8 @@ func (u hostedUsers) Select(ctx context.Context, p hosted.Project, secret, userS
 	return hostedAccount(*a), nil
 }
 
-// NOTE: G16: signing an account out also revokes the grants issued under that user session.
 func (u hostedUsers) SignOut(ctx context.Context, p hosted.Project, secret, userSession string) error {
-	if err := u.users.SignOut(ctx, endUserProject(p), secret, userSession); err != nil || u.grants == nil {
-		return err
-	}
-	return u.grants.RevokeUserSession(ctx, grantProject(p), userSession, grant.ReasonSignOut)
+	return u.users.SignOut(ctx, endUserProject(p), secret, userSession)
 }
 
 func (u hostedUsers) TermsState(ctx context.Context, p hosted.Project, secret, userSession string) (hosted.TermsState, error) {
@@ -334,8 +332,5 @@ func (o hostedOAuth) EndSession(ctx context.Context, p hosted.Project, sid, user
 	if userSession == "" {
 		return nil
 	}
-	if err := o.users.EndSession(ctx, endUserProject(p), userSession); err != nil {
-		return err
-	}
-	return o.grants.RevokeUserSession(ctx, grantProject(p), userSession, grant.ReasonEndSession)
+	return o.users.EndSession(ctx, endUserProject(p), userSession)
 }

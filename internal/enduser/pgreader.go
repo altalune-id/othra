@@ -126,15 +126,8 @@ func (s *postgresStore) EndUserExists(ctx context.Context, projectID uuid.UUID, 
 // EndUserByID returns the end user id, or nil.
 func (s *postgresStore) EndUserByID(ctx context.Context, projectID, id uuid.UUID) (*EndUser, error) {
 	t := s.users
-	stmt := postgres.SELECT(t.ID, t.PublicID, t.Email, t.EmailVerifiedAt, t.Name).FROM(t).
-		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(id))))
-	var row struct {
-		ID         uuid.UUID  `alias:"end_users.id"`
-		Subject    string     `alias:"end_users.public_id"`
-		Email      string     `alias:"end_users.email"`
-		VerifiedAt *time.Time `alias:"end_users.email_verified_at"`
-		Name       string     `alias:"end_users.name"`
-	}
+	stmt := postgres.SELECT(s.endUserColumns()).FROM(t).WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(id))))
+	var row endUserRow
 	err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) })
 	switch {
 	case db.IsNoRows(err):
@@ -142,7 +135,78 @@ func (s *postgresStore) EndUserByID(ctx context.Context, projectID, id uuid.UUID
 	case err != nil:
 		return nil, wrap("EndUserByID", err)
 	}
-	return &EndUser{ID: row.ID, Subject: row.Subject, Email: row.Email, EmailVerified: row.VerifiedAt != nil, Name: row.Name}, nil
+	return row.toEndUser(), nil
+}
+
+// ListEndUsers returns up to limit end users, newest first, after the one with public id after, whose email starts with prefix.
+func (s *postgresStore) ListEndUsers(ctx context.Context, projectID uuid.UUID, prefix, after string, limit int) ([]*EndUser, error) {
+	t := s.users
+	where := t.ProjectID.EQ(postgres.UUID(projectID))
+	if prefix != "" {
+		where = where.AND(t.Email.LIKE(postgres.String(escapeLike(prefix) + "%")))
+	}
+	if after != "" {
+		cur, err := s.EndUserByPublicID(ctx, projectID, after)
+		if err != nil || cur == nil {
+			return nil, err
+		}
+		at := postgres.TimestampzT(cur.CreatedAt)
+		where = where.AND(t.CreatedAt.LT(at).OR(t.CreatedAt.EQ(at).AND(t.ID.GT(postgres.UUID(cur.ID)))))
+	}
+	stmt := postgres.SELECT(s.endUserColumns()).FROM(t).WHERE(where).ORDER_BY(t.CreatedAt.DESC(), t.ID.ASC()).LIMIT(int64(limit))
+	var rows []endUserRow
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, wrap("ListEndUsers", err)
+	}
+	out := make([]*EndUser, 0, len(rows))
+	for i := range rows {
+		out = append(out, rows[i].toEndUser())
+	}
+	return out, nil
+}
+
+// EndUserByPublicID returns the end user publicID, or nil.
+func (s *postgresStore) EndUserByPublicID(ctx context.Context, projectID uuid.UUID, publicID string) (*EndUser, error) {
+	t := s.users
+	stmt := postgres.SELECT(s.endUserColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.PublicID.EQ(postgres.String(publicID))))
+	var row endUserRow
+	err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) })
+	switch {
+	case db.IsNoRows(err):
+		return nil, nil
+	case err != nil:
+		return nil, wrap("EndUserByPublicID", err)
+	}
+	return row.toEndUser(), nil
+}
+
+// LiveSessions returns the end user's live user sessions on every browser, the most recently seen first.
+func (s *postgresStore) LiveSessions(ctx context.Context, projectID, endUserID uuid.UUID) ([]LiveSession, error) {
+	us, b := s.sessions, s.browsers
+	stmt := postgres.SELECT(us.ID, us.PublicID, us.Method, us.AuthTime, us.LastSeenAt, b.UserAgent).
+		FROM(us.INNER_JOIN(b, b.ID.EQ(us.BrowserSessionID).AND(b.ProjectID.EQ(us.ProjectID)))).
+		WHERE(us.ProjectID.EQ(postgres.UUID(projectID)).AND(us.EndUserID.EQ(postgres.UUID(endUserID))).AND(us.EndedAt.IS_NULL()).
+			AND(b.EndedAt.IS_NULL())).
+		ORDER_BY(us.LastSeenAt.DESC(), us.ID.ASC())
+	var rows []struct {
+		ID         uuid.UUID `alias:"user_sessions.id"`
+		PublicID   string    `alias:"user_sessions.public_id"`
+		Method     string    `alias:"user_sessions.method"`
+		AuthTime   time.Time `alias:"user_sessions.auth_time"`
+		LastSeenAt time.Time `alias:"user_sessions.last_seen_at"`
+		UserAgent  string    `alias:"browser_sessions.user_agent"`
+	}
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, wrap("LiveSessions", err)
+	}
+	out := make([]LiveSession, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, LiveSession{
+			PublicID: r.PublicID, Method: r.Method, UserAgent: r.UserAgent, AuthTime: r.AuthTime.UTC(), LastSeenAt: r.LastSeenAt.UTC(),
+		})
+	}
+	return out, nil
 }
 
 // EndUserIDByEmail returns the id of the project's end user with email; ok is false when there is none.

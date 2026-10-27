@@ -8,8 +8,10 @@ ENV PNPM_HOME=/pnpm \
     COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY ui/base/package.json ui/base/
 COPY ui/console/package.json ui/console/
 COPY ui/mcp/package.json ui/mcp/
+COPY ui/portal/package.json ui/portal/
 COPY ui/web/package.json ui/web/
 COPY ui/scripts/package.json ui/scripts/
 COPY ui/vitest-config/package.json ui/vitest-config/
@@ -40,6 +42,7 @@ COPY . .
 # make ui placed the builds where the binary embeds them; carry them over from the ui stage
 COPY --from=ui /src/internal/web/static/ internal/web/static/
 COPY --from=ui /src/internal/web/console/public/ internal/web/console/public/
+COPY --from=ui /src/internal/web/portal/public/ internal/web/portal/public/
 COPY --from=ui /src/internal/mcp/ui/assets/ internal/mcp/ui/assets/
 
 # VERSION defaults to version/VERSION; COMMIT and BUILD_TIME come from the build (no .git in the context)

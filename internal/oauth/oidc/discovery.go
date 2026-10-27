@@ -37,13 +37,23 @@ type Document struct {
 	UILocalesSupported               []string `json:"ui_locales_supported"`
 	RevocationEndpoint               string   `json:"revocation_endpoint"`
 	RevocationAuthMethods            []string `json:"revocation_endpoint_auth_methods_supported"`
+	IntrospectionEndpoint            string   `json:"introspection_endpoint,omitempty"`
+	IntrospectionAuthMethods         []string `json:"introspection_endpoint_auth_methods_supported,omitempty"`
 	// ClientIDMetadataDocumentSupported is always sent (CIMD §6); true only while a verified resource server admits CIMD clients.
 	ClientIDMetadataDocumentSupported bool `json:"client_id_metadata_document_supported"`
 }
 
-// Discovery builds the metadata of the issuer at issuerURL; cimd says whether it admits CIMD clients.
-func Discovery(issuerURL string, cimd bool) Document {
-	return Document{
+// Features are the optional parts of an issuer's metadata.
+type Features struct {
+	// CIMD says whether the issuer admits CIMD clients.
+	CIMD bool
+	// Introspection says whether the issuer serves the introspection endpoint.
+	Introspection bool
+}
+
+// Discovery builds the metadata of the issuer at issuerURL with the features f.
+func Discovery(issuerURL string, f Features) Document {
+	d := Document{
 		Issuer:                           issuerURL,
 		AuthorizationEndpoint:            issuerURL + authorizePath,
 		TokenEndpoint:                    issuerURL + tokenPath,
@@ -66,6 +76,11 @@ func Discovery(issuerURL string, cimd bool) Document {
 		UILocalesSupported:                i18n.Locales(),
 		RevocationEndpoint:                issuerURL + revokePath,
 		RevocationAuthMethods:             []string{authBasic, authPost, authNone},
-		ClientIDMetadataDocumentSupported: cimd,
+		ClientIDMetadataDocumentSupported: f.CIMD,
 	}
+	if f.Introspection {
+		d.IntrospectionEndpoint = issuerURL + introspectPath
+		d.IntrospectionAuthMethods = []string{authBasic, authPost}
+	}
+	return d
 }

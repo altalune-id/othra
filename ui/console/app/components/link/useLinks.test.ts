@@ -1,9 +1,9 @@
 import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ClientRegistration, ClientSchema } from '../../../gen/client/v1/client_pb';
-import { LinkSchema, ResourceServerSchema, ResourceServerState } from '../../../gen/resourceserver/v1/resourceserver_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
+import { ClientRegistration, ClientSchema } from '#gen/client/v1/client_pb';
+import { LinkSchema, ResourceServerSchema, ResourceServerState } from '#gen/resourceserver/v1/resourceserver_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { linkUnverified, useLinks } from './useLinks';
 
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';

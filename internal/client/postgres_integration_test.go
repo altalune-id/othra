@@ -17,6 +17,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/pgtest"
@@ -142,7 +143,7 @@ func TestPostgres_SecretRotation(t *testing.T) {
 	require.Len(t, got.Secrets, 1)
 	var hash string
 	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT secret_hash FROM oauth_client_secrets WHERE public_id = $1`, got.Secrets[0].PublicID).Scan(&hash))
-	assert.True(t, client.SecretMatches(hash, first))
+	assert.True(t, secret.Matches(hash, first))
 	authn, err := f.svc.Authenticate(ctx, org, prj, c.PublicID)
 	require.NoError(t, err)
 	assert.True(t, authn.VerifySecret(first, time.Now()), "the authentication read carries the hashes")

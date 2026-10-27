@@ -62,3 +62,6 @@ func (e *ProjectNotFoundError) ToAppError() *apperror.AppError {
 func IsExpectedError(err error) bool {
 	return IsNoActiveKeyError(err) || IsRotationPendingError(err) || IsProjectNotFoundError(err)
 }
+
+// ErrInvalidToken is the cause of every token Verify refuses.
+var ErrInvalidToken = errors.New("keys: invalid token")

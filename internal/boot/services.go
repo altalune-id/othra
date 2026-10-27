@@ -25,12 +25,14 @@ import (
 	"altalune.id/othra/internal/kernel/ratelimit"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/kernel/storage"
+	"altalune.id/othra/internal/kernel/usage"
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/oauth/oidc"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
+	"altalune.id/othra/internal/pat"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/upstream"
@@ -52,7 +54,7 @@ type Services struct {
 	APIKeys         *apikey.Service
 	KeyScheme       apikey.Scheme
 	KeyAuthn        *apikey.Authenticator
-	KeyUsage        *apikey.UsageWorker
+	KeyUsage        *usage.Worker
 	Outbox          outbox.Store
 	WebhookStore    webhook.Store
 	Webhooks        *webhook.Service
@@ -83,6 +85,8 @@ type Services struct {
 	Consents        *consent.Service
 	Upstreams       *upstream.Service
 	Federation      *federation.Service
+	PersonalTokens  *pat.Service
+	TokenUsage      *usage.Worker
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -128,7 +132,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	apiKeys := apikey.NewService(apiKeyStore, keyScheme, projectIDs{projects: projects}, k.Reporter.Unexpected).
 		WithOwnerRoles(owners).
 		WithPersonalKeys(caps.PersonalKeys)
-	keyUsage := apikey.NewUsageWorker(apiKeyStore, keyUsageInterval, k.Log)
+	keyUsage := usage.New("apikey-usage", apiKeyStore, keyUsageInterval, k.Log)
 	keyAuthn := apikey.NewAuthenticator(apiKeyStore, keyUsage, keyScheme, owners, k.Reporter.Unexpected)
 	sessions := buildSessionStore(k, cfg, sl, secretsLog(k.Log, caps))
 	mailQueue := buildMailQueue(k.Pool, cfg, sl)
@@ -180,6 +184,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	svcs.IssuerResolver = oidc.NewResolver(projects, signingKeys, publicBase(cfg.HTTP), k.Reporter.Unexpected)
 	svcs.ResourceServers = buildResourceServers(k, cfg, uow, projects, users, svcs.Clients)
 	svcs.Consents = buildConsents(k, cfg, svcs)
+	svcs.PersonalTokens, svcs.TokenUsage = buildPersonalTokens(k, cfg, uow, svcs.ResourceServers, svcs.EndUsers)
 	svcs.Upstreams = buildUpstreams(k, cfg, uow, sl, projects)
 	installer.WithProjectSeed(seedUpstreams(cfg.Upstreams, svcs.Upstreams))
 	if svcs.Upstreams != nil {
@@ -187,6 +192,8 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	}
 	projects.WithSignInMethods(projectSignInMethods{upstreams: svcs.Upstreams, linked: svcs.Federation})
 	svcs.Grants = buildGrants(k, cfg, uow, signingKeys, grantAudiences{servers: svcs.ResourceServers})
+	svcs.EndUsers.WithGrants(endUserGrants{grants: svcs.Grants})
+	svcs.Consents.WithGrants(consentGrants{grants: svcs.Grants}, uow)
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
 		Store:      auth.NewResetStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),
 		Transactor: uow,

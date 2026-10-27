@@ -231,3 +231,20 @@ func TestSecurityHeadersOnEverySurfaceButMCP(t *testing.T) {
 type registrarFunc func(mux *http.ServeMux)
 
 func (f registrarFunc) Register(mux *http.ServeMux) { f(mux) }
+
+func TestPortalAssetsMountOutsideTheHostedPages(t *testing.T) {
+	t.Parallel()
+	assets := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("asset " + r.URL.Path))
+	})
+	h := NewServer(ServerOpts{BasePath: "/oa", PortalAssets: assets})
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/oa/portal/_nuxt/e.js", nil))
+	assert.Equal(t, "asset _nuxt/e.js", rec.Body.String())
+	assert.Empty(t, rec.Header().Get("Cache-Control"), "the build's own cache headers, never the hosted no-store")
+	assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+
+	post := httptest.NewRecorder()
+	h.ServeHTTP(post, httptest.NewRequest(http.MethodPost, "/oa/portal/_nuxt/e.js", nil))
+	assert.NotEqual(t, http.StatusOK, post.Code)
+}

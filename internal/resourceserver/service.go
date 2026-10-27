@@ -13,6 +13,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/nanoid"
 )
@@ -142,6 +143,9 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*ResourceServe
 func (s *Service) List(ctx context.Context, orgID, projectID uuid.UUID) ([]*ResourceServer, error) {
 	ctx = scope(ctx, orgID, projectID)
 	list, err := s.store.List(ctx, projectID)
+	if err == nil {
+		err = s.withSecrets(ctx, projectID, list...)
+	}
 	if err != nil {
 		return nil, s.errOrReport(ctx, "resourceserver: list", err)
 	}
@@ -152,6 +156,9 @@ func (s *Service) List(ctx context.Context, orgID, projectID uuid.UUID) ([]*Reso
 func (s *Service) Get(ctx context.Context, orgID, projectID uuid.UUID, publicID string) (*ResourceServer, error) {
 	ctx = scope(ctx, orgID, projectID)
 	r, err := s.store.ByPublicID(ctx, projectID, publicID)
+	if err == nil {
+		err = s.withSecrets(ctx, projectID, r)
+	}
 	if err != nil {
 		return nil, s.errOrReport(ctx, "resourceserver: get", err)
 	}
@@ -216,7 +223,7 @@ func (s *Service) refuseRemoval(ctx context.Context, r *ResourceServer, removed 
 	return nil
 }
 
-// Delete removes a server; it is refused while clients are linked to it.
+// Delete removes a server with its metadata document clients' links; it is refused while registered clients are linked to it.
 func (s *Service) Delete(ctx context.Context, orgID, projectID uuid.UUID, publicID string) error {
 	ctx = scope(ctx, orgID, projectID)
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
@@ -229,15 +236,27 @@ func (s *Service) Delete(ctx context.Context, orgID, projectID uuid.UUID, public
 			return err
 		}
 		var names []string
+		var managed []uuid.UUID
 		for _, l := range links {
 			if l.Client.MetadataURL == "" {
 				names = append(names, l.Client.Name)
+			} else {
+				managed = append(managed, l.ClientID)
 			}
 		}
 		if len(names) > 0 {
 			return &LinkedError{Clients: names}
 		}
-		return s.store.Delete(ctx, projectID, r.ID)
+		for _, clientID := range managed {
+			if err := s.store.DeleteLink(ctx, projectID, clientID, r.ID); err != nil {
+				return err
+			}
+		}
+		err = s.store.Delete(ctx, projectID, r.ID)
+		if db.IsForeignKeyViolation(err) {
+			return &LinkedError{}
+		}
+		return err
 	})
 	if err != nil {
 		return s.errOrReport(ctx, "resourceserver: delete", err)
@@ -607,7 +626,7 @@ func (s *Service) SetAdmission(ctx context.Context, orgID, projectID uuid.UUID, 
 			}
 		}
 		if a.Accept && !r.Admissible(s.cfg.TrustAvailable) {
-			return &AdmissionUnverifiedError{}
+			return &AdmissionUnverifiedError{Reason: UnverifiedCIMD}
 		}
 		r.Admission, r.UpdatedAt = a, s.now().UTC()
 		if err := s.store.Update(ctx, r); err != nil {
@@ -742,4 +761,199 @@ func (s *Service) AcceptsCIMD(ctx context.Context, orgID, projectID uuid.UUID) (
 		}
 	}
 	return false, nil
+}
+
+func (s *Service) withSecrets(ctx context.Context, projectID uuid.UUID, servers ...*ResourceServer) error {
+	ids := make([]uuid.UUID, len(servers))
+	for i, r := range servers {
+		ids[i] = r.ID
+	}
+	secrets, err := s.store.IntrospectionSecrets(ctx, projectID, ids, s.now().UTC(), false)
+	if err != nil {
+		return err
+	}
+	for _, r := range servers {
+		r.IntrospectionSecrets = secrets[r.ID]
+	}
+	return nil
+}
+
+// SetPersonalTokenAccess turns personal tokens for the server on or off; on needs a live introspection secret (RSV012).
+func (s *Service) SetPersonalTokenAccess(
+	ctx context.Context, orgID, projectID uuid.UUID, publicID string, accept bool,
+) (*ResourceServer, error) {
+	ctx = scope(ctx, orgID, projectID)
+	var out *ResourceServer
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		r, err := s.store.Lock(ctx, projectID, publicID)
+		if err == nil {
+			err = s.withSecrets(ctx, projectID, r)
+		}
+		if err != nil {
+			return err
+		}
+		r.AcceptPersonalTokens, r.UpdatedAt = accept, s.now().UTC()
+		switch {
+		case accept && !r.Admissible(s.cfg.TrustAvailable):
+			return &AdmissionUnverifiedError{Reason: UnverifiedPersonalTokens}
+		case accept && !r.TakesPersonalTokens(r.UpdatedAt, s.cfg.TrustAvailable):
+			return &IntrospectionRequiredError{}
+		}
+		out = r
+		return s.store.Update(ctx, r)
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "resourceserver: personal tokens", err)
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "resourceserver: personal tokens", slog.String("resource_server", out.PublicID),
+		slog.Bool("accept", accept))
+	return out, nil
+}
+
+// GenerateIntrospectionSecret gives a server without a current introspection secret a new one and returns its plaintext once.
+func (s *Service) GenerateIntrospectionSecret(
+	ctx context.Context, orgID, projectID uuid.UUID, publicID string,
+) (*ResourceServer, string, error) {
+	return s.issueSecret(ctx, orgID, projectID, publicID, "resourceserver: generate introspection secret",
+		func(_ context.Context, r *ResourceServer, _ time.Time) error {
+			if _, ok := r.CurrentIntrospectionSecret(); ok {
+				return &IntrospectionSecretExistsError{}
+			}
+			return nil
+		})
+}
+
+// RotateIntrospectionSecret makes a new current secret; the old one keeps working for grace, an older one in its grace ends at once.
+func (s *Service) RotateIntrospectionSecret(
+	ctx context.Context, orgID, projectID uuid.UUID, publicID string, grace time.Duration,
+) (*ResourceServer, string, error) {
+	return s.issueSecret(ctx, orgID, projectID, publicID, "resourceserver: rotate introspection secret",
+		func(ctx context.Context, r *ResourceServer, now time.Time) error {
+			rot := secret.Rotate(r.IntrospectionSecrets, grace, now)
+			for _, id := range rot.Expire {
+				if err := s.store.ExpireIntrospectionSecret(ctx, projectID, r.ID, id, rot.At); err != nil {
+					return err
+				}
+			}
+			return s.store.DeleteIntrospectionSecrets(ctx, projectID, r.ID, rot.Drop, now)
+		})
+}
+
+func (s *Service) issueSecret(
+	ctx context.Context, orgID, projectID uuid.UUID, publicID, message string,
+	before func(ctx context.Context, r *ResourceServer, now time.Time) error,
+) (*ResourceServer, string, error) {
+	ctx = scope(ctx, orgID, projectID)
+	var (
+		out *ResourceServer
+		m   secret.Minted
+		st  secret.Stored
+	)
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		now := s.now().UTC()
+		r, err := s.store.Lock(ctx, projectID, publicID)
+		if err == nil {
+			err = s.withSecrets(ctx, projectID, r)
+		}
+		if err != nil {
+			return err
+		}
+		if err := before(ctx, r, now); err != nil {
+			return err
+		}
+		if m, err = IntrospectionSecretScheme.Mint(); err != nil {
+			return err
+		}
+		id, err := nanoid.New(publicIDLen)
+		if err != nil {
+			return err
+		}
+		st = secret.Stored{ID: uuid.New(), PublicID: id, Hint: m.Hint, CreatedAt: now}
+		if err := s.store.InsertIntrospectionSecret(ctx, r, st, secret.Versioned(m.Plaintext)); err != nil {
+			return err
+		}
+		out = r
+		return s.withSecrets(ctx, projectID, r)
+	})
+	if err != nil {
+		return nil, "", s.errOrReport(ctx, message, err)
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, message, slog.String("resource_server", out.PublicID), slog.String("secret_id", st.PublicID),
+		slog.Int("live_secrets", len(out.IntrospectionSecrets)))
+	return out, m.Plaintext, nil
+}
+
+// RevokeIntrospectionSecret ends one of the server's introspection secrets at once.
+func (s *Service) RevokeIntrospectionSecret(
+	ctx context.Context, orgID, projectID uuid.UUID, publicID, secretPublicID string,
+) (*ResourceServer, error) {
+	ctx = scope(ctx, orgID, projectID)
+	var out *ResourceServer
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		now := s.now().UTC()
+		r, err := s.store.Lock(ctx, projectID, publicID)
+		if err == nil {
+			err = s.withSecrets(ctx, projectID, r)
+		}
+		if err != nil {
+			return err
+		}
+		i := slices.IndexFunc(r.IntrospectionSecrets, func(st secret.Stored) bool { return st.PublicID == secretPublicID })
+		if i < 0 {
+			return &IntrospectionSecretNotFoundError{}
+		}
+		if err := s.store.DeleteIntrospectionSecrets(ctx, projectID, r.ID, []uuid.UUID{r.IntrospectionSecrets[i].ID}, now); err != nil {
+			return err
+		}
+		out = r
+		return s.withSecrets(ctx, projectID, r)
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "resourceserver: revoke introspection secret", err)
+	}
+	s.log.LogAttrs(ctx, slog.LevelInfo, "resourceserver: revoke introspection secret", slog.String("resource_server", out.PublicID),
+		slog.String("secret_id", secretPublicID), slog.Int("live_secrets", len(out.IntrospectionSecrets)))
+	return out, nil
+}
+
+// Authenticate returns the server publicID and whether presented is one of its live introspection secrets (RFC 7662 §2.1).
+func (s *Service) Authenticate(ctx context.Context, orgID, projectID uuid.UUID, publicID, presented string) (*ResourceServer, bool, error) {
+	ctx = scope(ctx, orgID, projectID)
+	r, err := s.store.ByPublicID(ctx, projectID, publicID)
+	if IsNotFoundError(err) {
+		_ = secret.Matches(secret.Versioned(""), presented)
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, s.errOrReport(ctx, "resourceserver: authenticate", err)
+	}
+	now := s.now().UTC()
+	secrets, err := s.store.IntrospectionSecrets(ctx, projectID, []uuid.UUID{r.ID}, now, true)
+	if err != nil {
+		return nil, false, s.errOrReport(ctx, "resourceserver: authenticate", err)
+	}
+	return r, secret.MatchesAny(secrets[r.ID], presented, now), nil
+}
+
+// PersonalTokenServers returns the project's servers that take personal tokens now, by name.
+func (s *Service) PersonalTokenServers(ctx context.Context, orgID, projectID uuid.UUID) ([]*ResourceServer, error) {
+	list, err := s.List(ctx, orgID, projectID)
+	if err != nil {
+		return nil, err
+	}
+	now := s.now().UTC()
+	return slices.DeleteFunc(list, func(r *ResourceServer) bool { return !r.TakesPersonalTokens(now, s.cfg.TrustAvailable) }), nil
+}
+
+// ByID returns the project's resource server id with its introspection secrets, or *NotFoundError.
+func (s *Service) ByID(ctx context.Context, orgID, projectID, id uuid.UUID) (*ResourceServer, error) {
+	ctx = scope(ctx, orgID, projectID)
+	r, err := s.store.ByID(ctx, projectID, id)
+	if err == nil {
+		err = s.withSecrets(ctx, projectID, r)
+	}
+	if err != nil {
+		return nil, s.errOrReport(ctx, "resourceserver: by id", err)
+	}
+	return r, nil
 }

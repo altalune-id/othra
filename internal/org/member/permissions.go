@@ -8,7 +8,7 @@ func BuiltinPermissions(r Role) []string {
 	case RoleOwner:
 		return []string{"*"}
 	case RoleAdmin:
-		return []string{scope.OrgRead, "project:*", "webhook:*", "member:*", "apikey:*"}
+		return []string{scope.OrgRead, "project:*", "webhook:*", "member:*", "apikey:*", "end_user:*"}
 	case RoleMember:
 		return []string{scope.OrgRead, scope.ProjectRead, "webhook:*", scope.MemberRead, scope.ApikeyRead}
 	}

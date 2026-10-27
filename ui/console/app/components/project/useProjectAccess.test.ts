@@ -1,8 +1,8 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setClient } from '#test/nuxt-globals';
 import { useAuthStore } from '~/stores/auth';
-import { setClient } from '../../../test/nuxt-globals';
 import { canEditProject, useCanEditProject } from './useProjectAccess';
 
 describe('canEditProject', () => {

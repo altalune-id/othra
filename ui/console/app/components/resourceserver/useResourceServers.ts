@@ -1,11 +1,11 @@
-import type { ResourceServer, VerificationFailure } from '~~/gen/resourceserver/v1/resourceserver_pb';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { ResourceServer, VerificationFailure } from '#gen/resourceserver/v1/resourceserver_pb';
 import type { ScopeList } from './scopes';
-import type { ShownError } from '~/lib/apperror/message';
 import { create } from '@bufbuild/protobuf';
-import { CreateResourceServerRequestSchema, UpdateResourceServerRequestSchema } from '~~/gen/resourceserver/v1/resourceserver_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useValidation } from '~/composables/useValidation';
-import { errorCode, errorMeta } from '~/lib/apperror/message';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useValidation } from '#base/composables/useValidation';
+import { errorCode, errorMeta } from '#base/lib/apperror/message';
+import { CreateResourceServerRequestSchema, UpdateResourceServerRequestSchema } from '#gen/resourceserver/v1/resourceserver_pb';
 import { identifierProblem, isHttpIdentifier } from './resourceUri';
 import { checkScopes, maxDescription, maxScopes, scopeMessageKey } from './scopes';
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { APIKey } from '~/stores/apiKeys';
-import AppModal from '~/components/ui/AppModal.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useScopeLabel } from '~/composables/useScopeLabel';
+import AppModal from '#base/components/ui/AppModal.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useScopeLabel } from '#base/composables/useScopeLabel';
 import { useAPIKeysStore } from '~/stores/apiKeys';
 
 const { orgId, canManage = false } = defineProps<{ orgId: string, canManage?: boolean }>();
@@ -74,7 +74,7 @@ async function confirmRevoke() {
           </td>
           <td>
             <span class="badge badge-sm" :class="k.revokedAt ? 'badge-error' : 'badge-success'">
-              {{ k.revokedAt ? t('apikeys.revoked') : t('apikeys.active') }}
+              {{ k.revokedAt ? t('tokens.status_revoked') : t('tokens.status_active') }}
             </span>
           </td>
           <td class="whitespace-nowrap text-right">

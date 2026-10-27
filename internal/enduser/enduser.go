@@ -119,7 +119,30 @@ type EndUser struct {
 	Email         string
 	EmailVerified bool
 	Name          string
+	CreatedAt     time.Time
+	LastSignInAt  *time.Time
 }
+
+// LiveSession is one of an end user's live user sessions, on any browser.
+type LiveSession struct {
+	PublicID   string
+	Method     string
+	UserAgent  string
+	AuthTime   time.Time
+	LastSeenAt time.Time
+}
+
+// EndReason is why a user session ends; the Grants port revokes the session's grants for it.
+type EndReason int
+
+// The end reasons: the person signed out (on this browser, in the portal or by an admin), or a relying party logged them out.
+const (
+	EndSignOut EndReason = iota
+	EndLogout
+)
+
+// MaxListLimit bounds one page of ListEndUsers.
+const MaxListLimit = 100
 
 // Session is a browser's live accounts, the most recently selected first; Active is nil when none is left.
 type Session struct {
@@ -189,11 +212,8 @@ func minTime(a, b time.Time) time.Time {
 }
 
 func clip(s string, n int) string {
-	if len(s) <= n {
-		return s
+	if r := []rune(s); len(r) > n {
+		return string(r[:n])
 	}
-	for n > 0 && s[n]&0xC0 == 0x80 {
-		n--
-	}
-	return s[:n]
+	return s
 }

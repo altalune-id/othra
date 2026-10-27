@@ -1,8 +1,9 @@
-import type { SigningKey } from '~~/gen/keys/v1/keys_pb';
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { SigningKey } from '#gen/keys/v1/keys_pb';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
-import { SigningKeyStatus } from '~~/gen/keys/v1/keys_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { formatDate } from '#base/lib/format/date';
+import { SigningKeyStatus } from '#gen/keys/v1/keys_pb';
 
 const statusOrder: Record<SigningKeyStatus, number> = {
   [SigningKeyStatus.NEXT]: 0,
@@ -28,7 +29,7 @@ export function shortKid(kid: string): string {
 // formatWhen shows only the time for a moment later today, and the date with the time otherwise.
 export function formatWhen(when: Date, locale: string, now: Date = new Date()): string {
   const sameDay = when.toDateString() === now.toDateString();
-  return new Intl.DateTimeFormat(locale, sameDay ? { timeStyle: 'short' } : { dateStyle: 'medium', timeStyle: 'short' }).format(when);
+  return formatDate(when, locale, { style: sameDay ? 'time' : 'moment' });
 }
 
 function millis(key: SigningKey): number {

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"log/slog"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -75,16 +76,11 @@ func scope(ctx context.Context, p Project) context.Context {
 
 // Enabled reports whether the project's upstream of kind is on, so its sign-in button shows.
 func (s *Service) Enabled(ctx context.Context, p Project, kind upstream.Kind) (bool, error) {
-	all, err := s.upstreams.List(ctx, p.OrgID, p.ID)
+	offered, err := s.upstreams.Offered(ctx, p.OrgID, p.ID)
 	if err != nil {
 		return false, err
 	}
-	for _, u := range all {
-		if u.Kind == kind && u.Enabled {
-			return true, nil
-		}
-	}
-	return false, nil
+	return slices.Contains(offered, kind), nil
 }
 
 // Start makes one sign-in attempt's secrets after checking the upstream is on; loginHint is P7's linked upstream email, or empty.
@@ -263,7 +259,7 @@ func (s *Service) insert(ctx context.Context, p Project, endUserID uuid.UUID, id
 	return s.store.Insert(ctx, p.OrgID, p.ID, endUserID, id, publicID, now)
 }
 
-// Unlink removes an identity unless no sign-in method remains. SECURITY: SIG019: it locks the project row first, like the switch.
+// Unlink removes the end user's own identity unless no method remains. SECURITY: ownership, then SIG019, under the project row lock.
 func (s *Service) Unlink(ctx context.Context, p Project, endUserID uuid.UUID, identityPublicID string) error {
 	ctx = scope(ctx, p)
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
@@ -279,14 +275,12 @@ func (s *Service) Unlink(ctx context.Context, p Project, endUserID uuid.UUID, id
 			return &IdentityNotFoundError{}
 		}
 		ids, err := s.store.ListByEndUser(ctx, p.ID, endUserID)
-		if err != nil {
+		switch {
+		case err != nil:
 			return err
-		}
-		remaining := len(ids) - 1
-		if emailLink {
-			remaining++
-		}
-		if remaining < 1 {
+		case !slices.ContainsFunc(ids, func(i Identity) bool { return i.PublicID == identityPublicID }):
+			return &IdentityNotFoundError{}
+		case !canRemove(emailLink, len(ids)):
 			return &LastMethodError{}
 		}
 		deleted, err := s.store.Delete(ctx, p.ID, endUserID, identityPublicID)
@@ -300,6 +294,53 @@ func (s *Service) Unlink(ctx context.Context, p Project, endUserID uuid.UUID, id
 	}
 	s.log.LogAttrs(ctx, slog.LevelInfo, "federation: unlinked", slog.String("project", p.PublicID), slog.String("identity", identityPublicID))
 	return nil
+}
+
+// SECURITY: F8, L7: an identity may go only while another sign-in method is left; Unlink and SignInMethods share this one rule.
+func canRemove(emailLink bool, identities int) bool {
+	left := identities - 1
+	if emailLink {
+		left++
+	}
+	return left >= 1
+}
+
+// SignInMethods lists the email link while offered, every enabled upstream IdP, and any linked identity: one read for both views.
+func (s *Service) SignInMethods(ctx context.Context, p Project, endUserID uuid.UUID) ([]SignInMethod, error) {
+	ctx = scope(ctx, p)
+	emailLink, err := s.projects.EmailLink(ctx, p.ID)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "federation: sign-in methods", err)
+	}
+	ids, err := s.store.ListByEndUser(ctx, p.ID, endUserID)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "federation: sign-in methods", err)
+	}
+	offered, err := s.upstreams.Offered(ctx, p.OrgID, p.ID)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "federation: sign-in methods", err)
+	}
+	return methods(emailLink, ids, offered), nil
+}
+
+func methods(emailLink bool, ids []Identity, offered []upstream.Kind) []SignInMethod {
+	var out []SignInMethod
+	if emailLink {
+		out = append(out, SignInMethod{Linked: true, LastMethod: len(ids) == 0})
+	}
+	removable := canRemove(emailLink, len(ids))
+	listed := map[upstream.Kind]bool{}
+	for _, id := range ids {
+		listed[id.Kind] = true
+		out = append(out, SignInMethod{Kind: id.Kind, Linked: true, Identity: id, CanRemove: removable, LastMethod: !removable})
+	}
+	for _, kind := range offered {
+		if !listed[kind] {
+			listed[kind] = true
+			out = append(out, SignInMethod{Kind: kind})
+		}
+	}
+	return out
 }
 
 // Identities returns the end user's linked identities, oldest first.

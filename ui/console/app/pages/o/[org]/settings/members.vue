@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
 import InviteModal from '~/components/member/invite/InviteModal.vue';
 import PendingInvites from '~/components/member/invite/PendingInvites.vue';
 import { useInvite } from '~/components/member/invite/useInvite';
 import MemberList from '~/components/member/MemberList.vue';
 import { useMembers } from '~/components/member/useMembers';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
 import { useOrgsStore } from '~/stores/orgs';
 
 const route = useRoute();
@@ -114,7 +115,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('members.tit
       </button>
     </div>
     <ErrorText v-if="loadError" :error="loadError" />
-    <span v-else-if="loading" class="loading loading-spinner loading-sm" />
+    <LoadingStatus v-else-if="loading" :label="t('common.loading')" />
     <MemberList
       v-else
       :rows="rows"

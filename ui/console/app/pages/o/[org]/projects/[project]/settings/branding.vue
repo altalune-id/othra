@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import FieldError from '#base/components/ui/FieldError.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
 import BrandingPreview from '~/components/project/branding/BrandingPreview.vue';
 import { useBranding } from '~/components/project/branding/useBranding';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import FieldError from '~/components/ui/FieldError.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 

@@ -145,14 +145,7 @@ func TestTerms(t *testing.T) {
 	assert.NotContains(t, updated, `role="alert"`)
 }
 
-func TestAccountAndSignedOut(t *testing.T) {
-	out := html(t, ctxIn(t, i18n.English), Account(page(), AccountData{Site: site, Email: "ana@acme.test", UserSession: "us1", ReturnTo: "/id/p/acme/account/", SignOutToken: "tok-signout"}))
-	assert.Equal(t, 1, strings.Count(out, "ana@acme.test"), "D8: the email shows once, in the tile")
-	assert.Contains(t, out, `<span class="min-w-0 break-all font-medium">ana@acme.test</span>`)
-	assert.Contains(t, out, `href="/id/p/acme/login?return_to=%2Fid%2Fp%2Facme%2Faccount%2F">Switch account</a>`)
-	signOut := strings.ReplaceAll(out[strings.Index(out, `action="/id/p/acme/login/signout"`):], "> <", "><")
-	assert.Contains(t, signOut, `<input type="hidden" name="csrf" value="tok-signout"><input type="hidden" name="user_session" value="us1"><input type="hidden" name="next" value="signed_out"><input type="hidden" name="return_to" value="/id/p/acme/account/">`)
-
+func TestSignedOut(t *testing.T) {
 	gone := html(t, ctxIn(t, i18n.Indonesian), SignedOut(page(), SignedOutData{Site: site}))
 	assert.Contains(t, gone, "Anda sudah keluar dari Acme Store di browser ini.")
 	assert.Contains(t, gone, `href="/id/p/acme/login">Masuk lagi</a>`)
@@ -161,11 +154,10 @@ func TestAccountAndSignedOut(t *testing.T) {
 func TestViews_EscapeEndUserText(t *testing.T) {
 	evil := `"><script>x</script>`
 	for name, c := range map[string]templ.Component{
-		"login":   Login(page(), LoginData{Site: Site{Handle: "acme", Project: evil}, Email: evil, Error: evil}),
-		"picker":  Picker(page(), PickerData{Site: site, Accounts: []AccountTile{{SessionID: evil, Email: evil}}, Notice: evil}),
-		"sent":    Sent(page(), SentData{Site: site, Email: evil}),
-		"terms":   Terms(page(), TermsData{Site: site, Email: evil, UserSession: evil}),
-		"account": Account(page(), AccountData{Site: site, Email: evil}),
+		"login":  Login(page(), LoginData{Site: Site{Handle: "acme", Project: evil}, Email: evil, Error: evil}),
+		"picker": Picker(page(), PickerData{Site: site, Accounts: []AccountTile{{SessionID: evil, Email: evil}}, Notice: evil}),
+		"sent":   Sent(page(), SentData{Site: site, Email: evil}),
+		"terms":  Terms(page(), TermsData{Site: site, Email: evil, UserSession: evil}),
 	} {
 		assert.NotContains(t, html(t, ctxIn(t, i18n.English), c), "<script>", name)
 	}
@@ -348,7 +340,15 @@ func TestLoginAndPicker_ClientContext(t *testing.T) {
 	reauth := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Client: "Openwa Web", Reauth: true}))
 	assert.Contains(t, reauth, `<p class="text-sm text-base-content/70">Openwa Web meminta Anda masuk lagi.</p>`)
 	assert.Contains(t, reauth, "Masuk untuk melanjutkan ke Openwa Web.")
-	assert.NotContains(t, html(t, en, Login(page(), LoginData{Site: site, Reauth: true})), "sign in again", "no client, no reauth line")
+	portal := html(t, en, Login(page(), LoginData{Site: site, Reauth: true}))
+	assert.Contains(t, portal, "Sign in again to continue.", "M8 G5: the portal's step-up")
+	assert.NotContains(t, portal, "asks you to sign in again")
+	assert.Contains(t, portal, "<title>Confirm it&#39;s you", "K-8: the step-up heading matches ACC009")
+	assert.Contains(t, portal, ">Confirm it&#39;s you</h", "K-8")
+	assert.NotContains(t, portal, "Welcome")
+	assert.Contains(t, html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Reauth: true})), "Konfirmasi bahwa ini Anda")
+	assert.Contains(t, reauth, "Selamat datang", "an app's prompt=login keeps the sign-in heading")
+	assert.Contains(t, withClient, "Welcome", "normal sign-in keeps its heading")
 
 	assert.Contains(t, html(t, en, Picker(page(), PickerData{Site: site})), "to continue to Acme Store")
 	assert.Contains(t, html(t, en, Picker(page(), PickerData{Site: site, Client: "Openwa Web"})), "to continue to Openwa Web")
@@ -575,32 +575,6 @@ func TestPicker_SignInMethod(t *testing.T) {
 	assert.Less(t, strings.Index(out, "ana@acme.test"), strings.Index(out, "Signed in with Google"))
 	assert.Less(t, strings.Index(out, "Signed in with Google"), strings.Index(out, "budi@example.com"))
 	assert.Less(t, strings.Index(out, "budi@example.com"), strings.Index(out, "Signed in with an email link"))
-}
-
-func TestAccount_SignInMethods(t *testing.T) {
-	en := ctxIn(t, i18n.English)
-	none := html(t, en, Account(page(), AccountData{Site: site, Email: "ana@acme.test"}))
-	assert.NotContains(t, none, "Sign-in methods", "no Google anywhere, no card")
-
-	linked := html(t, en, Account(page(), AccountData{Site: site, Email: "ana@acme.test", Google: &GoogleMethod{Identity: "idn1", Email: "ana.s@gmail.com", Token: "tok-unlink"}, Linked: true}))
-	assert.Contains(t, linked, `<h2 id="methods-title" class="text-sm font-semibold">Sign-in methods</h2>`)
-	assert.Contains(t, linked, "Email link")
-	assert.Contains(t, linked, `<form method="post" action="/id/p/acme/account/unlink"><input type="hidden" name="csrf" value="tok-unlink"><input type="hidden" name="identity" value="idn1">`)
-	assert.Contains(t, linked, `aria-label="Disconnect Google">Disconnect</button>`)
-	assert.Contains(t, linked, `role="status"`)
-	assert.Contains(t, linked, "Google is connected.")
-	assert.NotContains(t, linked, "Connect Google")
-
-	open := html(t, ctxIn(t, i18n.Indonesian), Account(page(), AccountData{Site: site, Email: "ana@acme.test", Google: &GoogleMethod{Token: "tok-link"}, Unlinked: true}))
-	assert.Contains(t, open, `<form method="post" action="/id/p/acme/federation/google/start"><input type="hidden" name="csrf" value="tok-link"><input type="hidden" name="intent" value="link">`)
-	assert.Contains(t, open, "Hubungkan Google")
-	assert.Contains(t, open, "Belum terhubung")
-	assert.Contains(t, open, "Anda tetap bisa masuk dengan tautan email.")
-
-	googleOnly := html(t, en, Account(page(), AccountData{Site: site, Email: "ana@acme.test", EmailLinkOff: true, Google: &GoogleMethod{Identity: "idn1", Email: "ana@acme.test"}, Unlinked: true, Error: "You can't remove your only way to sign in."}))
-	assert.NotContains(t, googleOnly, "Email link")
-	assert.NotContains(t, googleOnly, "You can still sign in with an email link.")
-	assert.Contains(t, googleOnly, `role="alert"`)
 }
 
 func TestUpstreamError_KeepsReturnTo(t *testing.T) {

@@ -26,8 +26,8 @@ type LoginData struct {
 
 // Login is the email form that sends a magic link.
 templ Login(d layout.LayoutData, v LoginData) {
-	@layout.Layout(titled(d, i18n.T(ctx, "login.title"))) {
-		@layout.Card(i18n.T(ctx, "login.title")) {
+	@layout.Layout(titled(d, loginTitle(ctx, v))) {
+		@layout.Card(loginTitle(ctx, v)) {
 			if v.Client != "" {
 				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle_client", "client", v.Client) }</p>
 				if v.ClientHost != "" {
@@ -38,6 +38,8 @@ templ Login(d layout.LayoutData, v LoginData) {
 			}
 			if v.Reauth && v.Client != "" {
 				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.reauth_client", "client", v.Client) }</p>
+			} else if v.Reauth {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.reauth_account") }</p>
 			}
 			if v.Notice != "" {
 				@alertSuccess() {

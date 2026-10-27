@@ -2,9 +2,9 @@ import { create } from '@bufbuild/protobuf';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ProjectSchema } from '#gen/project/v1/project_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useProjectDetailStore } from '~/stores/projectDetail';
-import { ProjectSchema } from '../../../../gen/project/v1/project_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../../test/nuxt-globals';
 import { defaultHandle, handleProblem, isHandleFormat, slugify, useIssuerHandle } from './useIssuerHandle';
 
 const orgId = 'V3StGXR8Z5jdHj6BmyT2a';

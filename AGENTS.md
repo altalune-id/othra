@@ -2,7 +2,7 @@
 
 Rules for anyone changing Othra, people and coding agents alike. `CLAUDE.md` is a link to this file.
 
-Othra is one Go binary (module `altalune.id/othra`) that serves an API (Connect RPC), an MCP server, a CLI and a web console. The UI lives in the pnpm workspace `ui/*` and is embedded into the binary.
+Othra is one Go binary (module `altalune.id/othra`) that serves an API (Connect RPC), an MCP server, a CLI and a web console. The UI lives in the pnpm workspace under `ui/` (the packages are listed in `pnpm-workspace.yaml`) and is embedded into the binary.
 
 Setup: see [README.md](README.md). Architecture: [docs/architecture](docs/architecture/README.md).
 
@@ -84,7 +84,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
   - The default is no comment.
   - Exported symbols get a one-sentence doc.
   - Keep only markers (`TODO`, `NOTE`, `SECURITY`…) or links. No rationale, history or section headers.
-- Generated code (`gen/`, `*_templ.go`, `ui/console/gen/`) is never edited by hand.
+- Generated code (`gen/`, `*_templ.go`, `ui/base/gen/`) is never edited by hand.
 
 **Versions**
 
@@ -111,5 +111,6 @@ Skills in `.agents/skills/` (each linked from `.claude/skills/`) and agents in `
 - `cobra-viper`, `go-release`, `go-spec-reviewer`: CLI and config, releases, spec review.
 - `oauth-spec-checklist`: OAuth 2.1, OIDC, RFC 9700 and MCP authorization dimensions with a scoring rubric and an RFC section index.
 - Agent `oauth-reviewer`: an independent, read-only OAuth / OIDC conformance review against the Othra profile; it loads `oauth-spec-checklist`.
+- Agent `go-expert-reviewer`: an independent, read-only scorecard of a Go repo (idioms, packaging and cycles, architecture, production readiness); it loads `go` and `go-proverb`.
 
 A new skill or agent goes in `.agents/{skills,agents}/<name>` with a `.claude/{skills,agents}/<name>` link, in the same commit.

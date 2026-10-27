@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import AppButton from '#base/components/ui/AppButton.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
 import OrgsEmptyState from '~/components/org/OrgsEmptyState.vue';
-import AppButton from '~/components/ui/AppButton.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
 import { siblingURL } from '~/lib/auth/urls';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';

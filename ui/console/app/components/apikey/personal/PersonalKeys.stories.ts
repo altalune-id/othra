@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import type { PersonalKeyView } from './PersonalKeys.vue';
-import { mcpSnippet } from './mcpSnippet';
+import { mcpSnippet } from '#base/lib/tokens/mcpSnippet';
 import PersonalKeys from './PersonalKeys.vue';
 
 const acme = 'V3StGXR8Z5jdHj6BmyT2a';

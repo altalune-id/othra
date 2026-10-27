@@ -52,8 +52,9 @@ func TestFederation_SignInWithGoogle(t *testing.T) {
 	done := signIn(f.c)
 	require.Equal(t, http.StatusSeeOther, done.status, done.body)
 	assert.Equal(t, base+"/account/", done.header.Get("Location"))
-	account := f.do(f.c, http.MethodGet, base+"/account/", nil)
-	assert.Contains(t, account.body, "ana@gmail.com")
+	status, me := f.profile(f.c, base)
+	require.Equal(t, http.StatusOK, status)
+	assert.Equal(t, "ana@gmail.com", me.Profile.Email, "signed in as the Google account's end user")
 
 	var endUser, issuer, method string
 	require.NoError(t, f.db.QueryRowContext(t.Context(), `SELECT i.end_user_id, i.issuer, s.method FROM end_user_identities i

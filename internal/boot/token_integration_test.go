@@ -194,7 +194,7 @@ func TestSignOutKeepsOfflineGrantsThroughBoot(t *testing.T) {
 
 	ada := signIn("ada@example.com")
 	plain, offline := grantOf(ada, "openid"), grantOf(ada, "openid", "offline_access")
-	users := hostedUsers{users: svcs.EndUsers, grants: svcs.Grants}
+	users := hostedUsers{users: svcs.EndUsers}
 	require.NoError(t, users.SignOut(ctx, hp, ada.Secret, ada.Account.PublicID))
 	assert.False(t, live(plain.Family.PublicID), "sign-out ends the session's plain grants")
 	assert.True(t, live(offline.Family.PublicID), "an offline_access grant outlives the sign-in session")

@@ -171,8 +171,9 @@ type CreateAPIKeyRequest struct {
 	OrgId     string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
 	ProjectId string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	// project, org or personal; personal needs a signed-in person and never exceeds their role.
-	Kind        string   `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
-	Name        string   `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Kind string `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
+	Name string `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	// The catalog's shape; the service checks each scope against scope/scopes.json, the one list.
 	Scopes      []string `protobuf:"bytes,5,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	ProjectIds  []string `protobuf:"bytes,6,rep,name=project_ids,json=projectIds,proto3" json:"project_ids,omitempty"`
 	AllProjects bool     `protobuf:"varint,7,opt,name=all_projects,json=allProjects,proto3" json:"all_projects,omitempty"`
@@ -541,7 +542,7 @@ const file_apikey_v1_apikey_proto_rawDesc = "" +
 	"\x04name\x18\x04 \x01(\tB\xaa\x01\xbaH\xa6\x01\xba\x01A\n" +
 	"\x11apikey.name.blank\x1a,this.trim() != '' ? '' : 'must not be blank'\xba\x01\\\n" +
 	"\x17apikey.name.max_len.100\x1aAthis.trim().size() <= 100 ? '' : 'must be at most 100 characters'\xc8\x01\x01R\x04name\x129\n" +
-	"\x06scopes\x18\x05 \x03(\tB!\xbaH\x1e\x92\x01\x1b\"\x19r\x172\x15^[a-z]+:(read|write)$R\x06scopes\x12/\n" +
+	"\x06scopes\x18\x05 \x03(\tB!\xbaH\x1e\x92\x01\x1b\"\x19r\x172\x15^[a-z][a-z_]*:[a-z]+$R\x06scopes\x12/\n" +
 	"\vproject_ids\x18\x06 \x03(\tB\x0e\xbaH\v\x92\x01\b\"\x06r\x04\x88\xe42\x01R\n" +
 	"projectIds\x12!\n" +
 	"\fall_projects\x18\a \x01(\bR\vallProjects\x121\n" +

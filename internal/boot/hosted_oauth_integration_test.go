@@ -182,9 +182,7 @@ func TestHosted_OfflineAccessSurvivesSignOut(t *testing.T) {
 
 	offline = exchange(f.signInForCode(base, request("openid offline_access"), "ana@example.com", "Shop Web"))
 	plain = silent("openid email")
-	account := f.do(f.c, http.MethodGet, base+"/account/", nil)
-	require.Equal(t, http.StatusOK, account.status, account.body)
-	out := f.submit(f.c, account, "/login/signout", url.Values{"next": {"signed_out"}})
+	out := f.portalSignOut(f.c, base)
 	require.Equal(t, http.StatusSeeOther, out.status, out.body)
 	assert.False(t, live(plain), "sign-out revokes the session's plain grants")
 	assert.True(t, live(offline), "an offline_access grant survives sign-out")

@@ -58,9 +58,9 @@ export function secretDialogLabels(t: Translate): ClientSecretDialogLabels {
   return {
     title: t('secret.title'),
     body: t('secret.body'),
-    clientId: t('clients.client_id'),
+    ownerId: t('clients.client_id'),
     secret: t('secret.label'),
-    copyClientId: t('secret.copy_client_id'),
+    copyOwnerId: t('secret.copy_client_id'),
     copySecret: t('secret.copy_secret'),
     confirm: t('secret.confirm'),
     closeDisabled: t('secret.close_disabled'),

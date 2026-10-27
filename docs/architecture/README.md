@@ -9,13 +9,14 @@ For step-by-step changes, see the recipes in [docs/howto](../howto/README.md).
 | Surface           | Where                                 | Code                                                                  |
 | ----------------- | ------------------------------------- | --------------------------------------------------------------------- |
 | API               | `/api` (Connect RPC, OpenAPI docs)    | `internal/controlplane`, protos in `api/`                             |
+| Portal API        | `/p/<handle>/api/` (`account.v1`)     | `internal/controlplane/account.go` + each domain's `controlplane.go`  |
 | MCP server        | `/mcp` (HTTP) and `othra mcp` (stdio) | generated tools over the Connect handlers, `internal/mcp`, root `mcp` |
 | CLI               | `othra ...`                           | `internal/cli` (shell) + each domain's `cli.go`                       |
 | Web console       | `/console`                            | Nuxt SPA in `ui/console`, embedded by `internal/web/console`          |
 | Pre-sign-in pages | `/login`, `/install`, `/invite`, ...  | each domain's `web.go` + templ in `<domain>/views`                    |
 | Probes            | `/healthz`, `/readyz`                 | `internal/health`                                                     |
 
-Every signed-in surface (API, MCP, console) reaches a domain through the `controlplane` handlers, which hold the permission and reach checks. Only pre-sign-in pages, operator commands that boot the `App`, and workers call services directly.
+Every signed-in surface (API, MCP, console, the end-user portal) reaches a domain through the `controlplane` handlers, which hold the permission and reach checks. The portal's caller is an end user (`session.EndUser`, the browser's active account), checked against `permission.EndUserTable()`; admin callers are a `session.Principal` checked against `permission.Table()`. Only pre-sign-in pages, operator commands that boot the `App`, and workers call services directly.
 
 ## Layers
 
@@ -78,7 +79,7 @@ Packages at the repo root never import `internal/`: `apperror` (error codes, `co
 
 ## UI builds
 
-The pnpm workspace `ui/*` builds assets that the binary embeds. The builds are not committed.
+The pnpm workspace under `ui/` (packages listed in `pnpm-workspace.yaml`) builds assets that the binary embeds. The builds are not committed.
 
 | Package      | What                           | Build             | Embedded at                   |
 | ------------ | ------------------------------ | ----------------- | ----------------------------- |
@@ -94,6 +95,6 @@ Postgres only (`db.driver: postgres`, connection `postgres.*`). Migrations live 
 
 ## Code generation and dev tools
 
-- `make generate`: protos (Go, Connect, OpenAPI, MCP tools, console TypeScript in `ui/console/gen`), scope names, error codes and templ.
+- `make generate`: protos (Go, Connect, OpenAPI, MCP tools, TypeScript in `ui/base/gen`), scope names, error codes and templ.
 - `cmd/*`: the generators and linters (`gen-apperror`, `gen-scope`, `gen-config-example`, `protoc-gen-mcp`, `comment-lint`). `protoc-gen-mcp` and `comment-lint` keep their code in `internal/tool` (`protocmcp`, `commentlint`).
 - `make check`: vet, lint and tests.

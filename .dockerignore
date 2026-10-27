@@ -14,9 +14,17 @@ ui/console/.nuxt/
 ui/console/.output/
 ui/console/storybook-static/
 ui/console/coverage/
+ui/portal/.nuxt/
+ui/portal/.output/
+ui/portal/coverage/
+ui/base/.nuxt/
+ui/base/.output/
+ui/base/coverage/
 ui/web/coverage/
 internal/web/console/public/*
 !internal/web/console/public/.gitkeep
+internal/web/portal/public/*
+!internal/web/portal/public/.gitkeep
 internal/mcp/ui/assets/app.html
 internal/web/static/app.css
 internal/web/static/password.js

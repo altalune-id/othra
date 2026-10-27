@@ -1,5 +1,5 @@
-import type { Client } from '~~/gen/client/v1/client_pb';
-import { ClientKind, ClientRegistration } from '~~/gen/client/v1/client_pb';
+import type { Client } from '#gen/client/v1/client_pb';
+import { ClientKind, ClientRegistration } from '#gen/client/v1/client_pb';
 
 export type ClientKindName = 'web' | 'cli';
 

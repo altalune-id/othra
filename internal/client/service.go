@@ -9,6 +9,7 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/nanoid"
@@ -17,7 +18,7 @@ import (
 const publicIDLen = 21
 
 // MaxGrace is the longest an old secret keeps working after a rotation.
-const MaxGrace = 7 * 24 * time.Hour
+const MaxGrace = secret.MaxGrace
 
 // Service registers OAuth clients and manages their secrets.
 type Service struct {
@@ -177,20 +178,14 @@ func (s *Service) GenerateSecret(ctx context.Context, orgID, projectID uuid.UUID
 func (s *Service) RotateSecret(
 	ctx context.Context, orgID, projectID uuid.UUID, publicID string, grace time.Duration,
 ) (*Client, string, error) {
-	grace = min(max(grace, 0), MaxGrace)
 	return s.issueSecret(ctx, orgID, projectID, publicID, "client: rotate secret", func(ctx context.Context, c *Client, now time.Time) error {
-		var drop []uuid.UUID
-		for _, old := range c.Secrets {
-			switch {
-			case !old.Current(), grace == 0:
-				drop = append(drop, old.ID)
-			default:
-				if err := s.store.ExpireSecret(ctx, c.ProjectID, c.ID, old.ID, now.Add(grace)); err != nil {
-					return err
-				}
+		r := secret.Rotate(c.Secrets, grace, now)
+		for _, id := range r.Expire {
+			if err := s.store.ExpireSecret(ctx, c.ProjectID, c.ID, id, r.At); err != nil {
+				return err
 			}
 		}
-		return s.store.DeleteSecrets(ctx, c.ProjectID, c.ID, drop, now)
+		return s.store.DeleteSecrets(ctx, c.ProjectID, c.ID, r.Drop, now)
 	})
 }
 
@@ -202,7 +197,7 @@ func (s *Service) issueSecret(
 	var (
 		out       *Client
 		plaintext string
-		secret    Secret
+		issued    Secret
 	)
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		now := s.now().UTC()
@@ -221,8 +216,8 @@ func (s *Service) issueSecret(
 		if err != nil {
 			return err
 		}
-		secret = Secret{ID: uuid.New(), PublicID: id, Hint: hint, CreatedAt: now}
-		if err := s.store.InsertSecret(ctx, c, secret, hash); err != nil {
+		issued = Secret{ID: uuid.New(), PublicID: id, Hint: hint, CreatedAt: now}
+		if err := s.store.InsertSecret(ctx, c, issued, hash); err != nil {
 			return err
 		}
 		out, err = s.store.ByPublicID(ctx, projectID, publicID, now)
@@ -233,7 +228,7 @@ func (s *Service) issueSecret(
 		return nil, "", s.errOrReport(ctx, message, err)
 	}
 	s.log.LogAttrs(ctx, slog.LevelInfo, message,
-		slog.String("client", publicID), slog.String("secret_id", secret.PublicID), slog.Int("live_secrets", len(out.Secrets)))
+		slog.String("client", publicID), slog.String("secret_id", issued.PublicID), slog.Int("live_secrets", len(out.Secrets)))
 	return out, plaintext, nil
 }
 

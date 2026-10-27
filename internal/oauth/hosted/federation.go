@@ -214,7 +214,7 @@ func (h *Web) federationLink(w http.ResponseWriter, r *http.Request, s *site, st
 		h.federationFailed(w, r, s, st, err)
 		return
 	}
-	h.toPage(w, r, s, pageAccount, url.Values{"linked": {"1"}})
+	h.toPage(w, r, s, pageSignIn, url.Values{"linked": {"1"}})
 }
 
 // NOTE: MF7: a failed Connect speaks to a signed-in person: "Couldn't connect Google", back to the account, never to sign in.

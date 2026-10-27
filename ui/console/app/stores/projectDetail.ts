@@ -1,6 +1,6 @@
-import type { Project } from '~~/gen/project/v1/project_pb';
-import type { ShownError } from '~/lib/apperror/message';
-import { useErrorMessage } from '~/composables/useErrorMessage';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { Project } from '#gen/project/v1/project_pb';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
 
 // useProjectDetailStore holds each project's full settings from GetProject; the projects store keeps only the list.
 export const useProjectDetailStore = defineStore('projectDetail', () => {

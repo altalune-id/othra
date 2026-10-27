@@ -7,9 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	accountv1 "altalune.id/othra/gen/go/account/v1"
 	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
 	authv1 "altalune.id/othra/gen/go/auth/v1"
 	clientv1 "altalune.id/othra/gen/go/client/v1"
+	enduserv1 "altalune.id/othra/gen/go/enduser/v1"
 	invitev1 "altalune.id/othra/gen/go/invite/v1"
 	keysv1 "altalune.id/othra/gen/go/keys/v1"
 	memberv1 "altalune.id/othra/gen/go/member/v1"
@@ -23,11 +25,11 @@ import (
 )
 
 func allProcedures() []string {
-	var out []string
-	for _, f := range []protoreflect.FileDescriptor{
+	return procedures(
 		apikeyv1.File_apikey_v1_apikey_proto,
 		authv1.File_auth_v1_auth_proto,
 		clientv1.File_client_v1_client_proto,
+		enduserv1.File_enduser_v1_enduser_proto,
 		invitev1.File_invite_v1_invite_proto,
 		keysv1.File_keys_v1_keys_proto,
 		memberv1.File_member_v1_member_proto,
@@ -36,7 +38,12 @@ func allProcedures() []string {
 		upstreamv1.File_upstream_v1_upstream_proto,
 		resourceserverv1.File_resourceserver_v1_resourceserver_proto,
 		webhookv1.File_webhook_v1_webhook_proto,
-	} {
+	)
+}
+
+func procedures(files ...protoreflect.FileDescriptor) []string {
+	var out []string
+	for _, f := range files {
 		svcs := f.Services()
 		for i := range svcs.Len() {
 			s := svcs.Get(i)
@@ -50,7 +57,8 @@ func allProcedures() []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 75, "Org 4, Project 13, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 12, Upstream 6")
+	require.Len(t, procs, 84,
+		"Org 4, Project 13, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 16, Upstream 6, EndUser 5")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]
@@ -64,6 +72,22 @@ func TestEveryRPCHasAPermission(t *testing.T) {
 		}
 	}
 	assert.Len(t, table, len(procs), "the table names no procedure that does not exist")
+}
+
+// SECURITY: M8 P2: every procedure is in exactly one plane; the end user's own are all in EndUserTable, none in Table.
+func TestEndUserTable_IsItsOwnPlane(t *testing.T) {
+	account := procedures(accountv1.File_account_v1_account_proto)
+	require.Len(t, account, 13)
+	table, own := Table(), EndUserTable()
+	for _, proc := range account {
+		assert.Contains(t, []string{Self, SelfRecent}, own[proc], "%s is missing from EndUserTable", proc)
+		assert.NotContains(t, table, proc, "%s must never be routed by /api or MCP", proc)
+	}
+	assert.Len(t, own, len(account), "EndUserTable names no procedure that does not exist")
+	for _, proc := range allProcedures() {
+		assert.NotContains(t, own, proc, "%s is an admin procedure", proc)
+	}
+	assert.Equal(t, SelfRecent, own["/account.v1.AccountService/CreatePersonalToken"], "M8 G5: creating a token is the only step-up")
 }
 
 func TestPermissionTable_Spec15(t *testing.T) {

@@ -11,7 +11,6 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/upstream"
 )
 
 func (f *webFixture) collideAtCallback(c *http.Client) hostedPage {
@@ -113,48 +112,6 @@ func TestCollision_IssueFailure(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, f.collideAtCallback(f.client).status)
 }
 
-func TestAccount_GoogleRow(t *testing.T) {
-	f, fed := newFederationFixture(t)
-	f.signIn(f.client, "acme", "ana@example.com")
-	page := f.get(f.client, "/p/acme/account/")
-	assert.Contains(t, page.body, `name="intent" value="link"`)
-
-	fed.identities = []federation.Identity{{Kind: upstream.KindGoogle, PublicID: "fid1", Email: "ana@gmail.com"}}
-	page = f.get(f.client, "/p/acme/account/?linked=1")
-	assert.Contains(t, page.body, `action="/p/acme/account/unlink"`)
-	assert.Contains(t, page.body, "ana@gmail.com")
-
-	fed.identities, fed.off = nil, true
-	assert.NotContains(t, f.get(f.client, "/p/acme/account/").body, "/federation/google/start", "no Google row when off and unlinked")
-}
-
-func TestAccount_Unlink(t *testing.T) {
-	f, fed := newFederationFixture(t)
-	f.signIn(f.client, "acme", "ana@example.com")
-	fed.identities = []federation.Identity{{Kind: upstream.KindGoogle, PublicID: "fid1", Email: "ana@gmail.com"}}
-	account := f.get(f.client, "/p/acme/account/")
-
-	done := f.submit(f.client, account, "/account/unlink", nil)
-	require.Equal(t, http.StatusSeeOther, done.status, done.body)
-	assert.Equal(t, "/p/acme/account/?unlinked=1", done.location())
-	assert.Equal(t, []string{"fid1"}, fed.unlinked)
-
-	fed.unlinkErr = &federation.IdentityNotFoundError{}
-	gone := f.submit(f.client, f.get(f.client, "/p/acme/account/"), "/account/unlink", nil)
-	assert.Equal(t, "/p/acme/account/", gone.location())
-
-	fed.unlinkErr = &federation.LastMethodError{}
-	last := f.submit(f.client, f.get(f.client, "/p/acme/account/"), "/account/unlink", nil)
-	assert.Equal(t, http.StatusConflict, last.status, last.body)
-	assert.Contains(t, last.body, `role="alert"`)
-
-	fed.unlinkErr = errFake
-	assert.Equal(t, http.StatusInternalServerError, f.submit(f.client, f.get(f.client, "/p/acme/account/"), "/account/unlink", nil).status)
-
-	assert.Equal(t, http.StatusForbidden, f.do(f.client, http.MethodPost, "/p/acme/account/unlink", url.Values{}).status, "no CSRF token")
-}
-
-// R-2: a sign-up link mailed before the email link went off is refused at redeem, and nobody is signed in.
 func TestRedeem_EmailLinkTurnedOffAfterIssue(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, "/p/acme/login")

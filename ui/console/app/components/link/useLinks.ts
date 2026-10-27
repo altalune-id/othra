@@ -1,8 +1,8 @@
-import type { Link } from '~~/gen/resourceserver/v1/resourceserver_pb';
-import type { ShownError } from '~/lib/apperror/message';
-import { ClientRegistration } from '~~/gen/client/v1/client_pb';
-import { ResourceServerState } from '~~/gen/resourceserver/v1/resourceserver_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { Link } from '#gen/resourceserver/v1/resourceserver_pb';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { ClientRegistration } from '#gen/client/v1/client_pb';
+import { ResourceServerState } from '#gen/resourceserver/v1/resourceserver_pb';
 
 export type LinkSide = 'client' | 'resourceServer';
 

@@ -2,6 +2,7 @@ package resourceserver
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -374,4 +375,41 @@ func TestControlPlane_Admission(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	assert.Equal(t, map[string]string{"read": "Read your orders"}, updated.Msg.GetResourceServer().GetScopeDescriptions())
+}
+
+// SECURITY: introspection secrets, like client secrets, and the personal-token switch are set only by a signed-in person.
+func TestControlPlane_IntrospectionSecretsArePersonOnly(t *testing.T) {
+	f := newCPFixture(t, true)
+	rs := f.create(t, f.owner, "https://api.example.com")
+	generate := connect.NewRequest(&resourceserverv1.GenerateIntrospectionSecretRequest{ProjectId: f.projectPub, ResourceServerId: rs.GetId()})
+	rotate := connect.NewRequest(&resourceserverv1.RotateIntrospectionSecretRequest{ProjectId: f.projectPub, ResourceServerId: rs.GetId()})
+	access := connect.NewRequest(&resourceserverv1.SetPersonalTokenAccessRequest{ProjectId: f.projectPub, ResourceServerId: rs.GetId()})
+	for _, ctx := range []context.Context{f.key, context.Background()} {
+		_, err := f.cp.SetPersonalTokenAccess(ctx, access)
+		assert.True(t, authz.IsForbiddenError(err), "R-4: %v", err)
+		_, err = f.cp.GenerateIntrospectionSecret(ctx, generate)
+		assert.True(t, authz.IsForbiddenError(err), "%v", err)
+		_, err = f.cp.RotateIntrospectionSecret(ctx, rotate)
+		assert.True(t, authz.IsForbiddenError(err), "%v", err)
+		_, err = f.cp.RevokeIntrospectionSecret(ctx, connect.NewRequest(&resourceserverv1.RevokeIntrospectionSecretRequest{
+			ProjectId: f.projectPub, ResourceServerId: rs.GetId(), SecretId: "s-any",
+		}))
+		assert.True(t, authz.IsForbiddenError(err), "%v", err)
+	}
+	assert.Empty(t, f.h.store.server(uuidOf(t, f, rs.GetId())).IntrospectionSecrets, "an API key minted nothing")
+
+	resp, err := f.cp.GenerateIntrospectionSecret(f.owner, generate)
+	require.NoError(t, err)
+	assert.True(t, strings.HasPrefix(resp.Msg.GetSecret(), IntrospectionSecretPrefix))
+	rotated, err := f.cp.RotateIntrospectionSecret(f.owner, rotate)
+	require.NoError(t, err)
+	assert.NotEqual(t, resp.Msg.GetSecret(), rotated.Msg.GetSecret())
+	_, err = f.cp.SetPersonalTokenAccess(f.owner, access)
+	require.NoError(t, err, "a person may turn personal tokens off")
+	secrets := rotated.Msg.GetResourceServer().GetIntrospectionSecrets()
+	require.NotEmpty(t, secrets)
+	_, err = f.cp.RevokeIntrospectionSecret(f.owner, connect.NewRequest(&resourceserverv1.RevokeIntrospectionSecretRequest{
+		ProjectId: f.projectPub, ResourceServerId: rs.GetId(), SecretId: secrets[0].GetId(),
+	}))
+	require.NoError(t, err)
 }

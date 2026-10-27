@@ -8,5 +8,7 @@
   { "name": "member:read", "level": "org", "labelKey": "scope.member_read" },
   { "name": "member:write", "level": "org", "labelKey": "scope.member_write", "personOnly": true },
   { "name": "apikey:read", "level": "org", "labelKey": "scope.apikey_read" },
-  { "name": "apikey:write", "level": "org", "labelKey": "scope.apikey_write", "personOnly": true }
+  { "name": "apikey:write", "level": "org", "labelKey": "scope.apikey_write", "personOnly": true },
+  { "name": "end_user:read", "level": "project", "labelKey": "scope.end_user_read" },
+  { "name": "end_user:revoke", "level": "project", "labelKey": "scope.end_user_revoke" }
 ]

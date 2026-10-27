@@ -1,10 +1,10 @@
-import type { ShownError } from '~/lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import { create } from '@bufbuild/protobuf';
 import { watch } from 'vue';
-import { UpdateProjectBrandingRequestSchema } from '~~/gen/project/v1/project_pb';
-import { useErrorMessage } from '~/composables/useErrorMessage';
-import { useValidation } from '~/composables/useValidation';
-import { errorCode } from '~/lib/apperror/message';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { useValidation } from '#base/composables/useValidation';
+import { errorCode } from '#base/lib/apperror/message';
+import { UpdateProjectBrandingRequestSchema } from '#gen/project/v1/project_pb';
 import { useAuthStore } from '~/stores/auth';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { bestTextColor, contrastRatio, formatRatio, isLowContrast, normalizeHex } from './contrast';

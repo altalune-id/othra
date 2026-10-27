@@ -50,6 +50,7 @@ type identityRow struct {
 	Email         *string   `alias:"end_user_identities.email"`
 	EmailVerified bool      `alias:"end_user_identities.email_verified"`
 	LinkedAt      time.Time `alias:"end_user_identities.linked_at"`
+	LastUsedAt    time.Time `alias:"end_user_identities.last_used_at"`
 	Kind          string    `alias:"upstream_providers.kind"`
 }
 
@@ -60,14 +61,14 @@ func (r *identityRow) toIdentity() Identity {
 	}
 	return Identity{
 		UpstreamID: r.UpstreamID, Issuer: r.Issuer, Subject: r.Subject, Email: email, EmailVerified: r.EmailVerified,
-		PublicID: r.PublicID, Kind: upstream.Kind(r.Kind), LinkedAt: r.LinkedAt.UTC(),
+		PublicID: r.PublicID, Kind: upstream.Kind(r.Kind), LinkedAt: r.LinkedAt.UTC(), LastUsedAt: r.LastUsedAt.UTC(),
 	}
 }
 
 func (s *postgresStore) columns() postgres.ProjectionList {
 	t, u := s.identities, s.upstreams
 	return postgres.ProjectionList{
-		t.ID, t.PublicID, t.EndUserID, t.UpstreamProviderID, t.Issuer, t.Subject, t.Email, t.EmailVerified, t.LinkedAt, u.Kind,
+		t.ID, t.PublicID, t.EndUserID, t.UpstreamProviderID, t.Issuer, t.Subject, t.Email, t.EmailVerified, t.LinkedAt, t.LastUsedAt, u.Kind,
 	}
 }
 

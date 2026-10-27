@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ClientKind, ClientRegistration } from '../../../gen/client/v1/client_pb';
+import { ClientKind, ClientRegistration } from '#gen/client/v1/client_pb';
 import { clientKindNames, clientKinds, isCimdClient, kindName } from './kinds';
 
 describe('clientKinds', () => {

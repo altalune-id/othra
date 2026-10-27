@@ -76,6 +76,11 @@ type IdentityNotFoundError struct{}
 
 func (*IdentityNotFoundError) Error() string { return "federation: identity not found" }
 
+// ToAppError maps IdentityNotFoundError to the generic not-found, the same for an unknown identity and another end user's.
+func (e *IdentityNotFoundError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeNotFound, "That sign-in method is not linked to your account").WithCause(e)
+}
+
 // UpstreamError is a failed round trip with the upstream; Reason is for logs only.
 type UpstreamError struct {
 	Reason oidcrp.Reason
@@ -125,3 +130,11 @@ func isType[T error](err error) bool {
 	_, ok := errors.AsType[T](err)
 	return ok
 }
+
+// ErrEmailTaken reports a Create whose email another end user just took; federation answers it as a collision.
+var ErrEmailTaken = errors.New("federation: the email belongs to another end user")
+
+var (
+	errSubjectTaken  = errors.New("federation: the (issuer, subject) is linked")
+	errUpstreamTaken = errors.New("federation: the end user already has an identity of this upstream")
+)

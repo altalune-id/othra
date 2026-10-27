@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import type { PersonalKeyView } from '~/components/apikey/personal/PersonalKeys.vue';
-import { expiryState, relativeTime } from '~/components/apikey/personal/keyStatus';
+import { useDates } from '#base/composables/useDates';
+import { expiryState, relativeTime } from '#base/lib/tokens/keyStatus';
 import PersonalKeys from '~/components/apikey/personal/PersonalKeys.vue';
 import { usePersonalKeys } from '~/components/apikey/personal/usePersonalKeys';
 import { loginURL } from '~/lib/auth/urls';
 
 const { t, locale } = useI18n();
+const { date } = useDates();
 const personal = usePersonalKeys();
 const { rows, failed, oneOrg, signedIn, error, created } = personal;
 const loginUrl = computed(() => (import.meta.client ? loginURL(useRuntimeConfig().public.apiUrl, window.location) : ''));
 
 const now = new Date();
 const keys = computed<PersonalKeyView[]>(() => {
-  const date = new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' });
   return rows.value.map(k => ({
     rowKey: k.rowKey,
     orgId: k.orgId,
@@ -21,7 +22,7 @@ const keys = computed<PersonalKeyView[]>(() => {
     secretHint: k.secretHint,
     scopes: k.scopeLabels,
     lastUsed: relativeTime(k.lastUsedAt, now, locale.value),
-    expires: k.expiresAt ? date.format(k.expiresAt) : '',
+    expires: date(k.expiresAt),
     expiry: expiryState(k.expiresAt, now),
     revoked: !!k.revokedAt,
   }));
@@ -32,13 +33,13 @@ const labels = computed(() => ({
   org: t('apikeys.col_org'),
   scopes: t('apikeys.col_scopes'),
   lastUsed: t('apikeys.col_last_used'),
-  neverUsed: t('apikeys.never_used'),
+  neverUsed: t('tokens.never_used'),
   expires: t('apikeys.expires'),
-  expiresSoon: (days: number) => t('apikeys.expires_soon', { days }),
-  expired: t('apikeys.expired'),
+  expiresSoon: (days: number) => t('tokens.expires_soon', { days }),
+  expired: t('tokens.status_expired'),
   status: t('apikeys.col_status'),
-  active: t('apikeys.active'),
-  revoked: t('apikeys.revoked'),
+  active: t('tokens.status_active'),
+  revoked: t('tokens.status_revoked'),
   revoke: t('common.revoke'),
   revokeConfirm: t('apikeys.revoke_confirm'),
   cancel: t('common.cancel'),

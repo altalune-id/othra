@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
 	"altalune.id/othra/internal/kernel/db"
+	"altalune.id/othra/internal/kernel/secret"
 )
 
 // Insert records r, or returns *IdentifierTakenError.
@@ -26,12 +28,12 @@ func (s *postgresStore) Insert(ctx context.Context, r *ResourceServer) error {
 	stmt := t.INSERT(
 		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Name, t.Identifier, t.Scopes, t.VerificationState, t.VerifiedAt, t.LastCheckedAt,
 		t.LastError, t.ConsecutiveFailures, t.Trusted, t.TrustedAt, t.TrustedBy, t.CreatedAt, t.UpdatedAt,
-		t.AcceptCIMDClients, t.CIMDClientHosts, t.CIMDScopes, t.ScopeDescriptions,
+		t.AcceptCIMDClients, t.CIMDClientHosts, t.CIMDScopes, t.ScopeDescriptions, t.AcceptPersonalTokens,
 	).VALUES(
 		r.ID, r.PublicID, r.OrgID, r.ProjectID, r.Name, r.Identifier, db.TextArray(r.Scopes), string(r.State),
 		timeExpr(r.VerifiedAt), timeExpr(r.LastCheckedAt), lastError, r.ConsecutiveFailures, r.Trusted,
 		timeExpr(r.TrustedAt), nullableUUID(r.TrustedBy), r.CreatedAt.UTC(), r.UpdatedAt.UTC(),
-		r.Admission.Accept, db.TextArray(hostsOf(r.Admission)), nullArray(r.Admission.Scopes), descriptions,
+		r.Admission.Accept, db.TextArray(hostsOf(r.Admission)), nullArray(r.Admission.Scopes), descriptions, r.AcceptPersonalTokens,
 	)
 	err = db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err })
 	if db.IsUniqueViolation(err) {
@@ -71,6 +73,7 @@ func (s *postgresStore) Update(ctx context.Context, r *ResourceServer) error {
 		t.CIMDClientHosts.SET(db.TextArray(hostsOf(r.Admission))),
 		t.CIMDScopes.SET(postgres.StringExp(nullArray(r.Admission.Scopes))),
 		t.ScopeDescriptions.SET(descriptions),
+		t.AcceptPersonalTokens.SET(postgres.Bool(r.AcceptPersonalTokens)),
 		t.UpdatedAt.SET(postgres.TimestampzT(r.UpdatedAt.UTC())),
 	).WHERE(t.ID.EQ(postgres.UUID(r.ID)).AND(t.ProjectID.EQ(postgres.UUID(r.ProjectID))))
 	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
@@ -191,4 +194,46 @@ func hostsOf(a Admission) []string {
 		return []string{}
 	}
 	return a.Hosts
+}
+
+// InsertIntrospectionSecret records secret sec of server r by its Versioned hash.
+func (s *postgresStore) InsertIntrospectionSecret(ctx context.Context, r *ResourceServer, sec secret.Stored, hash string) error {
+	t := s.secrets
+	stmt := t.INSERT(t.ID, t.PublicID, t.OrgID, t.ProjectID, t.ResourceServerID, t.SecretHash, t.Hint, t.CreatedAt).
+		VALUES(sec.ID, sec.PublicID, r.OrgID, r.ProjectID, r.ID, hash, sec.Hint, sec.CreatedAt.UTC())
+	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
+		return fmt.Errorf("resourceserver.postgres: InsertIntrospectionSecret: %w", err)
+	}
+	return nil
+}
+
+// ExpireIntrospectionSecret makes the secret id of server serverID stop working at at.
+func (s *postgresStore) ExpireIntrospectionSecret(ctx context.Context, projectID, serverID, id uuid.UUID, at time.Time) error {
+	t := s.secrets
+	stmt := t.UPDATE(t.ExpiresAt).SET(postgres.TimestampzT(at.UTC())).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ResourceServerID.EQ(postgres.UUID(serverID))).AND(t.ID.EQ(postgres.UUID(id))))
+	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
+		return fmt.Errorf("resourceserver.postgres: ExpireIntrospectionSecret: %w", err)
+	}
+	return nil
+}
+
+// DeleteIntrospectionSecrets removes the server's secrets ids and every one that expired at or before now.
+func (s *postgresStore) DeleteIntrospectionSecrets(
+	ctx context.Context, projectID, serverID uuid.UUID, ids []uuid.UUID, now time.Time,
+) error {
+	t := s.secrets
+	gone := t.ExpiresAt.LT_EQ(postgres.TimestampzT(now.UTC()))
+	if len(ids) > 0 {
+		named := make([]postgres.Expression, len(ids))
+		for i, id := range ids {
+			named[i] = postgres.UUID(id)
+		}
+		gone = gone.OR(t.ID.IN(named...))
+	}
+	stmt := t.DELETE().WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ResourceServerID.EQ(postgres.UUID(serverID))).AND(gone))
+	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
+		return fmt.Errorf("resourceserver.postgres: DeleteIntrospectionSecrets: %w", err)
+	}
+	return nil
 }

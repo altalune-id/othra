@@ -8,9 +8,11 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	clientv1 "altalune.id/othra/gen/go/client/v1"
 	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
 	resourceserverv1connect "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
 	"altalune.id/othra/internal/kernel/authz"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/session"
 )
 
@@ -134,11 +136,7 @@ func (s *ResourceServerService) VerifyResourceServer(
 func (s *ResourceServerService) SetResourceServerTrust(
 	ctx context.Context, req *connect.Request[resourceserverv1.SetResourceServerTrustRequest],
 ) (*connect.Response[resourceserverv1.SetResourceServerTrustResponse], error) {
-	p := person(ctx)
-	if p == uuid.Nil {
-		return nil, &authz.ForbiddenError{Permission: authz.PersonOnly}
-	}
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, p, err := s.personProject(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +164,80 @@ func (s *ResourceServerService) SetResourceServerAdmission(
 		return nil, err
 	}
 	return connect.NewResponse(&resourceserverv1.SetResourceServerAdmissionResponse{ResourceServer: s.toProto(r)}), nil
+}
+
+// SetPersonalTokenAccess turns personal tokens for a resource server on or off; only a signed-in person may.
+func (s *ResourceServerService) SetPersonalTokenAccess(
+	ctx context.Context, req *connect.Request[resourceserverv1.SetPersonalTokenAccessRequest],
+) (*connect.Response[resourceserverv1.SetPersonalTokenAccessResponse], error) {
+	orgID, projectID, _, err := s.personProject(ctx, req.Msg.GetProjectId())
+	if err != nil {
+		return nil, err
+	}
+	r, err := s.svc.SetPersonalTokenAccess(ctx, orgID, projectID, req.Msg.GetResourceServerId(), req.Msg.GetAccept())
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&resourceserverv1.SetPersonalTokenAccessResponse{ResourceServer: s.toProto(r)}), nil
+}
+
+// GenerateIntrospectionSecret gives a resource server its first introspection secret, shown once; only a signed-in person may.
+func (s *ResourceServerService) GenerateIntrospectionSecret(
+	ctx context.Context, req *connect.Request[resourceserverv1.GenerateIntrospectionSecretRequest],
+) (*connect.Response[resourceserverv1.GenerateIntrospectionSecretResponse], error) {
+	orgID, projectID, _, err := s.personProject(ctx, req.Msg.GetProjectId())
+	if err != nil {
+		return nil, err
+	}
+	r, plaintext, err := s.svc.GenerateIntrospectionSecret(ctx, orgID, projectID, req.Msg.GetResourceServerId())
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&resourceserverv1.GenerateIntrospectionSecretResponse{ResourceServer: s.toProto(r), Secret: plaintext}), nil
+}
+
+// RotateIntrospectionSecret replaces a resource server's introspection secret, keeping the old one for the grace; only a person may.
+func (s *ResourceServerService) RotateIntrospectionSecret(
+	ctx context.Context, req *connect.Request[resourceserverv1.RotateIntrospectionSecretRequest],
+) (*connect.Response[resourceserverv1.RotateIntrospectionSecretResponse], error) {
+	orgID, projectID, _, err := s.personProject(ctx, req.Msg.GetProjectId())
+	if err != nil {
+		return nil, err
+	}
+	grace := graceFromProto(req.Msg.GetGrace())
+	r, plaintext, err := s.svc.RotateIntrospectionSecret(ctx, orgID, projectID, req.Msg.GetResourceServerId(), grace)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&resourceserverv1.RotateIntrospectionSecretResponse{ResourceServer: s.toProto(r), Secret: plaintext}), nil
+}
+
+// RevokeIntrospectionSecret ends one of a resource server's introspection secrets at once; only a signed-in person may.
+func (s *ResourceServerService) RevokeIntrospectionSecret(
+	ctx context.Context, req *connect.Request[resourceserverv1.RevokeIntrospectionSecretRequest],
+) (*connect.Response[resourceserverv1.RevokeIntrospectionSecretResponse], error) {
+	orgID, projectID, _, err := s.personProject(ctx, req.Msg.GetProjectId())
+	if err != nil {
+		return nil, err
+	}
+	r, err := s.svc.RevokeIntrospectionSecret(ctx, orgID, projectID, req.Msg.GetResourceServerId(), req.Msg.GetSecretId())
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&resourceserverv1.RevokeIntrospectionSecretResponse{ResourceServer: s.toProto(r)}), nil
+}
+
+func graceFromProto(g clientv1.SecretGrace) time.Duration {
+	switch g {
+	case clientv1.SecretGrace_SECRET_GRACE_NOW:
+		return secret.GraceNow
+	case clientv1.SecretGrace_SECRET_GRACE_HOUR:
+		return secret.GraceHour
+	case clientv1.SecretGrace_SECRET_GRACE_WEEK:
+		return secret.MaxGrace
+	default:
+		return secret.GraceDay
+	}
 }
 
 // ListLinks lists the links of one client or of one resource server.
@@ -245,6 +317,15 @@ func (s *ResourceServerService) project(
 	return orgID, projectID, nil
 }
 
+// SECURITY: trust and introspection secrets are a signed-in person's acts, never an API key's (as for client secrets).
+func (s *ResourceServerService) personProject(ctx context.Context, publicID string) (orgID, projectID, p uuid.UUID, err error) {
+	if p = person(ctx); p == uuid.Nil {
+		return uuid.Nil, uuid.Nil, uuid.Nil, &authz.ForbiddenError{Permission: authz.PersonOnly}
+	}
+	orgID, projectID, err = s.project(ctx, publicID, authz.ReachWholeProject)
+	return orgID, projectID, p, err
+}
+
 func person(ctx context.Context) uuid.UUID {
 	if p := session.PrincipalFrom(ctx); p.IsPerson() {
 		return p.UserID
@@ -261,6 +342,12 @@ func (s *ResourceServerService) toProto(r *ResourceServer) *resourceserverv1.Res
 		Cimd: &resourceserverv1.CIMDAdmission{
 			Accept: r.Admission.Accept, Hosts: r.Admission.Hosts, AllScopes: r.Admission.Scopes == nil, Scopes: r.Admission.Scopes,
 		},
+		AcceptPersonalTokens: r.AcceptPersonalTokens,
+	}
+	for _, st := range r.IntrospectionSecrets {
+		out.IntrospectionSecrets = append(out.IntrospectionSecrets, &clientv1.ClientSecret{
+			Id: st.PublicID, Hint: st.Hint, CreatedAt: timestamppb.New(st.CreatedAt), ExpiresAt: ts(st.ExpiresAt),
+		})
 	}
 	if !IsLoopbackHTTP(r.Identifier) {
 		out.MetadataUrl = MetadataURL(r.Identifier)

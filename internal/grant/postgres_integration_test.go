@@ -554,3 +554,41 @@ func TestPostgres_Revoke(t *testing.T) {
 	assert.True(t, grant.IsInvalidTokenError(err))
 	assert.Contains(t, f.logs.String(), got.Family.PublicID)
 }
+
+// R-5, M8 P8: Disconnect revokes every family of the end user's client, offline ones too, and drops its unused codes.
+func TestPostgres_RevokeClient(t *testing.T) {
+	f := newPGFixture(t)
+	ctx := t.Context()
+	s := f.seed(t)
+	online := f.exchange(t, s, "openid")
+	f.now = f.now.Add(time.Second)
+	offline := f.exchange(t, s, "openid", "offline_access")
+	pending := f.code(t, s, "openid")
+
+	live, err := f.svc.LiveFamilies(ctx, s.p, s.endUser)
+	require.NoError(t, err)
+	require.Len(t, live, 2)
+	assert.Equal(t, offline.Family.PublicID, live[0].PublicID, "newest first")
+
+	revoked, err := f.svc.RevokeClient(ctx, s.p, s.endUser, s.client.ID)
+	require.NoError(t, err)
+	assert.True(t, revoked)
+	assert.Equal(t, grant.ReasonConsentRevoked, f.reason(t, online.Family.PublicID))
+	assert.Equal(t, grant.ReasonConsentRevoked, f.reason(t, offline.Family.PublicID), "offline access ends too")
+	_, err = f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: pending, CodeVerifier: verifier})
+	assert.True(t, grant.IsInvalidGrantError(err), "its unused codes are gone")
+	_, err = f.svc.Access(ctx, s.p, online.AccessToken)
+	assert.True(t, grant.IsInvalidTokenError(err), "its access tokens stop at once for an introspecting server")
+	var unstamped int
+	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT count(*) FROM access_tokens WHERE project_id = $1 AND revoked_at IS NULL`,
+		s.p.ID).Scan(&unstamped))
+	assert.Zero(t, unstamped, "R-6, A13: every access token of the revoked families has revoked_at")
+	assert.Equal(t, 2, strings.Count(f.logs.String(), `"reason":"consent_revoked"`), "R-6: one line per revoked family")
+
+	live, err = f.svc.LiveFamilies(ctx, s.p, s.endUser)
+	require.NoError(t, err)
+	assert.Empty(t, live)
+	again, err := f.svc.RevokeClient(ctx, s.p, s.endUser, s.client.ID)
+	require.NoError(t, err)
+	assert.False(t, again, "nothing was live")
+}

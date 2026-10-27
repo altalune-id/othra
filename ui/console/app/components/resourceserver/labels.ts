@@ -1,10 +1,14 @@
-import type { ResourceServer, VerificationFailure } from '~~/gen/resourceserver/v1/resourceserver_pb';
+import type { ResourceServer, VerificationFailure } from '#gen/resourceserver/v1/resourceserver_pb';
+import type { ClientSecretDialogLabels } from '../client/ClientSecretDialog.vue';
+import type { ClientSecretsLabels } from '../client/ClientSecrets.vue';
+import type { RotateSecretDialogLabels } from '../client/RotateSecretDialog.vue';
 import type { CimdCardLabels } from './CimdCard.vue';
 import type { ResourceServerListLabels } from './ResourceServerList.vue';
 import type { ScopeTableLabels } from './ScopeTable.vue';
 import type { VerificationName } from './verification';
 import type { VerificationCardLabels } from './VerificationCard.vue';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
+import { rotateLabels, secretDialogLabels, secretsLabels } from '../client/labels';
 import { failureText, verificationStates } from './verification';
 
 type Translate = (key: string, params?: Record<string, unknown>) => string;
@@ -110,4 +114,30 @@ export function verificationText(rs: ResourceServer, name: VerificationName, iss
     out.lastCheck = rs.lastCheckedAt ? format(timestampDate(rs.lastCheckedAt)) : '';
   }
   return out;
+}
+
+export interface IntrospectionSecretLabels {
+  card: ClientSecretsLabels;
+  rotate: RotateSecretDialogLabels;
+  dialog: ClientSecretDialogLabels;
+  revokeTitle: string;
+  revokeBody: string;
+}
+
+// introspectionSecretLabels words the client-secret components for a resource server's introspection secret.
+export function introspectionSecretLabels(t: Translate): IntrospectionSecretLabels {
+  return {
+    card: { ...secretsLabels(t), title: t('rs.pat_secret_title'), intro: t('rs.pat_secret_intro'), noSecret: t('rs.pat_no_secret'), generate: t('rs.pat_generate') },
+    rotate: { ...rotateLabels(t), title: t('rs.pat_rotate_title'), body: t('rs.pat_rotate_body'), nowWarning: t('rs.pat_now_warning') },
+    dialog: {
+      ...secretDialogLabels(t),
+      body: t('rs.pat_dialog_body'),
+      ownerId: t('rs.pat_server_id'),
+      copyOwnerId: t('common.copy_label', { label: t('rs.pat_server_id') }),
+      secret: t('rs.pat_secret_label'),
+      copySecret: t('common.copy_label', { label: t('rs.pat_secret_label') }),
+    },
+    revokeTitle: t('rs.pat_revoke_title'),
+    revokeBody: t('rs.pat_revoke_body', { hint: '{hint}' }),
+  };
 }

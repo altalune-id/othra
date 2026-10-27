@@ -2,7 +2,6 @@ package member
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -17,8 +16,6 @@ import (
 	"altalune.id/othra/mailer"
 	"altalune.id/othra/scope"
 )
-
-var errNoDirectory = errors.New("member: no directory wired")
 
 // Service is the membership application service.
 type Service struct {

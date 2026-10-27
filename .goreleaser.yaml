@@ -4,7 +4,7 @@ project_name: othra
 
 before:
   hooks:
-    # the binary embeds the console, the MCP views and the sign-in page assets
+    # the binary embeds the console, the end-user portal, the MCP views and the sign-in page assets
     - make ui
 
 report_sizes: true

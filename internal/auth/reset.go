@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/nanoid"
 )
 
@@ -25,7 +26,7 @@ type Reset struct {
 }
 
 func newReset(userID uuid.UUID, now time.Time) (*Reset, string, error) {
-	raw, hash, err := nanoid.NewToken()
+	raw, hash, err := secret.NewToken()
 	if err != nil {
 		return nil, "", err
 	}

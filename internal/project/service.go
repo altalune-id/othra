@@ -302,6 +302,15 @@ func (s *Service) othersRemain(ctx context.Context, p *Project) error {
 	return nil
 }
 
+// EmailLink reports whether the project id's email link is on, without a lock, for a display.
+func (s *Service) EmailLink(ctx context.Context, id uuid.UUID) (bool, error) {
+	p, err := s.Get(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return p.SignInEmailLink, nil
+}
+
 // LockEmailLink locks the project id's row until the caller's unit of work ends and reports whether its email link is on.
 func (s *Service) LockEmailLink(ctx context.Context, id uuid.UUID) (bool, error) {
 	on, err := s.store.LockSignIn(ctx, id)

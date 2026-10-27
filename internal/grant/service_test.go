@@ -49,6 +49,12 @@ func (s *failingStore) RevokeFamily(context.Context, uuid.UUID, uuid.UUID, strin
 func (s *failingStore) RevokeUserSession(context.Context, uuid.UUID, string, string, time.Time) error {
 	return s.err
 }
+func (s *failingStore) LiveFamilies(context.Context, uuid.UUID, uuid.UUID, time.Time) ([]*Family, error) {
+	return nil, s.err
+}
+func (s *failingStore) RevokeClient(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, string, time.Time) ([]string, error) {
+	return nil, s.err
+}
 func (s *failingStore) InsertAccessToken(
 	context.Context, uuid.UUID, uuid.UUID, uuid.UUID, *uuid.UUID, string, []string, time.Time, time.Time,
 ) error {

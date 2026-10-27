@@ -1,5 +1,11 @@
 packages:
-  - "ui/*"
+  - ui/base # shared Nuxt layer: components, i18n, generated API clients
+  - ui/console # admin console
+  - ui/portal # end-user portal
+  - ui/mcp # MCP app UI
+  - ui/web # CSS for the Go-rendered pages
+  - ui/vitest-config # shared Vitest presets
+  - ui/scripts # build and lint scripts
 
 onlyBuiltDependencies:
   - esbuild
@@ -12,7 +18,9 @@ catalog:
   "@types/node": ^26.6.5
   "@vitejs/plugin-vue": ^6.0.10
   "@vitest/coverage-v8": 5.0.3
+  "@vue/test-utils": 2.5.1
   daisyui: ^5.7.47
+  happy-dom: 21.0.4
   tailwindcss: ^4.3.3
   typescript: 6.0.3
   vite: ^8.3.4

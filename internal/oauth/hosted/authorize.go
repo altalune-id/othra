@@ -71,15 +71,6 @@ type authRequest struct {
 	resource    *Resource
 }
 
-// NOTE: E2: the client hears about this failure by redirect, with state and iss.
-type authorizeError struct {
-	code        string
-	description string
-	request     *authRequest
-}
-
-func (e *authorizeError) Error() string { return "hosted: authorize error " + e.code }
-
 func parseAuthorize(ctx context.Context, o OAuth, p Project, q url.Values) (*authRequest, error) {
 	for _, k := range []string{"client_id", "redirect_uri", "response_mode"} {
 		if len(q[k]) > 1 {

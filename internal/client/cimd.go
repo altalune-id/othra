@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"mime"
 	"net"
 	"net/url"
@@ -14,7 +13,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/oauth/redirecturi"
 )
 
@@ -26,78 +24,6 @@ const (
 )
 
 const metadataURLPrefix = "https://"
-
-// MetadataReason is the stable cause of a *MetadataError; it goes only to the log.
-type MetadataReason string
-
-// The causes of a *MetadataError.
-const (
-	MetadataFetch        MetadataReason = "fetch"
-	MetadataTooLarge     MetadataReason = "too_large"
-	MetadataContentType  MetadataReason = "content_type"
-	MetadataNotJSON      MetadataReason = "not_json"
-	MetadataClientID     MetadataReason = "client_id"
-	MetadataClientName   MetadataReason = "client_name"
-	MetadataRedirectURIs MetadataReason = "redirect_uris"
-	MetadataAuthMethod   MetadataReason = "auth_method"
-	MetadataGrantTypes   MetadataReason = "grant_types"
-	MetadataURI          MetadataReason = "uri"
-)
-
-// MetadataError signals a client metadata document that can't be used; Err is the fetch failure, for the log.
-type MetadataError struct {
-	Reason MetadataReason
-	Err    error
-}
-
-func (e *MetadataError) Error() string { return "client: metadata document: " + string(e.Reason) }
-
-func (e *MetadataError) Unwrap() error { return e.Err }
-
-// ToAppError maps MetadataError to SIG011; the reason goes only to the log.
-func (e *MetadataError) ToAppError() *apperror.AppError {
-	return apperror.New(apperror.CodeAuthorizeClientMetadataUnusable, "This app's details can't be used").WithCause(e)
-}
-
-// AdmissionReason is the stable cause of a *NotAdmittedError; it goes only to the log.
-type AdmissionReason string
-
-// The causes of a *NotAdmittedError.
-const (
-	AdmissionClientID AdmissionReason = "client_id"
-	AdmissionResource AdmissionReason = "resource"
-	AdmissionOff      AdmissionReason = "off"
-	AdmissionHost     AdmissionReason = "host"
-)
-
-// NotAdmittedError signals a metadata document client no resource server of the request admits (ADR-0021 D1, D3).
-type NotAdmittedError struct {
-	Reason AdmissionReason
-}
-
-func (e *NotAdmittedError) Error() string { return "client: not admitted: " + string(e.Reason) }
-
-// IsNotAdmittedError reports whether err's tree contains a *NotAdmittedError.
-func IsNotAdmittedError(err error) bool {
-	_, ok := errors.AsType[*NotAdmittedError](err)
-	return ok
-}
-
-// ToAppError maps NotAdmittedError to SIG010, one answer for every miss so the page is no oracle.
-func (e *NotAdmittedError) ToAppError() *apperror.AppError {
-	return apperror.New(apperror.CodeAuthorizeClientNotAdmitted, "This app isn't allowed to sign in").WithCause(e)
-}
-
-// IsMetadataError reports whether err's tree contains a *MetadataError.
-func IsMetadataError(err error) bool {
-	_, ok := AsMetadataError(err)
-	return ok
-}
-
-// AsMetadataError returns the *MetadataError in err's tree.
-func AsMetadataError(err error) (*MetadataError, bool) {
-	return errors.AsType[*MetadataError](err)
-}
 
 // LoadMetadata fetches and validates the document of clientID and returns how long it may be used.
 func LoadMetadata(ctx context.Context, f MetadataFetcher, cfg MetadataConfig, clientID string) (*Metadata, time.Duration, error) {

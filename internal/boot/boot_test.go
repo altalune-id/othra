@@ -133,7 +133,7 @@ func TestBoot(t *testing.T) {
 	assert.NotNil(t, app.Kernel.Meter)
 	assert.NotNil(t, app.Kernel.Queue) // always non-nil; Disabled when queue.enabled=false
 	require.NotNil(t, app.Supervisor)
-	assert.Len(t, app.Supervisor.Workers(), 5) // http + db-health + outbox + mailqueue + apikey-usage
+	assert.Len(t, app.Supervisor.Workers(), 6) // http + db-health + outbox + mailqueue + apikey-usage + pat-usage
 	assert.Contains(t, workerNames(app), "apikey-usage")
 	assert.Contains(t, workerNames(app), "mailqueue.send")
 	assert.NotNil(t, app.Services.Mailer)
@@ -160,7 +160,7 @@ func TestBoot_SchedulerEnabled(t *testing.T) {
 		Scheduler: config.SchedulerConfig{Enabled: true},
 	}, testLogger())
 	require.NoError(t, err)
-	assert.Len(t, app.Supervisor.Workers(), 6) // http + db-health + outbox + mailqueue + apikey-usage + scheduler
+	assert.Len(t, app.Supervisor.Workers(), 7) // http + db-health + outbox + mailqueue + apikey-usage + pat-usage + scheduler
 	require.NoError(t, app.Close(context.Background()))
 }
 
@@ -176,7 +176,7 @@ func TestBoot_WithSchedulerFalse(t *testing.T) {
 		config.Config{Postgres: config.PostgresConfig{DSN: "x"}, Scheduler: config.SchedulerConfig{Enabled: true}},
 		testLogger(), WithScheduler(false))
 	require.NoError(t, err)
-	assert.Len(t, app.Supervisor.Workers(), 5) // http + db-health + outbox + mailqueue + apikey-usage
+	assert.Len(t, app.Supervisor.Workers(), 6) // http + db-health + outbox + mailqueue + apikey-usage + pat-usage
 	require.NoError(t, app.Close(context.Background()))
 }
 
@@ -218,7 +218,7 @@ func TestBoot_ConsumerEnabled(t *testing.T) {
 
 	app, err := Boot(context.Background(), natsFeatureConfig(), testLogger())
 	require.NoError(t, err)
-	assert.Len(t, app.Supervisor.Workers(), 8) // http + db-health + nats-health + outbox + mailqueue + apikey-usage + consumer + listener
+	assert.Len(t, app.Supervisor.Workers(), 9) // http + db-health + nats-health + outbox + mailqueue + apikey-usage + pat-usage + consumer + listener
 	assert.Contains(t, workerNames(app), "nats-health")
 	assert.Contains(t, workerNames(app), "fake-consumer")
 	assert.Contains(t, workerNames(app), "fake-listener")

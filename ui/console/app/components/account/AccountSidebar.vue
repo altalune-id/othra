@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { NavItem } from '~/components/ui/types';
-import SidebarNav from '~/components/ui/SidebarNav.vue';
+import type { NavItem } from '#base/components/ui/types';
+import SidebarNav from '#base/components/ui/SidebarNav.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { accountBackLink } from './backLink';

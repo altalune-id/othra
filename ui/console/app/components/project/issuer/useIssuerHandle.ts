@@ -1,6 +1,6 @@
-import type { ShownError } from '~/lib/apperror/message';
-import { UpdateProjectIssuerRequestSchema } from '~~/gen/project/v1/project_pb';
-import { useValidation } from '~/composables/useValidation';
+import type { ShownError } from '#base/lib/apperror/message';
+import { useValidation } from '#base/composables/useValidation';
+import { UpdateProjectIssuerRequestSchema } from '#gen/project/v1/project_pb';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 
 export type HandleStatus = 'idle' | 'checking' | 'available' | 'taken' | 'reserved' | 'invalid' | 'locked' | 'error';

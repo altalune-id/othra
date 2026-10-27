@@ -15,6 +15,7 @@ import (
 
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/client"
+	ksecret "altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/testutil/fakes"
 )
 
@@ -284,10 +285,10 @@ func TestGenerateSecret(t *testing.T) {
 	require.Len(t, got.Secrets, 1)
 	assert.True(t, got.Secrets[0].Current())
 	assert.Equal(t, secret[len(secret)-4:], got.Secrets[0].Hint)
-	assert.Equal(t, client.HashSecret(secret), h.store.Hashes[got.Secrets[0].ID])
+	assert.Equal(t, ksecret.Versioned(secret), h.store.Hashes[got.Secrets[0].ID])
 	assert.Regexp(t, `^sha256\$[0-9a-f]{64}$`, h.store.Hashes[got.Secrets[0].ID])
-	assert.True(t, client.SecretMatches(h.store.Hashes[got.Secrets[0].ID], secret))
-	assert.False(t, client.SecretMatches(h.store.Hashes[got.Secrets[0].ID], secret+"x"))
+	assert.True(t, ksecret.Matches(h.store.Hashes[got.Secrets[0].ID], secret))
+	assert.False(t, ksecret.Matches(h.store.Hashes[got.Secrets[0].ID], secret+"x"))
 
 	_, _, err = h.svc.GenerateSecret(context.Background(), h.org, h.project, c.PublicID)
 	assert.Equal(t, apperror.CodeClientSecretExists, codeOf(err))
@@ -415,7 +416,7 @@ func TestSecrets_NeverLogThePlaintext(t *testing.T) {
 	require.NoError(t, err)
 	logs := h.logs.String()
 	assert.Equal(t, 3, strings.Count(logs, "\n"), logs)
-	for _, secret := range []string{first, second, client.HashSecret(first), client.HashSecret(second)} {
+	for _, secret := range []string{first, second, ksecret.Versioned(first), ksecret.Versioned(second)} {
 		assert.NotContains(t, logs, secret)
 		assert.NotContains(t, logs, secret[len(client.SecretPrefix):])
 	}

@@ -28,6 +28,7 @@ import (
 	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
 	"altalune.id/othra/internal/permission"
 	"altalune.id/othra/nanoid"
+	"altalune.id/othra/scope"
 )
 
 //nolint:gochecknoglobals // a fixed allowlist.
@@ -46,6 +47,7 @@ var unruled = map[string]string{
 	"project.v1.UpdateProjectSignInRequest.email_link":               "a bool; the domain refuses off while it would leave no sign-in method (PRJ010)",
 	"upstream.v1.CreateUpstreamRequest.enabled":                      "a bool; any value is valid",
 	"upstream.v1.SetUpstreamEnabledRequest.enabled":                  "a bool; the domain refuses off while it would leave no sign-in method (PRJ010)",
+	"resourceserver.v1.SetPersonalTokenAccessRequest.accept":         "a bool; the domain refuses on without an introspection secret (RSV012)",
 	"resourceserver.v1.SetResourceServerTrustRequest.trusted":        "a bool; the domain refuses it outside self-hosted (RSV007)",
 	"resourceserver.v1.SetResourceServerAdmissionRequest.accept":     "a bool; the domain refuses it while the server isn't admissible (RSV011)",
 	"resourceserver.v1.SetResourceServerAdmissionRequest.all_scopes": "a bool; false needs scopes from the catalog (RSV009, RSV005)",
@@ -332,6 +334,20 @@ func TestRequestRules_ParamsCarryTheLimit(t *testing.T) {
 		ae, ok := apperror.AsAppError(v.Validate(msg))
 		require.True(t, ok, want)
 		assert.Equal(t, want, ae.Violations()[0].Param)
+	}
+}
+
+// qa A23: the API-key scope rule takes every catalog scope, so a new scope needs no proto edit; the service checks membership.
+func TestAPIKeyScopeRule_AcceptsEveryCatalogScope(t *testing.T) {
+	v := newTestValidator(t)
+	future := timestamppb.New(time.Now().Add(time.Hour))
+	for _, name := range scope.Names() {
+		req := &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, ProjectId: goodID, Kind: "project", Name: "ci", Scopes: []string{name}, ExpiresAt: future}
+		require.NoError(t, v.Validate(req), name)
+	}
+	for _, bad := range []string{"Project:read", "project", ":read", "project:read write", "end-user:read"} {
+		req := &apikeyv1.CreateAPIKeyRequest{OrgId: goodID, ProjectId: goodID, Kind: "project", Name: "ci", Scopes: []string{bad}, ExpiresAt: future}
+		assert.Error(t, v.Validate(req), bad)
 	}
 }
 

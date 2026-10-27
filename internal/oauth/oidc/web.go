@@ -33,6 +33,7 @@ type Web struct {
 	kit      layout.Kit
 	cfg      Config
 	tokens   *Tokens
+	intro    *Introspection
 }
 
 // NewWeb binds the issuer routes to the resolver its documents and pages share.
@@ -49,6 +50,12 @@ func CrossSitePOSTs(basePath string) []string {
 // WithTokens answers the token and userinfo endpoints with t.
 func (h *Web) WithTokens(t Tokens) *Web {
 	h.tokens = &t
+	return h
+}
+
+// WithIntrospection answers the introspection endpoint with i; it needs WithTokens too.
+func (h *Web) WithIntrospection(i Introspection) *Web {
+	h.intro = &i
 	return h
 }
 
@@ -70,6 +77,9 @@ func (h *Web) Register(mux *http.ServeMux) {
 	mux.Handle(issuer+tokenPath, api(http.HandlerFunc(h.token)))
 	mux.Handle(issuer+userinfoPath, api(http.HandlerFunc(h.userinfo)))
 	mux.Handle(issuer+revokePath, http.HandlerFunc(h.revoke))
+	if h.tokens != nil && h.intro != nil {
+		mux.Handle(issuer+introspectPath, http.HandlerFunc(h.introspect))
+	}
 }
 
 func (h *Web) document(pick func(*issuerEntry) (document, string)) http.Handler {

@@ -182,11 +182,20 @@ func (e *InvalidClientHostError) ToAppError() *apperror.AppError {
 		WithMeta(map[string]string{"host": apperror.Echo(e.Host), "reason": string(e.Reason)}).WithCause(e)
 }
 
-// AdmissionUnverifiedError signals CIMD admission turned on for a server that is neither verified nor trusted.
-type AdmissionUnverifiedError struct{}
+// UnverifiedReason is what an AdmissionUnverifiedError refused to turn on, sent to clients as meta.reason.
+type UnverifiedReason string
 
-func (*AdmissionUnverifiedError) Error() string {
-	return "resourceserver: CIMD admission needs a verified server"
+// The causes of an AdmissionUnverifiedError.
+const (
+	UnverifiedCIMD           UnverifiedReason = "cimd"
+	UnverifiedPersonalTokens UnverifiedReason = "personal_tokens"
+)
+
+// AdmissionUnverifiedError signals CIMD admission or personal tokens turned on for a server that is neither verified nor trusted.
+type AdmissionUnverifiedError struct{ Reason UnverifiedReason }
+
+func (e *AdmissionUnverifiedError) Error() string {
+	return "resourceserver: " + string(e.Reason) + " needs a verified server"
 }
 
 // IsAdmissionUnverifiedError reports whether err's tree contains an *AdmissionUnverifiedError.
@@ -195,9 +204,10 @@ func IsAdmissionUnverifiedError(err error) bool {
 	return ok
 }
 
-// ToAppError maps AdmissionUnverifiedError to RSV011.
+// ToAppError maps AdmissionUnverifiedError to RSV011 with what was refused.
 func (e *AdmissionUnverifiedError) ToAppError() *apperror.AppError {
-	return apperror.New(apperror.CodeResourceServerAdmissionUnverified, "Verify the resource server first").WithCause(e)
+	return apperror.New(apperror.CodeResourceServerAdmissionUnverified, "Verify the resource server first").
+		WithMeta(map[string]string{"reason": string(e.Reason)}).WithCause(e)
 }
 
 // LinkedError signals a delete of a resource server that clients are still linked to.
@@ -338,7 +348,8 @@ func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsInvalidIdentifierError(err) || IsIdentifierTakenError(err) || IsInvalidScopeError(err) ||
 		IsScopePinnedError(err) || IsLinkedError(err) || IsTrustSelfHostedOnlyError(err) || IsVerifyTooSoonError(err) ||
 		IsInvalidLinkScopesError(err) || IsClientNotFoundError(err) || IsProjectNotFoundError(err) || IsInvalidClientHostError(err) ||
-		IsAdmissionUnverifiedError(err) || IsClientManagedError(err)
+		IsAdmissionUnverifiedError(err) || IsClientManagedError(err) || IsIntrospectionRequiredError(err) ||
+		IsIntrospectionSecretExistsError(err) || IsIntrospectionSecretNotFoundError(err)
 }
 
 // ClientManagedError signals a link change for a metadata document client, which only its admission sets.
@@ -357,4 +368,58 @@ func IsClientManagedError(err error) bool {
 // ToAppError maps ClientManagedError to CLT008.
 func (e *ClientManagedError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeClientMetadataManaged, "This app is managed by its metadata document").WithCause(e)
+}
+
+// IntrospectionRequiredError signals personal tokens switched on for a server without an introspection secret (RFC 7662 §2.1).
+type IntrospectionRequiredError struct{}
+
+func (*IntrospectionRequiredError) Error() string {
+	return "resourceserver: personal tokens need an introspection secret"
+}
+
+// IsIntrospectionRequiredError reports whether err's tree contains an *IntrospectionRequiredError.
+func IsIntrospectionRequiredError(err error) bool {
+	_, ok := errors.AsType[*IntrospectionRequiredError](err)
+	return ok
+}
+
+// ToAppError maps IntrospectionRequiredError to RSV012.
+func (e *IntrospectionRequiredError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeResourceServerIntrospectionRequired, "Create an introspection credential first").WithCause(e)
+}
+
+// IntrospectionSecretExistsError signals a Generate on a server that has a current introspection secret; rotate it instead.
+type IntrospectionSecretExistsError struct{}
+
+func (*IntrospectionSecretExistsError) Error() string {
+	return "resourceserver: the server has an introspection secret"
+}
+
+// IsIntrospectionSecretExistsError reports whether err's tree contains an *IntrospectionSecretExistsError.
+func IsIntrospectionSecretExistsError(err error) bool {
+	_, ok := errors.AsType[*IntrospectionSecretExistsError](err)
+	return ok
+}
+
+// ToAppError maps IntrospectionSecretExistsError to GEN006.
+func (e *IntrospectionSecretExistsError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAlreadyExists, "The server already has an introspection secret; rotate it").WithCause(e)
+}
+
+// IntrospectionSecretNotFoundError signals an introspection secret that is not one of the server's live ones.
+type IntrospectionSecretNotFoundError struct{}
+
+func (*IntrospectionSecretNotFoundError) Error() string {
+	return "resourceserver: introspection secret not found"
+}
+
+// IsIntrospectionSecretNotFoundError reports whether err's tree contains an *IntrospectionSecretNotFoundError.
+func IsIntrospectionSecretNotFoundError(err error) bool {
+	_, ok := errors.AsType[*IntrospectionSecretNotFoundError](err)
+	return ok
+}
+
+// ToAppError maps IntrospectionSecretNotFoundError to GEN005.
+func (e *IntrospectionSecretNotFoundError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeNotFound, "Introspection secret not found").WithCause(e)
 }

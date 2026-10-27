@@ -10,13 +10,13 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/org/invite/views"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/mailer"
-	"altalune.id/othra/nanoid"
 )
 
 // Deps are what the invite service needs.
@@ -196,7 +196,7 @@ func (s *Service) Lookup(ctx context.Context, rawToken string) (*Invite, error) 
 	if rawToken == "" {
 		return nil, &NotUsableError{Reason: ReasonNotFound}
 	}
-	inv, err := s.store.ByTokenHash(ctx, nanoid.HashToken(rawToken))
+	inv, err := s.store.ByTokenHash(ctx, secret.Hex(rawToken))
 	if IsNotFoundError(err) {
 		return nil, &NotUsableError{Reason: ReasonNotFound}
 	}

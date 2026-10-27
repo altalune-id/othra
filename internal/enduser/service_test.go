@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/mailer"
-	"altalune.id/othra/nanoid"
 )
 
 type harness struct {
@@ -90,7 +90,7 @@ func TestSendLink(t *testing.T) {
 	token := tokenOf(t, l.URL)
 	assert.Len(t, token, 43, "32 random bytes, base64url")
 	require.Len(t, h.store.links, 1)
-	assert.Equal(t, nanoid.HashToken(token), h.store.links[0].hash, "only the hash is stored")
+	assert.Equal(t, secret.Hex(token), h.store.links[0].hash, "only the hash is stored")
 	assert.NotContains(t, h.store.links[0].hash, token)
 	assert.Equal(t, "192.0.2.1", h.store.links[0].ip)
 
@@ -453,7 +453,7 @@ func TestSessionAccessors(t *testing.T) {
 	assert.False(t, ok)
 	assert.Nil(t, (&Session{}).Active())
 	assert.Equal(t, "héllo", clip("héllo", 10))
-	assert.Equal(t, "h", clip("héllo", 2), "never splits a rune")
+	assert.Equal(t, "hé", clip("héllo", 2), "counts characters, as char_length and protovalidate do")
 	assert.False(t, Project{TermsVersion: 1}.TermsRequired(), "a version without a terms link asks nothing")
 }
 

@@ -94,7 +94,7 @@ type secretRow struct {
 }
 
 func (r *secretRow) toSecret() Secret {
-	s := Secret{ID: r.ID, PublicID: r.PublicID, Hint: r.Hint, CreatedAt: r.CreatedAt.UTC(), hash: r.Hash}
+	s := Secret{ID: r.ID, PublicID: r.PublicID, Hint: r.Hint, CreatedAt: r.CreatedAt.UTC()}.WithHash(r.Hash)
 	if r.ExpiresAt != nil {
 		at := r.ExpiresAt.UTC()
 		s.ExpiresAt = &at

@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import AppModal from '#base/components/ui/AppModal.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
+import UrlField from '#base/components/ui/UrlField.vue';
 import { discoveryUrls } from '~/components/project/issuer/discovery';
 import IssuerHandleField from '~/components/project/issuer/IssuerHandleField.vue';
 import { useIssuerHandle } from '~/components/project/issuer/useIssuerHandle';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
-import AppModal from '~/components/ui/AppModal.vue';
-import ErrorText from '~/components/ui/ErrorText.vue';
-import SavedNote from '~/components/ui/SavedNote.vue';
-import UrlField from '~/components/ui/UrlField.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';

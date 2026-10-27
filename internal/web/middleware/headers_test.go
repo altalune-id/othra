@@ -71,3 +71,22 @@ func TestHostedCSP_WithoutImageBases(t *testing.T) {
 	HostedCSP()(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/p/acme/login", nil))
 	assert.Contains(t, rec.Header().Get("Content-Security-Policy"), "default-src 'self'; img-src 'self' data:; style-src 'self' 'nonce-")
 }
+
+func TestAllowNonceScripts(t *testing.T) {
+	t.Parallel()
+	var nonce string
+	h := HostedCSP()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nonce = templ.GetNonce(r.Context())
+		AllowNonceScripts(w, nonce)
+	}))
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	policy := rec.Header().Get("Content-Security-Policy")
+	assert.Contains(t, policy, "default-src 'self'; script-src 'self' 'nonce-"+nonce+"';")
+	assert.Contains(t, policy, "style-src 'self' 'nonce-"+nonce+"'")
+	assert.Contains(t, policy, "frame-ancestors 'none'")
+
+	bare := httptest.NewRecorder()
+	AllowNonceScripts(bare, "n")
+	assert.Empty(t, bare.Header().Get("Content-Security-Policy"), "no policy, nothing to widen")
+}

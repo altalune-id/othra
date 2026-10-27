@@ -5,6 +5,7 @@ import (
 
 	"altalune.id/othra/internal/web/console"
 	"altalune.id/othra/internal/web/layout"
+	"altalune.id/othra/internal/web/portal"
 	"altalune.id/othra/version"
 )
 
@@ -14,4 +15,13 @@ func buildConsoleHandler(basePath string) http.Handler {
 		layout.Path(basePath, "/api"),
 		version.Default(),
 	)
+}
+
+// NOTE: one embedded portal build: the page the hosted /account/ serves and the files under /portal/; without a build, neither.
+func buildPortal(basePath string) (*portal.Page, http.Handler) {
+	s, err := portal.Load(layout.Path(basePath, "/portal") + "/")
+	if err != nil {
+		return nil, nil
+	}
+	return portal.NewPage(s), s.Files()
 }

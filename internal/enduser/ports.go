@@ -25,3 +25,8 @@ type SignInSwitch interface {
 
 // ComposeFunc builds the sign-in email for a freshly issued link.
 type ComposeFunc func(ctx context.Context, link IssuedLink) (mailer.Message, error)
+
+// Grants revokes the grants issued under a user session, in the unit of work on ctx, when the session ends.
+type Grants interface {
+	RevokeUserSession(ctx context.Context, p Project, userSession string, reason EndReason) error
+}

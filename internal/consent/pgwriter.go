@@ -53,8 +53,10 @@ func (s *postgresStore) DeleteClient(ctx context.Context, projectID, clientID uu
 }
 
 // Delete removes the consent key names, reporting whether there was one.
-func (s *postgresStore) Delete(ctx context.Context, projectID uuid.UUID, key Key) (bool, error) {
-	stmt := s.consents.DELETE().WHERE(s.keyed(projectID, key))
+func (s *postgresStore) DeleteEndUserClient(ctx context.Context, projectID, endUserID, clientID uuid.UUID) (int, error) {
+	t := s.consents
+	stmt := t.DELETE().WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.EndUserID.EQ(postgres.UUID(endUserID))).
+		AND(t.ClientID.EQ(postgres.UUID(clientID))))
 	var n int64
 	err := db.Write(ctx, s.pool, func(q qrm.DB) error {
 		res, err := stmt.ExecContext(ctx, q)
@@ -65,7 +67,7 @@ func (s *postgresStore) Delete(ctx context.Context, projectID uuid.UUID, key Key
 		return err
 	})
 	if err != nil {
-		return false, wrap("Delete", err)
+		return 0, wrap("DeleteEndUserClient", err)
 	}
-	return n > 0, nil
+	return int(n), nil
 }

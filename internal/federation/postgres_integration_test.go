@@ -53,8 +53,8 @@ func (u endUsers) SignIn(ctx context.Context, p federation.Project, req federati
 
 type upstreams struct{ id uuid.UUID }
 
-func (u upstreams) List(context.Context, uuid.UUID, uuid.UUID) ([]*upstream.Upstream, error) {
-	return []*upstream.Upstream{{ID: u.id, Kind: upstream.KindGoogle, Enabled: true}}, nil
+func (u upstreams) Offered(context.Context, uuid.UUID, uuid.UUID) ([]upstream.Kind, error) {
+	return []upstream.Kind{upstream.KindGoogle}, nil
 }
 
 func (u upstreams) Credentials(context.Context, uuid.UUID, uuid.UUID, upstream.Kind) (*upstream.Credentials, error) {
@@ -185,7 +185,7 @@ func TestPostgres_LinkUnlinkAndGuard(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, ids, 1)
 	err = f.svc.Unlink(ctx, f.p, budi, ids[0].PublicID)
-	assert.IsType(t, &federation.IdentityNotFoundError{}, err, "another end user's identity")
+	assert.Equal(t, apperror.CodeNotFound, codeOf(err), "another end user's identity")
 	require.NoError(t, f.svc.Unlink(ctx, f.p, ana, ids[0].PublicID), "the email link is on, so Google is not the last method")
 	assert.Equal(t, 1, f.count(t, `SELECT count(*) FROM end_user_identities WHERE project_id = $1`, f.p.ID))
 }

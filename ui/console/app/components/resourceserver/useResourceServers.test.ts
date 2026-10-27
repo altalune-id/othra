@@ -1,8 +1,8 @@
 import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ResourceServerSchema, ResourceServerState, VerificationFailureSchema } from '../../../gen/resourceserver/v1/resourceserver_pb';
-import { connectError, deferred, setClient, setKnownKeys } from '../../../test/nuxt-globals';
+import { ResourceServerSchema, ResourceServerState, VerificationFailureSchema } from '#gen/resourceserver/v1/resourceserver_pb';
+import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useResourceServer, useResourceServerCreate, useResourceServerList, useScopeRows } from './useResourceServers';
 
 const projectId = 'x6MH9WPWjktMwCBKHy4pF';

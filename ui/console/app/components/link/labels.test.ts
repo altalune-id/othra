@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { t } from '../../../test/nuxt-globals';
+import { t } from '#test/nuxt-globals';
 import { linkDialogLabels, linkListLabels } from './labels';
 
 describe('link labels', () => {

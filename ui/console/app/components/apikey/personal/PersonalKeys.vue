@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { ShownError } from '../../../lib/apperror/message';
-import type { ExpiryState } from './keyStatus';
+import type { ShownError } from '#base/lib/apperror/message';
+import type { ExpiryState } from '#base/lib/tokens/keyStatus';
 import { ref } from 'vue';
-import CopyButton from '../../ui/CopyButton.vue';
-import ErrorText from '../../ui/ErrorText.vue';
-import SecretField from '../../ui/SecretField.vue';
-import { keyStatus } from './keyStatus';
+import CopyButton from '#base/components/ui/CopyButton.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import SecretField from '#base/components/ui/SecretField.vue';
+import { keyStatus } from '#base/lib/tokens/keyStatus';
 
 export interface PersonalKeyView {
   rowKey: string;

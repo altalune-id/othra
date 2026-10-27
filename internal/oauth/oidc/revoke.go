@@ -52,8 +52,7 @@ func (h *Web) revoke(w http.ResponseWriter, r *http.Request) {
 	}
 	p := grant.Project{OrgID: e.issuer.OrgID, ID: e.issuer.ProjectID, IssuerURL: issuer}
 	if err := h.tokens.Grants.Revoke(r.Context(), p, grantClient(c), token, form.Get("token_type_hint")); err != nil {
-		w.Header().Set("Retry-After", "5")
-		writeJSON(w, http.StatusServiceUnavailable, unavailableBody)
+		h.unavailable(w)
 		return
 	}
 	writeJSON(w, http.StatusOK, nil)

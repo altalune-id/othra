@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { ShownError } from '../../lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import { useId } from 'vue';
-import ErrorText from '../ui/ErrorText.vue';
-import FieldError from '../ui/FieldError.vue';
-import SavedNote from '../ui/SavedNote.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
+import FieldError from '#base/components/ui/FieldError.vue';
+import SavedNote from '#base/components/ui/SavedNote.vue';
 
 export interface CimdApp {
   id: string;

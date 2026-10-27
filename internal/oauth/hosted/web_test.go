@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,6 +29,8 @@ import (
 	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/internal/web/middleware"
+	"altalune.id/othra/internal/web/portal"
+	"altalune.id/othra/internal/web/spa"
 )
 
 type webFixture struct {
@@ -80,9 +83,30 @@ func newWebFixture(t *testing.T) *webFixture {
 	f.web.WithOAuth(OAuth{
 		Clients: testClients(), Resources: testResources(), Admissions: f.admissions, Consents: f.consents, Grants: f.grants, Marker: marker,
 	})
+	f.web.WithPortal(testPortal(t))
 	f.web.Register(mux)
 	f.client = f.newClient()
 	return f
+}
+
+const portalIndex = `<html><head></head><body><script>window.__NUXT__.config={public:{apiUrl:"",handle:"",project:"",logoUrl:"",` +
+	`termsUrl:"",privacyUrl:"",hostedUrl:""},app:{baseURL:"/"}}</script></body></html>`
+
+func testPortal(t *testing.T) *portal.Page {
+	t.Helper()
+	s, err := spa.Load(fstest.MapFS{"index.html": {Data: []byte(portalIndex)}})
+	require.NoError(t, err)
+	return portal.NewPage(s)
+}
+
+var portalValueRE = regexp.MustCompile(`(\w+):"([^"]*)"`)
+
+func portalValues(body string) map[string]string {
+	out := map[string]string{}
+	for _, m := range portalValueRE.FindAllStringSubmatch(body, -1) {
+		out[m[1]] = m[2]
+	}
+	return out
 }
 
 func (f *webFixture) newClient() *http.Client {
@@ -224,7 +248,7 @@ func TestWeb_FirstSignIn(t *testing.T) {
 
 	account := f.get(f.client, "/p/acme/account/")
 	assert.Equal(t, http.StatusOK, account.status)
-	assert.Contains(t, account.body, "ana@example.com")
+	assert.Equal(t, "/p/acme", portalValues(account.body)["hostedUrl"], "the portal is served to the signed-in account")
 }
 
 func TestWeb_Cookies(t *testing.T) {
@@ -300,8 +324,8 @@ func TestWeb_PickerSelectAndSignOut(t *testing.T) {
 func TestWeb_AccountSignOutAndSignedOut(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
-	account := f.get(f.client, "/p/acme/account/")
-	out := f.submit(f.client, account, "/login/signout", url.Values{"next": {"signed_out"}})
+	picker := f.get(f.client, "/p/acme/login")
+	out := f.submit(f.client, picker, "/login/signout", url.Values{"next": {"signed_out"}})
 	require.Equal(t, http.StatusSeeOther, out.status)
 	assert.Equal(t, "/p/acme/signed-out", out.location())
 	assert.Contains(t, f.get(f.client, out.location()).body, "You signed out of Acme")
@@ -647,9 +671,9 @@ func TestWeb_ServiceFailures(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, f.get(f.client, "/p/acme/account/").status)
 	assert.Equal(t, http.StatusInternalServerError, f.get(f.client, "/p/acme/terms").status)
 	f.users.failOn = ""
-	account := f.get(f.client, "/p/acme/account/")
+	picker := f.get(f.client, "/p/acme/login")
 	f.users.failOn = "signout"
-	assert.Equal(t, http.StatusInternalServerError, f.submit(f.client, account, "/login/signout", nil).status)
+	assert.Equal(t, http.StatusInternalServerError, f.submit(f.client, picker, "/login/signout", nil).status)
 	assert.NotEmpty(t, f.reports)
 }
 
@@ -819,4 +843,34 @@ func TestWeb_CodeErrorNamesTheProject(t *testing.T) {
 	body := rec.Body.String()
 	assert.Contains(t, body, s.views().Project)
 	assert.NotContains(t, body, "{project}")
+}
+
+// G1: the portal app is served at every /account/ path to a signed-in account, with its project's values and a script nonce.
+func TestWeb_Portal(t *testing.T) {
+	f := newWebFixture(t)
+	gone := f.get(f.client, "/p/acme/account/sessions")
+	assert.Equal(t, http.StatusSeeOther, gone.status)
+	assert.Equal(t, "/p/acme/login?return_to=%2Fp%2Facme%2Faccount%2Fsessions", gone.location(), "a deep link survives the sign-in")
+
+	f.signIn(f.client, "acme", "ana@example.com")
+	page := f.get(f.client, "/p/acme/account/tokens/new")
+	require.Equal(t, http.StatusOK, page.status)
+	v := portalValues(page.body)
+	assert.Equal(t, "/p/acme/account/", v["baseURL"])
+	assert.Equal(t, "/p/acme/api", v["apiUrl"])
+	assert.Equal(t, "acme", v["handle"])
+	assert.Equal(t, "Acme", v["project"])
+	policy := page.header.Get("Content-Security-Policy")
+	nonce := regexp.MustCompile(`script-src 'self' 'nonce-([^']+)'`).FindStringSubmatch(policy)
+	require.Len(t, nonce, 2, policy)
+	assert.Contains(t, page.body, `<script nonce="`+nonce[1]+`">window.__NUXT__`)
+	assert.Equal(t, "no-store", page.header.Get("Cache-Control"))
+
+	f.acme.PrimaryColor = "#1e3a8a"
+	assert.Contains(t, f.get(f.client, "/p/acme/account/").body, `<style nonce="`)
+
+	none := newWebFixture(t)
+	none.web.portalPage = nil
+	none.signIn(none.client, "acme", "ana@example.com")
+	assert.Equal(t, http.StatusNotFound, none.get(none.client, "/p/acme/account/").status, "without a portal build there is no account page")
 }

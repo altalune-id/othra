@@ -72,6 +72,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/resourceserver.v1.DeleteResourceServerResponse'
+  /resourceserver.v1.ResourceServerService/GenerateIntrospectionSecret:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: GenerateIntrospectionSecret
+      operationId: resourceserver.v1.ResourceServerService.GenerateIntrospectionSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.GenerateIntrospectionSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.GenerateIntrospectionSecretResponse'
   /resourceserver.v1.ResourceServerService/GetResourceServer:
     post:
       tags:
@@ -212,6 +247,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/resourceserver.v1.ListResourceServersResponse'
+  /resourceserver.v1.ResourceServerService/RevokeIntrospectionSecret:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: RevokeIntrospectionSecret
+      operationId: resourceserver.v1.ResourceServerService.RevokeIntrospectionSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.RevokeIntrospectionSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.RevokeIntrospectionSecretResponse'
+  /resourceserver.v1.ResourceServerService/RotateIntrospectionSecret:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: RotateIntrospectionSecret
+      operationId: resourceserver.v1.ResourceServerService.RotateIntrospectionSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.RotateIntrospectionSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.RotateIntrospectionSecretResponse'
+  /resourceserver.v1.ResourceServerService/SetPersonalTokenAccess:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: SetPersonalTokenAccess
+      description: 'SECURITY: personal tokens and the RFC 7662 introspection secret are set by a signed-in person, never MCP; a secret is shown once.'
+      operationId: resourceserver.v1.ResourceServerService.SetPersonalTokenAccess
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.SetPersonalTokenAccessRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.SetPersonalTokenAccessResponse'
   /resourceserver.v1.ResourceServerService/SetResourceServerAdmission:
     post:
       tags:
@@ -426,6 +567,35 @@ paths:
                 $ref: '#/components/schemas/resourceserver.v1.VerifyResourceServerResponse'
 components:
   schemas:
+    client.v1.ClientSecret:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        hint:
+          type: string
+          title: hint
+          description: hint is the secret's last 4 characters.
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        expiresAt:
+          title: expires_at
+          description: expires_at is unset on the current secret and set on an old one that still works until then.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: ClientSecret
+      additionalProperties: false
+    client.v1.SecretGrace:
+      type: string
+      title: SecretGrace
+      enum:
+        - SECRET_GRACE_UNSPECIFIED
+        - SECRET_GRACE_NOW
+        - SECRET_GRACE_HOUR
+        - SECRET_GRACE_DAY
+        - SECRET_GRACE_WEEK
+      description: SecretGrace is how long the current secret keeps working after a rotation.
     connect-protocol-version:
       type: number
       title: Connect-Protocol-Version
@@ -701,6 +871,36 @@ components:
       type: object
       title: DeleteResourceServerResponse
       additionalProperties: false
+    resourceserver.v1.GenerateIntrospectionSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+      title: GenerateIntrospectionSecretRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.GenerateIntrospectionSecretResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+        secret:
+          type: string
+          title: secret
+          description: secret is the one-time secret. It is never present on any other response.
+      title: GenerateIntrospectionSecretResponse
+      additionalProperties: false
     resourceserver.v1.GetResourceServerRequest:
       type: object
       properties:
@@ -944,6 +1144,16 @@ components:
           title: cimd
           description: cimd is whether apps without registration (CIMD) may ask for this server's scopes.
           $ref: '#/components/schemas/resourceserver.v1.CIMDAdmission'
+        acceptPersonalTokens:
+          type: boolean
+          title: accept_personal_tokens
+          description: accept_personal_tokens lets end users mint personal tokens for this server; it needs an introspection secret.
+        introspectionSecrets:
+          type: array
+          items:
+            $ref: '#/components/schemas/client.v1.ClientSecret'
+          title: introspection_secrets
+          description: 'introspection_secrets are the credentials this server introspects with (RFC 7662 §2.1): the current one and any in its grace.'
       title: ResourceServer
       additionalProperties: false
     resourceserver.v1.ResourceServer.ScopeDescriptionsEntry:
@@ -966,6 +1176,100 @@ components:
         - RESOURCE_SERVER_STATE_VERIFIED
         - RESOURCE_SERVER_STATE_FAILED
       description: ResourceServerState is where RFC 9728 verification stands.
+    resourceserver.v1.RevokeIntrospectionSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        secretId:
+          type: string
+          title: secret_id
+          description: |
+            othra.public_id = true
+      title: RevokeIntrospectionSecretRequest
+      required:
+        - projectId
+        - resourceServerId
+        - secretId
+      additionalProperties: false
+    resourceserver.v1.RevokeIntrospectionSecretResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: RevokeIntrospectionSecretResponse
+      additionalProperties: false
+    resourceserver.v1.RotateIntrospectionSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        grace:
+          title: grace
+          $ref: '#/components/schemas/client.v1.SecretGrace'
+      title: RotateIntrospectionSecretRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.RotateIntrospectionSecretResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+        secret:
+          type: string
+          title: secret
+          description: secret is the new one-time secret. It is never present on any other response.
+      title: RotateIntrospectionSecretResponse
+      additionalProperties: false
+    resourceserver.v1.SetPersonalTokenAccessRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        accept:
+          type: boolean
+          title: accept
+      title: SetPersonalTokenAccessRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.SetPersonalTokenAccessResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: SetPersonalTokenAccessResponse
+      additionalProperties: false
     resourceserver.v1.SetResourceServerAdmissionRequest:
       type: object
       properties:

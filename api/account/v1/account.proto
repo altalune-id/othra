@@ -1,0 +1,262 @@
+syntax = "proto3";
+
+package account.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "altalune.id/othra/gen/go/account/v1;accountv1";
+
+// AccountService is the signed-in end user's own account in one project, served at /p/<handle>/api/ to the portal on the same origin.
+// SECURITY: never an MCP tool and never on /api; the end user comes from the browser session, never from a request field.
+service AccountService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+
+  rpc GetSignInMethods(GetSignInMethodsRequest) returns (GetSignInMethodsResponse);
+  rpc UnlinkIdentity(UnlinkIdentityRequest) returns (UnlinkIdentityResponse);
+
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
+  rpc EndOtherSessions(EndOtherSessionsRequest) returns (EndOtherSessionsResponse);
+
+  rpc ListConnectedApps(ListConnectedAppsRequest) returns (ListConnectedAppsResponse);
+  rpc DisconnectApp(DisconnectAppRequest) returns (DisconnectAppResponse);
+
+  rpc ListTokenServers(ListTokenServersRequest) returns (ListTokenServersResponse);
+  rpc ListPersonalTokens(ListPersonalTokensRequest) returns (ListPersonalTokensResponse);
+  // SECURITY: needs a sign-in in the last 10 minutes (ACC009); the token is in this response only.
+  rpc CreatePersonalToken(CreatePersonalTokenRequest) returns (CreatePersonalTokenResponse);
+  rpc RevokePersonalToken(RevokePersonalTokenRequest) returns (RevokePersonalTokenResponse);
+}
+
+message Profile {
+  string id = 1;
+  string email = 2;
+  // name is what apps see as the name claim; empty shows none.
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message GetProfileRequest {}
+
+message GetProfileResponse {
+  Profile profile = 1;
+  // sign_out_token is the CSRF token of the hosted sign-out form (POST /p/<handle>/login/signout).
+  string sign_out_token = 2 [debug_redact = true];
+  // current_session_id is the public id of this browser's active user session, the one the sign-out form ends.
+  string current_session_id = 3;
+}
+
+message UpdateProfileRequest {
+  string name = 1 [(buf.validate.field).string.max_len = 200];
+}
+
+message UpdateProfileResponse {
+  Profile profile = 1;
+}
+
+// SignInMethodKind is a way to sign in.
+enum SignInMethodKind {
+  SIGN_IN_METHOD_KIND_UNSPECIFIED = 0;
+  SIGN_IN_METHOD_KIND_EMAIL_LINK = 1;
+  SIGN_IN_METHOD_KIND_GOOGLE = 2;
+}
+
+// SignInMethodLock is why a method can't be removed now.
+enum SignInMethodLock {
+  SIGN_IN_METHOD_LOCK_UNSPECIFIED = 0;
+  // LAST_METHOD: removing it would leave no way to sign in (SIG019).
+  SIGN_IN_METHOD_LOCK_LAST_METHOD = 1;
+}
+
+message SignInMethod {
+  SignInMethodKind kind = 1;
+  // linked is false for an upstream IdP the project offers that this end user hasn't connected.
+  bool linked = 2;
+  // identity_id names a linked upstream identity, for UnlinkIdentity.
+  string identity_id = 3;
+  // email is the address this method signs in with.
+  string email = 4;
+  google.protobuf.Timestamp linked_at = 5;
+  google.protobuf.Timestamp last_used_at = 6;
+  bool can_remove = 7;
+  SignInMethodLock lock = 8;
+}
+
+message GetSignInMethodsRequest {}
+
+message GetSignInMethodsResponse {
+  repeated SignInMethod methods = 1;
+  // link_token is the CSRF token of the hosted connect form (POST /p/<handle>/federation/google/start, intent=link).
+  string link_token = 2 [debug_redact = true];
+}
+
+message UnlinkIdentityRequest {
+  string identity_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message UnlinkIdentityResponse {}
+
+message Session {
+  string id = 1;
+  SignInMethodKind method = 2;
+  // user_agent is the browser's own description, raw; the portal shortens it.
+  string user_agent = 3;
+  google.protobuf.Timestamp auth_time = 4;
+  google.protobuf.Timestamp last_seen_at = 5;
+  // current is the session this request came from.
+  bool current = 6;
+}
+
+message ListSessionsRequest {}
+
+message ListSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+message EndSessionRequest {
+  string session_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message EndSessionResponse {}
+
+message EndOtherSessionsRequest {}
+
+message EndOtherSessionsResponse {
+  int32 ended = 1;
+}
+
+message AppResource {
+  // id is the resource server's public id; empty for sign-in only (OIDC).
+  string id = 1;
+  string name = 2;
+  string identifier = 3;
+  repeated string scopes = 4;
+  map<string, string> scope_descriptions = 5;
+}
+
+message ConnectedApp {
+  // client_id is the app's client_id: a public id, or the https URL of an app without registration (CIMD).
+  string client_id = 1;
+  string name = 2;
+  // metadata_host is the host of an app without registration; empty for a registered app.
+  string metadata_host = 3;
+  repeated AppResource resources = 4;
+  // consented is false for a first-party app that never showed a consent page.
+  bool consented = 5;
+  // offline is true while the app holds access that outlives a sign-out (offline_access).
+  bool offline = 6;
+  google.protobuf.Timestamp connected_at = 7;
+  google.protobuf.Timestamp last_used_at = 8;
+}
+
+message ListConnectedAppsRequest {}
+
+message ListConnectedAppsResponse {
+  repeated ConnectedApp apps = 1;
+}
+
+message DisconnectAppRequest {
+  string client_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 2048
+  ];
+}
+
+message DisconnectAppResponse {}
+
+message TokenServer {
+  string id = 1;
+  string name = 2;
+  string identifier = 3;
+  repeated string scopes = 4;
+  map<string, string> scope_descriptions = 5;
+}
+
+message ListTokenServersRequest {}
+
+message ListTokenServersResponse {
+  repeated TokenServer servers = 1;
+}
+
+// TokenExpiry is how long a new personal token lives; never more than 90 days.
+enum TokenExpiry {
+  TOKEN_EXPIRY_UNSPECIFIED = 0;
+  TOKEN_EXPIRY_7_DAYS = 1;
+  TOKEN_EXPIRY_30_DAYS = 2;
+  TOKEN_EXPIRY_90_DAYS = 3;
+}
+
+// PersonalTokenState is where a personal token stands.
+enum PersonalTokenState {
+  PERSONAL_TOKEN_STATE_UNSPECIFIED = 0;
+  PERSONAL_TOKEN_STATE_ACTIVE = 1;
+  PERSONAL_TOKEN_STATE_EXPIRED = 2;
+  PERSONAL_TOKEN_STATE_REVOKED = 3;
+}
+
+message PersonalToken {
+  string id = 1;
+  string name = 2;
+  // hint is the token's last 4 characters.
+  string hint = 3;
+  TokenServer server = 4;
+  repeated string scopes = 5;
+  PersonalTokenState state = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp expires_at = 8;
+  google.protobuf.Timestamp last_used_at = 9;
+  google.protobuf.Timestamp revoked_at = 10;
+}
+
+message ListPersonalTokensRequest {}
+
+message ListPersonalTokensResponse {
+  repeated PersonalToken tokens = 1;
+}
+
+message CreatePersonalTokenRequest {
+  string name = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.name) = true,
+    (buf.validate.field).string.max_len = 100
+  ];
+  string server_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  repeated string scopes = 3 [
+    (buf.validate.field).repeated.min_items = 1,
+    (buf.validate.field).repeated.max_items = 64,
+    (buf.validate.field).repeated.unique = true,
+    (buf.validate.field).repeated.items.string.min_len = 1,
+    (buf.validate.field).repeated.items.string.max_len = 128
+  ];
+  TokenExpiry expiry = 4 [
+    (buf.validate.field).enum.defined_only = true,
+    (buf.validate.field).enum.not_in = 0
+  ];
+}
+
+message CreatePersonalTokenResponse {
+  PersonalToken token = 1;
+  // secret is the one-time token. It is never present on any other response.
+  string secret = 2 [debug_redact = true];
+}
+
+message RevokePersonalTokenRequest {
+  string token_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message RevokePersonalTokenResponse {}

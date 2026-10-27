@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { ShownError } from '../../lib/apperror/message';
+import type { ShownError } from '#base/lib/apperror/message';
 import { ref } from 'vue';
-import ErrorText from '../ui/ErrorText.vue';
+import ErrorText from '#base/components/ui/ErrorText.vue';
 
 export interface SecretView {
   id: string;

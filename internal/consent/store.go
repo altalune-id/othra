@@ -15,6 +15,8 @@ type Store interface {
 	Upsert(ctx context.Context, c *Consent, keep []string) (*Consent, error)
 	// DeleteClient removes every consent of clientID.
 	DeleteClient(ctx context.Context, projectID, clientID uuid.UUID) error
-	// Delete removes the consent key names, reporting whether there was one.
-	Delete(ctx context.Context, projectID uuid.UUID, key Key) (bool, error)
+	// ListByEndUser returns every consent of the end user.
+	ListByEndUser(ctx context.Context, projectID, endUserID uuid.UUID) ([]*Consent, error)
+	// DeleteEndUserClient removes every consent of the end user for clientID, across resource servers, and counts them.
+	DeleteEndUserClient(ctx context.Context, projectID, endUserID, clientID uuid.UUID) (int, error)
 }

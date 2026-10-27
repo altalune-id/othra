@@ -1,7 +1,7 @@
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
-import { AuthMethod, ClientKind, ClientSchema, ConsentPolicy } from '../../../gen/client/v1/client_pb';
+import { AuthMethod, ClientKind, ClientSchema, ConsentPolicy } from '#gen/client/v1/client_pb';
 import { authMethodName, authMethodValue, consentName, consentValue, emptyFields, fieldsOf } from './clientForm';
 
 describe('clientForm', () => {
