@@ -154,6 +154,21 @@ func (f *ClientStore) Lock(_ context.Context, projectID uuid.UUID, publicID stri
 	return f.find("Lock", projectID, publicID, now)
 }
 
+// LockSystem returns the project's console client.
+func (f *ClientStore) LockSystem(_ context.Context, projectID uuid.UUID, now time.Time) (*client.Client, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("LockSystem"); err != nil {
+		return nil, err
+	}
+	for _, c := range f.clients {
+		if c.ProjectID == projectID && c.System {
+			return f.withSecrets(c, now), nil
+		}
+	}
+	return nil, &client.NotFoundError{}
+}
+
 func (f *ClientStore) find(op string, projectID uuid.UUID, publicID string, now time.Time) (*client.Client, error) {
 	if err := f.fail(op); err != nil {
 		return nil, err

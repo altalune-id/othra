@@ -26,6 +26,8 @@ type Store interface {
 	ForAuthentication(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error)
 	// Lock locks a client's row and returns it with its live secrets at now, or *NotFoundError.
 	Lock(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error)
+	// LockSystem locks the project's console client row and returns it, or *NotFoundError when there is none.
+	LockSystem(ctx context.Context, projectID uuid.UUID, now time.Time) (*Client, error)
 	// InsertSecret records secret s of client c by its hash.
 	InsertSecret(ctx context.Context, c *Client, s Secret, hash string) error
 	// ExpireSecret makes the secret id of client clientID stop working at at.

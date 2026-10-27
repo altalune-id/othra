@@ -42,7 +42,7 @@ func TestInviteWeb_JoinAndAcceptAsTheServiceRole(t *testing.T) {
 	svcs, cfg := migratedServices(t, cfg)
 	svcs.Caps.EnvGenesis = true
 	require.NoError(t, firstBoot(t.Context(), cfg, svcs, testLogger(), false))
-	h := buildHTTPHandler(httpSurfaces{routes: buildRoutes(cfg, svcs, nil, nil), session: buildSessionMiddleware(svcs, nil)})
+	h := buildHTTPHandler(httpSurfaces{routes: buildRoutes(cfg, svcs, nil, nil, nil), session: buildSessionMiddleware(svcs, nil)})
 	ctx := t.Context()
 	sys, err := svcs.Orgs.System(ctx)
 	require.NoError(t, err)

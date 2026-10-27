@@ -197,3 +197,9 @@ func TestTruncate(t *testing.T) {
 	assert.Equal(t, "ab", truncate("abcdef", 2))
 	assert.Equal(t, "a", truncate("aé", 2), "a cut never splits a rune")
 }
+
+func TestMetadataURL(t *testing.T) {
+	assert.Equal(t, "https://api.example.com/.well-known/oauth-protected-resource", MetadataURL("https://api.example.com"))
+	assert.Equal(t, "https://api.example.com:8443/.well-known/oauth-protected-resource/v1/mcp", MetadataURL("https://api.example.com:8443/v1/mcp/"))
+	assert.Empty(t, MetadataURL("::"))
+}

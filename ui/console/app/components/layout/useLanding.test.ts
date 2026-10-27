@@ -32,6 +32,11 @@ describe('useLanding', () => {
     expect(listProjects).not.toHaveBeenCalled();
   });
 
+  it('goes to onboarding when there are no orgs and the caller may create one', async () => {
+    setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', userId: 'u1', orgCreation: true }) });
+    expect(await useLanding().resolve()).toBe('/onboarding');
+  });
+
   it('lands on the first project of the first org', async () => {
     withOrgs(acme, beta);
     expect(await useLanding().resolve()).toBe('/o/acme/projects/web');
@@ -54,7 +59,7 @@ describe('useLanding', () => {
   it('lands on the active org when nothing is pinned', async () => {
     withOrgs(acme, beta);
     listProjects.mockResolvedValue({ projects: [] });
-    setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', activeOrgSlug: 'beta' }), setActiveOrg: vi.fn() });
+    setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', userId: 'u1', activeOrgSlug: 'beta' }), setActiveOrg: vi.fn() });
     expect(await useLanding().resolve()).toBe('/o/beta');
     expect(listProjects).toHaveBeenCalledWith({ orgId: beta.id });
   });
@@ -67,10 +72,10 @@ describe('useLanding', () => {
       return { projects: [] };
     });
     setClient('$authClient', {
-      whoami: vi.fn().mockResolvedValue({ source: 'local', activeOrgSlug: 'acme' }),
+      whoami: vi.fn().mockResolvedValue({ source: 'local', userId: 'u1', activeOrgSlug: 'acme' }),
       setActiveOrg: vi.fn(async () => {
         calls.push('setActiveOrg');
-        return { me: { source: 'local', activeOrgSlug: 'beta' } };
+        return { me: { source: 'local', userId: 'u1', activeOrgSlug: 'beta' } };
       }),
     });
     expect(await useLanding().resolve('beta')).toBe('/o/beta');

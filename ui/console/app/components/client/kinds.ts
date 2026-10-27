@@ -54,7 +54,12 @@ export function kindName(kind: ClientKind): ClientKindName {
   return clientKindNames.find(name => clientKinds[name].value === kind) ?? clientKindNames[0]!;
 }
 
-// isCimdClient reports a client that signed in with a client metadata document: it is managed by that document and can only be revoked.
+// isCimdClient reports a client that signed in with a client metadata document.
 export function isCimdClient(c: Pick<Client, 'registration'>): boolean {
   return c.registration === ClientRegistration.CIMD;
+}
+
+// isSystemClient reports the console client Othra seeds at install.
+export function isSystemClient(c: Pick<Client, 'registration'>): boolean {
+  return c.registration === ClientRegistration.SYSTEM;
 }

@@ -25,6 +25,7 @@ import (
 	"altalune.id/othra/internal/apikey"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/boot"
+	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/keys"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/invite"
@@ -41,6 +42,7 @@ type App interface {
 	Run(ctx context.Context) error
 	RunMCP(ctx context.Context) error
 	SetPassword(ctx context.Context, email, password string) error
+	SignInLink(ctx context.Context, email string) (enduser.IssuedLink, error)
 	AddMember(ctx context.Context, email, orgPublicID string, role member.Role) (*member.Member, error)
 	Close(ctx context.Context) error
 }
@@ -156,7 +158,7 @@ func NewRootCmd(bootServer ServerBootFn, bootClient ClientBootFn) *cobra.Command
 	root.AddCommand(
 		newServeCmd(bootServer),
 		newMCPCmd(bootServer),
-		markOperator(user.NewCmd(setPasswordFn(bootServer))),
+		markOperator(newAdminCmd(bootServer)),
 		authCmd,
 		orgCmd,
 		memberCmd,
@@ -299,11 +301,47 @@ func authSessionClientFn(bootClient ClientBootFn) auth.SessionClientFn {
 	}
 }
 
+func newAdminCmd(bootServer ServerBootFn) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "admin",
+		Short:   "Break-glass operator actions on console accounts (needs database access)",
+		GroupID: "runtime",
+	}
+	cmd.AddCommand(user.NewSetPasswordCmd(setPasswordFn(bootServer)), enduser.NewSignInLinkCmd(signInLinkFn(bootServer)))
+	return cmd
+}
+
 func setPasswordFn(bootServer ServerBootFn) user.SetPasswordFn {
 	return func(ctx context.Context, email, password string) error {
+		rt, err := runtimeFromCtx(ctx)
+		if err != nil {
+			return err
+		}
+		if !rt.cfg.PasswordsOn() {
+			return apperror.New(apperror.CodeValidation,
+				"password sign-in is off on this server (auth.password.enabled); use `othra admin sign-in-link`")
+		}
 		return withOperatorApp(ctx, bootServer, func(app App) error {
 			return app.SetPassword(ctx, email, password)
 		})
+	}
+}
+
+func signInLinkFn(bootServer ServerBootFn) enduser.SignInLinkFn {
+	return func(ctx context.Context, email string) (l enduser.IssuedLink, err error) {
+		rt, err := runtimeFromCtx(ctx)
+		if err != nil {
+			return l, err
+		}
+		if strings.TrimSpace(rt.cfg.HTTP.BaseURL) == "" {
+			return l, fmt.Errorf("sign-in-link: %w",
+				&config.InvalidSettingError{Key: "http.baseURL", Reason: "set http.baseURL to the server's public URL"})
+		}
+		err = withOperatorApp(ctx, bootServer, func(app App) error {
+			l, err = app.SignInLink(ctx, email)
+			return err
+		})
+		return l, err
 	}
 }
 

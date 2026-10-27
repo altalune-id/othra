@@ -246,3 +246,31 @@ func TestService_SetNameNeverWritesAStalePassword(t *testing.T) {
 	assert.Equal(t, "Ana Maria", got.Name)
 	assert.NoError(t, password.Verify(got.PasswordHash, "a brand new passphrase"), "a rename that read the user before a reset keeps the new password")
 }
+
+func TestService_Identities(t *testing.T) {
+	store := fakes.NewUserStore()
+	svc := newService(store)
+	ctx := context.Background()
+	u, err := svc.CreateLinked(ctx, "Ana@Shop.test", "Ana", "othra:system", "sub-1")
+	require.NoError(t, err)
+	assert.Equal(t, "ana@shop.test", u.Email)
+	assert.Empty(t, u.PasswordHash, "an identity-only user has no password")
+	got, err := svc.ByIDP(ctx, "othra:system", "sub-1")
+	require.NoError(t, err)
+	assert.Equal(t, u.ID, got.ID)
+	linked, err := svc.LinkIDP(ctx, u.ID, "othra:system", "sub-2")
+	require.NoError(t, err)
+	assert.False(t, linked)
+	require.NoError(t, svc.Lock(ctx, u.ID))
+	_, err = svc.CreateLinked(ctx, "not an email", "", "othra:system", "sub-3")
+	assert.Error(t, err)
+
+	store.Err = errors.New("db down")
+	_, err = svc.ByIDP(ctx, "othra:system", "sub-1")
+	assert.Error(t, err)
+	_, err = svc.LinkIDP(ctx, u.ID, "othra:system", "sub-1")
+	assert.Error(t, err)
+	assert.Error(t, svc.Lock(ctx, u.ID))
+	_, err = svc.CreateLinked(ctx, "bea@shop.test", "Bea", "othra:system", "sub-4")
+	assert.Error(t, err)
+}

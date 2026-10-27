@@ -47,7 +47,9 @@ type Project struct {
 	TermsPublishedAt     *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=terms_published_at,json=termsPublishedAt,proto3" json:"terms_published_at,omitempty"`
 	SigninEmailLink      bool                   `protobuf:"varint,21,opt,name=signin_email_link,json=signinEmailLink,proto3" json:"signin_email_link,omitempty"`
 	// logo_url is the public URL of the project's logo, empty when it has none.
-	LogoUrl       string `protobuf:"bytes,22,opt,name=logo_url,json=logoUrl,proto3" json:"logo_url,omitempty"`
+	LogoUrl string `protobuf:"bytes,22,opt,name=logo_url,json=logoUrl,proto3" json:"logo_url,omitempty"`
+	// system is true for the console project Othra seeds at install; only its branding, terms and upstream IdPs can change.
+	System        bool `protobuf:"varint,23,opt,name=system,proto3" json:"system,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -213,6 +215,13 @@ func (x *Project) GetLogoUrl() string {
 		return x.LogoUrl
 	}
 	return ""
+}
+
+func (x *Project) GetSystem() bool {
+	if x != nil {
+		return x.System
+	}
+	return false
 }
 
 type CreateProjectRequest struct {
@@ -1551,7 +1560,7 @@ var File_project_v1_project_proto protoreflect.FileDescriptor
 const file_project_v1_project_proto_rawDesc = "" +
 	"\n" +
 	"\x18project/v1/project.proto\x12\n" +
-	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xb0\x06\n" +
+	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xc8\x06\n" +
 	"\aProject\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
 	"\x06org_id\x18\x03 \x01(\tR\x05orgId\x12\x12\n" +
@@ -1576,7 +1585,8 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\rterms_version\x18\x13 \x01(\x05R\ftermsVersion\x12H\n" +
 	"\x12terms_published_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\x10termsPublishedAt\x12*\n" +
 	"\x11signin_email_link\x18\x15 \x01(\bR\x0fsigninEmailLink\x12\x19\n" +
-	"\blogo_url\x18\x16 \x01(\tR\alogoUrlJ\x04\b\x02\x10\x03J\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11R\tpublic_idR\bhas_logoR\x0flogo_updated_at\"\xb1\x04\n" +
+	"\blogo_url\x18\x16 \x01(\tR\alogoUrl\x12\x16\n" +
+	"\x06system\x18\x17 \x01(\bR\x06systemJ\x04\b\x02\x10\x03J\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11R\tpublic_idR\bhas_logoR\x0flogo_updated_at\"\xb1\x04\n" +
 	"\x14CreateProjectRequest\x12#\n" +
 	"\x06org_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x05orgId\x12\x1d\n" +
 	"\x04slug\x18\x02 \x01(\tB\t\xbaH\x06r\x04\xa0\xe42\x01R\x04slug\x12 \n" +

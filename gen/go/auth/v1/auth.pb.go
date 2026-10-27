@@ -8,6 +8,7 @@ package authv1
 
 import (
 	_ "altalune.id/othra/gen/go/mcp/v1"
+	v1 "altalune.id/othra/gen/go/org/v1"
 	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -24,6 +25,102 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type CreateOwnOrgRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Slug          string                 `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateOwnOrgRequest) Reset() {
+	*x = CreateOwnOrgRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateOwnOrgRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateOwnOrgRequest) ProtoMessage() {}
+
+func (x *CreateOwnOrgRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateOwnOrgRequest.ProtoReflect.Descriptor instead.
+func (*CreateOwnOrgRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *CreateOwnOrgRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateOwnOrgRequest) GetSlug() string {
+	if x != nil {
+		return x.Slug
+	}
+	return ""
+}
+
+type CreateOwnOrgResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Org           *v1.Org                `protobuf:"bytes,1,opt,name=org,proto3" json:"org,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateOwnOrgResponse) Reset() {
+	*x = CreateOwnOrgResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateOwnOrgResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateOwnOrgResponse) ProtoMessage() {}
+
+func (x *CreateOwnOrgResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateOwnOrgResponse.ProtoReflect.Descriptor instead.
+func (*CreateOwnOrgResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *CreateOwnOrgResponse) GetOrg() *v1.Org {
+	if x != nil {
+		return x.Org
+	}
+	return nil
+}
+
 type WhoamiRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -32,7 +129,7 @@ type WhoamiRequest struct {
 
 func (x *WhoamiRequest) Reset() {
 	*x = WhoamiRequest{}
-	mi := &file_auth_v1_auth_proto_msgTypes[0]
+	mi := &file_auth_v1_auth_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +141,7 @@ func (x *WhoamiRequest) String() string {
 func (*WhoamiRequest) ProtoMessage() {}
 
 func (x *WhoamiRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[0]
+	mi := &file_auth_v1_auth_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,13 +154,13 @@ func (x *WhoamiRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WhoamiRequest.ProtoReflect.Descriptor instead.
 func (*WhoamiRequest) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{0}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{2}
 }
 
 // Every id is a public id.
 type WhoamiResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// local, basic, apikey or system.
+	// local, oidc, basic, apikey or system.
 	Source    string `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
 	UserId    string `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Email     string `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
@@ -82,14 +179,16 @@ type WhoamiResponse struct {
 	// Whether this deployment lets the caller create organizations (cloud only).
 	OrgCreation bool `protobuf:"varint,14,opt,name=org_creation,json=orgCreation,proto3" json:"org_creation,omitempty"`
 	// Whether this deployment has file storage, so the caller can upload files such as a project logo.
-	FileUploads   bool `protobuf:"varint,15,opt,name=file_uploads,json=fileUploads,proto3" json:"file_uploads,omitempty"`
+	FileUploads bool `protobuf:"varint,15,opt,name=file_uploads,json=fileUploads,proto3" json:"file_uploads,omitempty"`
+	// Whether this person can change a password: password sign-in is on here and they have one.
+	Passwords     bool `protobuf:"varint,16,opt,name=passwords,proto3" json:"passwords,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *WhoamiResponse) Reset() {
 	*x = WhoamiResponse{}
-	mi := &file_auth_v1_auth_proto_msgTypes[1]
+	mi := &file_auth_v1_auth_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -101,7 +200,7 @@ func (x *WhoamiResponse) String() string {
 func (*WhoamiResponse) ProtoMessage() {}
 
 func (x *WhoamiResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[1]
+	mi := &file_auth_v1_auth_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -114,7 +213,7 @@ func (x *WhoamiResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WhoamiResponse.ProtoReflect.Descriptor instead.
 func (*WhoamiResponse) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{1}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *WhoamiResponse) GetSource() string {
@@ -215,6 +314,13 @@ func (x *WhoamiResponse) GetFileUploads() bool {
 	return false
 }
 
+func (x *WhoamiResponse) GetPasswords() bool {
+	if x != nil {
+		return x.Passwords
+	}
+	return false
+}
+
 type UpdateProfileRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// At most 200 characters; surrounding spaces are trimmed.
@@ -225,7 +331,7 @@ type UpdateProfileRequest struct {
 
 func (x *UpdateProfileRequest) Reset() {
 	*x = UpdateProfileRequest{}
-	mi := &file_auth_v1_auth_proto_msgTypes[2]
+	mi := &file_auth_v1_auth_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -237,7 +343,7 @@ func (x *UpdateProfileRequest) String() string {
 func (*UpdateProfileRequest) ProtoMessage() {}
 
 func (x *UpdateProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[2]
+	mi := &file_auth_v1_auth_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -250,7 +356,7 @@ func (x *UpdateProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProfileRequest.ProtoReflect.Descriptor instead.
 func (*UpdateProfileRequest) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{2}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *UpdateProfileRequest) GetName() string {
@@ -271,7 +377,7 @@ type UpdateProfileResponse struct {
 
 func (x *UpdateProfileResponse) Reset() {
 	*x = UpdateProfileResponse{}
-	mi := &file_auth_v1_auth_proto_msgTypes[3]
+	mi := &file_auth_v1_auth_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -283,7 +389,7 @@ func (x *UpdateProfileResponse) String() string {
 func (*UpdateProfileResponse) ProtoMessage() {}
 
 func (x *UpdateProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[3]
+	mi := &file_auth_v1_auth_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -296,7 +402,7 @@ func (x *UpdateProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProfileResponse.ProtoReflect.Descriptor instead.
 func (*UpdateProfileResponse) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *UpdateProfileResponse) GetUserId() string {
@@ -323,7 +429,7 @@ type ChangePasswordRequest struct {
 
 func (x *ChangePasswordRequest) Reset() {
 	*x = ChangePasswordRequest{}
-	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	mi := &file_auth_v1_auth_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -335,7 +441,7 @@ func (x *ChangePasswordRequest) String() string {
 func (*ChangePasswordRequest) ProtoMessage() {}
 
 func (x *ChangePasswordRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	mi := &file_auth_v1_auth_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -348,7 +454,7 @@ func (x *ChangePasswordRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangePasswordRequest.ProtoReflect.Descriptor instead.
 func (*ChangePasswordRequest) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{4}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ChangePasswordRequest) GetCurrentPassword() string {
@@ -373,7 +479,7 @@ type ChangePasswordResponse struct {
 
 func (x *ChangePasswordResponse) Reset() {
 	*x = ChangePasswordResponse{}
-	mi := &file_auth_v1_auth_proto_msgTypes[5]
+	mi := &file_auth_v1_auth_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -385,7 +491,7 @@ func (x *ChangePasswordResponse) String() string {
 func (*ChangePasswordResponse) ProtoMessage() {}
 
 func (x *ChangePasswordResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[5]
+	mi := &file_auth_v1_auth_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -398,7 +504,7 @@ func (x *ChangePasswordResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangePasswordResponse.ProtoReflect.Descriptor instead.
 func (*ChangePasswordResponse) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{5}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{7}
 }
 
 type SignOutEverywhereRequest struct {
@@ -409,7 +515,7 @@ type SignOutEverywhereRequest struct {
 
 func (x *SignOutEverywhereRequest) Reset() {
 	*x = SignOutEverywhereRequest{}
-	mi := &file_auth_v1_auth_proto_msgTypes[6]
+	mi := &file_auth_v1_auth_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -421,7 +527,7 @@ func (x *SignOutEverywhereRequest) String() string {
 func (*SignOutEverywhereRequest) ProtoMessage() {}
 
 func (x *SignOutEverywhereRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[6]
+	mi := &file_auth_v1_auth_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -434,7 +540,7 @@ func (x *SignOutEverywhereRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignOutEverywhereRequest.ProtoReflect.Descriptor instead.
 func (*SignOutEverywhereRequest) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{6}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{8}
 }
 
 type SignOutEverywhereResponse struct {
@@ -447,7 +553,7 @@ type SignOutEverywhereResponse struct {
 
 func (x *SignOutEverywhereResponse) Reset() {
 	*x = SignOutEverywhereResponse{}
-	mi := &file_auth_v1_auth_proto_msgTypes[7]
+	mi := &file_auth_v1_auth_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -459,7 +565,7 @@ func (x *SignOutEverywhereResponse) String() string {
 func (*SignOutEverywhereResponse) ProtoMessage() {}
 
 func (x *SignOutEverywhereResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[7]
+	mi := &file_auth_v1_auth_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -472,7 +578,7 @@ func (x *SignOutEverywhereResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignOutEverywhereResponse.ProtoReflect.Descriptor instead.
 func (*SignOutEverywhereResponse) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{7}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SignOutEverywhereResponse) GetSignedOut() bool {
@@ -492,7 +598,7 @@ type SetActiveOrgRequest struct {
 
 func (x *SetActiveOrgRequest) Reset() {
 	*x = SetActiveOrgRequest{}
-	mi := &file_auth_v1_auth_proto_msgTypes[8]
+	mi := &file_auth_v1_auth_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -504,7 +610,7 @@ func (x *SetActiveOrgRequest) String() string {
 func (*SetActiveOrgRequest) ProtoMessage() {}
 
 func (x *SetActiveOrgRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[8]
+	mi := &file_auth_v1_auth_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -517,7 +623,7 @@ func (x *SetActiveOrgRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetActiveOrgRequest.ProtoReflect.Descriptor instead.
 func (*SetActiveOrgRequest) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{8}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SetActiveOrgRequest) GetOrgId() string {
@@ -537,7 +643,7 @@ type SetActiveOrgResponse struct {
 
 func (x *SetActiveOrgResponse) Reset() {
 	*x = SetActiveOrgResponse{}
-	mi := &file_auth_v1_auth_proto_msgTypes[9]
+	mi := &file_auth_v1_auth_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -549,7 +655,7 @@ func (x *SetActiveOrgResponse) String() string {
 func (*SetActiveOrgResponse) ProtoMessage() {}
 
 func (x *SetActiveOrgResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[9]
+	mi := &file_auth_v1_auth_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -562,7 +668,7 @@ func (x *SetActiveOrgResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetActiveOrgResponse.ProtoReflect.Descriptor instead.
 func (*SetActiveOrgResponse) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{9}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SetActiveOrgResponse) GetMe() *WhoamiResponse {
@@ -576,8 +682,13 @@ var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth/v1/auth.proto\x12\aauth.v1\x1a\x1bbuf/validate/validate.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\x0f\n" +
-	"\rWhoamiRequest\"\xca\x03\n" +
+	"\x12auth/v1/auth.proto\x12\aauth.v1\x1a\x1bbuf/validate/validate.proto\x1a\x18mcp/v1/annotations.proto\x1a\x10org/v1/org.proto\x1a\x14othra/v1/rules.proto\"V\n" +
+	"\x13CreateOwnOrgRequest\x12 \n" +
+	"\x04name\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x90\xe42\x01R\x04name\x12\x1d\n" +
+	"\x04slug\x18\x02 \x01(\tB\t\xbaH\x06r\x04\xa0\xe42\x01R\x04slug\"5\n" +
+	"\x14CreateOwnOrgResponse\x12\x1d\n" +
+	"\x03org\x18\x01 \x01(\v2\v.org.v1.OrgR\x03org\"\x0f\n" +
+	"\rWhoamiRequest\"\xe8\x03\n" +
 	"\x0eWhoamiResponse\x12\x16\n" +
 	"\x06source\x18\x01 \x01(\tR\x06source\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x14\n" +
@@ -594,7 +705,8 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\vpermissions\x18\v \x03(\tR\vpermissions\x12\x1a\n" +
 	"\boperator\x18\f \x01(\bR\boperator\x12!\n" +
 	"\forg_creation\x18\x0e \x01(\bR\vorgCreation\x12!\n" +
-	"\ffile_uploads\x18\x0f \x01(\bR\vfileUploadsJ\x04\b\x06\x10\aR\x06key_id\"\x8c\x01\n" +
+	"\ffile_uploads\x18\x0f \x01(\bR\vfileUploads\x12\x1c\n" +
+	"\tpasswords\x18\x10 \x01(\bR\tpasswordsJ\x04\b\x06\x10\aR\x06key_id\"\x8c\x01\n" +
 	"\x14UpdateProfileRequest\x12t\n" +
 	"\x04name\x18\x01 \x01(\tB`\xbaH]\xba\x01Z\n" +
 	"\x15user.name.max_len.200\x1aAthis.trim().size() <= 200 ? '' : 'must be at most 200 characters'R\x04name\"D\n" +
@@ -613,14 +725,15 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x13SetActiveOrgRequest\x12 \n" +
 	"\x06org_id\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x88\xe42\x01R\x05orgId\"?\n" +
 	"\x14SetActiveOrgResponse\x12'\n" +
-	"\x02me\x18\x01 \x01(\v2\x17.auth.v1.WhoamiResponseR\x02me2\xf9\x03\n" +
+	"\x02me\x18\x01 \x01(\v2\x17.auth.v1.WhoamiResponseR\x02me2\xc8\x04\n" +
 	"\vAuthService\x12\x95\x01\n" +
 	"\x06Whoami\x12\x16.auth.v1.WhoamiRequest\x1a\x17.auth.v1.WhoamiResponse\"Z\xca\xf3\x18V\n" +
 	"\vauth_whoami\x12BWho this MCP client acts as: user or key, active org, permissions.*\x03app\x12P\n" +
 	"\rUpdateProfile\x12\x1d.auth.v1.UpdateProfileRequest\x1a\x1e.auth.v1.UpdateProfileResponse\"\x00\x12S\n" +
 	"\x0eChangePassword\x12\x1e.auth.v1.ChangePasswordRequest\x1a\x1f.auth.v1.ChangePasswordResponse\"\x00\x12\\\n" +
 	"\x11SignOutEverywhere\x12!.auth.v1.SignOutEverywhereRequest\x1a\".auth.v1.SignOutEverywhereResponse\"\x00\x12M\n" +
-	"\fSetActiveOrg\x12\x1c.auth.v1.SetActiveOrgRequest\x1a\x1d.auth.v1.SetActiveOrgResponse\"\x00B~\n" +
+	"\fSetActiveOrg\x12\x1c.auth.v1.SetActiveOrgRequest\x1a\x1d.auth.v1.SetActiveOrgResponse\"\x00\x12M\n" +
+	"\fCreateOwnOrg\x12\x1c.auth.v1.CreateOwnOrgRequest\x1a\x1d.auth.v1.CreateOwnOrgResponse\"\x00B~\n" +
 	"\vcom.auth.v1B\tAuthProtoP\x01Z'altalune.id/othra/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
@@ -635,36 +748,42 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_auth_v1_auth_proto_goTypes = []any{
-	(*WhoamiRequest)(nil),             // 0: auth.v1.WhoamiRequest
-	(*WhoamiResponse)(nil),            // 1: auth.v1.WhoamiResponse
-	(*UpdateProfileRequest)(nil),      // 2: auth.v1.UpdateProfileRequest
-	(*UpdateProfileResponse)(nil),     // 3: auth.v1.UpdateProfileResponse
-	(*ChangePasswordRequest)(nil),     // 4: auth.v1.ChangePasswordRequest
-	(*ChangePasswordResponse)(nil),    // 5: auth.v1.ChangePasswordResponse
-	(*SignOutEverywhereRequest)(nil),  // 6: auth.v1.SignOutEverywhereRequest
-	(*SignOutEverywhereResponse)(nil), // 7: auth.v1.SignOutEverywhereResponse
-	(*SetActiveOrgRequest)(nil),       // 8: auth.v1.SetActiveOrgRequest
-	(*SetActiveOrgResponse)(nil),      // 9: auth.v1.SetActiveOrgResponse
+	(*CreateOwnOrgRequest)(nil),       // 0: auth.v1.CreateOwnOrgRequest
+	(*CreateOwnOrgResponse)(nil),      // 1: auth.v1.CreateOwnOrgResponse
+	(*WhoamiRequest)(nil),             // 2: auth.v1.WhoamiRequest
+	(*WhoamiResponse)(nil),            // 3: auth.v1.WhoamiResponse
+	(*UpdateProfileRequest)(nil),      // 4: auth.v1.UpdateProfileRequest
+	(*UpdateProfileResponse)(nil),     // 5: auth.v1.UpdateProfileResponse
+	(*ChangePasswordRequest)(nil),     // 6: auth.v1.ChangePasswordRequest
+	(*ChangePasswordResponse)(nil),    // 7: auth.v1.ChangePasswordResponse
+	(*SignOutEverywhereRequest)(nil),  // 8: auth.v1.SignOutEverywhereRequest
+	(*SignOutEverywhereResponse)(nil), // 9: auth.v1.SignOutEverywhereResponse
+	(*SetActiveOrgRequest)(nil),       // 10: auth.v1.SetActiveOrgRequest
+	(*SetActiveOrgResponse)(nil),      // 11: auth.v1.SetActiveOrgResponse
+	(*v1.Org)(nil),                    // 12: org.v1.Org
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	1, // 0: auth.v1.SetActiveOrgResponse.me:type_name -> auth.v1.WhoamiResponse
-	0, // 1: auth.v1.AuthService.Whoami:input_type -> auth.v1.WhoamiRequest
-	2, // 2: auth.v1.AuthService.UpdateProfile:input_type -> auth.v1.UpdateProfileRequest
-	4, // 3: auth.v1.AuthService.ChangePassword:input_type -> auth.v1.ChangePasswordRequest
-	6, // 4: auth.v1.AuthService.SignOutEverywhere:input_type -> auth.v1.SignOutEverywhereRequest
-	8, // 5: auth.v1.AuthService.SetActiveOrg:input_type -> auth.v1.SetActiveOrgRequest
-	1, // 6: auth.v1.AuthService.Whoami:output_type -> auth.v1.WhoamiResponse
-	3, // 7: auth.v1.AuthService.UpdateProfile:output_type -> auth.v1.UpdateProfileResponse
-	5, // 8: auth.v1.AuthService.ChangePassword:output_type -> auth.v1.ChangePasswordResponse
-	7, // 9: auth.v1.AuthService.SignOutEverywhere:output_type -> auth.v1.SignOutEverywhereResponse
-	9, // 10: auth.v1.AuthService.SetActiveOrg:output_type -> auth.v1.SetActiveOrgResponse
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	12, // 0: auth.v1.CreateOwnOrgResponse.org:type_name -> org.v1.Org
+	3,  // 1: auth.v1.SetActiveOrgResponse.me:type_name -> auth.v1.WhoamiResponse
+	2,  // 2: auth.v1.AuthService.Whoami:input_type -> auth.v1.WhoamiRequest
+	4,  // 3: auth.v1.AuthService.UpdateProfile:input_type -> auth.v1.UpdateProfileRequest
+	6,  // 4: auth.v1.AuthService.ChangePassword:input_type -> auth.v1.ChangePasswordRequest
+	8,  // 5: auth.v1.AuthService.SignOutEverywhere:input_type -> auth.v1.SignOutEverywhereRequest
+	10, // 6: auth.v1.AuthService.SetActiveOrg:input_type -> auth.v1.SetActiveOrgRequest
+	0,  // 7: auth.v1.AuthService.CreateOwnOrg:input_type -> auth.v1.CreateOwnOrgRequest
+	3,  // 8: auth.v1.AuthService.Whoami:output_type -> auth.v1.WhoamiResponse
+	5,  // 9: auth.v1.AuthService.UpdateProfile:output_type -> auth.v1.UpdateProfileResponse
+	7,  // 10: auth.v1.AuthService.ChangePassword:output_type -> auth.v1.ChangePasswordResponse
+	9,  // 11: auth.v1.AuthService.SignOutEverywhere:output_type -> auth.v1.SignOutEverywhereResponse
+	11, // 12: auth.v1.AuthService.SetActiveOrg:output_type -> auth.v1.SetActiveOrgResponse
+	1,  // 13: auth.v1.AuthService.CreateOwnOrg:output_type -> auth.v1.CreateOwnOrgResponse
+	8,  // [8:14] is the sub-list for method output_type
+	2,  // [2:8] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -678,7 +797,7 @@ func file_auth_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

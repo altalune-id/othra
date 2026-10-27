@@ -31,11 +31,19 @@ func TestFrom(t *testing.T) {
 		},
 		"cloud": {
 			cfg:  capabilities.Config{Cloud: true},
-			want: capabilities.Capabilities{OrgCreation: true, PersonalKeys: true, OperatorOrgSupport: true},
+			want: capabilities.Capabilities{LocalLogin: true, OrgCreation: true, PersonalKeys: true, OperatorOrgSupport: true},
 		},
 		"neither mode": {
 			cfg:  capabilities.Config{},
 			want: capabilities.Capabilities{PersonalKeys: true},
+		},
+		"selfhosted with passwords": {
+			cfg:  capabilities.Config{Selfhosted: true, Passwords: true},
+			want: capabilities.Capabilities{LocalLogin: true, PersonalKeys: true, Passwords: true},
+		},
+		"basic has no console passwords": {
+			cfg:  capabilities.Config{Selfhosted: true, BasicAuth: true, Passwords: true},
+			want: capabilities.Capabilities{BasicAuth: true},
 		},
 		"file storage": {
 			cfg:  capabilities.Config{Selfhosted: true, FileStorage: true},

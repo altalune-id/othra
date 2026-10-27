@@ -53,7 +53,7 @@ func TestInstall_EndToEnd(t *testing.T) {
 	required, err := installRequired(t.Context(), svcs)
 	require.NoError(t, err)
 	svcs.InstallRequired = required
-	h := buildHTTPHandler(httpSurfaces{basePath: cfg.HTTP.BasePath, routes: buildRoutes(cfg, svcs, nil, nil), installRequired: required})
+	h := buildHTTPHandler(httpSurfaces{basePath: cfg.HTTP.BasePath, routes: buildRoutes(cfg, svcs, nil, nil, nil), installRequired: required})
 
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/app/console/", nil))
@@ -129,7 +129,7 @@ func TestLogin_EndToEnd(t *testing.T) {
 		_, _ = w.Write([]byte(p.Email + "|" + strings.Join(p.Scopes, ",")))
 	})
 	h := buildHTTPHandler(httpSurfaces{
-		routes:          buildRoutes(cfg, svcs, nil, nil),
+		routes:          buildRoutes(cfg, svcs, nil, nil, nil),
 		console:         console,
 		session:         buildSessionMiddleware(svcs, nil),
 		installRequired: required,

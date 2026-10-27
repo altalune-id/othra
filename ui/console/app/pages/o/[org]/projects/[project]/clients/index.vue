@@ -3,10 +3,10 @@ import type { ClientRow } from '~/components/client/ClientList.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import { useDates } from '#base/composables/useDates';
 import ClientList from '~/components/client/ClientList.vue';
-import { clientKinds, kindName } from '~/components/client/kinds';
+import { clientKinds, isSystemClient, kindName } from '~/components/client/kinds';
 import { useClientList } from '~/components/client/useClients';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
-import { useCanEditProject } from '~/components/project/useProjectAccess';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -16,11 +16,11 @@ const { t } = useI18n();
 const { date } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
-const canEdit = useCanEditProject();
-await useAuthStore().load();
-
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const listed = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
+const guard = useProjectGuard(() => listed.value);
+const canEdit = computed(() => guard.value.canConfigure);
+await useAuthStore().load();
 if (!listed.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }
@@ -35,6 +35,7 @@ const rows = computed<ClientRow[]>(() => {
     kind: t(clientKinds[kindName(c.kind)].labelKey),
     created: date(c.createdAt),
     to: `${base.value}/${c.id}`,
+    system: isSystemClient(c),
   }));
 });
 const labels = computed(() => ({
@@ -43,6 +44,7 @@ const labels = computed(() => ({
   kind: t('clients.kind'),
   created: t('clients.col_created'),
   copyFor: t('clients.copy_id_for', { name: '{name}' }),
+  system: t('common.system'),
 }));
 
 onMounted(() => list.load());
@@ -66,7 +68,8 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
         {{ t('clients.new') }}
       </NuxtLink>
     </div>
-    <ProjectReadOnlyNote v-if="!canEdit" />
+    <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('clients.system_note')" />
+    <ProjectReadOnlyNote v-else-if="!canEdit" />
 
     <section class="card border border-base-300 bg-base-100" data-testid="clients-card">
       <div class="card-body gap-2">

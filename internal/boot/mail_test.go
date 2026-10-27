@@ -79,7 +79,7 @@ func TestMailAllowPlain(t *testing.T) {
 }
 
 func TestBuildMailQueueRefusesPlainOutsideDevConsole(t *testing.T) {
-	cfg := config.Config{Env: config.EnvProduction, Mail: config.MailConfig{Driver: config.MailDriverSMTP}}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Env: config.EnvProduction, Mail: config.MailConfig{Driver: config.MailDriverSMTP}}
 	q := buildMailQueue(db.Pool{}, cfg, sealer.Disabled())
 	_, err := q.Enqueue(context.Background(), mailer.Message{To: "a@example.com", Subject: "s", TextBody: "b"})
 	assert.True(t, mailqueue.IsSealerRequiredError(err))

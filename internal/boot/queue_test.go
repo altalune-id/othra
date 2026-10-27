@@ -41,7 +41,7 @@ func TestBuildQueue_NATSDriverRunsOnTheSharedConnection(t *testing.T) {
 }
 
 func TestBuildQueue_UnknownDriver(t *testing.T) {
-	cfg := config.Config{Queue: config.QueueConfig{Enabled: true, Driver: "kafka"}}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Queue: config.QueueConfig{Enabled: true, Driver: "kafka"}}
 	_, err := buildQueue(t.Context(), kernel.Kernel{}, cfg, nil, testLogger())
 	assert.ErrorContains(t, err, `queue.driver "kafka"`)
 }

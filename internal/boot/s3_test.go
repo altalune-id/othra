@@ -29,7 +29,7 @@ func s3TestConfig(endpoint string) config.S3Config {
 }
 
 func s3FeatureConfig(endpoint string) config.Config {
-	return config.Config{
+	return config.Config{HTTP: config.HTTPConfig{Addr: ":5150"},
 		Postgres: config.PostgresConfig{DSN: "x"},
 		Storage:  config.StorageConfig{Driver: config.StorageDriverS3, PublicBaseURL: "https://files.altalune.id"},
 		S3:       s3TestConfig(endpoint),
@@ -71,7 +71,7 @@ func TestBuildS3_UnusedNeverConnects(t *testing.T) {
 	assert.Nil(t, sh)
 	assert.Empty(t, logs.String(), "no endpoint, nothing to say")
 
-	cfg := config.Config{S3: s3TestConfig("https://acct.r2.cloudflarestorage.com")}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, S3: s3TestConfig("https://acct.r2.cloudflarestorage.com")}
 	cfg.Storage.Driver = config.StorageDriverMemory
 	c, sh, err = buildS3(t.Context(), k, cfg, log)
 	require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestBoot_DefaultConfigNeverOpensS3(t *testing.T) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
 
-	app, err := Boot(context.Background(), config.Config{Postgres: config.PostgresConfig{DSN: "x"}}, testLogger())
+	app, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}}, testLogger())
 	require.NoError(t, err)
 	assert.Zero(t, *calls)
 	assert.NotContains(t, workerNames(app), "s3-health")

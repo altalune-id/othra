@@ -189,6 +189,8 @@ const (
 	ClientRegistration_CLIENT_REGISTRATION_REGISTERED ClientRegistration = 1
 	// CIMD signed in with a Client ID Metadata Document; it is read-only and its OAuth client_id is metadata_url.
 	ClientRegistration_CLIENT_REGISTRATION_CIMD ClientRegistration = 2
+	// SYSTEM is the console client Othra seeds at install; it is read-only on every surface.
+	ClientRegistration_CLIENT_REGISTRATION_SYSTEM ClientRegistration = 3
 )
 
 // Enum value maps for ClientRegistration.
@@ -197,11 +199,13 @@ var (
 		0: "CLIENT_REGISTRATION_UNSPECIFIED",
 		1: "CLIENT_REGISTRATION_REGISTERED",
 		2: "CLIENT_REGISTRATION_CIMD",
+		3: "CLIENT_REGISTRATION_SYSTEM",
 	}
 	ClientRegistration_value = map[string]int32{
 		"CLIENT_REGISTRATION_UNSPECIFIED": 0,
 		"CLIENT_REGISTRATION_REGISTERED":  1,
 		"CLIENT_REGISTRATION_CIMD":        2,
+		"CLIENT_REGISTRATION_SYSTEM":      3,
 	}
 )
 
@@ -1562,17 +1566,18 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"AuthMethod\x12\x1b\n" +
 	"\x17AUTH_METHOD_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fAUTH_METHOD_CLIENT_SECRET_BASIC\x10\x01\x12\"\n" +
-	"\x1eAUTH_METHOD_CLIENT_SECRET_POST\x10\x02*{\n" +
+	"\x1eAUTH_METHOD_CLIENT_SECRET_POST\x10\x02*\x9b\x01\n" +
 	"\x12ClientRegistration\x12#\n" +
 	"\x1fCLIENT_REGISTRATION_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eCLIENT_REGISTRATION_REGISTERED\x10\x01\x12\x1c\n" +
-	"\x18CLIENT_REGISTRATION_CIMD\x10\x02*\x85\x01\n" +
+	"\x18CLIENT_REGISTRATION_CIMD\x10\x02\x12\x1e\n" +
+	"\x1aCLIENT_REGISTRATION_SYSTEM\x10\x03*\x85\x01\n" +
 	"\vSecretGrace\x12\x1c\n" +
 	"\x18SECRET_GRACE_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10SECRET_GRACE_NOW\x10\x01\x12\x15\n" +
 	"\x11SECRET_GRACE_HOUR\x10\x02\x12\x14\n" +
 	"\x10SECRET_GRACE_DAY\x10\x03\x12\x15\n" +
-	"\x11SECRET_GRACE_WEEK\x10\x042\x96\f\n" +
+	"\x11SECRET_GRACE_WEEK\x10\x042\x91\r\n" +
 	"\rClientService\x12\xb6\x01\n" +
 	"\vListClients\x12\x1d.client.v1.ListClientsRequest\x1a\x1e.client.v1.ListClientsResponse\"h\xca\xf3\x18d\n" +
 	"\vclient_list\x12IList a project's OAuth clients with their redirect URIs and secret hints.\x1a\n" +
@@ -1583,12 +1588,12 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"project_id\x1a\tclient_id\x12\xe3\x02\n" +
 	"\fCreateClient\x12\x1e.client.v1.CreateClientRequest\x1a\x1f.client.v1.CreateClientResponse\"\x91\x02\xca\xf3\x18\x8c\x02\n" +
 	"\rclient_create\x12\xd1\x01Register an OAuth client in a project: WEB for a confidential web app, CLI for a public native app on loopback redirect URIs. It never returns a secret; a person generates a WEB client's secret in the console.\x1a\n" +
-	"project_id\x1a\x04name\x1a\x04kind\x1a\rredirect_uris \x01\x12\xae\x02\n" +
-	"\fUpdateClient\x12\x1e.client.v1.UpdateClientRequest\x1a\x1f.client.v1.UpdateClientResponse\"\xdc\x01\xca\xf3\x18\xd7\x01\n" +
-	"\rclient_update\x12\x85\x01Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change.\x1a\n" +
-	"project_id\x1a\tclient_id\x1a\x04name\x1a\rredirect_uris\x1a\x0econsent_policy \x010\x01\x12\xde\x01\n" +
-	"\fDeleteClient\x12\x1e.client.v1.DeleteClientRequest\x1a\x1f.client.v1.DeleteClientResponse\"\x8c\x01\xca\xf3\x18\x87\x01\n" +
-	"\rclient_delete\x12[Delete an OAuth client and its secrets and links. Apps using its client_id stop signing in.\x1a\n" +
+	"project_id\x1a\x04name\x1a\x04kind\x1a\rredirect_uris \x01\x12\xed\x02\n" +
+	"\fUpdateClient\x12\x1e.client.v1.UpdateClientRequest\x1a\x1f.client.v1.UpdateClientResponse\"\x9b\x02\xca\xf3\x18\x96\x02\n" +
+	"\rclient_update\x12\xc4\x01Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change, and the console client (registration SYSTEM) can't be changed.\x1a\n" +
+	"project_id\x1a\tclient_id\x1a\x04name\x1a\rredirect_uris\x1a\x0econsent_policy \x010\x01\x12\x9a\x02\n" +
+	"\fDeleteClient\x12\x1e.client.v1.DeleteClientRequest\x1a\x1f.client.v1.DeleteClientResponse\"\xc8\x01\xca\xf3\x18\xc3\x01\n" +
+	"\rclient_delete\x12\x96\x01Delete an OAuth client and its secrets and links. Apps using its client_id stop signing in. The console client (registration SYSTEM) can't be deleted.\x1a\n" +
 	"project_id\x1a\tclient_id \x010\x01\x12g\n" +
 	"\x14GenerateClientSecret\x12&.client.v1.GenerateClientSecretRequest\x1a'.client.v1.GenerateClientSecretResponse\x12a\n" +
 	"\x12RotateClientSecret\x12$.client.v1.RotateClientSecretRequest\x1a%.client.v1.RotateClientSecretResponse\x12a\n" +

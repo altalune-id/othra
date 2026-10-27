@@ -67,6 +67,10 @@ func newWebFixture(t *testing.T, requireTerms bool) *webFixture {
 }
 
 func newLimitedWebFixture(t *testing.T, requireTerms bool, limits layout.Limits) *webFixture {
+	return newMethodsWebFixture(t, requireTerms, limits, invite.MethodPassword)
+}
+
+func newMethodsWebFixture(t *testing.T, requireTerms bool, limits layout.Limits, methods ...string) *webFixture {
 	f := &webFixture{fixture: newFixture(t), sessions: session.NewMemoryStore()}
 	f.signIn = &fakeSignIn{users: f.users}
 	cookies := auth.CookieSessions{Store: f.sessions, Secret: webSecret, Cookie: session.CookieOptions{Path: "/", Secure: true}, TTL: time.Hour}
@@ -76,7 +80,7 @@ func newLimitedWebFixture(t *testing.T, requireTerms bool, limits layout.Limits)
 			Kit: layout.Kit{}, Invites: f.svc, Users: f.users, Members: f.members,
 			Orgs: orgNames{f.org: "Acme"}, OrgLinks: slugs{f.org: "acme"}, People: directory{people: f.people, users: f.users},
 			SignIn: f.signIn, Sessions: cookies, Consent: layout.ConsentData{Required: requireTerms},
-			Methods: []string{invite.MethodPassword}, StateSecret: webSecret, CookieSecure: true,
+			Methods: methods, StateSecret: webSecret, CookieSecure: true,
 			Now: func() time.Time { return f.clock }, Limits: limits,
 		})},
 	})
@@ -469,4 +473,31 @@ func TestWeb_NoSignInMethod(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Contains(t, rec.Body.String(), "this server has no way to sign in yet")
 	assert.NotContains(t, rec.Body.String(), `action="/invite/join"`)
+}
+
+// With passwords off an invitee joins only through Continue with Othra, which carries the invite to the console sign-in.
+func TestWeb_JoinWithOthraOnly(t *testing.T) {
+	f := newMethodsWebFixture(t, false, layout.Limits{}, invite.MethodOthra)
+	c := f.create("bob@x.io", member.RoleMember)
+	ck := f.open(t, c)
+	rec := f.get("/invite", ck)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+	assert.Contains(t, body, "Continue with Othra")
+	assert.Contains(t, body, "/login/oidc?invite="+c.Invite.PublicID)
+	assert.Contains(t, body, "login_hint=bob%40x.io")
+	assert.NotContains(t, body, `name="password"`)
+
+	rec = f.post("/invite/join", url.Values{"name": {"Bob"}, "password": {"quiet forest lamp nine"}}, ck)
+	assert.Equal(t, http.StatusConflict, rec.Code, "no password join when passwords are off")
+
+	both := newMethodsWebFixture(t, false, layout.Limits{}, invite.MethodPassword, invite.MethodOthra)
+	ck = both.open(t, both.create("cara@x.io", member.RoleMember))
+	body = both.get("/invite", ck).Body.String()
+	assert.Contains(t, body, "Continue with Othra")
+	assert.Contains(t, body, `name="password"`)
+
+	none := newMethodsWebFixture(t, false, layout.Limits{})
+	ck = none.open(t, none.create("dan@x.io", member.RoleMember))
+	assert.Contains(t, none.get("/invite", ck).Body.String(), "no way to sign in yet")
 }

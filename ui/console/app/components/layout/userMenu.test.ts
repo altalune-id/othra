@@ -20,6 +20,17 @@ describe('userMenu', () => {
     expect(accessibleText(trigger.element).replace(/\s+/g, ' ').trim()).toBe('Signed in as Rina Admin');
   });
 
+  it.each(['local', 'oidc'])('gives a %s person Profile, My API keys and Sign out', (source) => {
+    const w = mount(UserMenu, { props: { me: { ...me, source }, logoutUrl: '/logout' } });
+    expect(w.findAll('a').length).toBeGreaterThanOrEqual(2);
+    expect(w.find('form[action="/logout"]').exists()).toBe(true);
+  });
+
+  it('gives an API key none of them', () => {
+    const w = mount(UserMenu, { props: { me: { ...me, source: 'apikey', userId: '' }, logoutUrl: '/logout' } });
+    expect(w.find('form[action="/logout"]').exists()).toBe(false);
+  });
+
   it('shows nothing without a signed-in person', () => {
     expect(mount(UserMenu, { props: { me: null, logoutUrl: '/logout' } }).find('[role="button"]').exists()).toBe(false);
   });

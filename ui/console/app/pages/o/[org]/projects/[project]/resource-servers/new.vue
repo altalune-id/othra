@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
-import { useCanEditProject } from '~/components/project/useProjectAccess';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { scopeTableLabels } from '~/components/resourceserver/labels';
 import ScopeTable from '~/components/resourceserver/ScopeTable.vue';
 import { useResourceServerCreate } from '~/components/resourceserver/useResourceServers';
@@ -15,11 +15,12 @@ const { t } = useI18n();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const detail = useProjectDetailStore();
-const canEdit = useCanEditProject();
-await useAuthStore().load();
-
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const listed = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
+const guard = useProjectGuard(() => listed.value);
+const canEdit = computed(() => guard.value.canConfigure);
+await useAuthStore().load();
+
 if (!listed.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }

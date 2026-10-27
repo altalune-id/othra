@@ -2,6 +2,8 @@ package config
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -112,11 +114,11 @@ func TestValidate_Auth(t *testing.T) {
 			},
 			check: func(t *testing.T, err error) { assert.True(t, IsGenesisInCloudError(err), "got %v", err) },
 		},
-		"cloud requires oidc": {
-			mutate: func(c *Config) { c.Mode = ModeCloud },
+		"cloud needs mail that is delivered": {
+			mutate: func(c *Config) { c.Mode, c.Mail.Driver = ModeCloud, MailDriverConsole },
 			check: func(t *testing.T, err error) {
-				assert.True(t, IsCloudRequiresOIDCError(err), "got %v", err)
-				assert.True(t, strings.Contains(err.Error(), "OIDC"), err.Error())
+				assert.True(t, IsInvalidSettingError(err), "got %v", err)
+				assert.True(t, strings.Contains(err.Error(), "mail.driver"), err.Error())
 			},
 		},
 		"session ttl too short": {
@@ -260,4 +262,102 @@ func TestErrors_Messages(t *testing.T) {
 	assert.Equal(t, "config: auth.basic.user required: auth.mode is basic", (&MissingSettingError{Keys: "auth.basic.user", Reason: "auth.mode is basic"}).Error())
 	assert.Contains(t, (&GenesisInCloudError{}).Error(), "selfhosted only")
 	assert.Equal(t, "config: http.stateSecret: too short", (&InvalidSettingError{Key: "http.stateSecret", Reason: "too short"}).Error())
+}
+
+// auth.password.enabled: unset is on in selfhosted and off in cloud; cloud refuses it on; genesis follows it.
+func TestPasswordsOn(t *testing.T) {
+	on, off := true, false
+	c := validConfig(t)
+	assert.True(t, c.PasswordsOn(), "selfhosted default")
+	c.Auth.Password.Enabled = &off
+	assert.False(t, c.PasswordsOn())
+	assert.False(t, c.OpenSignup(), "selfhosted joins by invite only")
+	c.Mode, c.Auth.Password.Enabled = ModeCloud, nil
+	assert.True(t, c.OpenSignup())
+	assert.False(t, c.PasswordsOn(), "cloud default")
+	c.Auth.Password.Enabled = &on
+	var invalid *InvalidSettingError
+	require.ErrorAs(t, c.validateAuth(), &invalid)
+	assert.Equal(t, "auth.password.enabled", invalid.Key)
+}
+
+func TestValidate_GenesisFollowsPasswords(t *testing.T) {
+	off := false
+	for name, tc := range map[string]struct {
+		mutate func(c *Config)
+		check  func(t *testing.T, err error)
+	}{
+		"passwords off: email alone installs": {
+			mutate: func(c *Config) {
+				c.Auth.Password.Enabled, c.Auth.Genesis = &off, GenesisConfig{Email: "root@example.com"}
+			},
+			check: func(t *testing.T, err error) { assert.NoError(t, err) },
+		},
+		"passwords off: a password is refused": {
+			mutate: func(c *Config) {
+				c.Auth.Password.Enabled, c.Auth.Genesis = &off, GenesisConfig{Email: "root@example.com", Password: "correct horse battery"}
+			},
+			check: func(t *testing.T, err error) {
+				var invalid *InvalidSettingError
+				require.ErrorAs(t, err, &invalid)
+				assert.Equal(t, "auth.genesis.password", invalid.Key)
+			},
+		},
+		"passwords on: email alone is missing the password": {
+			mutate: func(c *Config) { c.Auth.Genesis = GenesisConfig{Email: "root@example.com"} },
+			check: func(t *testing.T, err error) {
+				var missing *MissingSettingError
+				assert.ErrorAs(t, err, &missing)
+			},
+		},
+		"cloud: genesis stays refused": {
+			mutate: func(c *Config) { c.Mode, c.Auth.Genesis = ModeCloud, GenesisConfig{Email: "root@example.com"} },
+			check:  func(t *testing.T, err error) { assert.True(t, IsGenesisInCloudError(err), "%v", err) },
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			c := validConfig(t)
+			tc.mutate(c)
+			tc.check(t, c.validateAuth())
+		})
+	}
+}
+
+func TestLoad_PasswordEnabledFromEnv(t *testing.T) {
+	setSecretEnv(t)
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	c, err := Load(missingPath(t))
+	require.NoError(t, err)
+	assert.Nil(t, c.Auth.Password.Enabled, "unset: the mode decides")
+
+	t.Setenv("OTHRA_AUTH_PASSWORD_ENABLED", "false")
+	t.Setenv("OTHRA_AUTH_GENESIS_EMAIL", "root@example.com")
+	c, err = Load(missingPath(t))
+	require.NoError(t, err)
+	require.NotNil(t, c.Auth.Password.Enabled)
+	assert.False(t, c.PasswordsOn())
+}
+
+// A blank auth.password.enabled, as an old copy of the reference file had it, stays unset: the mode's default applies.
+func TestLoad_BlankPasswordEnabledKeepsTheDefault(t *testing.T) {
+	setSecretEnv(t)
+	t.Setenv("OTHRA_POSTGRES_DSN", "postgres://localhost/db")
+	path := filepath.Join(t.TempDir(), "othra.yaml")
+	require.NoError(t, os.WriteFile(path, []byte("auth:\n  password:\n    enabled: \"\"\n"), 0o600))
+	c, err := Load(path)
+	require.NoError(t, err)
+	assert.Nil(t, c.Auth.Password.Enabled)
+	assert.True(t, c.PasswordsOn())
+
+	t.Setenv("OTHRA_AUTH_PASSWORD_ENABLED", "  ")
+	c, err = Load(missingPath(t))
+	require.NoError(t, err)
+	assert.Nil(t, c.Auth.Password.Enabled)
+	assert.True(t, c.PasswordsOn())
+
+	t.Setenv("OTHRA_AUTH_PASSWORD_ENABLED", "true")
+	c, err = Load(missingPath(t))
+	require.NoError(t, err)
+	require.NotNil(t, c.Auth.Password.Enabled)
+	assert.True(t, *c.Auth.Password.Enabled)
 }

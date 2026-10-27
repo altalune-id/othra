@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import AppDropdown from '#base/components/ui/AppDropdown.vue';
 import Avatar from '#base/components/ui/Avatar.vue';
+import { isPerson } from '~/lib/auth/person';
 
 export interface UserMenuIdentity {
   source: string;
@@ -34,7 +35,7 @@ const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys'
 } } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, apiKeysUrl?: string, labels?: UserMenuLabels }>();
 
 const display = computed(() => me?.name || me?.email || (me?.source === 'apikey' ? labels.apikey : ''));
-const isPerson = computed(() => me?.source === 'local' && !!me.userId);
+const person = computed(() => isPerson(me));
 const sourceBadge = computed(() => {
   switch (me?.source) {
     case 'apikey': return labels.apikey;
@@ -66,15 +67,15 @@ const sourceBadge = computed(() => {
         <span v-if="sourceBadge" class="badge badge-sm badge-outline">{{ sourceBadge }}</span>
         <span v-if="me.operator" class="badge badge-sm badge-warning">{{ labels.operator }}</span>
       </div>
-      <NuxtLink v-if="isPerson" :to="profileUrl" class="btn btn-ghost btn-sm btn-block mt-3 justify-start gap-2">
+      <NuxtLink v-if="person" :to="profileUrl" class="btn btn-ghost btn-sm btn-block mt-3 justify-start gap-2">
         <Icon name="lucide:user-round" size="16" />
         {{ labels.profile }}
       </NuxtLink>
-      <NuxtLink v-if="isPerson" :to="apiKeysUrl" class="btn btn-ghost btn-sm btn-block mt-1 justify-start gap-2">
+      <NuxtLink v-if="person" :to="apiKeysUrl" class="btn btn-ghost btn-sm btn-block mt-1 justify-start gap-2">
         <Icon name="lucide:key-round" size="16" />
         {{ labels.apiKeys }}
       </NuxtLink>
-      <form v-if="me.source === 'local'" method="post" :action="logoutUrl" :class="isPerson ? 'mt-1' : 'mt-3'">
+      <form v-if="person" method="post" :action="logoutUrl" class="mt-1">
         <button type="submit" class="btn btn-sm btn-block justify-start gap-2">
           <Icon name="lucide:log-out" size="16" />
           {{ labels.signOut }}

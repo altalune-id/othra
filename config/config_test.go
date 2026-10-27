@@ -50,8 +50,9 @@ func TestLoad_ModeAndEnvOverride(t *testing.T) {
 	t.Setenv("OTHRA_MODE", "cloud")
 	t.Setenv("OTHRA_ENV", "production")
 
-	_, err := Load(missingPath(t))
-	assert.True(t, IsCloudRequiresOIDCError(err), "cloud must refuse to boot until OIDC; got %v", err)
+	cloud, err := Load(missingPath(t))
+	require.NoError(t, err, "cloud boots: its console signs in through /p/system")
+	assert.Equal(t, ModeCloud, cloud.Mode)
 
 	t.Setenv("OTHRA_MODE", "selfhosted")
 	c, err := Load(missingPath(t))

@@ -50,6 +50,8 @@ message Org {
   string role = 7;
   // permissions are what that role grants in this org, so a client can offer only the scopes a key there may hold.
   repeated string permissions = 8;
+  // system is true for the deployment's system org, which holds the console project.
+  bool system = 9;
 }
 
 message CreateOrgRequest {

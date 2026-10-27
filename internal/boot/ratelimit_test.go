@@ -25,7 +25,7 @@ func TestBuildLimiters_OffByDefault(t *testing.T) {
 
 func TestBuildLimiters_AuthOnWithMemory(t *testing.T) {
 	for _, driver := range []config.RateLimitDriver{"", config.RateLimitDriverMemory} {
-		cfg := config.Config{RateLimit: config.RateLimitConfig{Driver: driver, MaxKeys: 7, Auth: config.RateLimitGroupConfig{Enabled: true}}}
+		cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, RateLimit: config.RateLimitConfig{Driver: driver, MaxKeys: 7, Auth: config.RateLimitGroupConfig{Enabled: true}}}
 		l, err := buildLimiters(cfg, nil, testLogger())
 		require.NoError(t, err)
 		m, ok := l.auth.(*memory.Store)
@@ -35,7 +35,7 @@ func TestBuildLimiters_AuthOnWithMemory(t *testing.T) {
 }
 
 func TestBuildLimiters_UnknownDriver(t *testing.T) {
-	cfg := config.Config{RateLimit: config.RateLimitConfig{Driver: "pigeon", Auth: config.RateLimitGroupConfig{Enabled: true}}}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, RateLimit: config.RateLimitConfig{Driver: "pigeon", Auth: config.RateLimitGroupConfig{Enabled: true}}}
 	_, err := buildLimiters(cfg, nil, testLogger())
 	assert.ErrorContains(t, err, "rateLimit.driver")
 }
@@ -82,7 +82,7 @@ func TestBoot_RateLimitAuthEnabled(t *testing.T) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
 
-	app, err := Boot(context.Background(), config.Config{
+	app, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"},
 		Postgres:  config.PostgresConfig{DSN: "x"},
 		RateLimit: config.RateLimitConfig{Driver: config.RateLimitDriverMemory, MaxKeys: 10, Auth: config.RateLimitGroupConfig{Enabled: true}},
 	}, testLogger())
@@ -100,7 +100,7 @@ func TestBoot_RateLimitDriverError(t *testing.T) {
 	openPool = func(context.Context, config.PostgresConfig, *slog.Logger) (db.Pool, error) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
-	_, err := Boot(context.Background(), config.Config{
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"},
 		Postgres:  config.PostgresConfig{DSN: "x"},
 		RateLimit: config.RateLimitConfig{Driver: "pigeon", Auth: config.RateLimitGroupConfig{Enabled: true}},
 	}, testLogger())

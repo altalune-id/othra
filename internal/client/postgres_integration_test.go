@@ -29,6 +29,10 @@ type failAfterLock struct {
 	err      error
 }
 
+func (l *failAfterLock) IsSystem(ctx context.Context, projectID uuid.UUID) (bool, error) {
+	return l.projects.IsSystem(ctx, projectID)
+}
+
 func (l *failAfterLock) LockIssuerHandle(ctx context.Context, projectID uuid.UUID) error {
 	if err := l.projects.LockIssuerHandle(ctx, projectID); err != nil {
 		return err
@@ -48,14 +52,15 @@ func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	unexpected := apperror.NewReporter(nil, false).Unexpected
-	issuer := &failAfterLock{projects: project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, "", unexpected)}
+	issuer := &failAfterLock{projects: project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, "", unexpected).WithOrgSlugs(fakes.OrgSlugs(""))}
 	svc := client.NewService(client.NewStore(pool, schemaName, ""), db.NewTransactor(pool), issuer, docFetcher{}, client.MetadataConfig{}, unexpected)
 	return &pgFixture{db: sqlDB, pool: pool, schema: schemaName, svc: svc, issuer: issuer}
 }
 
 func (f *pgFixture) withMetadata(fetcher client.MetadataFetcher, cfg client.MetadataConfig) *client.Service {
 	return client.NewService(client.NewStore(f.pool, f.schema, ""), db.NewTransactor(f.pool), f.issuer, fetcher, cfg,
-		apperror.NewReporter(nil, false).Unexpected).WithLinks(noLinks{})
+		apperror.NewReporter(nil, false).Unexpected).WithLinks(noLinks{}).
+		WithOnMetadataChange(func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) error { return nil })
 }
 
 func (f *pgFixture) seed(t *testing.T) (org, prj uuid.UUID) {
@@ -310,4 +315,43 @@ func TestPostgres_PruneShadows(t *testing.T) {
 	}
 	assert.Equal(t, []uuid.UUID{consented, fresh}, left)
 	assert.NotContains(t, left, unused)
+}
+
+// The console client round-trips as registration_kind system: one per project, public web with none, and only it may be.
+func TestPostgres_SystemClient(t *testing.T) {
+	f := newPGFixture(t)
+	org, prj := f.seed(t)
+	ctx := t.Context()
+	c, err := f.svc.CreateSystem(ctx, org, prj, "http://localhost:5150/oauth/callback", "http://localhost:5150/console/")
+	require.NoError(t, err)
+	assert.True(t, f.locked(t, prj))
+
+	got, err := f.svc.System(ctx, org, prj)
+	require.NoError(t, err)
+	assert.Equal(t, c.PublicID, got.PublicID)
+	assert.True(t, got.System)
+	assert.False(t, got.Managed())
+	var kind string
+	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT registration_kind FROM oauth_clients WHERE id = $1`, c.ID).Scan(&kind))
+	assert.Equal(t, "system", kind)
+
+	_, err = f.svc.CreateSystem(ctx, org, prj, "http://localhost:5150/oauth/callback", "http://localhost:5150/console/")
+	require.Error(t, err, "oauth_clients_system_idx: one console client per project")
+
+	changed, err := f.svc.ReconcileSystem(ctx, org, prj, "https://admin.example/oauth/callback", "https://admin.example/console/")
+	require.NoError(t, err)
+	assert.True(t, changed)
+	got, err = f.svc.Get(ctx, org, prj, c.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"https://admin.example/oauth/callback"}, got.RedirectURIs)
+	changed, err = f.svc.ReconcileSystem(ctx, org, prj, "https://admin.example/oauth/callback", "https://admin.example/console/")
+	require.NoError(t, err)
+	assert.False(t, changed)
+
+	_, err = f.db.ExecContext(ctx, `UPDATE oauth_clients SET registration_kind = 'registered' WHERE id = $1`, c.ID)
+	assert.Error(t, err, "oauth_clients_kind_check: only the console client is a public web client")
+	_, err = f.db.ExecContext(ctx, `UPDATE oauth_clients SET consent_policy = 'require' WHERE id = $1`, c.ID)
+	assert.Error(t, err, "oauth_clients_system_shape")
+	_, err = f.db.ExecContext(ctx, `UPDATE oauth_clients SET grant_types = '{authorization_code,refresh_token}' WHERE id = $1`, c.ID)
+	assert.Error(t, err, "oauth_clients_system_shape")
 }

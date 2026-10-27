@@ -348,8 +348,45 @@ func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsInvalidIdentifierError(err) || IsIdentifierTakenError(err) || IsInvalidScopeError(err) ||
 		IsScopePinnedError(err) || IsLinkedError(err) || IsTrustSelfHostedOnlyError(err) || IsVerifyTooSoonError(err) ||
 		IsInvalidLinkScopesError(err) || IsClientNotFoundError(err) || IsProjectNotFoundError(err) || IsInvalidClientHostError(err) ||
-		IsAdmissionUnverifiedError(err) || IsClientManagedError(err) || IsIntrospectionRequiredError(err) ||
+		IsAdmissionUnverifiedError(err) || IsClientManagedError(err) || IsClientSystemManagedError(err) || IsSystemProjectError(err) ||
+		IsIntrospectionRequiredError(err) ||
 		IsIntrospectionSecretExistsError(err) || IsIntrospectionSecretNotFoundError(err)
+}
+
+// SystemProjectError signals a new resource server in the console project, which takes none.
+type SystemProjectError struct{}
+
+func (*SystemProjectError) Error() string {
+	return "resourceserver: the console project takes no resource server"
+}
+
+// IsSystemProjectError reports whether err's tree contains a *SystemProjectError.
+func IsSystemProjectError(err error) bool {
+	_, ok := errors.AsType[*SystemProjectError](err)
+	return ok
+}
+
+// ToAppError maps SystemProjectError to PRJ011.
+func (e *SystemProjectError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectSystemManaged, "Othra manages the console project").WithCause(e)
+}
+
+// ClientSystemManagedError signals a link change for the console client, which Othra manages.
+type ClientSystemManagedError struct{}
+
+func (*ClientSystemManagedError) Error() string {
+	return "resourceserver: the console client takes no links"
+}
+
+// IsClientSystemManagedError reports whether err's tree contains a *ClientSystemManagedError.
+func IsClientSystemManagedError(err error) bool {
+	_, ok := errors.AsType[*ClientSystemManagedError](err)
+	return ok
+}
+
+// ToAppError maps ClientSystemManagedError to CLT009.
+func (e *ClientSystemManagedError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeClientSystemManaged, "Othra manages the console app").WithCause(e)
 }
 
 // ClientManagedError signals a link change for a metadata document client, which only its admission sets.

@@ -19,7 +19,7 @@ func buildUpstreams(k kernel.Kernel, cfg config.Config, uow db.Transactor, sl se
 		WithLogger(orDiscard(k.Log))
 }
 
-// NOTE: the project install creates gets Google from upstreams.google, once; every other project is set up in the console.
+// NOTE: the console project (/p/system) gets Google from upstreams.google once, at install; every other project is set up in the console.
 func seedUpstreams(cfg config.UpstreamsConfig, upstreams *upstream.Service) func(ctx context.Context, orgID, projectID uuid.UUID) error {
 	return func(ctx context.Context, orgID, projectID uuid.UUID) error {
 		return upstreams.Seed(ctx, orgID, projectID, upstream.KindGoogle, cfg.Google.ClientID, cfg.Google.ClientSecret)

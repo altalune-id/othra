@@ -58,7 +58,7 @@ GOVULNCHECK_VERSION ?= v1.9.0
 
 .PHONY: vulncheck
 vulncheck: ## scan dependencies and the standard library for known vulnerabilities
-	$(GO) run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./...
+	@for m in $(GO_MODULES); do $(GO) -C $$m run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./... || exit 1; done
 
 .PHONY: templ
 templ: ## generate templ components
@@ -119,18 +119,21 @@ GOLANGCI := $(shell v=$$(golangci-lint version --short 2>/dev/null); \
 
 .PHONY: fmt
 fmt: ## format all Go files (gofmt + gci import groups, settings from .golangci.yml)
-	$(GOLANGCI) fmt ./...
+	@for m in $(GO_MODULES); do (cd $$m && $(GOLANGCI) fmt -c $(CURDIR)/.golangci.yml ./...) || exit 1; done
+
+# the main module and the root libraries that are modules of their own
+GO_MODULES := . oidcrp oauthrs
 
 .PHONY: vet
 vet: ## run go vet (unit and integration files)
-	$(GO) vet -tags integration ./...
+	@for m in $(GO_MODULES); do $(GO) -C $$m vet -tags integration ./... || exit 1; done
 
 .PHONY: lint
 lint: lint-go lint-js lint-config ## run every linter
 
 .PHONY: lint-go
 lint-go: ## run golangci-lint (GOLANGCI_VERSION)
-	$(GOLANGCI) run --timeout=3m ./...
+	@for m in $(GO_MODULES); do (cd $$m && $(GOLANGCI) run -c $(CURDIR)/.golangci.yml --timeout=3m ./...) || exit 1; done
 
 .PHONY: lint-js
 lint-js: ## run ESLint over ui/, docs and every JS/TS/Vue/JSON/Markdown/CSS file
@@ -153,13 +156,13 @@ comment-list: ## list comment-discipline violations without failing
 
 .PHONY: test
 test: ## run tests with the race detector
-	$(GO) test -race ./...
+	@for m in $(GO_MODULES); do $(GO) -C $$m test -race ./... || exit 1; done
 
 INTEGRATION_TIMEOUT ?= 10m
 
 .PHONY: test-integration
 test-integration: ## run integration tests (TEST_PG_DSN if set, else one Postgres container per package)
-	$(GO) test -race -shuffle=on -tags integration -timeout $(INTEGRATION_TIMEOUT) ./...
+	@for m in $(GO_MODULES); do $(GO) -C $$m test -race -shuffle=on -tags integration -timeout $(INTEGRATION_TIMEOUT) ./... || exit 1; done
 
 .PHONY: test-all
 test-all: test test-integration ## unit + integration tests
@@ -170,7 +173,9 @@ COVER_SKIP ?= /gen(/|$$)|/views$$|/testutil/|/sessiontest$$|/ratelimittest$$|/oi
 
 .PHONY: cover
 cover: ## unit + integration coverage; fails when a package is under COVER_MIN percent
-	PATH="$$($(GO) env GOROOT)/bin:$$PATH" $(GO) test -tags integration -count=1 -timeout $(INTEGRATION_TIMEOUT) -cover ./... \
+	@for m in $(GO_MODULES); do \
+		PATH="$$($(GO) env GOROOT)/bin:$$PATH" $(GO) -C $$m test -tags integration -count=1 -timeout $(INTEGRATION_TIMEOUT) -cover ./... || echo FAIL; \
+	done \
 		| tee /dev/stderr \
 		| awk -v min=$(COVER_MIN) -v skip='$(COVER_SKIP)' ' \
 			$$1 == "FAIL" { bad = 1 } \
@@ -182,8 +187,8 @@ cover: ## unit + integration coverage; fails when a package is under COVER_MIN p
 			END { exit bad }'
 
 .PHONY: tidy
-tidy: ## run go mod tidy
-	$(GO) mod tidy
+tidy: ## run go mod tidy in every module
+	@for m in $(GO_MODULES); do $(GO) -C $$m mod tidy || exit 1; done
 
 .PHONY: check
 check: vet lint test ## vet + lint + test

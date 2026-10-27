@@ -132,7 +132,8 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusUnauthorized, invalidClient)
 		return
 	}
-	if !h.allow(w, r, e, TokenIPRule(), ratelimit.IPSubject(layout.ClientIP(r, h.tokens.Limits.TrustedProxyHops))) {
+	ip := ratelimit.IPSubject(layout.ClientIP(r, h.tokens.Limits.TrustedProxyHops))
+	if !isInProcess(r.Context()) && !h.allow(w, r, e, TokenIPRule(), ip) {
 		return
 	}
 	form, err := postForm(w, r)
@@ -229,9 +230,13 @@ func (h *Web) authenticate(req *tokenRequest) (*client.Client, bool) {
 		h.oauthFail(req.w, http.StatusInternalServerError, errServer, "")
 		return nil, false
 	}
+	// SECURITY: the console's client has no secret, so its codes are redeemed only by the console in this process.
+	if c.System && !isInProcess(r.Context()) {
+		return nil, h.clientFail(req)
+	}
 	// SECURITY: keyed by a registered client_id only, so made-up ids can't fill the limiter's keys.
 	subject := ratelimit.IPSubject(layout.ClientIP(r, h.tokens.Limits.TrustedProxyHops)) + ":client:" + c.PublicID
-	if !h.allow(req.w, r, req.e, TokenClientRule(), subject) {
+	if !isInProcess(r.Context()) && !h.allow(req.w, r, req.e, TokenClientRule(), subject) {
 		return nil, false
 	}
 	switch {

@@ -77,6 +77,14 @@ Other internal packages: `permission` (the permission each RPC needs), `apiclien
 
 Packages at the repo root never import `internal/`: `apperror` (error codes, `codes.json`), `config`, the connections `pg`, `nats` and `redis`, `migrator`, `mailer` (+ console, smtp, resend), `worker`, `scheduler`, `httpclient`, `httpserver`, `mcp`, `password`, `sealer`, `nanoid`, `slug`, `scope`, `reqid`, `telemetry`, `version`.
 
+## Library modules
+
+`oidcrp` (an OpenID Connect relying party) and `oauthrs` (an OAuth resource server) are their own Go modules, `altalune.id/othra/oidcrp` and `altalune.id/othra/oauthrs`, so apps can import them without the server. They use only the standard library, go-jose and, for `oauthrs`, `oidcrp`; depguard `library-boundary` keeps `internal/` and `config` out.
+
+- The root `go.mod` requires both at `v0.0.0` with `replace` lines to `./oidcrp` and `./oauthrs`; `oauthrs/go.mod` replaces `oidcrp` with `../oidcrp`.
+- The Makefile runs every Go target once per module (`GO_MODULES`, `go -C <module>`), and CI and Dependabot cover each module.
+- Releases tag `oidcrp/vX.Y.Z` first, then point `oauthrs` at that tag and drop its `replace` before the first `oauthrs/vX.Y.Z`, as the `go-release` skill's checklist says.
+
 ## UI builds
 
 The pnpm workspace under `ui/` (packages listed in `pnpm-workspace.yaml`) builds assets that the binary embeds. The builds are not committed.

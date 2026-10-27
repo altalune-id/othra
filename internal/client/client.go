@@ -93,9 +93,11 @@ type Client struct {
 	ClientURI         string
 	MetadataFetchedAt *time.Time
 	MetadataExpiresAt *time.Time
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
-	Secrets           []Secret
+	// System marks the console client Othra seeds at install; only boot changes it, and only its derived URIs.
+	System    bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Secrets   []Secret
 }
 
 // Secret is one of a client's live secrets; the plaintext is never kept.
@@ -122,6 +124,42 @@ func (c *Client) Preset(kind Kind) {
 		return
 	}
 	c.ClientType, c.ApplicationType, c.TokenEndpointAuthMethod = TypeConfidential, AppWeb, AuthClientSecretBasic
+}
+
+const systemName = "Othra console"
+
+// NewSystem builds the console client: a first-party public web client with PKCE, implicit consent and no secret.
+func NewSystem(orgID, projectID uuid.UUID, publicID, redirectURI, postLogoutURI string, now time.Time) (*Client, error) {
+	c := &Client{
+		ID: uuid.New(), PublicID: publicID, OrgID: orgID, ProjectID: projectID, System: true, CreatedAt: now, UpdatedAt: now,
+		Secrets: []Secret{},
+	}
+	c.Preset(KindWeb)
+	err := c.Apply(Settings{
+		Name: systemName, RedirectURIs: []string{redirectURI}, PostLogoutRedirectURIs: []string{postLogoutURI},
+		ConsentPolicy: ConsentImplicit,
+	})
+	if err != nil {
+		return nil, err
+	}
+	c.ClientType, c.TokenEndpointAuthMethod = TypePublic, AuthNone
+	return c, nil
+}
+
+// SetSystemURIs replaces the console client's derived redirect and sign-out URIs; it reports whether either changed.
+func (c *Client) SetSystemURIs(redirectURI, postLogoutURI string) (bool, error) {
+	if err := redirectError(FieldRedirectURIs, redirecturi.Validate(redirecturi.Web, redirectURI)); err != nil {
+		return false, err
+	}
+	if err := redirectError(FieldPostLogoutRedirectURIs, redirecturi.Validate(redirecturi.Web, postLogoutURI)); err != nil {
+		return false, err
+	}
+	redirects, postLogout := []string{redirectURI}, []string{postLogoutURI}
+	if slices.Equal(c.RedirectURIs, redirects) && slices.Equal(c.PostLogoutRedirectURIs, postLogout) {
+		return false, nil
+	}
+	c.RedirectURIs, c.PostLogoutRedirectURIs = redirects, postLogout
+	return true, nil
 }
 
 // OAuthID is the client_id on the wire: the metadata document URL of a shadow client, else the public id.

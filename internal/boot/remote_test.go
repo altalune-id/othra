@@ -23,7 +23,7 @@ func TestBootRemote(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	cfg := config.Config{Env: config.EnvDevelopment}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Env: config.EnvDevelopment}
 	log := testLogger()
 	r, err := BootRemote(t.Context(), cfg, log, srv.URL+"/", apiclient.Credential{Token: "othra_tok"})
 	require.NoError(t, err)

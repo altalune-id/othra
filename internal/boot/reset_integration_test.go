@@ -59,7 +59,7 @@ func TestPasswordReset_EndToEnd(t *testing.T) {
 	svcs.Caps.EnvGenesis = true
 	require.NoError(t, firstBoot(t.Context(), cfg, svcs, testLogger(), false))
 	h := buildHTTPHandler(httpSurfaces{
-		routes: buildRoutes(cfg, svcs, nil, nil), session: buildSessionMiddleware(svcs, nil),
+		routes: buildRoutes(cfg, svcs, nil, nil, nil), session: buildSessionMiddleware(svcs, nil),
 		requireAcceptance: true, termsUpdated: svcs.Legal.TermsUpdatedAt(),
 	})
 	ctx := t.Context()

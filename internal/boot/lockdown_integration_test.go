@@ -56,7 +56,7 @@ func newLockdown(t *testing.T, cfg config.Config) *lockdown {
 		mcp:             buildMCPHandler(buildMCPServer(config.MCPConfig{Enabled: true}, svcs, testLogger()), svcs, testLogger()),
 		console:         console,
 		consoleGate:     buildConsoleGate(cfg, svcs),
-		routes:          buildRoutes(cfg, svcs, nil, nil),
+		routes:          buildRoutes(cfg, svcs, nil, nil, nil),
 		session:         buildSessionMiddleware(svcs, nil),
 		installRequired: required,
 	})

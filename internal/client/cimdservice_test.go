@@ -128,6 +128,22 @@ func TestAdmit_ShadowClient(t *testing.T) {
 	assert.NotContains(t, h.logs.String(), "network down")
 }
 
+// SECURITY: a changed document fails the refresh when nothing is wired to drop the client's remembered consent.
+func TestAdmit_ChangedWithoutConsentHook(t *testing.T) {
+	h := newHarness(t)
+	f := &fakeFetcher{body: claudeDoc("Claude Code"), cache: "max-age=600"}
+	h.build(f, client.MetadataConfig{Cache: client.MetadataCache{Max: time.Hour, Default: time.Hour}, IssuerHost: "othra.example.com"})
+	h.svc.WithLinks(&fakeLinks{links: map[uuid.UUID][]string{}})
+	req := client.AdmitRequest{URL: claudeURL, ResourceServerID: uuid.New()}
+	_, err := h.svc.Admit(context.Background(), h.org, h.project, req)
+	require.NoError(t, err, "a first admission changes nothing")
+
+	h.now = h.now.Add(11 * time.Minute)
+	f.body = claudeDoc("Claude Code 2")
+	_, err = h.svc.Admit(context.Background(), h.org, h.project, req)
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+}
+
 // A Service whose resource server links were never set refuses to admit instead of panicking.
 func TestAdmit_WithoutLinks(t *testing.T) {
 	h := newHarness(t)

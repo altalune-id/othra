@@ -1,4 +1,3 @@
-// Package oidcrp is a generic OpenID Connect relying party: discovery, JWKS, the code flow with PKCE, state and nonce, and ID tokens.
 package oidcrp
 
 import (
@@ -9,8 +8,9 @@ import (
 // Config is one relying party's registration at one upstream IdP (an OpenID Provider).
 type Config struct {
 	// Issuer is the upstream IdP's issuer; its discovery document is read from Issuer + "/.well-known/openid-configuration".
-	Issuer       string
-	ClientID     string
+	Issuer   string
+	ClientID string
+	// ClientSecret empty sends client_id in the body, no Basic (https://www.rfc-editor.org/rfc/rfc6749#section-2.3.1).
 	ClientSecret string
 	RedirectURI  string
 	Scopes       []string
@@ -29,6 +29,8 @@ type Metadata struct {
 	CodeChallengeMethodsSupported  []string `json:"code_challenge_methods_supported"`
 	AuthorizationResponseISSParams bool     `json:"authorization_response_iss_parameter_supported"`
 	IDTokenSigningAlgValues        []string `json:"id_token_signing_alg_values_supported"`
+	EndSessionEndpoint             string   `json:"end_session_endpoint"`
+	IntrospectionEndpoint          string   `json:"introspection_endpoint"`
 }
 
 // AuthRequest is one sign-in attempt: the values kept on the browser until the callback, never sent to the client.
@@ -60,4 +62,9 @@ type IDToken struct {
 	HostedDomain  string
 	IssuedAt      time.Time
 	ExpiresAt     time.Time
+	// AuthTime is when the person signed in at the upstream IdP; zero when the token has no auth_time.
+	AuthTime  time.Time
+	SessionID string
+	// Raw is the compact ID token, the id_token_hint for an RP-initiated logout.
+	Raw string
 }

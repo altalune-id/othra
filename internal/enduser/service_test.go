@@ -142,6 +142,35 @@ func TestIssueLink_ReturnsTheURLWithoutMail(t *testing.T) {
 	assert.Empty(t, h.mail.sent)
 }
 
+// The operator CLI's printed link skips the resend cooldown and redeems inside it; the email-link switch holds, as at redeem.
+func TestIssueLink_Operator(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	first, err := h.svc.IssueLink(ctx, h.project, LinkRequest{Email: "ada@example.com"})
+	require.NoError(t, err)
+	require.True(t, first.Issued)
+	cooled, err := h.svc.IssueLink(ctx, h.project, LinkRequest{Email: "ada@example.com"})
+	require.NoError(t, err)
+	assert.False(t, cooled.Issued, "a plain request waits out the cooldown")
+
+	l, err := h.svc.IssueLink(ctx, h.project, LinkRequest{Email: "ada@example.com", Operator: true})
+	require.NoError(t, err)
+	assert.True(t, l.Issued, "the cooldown doesn't stop the operator")
+	assert.NotEqual(t, first.URL, l.URL)
+	assert.Empty(t, h.mail.sent)
+	again, err := h.svc.IssueLink(ctx, h.project, LinkRequest{Email: "ada@example.com"})
+	require.NoError(t, err)
+	assert.False(t, again.Issued, "a plain request inside the cooldown leaves the printed link alone")
+	r, err := h.svc.Redeem(ctx, h.project, RedeemRequest{Token: tokenOf(t, l.URL), UserAgent: "test"})
+	require.NoError(t, err, "the printed link redeems while the cooldown still applies")
+	assert.NotEmpty(t, r.Secret)
+
+	off := h.project
+	off.EmailLink = false
+	_, err = h.svc.IssueLink(ctx, off, LinkRequest{Email: "cara@example.com", Operator: true})
+	assert.Equal(t, apperror.CodeSignInEmailDisabled, codeOf(err), "refused up front, never a link that redeem refuses")
+}
+
 func TestSendLink_Refusals(t *testing.T) {
 	h := newHarness(t)
 	_, err := h.svc.SendLink(context.Background(), h.project, LinkRequest{Email: "not an email"}, compose)

@@ -21,6 +21,7 @@ func (s *postgresStore) clientColumns() postgres.ProjectionList {
 		db.ArrayAsJSON(t.RedirectURIs, "oauth_clients.redirect_uris"),
 		db.ArrayAsJSON(t.PostLogoutRedirectURIs, "oauth_clients.post_logout_redirect_uris"),
 		t.ConsentPolicy, t.PKCERequired, t.CreatedAt, t.UpdatedAt, t.MetadataURL, t.ClientURI, t.MetadataFetchedAt, t.MetadataExpiresAt,
+		t.RegistrationKind,
 	}
 }
 
@@ -72,6 +73,22 @@ func (s *postgresStore) Lock(ctx context.Context, projectID uuid.UUID, publicID 
 // ForAuthentication returns one client with its live secrets at now and their hashes, for VerifySecret only, or *NotFoundError.
 func (s *postgresStore) ForAuthentication(ctx context.Context, projectID uuid.UUID, publicID string, now time.Time) (*Client, error) {
 	return s.one(ctx, "ForAuthentication", projectID, publicID, now, readHashes)
+}
+
+// LockSystem locks the project's console client row and returns it, or *NotFoundError when the project has none.
+func (s *postgresStore) LockSystem(ctx context.Context, projectID uuid.UUID, now time.Time) (*Client, error) {
+	t := s.clients
+	stmt := postgres.SELECT(s.clientColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.RegistrationKind.EQ(postgres.String(kindSystem)))).
+		FOR(postgres.UPDATE())
+	out, err := s.read(ctx, "LockSystem", stmt, projectID, now, false)
+	if err != nil {
+		return nil, err
+	}
+	if len(out) == 0 {
+		return nil, &NotFoundError{}
+	}
+	return out[0], nil
 }
 
 type readMode int

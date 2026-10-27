@@ -10,8 +10,10 @@ import { WebhookSchema } from '#gen/webhook/v1/webhook_pb';
 import { mountPage } from '#test/mount-page';
 import { setClient, setRoute } from '#test/nuxt-globals';
 import APIKeyList from '~/components/apikey/list/APIKeyList.vue';
+import ClientList from '~/components/client/ClientList.vue';
 import MemberList from '~/components/member/MemberList.vue';
 import OrgCreateModal from '~/components/org/create/OrgCreateModal.vue';
+import OrgFields from '~/components/org/create/OrgFields.vue';
 import WebhookList from '~/components/webhook/list/WebhookList.vue';
 import OrgSettings from '~/pages/o/[org]/settings/index.vue';
 import { useOrgsStore } from '~/stores/orgs';
@@ -32,6 +34,32 @@ describe('org create modal copy', () => {
     expect(slug!.attributes('placeholder')).toBe('org.slug_placeholder');
     expect(w.text()).toContain('org.slug_random_help');
     expect(w.text()).not.toContain('generated when empty');
+  });
+});
+
+describe('org fields', () => {
+  it('names each input by its fieldset legend and shows its error', () => {
+    const w = mount(OrgFields, { props: { name: '', slug: '', fieldErrors: { slug: 'taken' } } });
+    const legends = w.findAll('fieldset > legend.fieldset-legend');
+    expect(legends.map(l => l.text())).toEqual(['common.name', 'common.slug']);
+    const [name, slug] = w.findAll('input');
+    expect(name!.attributes('aria-labelledby')).toBe(legends[0]!.attributes('id'));
+    expect(slug!.attributes('aria-labelledby')).toBe(legends[1]!.attributes('id'));
+    expect(slug!.attributes('aria-invalid')).toBe('true');
+    expect(w.text()).toContain('taken');
+  });
+
+  it('is the same block in the modal and on onboarding', () => {
+    expect(mount(OrgCreateModal).findComponent(OrgFields).exists()).toBe(true);
+  });
+});
+
+describe('client list', () => {
+  it('marks the console client with the system badge', () => {
+    const row = { name: 'App', kind: 'Web app', created: 'Oct 20, 2026', to: '#' };
+    const w = mount(ClientList, { props: { rows: [{ ...row, id: 'Lq3vT8nWx2KpZr6YbM9cD', system: true }, { ...row, id: 'dPm7fmQRJKPVw8PxrgdrN' }] } });
+    const cells = w.findAll('tbody tr').map(r => r.find('td').text());
+    expect(cells).toEqual(['App System', 'App']);
   });
 });
 
@@ -76,5 +104,16 @@ describe('member-visible write actions', () => {
     expect(w.find('form').exists()).toBe(false);
     expect(w.find('dl').exists()).toBe(true);
     expect(w.text()).toContain('settings.read_only');
+  });
+
+  it('keeps the system org read-only, even for owners', async () => {
+    useOrgsStore().items = [{ id: orgId, slug: 'othra', name: 'Othra', role: 'owner', permissions: [], system: true }];
+    setRoute({ path: '/o/othra/settings', params: { org: 'othra' } });
+    setClient('$authClient', { whoami: vi.fn().mockResolvedValue(create(WhoamiResponseSchema, { permissions: ['org:read', 'org:write'] })) });
+    const w = await mountPage(OrgSettings);
+    expect(w.find('form').exists()).toBe(false);
+    expect(w.find('[data-testid="org-settings-readonly"]').exists()).toBe(true);
+    expect(w.text()).toContain('org.system_note');
+    expect(w.text()).not.toContain('settings.read_only');
   });
 });

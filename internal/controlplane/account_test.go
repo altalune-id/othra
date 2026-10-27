@@ -186,6 +186,12 @@ func TestAccountPlane_HTTPGuards(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode, "the resolver answered an unknown issuer itself")
 }
 
+func TestAccountPlane_RefusesAnOverLimitBody(t *testing.T) {
+	c := accountv1connect.NewAccountServiceClient(http.DefaultClient, newPlane(t, &fakeResolver{eu: signedIn()}, fakeProfile{})+"/app/p/acme/api")
+	_, err := c.UpdateProfile(context.Background(), connect.NewRequest(&accountv1.UpdateProfileRequest{Name: strings.Repeat("a", maxRequestBytes)}))
+	assert.Equal(t, connect.CodeResourceExhausted, connect.CodeOf(err), "refused before the slice, which would answer unimplemented")
+}
+
 func TestAccountPlane_RecoversAPanic(t *testing.T) {
 	c := accountv1connect.NewAccountServiceClient(http.DefaultClient,
 		newPlane(t, &fakeResolver{eu: signedIn()}, fakeProfile{panic: true})+"/app/p/acme/api")

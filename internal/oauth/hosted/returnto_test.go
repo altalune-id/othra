@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"altalune.id/othra/internal/project"
 )
 
 const testIssuer = "https://id.example.com/auth/p/acme"
@@ -76,4 +78,15 @@ func FuzzReturnTo(f *testing.F) {
 			t.Fatalf("%q gave %q, then %q", raw, got, again)
 		}
 	})
+}
+
+// SECURITY: /p/system may hand off to the console's sign-in start, and nothing else; no other project may.
+func TestConsoleHandOff(t *testing.T) {
+	h := &Web{cfg: Config{BasePath: "/auth"}}
+	system := &site{issuer: &project.Issuer{Handle: project.SystemHandle}, issuerURL: "https://id.example.com/auth/p/system"}
+	acme := &site{issuer: &project.Issuer{Handle: "acme"}, issuerURL: "https://id.example.com/auth/p/acme"}
+	assert.Equal(t, "/auth/login/oidc", h.returnTo(system, "/auth/login/oidc"))
+	assert.Equal(t, "/auth/p/system/account/", h.returnTo(system, "/auth/login/oidc?return_to=https://evil.test"), "exact path only")
+	assert.Equal(t, "/auth/p/system/account/", h.returnTo(system, "https://evil.test/auth/login/oidc"))
+	assert.Equal(t, "/auth/p/acme/account/", h.returnTo(acme, "/auth/login/oidc"))
 }

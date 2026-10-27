@@ -57,8 +57,8 @@ func procedures(files ...protoreflect.FileDescriptor) []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 84,
-		"Org 4, Project 13, APIKey 3, Webhook 11, Auth 5, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 16, Upstream 6, EndUser 5")
+	require.Len(t, procs, 85,
+		"Org 4, Project 13, APIKey 3, Webhook 11, Auth 6, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 16, Upstream 6, EndUser 5")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]
@@ -135,6 +135,7 @@ func TestPermissionTable_Spec15(t *testing.T) {
 		"/apikey.v1.APIKeyService/RevokeAPIKey":                               authz.AnyAuthenticated,
 		"/auth.v1.AuthService/Whoami":                                         authz.AnyAuthenticated,
 		"/auth.v1.AuthService/SetActiveOrg":                                   authz.PersonOnly,
+		"/auth.v1.AuthService/CreateOwnOrg":                                   authz.PersonOnly,
 		"/auth.v1.AuthService/UpdateProfile":                                  authz.PersonOnly,
 		"/auth.v1.AuthService/ChangePassword":                                 authz.PersonOnly,
 		"/auth.v1.AuthService/SignOutEverywhere":                              authz.PersonOnly,

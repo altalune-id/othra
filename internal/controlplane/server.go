@@ -69,6 +69,8 @@ type Services struct {
 	Refs    Refs
 	// FileUploads is true when the deployment has file storage.
 	FileUploads bool
+	// Passwords is true when console password sign-in is on.
+	Passwords bool
 }
 
 // Refs turns the public ids every surface carries into ids and back, for every domain's handler.
@@ -158,7 +160,8 @@ func New(svcs Services, unexpected apperror.UnexpectedFunc, opts Options) *Serve
 		s.InviteSvc = invite.NewControlPlane(svcs.Invites, svcs.Refs)
 	}
 	if svcs.Orgs != nil && svcs.Projects != nil && svcs.Users != nil {
-		s.AuthSvc = auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users, svcs.Auth).WithFileUploads(svcs.FileUploads)
+		s.AuthSvc = auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users, svcs.Auth).
+			WithFileUploads(svcs.FileUploads).WithPasswords(svcs.Passwords)
 	}
 	return s
 }
@@ -230,6 +233,9 @@ func (s *Server) Handler(basePath string) http.Handler {
 	return outer
 }
 
+// NOTE: no RPC takes more than a few KiB; uploads go to presigned storage URLs, never through Connect.
+const maxRequestBytes = 1 << 20
+
 func (s *Server) handlerOptions() []connect.HandlerOption {
 	ics := []connect.Interceptor{
 		RequestID(),
@@ -240,6 +246,7 @@ func (s *Server) handlerOptions() []connect.HandlerOption {
 	ics = append(ics, Wrap(s.unexpected), authn.Interceptor(s.authn), tenantFromPrincipal(), s.validator.interceptor())
 	return []connect.HandlerOption{
 		connect.WithRecover(s.recoverPanic),
+		connect.WithReadMaxBytes(maxRequestBytes),
 		connect.WithInterceptors(ics...),
 	}
 }

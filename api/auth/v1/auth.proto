@@ -4,6 +4,7 @@ package auth.v1;
 
 import "buf/validate/validate.proto";
 import "mcp/v1/annotations.proto";
+import "org/v1/org.proto";
 import "othra/v1/rules.proto";
 
 option go_package = "altalune.id/othra/gen/go/auth/v1;authv1";
@@ -29,13 +30,30 @@ service AuthService {
 
   // SetActiveOrg makes an organization the signed-in person belongs to the active one of this session.
   rpc SetActiveOrg(SetActiveOrgRequest) returns (SetActiveOrgResponse) {}
+
+  // CreateOwnOrg creates an organization the signed-in person owns, with its default project; cloud signup's one org per person.
+  rpc CreateOwnOrg(CreateOwnOrgRequest) returns (CreateOwnOrgResponse) {}
+}
+
+message CreateOwnOrgRequest {
+  string name = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.name) = true
+  ];
+  string slug = 2 [
+    (buf.validate.field).string.(othra.v1.slug) = true
+  ];
+}
+
+message CreateOwnOrgResponse {
+  org.v1.Org org = 1;
 }
 
 message WhoamiRequest {}
 
 // Every id is a public id.
 message WhoamiResponse {
-  // local, basic, apikey or system.
+  // local, oidc, basic, apikey or system.
   string source = 1;
   string user_id = 2;
   string email = 3;
@@ -57,6 +75,8 @@ message WhoamiResponse {
   bool org_creation = 14;
   // Whether this deployment has file storage, so the caller can upload files such as a project logo.
   bool file_uploads = 15;
+  // Whether this person can change a password: password sign-in is on here and they have one.
+  bool passwords = 16;
 }
 
 message UpdateProfileRequest {

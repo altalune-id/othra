@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/internal/kernel/authn"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/user"
 )
 
@@ -24,6 +25,7 @@ type recordedProfiles struct {
 	current   string
 	next      string
 	signedOut uuid.UUID
+	owner     uuid.UUID
 }
 
 func (r *recordedProfiles) UpdateProfile(_ context.Context, userID uuid.UUID, name string) (*user.User, error) {
@@ -49,6 +51,14 @@ func (r *recordedProfiles) SetActiveOrg(context.Context, string, session.Princip
 	return session.Principal{}, errors.New("recordedProfiles does not switch orgs")
 }
 
+func (r *recordedProfiles) CreateOwnOrg(_ context.Context, userID uuid.UUID, name, slug string) (*org.Org, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+	r.owner = userID
+	return org.NewOrg(slug, name, userID)
+}
+
 func profileCtx(p session.Principal, sid string) context.Context {
 	ctx := session.PrincipalInto(context.Background(), p)
 	if sid != "" {
@@ -57,9 +67,17 @@ func profileCtx(p session.Principal, sid string) context.Context {
 	return ctx
 }
 
+// A console session from Othra sign-in (oidc) is a person exactly like a password one.
 func TestProfileRPCs(t *testing.T) {
+	for _, src := range []session.Source{session.SourceLocal, session.SourceOIDC} {
+		t.Run(string(src), func(t *testing.T) { profileRPCs(t, src) })
+	}
+}
+
+func profileRPCs(t *testing.T, src session.Source) {
+	t.Helper()
 	ada := &user.User{ID: uuid.New(), PublicID: "adaUserPublicId000001", Email: "ada@example.com"}
-	person := session.Principal{UserID: ada.ID, Email: ada.Email, Source: session.SourceLocal}
+	person := session.Principal{UserID: ada.ID, Email: ada.Email, Source: src}
 	rec := &recordedProfiles{user: ada}
 	s := NewControlPlane(orgByID{}, projectByID{}, userByID{ada.ID: ada}, rec)
 
@@ -122,9 +140,34 @@ func TestProfileRPCs_Errors(t *testing.T) {
 
 func TestWhoami_ShowsTheStoredName(t *testing.T) {
 	ada := &user.User{ID: uuid.New(), PublicID: "adaUserPublicId000001", Email: "ada@example.com", Name: "Ada Lovelace"}
-	got, err := whoami(t, whoamiClient(t, orgByID{}, projectByID{}, userByID{ada.ID: ada}, session.Principal{
-		UserID: ada.ID, Email: ada.Email, Name: "Ada", Source: session.SourceLocal,
-	}))
+	for _, src := range []session.Source{session.SourceLocal, session.SourceOIDC} {
+		got, err := whoami(t, whoamiClient(t, orgByID{}, projectByID{}, userByID{ada.ID: ada}, session.Principal{
+			UserID: ada.ID, Email: ada.Email, Name: "Ada", Source: src,
+		}))
+		require.NoError(t, err, src)
+		assert.Equal(t, "Ada Lovelace", got.GetName(), "a renamed person sees the new name without signing in again")
+		assert.Equal(t, string(src), got.GetSource(), "the console reads the source, so oidc must come through as is")
+	}
+}
+
+// Cloud signup's onboarding: a signed-in person creates the org they own; a key or a person who owns one already can't.
+func TestCreateOwnOrg(t *testing.T) {
+	ada := uuid.New()
+	rec := &recordedProfiles{}
+	s := NewControlPlane(orgByID{}, projectByID{}, userByID{}, rec)
+	resp, err := s.CreateOwnOrg(profileCtx(session.Principal{UserID: ada, Source: session.SourceOIDC}, "sid-1"),
+		connect.NewRequest(&authv1.CreateOwnOrgRequest{Name: "Ana Org", Slug: "ana-org"}))
 	require.NoError(t, err)
-	assert.Equal(t, "Ada Lovelace", got.GetName(), "a renamed person sees the new name without signing in again")
+	assert.Equal(t, "ana-org", resp.Msg.GetOrg().GetSlug())
+	assert.NotEmpty(t, resp.Msg.GetOrg().GetId())
+	assert.Equal(t, ada, rec.owner)
+
+	_, err = s.CreateOwnOrg(profileCtx(session.Principal{UserID: uuid.New(), Source: session.SourceAPIKey}, ""),
+		connect.NewRequest(&authv1.CreateOwnOrgRequest{Name: "Key Org"}))
+	assert.True(t, authz.IsForbiddenError(err), "a key never owns an org")
+
+	rec.err = &org.AlreadyOwnedError{}
+	_, err = s.CreateOwnOrg(profileCtx(session.Principal{UserID: ada, Source: session.SourceOIDC}, "sid-1"),
+		connect.NewRequest(&authv1.CreateOwnOrgRequest{Name: "Second"}))
+	assert.True(t, org.IsAlreadyOwnedError(err))
 }

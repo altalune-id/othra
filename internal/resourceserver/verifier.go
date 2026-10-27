@@ -1,9 +1,7 @@
 package resourceserver
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"io"
 	"net"
@@ -13,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"altalune.id/othra/httpclient"
+	"altalune.id/othra/oauthrs"
 )
 
 // MaxMetadataBytes bounds the RFC 9728 metadata document a check reads.
@@ -75,34 +74,19 @@ func (v *Verifier) Check(ctx context.Context, identifier, issuer string) *Failur
 	case len(body) > MaxMetadataBytes:
 		return fail(FailureTooLarge)
 	}
-	resource, servers, ok := metadata(body)
-	if !ok {
+	doc, err := oauthrs.ParseProtectedResource(body)
+	if err != nil {
 		return fail(FailureNotJSON)
 	}
-	if resource != identifier {
+	if doc.Resource != identifier {
 		f := fail(FailureResourceMismatch)
-		f.Resource = truncate(resource, maxEchoedResource)
+		f.Resource = truncate(doc.Resource, maxEchoedResource)
 		return f
 	}
-	if !slices.Contains(servers, issuer) {
+	if !slices.Contains(doc.AuthorizationServers, issuer) {
 		return fail(FailureIssuerMissing)
 	}
 	return nil
-}
-
-// NOTE: the exact keys are read, as encoding/json would match "Resource" to resource.
-func metadata(body []byte) (resource string, servers []string, ok bool) {
-	var doc map[string]json.RawMessage
-	if !bytes.HasPrefix(bytes.TrimSpace(body), []byte("{")) || json.Unmarshal(body, &doc) != nil {
-		return "", nil, false
-	}
-	if raw, found := doc["resource"]; found && json.Unmarshal(raw, &resource) != nil {
-		return "", nil, false
-	}
-	if raw, found := doc["authorization_servers"]; found && json.Unmarshal(raw, &servers) != nil {
-		return "", nil, false
-	}
-	return resource, servers, true
 }
 
 func status(code int) int32 {
@@ -132,4 +116,13 @@ func truncate(s string, n int) string {
 		s = s[:len(s)-1]
 	}
 	return s
+}
+
+// MetadataURL is where the RFC 9728 metadata of identifier lives, or "" when it can't have any.
+func MetadataURL(identifier string) string {
+	u, err := oauthrs.MetadataURL(identifier)
+	if err != nil {
+		return ""
+	}
+	return u
 }

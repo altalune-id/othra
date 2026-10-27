@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import CopyButton from '#base/components/ui/CopyButton.vue';
+import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import UrlField from '#base/components/ui/UrlField.vue';
 import { discoveryUrls } from '~/components/project/issuer/discovery';
+import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
@@ -16,13 +20,15 @@ const project = computed(() =>
   projects.items.find(item => item.orgId === org.value?.id && item.slug === route.params.project),
 );
 
+const guard = useProjectGuard(() => project.value);
+
 if (!project.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }
 
 const base = computed(() => `/o/${route.params.org}/projects/${route.params.project}`);
 const detail = useProjectDetailStore();
-await detail.ensureLoaded(project.value.id);
+await Promise.all([detail.ensureLoaded(project.value.id), useAuthStore().load()]);
 const full = computed(() => detail.get(project.value?.id ?? ''));
 const discovery = computed(() => discoveryUrls(full.value?.issuerUrl ?? ''));
 const copyLabel = computed(() => t('common.copy_label', { label: '{label}' }));
@@ -42,8 +48,9 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
     <div class="flex items-center gap-3">
       <img v-if="full?.logoUrl" :src="full.logoUrl" alt="" class="size-10 shrink-0 rounded-box border border-base-300 bg-base-100 object-contain p-1 max-sm:size-8">
       <div>
-        <h1 class="text-2xl font-bold">
+        <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold">
           {{ project.name }}
+          <SystemBadge v-if="project.system" :label="t('common.system')" />
         </h1>
         <p class="text-sm text-base-content/60">
           {{ t('nav.overview') }}
@@ -55,6 +62,8 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
       </div>
     </div>
 
+    <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('project.system_note')" />
+    <ProjectReadOnlyNote v-else-if="guard.system" />
     <section v-if="full" class="card border border-base-300 bg-base-100" data-testid="issuer-card">
       <div class="card-body gap-2">
         <div class="flex items-center justify-between gap-2">

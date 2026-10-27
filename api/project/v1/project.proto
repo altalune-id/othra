@@ -72,6 +72,8 @@ message Project {
   bool signin_email_link = 21;
   // logo_url is the public URL of the project's logo, empty when it has none.
   string logo_url = 22;
+  // system is true for the console project Othra seeds at install; only its branding, terms and upstream IdPs can change.
+  bool system = 23;
 }
 
 message CreateProjectRequest {

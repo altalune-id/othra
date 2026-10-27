@@ -32,7 +32,7 @@ func TestHTTPConfig(t *testing.T) {
 
 func TestBuildHTTPHandler_ServesPages(t *testing.T) {
 	cfg := config.Config{HTTP: config.HTTPConfig{BasePath: "/app"}}
-	h := buildHTTPHandler(httpSurfaces{basePath: "/app", routes: buildRoutes(cfg, nil, nil, nil)})
+	h := buildHTTPHandler(httpSurfaces{basePath: "/app", routes: buildRoutes(cfg, nil, nil, nil, nil)})
 
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/app/terms", nil))
@@ -44,14 +44,14 @@ func TestBuildHTTPHandler_ServesPages(t *testing.T) {
 }
 
 func serveRoutes(cfg config.Config, svcs *Services, method, path string) *httptest.ResponseRecorder {
-	h := buildHTTPHandler(httpSurfaces{basePath: cfg.HTTP.BasePath, routes: buildRoutes(cfg, svcs, nil, nil)})
+	h := buildHTTPHandler(httpSurfaces{basePath: cfg.HTTP.BasePath, routes: buildRoutes(cfg, svcs, nil, nil, nil)})
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, httptest.NewRequest(method, path, nil))
 	return rec
 }
 
 func TestBuildRoutes_TermsOverride(t *testing.T) {
-	cfg := config.Config{Compliance: config.ComplianceConfig{TermsURL: "https://example.com/t"}}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Compliance: config.ComplianceConfig{TermsURL: "https://example.com/t"}}
 	rec := serveRoutes(cfg, nil, http.MethodGet, "/terms")
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "https://example.com/t", rec.Header().Get("Location"))
@@ -60,7 +60,7 @@ func TestBuildRoutes_TermsOverride(t *testing.T) {
 func TestBuildRoutes_WelcomeFollowsFlag(t *testing.T) {
 	users := &user.Service{}
 	svcs := &Services{Caps: capabilities.Capabilities{LocalLogin: true}, Auth: &auth.Service{}, Users: users, Legal: legal.NewService(users, legal.NewStore(db.Pool{}, "", ""), fakes.Transactor{})}
-	cfg := config.Config{}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}
 	assert.Equal(t, http.StatusNotFound, serveRoutes(cfg, svcs, http.MethodGet, "/welcome").Code)
 
 	cfg.Compliance.RequireAcceptance = true
@@ -68,7 +68,7 @@ func TestBuildRoutes_WelcomeFollowsFlag(t *testing.T) {
 }
 
 func TestBuildRoutes_LoginOnlyWithLocalLogin(t *testing.T) {
-	cfg := config.Config{}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}
 	assert.Equal(t, http.StatusNotFound, serveRoutes(cfg, nil, http.MethodGet, "/login").Code)
 	assert.Equal(t, http.StatusNotFound, serveRoutes(cfg, nil, http.MethodPost, "/logout").Code)
 
@@ -158,14 +158,14 @@ func TestWarnSampleLegal(t *testing.T) {
 }
 
 func TestWarnSampleLegal_NamesOnlyTheMissingKey(t *testing.T) {
-	cfg := config.Config{Env: config.EnvProduction, Compliance: config.ComplianceConfig{TermsURL: "https://example.com/terms"}}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Env: config.EnvProduction, Compliance: config.ComplianceConfig{TermsURL: "https://example.com/terms"}}
 	log, buf := bufferLogger()
 	warnSampleLegal(cfg, log, true)
 	assert.Contains(t, buf.String(), "missing=compliance.privacyURL")
 }
 
 func TestBuildLegal_TermsDate(t *testing.T) {
-	cfg := config.Config{}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}
 	builtIn := buildLegal(kernel.Kernel{}, cfg, nil).TermsUpdatedAt()
 	assert.False(t, builtIn.IsZero(), "the built-in documents carry a date")
 
@@ -175,21 +175,21 @@ func TestBuildLegal_TermsDate(t *testing.T) {
 }
 
 func TestConsentData(t *testing.T) {
-	cfg := config.Config{}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}
 	cfg.Compliance.RequireAcceptance = true
 	cfg.Compliance.PrivacyURL = "https://legal.example.com/privacy"
 	assert.Equal(t, layout.ConsentData{PrivacyURL: "https://legal.example.com/privacy", Required: true}, consentData(cfg))
 }
 
 func TestBuildRoutes_InviteOnlyWithLocalLogin(t *testing.T) {
-	cfg := config.Config{}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}
 	assert.Equal(t, http.StatusNotFound, serveRoutes(cfg, nil, http.MethodGet, "/invite").Code)
 	svcs := &Services{Caps: capabilities.Capabilities{LocalLogin: true}, Auth: &auth.Service{}}
 	assert.Equal(t, http.StatusBadRequest, serveRoutes(cfg, svcs, http.MethodGet, "/invite").Code, "no invite cookie")
 }
 
 func TestBuildLegal_AnyCustomURLKeepsNoHistory(t *testing.T) {
-	cfg := config.Config{}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}
 	cfg.Compliance.PrivacyURL = "https://legal.example.com/privacy"
 	l := buildLegal(kernel.Kernel{}, cfg, nil)
 	require.NoError(t, l.Publish(t.Context()), "nothing is snapshotted, so no database is touched")

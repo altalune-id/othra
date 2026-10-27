@@ -28,7 +28,7 @@ func natsTestConfig(url string) config.NATSConfig {
 }
 
 func natsFeatureConfig() config.Config {
-	return config.Config{
+	return config.Config{HTTP: config.HTTPConfig{Addr: ":5150"},
 		Postgres: config.PostgresConfig{DSN: "x"},
 		Queue:    config.QueueConfig{Enabled: true, Driver: config.QueueDriverNATS},
 		NATS:     natsTestConfig("nats://othra:" + natsTestPassword + "@127.0.0.1:1"),
@@ -78,7 +78,7 @@ func TestBuildNATS_UnusedNeverConnects(t *testing.T) {
 	assert.Zero(t, *calls)
 	assert.Empty(t, logs.String(), "no url, nothing to say")
 
-	cfg := config.Config{Queue: config.QueueConfig{Driver: config.QueueDriverNATS}, NATS: natsTestConfig("nats://othra:" + natsTestPassword + "@nats.internal:4222")}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Queue: config.QueueConfig{Driver: config.QueueDriverNATS}, NATS: natsTestConfig("nats://othra:" + natsTestPassword + "@nats.internal:4222")}
 	nc, nh, err = buildNATS(t.Context(), k, cfg, log)
 	require.NoError(t, err)
 	assert.Nil(t, nc, "the nats driver with the queue off needs no connection")
@@ -125,7 +125,7 @@ func TestBoot_DefaultConfigNeverOpensNATS(t *testing.T) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
 
-	app, err := Boot(context.Background(), config.Config{Postgres: config.PostgresConfig{DSN: "x"}}, testLogger())
+	app, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}}, testLogger())
 	require.NoError(t, err)
 	assert.Zero(t, *calls)
 	assert.NotContains(t, workerNames(app), "nats-health")

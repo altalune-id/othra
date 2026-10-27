@@ -19,7 +19,8 @@ import (
 )
 
 func newService(store member.Store) *member.Service {
-	return member.NewService(store, fakes.Transactor{}, apperror.NewReporter(nil, false).Unexpected)
+	return member.NewService(store, fakes.Transactor{}, apperror.NewReporter(nil, false).Unexpected).
+		WithEffects((&effectCalls{orgName: "Acme Corp"}).effects())
 }
 
 func isUnexpected(err error) bool {
@@ -402,6 +403,19 @@ func newEffectsFixture(t *testing.T) (*orgFixture, *effectCalls) {
 	e := &effectCalls{orgName: "Acme Corp"}
 	f.svc.WithEffects(e.effects())
 	return f, e
+}
+
+// SECURITY: without its effects a removal, a demotion or a leave fails, so its unit of work rolls back instead of leaving access alive.
+func TestService_WithoutEffectsFailsClosed(t *testing.T) {
+	store := &fakes.MemberStore{}
+	f := &orgFixture{t: t, ctx: context.Background(), store: store, org: uuid.New(),
+		svc: member.NewService(store, fakes.Transactor{}, apperror.NewReporter(nil, false).Unexpected)}
+	owner := f.add(member.RoleOwner)
+
+	_, err := f.svc.SetRole(f.ctx, owner, f.org, f.add(member.RoleAdmin).UserID, member.RoleMember)
+	assert.True(t, isUnexpected(err), "a demotion that can't end sessions fails: %v", err)
+	assert.True(t, isUnexpected(f.svc.Remove(f.ctx, owner, f.org, f.add(member.RoleMember).UserID)), "a removal that can't end access fails")
+	assert.True(t, isUnexpected(f.svc.Leave(f.ctx, f.org, f.add(member.RoleMember).UserID)), "leaving without revoking keys fails")
 }
 
 func TestService_RemoveEndsAccessAndNotifies(t *testing.T) {

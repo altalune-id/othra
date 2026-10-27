@@ -37,10 +37,12 @@ func newIssuerServer(t *testing.T, basePath string) (*httptest.Server, *Services
 	required, err := installRequired(t.Context(), svcs)
 	require.NoError(t, err)
 
-	public, hosted := buildIssuerRoutes(cfg, svcs, nil, nil)
+	inProcess := http.NewServeMux()
+	rp := buildConsoleRP(cfg, svcs, inProcess)
+	public, hosted := buildIssuerRoutes(cfg, svcs, inProcess, nil, nil)
 	ts := httptest.NewServer(buildHTTPHandler(httpSurfaces{
 		basePath:        basePath,
-		routes:          buildRoutes(cfg, svcs, nil, nil),
+		routes:          buildRoutes(cfg, svcs, rp, nil, nil),
 		public:          public,
 		hosted:          hosted,
 		session:         buildSessionMiddleware(svcs, nil),
@@ -124,7 +126,7 @@ func TestIssuerRoutesThroughBoot(t *testing.T) {
 			assert.Contains(t, body, string(apperror.CodeAuthorizeClientUnknown))
 			assert.Empty(t, resp.Header.Get("Location"))
 
-			for _, path := range []string{"/p/nobody-home/oauth2/jwks.json", "/p/ACME-WEB/.well-known/openid-configuration", "/p/system/oauth2/jwks.json"} {
+			for _, path := range []string{"/p/nobody-home/oauth2/jwks.json", "/p/ACME-WEB/.well-known/openid-configuration", "/p/admin/oauth2/jwks.json"} {
 				resp, body := fetch(t, http.MethodGet, ts.URL+basePath+path)
 				assert.Equal(t, http.StatusNotFound, resp.StatusCode, path)
 				assert.JSONEq(t, `{"error":"not_found"}`, body, path)

@@ -47,6 +47,9 @@ const (
 	// AuthServiceSetActiveOrgProcedure is the fully-qualified name of the AuthService's SetActiveOrg
 	// RPC.
 	AuthServiceSetActiveOrgProcedure = "/auth.v1.AuthService/SetActiveOrg"
+	// AuthServiceCreateOwnOrgProcedure is the fully-qualified name of the AuthService's CreateOwnOrg
+	// RPC.
+	AuthServiceCreateOwnOrgProcedure = "/auth.v1.AuthService/CreateOwnOrg"
 )
 
 // AuthServiceClient is a client for the auth.v1.AuthService service.
@@ -61,6 +64,8 @@ type AuthServiceClient interface {
 	SignOutEverywhere(context.Context, *connect.Request[v1.SignOutEverywhereRequest]) (*connect.Response[v1.SignOutEverywhereResponse], error)
 	// SetActiveOrg makes an organization the signed-in person belongs to the active one of this session.
 	SetActiveOrg(context.Context, *connect.Request[v1.SetActiveOrgRequest]) (*connect.Response[v1.SetActiveOrgResponse], error)
+	// CreateOwnOrg creates an organization the signed-in person owns, with its default project; cloud signup's one org per person.
+	CreateOwnOrg(context.Context, *connect.Request[v1.CreateOwnOrgRequest]) (*connect.Response[v1.CreateOwnOrgResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the auth.v1.AuthService service. By default, it uses
@@ -104,6 +109,12 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("SetActiveOrg")),
 			connect.WithClientOptions(opts...),
 		),
+		createOwnOrg: connect.NewClient[v1.CreateOwnOrgRequest, v1.CreateOwnOrgResponse](
+			httpClient,
+			baseURL+AuthServiceCreateOwnOrgProcedure,
+			connect.WithSchema(authServiceMethods.ByName("CreateOwnOrg")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -114,6 +125,7 @@ type authServiceClient struct {
 	changePassword    *connect.Client[v1.ChangePasswordRequest, v1.ChangePasswordResponse]
 	signOutEverywhere *connect.Client[v1.SignOutEverywhereRequest, v1.SignOutEverywhereResponse]
 	setActiveOrg      *connect.Client[v1.SetActiveOrgRequest, v1.SetActiveOrgResponse]
+	createOwnOrg      *connect.Client[v1.CreateOwnOrgRequest, v1.CreateOwnOrgResponse]
 }
 
 // Whoami calls auth.v1.AuthService.Whoami.
@@ -141,6 +153,11 @@ func (c *authServiceClient) SetActiveOrg(ctx context.Context, req *connect.Reque
 	return c.setActiveOrg.CallUnary(ctx, req)
 }
 
+// CreateOwnOrg calls auth.v1.AuthService.CreateOwnOrg.
+func (c *authServiceClient) CreateOwnOrg(ctx context.Context, req *connect.Request[v1.CreateOwnOrgRequest]) (*connect.Response[v1.CreateOwnOrgResponse], error) {
+	return c.createOwnOrg.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the auth.v1.AuthService service.
 type AuthServiceHandler interface {
 	// Whoami describes the credential the request was made with.
@@ -153,6 +170,8 @@ type AuthServiceHandler interface {
 	SignOutEverywhere(context.Context, *connect.Request[v1.SignOutEverywhereRequest]) (*connect.Response[v1.SignOutEverywhereResponse], error)
 	// SetActiveOrg makes an organization the signed-in person belongs to the active one of this session.
 	SetActiveOrg(context.Context, *connect.Request[v1.SetActiveOrgRequest]) (*connect.Response[v1.SetActiveOrgResponse], error)
+	// CreateOwnOrg creates an organization the signed-in person owns, with its default project; cloud signup's one org per person.
+	CreateOwnOrg(context.Context, *connect.Request[v1.CreateOwnOrgRequest]) (*connect.Response[v1.CreateOwnOrgResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -192,6 +211,12 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("SetActiveOrg")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceCreateOwnOrgHandler := connect.NewUnaryHandler(
+		AuthServiceCreateOwnOrgProcedure,
+		svc.CreateOwnOrg,
+		connect.WithSchema(authServiceMethods.ByName("CreateOwnOrg")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceWhoamiProcedure:
@@ -204,6 +229,8 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceSignOutEverywhereHandler.ServeHTTP(w, r)
 		case AuthServiceSetActiveOrgProcedure:
 			authServiceSetActiveOrgHandler.ServeHTTP(w, r)
+		case AuthServiceCreateOwnOrgProcedure:
+			authServiceCreateOwnOrgHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -231,4 +258,8 @@ func (UnimplementedAuthServiceHandler) SignOutEverywhere(context.Context, *conne
 
 func (UnimplementedAuthServiceHandler) SetActiveOrg(context.Context, *connect.Request[v1.SetActiveOrgRequest]) (*connect.Response[v1.SetActiveOrgResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.SetActiveOrg is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) CreateOwnOrg(context.Context, *connect.Request[v1.CreateOwnOrgRequest]) (*connect.Response[v1.CreateOwnOrgResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.CreateOwnOrg is not implemented"))
 }

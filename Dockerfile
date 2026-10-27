@@ -35,6 +35,8 @@ WORKDIR /src
 RUN apk add --no-cache make
 
 COPY go.mod go.sum ./
+COPY oidcrp/go.mod oidcrp/go.sum oidcrp/
+COPY oauthrs/go.mod oauthrs/go.sum oauthrs/
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 

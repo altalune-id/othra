@@ -233,6 +233,9 @@ func toProto(c *Client) *clientv1.Client {
 		UpdatedAt:               timestamppb.New(c.UpdatedAt),
 		Registration:            clientv1.ClientRegistration_CLIENT_REGISTRATION_REGISTERED,
 	}
+	if c.System {
+		out.Registration = clientv1.ClientRegistration_CLIENT_REGISTRATION_SYSTEM
+	}
 	if c.Managed() {
 		out.Registration = clientv1.ClientRegistration_CLIENT_REGISTRATION_CIMD
 		out.MetadataUrl = c.MetadataURL

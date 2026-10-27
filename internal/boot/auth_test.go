@@ -103,7 +103,7 @@ func TestBuildServices_AuthNoSecretWarningsWithoutLocalLogin(t *testing.T) {
 func TestFirstBoot_NoopWithoutLocalOrBasic(t *testing.T) {
 	log, buf := bufferLogger()
 	k := authKernel(t, log)
-	cfg := config.Config{}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}
 	svcs := buildServices(k, cfg)
 	require.NoError(t, buildAuthSecrets(cfg, svcs, log))
 

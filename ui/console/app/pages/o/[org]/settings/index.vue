@@ -4,6 +4,7 @@ import AppButton from '#base/components/ui/AppButton.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCan } from '~/composables/useCan';
@@ -25,6 +26,8 @@ if (!org.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.org_not_found'), fatal: true });
 }
 
+const system = computed(() => org.value?.system === true);
+const canSave = computed(() => canEdit.value && !system.value);
 const name = ref(org.value.name);
 const slug = ref(org.value.slug);
 const busy = ref(false);
@@ -63,10 +66,12 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
 
 <template>
   <div v-if="org" class="max-w-lg space-y-6">
-    <h1 class="text-2xl font-bold">
+    <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold">
       {{ t('settings.title') }}
+      <SystemBadge v-if="system" :label="t('common.system')" class="font-normal" />
     </h1>
-    <ProjectReadOnlyNote v-if="!canEdit" :text="t('settings.read_only')" />
+    <ProjectReadOnlyNote v-if="system" icon="lucide:shield" :text="t('org.system_note')" />
+    <ProjectReadOnlyNote v-else-if="!canEdit" :text="t('settings.read_only')" />
 
     <div class="space-y-1">
       <span class="block text-xs text-base-content/60">{{ t('common.id') }}</span>
@@ -76,7 +81,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
       </div>
     </div>
 
-    <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="save()">
+    <form v-if="canSave" novalidate class="space-y-2" @submit.prevent="save()">
       <div class="fieldset">
         <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
         <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">

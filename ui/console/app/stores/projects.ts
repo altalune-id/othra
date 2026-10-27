@@ -6,6 +6,7 @@ export interface Project {
   orgId: string;
   slug: string;
   name: string;
+  system?: boolean;
 }
 
 export const useProjectsStore = defineStore('projects', () => {
@@ -43,7 +44,7 @@ export const useProjectsStore = defineStore('projects', () => {
       if (mine !== latest) {
         return;
       }
-      items.value = (res.projects ?? []).map(p => ({ id: p.id, orgId: p.orgId, slug: p.slug, name: p.name }));
+      items.value = (res.projects ?? []).map(p => ({ id: p.id, orgId: p.orgId, slug: p.slug, name: p.name, system: p.system }));
       loadedFor = orgId;
     } catch (e) {
       if (mine === latest) {

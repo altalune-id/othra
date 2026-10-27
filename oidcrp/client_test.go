@@ -32,10 +32,12 @@ type fakeIDP struct {
 	noS256   bool
 	iss      string
 	tokenErr int
+	errBody  string
 	noIDTok  bool
 	form     url.Values
 	user     string
 	pass     string
+	basic    bool
 	jwksHits int
 	slow     time.Duration
 	algs     []string
@@ -44,6 +46,9 @@ type fakeIDP struct {
 	jwksGate chan struct{}
 	maxAge   string
 	metaHits int
+	tokType  string
+	endSess  string
+	lastID   string
 }
 
 func newFakeIDP(t *testing.T) *fakeIDP {
@@ -71,6 +76,7 @@ func newFakeIDP(t *testing.T) *fakeIDP {
 			"issuer": iss, "authorization_endpoint": f.srv.URL + "/authorize", "token_endpoint": f.srv.URL + "/token",
 			"jwks_uri": f.srv.URL + "/jwks", "code_challenge_methods_supported": methods,
 			"authorization_response_iss_parameter_supported": true, "id_token_signing_alg_values_supported": f.algs,
+			"end_session_endpoint": f.endSess,
 		})
 	})
 	mux.HandleFunc("/jwks", func(w http.ResponseWriter, _ *http.Request) {
@@ -91,15 +97,24 @@ func newFakeIDP(t *testing.T) *fakeIDP {
 		time.Sleep(f.slow)
 		require.NoError(t, r.ParseForm())
 		f.form = r.PostForm
-		f.user, f.pass, _ = r.BasicAuth()
+		f.user, f.pass, f.basic = r.BasicAuth()
 		if f.tokenErr != 0 {
 			w.WriteHeader(f.tokenErr)
-			_, _ = w.Write([]byte(`{"error":"invalid_grant"}`))
+			body := `{"error":"invalid_grant"}`
+			if f.errBody != "" {
+				body = f.errBody
+			}
+			_, _ = w.Write([]byte(body))
 			return
 		}
-		out := map[string]any{"access_token": "upstream-at", "token_type": "Bearer", "refresh_token": "upstream-rt"}
+		typ := "Bearer"
+		if f.tokType != "" {
+			typ = f.tokType
+		}
+		out := map[string]any{"access_token": "upstream-at", "token_type": typ, "refresh_token": "upstream-rt"}
 		if !f.noIDTok {
-			out["id_token"] = f.sign()
+			f.lastID = f.sign()
+			out["id_token"] = f.lastID
 		}
 		_ = json.NewEncoder(w).Encode(out)
 	})
@@ -186,7 +201,7 @@ func TestExchange(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, &IDToken{
 		Issuer: f.srv.URL, Subject: "1234567890", Audience: []string{"cid.apps"}, Email: "ana@gmail.com", EmailVerified: true, Name: "Ana",
-		IssuedAt: now, ExpiresAt: now.Add(time.Hour),
+		IssuedAt: now, ExpiresAt: now.Add(time.Hour), Raw: f.lastID,
 	}, tok)
 	assert.Equal(t, "cid.apps", f.user)
 	assert.Equal(t, "s3cret%2F%2B%3D", f.pass, "RFC 6749 §2.3.1: client_secret_basic, form-encoded")
@@ -432,7 +447,7 @@ func TestCache_FetchesOutsideTheLock(t *testing.T) {
 	var wg sync.WaitGroup
 	for range 5 {
 		wg.Go(func() {
-			_, _ = c.key(context.Background(), &Metadata{JWKSURI: f.srv.URL + "/jwks"}, "k1")
+			_, _ = c.src.Key(context.Background(), "k1")
 		})
 	}
 	require.Eventually(t, func() bool { _, jwks := f.hits(); return jwks == 1 }, 5*time.Second, 5*time.Millisecond)
@@ -494,8 +509,8 @@ func TestVerify_GoogleIssuerForms(t *testing.T) {
 	f := newFakeIDP(t)
 	c := New(Config{Issuer: "https://accounts.google.com", ClientID: "cid.apps", AcceptIssuers: []string{"accounts.google.com"}}).
 		WithClock(func() time.Time { return now })
-	c.keys.val = &jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: &f.key.PublicKey, KeyID: "k1", Algorithm: "RS256", Use: "sig"}}}
-	c.keys.expires = now.Add(time.Hour)
+	c.src.keys.val = &jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: &f.key.PublicKey, KeyID: "k1", Algorithm: "RS256", Use: "sig"}}}
+	c.src.keys.expires = now.Add(time.Hour)
 	meta := &Metadata{IDTokenSigningAlgValues: []string{"RS256"}}
 	for iss, ok := range map[string]bool{
 		"https://accounts.google.com":      true,

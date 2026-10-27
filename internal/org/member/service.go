@@ -33,7 +33,7 @@ func NewService(store Store, uow db.Transactor, unexpected apperror.UnexpectedFu
 	return &Service{store: store, uow: uow, unexpected: unexpected}
 }
 
-// WithEffects sets what removals and role changes do besides the membership row; without it they only change the row.
+// WithEffects sets what removals and role changes do besides the membership row; without it they fail.
 func (s *Service) WithEffects(e Effects) *Service {
 	s.effects = &e
 	return s
@@ -304,7 +304,7 @@ func (s *Service) actor(ctx context.Context, r Requester, orgID uuid.UUID, owner
 
 func (s *Service) removed(ctx context.Context, orgID, userID uuid.UUID) error {
 	if s.effects == nil {
-		return nil
+		return errNoEffects
 	}
 	if err := s.effects.Sessions.DeleteByUser(ctx, userID); err != nil {
 		return fmt.Errorf("member: end sessions: %w", err)
@@ -321,7 +321,7 @@ func (s *Service) removed(ctx context.Context, orgID, userID uuid.UUID) error {
 
 func (s *Service) roleChanged(ctx context.Context, orgID, userID uuid.UUID, to Role, demoted bool) error {
 	if s.effects == nil {
-		return nil
+		return errNoEffects
 	}
 	if demoted {
 		if err := s.effects.Sessions.DeleteByUser(ctx, userID); err != nil {
@@ -341,7 +341,7 @@ func (s *Service) roleChanged(ctx context.Context, orgID, userID uuid.UUID, to R
 
 func (s *Service) revokeKeys(ctx context.Context, orgID, userID uuid.UUID) error {
 	if s.effects == nil {
-		return nil
+		return errNoEffects
 	}
 	if _, err := s.effects.Keys.RevokePersonalOf(ctx, orgID, userID); err != nil {
 		return fmt.Errorf("member: revoke personal keys: %w", err)

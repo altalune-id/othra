@@ -19,8 +19,13 @@ import (
 
 const cookieName = "othra_invite"
 
-// MethodPassword is the sign-in method for a local account with a password.
-const MethodPassword = "password"
+// The sign-in methods an invitee may join with.
+const (
+	// MethodPassword is a local account with a password.
+	MethodPassword = "password"
+	// MethodOthra is the console's Continue with Othra, through the /p/system issuer.
+	MethodOthra = "othra"
+)
 
 // WebOpts configures the invite pages.
 type WebOpts struct {
@@ -123,7 +128,7 @@ func (h *Web) postJoin(w http.ResponseWriter, r *http.Request) {
 		h.o.Kit.Fail(w, r, "web: invite join", err)
 		return
 	}
-	if v.State != views.StateJoin {
+	if v.State != views.StateJoin || !v.Password {
 		h.render(w, r, http.StatusConflict, v)
 		return
 	}
@@ -224,11 +229,16 @@ func (h *Web) landing(r *http.Request, inv *Invite) (views.LandingData, error) {
 		switch {
 		case err == nil:
 			v.State, v.LoginURL = views.StateSignIn, h.loginURL(inv.Email)
+			return v, nil
 		case !user.IsNotFoundError(err):
 			return views.LandingData{}, err
-		case slices.Contains(h.o.Methods, MethodPassword):
-			v.State = views.StateJoin
-		default:
+		}
+		v.Password = slices.Contains(h.o.Methods, MethodPassword)
+		if slices.Contains(h.o.Methods, MethodOthra) {
+			v.OthraURL = h.othraURL(inv)
+		}
+		v.State = views.StateJoin
+		if !v.Password && v.OthraURL == "" {
 			v.State = views.StateNoMethod
 		}
 	}
@@ -327,6 +337,12 @@ func (h *Web) render(w http.ResponseWriter, r *http.Request, status int, v views
 
 func (h *Web) consoleURL(slug string) string {
 	return h.o.Kit.Path("/console") + "/o/" + url.PathEscape(slug)
+}
+
+// NOTE: the console's sign-in claims the invite by its public id, and only for this invite's verified email.
+func (h *Web) othraURL(inv *Invite) string {
+	q := url.Values{"invite": {inv.PublicID}, "login_hint": {inv.Email}, "return_to": {h.o.Kit.Path("/console/")}}
+	return h.o.Kit.Path("/login/oidc") + "?" + q.Encode()
 }
 
 func (h *Web) loginURL(email string) string {

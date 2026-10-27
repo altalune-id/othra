@@ -1,4 +1,6 @@
 import type { ShownError } from '#base/lib/apperror/message';
+import type { Org as OrgMessage } from '#gen/org/v1/org_pb';
+import type { Org } from '~/stores/orgs';
 
 import { create } from '@bufbuild/protobuf';
 import { useValidation } from '#base/composables/useValidation';
@@ -6,7 +8,14 @@ import { CreateOrgRequestSchema } from '#gen/org/v1/org_pb';
 import { useOrgsStore } from '~/stores/orgs';
 import { useUIStore } from '~/stores/ui';
 
-export function useOrgCreate() {
+export type OrgCreateCall = (req: { name: string, slug: string }) => Promise<{ org?: OrgMessage }>;
+
+export interface OrgCreateOptions {
+  create?: OrgCreateCall;
+  landing?: (org: Org) => Promise<string>;
+}
+
+export function useOrgCreate(options: OrgCreateOptions = {}) {
   const name = ref('');
   const slug = ref('');
   const busy = ref(false);
@@ -43,14 +52,15 @@ export function useOrgCreate() {
     busy.value = true;
     error.value = null;
     try {
-      const res = await client.createOrg(req);
+      const res = await (options.create ?? (r => client.createOrg(r)))(req);
       const org = res.org;
       if (org) {
-        orgs.add({ id: org.id, slug: org.slug, name: org.name });
+        const added = { id: org.id, slug: org.slug, name: org.name };
+        orgs.add(added);
         ui.closeOrgCreate();
         name.value = '';
         slug.value = '';
-        await navigateTo(`/o/${org.slug}`);
+        await navigateTo(options.landing ? await options.landing(added) : `/o/${org.slug}`);
       }
     } catch (e) {
       error.value = validation.fromServer(e, 'error.create_org');

@@ -160,9 +160,25 @@ func defaultHandle(orgSlug, projectSlug string, suffixed bool) string {
 
 func (s *Service) orgSlug(ctx context.Context, orgID uuid.UUID) (string, error) {
 	if s.orgSlugs == nil {
-		return "", nil
+		return "", errNoOrgSlugs
 	}
 	return s.orgSlugs.Slug(ctx, orgID)
+}
+
+// CreateSystem creates the system org's console project, keys included through the after-create hook; install calls it once.
+func (s *Service) CreateSystem(ctx context.Context, orgID uuid.UUID) (*Project, error) {
+	p, err := NewSystemProject(orgID)
+	if err != nil {
+		return nil, err
+	}
+	hookErr, err := s.save(tenant.WithOrg(ctx, orgID), p)
+	switch {
+	case hookErr != nil:
+		return nil, s.errOrReport(ctx, "project: after create", hookErr)
+	case err != nil:
+		return nil, s.errOrReport(ctx, "project: create system", err)
+	}
+	return p, nil
 }
 
 // Get loads a project by id.
@@ -172,6 +188,15 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID) (*Project, error) {
 		return nil, s.errOrReport(ctx, "project: get", err)
 	}
 	return p, nil
+}
+
+// IsSystem reports whether project id is the console project, where only Othra adds clients and resource servers.
+func (s *Service) IsSystem(ctx context.Context, id uuid.UUID) (bool, error) {
+	p, err := s.Get(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return p.IsSystem(), nil
 }
 
 // ByPublicID loads a project by its public id.
@@ -209,6 +234,9 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, name, slug string) (
 	if err != nil {
 		return nil, s.errOrReport(ctx, "project: update", err)
 	}
+	if p.IsSystem() {
+		return nil, &SystemManagedError{}
+	}
 	if err := p.Update(name, slug); err != nil {
 		return nil, err
 	}
@@ -223,6 +251,9 @@ func (s *Service) UpdateIssuerHandle(ctx context.Context, id uuid.UUID, handle s
 	p, err := s.store.ByID(ctx, id)
 	if err != nil {
 		return nil, s.errOrReport(ctx, "project: update issuer", err)
+	}
+	if p.IsSystem() {
+		return nil, &SystemManagedError{}
 	}
 	h := strings.TrimSpace(handle)
 	if h == p.IssuerHandle {
@@ -256,8 +287,11 @@ func (s *Service) SetSignInEmailLink(ctx context.Context, id uuid.UUID, on bool)
 			return err
 		}
 		p, err := s.store.ByID(ctx, id)
-		if err != nil {
+		switch {
+		case err != nil:
 			return err
+		case !on && p.IsSystem():
+			return &SystemManagedError{}
 		}
 		if !on {
 			if err := s.othersRemain(ctx, p); err != nil {

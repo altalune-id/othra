@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CopyButton from '#base/components/ui/CopyButton.vue';
+import SystemBadge from '#base/components/ui/SystemBadge.vue';
 
 export interface ClientRow {
   id: string;
@@ -7,6 +8,7 @@ export interface ClientRow {
   kind: string;
   created: string;
   to: string;
+  system?: boolean;
 }
 
 export interface ClientListLabels {
@@ -15,6 +17,7 @@ export interface ClientListLabels {
   kind: string;
   created: string;
   copyFor: string;
+  system: string;
 }
 
 const { rows, loading = false, labels = {
@@ -23,6 +26,7 @@ const { rows, loading = false, labels = {
   kind: 'Kind',
   created: 'Created',
   copyFor: 'Copy client ID for {name}',
+  system: 'System',
 } } = defineProps<{ rows: ClientRow[], loading?: boolean, labels?: ClientListLabels }>();
 </script>
 
@@ -48,9 +52,12 @@ const { rows, loading = false, labels = {
         <tbody v-else>
           <tr v-for="row in rows" :key="row.id">
             <td>
-              <NuxtLink :to="row.to" class="link link-hover font-medium">
-                {{ row.name }}
-              </NuxtLink>
+              <span class="inline-flex flex-wrap items-center gap-2">
+                <NuxtLink :to="row.to" class="link link-hover font-medium">
+                  {{ row.name }}
+                </NuxtLink>
+                <SystemBadge v-if="row.system" :label="labels.system" />
+              </span>
             </td>
             <td>
               <span class="inline-flex items-center gap-1">
@@ -74,9 +81,12 @@ const { rows, loading = false, labels = {
       </template>
       <template v-else>
         <li v-for="row in rows" :key="row.id" class="space-y-1 py-3">
-          <NuxtLink :to="row.to" class="link link-hover font-medium">
-            {{ row.name }}
-          </NuxtLink>
+          <span class="flex flex-wrap items-center gap-2">
+            <NuxtLink :to="row.to" class="link link-hover font-medium">
+              {{ row.name }}
+            </NuxtLink>
+            <SystemBadge v-if="row.system" :label="labels.system" />
+          </span>
           <span class="flex items-center gap-1">
             <code class="min-w-0 font-mono text-xs break-all">{{ row.id }}</code>
             <CopyButton :value="row.id" :label="labels.copyFor.replace('{name}', row.name)" />

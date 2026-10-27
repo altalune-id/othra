@@ -125,6 +125,13 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*ResourceServe
 		return nil, &InvalidIdentifierError{Identifier: req.Identifier, Reason: IdentifierNeedsTrust}
 	}
 	err = s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		system, err := s.issuers.IsSystem(ctx, req.ProjectID)
+		switch {
+		case err != nil:
+			return err
+		case system:
+			return &SystemProjectError{}
+		}
 		if err := s.issuers.LockIssuerHandle(ctx, req.ProjectID); err != nil {
 			return err
 		}
@@ -453,10 +460,7 @@ func (s *Service) writeLink(
 	ctx context.Context, orgID, projectID uuid.UUID, clientPublicID, serverPublicID string, scopes []string, create bool,
 ) (*Link, error) {
 	ctx = scope(ctx, orgID, projectID)
-	c, err := s.client(ctx, orgID, projectID, clientPublicID)
-	if err == nil && c.MetadataURL != "" {
-		err = &ClientManagedError{}
-	}
+	c, err := s.linkableClient(ctx, orgID, projectID, clientPublicID)
 	if err != nil {
 		return nil, s.errOrReport(ctx, "resourceserver: link", err)
 	}
@@ -507,10 +511,7 @@ func (s *Service) reloadLink(ctx context.Context, l *Link) (*Link, error) {
 // UnlinkClient removes the link between a client and a server; a missing link is no error.
 func (s *Service) UnlinkClient(ctx context.Context, orgID, projectID uuid.UUID, clientPublicID, serverPublicID string) error {
 	ctx = scope(ctx, orgID, projectID)
-	c, err := s.client(ctx, orgID, projectID, clientPublicID)
-	if err == nil && c.MetadataURL != "" {
-		err = &ClientManagedError{}
-	}
+	c, err := s.linkableClient(ctx, orgID, projectID, clientPublicID)
 	if err != nil {
 		return s.errOrReport(ctx, "resourceserver: unlink", err)
 	}
@@ -522,6 +523,20 @@ func (s *Service) UnlinkClient(ctx context.Context, orgID, projectID uuid.UUID, 
 		return s.errOrReport(ctx, "resourceserver: unlink", err)
 	}
 	return nil
+}
+
+// NOTE: a metadata document client's links follow its admission, and the console client takes none.
+func (s *Service) linkableClient(ctx context.Context, orgID, projectID uuid.UUID, publicID string) (ClientRef, error) {
+	c, err := s.client(ctx, orgID, projectID, publicID)
+	switch {
+	case err != nil:
+		return c, err
+	case c.System:
+		return c, &ClientSystemManagedError{}
+	case c.MetadataURL != "":
+		return c, &ClientManagedError{}
+	}
+	return c, nil
 }
 
 func (s *Service) client(ctx context.Context, orgID, projectID uuid.UUID, publicID string) (ClientRef, error) {

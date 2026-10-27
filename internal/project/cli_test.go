@@ -20,7 +20,7 @@ import (
 
 func projectClient(t *testing.T, store project.Store, refs *fakes.PublicIDs) projectv1connect.ProjectServiceClient {
 	t.Helper()
-	srv := controlplane.New(controlplane.Services{Projects: project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), Refs: refs}, nil, cptest.OperatorOptions())
+	srv := controlplane.New(controlplane.Services{Projects: project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")), Refs: refs}, nil, cptest.OperatorOptions())
 	ts := httptest.NewServer(srv.Handler(""))
 	t.Cleanup(ts.Close)
 	return apiclient.New(ts.URL, cptest.OperatorCredential()).Projects

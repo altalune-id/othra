@@ -23,8 +23,6 @@ const (
 	FailureLimit = 3
 	// MaxClientHosts bounds the hosts a server admits metadata document clients from.
 	MaxClientHosts = 64
-	// MetadataPath is the RFC 9728 §3 well-known path, inserted between the host and the path of the identifier.
-	MetadataPath = "/.well-known/oauth-protected-resource"
 )
 
 // State is where a resource server's RFC 9728 verification stands.
@@ -337,15 +335,6 @@ func unreserved(c byte) bool {
 	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '-' || c == '.' || c == '_' || c == '~'
 }
 
-// MetadataURL is where the RFC 9728 metadata of an https identifier lives.
-func MetadataURL(identifier string) string {
-	u, err := url.Parse(identifier)
-	if err != nil || u.Host == "" {
-		return ""
-	}
-	return "https://" + u.Host + MetadataPath + strings.TrimSuffix(u.EscapedPath(), "/")
-}
-
 // ValidateScopes checks a scope list: 1 to MaxScopes RFC 6749 §3.3 tokens, none reserved and none twice.
 func ValidateScopes(scopes []string) error {
 	switch {
@@ -451,4 +440,6 @@ type ClientRef struct {
 	// MetadataURL and MetadataFetchedAt are set on a metadata document client, which only its document changes.
 	MetadataURL       string
 	MetadataFetchedAt *time.Time
+	// System is set on the console client, which links to no resource server.
+	System bool
 }

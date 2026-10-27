@@ -9,6 +9,7 @@ import (
 type EndSessionData struct {
 	Site
 	Client     string
+	ClientID   string
 	Token      string
 	Hint       string
 	PostLogout string
@@ -30,7 +31,12 @@ templ EndSession(d layout.LayoutData, v EndSessionData) {
 			<form method="post" action={ v.href(d, "/oauth2/end-session") }>
 				@layout.CSRFInput(v.Token)
 				<input type="hidden" name="confirm" value="1"/>
-				<input type="hidden" name="id_token_hint" value={ v.Hint }/>
+				if v.Hint != "" {
+					<input type="hidden" name="id_token_hint" value={ v.Hint }/>
+				}
+				if v.ClientID != "" {
+					<input type="hidden" name="client_id" value={ v.ClientID }/>
+				}
 				if v.PostLogout != "" {
 					<input type="hidden" name="post_logout_redirect_uri" value={ v.PostLogout }/>
 				}

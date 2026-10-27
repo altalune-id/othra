@@ -15,18 +15,8 @@ import (
 // SetPasswordFn sets a user's password and signs out their sessions; the caller boots the server graph.
 type SetPasswordFn func(ctx context.Context, email, password string) error
 
-// NewCmd builds the `user` command tree.
-func NewCmd(setPassword SetPasswordFn) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "user",
-		Short:   "Operator actions on users (needs database access)",
-		GroupID: "runtime",
-	}
-	cmd.AddCommand(newSetPasswordCmd(setPassword))
-	return cmd
-}
-
-func newSetPasswordCmd(setPassword SetPasswordFn) *cobra.Command {
+// NewSetPasswordCmd builds `set-password`: set a console account's password and sign out its sessions.
+func NewSetPasswordCmd(setPassword SetPasswordFn) *cobra.Command {
 	var email string
 	var passwordStdin bool
 	cmd := &cobra.Command{

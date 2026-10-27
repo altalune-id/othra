@@ -116,3 +116,10 @@ ACC008 AccountCurrentSession
 ACC009 AccountReauthRequired
 ACC010 AccountTermsRequired
 EUS001 EndUserNotFound
+AUT005 AuthNoConsoleAccount
+AUT006 AuthSignInExpired
+AUT007 AuthIdentityConflict
+ORG006 OrgAlreadyOwned
+PRJ011 ProjectSystemManaged
+CLT009 ClientSystemManaged
+ORG007 OrgSystemManaged

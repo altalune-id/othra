@@ -77,18 +77,25 @@ func TestAPIKeyService_CreatePersonal_NeedsPerson(t *testing.T) {
 	}
 }
 
+// A console session from Othra sign-in (oidc) holds personal keys exactly like a password one.
 func TestAPIKeyService_CreatePersonal_ByPerson(t *testing.T) {
-	orgID, me := uuid.New(), uuid.New()
-	refs := fakes.NewPublicIDs()
-	orgPub := refs.Org(orgID)
-	owners := &fakeOwners{}
-	owners.set(orgID, me, member.RoleMember)
-	store := &fakes.APIKeyStore{}
+	for _, src := range []session.Source{session.SourceLocal, session.SourceOIDC} {
+		t.Run(string(src), func(t *testing.T) {
+			orgID, me := uuid.New(), uuid.New()
+			refs := fakes.NewPublicIDs()
+			orgPub := refs.Org(orgID)
+			owners := &fakeOwners{}
+			owners.set(orgID, me, member.RoleMember)
+			store := &fakes.APIKeyStore{}
+			p := person(me, orgID)
+			p.Source = src
 
-	resp, err := newPersonalClient(t, refs, store, owners, person(me, orgID)).CreateAPIKey(context.Background(), personalCreate(orgPub))
-	require.NoError(t, err)
-	assert.Equal(t, "personal", resp.Msg.GetKey().GetKind())
-	assert.Equal(t, me, store.Saved.CreatedBy)
+			resp, err := newPersonalClient(t, refs, store, owners, p).CreateAPIKey(context.Background(), personalCreate(orgPub))
+			require.NoError(t, err)
+			assert.Equal(t, "personal", resp.Msg.GetKey().GetKind())
+			assert.Equal(t, me, store.Saved.CreatedBy)
+		})
+	}
 }
 
 func TestAPIKeyService_CreatePersonal_AboveRoleIsForbidden(t *testing.T) {

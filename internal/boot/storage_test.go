@@ -32,7 +32,7 @@ func TestBuildStorageDriver(t *testing.T) {
 	require.NoError(t, err)
 	assert.IsType(t, &memory.Driver{}, d)
 
-	s3cfg := config.Config{Storage: config.StorageConfig{Driver: config.StorageDriverS3}}
+	s3cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Storage: config.StorageConfig{Driver: config.StorageDriverS3}}
 	_, err = buildStorageDriver(s3cfg, nil)
 	assert.ErrorContains(t, err, "no S3 connection")
 
@@ -85,7 +85,7 @@ func TestBoot_MemoryStorageInDevelopment(t *testing.T) {
 	openPool = func(context.Context, config.PostgresConfig, *slog.Logger) (db.Pool, error) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
-	cfg := config.Config{Postgres: config.PostgresConfig{DSN: "x"}, Storage: config.StorageConfig{Driver: config.StorageDriverMemory}}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}, Storage: config.StorageConfig{Driver: config.StorageDriverMemory}}
 	app, err := Boot(t.Context(), cfg, testLogger())
 	require.NoError(t, err)
 	assert.True(t, app.Services.Storage.Enabled())

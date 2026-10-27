@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import SystemBadge from '#base/components/ui/SystemBadge.vue';
+import { useOrgCreation } from '~/components/org/create/useOrgCreation';
 import OrgsEmptyState from '~/components/org/OrgsEmptyState.vue';
 import { siblingURL } from '~/lib/auth/urls';
 import { useAuthStore } from '~/stores/auth';
@@ -15,8 +17,12 @@ const { apiUrl } = useRuntimeConfig().public;
 
 await Promise.all([orgs.ensureLoaded(), auth.load()]);
 
-const canCreate = computed(() => auth.me?.orgCreation === true);
+const { allowed, ownsOne, canCreate } = useOrgCreation();
 const isEmpty = computed(() => !orgs.error && orgs.items.length === 0);
+
+if (isEmpty.value && canCreate.value) {
+  await navigateTo('/onboarding', { replace: true });
+}
 const emptyLabels = computed(() => ({
   title: t('org.none_title'),
   body: t('org.none_body'),
@@ -38,7 +44,10 @@ useHead({ title: () => `${t('org.all')} · Othra` });
           {{ t('org.subtitle') }}
         </p>
       </div>
-      <AppButton v-if="canCreate && !isEmpty" size="sm" @click="ui.openOrgCreate()">
+      <p v-if="allowed && ownsOne" class="max-w-56 text-right text-xs text-base-content/60" data-testid="org-create-owned">
+        {{ t('org.create_owned') }}
+      </p>
+      <AppButton v-else-if="canCreate && !isEmpty" size="sm" @click="ui.openOrgCreate()">
         <Icon name="lucide:plus" size="16" />
         {{ t('org.new') }}
       </AppButton>
@@ -62,6 +71,7 @@ useHead({ title: () => `${t('org.all')} · Othra` });
         <div class="card-body">
           <h2 class="card-title text-base">
             {{ org.name }}
+            <SystemBadge v-if="org.system" :label="t('common.system')" class="font-normal" />
           </h2>
           <p class="text-sm text-base-content/60">
             /{{ org.slug }}

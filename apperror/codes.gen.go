@@ -18,6 +18,8 @@ const (
 	CodeOrgInvalidSlug      Code = "ORG003"
 	CodeOrgInvalidName      Code = "ORG004"
 	CodeOrgCreationDisabled Code = "ORG005"
+	CodeOrgAlreadyOwned     Code = "ORG006"
+	CodeOrgSystemManaged    Code = "ORG007"
 
 	CodeProjectNotFound            Code = "PRJ001"
 	CodeProjectAlreadyExists       Code = "PRJ002"
@@ -29,6 +31,7 @@ const (
 	CodeProjectInvalidLogo         Code = "PRJ008"
 	CodeProjectTermsNotSet         Code = "PRJ009"
 	CodeProjectSignInLastMethod    Code = "PRJ010"
+	CodeProjectSystemManaged       Code = "PRJ011"
 
 	CodeAPIKeyNotFound             Code = "KEY001"
 	CodeAPIKeyInvalidName          Code = "KEY002"
@@ -59,6 +62,9 @@ const (
 	CodeAuthPasswordPolicy     Code = "AUT002"
 	CodeAuthRateLimited        Code = "AUT003"
 	CodeAuthResetNotUsable     Code = "AUT004"
+	CodeAuthNoConsoleAccount   Code = "AUT005"
+	CodeAuthSignInExpired      Code = "AUT006"
+	CodeAuthIdentityConflict   Code = "AUT007"
 
 	CodeInstallAlreadyDone Code = "INS001"
 	CodeInstallRequired    Code = "INS002"
@@ -88,6 +94,7 @@ const (
 	CodeClientSecretNotFound     Code = "CLT006"
 	CodeClientSecretExists       Code = "CLT007"
 	CodeClientMetadataManaged    Code = "CLT008"
+	CodeClientSystemManaged      Code = "CLT009"
 
 	CodeResourceServerNotFound              Code = "RSV001"
 	CodeResourceServerInvalidIdentifier     Code = "RSV002"
@@ -156,6 +163,8 @@ var kinds = map[Code]Kind{
 	CodeOrgInvalidSlug:      KindInvalid,
 	CodeOrgInvalidName:      KindInvalid,
 	CodeOrgCreationDisabled: KindFailedPrecondition,
+	CodeOrgAlreadyOwned:     KindFailedPrecondition,
+	CodeOrgSystemManaged:    KindFailedPrecondition,
 
 	CodeProjectNotFound:            KindNotFound,
 	CodeProjectAlreadyExists:       KindAlreadyExists,
@@ -167,6 +176,7 @@ var kinds = map[Code]Kind{
 	CodeProjectInvalidLogo:         KindInvalid,
 	CodeProjectTermsNotSet:         KindFailedPrecondition,
 	CodeProjectSignInLastMethod:    KindFailedPrecondition,
+	CodeProjectSystemManaged:       KindFailedPrecondition,
 
 	CodeAPIKeyNotFound:             KindNotFound,
 	CodeAPIKeyInvalidName:          KindInvalid,
@@ -197,6 +207,9 @@ var kinds = map[Code]Kind{
 	CodeAuthPasswordPolicy:     KindInvalid,
 	CodeAuthRateLimited:        KindResourceExhausted,
 	CodeAuthResetNotUsable:     KindFailedPrecondition,
+	CodeAuthNoConsoleAccount:   KindForbidden,
+	CodeAuthSignInExpired:      KindFailedPrecondition,
+	CodeAuthIdentityConflict:   KindFailedPrecondition,
 
 	CodeInstallAlreadyDone: KindAlreadyExists,
 	CodeInstallRequired:    KindFailedPrecondition,
@@ -226,6 +239,7 @@ var kinds = map[Code]Kind{
 	CodeClientSecretNotFound:     KindNotFound,
 	CodeClientSecretExists:       KindFailedPrecondition,
 	CodeClientMetadataManaged:    KindFailedPrecondition,
+	CodeClientSystemManaged:      KindFailedPrecondition,
 
 	CodeResourceServerNotFound:              KindNotFound,
 	CodeResourceServerInvalidIdentifier:     KindInvalid,

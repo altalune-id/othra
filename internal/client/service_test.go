@@ -22,7 +22,10 @@ import (
 type issuerLock struct {
 	locked []uuid.UUID
 	err    error
+	system bool
 }
+
+func (l *issuerLock) IsSystem(context.Context, uuid.UUID) (bool, error) { return l.system, nil }
 
 func (l *issuerLock) LockIssuerHandle(_ context.Context, projectID uuid.UUID) error {
 	if l.err != nil {

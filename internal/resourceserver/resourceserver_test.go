@@ -77,12 +77,6 @@ func TestIsLoopbackHTTP(t *testing.T) {
 	assert.False(t, IsLoopbackHTTP("http://api.example.com"))
 }
 
-func TestMetadataURL(t *testing.T) {
-	assert.Equal(t, "https://api.example.com/.well-known/oauth-protected-resource", MetadataURL("https://api.example.com"))
-	assert.Equal(t, "https://api.example.com:8443/.well-known/oauth-protected-resource/v1/mcp", MetadataURL("https://api.example.com:8443/v1/mcp/"))
-	assert.Empty(t, MetadataURL("::"))
-}
-
 func TestValidateScopes(t *testing.T) {
 	assert.NoError(t, ValidateScopes([]string{"devices:read", "cache:purge", "A~z!#[]"}))
 	many := make([]string, MaxScopes+1)

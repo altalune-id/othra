@@ -96,6 +96,40 @@ type Deps struct {
 	Mail       MailQueue
 	From       string
 	BaseURL    string
+	Identities Identities
+	Invites    ConsoleInvites
+	OrgCreator OrgCreator
+	// OpenSignup lets a /p/system sign-in with no account create one (cloud); otherwise only an invite does.
+	OpenSignup bool
+}
+
+// Identities finds, links and creates the console accounts a /p/system sign-in names; user.Service is it.
+type Identities interface {
+	ByIDP(ctx context.Context, issuer, subject string) (*user.User, error)
+	LinkIDP(ctx context.Context, id uuid.UUID, issuer, subject string) (bool, error)
+	CreateLinked(ctx context.Context, email, name, issuer, subject string) (*user.User, error)
+}
+
+// OrgCreator creates an org; with CreatedBy set, its creator owns it, once per person (org.Service and boot's after-create hook).
+type OrgCreator interface {
+	Create(ctx context.Context, req org.CreateRequest) (*org.Org, error)
+}
+
+// Seat is a usable invite a /p/system sign-in may claim: who it is for and which org it joins.
+type Seat struct {
+	ID    uuid.UUID
+	OrgID uuid.UUID
+	Email string
+}
+
+// ConsoleInvites finds and uses up the invites a /p/system sign-in may claim; boot adapts invite.Service to it.
+type ConsoleInvites interface {
+	// Seat returns the usable invite with publicID, or nil when it is unknown, used, revoked or expired.
+	Seat(ctx context.Context, publicID string) (*Seat, error)
+	// OwnerSeat returns orgID's usable email-only invite for email, or nil.
+	OwnerSeat(ctx context.Context, orgID uuid.UUID, email string) (*Seat, error)
+	// Claim uses seat up for userID and adds them to its org; false when it is no longer usable or not for their email.
+	Claim(ctx context.Context, seat *Seat, userID uuid.UUID) (bool, error)
 }
 
 // ResetUsers finds the person a reset is for.

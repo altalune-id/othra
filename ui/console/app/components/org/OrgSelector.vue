@@ -2,20 +2,19 @@
 import type { EntityItem } from '#base/components/ui/types';
 import EntitySelect from '#base/components/ui/EntitySelect.vue';
 import { useLanding } from '~/components/layout/useLanding';
-import { useAuthStore } from '~/stores/auth';
+import { useOrgCreation } from '~/components/org/create/useOrgCreation';
 import { useOrgsStore } from '~/stores/orgs';
 import { usePinnedStore } from '~/stores/pinned';
 import { useUIStore } from '~/stores/ui';
 
 const orgs = useOrgsStore();
-const auth = useAuthStore();
 const pinned = usePinnedStore();
 const ui = useUIStore();
 const { resolve } = useLanding();
 const route = useRoute();
 const { t } = useI18n();
 
-const canCreate = computed(() => auth.me?.orgCreation === true);
+const { canCreate } = useOrgCreation();
 const current = computed(() => orgs.bySlug(route.params.org as string));
 const items = computed<EntityItem[]>(() =>
   orgs.items.map(org => ({ key: org.slug, label: org.name, active: org.slug === current.value?.slug, pinned: pinned.orgSlug === org.slug })),

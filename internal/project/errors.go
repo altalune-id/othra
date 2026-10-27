@@ -201,11 +201,27 @@ func IsSignInLastMethodError(err error) bool {
 	return ok
 }
 
+// SystemManagedError signals a change to the console project that only its branding and upstream IdPs allow.
+type SystemManagedError struct{}
+
+func (*SystemManagedError) Error() string { return "project: the console project is managed by Othra" }
+
+// IsSystemManagedError reports whether err wraps a *SystemManagedError.
+func IsSystemManagedError(err error) bool {
+	_, ok := errors.AsType[*SystemManagedError](err)
+	return ok
+}
+
+// ToAppError maps SystemManagedError to PRJ011.
+func (e *SystemManagedError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectSystemManaged, "Othra manages the console project").WithCause(e)
+}
+
 // IsExpectedError reports whether err is a typed domain error a service returns as-is.
 func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsAlreadyExistsError(err) || IsInvalidSlugError(err) || IsInvalidNameError(err) ||
 		IsIssuerHandleTakenError(err) || IsInvalidIssuerHandleError(err) || IsIssuerHandleLockedError(err) ||
-		IsInvalidLogoError(err) || IsTermsNotSetError(err) || IsSignInLastMethodError(err)
+		IsInvalidLogoError(err) || IsTermsNotSetError(err) || IsSignInLastMethodError(err) || IsSystemManagedError(err)
 }
 
 // ToAppError maps NotFoundError to the canonical NotFound envelope.
@@ -269,3 +285,5 @@ func (e *TermsNotSetError) ToAppError() *apperror.AppError {
 func (e *SignInLastMethodError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeProjectSignInLastMethod, "Keep at least one sign-in method on").WithCause(e)
 }
+
+var errNoOrgSlugs = errors.New("project: no org slugs wired")

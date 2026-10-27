@@ -124,6 +124,14 @@ describe('usePersonalKeys', () => {
     expect(listAPIKeys).toHaveBeenCalledTimes(1);
   });
 
+  it('loads the keys of someone who signed in with Continue with Othra', async () => {
+    whoami.mockResolvedValue({ source: 'oidc', userId: 'u1', activeOrgId: acme.id, permissions: ['*'] });
+    const keys = usePersonalKeys();
+    await keys.load();
+    expect(keys.signedIn.value).toBe(true);
+    expect(listAPIKeys).toHaveBeenCalled();
+  });
+
   it('loads nothing for a caller who is not a signed-in person', async () => {
     whoami.mockResolvedValue({ source: 'apikey', permissions: [] });
     const keys = usePersonalKeys();

@@ -3,6 +3,7 @@ import type { Project } from '~/stores/projects';
 import AppButton from '#base/components/ui/AppButton.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import ProjectEditModal from '~/components/project/edit/ProjectEditModal.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
@@ -54,9 +55,12 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
         <tbody>
           <tr v-for="project in items" :key="project.id" class="hover:bg-base-200">
             <td>
-              <NuxtLink :to="`/o/${org?.slug}/projects/${project.slug}`" class="link">
-                {{ project.name }}
-              </NuxtLink>
+              <span class="flex flex-wrap items-center gap-2">
+                <NuxtLink :to="`/o/${org?.slug}/projects/${project.slug}`" class="link">
+                  {{ project.name }}
+                </NuxtLink>
+                <SystemBadge v-if="project.system" :label="t('common.system')" />
+              </span>
             </td>
             <td>
               <span class="inline-flex items-center gap-1">
@@ -72,7 +76,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
                 <Icon name="lucide:external-link" size="14" />
                 {{ t('common.open') }}
               </NuxtLink>
-              <button v-if="canEdit" type="button" class="btn btn-ghost btn-xs" @click="edit(project)">
+              <button v-if="canEdit && !project.system" type="button" class="btn btn-ghost btn-xs" @click="edit(project)">
                 <Icon name="lucide:pencil" size="14" />
                 {{ t('common.edit') }}
               </button>

@@ -6,6 +6,8 @@ import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegen
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb.js";
 import { file_mcp_v1_annotations } from "../../mcp/v1/annotations_pb.js";
+import type { Org } from "../../org/v1/org_pb.js";
+import { file_org_v1_org } from "../../org/v1/org_pb.js";
 import { file_othra_v1_rules } from "../../othra/v1/rules_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -13,7 +15,46 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file auth/v1/auth.proto.
  */
 export const file_auth_v1_auth: GenFile = /*@__PURE__*/
-  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiDwoNV2hvYW1pUmVxdWVzdCKyAgoOV2hvYW1pUmVzcG9uc2USDgoGc291cmNlGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDQoFZW1haWwYAyABKAkSDAoEbmFtZRgEIAEoCRISCgphdmF0YXJfdXJsGAUgASgJEhAKCGtleV9oaW50GA0gASgJEhAKCG93bmVyX2lkGAcgASgJEhUKDWFjdGl2ZV9vcmdfaWQYCCABKAkSFwoPYWN0aXZlX29yZ19zbHVnGAkgASgJEhkKEWFjdGl2ZV9wcm9qZWN0X2lkGAogASgJEhMKC3Blcm1pc3Npb25zGAsgAygJEhAKCG9wZXJhdG9yGAwgASgIEhQKDG9yZ19jcmVhdGlvbhgOIAEoCBIUCgxmaWxlX3VwbG9hZHMYDyABKAhKBAgGEAdSBmtleV9pZCKGAQoUVXBkYXRlUHJvZmlsZVJlcXVlc3QSbgoEbmFtZRgBIAEoCUJgukhdugFaChV1c2VyLm5hbWUubWF4X2xlbi4yMDAaQXRoaXMudHJpbSgpLnNpemUoKSA8PSAyMDAgPyAnJyA6ICdtdXN0IGJlIGF0IG1vc3QgMjAwIGNoYXJhY3RlcnMnIjYKFVVwZGF0ZVByb2ZpbGVSZXNwb25zZRIPCgd1c2VyX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiXgoVQ2hhbmdlUGFzc3dvcmRSZXF1ZXN0EiAKEGN1cnJlbnRfcGFzc3dvcmQYASABKAlCBrpIA8gBARIjCgxuZXdfcGFzc3dvcmQYAiABKAlCDbpICsgBAXIFEAwYgAIiGAoWQ2hhbmdlUGFzc3dvcmRSZXNwb25zZSIaChhTaWduT3V0RXZlcnl3aGVyZVJlcXVlc3QiLwoZU2lnbk91dEV2ZXJ5d2hlcmVSZXNwb25zZRISCgpzaWduZWRfb3V0GAEgASgIIjAKE1NldEFjdGl2ZU9yZ1JlcXVlc3QSGQoGb3JnX2lkGAEgASgJQgm6SAZyBIjkMgEiOwoUU2V0QWN0aXZlT3JnUmVzcG9uc2USIwoCbWUYASABKAsyFy5hdXRoLnYxLldob2FtaVJlc3BvbnNlMvkDCgtBdXRoU2VydmljZRKVAQoGV2hvYW1pEhYuYXV0aC52MS5XaG9hbWlSZXF1ZXN0GhcuYXV0aC52MS5XaG9hbWlSZXNwb25zZSJayvMYVgoLYXV0aF93aG9hbWkSQldobyB0aGlzIE1DUCBjbGllbnQgYWN0cyBhczogdXNlciBvciBrZXksIGFjdGl2ZSBvcmcsIHBlcm1pc3Npb25zLioDYXBwElAKDVVwZGF0ZVByb2ZpbGUSHS5hdXRoLnYxLlVwZGF0ZVByb2ZpbGVSZXF1ZXN0Gh4uYXV0aC52MS5VcGRhdGVQcm9maWxlUmVzcG9uc2UiABJTCg5DaGFuZ2VQYXNzd29yZBIeLmF1dGgudjEuQ2hhbmdlUGFzc3dvcmRSZXF1ZXN0Gh8uYXV0aC52MS5DaGFuZ2VQYXNzd29yZFJlc3BvbnNlIgASXAoRU2lnbk91dEV2ZXJ5d2hlcmUSIS5hdXRoLnYxLlNpZ25PdXRFdmVyeXdoZXJlUmVxdWVzdBoiLmF1dGgudjEuU2lnbk91dEV2ZXJ5d2hlcmVSZXNwb25zZSIAEk0KDFNldEFjdGl2ZU9yZxIcLmF1dGgudjEuU2V0QWN0aXZlT3JnUmVxdWVzdBodLmF1dGgudjEuU2V0QWN0aXZlT3JnUmVzcG9uc2UiAEJ+Cgtjb20uYXV0aC52MUIJQXV0aFByb3RvUAFaJ2FsdGFsdW5lLmlkL290aHJhL2dlbi9nby9hdXRoL3YxO2F1dGh2MaICA0FYWKoCB0F1dGguVjHKAgdBdXRoXFYx4gITQXV0aFxWMVxHUEJNZXRhZGF0YeoCCEF1dGg6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_mcp_v1_annotations, file_othra_v1_rules]);
+  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiSgoTQ3JlYXRlT3duT3JnUmVxdWVzdBIaCgRuYW1lGAEgASgJQgy6SAnIAQFyBJDkMgESFwoEc2x1ZxgCIAEoCUIJukgGcgSg5DIBIjAKFENyZWF0ZU93bk9yZ1Jlc3BvbnNlEhgKA29yZxgBIAEoCzILLm9yZy52MS5PcmciDwoNV2hvYW1pUmVxdWVzdCLFAgoOV2hvYW1pUmVzcG9uc2USDgoGc291cmNlGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDQoFZW1haWwYAyABKAkSDAoEbmFtZRgEIAEoCRISCgphdmF0YXJfdXJsGAUgASgJEhAKCGtleV9oaW50GA0gASgJEhAKCG93bmVyX2lkGAcgASgJEhUKDWFjdGl2ZV9vcmdfaWQYCCABKAkSFwoPYWN0aXZlX29yZ19zbHVnGAkgASgJEhkKEWFjdGl2ZV9wcm9qZWN0X2lkGAogASgJEhMKC3Blcm1pc3Npb25zGAsgAygJEhAKCG9wZXJhdG9yGAwgASgIEhQKDG9yZ19jcmVhdGlvbhgOIAEoCBIUCgxmaWxlX3VwbG9hZHMYDyABKAgSEQoJcGFzc3dvcmRzGBAgASgISgQIBhAHUgZrZXlfaWQihgEKFFVwZGF0ZVByb2ZpbGVSZXF1ZXN0Em4KBG5hbWUYASABKAlCYLpIXboBWgoVdXNlci5uYW1lLm1heF9sZW4uMjAwGkF0aGlzLnRyaW0oKS5zaXplKCkgPD0gMjAwID8gJycgOiAnbXVzdCBiZSBhdCBtb3N0IDIwMCBjaGFyYWN0ZXJzJyI2ChVVcGRhdGVQcm9maWxlUmVzcG9uc2USDwoHdXNlcl9pZBgBIAEoCRIMCgRuYW1lGAIgASgJIl4KFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIgChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJQga6SAPIAQESIwoMbmV3X3Bhc3N3b3JkGAIgASgJQg26SArIAQFyBRAMGIACIhgKFkNoYW5nZVBhc3N3b3JkUmVzcG9uc2UiGgoYU2lnbk91dEV2ZXJ5d2hlcmVSZXF1ZXN0Ii8KGVNpZ25PdXRFdmVyeXdoZXJlUmVzcG9uc2USEgoKc2lnbmVkX291dBgBIAEoCCIwChNTZXRBY3RpdmVPcmdSZXF1ZXN0EhkKBm9yZ19pZBgBIAEoCUIJukgGcgSI5DIBIjsKFFNldEFjdGl2ZU9yZ1Jlc3BvbnNlEiMKAm1lGAEgASgLMhcuYXV0aC52MS5XaG9hbWlSZXNwb25zZTLIBAoLQXV0aFNlcnZpY2USlQEKBldob2FtaRIWLmF1dGgudjEuV2hvYW1pUmVxdWVzdBoXLmF1dGgudjEuV2hvYW1pUmVzcG9uc2UiWsrzGFYKC2F1dGhfd2hvYW1pEkJXaG8gdGhpcyBNQ1AgY2xpZW50IGFjdHMgYXM6IHVzZXIgb3Iga2V5LCBhY3RpdmUgb3JnLCBwZXJtaXNzaW9ucy4qA2FwcBJQCg1VcGRhdGVQcm9maWxlEh0uYXV0aC52MS5VcGRhdGVQcm9maWxlUmVxdWVzdBoeLmF1dGgudjEuVXBkYXRlUHJvZmlsZVJlc3BvbnNlIgASUwoOQ2hhbmdlUGFzc3dvcmQSHi5hdXRoLnYxLkNoYW5nZVBhc3N3b3JkUmVxdWVzdBofLmF1dGgudjEuQ2hhbmdlUGFzc3dvcmRSZXNwb25zZSIAElwKEVNpZ25PdXRFdmVyeXdoZXJlEiEuYXV0aC52MS5TaWduT3V0RXZlcnl3aGVyZVJlcXVlc3QaIi5hdXRoLnYxLlNpZ25PdXRFdmVyeXdoZXJlUmVzcG9uc2UiABJNCgxTZXRBY3RpdmVPcmcSHC5hdXRoLnYxLlNldEFjdGl2ZU9yZ1JlcXVlc3QaHS5hdXRoLnYxLlNldEFjdGl2ZU9yZ1Jlc3BvbnNlIgASTQoMQ3JlYXRlT3duT3JnEhwuYXV0aC52MS5DcmVhdGVPd25PcmdSZXF1ZXN0Gh0uYXV0aC52MS5DcmVhdGVPd25PcmdSZXNwb25zZSIAQn4KC2NvbS5hdXRoLnYxQglBdXRoUHJvdG9QAVonYWx0YWx1bmUuaWQvb3RocmEvZ2VuL2dvL2F1dGgvdjE7YXV0aHYxogIDQVhYqgIHQXV0aC5WMcoCB0F1dGhcVjHiAhNBdXRoXFYxXEdQQk1ldGFkYXRh6gIIQXV0aDo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_mcp_v1_annotations, file_org_v1_org, file_othra_v1_rules]);
+
+/**
+ * @generated from message auth.v1.CreateOwnOrgRequest
+ */
+export type CreateOwnOrgRequest = Message<"auth.v1.CreateOwnOrgRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string slug = 2;
+   */
+  slug: string;
+};
+
+/**
+ * Describes the message auth.v1.CreateOwnOrgRequest.
+ * Use `create(CreateOwnOrgRequestSchema)` to create a new message.
+ */
+export const CreateOwnOrgRequestSchema: GenMessage<CreateOwnOrgRequest> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 0);
+
+/**
+ * @generated from message auth.v1.CreateOwnOrgResponse
+ */
+export type CreateOwnOrgResponse = Message<"auth.v1.CreateOwnOrgResponse"> & {
+  /**
+   * @generated from field: org.v1.Org org = 1;
+   */
+  org?: Org;
+};
+
+/**
+ * Describes the message auth.v1.CreateOwnOrgResponse.
+ * Use `create(CreateOwnOrgResponseSchema)` to create a new message.
+ */
+export const CreateOwnOrgResponseSchema: GenMessage<CreateOwnOrgResponse> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 1);
 
 /**
  * @generated from message auth.v1.WhoamiRequest
@@ -26,7 +67,7 @@ export type WhoamiRequest = Message<"auth.v1.WhoamiRequest"> & {
  * Use `create(WhoamiRequestSchema)` to create a new message.
  */
 export const WhoamiRequestSchema: GenMessage<WhoamiRequest> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 0);
+  messageDesc(file_auth_v1_auth, 2);
 
 /**
  * Every id is a public id.
@@ -35,7 +76,7 @@ export const WhoamiRequestSchema: GenMessage<WhoamiRequest> = /*@__PURE__*/
  */
 export type WhoamiResponse = Message<"auth.v1.WhoamiResponse"> & {
   /**
-   * local, basic, apikey or system.
+   * local, oidc, basic, apikey or system.
    *
    * @generated from field: string source = 1;
    */
@@ -115,6 +156,13 @@ export type WhoamiResponse = Message<"auth.v1.WhoamiResponse"> & {
    * @generated from field: bool file_uploads = 15;
    */
   fileUploads: boolean;
+
+  /**
+   * Whether this person can change a password: password sign-in is on here and they have one.
+   *
+   * @generated from field: bool passwords = 16;
+   */
+  passwords: boolean;
 };
 
 /**
@@ -122,7 +170,7 @@ export type WhoamiResponse = Message<"auth.v1.WhoamiResponse"> & {
  * Use `create(WhoamiResponseSchema)` to create a new message.
  */
 export const WhoamiResponseSchema: GenMessage<WhoamiResponse> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 1);
+  messageDesc(file_auth_v1_auth, 3);
 
 /**
  * @generated from message auth.v1.UpdateProfileRequest
@@ -141,7 +189,7 @@ export type UpdateProfileRequest = Message<"auth.v1.UpdateProfileRequest"> & {
  * Use `create(UpdateProfileRequestSchema)` to create a new message.
  */
 export const UpdateProfileRequestSchema: GenMessage<UpdateProfileRequest> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 2);
+  messageDesc(file_auth_v1_auth, 4);
 
 /**
  * @generated from message auth.v1.UpdateProfileResponse
@@ -165,7 +213,7 @@ export type UpdateProfileResponse = Message<"auth.v1.UpdateProfileResponse"> & {
  * Use `create(UpdateProfileResponseSchema)` to create a new message.
  */
 export const UpdateProfileResponseSchema: GenMessage<UpdateProfileResponse> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 3);
+  messageDesc(file_auth_v1_auth, 5);
 
 /**
  * @generated from message auth.v1.ChangePasswordRequest
@@ -187,7 +235,7 @@ export type ChangePasswordRequest = Message<"auth.v1.ChangePasswordRequest"> & {
  * Use `create(ChangePasswordRequestSchema)` to create a new message.
  */
 export const ChangePasswordRequestSchema: GenMessage<ChangePasswordRequest> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 4);
+  messageDesc(file_auth_v1_auth, 6);
 
 /**
  * @generated from message auth.v1.ChangePasswordResponse
@@ -200,7 +248,7 @@ export type ChangePasswordResponse = Message<"auth.v1.ChangePasswordResponse"> &
  * Use `create(ChangePasswordResponseSchema)` to create a new message.
  */
 export const ChangePasswordResponseSchema: GenMessage<ChangePasswordResponse> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 5);
+  messageDesc(file_auth_v1_auth, 7);
 
 /**
  * @generated from message auth.v1.SignOutEverywhereRequest
@@ -213,7 +261,7 @@ export type SignOutEverywhereRequest = Message<"auth.v1.SignOutEverywhereRequest
  * Use `create(SignOutEverywhereRequestSchema)` to create a new message.
  */
 export const SignOutEverywhereRequestSchema: GenMessage<SignOutEverywhereRequest> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 6);
+  messageDesc(file_auth_v1_auth, 8);
 
 /**
  * @generated from message auth.v1.SignOutEverywhereResponse
@@ -232,7 +280,7 @@ export type SignOutEverywhereResponse = Message<"auth.v1.SignOutEverywhereRespon
  * Use `create(SignOutEverywhereResponseSchema)` to create a new message.
  */
 export const SignOutEverywhereResponseSchema: GenMessage<SignOutEverywhereResponse> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 7);
+  messageDesc(file_auth_v1_auth, 9);
 
 /**
  * @generated from message auth.v1.SetActiveOrgRequest
@@ -251,7 +299,7 @@ export type SetActiveOrgRequest = Message<"auth.v1.SetActiveOrgRequest"> & {
  * Use `create(SetActiveOrgRequestSchema)` to create a new message.
  */
 export const SetActiveOrgRequestSchema: GenMessage<SetActiveOrgRequest> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 8);
+  messageDesc(file_auth_v1_auth, 10);
 
 /**
  * @generated from message auth.v1.SetActiveOrgResponse
@@ -270,7 +318,7 @@ export type SetActiveOrgResponse = Message<"auth.v1.SetActiveOrgResponse"> & {
  * Use `create(SetActiveOrgResponseSchema)` to create a new message.
  */
 export const SetActiveOrgResponseSchema: GenMessage<SetActiveOrgResponse> = /*@__PURE__*/
-  messageDesc(file_auth_v1_auth, 9);
+  messageDesc(file_auth_v1_auth, 11);
 
 /**
  * @generated from service auth.v1.AuthService
@@ -325,6 +373,16 @@ export const AuthService: GenService<{
     methodKind: "unary";
     input: typeof SetActiveOrgRequestSchema;
     output: typeof SetActiveOrgResponseSchema;
+  },
+  /**
+   * CreateOwnOrg creates an organization the signed-in person owns, with its default project; cloud signup's one org per person.
+   *
+   * @generated from rpc auth.v1.AuthService.CreateOwnOrg
+   */
+  createOwnOrg: {
+    methodKind: "unary";
+    input: typeof CreateOwnOrgRequestSchema;
+    output: typeof CreateOwnOrgResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_auth_v1_auth, 0);

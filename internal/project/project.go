@@ -36,6 +36,17 @@ const (
 	DefaultName = "Default"
 )
 
+// SystemHandle is the console project's issuer handle (/p/system); it is reserved, so no other project can take it.
+const SystemHandle = "system"
+
+// SystemSlug is the console project's slug in the system org.
+const SystemSlug = "console"
+
+const (
+	systemName        = "Console"
+	systemDisplayName = "Othra"
+)
+
 //nolint:gochecknoglobals // immutable compiled pattern.
 var slugRe = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$`)
 
@@ -106,6 +117,19 @@ func NewProject(orgID uuid.UUID, slug, name string, createdBy uuid.UUID) (*Proje
 	return p, nil
 }
 
+// NewSystemProject constructs the console project of the system org: issuer handle SystemHandle, branded "Othra".
+func NewSystemProject(orgID uuid.UUID) (*Project, error) {
+	p, err := NewProject(orgID, SystemSlug, systemName, uuid.Nil)
+	if err != nil {
+		return nil, err
+	}
+	p.IssuerHandle, p.DisplayName = SystemHandle, systemDisplayName
+	return p, nil
+}
+
+// IsSystem reports whether p is the console project, which Othra manages.
+func (p *Project) IsSystem() bool { return p.IssuerHandle == SystemHandle }
+
 // Update applies a new display name and slug.
 func (p *Project) Update(name, slug string) error {
 	n := strings.TrimSpace(name)
@@ -142,7 +166,7 @@ func ValidateName(n string) error {
 
 //nolint:gochecknoglobals // a fixed list, the one place reserved issuer handles live.
 var reservedIssuerHandles = []string{
-	"system", "account", "admin", "api", "auth", "console", "default", "healthz", "install", "login", "mcp",
+	SystemHandle, "account", "admin", "api", "auth", "console", "default", "healthz", "install", "login", "mcp",
 	"oauth", "oauth2", "readyz", "static", "well-known", "www", "othra", "altalune",
 }
 
@@ -350,6 +374,7 @@ func projectToProto(p *Project, orgPublicID, issuerURL, logoURL string) *project
 		IssuerHandle:         p.IssuerHandle,
 		IssuerUrl:            issuerURL,
 		IssuerHandleLocked:   p.IssuerHandleLockedAt != nil,
+		System:               p.IsSystem(),
 		IssuerHandleLockedAt: timestampOrNil(p.IssuerHandleLockedAt),
 		DisplayName:          p.DisplayName,
 		PrimaryColor:         p.PrimaryColor,

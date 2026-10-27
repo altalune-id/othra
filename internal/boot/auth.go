@@ -71,8 +71,22 @@ func stateSecret(c config.HTTPConfig, log *slog.Logger) ([]byte, error) {
 	return b, nil
 }
 
-func firstBoot(ctx context.Context, cfg config.Config, s *Services, log *slog.Logger, logURL bool) error {
+// NOTE: serve is a process that serves the console; an operator command boots with its own config, so it never rewrites the console client.
+func firstBoot(ctx context.Context, cfg config.Config, s *Services, log *slog.Logger, serve bool) error {
 	log = orDiscard(log)
+	if err := installIfNeeded(ctx, cfg, s, log, serve); err != nil {
+		return err
+	}
+	if !serve || (!s.Caps.LocalLogin && !s.Caps.BasicAuth) {
+		return nil
+	}
+	if err := reconcileConsole(ctx, cfg.HTTP, s, log); err != nil {
+		return err
+	}
+	return logUpstreamDrift(ctx, cfg.Upstreams, s, log)
+}
+
+func installIfNeeded(ctx context.Context, cfg config.Config, s *Services, log *slog.Logger, logURL bool) error {
 	switch {
 	case s.Caps.BasicAuth:
 		return s.Install.EnsureBasicSystemOrg(ctx)
@@ -83,8 +97,14 @@ func firstBoot(ctx context.Context, cfg config.Config, s *Services, log *slog.Lo
 		return fmt.Errorf("boot: legal documents: %w", err)
 	}
 	required, err := s.Install.Required(ctx, false)
-	if err != nil || !required {
+	switch {
+	case err != nil:
 		return err
+	case !required && s.Caps.EnvGenesis:
+		logGenesisIgnored(log)
+		return nil
+	case !required:
+		return nil
 	}
 	if s.Caps.EnvGenesis {
 		return installGenesis(ctx, cfg.Auth.Genesis, s.Install, log)
@@ -100,12 +120,21 @@ func installGenesis(ctx context.Context, g config.GenesisConfig, svc *install.Se
 	_, err := svc.Install(ctx, install.Request{Email: g.Email, Password: g.Password})
 	switch {
 	case install.IsAlreadyInstalledError(err):
+		logGenesisIgnored(log)
 		return nil
 	case err != nil:
 		return fmt.Errorf("boot: install from auth.genesis: %w", err)
 	}
+	if !svc.Passwords() {
+		log.Info("boot: installed the system org and invited the first owner from auth.genesis; they sign in with Continue with Othra")
+		return nil
+	}
 	log.Info("boot: installed the first owner from auth.genesis")
 	return nil
+}
+
+func logGenesisIgnored(log *slog.Logger) {
+	log.Info("boot: auth.genesis is set but this instance is already installed; it is ignored")
 }
 
 // SECURITY: only local login has an install page; a failed check keeps the gate shut rather than open.

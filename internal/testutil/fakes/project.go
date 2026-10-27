@@ -131,3 +131,9 @@ func (f *ProjectStore) SetLogoFile(_ context.Context, _ uuid.UUID, fileID *uuid.
 	f.Project.LogoFileID = fileID
 	return old, nil
 }
+
+// OrgSlugs is a project.OrgSlugs that names every org by its own value.
+type OrgSlugs string
+
+// Slug returns s.
+func (s OrgSlugs) Slug(context.Context, uuid.UUID) (string, error) { return string(s), nil }

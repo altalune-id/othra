@@ -6,6 +6,7 @@ import { useErrorMessage } from '#base/composables/useErrorMessage';
 import { useValidation } from '#base/composables/useValidation';
 import { errorCode } from '#base/lib/apperror/message';
 import { ChangePasswordRequestSchema, UpdateProfileRequestSchema } from '#gen/auth/v1/auth_pb';
+import { isPerson } from '~/lib/auth/person';
 import { siblingURL } from '~/lib/auth/urls';
 import { useAuthStore } from '~/stores/auth';
 
@@ -29,10 +30,11 @@ export function useProfile() {
   const confirmingSignOut = ref(false);
   const signOutError = ref<ShownError | null>(null);
 
-  const isPerson = computed(() => auth.me?.source === 'local' && !!auth.me.userId);
+  const signedIn = computed(() => isPerson(auth.me));
+  const canChangePassword = computed(() => signedIn.value && auth.me?.passwords === true);
   const person = computed<AvatarPerson | null>(() => {
     const me = auth.me;
-    return isPerson.value && me ? { id: me.userId, name: me.name, email: me.email, avatarUrl: me.avatarUrl } : null;
+    return signedIn.value && me ? { id: me.userId, name: me.name, email: me.email, avatarUrl: me.avatarUrl } : null;
   });
 
   async function load() {
@@ -129,7 +131,8 @@ export function useProfile() {
     passwordFieldErrors: passwordValidation.errors,
     confirmingSignOut,
     signOutError,
-    isPerson,
+    isPerson: signedIn,
+    canChangePassword,
     person,
     load,
     saveName,

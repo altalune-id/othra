@@ -28,9 +28,11 @@ func TestHostedPages_IgnoreTheAdminSessionAndWelcomeGate(t *testing.T) {
 	svcs, cfg := migratedServices(t, cfg)
 	svcs.Caps.EnvGenesis = true
 	require.NoError(t, firstBoot(t.Context(), cfg, svcs, testLogger(), false))
-	public, hosted := buildIssuerRoutes(cfg, svcs, testLogger(), nil)
+	inProcess := http.NewServeMux()
+	rp := buildConsoleRP(cfg, svcs, inProcess)
+	public, hosted := buildIssuerRoutes(cfg, svcs, inProcess, testLogger(), nil)
 	h := buildHTTPHandler(httpSurfaces{
-		routes: buildRoutes(cfg, svcs, nil, nil), public: public, hosted: hosted, session: buildSessionMiddleware(svcs, nil),
+		routes: buildRoutes(cfg, svcs, rp, nil, nil), public: public, hosted: hosted, session: buildSessionMiddleware(svcs, nil),
 		requireAcceptance: true, termsUpdated: svcs.Legal.TermsUpdatedAt(),
 	})
 

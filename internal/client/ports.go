@@ -14,6 +14,8 @@ type Refs interface {
 // IssuerLock freezes a project's issuer handle; it joins the caller's unit of work.
 type IssuerLock interface {
 	LockIssuerHandle(ctx context.Context, projectID uuid.UUID) error
+	// IsSystem reports whether the project is the console project, which takes no client but its seeded one.
+	IsSystem(ctx context.Context, projectID uuid.UUID) (bool, error)
 }
 
 // Projects runs fn once for every project, with ctx scoped to its org and the project.

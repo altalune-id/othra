@@ -20,7 +20,7 @@ type setPasswordCall struct {
 func runSetPassword(t *testing.T, fail error, stdin string, args ...string) (string, *setPasswordCall, error) {
 	t.Helper()
 	got := &setPasswordCall{}
-	cmd := user.NewCmd(func(_ context.Context, email, password string) error {
+	cmd := user.NewSetPasswordCmd(func(_ context.Context, email, password string) error {
 		got.email, got.password = email, password
 		got.calls++
 		return fail
@@ -29,7 +29,7 @@ func runSetPassword(t *testing.T, fail error, stdin string, args ...string) (str
 	cmd.SetIn(strings.NewReader(stdin))
 	cmd.SetOut(buf)
 	cmd.SetErr(buf)
-	cmd.SetArgs(append([]string{"set-password"}, args...))
+	cmd.SetArgs(args)
 	err := cmd.ExecuteContext(t.Context())
 	return buf.String(), got, err
 }
@@ -80,12 +80,12 @@ func (f *fakeTerminal) ReadPassword() ([]byte, error) {
 }
 
 func TestSetPassword_PromptSaysTheMinimum(t *testing.T) {
-	cmd := user.NewCmd(func(context.Context, string, string) error { return nil })
+	cmd := user.NewSetPasswordCmd(func(context.Context, string, string) error { return nil })
 	errOut := new(bytes.Buffer)
 	cmd.SetIn(&fakeTerminal{Reader: strings.NewReader(""), answers: []string{"a brand new password", "a brand new password"}})
 	cmd.SetOut(new(bytes.Buffer))
 	cmd.SetErr(errOut)
-	cmd.SetArgs([]string{"set-password", "--email", "ada@example.com"})
+	cmd.SetArgs([]string{"--email", "ada@example.com"})
 	require.NoError(t, cmd.ExecuteContext(t.Context()))
 	assert.Contains(t, errOut.String(), "New password (at least 12 characters): ")
 	assert.NotContains(t, errOut.String(), "a brand new password")

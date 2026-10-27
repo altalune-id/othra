@@ -128,7 +128,7 @@ func RegisterClientServiceTools(reg *mcp.Registry, h clientv1connect.ClientServi
 	}, h)
 	reg.Register(mcp.ToolSpec{
 		Name:        ClientUpdateToolName,
-		Description: "Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change.",
+		Description: "Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change, and the console client (registration SYSTEM) can't be changed.",
 		Scopes:      permissionsFor(clientv1connect.ClientServiceUpdateClientProcedure),
 		Mutation:    true,
 		Destructive: true,
@@ -157,7 +157,7 @@ func RegisterClientServiceTools(reg *mcp.Registry, h clientv1connect.ClientServi
 	}, h)
 	reg.Register(mcp.ToolSpec{
 		Name:        ClientDeleteToolName,
-		Description: "Delete an OAuth client and its secrets and links. Apps using its client_id stop signing in.",
+		Description: "Delete an OAuth client and its secrets and links. Apps using its client_id stop signing in. The console client (registration SYSTEM) can't be deleted.",
 		Scopes:      permissionsFor(clientv1connect.ClientServiceDeleteClientProcedure),
 		Mutation:    true,
 		Destructive: true,

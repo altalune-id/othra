@@ -81,3 +81,12 @@ func TestNewSystemOrg(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, plain.IsSystem)
 }
+
+func TestOrgToProto_System(t *testing.T) {
+	sys, err := NewSystemOrg("default", "Default", uuid.Nil)
+	require.NoError(t, err)
+	assert.True(t, OrgProto(sys).GetSystem())
+	o, err := NewOrg("acme", "Acme", uuid.New())
+	require.NoError(t, err)
+	assert.False(t, OrgProto(o).GetSystem())
+}

@@ -104,7 +104,10 @@ func (s *Service) Admit(ctx context.Context, orgID, projectID uuid.UUID, req Adm
 			if out, err = s.store.SaveShadow(ctx, fresh); err != nil {
 				return err
 			}
-			if changed(old, out) && s.onMetadataChange != nil {
+			if changed(old, out) {
+				if s.onMetadataChange == nil {
+					return errNoMetadataHook
+				}
 				if err := s.onMetadataChange(ctx, orgID, projectID, out.ID); err != nil {
 					return err
 				}

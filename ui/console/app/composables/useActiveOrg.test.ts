@@ -19,19 +19,25 @@ describe('useActiveOrg', () => {
   });
 
   it('switches a person to the org they open', async () => {
-    const setActiveOrg = setup({ source: 'local', activeOrgSlug: 'acme' });
+    const setActiveOrg = setup({ source: 'local', userId: 'u1', activeOrgSlug: 'acme' });
+    await useActiveOrg().enter('beta');
+    expect(setActiveOrg).toHaveBeenCalledWith({ orgId: 'betaId' });
+  });
+
+  it('switches someone who signed in with Continue with Othra too', async () => {
+    const setActiveOrg = setup({ source: 'oidc', userId: 'u1', activeOrgSlug: 'acme' });
     await useActiveOrg().enter('beta');
     expect(setActiveOrg).toHaveBeenCalledWith({ orgId: 'betaId' });
   });
 
   it('does nothing when the org is already active', async () => {
-    const setActiveOrg = setup({ source: 'local', activeOrgSlug: 'beta' });
+    const setActiveOrg = setup({ source: 'local', userId: 'u1', activeOrgSlug: 'beta' });
     await useActiveOrg().enter('beta');
     expect(setActiveOrg).not.toHaveBeenCalled();
   });
 
   it('does nothing for an org the person does not have (the page answers not found)', async () => {
-    const setActiveOrg = setup({ source: 'local', activeOrgSlug: 'acme' });
+    const setActiveOrg = setup({ source: 'local', userId: 'u1', activeOrgSlug: 'acme' });
     await useActiveOrg().enter('foreign');
     expect(setActiveOrg).not.toHaveBeenCalled();
   });
@@ -46,15 +52,15 @@ describe('useActiveOrg', () => {
   });
 
   it('switches an operator to an org they belong to, so project pages there load', async () => {
-    const setActiveOrg = setup({ source: 'local', operator: true, activeOrgSlug: 'acme' });
+    const setActiveOrg = setup({ source: 'local', userId: 'u1', operator: true, activeOrgSlug: 'acme' });
     await useActiveOrg().enter('beta');
     expect(setActiveOrg).toHaveBeenCalledWith({ orgId: 'betaId' });
   });
 
   it('keeps an operator in an org they do not belong to when the switch is refused', async () => {
-    setup({ source: 'local', operator: true, activeOrgSlug: 'acme' });
+    setup({ source: 'local', userId: 'u1', operator: true, activeOrgSlug: 'acme' });
     const setActiveOrg = vi.fn().mockRejectedValue(new Error('not found'));
-    setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', operator: true, activeOrgSlug: 'acme' }), setActiveOrg });
+    setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', userId: 'u1', operator: true, activeOrgSlug: 'acme' }), setActiveOrg });
     await expect(useActiveOrg().enter('beta')).resolves.toBeUndefined();
     expect(setActiveOrg).toHaveBeenCalledWith({ orgId: 'betaId' });
   });
@@ -66,9 +72,9 @@ describe('useActiveOrg', () => {
   });
 
   it('lets a failed switch surface', async () => {
-    setup({ source: 'local', activeOrgSlug: 'acme' });
+    setup({ source: 'local', userId: 'u1', activeOrgSlug: 'acme' });
     setClient('$authClient', {
-      whoami: vi.fn().mockResolvedValue({ source: 'local', activeOrgSlug: 'acme' }),
+      whoami: vi.fn().mockResolvedValue({ source: 'local', userId: 'u1', activeOrgSlug: 'acme' }),
       setActiveOrg: vi.fn().mockRejectedValue(new Error('boom')),
     });
     await expect(useActiveOrg().enter('beta')).rejects.toThrow('boom');

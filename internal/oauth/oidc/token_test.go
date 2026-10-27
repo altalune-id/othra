@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -125,6 +126,9 @@ func newTokenFixture(t *testing.T) *tokenFixture {
 				Secrets: []client.Secret{(client.Secret{}).WithHash(ksecret.Versioned("a%zz"))},
 			},
 			"cli": {ID: uuid.New(), PublicID: "cli", TokenEndpointAuthMethod: client.AuthNone, GrantTypes: []string{"authorization_code", "refresh_token"}},
+			"console": {
+				ID: uuid.New(), PublicID: "console", TokenEndpointAuthMethod: client.AuthNone, GrantTypes: []string{"authorization_code"}, System: true,
+			},
 		},
 		Grants: f.grants, EndUsers: f.users, IDTokens: f.idTokens, IDTokenTTL: 5 * time.Minute,
 		Limits: layout.Limits{Limiter: f.limiter},
@@ -216,6 +220,27 @@ func TestToken_PostAndNoneClients(t *testing.T) {
 
 	rec = f.post(t, tokenURL, codeForm("client_id", "basic"), "Authorization", basic("basic", secret))
 	assert.Equal(t, http.StatusOK, rec.Code, "client_id beside Basic is the same client")
+}
+
+// SECURITY: RFC 6749 §10.2, the console's secretless client redeems codes only through the in-process transport.
+func TestToken_SystemClientOnlyInProcess(t *testing.T) {
+	f := newTokenFixture(t)
+	rec := f.post(t, tokenURL, codeForm("client_id", "console"))
+	assert.Equal(t, http.StatusUnauthorized, rec.Code, "over the network: %s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), "invalid_client")
+
+	f.limiter.allow = false
+	in := &http.Client{Transport: oidc.InProcess(f.mux)}
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "http://othra.test"+tokenURL, strings.NewReader(codeForm("client_id", "console").Encode()))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := in.Do(req)
+	require.NoError(t, err)
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	require.NoError(t, resp.Body.Close())
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "in process, and never IP rate limited: %s", body)
+	assert.Equal(t, "no-store", resp.Header.Get("Cache-Control"))
 }
 
 // SECURITY: RFC 6749 §5.2, every client authentication failure is one 401 invalid_client; Basic gets its challenge.

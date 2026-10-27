@@ -60,19 +60,6 @@ func IsGenesisInCloudError(err error) bool {
 	return ok
 }
 
-// CloudRequiresOIDCError reports cloud mode, which needs OIDC sign-in for the console and is not available yet.
-type CloudRequiresOIDCError struct{}
-
-func (*CloudRequiresOIDCError) Error() string {
-	return "config: mode cloud requires OIDC sign-in, which is not available yet; use mode selfhosted"
-}
-
-// IsCloudRequiresOIDCError reports whether err's tree contains a *CloudRequiresOIDCError.
-func IsCloudRequiresOIDCError(err error) bool {
-	_, ok := errors.AsType[*CloudRequiresOIDCError](err)
-	return ok
-}
-
 // RLSBypassError reports db.rls.allowBypass outside development: production and cloud always enforce row-level security.
 type RLSBypassError struct{}
 

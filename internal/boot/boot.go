@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"slices"
 
 	"altalune.id/othra/apperror"
@@ -28,6 +29,9 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	}
 	if o.logger != nil {
 		log = o.logger
+	}
+	if err := checkPublicBase(cfg.HTTP); err != nil {
+		return nil, err
 	}
 
 	tp, mp, shutdown, err := setupTelemetry(ctx, telemetryConfig(cfg.Telemetry), log)
@@ -170,7 +174,9 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	}
 	consoleHandler := buildConsoleHandler(cfg.HTTP.BasePath)
 	_, portalAssets := buildPortal(cfg.HTTP.BasePath)
-	issuerPublic, hostedPages := buildIssuerRoutes(cfg, svcs, log, k.Reporter.Unexpected)
+	inProcess := http.NewServeMux()
+	consoleRP := buildConsoleRP(cfg, svcs, inProcess)
+	issuerPublic, hostedPages := buildIssuerRoutes(cfg, svcs, inProcess, log, k.Reporter.Unexpected)
 	mcpServer := buildMCPServer(cfg.MCP, svcs, log, mcpPublicHost(cfg.HTTP)...)
 
 	sup := worker.New(log)
@@ -185,7 +191,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 			console:    consoleHandler,
 			portal:     portalAssets,
 			mcp:        buildMCPHandler(mcpServer, svcs, log),
-			routes:     buildRoutes(cfg, svcs, log, k.Reporter.Unexpected),
+			routes:     buildRoutes(cfg, svcs, consoleRP, log, k.Reporter.Unexpected),
 			public:     issuerPublic,
 			hosted:     hostedPages,
 			images:     hostedImageBases(cfg.Storage),
@@ -273,5 +279,7 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		Supervisor:        sup,
 		MCP:               mcpServer,
 		shutdownTelemetry: shutdown,
+		consoleSignIn:     layout.Path(cfg.HTTP.BasePath, "/login/oidc"),
+		log:               orDiscard(log),
 	}, nil
 }

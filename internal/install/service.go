@@ -22,28 +22,41 @@ const (
 	defaultOrgName = "Default"
 )
 
-// Service installs the instance and reports whether it still needs installing.
-type Service struct {
-	uow      db.Transactor
-	users    UserCreator
-	orgs     SystemOrgs
-	members  Owners
-	projects DefaultProjects
-	terms    Terms
-	seed     func(ctx context.Context, orgID, projectID uuid.UUID) error
+// Console is where the console client sends people back: its derived redirect and sign-out URIs.
+type Console struct {
+	RedirectURI   string
+	PostLogoutURI string
 }
 
-// NewService builds a Service over the domain services it writes through; seed, when not nil, runs once on the project install creates.
-func NewService(
-	uow db.Transactor, users UserCreator, orgs SystemOrgs, members Owners, projects DefaultProjects, terms Terms,
-	seed func(ctx context.Context, orgID, projectID uuid.UUID) error,
-) *Service {
-	return &Service{uow: uow, users: users, orgs: orgs, members: members, projects: projects, terms: terms, seed: seed}
+// Deps are the services install writes through.
+type Deps struct {
+	Transactor db.Transactor
+	Users      UserCreator
+	Orgs       SystemOrgs
+	Members    Owners
+	Projects   Projects
+	Clients    ConsoleClients
+	Invites    OwnerInvites
+	Terms      Terms
+	Console    Console
+	// Passwords is whether console passwords are on; when off, install takes an email and invites the first owner.
+	Passwords bool
+	// Seed, when not nil, runs once on the console project install creates.
+	Seed func(ctx context.Context, orgID, projectID uuid.UUID) error
 }
+
+// Service installs the instance and reports whether it still needs installing.
+type Service struct{ d Deps }
+
+// NewService builds a Service over d.
+func NewService(d Deps) *Service { return &Service{d: d} }
+
+// Passwords reports whether install creates the first owner with a password, or invites them by email.
+func (s *Service) Passwords() bool { return s.d.Passwords }
 
 // Required reports whether the instance still needs installing: no system org, or in local mode no owner of it.
 func (s *Service) Required(ctx context.Context, basic bool) (bool, error) {
-	sys, err := s.orgs.System(ctx)
+	sys, err := s.d.Orgs.System(ctx)
 	if org.IsNotFoundError(err) {
 		return true, nil
 	}
@@ -53,21 +66,26 @@ func (s *Service) Required(ctx context.Context, basic bool) (bool, error) {
 	if basic {
 		return false, nil
 	}
-	owners, err := s.members.CountOwners(ctx, sys.ID)
-	if err != nil {
-		return false, err
-	}
-	return owners == 0, nil
+	return s.ownerless(ctx, sys.ID)
 }
 
-// Install creates the first owner and claims or creates the system org and its default project, all in one transaction.
+func (s *Service) ownerless(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	owners, err := s.d.Members.CountOwners(ctx, orgID)
+	if err != nil || owners > 0 {
+		return false, err
+	}
+	pending, err := s.d.Invites.PendingOwner(ctx, orgID)
+	return !pending, err
+}
+
+// Install sets up the system org, its projects and the console client with the first owner (an owner invite when passwords are off).
 func (s *Service) Install(ctx context.Context, r Request) (*user.User, error) {
 	sysID, err := s.systemOrgID(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var created *user.User
-	err = s.uow.RunInTx(tenant.Into(ctx, tenant.Context{OrgID: sysID}), func(ctx context.Context) error {
+	err = s.d.Transactor.RunInTx(tenant.Into(ctx, tenant.Context{OrgID: sysID}), func(ctx context.Context) error {
 		if err := db.LockInTx(ctx, lockName); err != nil {
 			return err
 		}
@@ -75,25 +93,31 @@ func (s *Service) Install(ctx context.Context, r Request) (*user.User, error) {
 		if err != nil {
 			return err
 		}
-		u, err := s.users.Create(ctx, user.CreateRequest{Email: r.Email, Name: r.Name, Password: r.Password})
+		if !s.d.Passwords {
+			if sys, err = s.systemOrg(ctx, sys, sysID, r.OrgName, uuid.Nil); err != nil {
+				return err
+			}
+			if _, err := s.d.Invites.InviteOwner(ctx, sys.ID, r.Email); err != nil {
+				return err
+			}
+			return s.ensureProjects(ctx, sys.ID)
+		}
+		u, err := s.d.Users.Create(ctx, user.CreateRequest{Email: r.Email, Name: r.Name, Password: r.Password})
 		if err != nil {
 			return err
 		}
 		if r.AcceptTerms {
-			if _, err := s.terms.Accept(ctx, u.ID, legal.SourceInstall); err != nil {
+			if _, err := s.d.Terms.Accept(ctx, u.ID, legal.SourceInstall); err != nil {
 				return err
 			}
 		}
-		if sys == nil {
-			name := cmp.Or(strings.TrimSpace(r.OrgName), defaultOrgName)
-			if sys, err = s.orgs.CreateSystem(ctx, org.CreateRequest{ID: sysID, Name: name, CreatedBy: u.ID}); err != nil {
-				return err
-			}
-		}
-		if _, err := s.members.Add(ctx, sys.ID, u.ID, member.RoleOwner); err != nil {
+		if sys, err = s.systemOrg(ctx, sys, sysID, r.OrgName, u.ID); err != nil {
 			return err
 		}
-		if err := s.ensureDefaultProject(ctx, sys.ID); err != nil {
+		if _, err := s.d.Members.Add(ctx, sys.ID, u.ID, member.RoleOwner); err != nil {
+			return err
+		}
+		if err := s.ensureProjects(ctx, sys.ID); err != nil {
 			return err
 		}
 		created = u
@@ -119,13 +143,13 @@ func (s *Service) ensureBasicSystemOrg(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.uow.RunInTx(tenant.Into(ctx, tenant.Context{OrgID: sysID}), func(ctx context.Context) error {
+	return s.d.Transactor.RunInTx(tenant.Into(ctx, tenant.Context{OrgID: sysID}), func(ctx context.Context) error {
 		if err := db.LockInTx(ctx, lockName); err != nil {
 			return err
 		}
-		sys, err := s.orgs.System(ctx)
+		sys, err := s.d.Orgs.System(ctx)
 		if org.IsNotFoundError(err) {
-			sys, err = s.orgs.CreateSystem(ctx, org.CreateRequest{ID: sysID, Name: defaultOrgName})
+			sys, err = s.d.Orgs.CreateSystem(ctx, org.CreateRequest{ID: sysID, Name: defaultOrgName})
 		}
 		if err != nil {
 			return err
@@ -133,13 +157,13 @@ func (s *Service) ensureBasicSystemOrg(ctx context.Context) error {
 		if sys.ID != sysID {
 			return errSystemOrgMoved
 		}
-		return s.ensureDefaultProject(ctx, sys.ID)
+		return s.ensureProjects(ctx, sys.ID)
 	})
 }
 
 // SECURITY: the system org is scoped by its own id, chosen before the transaction opens; a new one gets a fresh id.
 func (s *Service) systemOrgID(ctx context.Context) (uuid.UUID, error) {
-	sys, err := s.orgs.System(ctx)
+	sys, err := s.d.Orgs.System(ctx)
 	switch {
 	case org.IsNotFoundError(err):
 		return uuid.New(), nil
@@ -150,7 +174,7 @@ func (s *Service) systemOrgID(ctx context.Context) (uuid.UUID, error) {
 }
 
 func (s *Service) ownerlessSystemOrg(ctx context.Context, scoped uuid.UUID) (*org.Org, error) {
-	sys, err := s.orgs.System(ctx)
+	sys, err := s.d.Orgs.System(ctx)
 	if org.IsNotFoundError(err) {
 		return nil, nil
 	}
@@ -160,24 +184,45 @@ func (s *Service) ownerlessSystemOrg(ctx context.Context, scoped uuid.UUID) (*or
 	if sys.ID != scoped {
 		return nil, &AlreadyInstalledError{}
 	}
-	owners, err := s.members.CountOwners(ctx, sys.ID)
-	if err != nil {
+	ownerless, err := s.ownerless(ctx, sys.ID)
+	switch {
+	case err != nil:
 		return nil, err
-	}
-	if owners > 0 {
+	case !ownerless:
 		return nil, &AlreadyInstalledError{}
 	}
 	return sys, nil
 }
 
-func (s *Service) ensureDefaultProject(ctx context.Context, orgID uuid.UUID) error {
-	_, err := s.projects.BySlug(ctx, orgID, project.DefaultSlug)
-	if err == nil || !project.IsNotFoundError(err) {
+func (s *Service) systemOrg(ctx context.Context, sys *org.Org, id uuid.UUID, name string, createdBy uuid.UUID) (*org.Org, error) {
+	if sys != nil {
+		return sys, nil
+	}
+	return s.d.Orgs.CreateSystem(ctx, org.CreateRequest{ID: id, Name: cmp.Or(strings.TrimSpace(name), defaultOrgName), CreatedBy: createdBy})
+}
+
+// NOTE: the system org's two projects: default, the first app's, and the console project with its client and upstream IdP seed.
+func (s *Service) ensureProjects(ctx context.Context, orgID uuid.UUID) error {
+	_, err := s.d.Projects.BySlug(ctx, orgID, project.DefaultSlug)
+	if project.IsNotFoundError(err) {
+		_, err = s.d.Projects.Create(ctx, project.CreateRequest{OrgID: orgID, Slug: project.DefaultSlug, Name: project.DefaultName})
+	}
+	if err != nil {
 		return err
 	}
-	p, err := s.projects.Create(ctx, project.CreateRequest{OrgID: orgID, Slug: project.DefaultSlug, Name: project.DefaultName})
-	if err != nil || s.seed == nil {
+	_, err = s.d.Projects.BySlug(ctx, orgID, project.SystemSlug)
+	if !project.IsNotFoundError(err) {
 		return err
 	}
-	return s.seed(ctx, orgID, p.ID)
+	p, err := s.d.Projects.CreateSystem(ctx, orgID)
+	if err != nil {
+		return err
+	}
+	if s.d.Seed != nil {
+		if err := s.d.Seed(ctx, orgID, p.ID); err != nil {
+			return err
+		}
+	}
+	_, err = s.d.Clients.CreateSystem(ctx, orgID, p.ID, s.d.Console.RedirectURI, s.d.Console.PostLogoutURI)
+	return err
 }

@@ -174,6 +174,22 @@ once, and verifiers that cached the old key set reject new tokens until they fet
 Changing `secrets.encryptionKey` makes every sealed private key unreadable (the published public keys stay
 servable). After a key change, run `othra project keys rotate <project> --now` for every project.
 
+### Console sign-in and break-glass
+
+Admins sign in at `/login` with a password (self-hosted, when `auth.password.enabled` is on) or with Continue with
+Othra, which goes through the deployment's own `/p/system` issuer. Cloud has no passwords.
+
+Locked out? Both commands need database access, like `othra serve`:
+
+- `othra admin set-password --email <email> --password-stdin` sets a console password and signs out every session.
+  It is refused when passwords are off.
+- `othra admin sign-in-link <email>` prints a one-time sign-in link for an existing console account, or for the first
+  owner an install with passwords off invited. It works once, for the magic-link TTL (15 minutes by default), and needs
+  no email server. It needs `http.baseURL`. Treat it like a password.
+
+Use one public URL (`http.baseURL`) per deployment. Every `othra serve` boot points the console's sign-in back at it, so
+instances with different URLs would keep undoing each other. Operator commands never change it.
+
 ## Everyday commands
 
 | Command                      | What it does                                                         |

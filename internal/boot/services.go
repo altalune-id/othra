@@ -2,6 +2,7 @@ package boot
 
 import (
 	"context"
+	"slices"
 	"sync/atomic"
 	"time"
 
@@ -109,6 +110,9 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		}, publicBase(cfg.HTTP), k.Reporter.Unexpected).WithStorage(files)
 	orgs := org.NewService(orgStore, uow, memberPermissions{members: members},
 		func(ctx context.Context, o *org.Org) error {
+			if err := ownNewOrg(ctx, users, members, o); err != nil {
+				return err
+			}
 			_, err := projects.Create(ctx, project.CreateRequest{OrgID: o.ID, Slug: project.DefaultSlug, Name: project.DefaultName})
 			return err
 		}, k.Reporter.Unexpected).WithCreation(caps.OrgCreation)
@@ -130,21 +134,6 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	keyAuthn := apikey.NewAuthenticator(apiKeyStore, keyUsage, keyScheme, owners, k.Reporter.Unexpected)
 	sessions := buildSessionStore(k, cfg, sl, secretsLog(k.Log, caps))
 	mailQueue := buildMailQueue(k.Pool, cfg, sl)
-	authn := auth.NewService(auth.Deps{
-		Users:      users,
-		Members:    members,
-		Orgs:       orgs,
-		Projects:   projects,
-		Sessions:   sessions,
-		Passwords:  users,
-		Basic:      basicCredentials(cfg, caps),
-		Profiles:   users,
-		Transactor: uow,
-		Mail:       mailQueue,
-		From:       cfg.Mail.From,
-		BaseURL:    publicBase(cfg.HTTP),
-	}).WithOperatorOrgSupport(caps.OperatorOrgSupport)
-
 	svcs := &Services{
 		OrgStore:     orgStore,
 		Orgs:         orgs,
@@ -163,7 +152,6 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Users:        users,
 		Members:      members,
 		Sessions:     sessions,
-		Auth:         authn,
 		Legal:        buildLegal(k, cfg, users),
 		Caps:         caps,
 		AuthLimiter:  ratelimit.Disabled(),
@@ -179,7 +167,6 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	svcs.Consents = buildConsents(k, cfg, uow, svcs)
 	svcs.PersonalTokens, svcs.TokenUsage = buildPersonalTokens(k, cfg, uow, svcs.ResourceServers, svcs.EndUsers)
 	svcs.Upstreams = buildUpstreams(k, cfg, uow, sl, projects)
-	svcs.Install = install.NewService(uow, users, orgs, members, projects, svcs.Legal, seedUpstreams(cfg.Upstreams, svcs.Upstreams))
 	svcs.Federation = buildFederation(k, cfg, uow, svcs.Upstreams, svcs.EndUsers, projects)
 	projects.WithSignInMethods(projectSignInMethods{upstreams: svcs.Upstreams, linked: svcs.Federation})
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
@@ -207,6 +194,25 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		BaseURL:    publicBase(cfg.HTTP),
 		Unexpected: k.Reporter.Unexpected,
 	})
+	svcs.Auth = auth.NewService(auth.Deps{
+		Users:      users,
+		Members:    members,
+		Orgs:       orgs,
+		Projects:   projects,
+		Sessions:   sessions,
+		Passwords:  users,
+		Basic:      basicCredentials(cfg, caps),
+		Profiles:   users,
+		Transactor: uow,
+		Mail:       mailQueue,
+		From:       cfg.Mail.From,
+		BaseURL:    publicBase(cfg.HTTP),
+		Identities: users,
+		Invites:    consoleInvites{invites: svcs.Invites},
+		OrgCreator: orgs,
+		OpenSignup: cfg.OpenSignup(),
+	}).WithOperatorOrgSupport(caps.OperatorOrgSupport)
+	svcs.Install = buildInstall(cfg, svcs, uow)
 	return svcs
 }
 
@@ -281,6 +287,65 @@ type inviteSignIn struct{ *auth.Service }
 
 func (s inviteSignIn) LoginLocal(ctx context.Context, email, password string) (session.Principal, error) {
 	return s.Service.LoginLocal(ctx, auth.Credentials{Email: email, Password: password})
+}
+
+// SECURITY: cloud signup's one org per person: the creator's row is locked, so two concurrent creations can't both pass the check.
+func ownNewOrg(ctx context.Context, users *user.Service, members *member.Service, o *org.Org) error {
+	if !o.CreatedBy.Valid {
+		return nil
+	}
+	owner := o.CreatedBy.UUID
+	if err := users.Lock(ctx, owner); err != nil {
+		return err
+	}
+	ms, err := members.ListByUser(ctx, owner)
+	if err != nil {
+		return err
+	}
+	if slices.ContainsFunc(ms, func(m *member.Membership) bool { return m.Role == member.RoleOwner }) {
+		return &org.AlreadyOwnedError{}
+	}
+	_, err = members.Add(ctx, o.ID, owner, member.RoleOwner)
+	return err
+}
+
+type consoleInvites struct{ invites *invite.Service }
+
+func (c consoleInvites) Seat(ctx context.Context, publicID string) (*auth.Seat, error) {
+	inv, err := c.invites.Landing(ctx, publicID)
+	if err != nil {
+		return nil, noSeat(err)
+	}
+	if usable := c.invites.Usable(inv) == nil; !usable {
+		return nil, nil
+	}
+	return &auth.Seat{ID: inv.ID, OrgID: inv.OrgID, Email: inv.Email}, nil
+}
+
+func (c consoleInvites) OwnerSeat(ctx context.Context, orgID uuid.UUID, email string) (*auth.Seat, error) {
+	inv, err := c.invites.Live(ctx, orgID, email)
+	if err != nil {
+		return nil, noSeat(err)
+	}
+	if !inv.EmailOnlyOwner() {
+		return nil, nil
+	}
+	return &auth.Seat{ID: inv.ID, OrgID: inv.OrgID, Email: inv.Email}, nil
+}
+
+func (c consoleInvites) Claim(ctx context.Context, seat *auth.Seat, userID uuid.UUID) (bool, error) {
+	if _, err := c.invites.Accept(ctx, seat.OrgID, seat.ID, userID); err != nil {
+		return false, noSeat(err)
+	}
+	return true, nil
+}
+
+// NOTE: an invite that is gone, used, expired or for another email is no seat to claim, not a failure.
+func noSeat(err error) error {
+	if invite.IsNotFoundError(err) || invite.IsNotUsableError(err) || invite.IsEmailMismatchError(err) {
+		return nil
+	}
+	return err
 }
 
 type memberOrgs struct{ orgs *org.Service }
@@ -389,6 +454,7 @@ func capabilitiesConfig(cfg config.Config) capabilities.Config {
 		BasicAuth:   cfg.Auth.Mode == config.AuthModeBasic,
 		EnvGenesis:  cfg.Auth.Genesis.Email != "",
 		FileStorage: cfg.Storage.Driver != "",
+		Passwords:   cfg.PasswordsOn(),
 	}
 }
 

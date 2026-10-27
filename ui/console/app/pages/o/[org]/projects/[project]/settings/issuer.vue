@@ -7,7 +7,7 @@ import { discoveryUrls } from '~/components/project/issuer/discovery';
 import IssuerHandleField from '~/components/project/issuer/IssuerHandleField.vue';
 import { useIssuerHandle } from '~/components/project/issuer/useIssuerHandle';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
-import { useCanEditProject } from '~/components/project/useProjectAccess';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
@@ -18,11 +18,11 @@ const { t } = useI18n();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const detail = useProjectDetailStore();
-const canEdit = useCanEditProject();
-await useAuthStore().load();
-
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const listed = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
+const guard = useProjectGuard(() => listed.value);
+const canEdit = computed(() => guard.value.canConfigure);
+await useAuthStore().load();
 if (!org.value || !listed.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }
@@ -75,7 +75,8 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
         {{ t('issuer.subtitle') }}
       </p>
     </div>
-    <ProjectReadOnlyNote v-if="!canEdit" />
+    <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="`${t('project.system_note')} ${t('project.system_issuer')}`" />
+    <ProjectReadOnlyNote v-else-if="!canEdit" />
 
     <div class="card border border-base-300 bg-base-100">
       <div class="card-body gap-4">

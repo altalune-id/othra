@@ -22,6 +22,7 @@ type Profiles interface {
 	ChangePassword(ctx context.Context, userID uuid.UUID, keepSID, current, next string) error
 	SignOutEverywhere(ctx context.Context, userID uuid.UUID) error
 	SetActiveOrg(ctx context.Context, sid string, p session.Principal, orgID uuid.UUID) (session.Principal, error)
+	CreateOwnOrg(ctx context.Context, userID uuid.UUID, name, slug string) (*org.Org, error)
 }
 
 // AuthService implements auth.v1.AuthService; every id it returns is a public id.
@@ -31,6 +32,7 @@ type AuthService struct {
 	users       UserGetter
 	profiles    Profiles
 	fileUploads bool
+	passwords   bool
 }
 
 var _ authv1connect.AuthServiceHandler = (*AuthService)(nil)
@@ -38,6 +40,12 @@ var _ authv1connect.AuthServiceHandler = (*AuthService)(nil)
 // NewControlPlane binds the handler to the lookups whoami fills names and public ids from, and to the profile changes.
 func NewControlPlane(orgs OrgGetter, projects ProjectGetter, users UserGetter, profiles Profiles) *AuthService {
 	return &AuthService{orgs: orgs, projects: projects, users: users, profiles: profiles}
+}
+
+// WithPasswords reports on whoami whether console password sign-in is on, so a person with a password may change it.
+func (s *AuthService) WithPasswords(on bool) *AuthService {
+	s.passwords = on
+	return s
 }
 
 // WithFileUploads reports on whoami whether this deployment accepts file uploads.
@@ -121,6 +129,21 @@ func (s *AuthService) SetActiveOrg(
 	return connect.NewResponse(&authv1.SetActiveOrgResponse{Me: me.Msg}), nil
 }
 
+// CreateOwnOrg creates an org the signed-in person owns, with its default project, where this deployment lets people do so.
+func (s *AuthService) CreateOwnOrg(
+	ctx context.Context, req *connect.Request[authv1.CreateOwnOrgRequest],
+) (*connect.Response[authv1.CreateOwnOrgResponse], error) {
+	p, err := person(ctx)
+	if err != nil {
+		return nil, err
+	}
+	o, err := s.profiles.CreateOwnOrg(ctx, p.UserID, req.Msg.GetName(), req.Msg.GetSlug())
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&authv1.CreateOwnOrgResponse{Org: org.OrgProto(o)}), nil
+}
+
 // SECURITY: keys, basic auth and the system principal never change a person's account.
 func person(ctx context.Context) (session.Principal, error) {
 	p := session.PrincipalFrom(ctx)
@@ -158,6 +181,7 @@ func (s *AuthService) Whoami(
 		switch {
 		case err == nil:
 			out.UserId, out.Name = u.PublicID, u.Name
+			out.Passwords = s.passwords && u.HasPassword()
 		case !user.IsNotFoundError(err):
 			return nil, err
 		}

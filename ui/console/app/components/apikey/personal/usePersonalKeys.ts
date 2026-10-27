@@ -2,6 +2,7 @@ import type { ShownError } from '#base/lib/apperror/message';
 import type { APIKey } from '~/stores/apiKeys';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import { useScopeLabel } from '#base/composables/useScopeLabel';
+import { isPerson } from '~/lib/auth/person';
 import { toAPIKey } from '~/stores/apiKeys';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
@@ -43,7 +44,7 @@ export function usePersonalKeys() {
   const error = ref<ShownError | null>(null);
   const created = createdKeyState();
 
-  const signedIn = computed(() => auth.me?.source === 'local');
+  const signedIn = computed(() => isPerson(auth.me));
   const oneOrg = computed(() => orgs.items.length === 1);
   const failed = computed(() => orgs.items.filter(o => failedIds.value.includes(o.id)).map(o => ({ id: o.id, name: o.name })));
   const rows = computed<PersonalKeyRow[]>(() =>

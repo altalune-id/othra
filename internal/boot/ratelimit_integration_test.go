@@ -39,7 +39,7 @@ func loginServerOn(t *testing.T, rl config.RateLimitConfig, rdb redis.UniversalC
 	lims, err := buildLimiters(cfg, rdb, testLogger())
 	require.NoError(t, err)
 	svcs.AuthLimiter = lims.auth
-	return buildHTTPHandler(httpSurfaces{routes: buildRoutes(cfg, svcs, nil, nil), session: buildSessionMiddleware(svcs, nil)})
+	return buildHTTPHandler(httpSurfaces{routes: buildRoutes(cfg, svcs, nil, nil, nil), session: buildSessionMiddleware(svcs, nil)})
 }
 
 func postLogin(h http.Handler, email, password, ip string) *httptest.ResponseRecorder {

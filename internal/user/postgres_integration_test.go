@@ -208,3 +208,33 @@ func TestPostgresStore_ByPublicID(t *testing.T) {
 		assert.True(t, user.IsNotFoundError(err), "%q is not a public id", bad)
 	}
 }
+
+// SECURITY: an identity links an unlinked user once; neither a linked user nor an identity another user holds moves.
+func TestPostgresStore_LinkIDP(t *testing.T) {
+	s, pool := newPGStore(t)
+	ctx := t.Context()
+	ada, bob := mustNew(t, "ada@example.com"), mustNew(t, "bob@example.com")
+	require.NoError(t, s.Save(ctx, ada))
+	require.NoError(t, s.Save(ctx, bob))
+
+	linked, err := s.LinkIDP(ctx, ada.ID, "othra:system", "sub-1")
+	require.NoError(t, err)
+	assert.True(t, linked)
+	got, err := s.ByIDP(ctx, "othra:system", "sub-1")
+	require.NoError(t, err)
+	assert.Equal(t, ada.ID, got.ID)
+
+	linked, err = s.LinkIDP(ctx, ada.ID, "othra:system", "sub-2")
+	require.NoError(t, err)
+	assert.False(t, linked, "a link is never re-pointed")
+	linked, err = s.LinkIDP(ctx, bob.ID, "othra:system", "sub-1")
+	require.NoError(t, err)
+	assert.False(t, linked, "another user's identity")
+	_, err = s.ByIDP(ctx, "othra:system", "sub-2")
+	assert.True(t, user.IsNotFoundError(err))
+
+	assert.Error(t, s.Lock(ctx, ada.ID), "a row lock needs a transaction")
+	require.NoError(t, db.RunInTx(ctx, pool, func(ctx context.Context) error { return s.Lock(ctx, ada.ID) }))
+	err = db.RunInTx(ctx, pool, func(ctx context.Context) error { return s.Lock(ctx, uuid.New()) })
+	assert.True(t, user.IsNotFoundError(err))
+}

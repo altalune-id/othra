@@ -15,6 +15,7 @@ import (
 	"altalune.id/othra/apperror"
 	orgv1 "altalune.id/othra/gen/go/org/v1"
 	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
+	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/testutil/fakes"
 )
@@ -109,6 +110,28 @@ func TestOrgService_DomainRefusesWithoutTheRules(t *testing.T) {
 			ae, ok := apperror.AsAppError(err)
 			require.True(t, ok, "%v", err)
 			assert.Equal(t, tc.want, ae.Code())
+		})
+	}
+}
+
+// SECURITY: a person's new org is created by them, so the after-create hook makes them its owner; an operator's or API key's is not.
+func TestOrgService_CreateOrgRecordsThePerson(t *testing.T) {
+	ada := uuid.New()
+	for name, tc := range map[string]struct {
+		p    session.Principal
+		want uuid.NullUUID
+	}{
+		"person":   {session.Principal{Source: session.SourceOIDC, UserID: ada}, uuid.NullUUID{UUID: ada, Valid: true}},
+		"operator": {session.Principal{Source: session.SourceLocal, UserID: ada, Operator: true}, uuid.NullUUID{}},
+		"api key":  {session.Principal{Source: session.SourceAPIKey, KeyID: uuid.New()}, uuid.NullUUID{}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			store := &fakes.OrgStore{}
+			h := org.NewControlPlane(org.NewService(store, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil).WithCreation(true))
+			_, err := h.CreateOrg(session.PrincipalInto(t.Context(), tc.p), connect.NewRequest(&orgv1.CreateOrgRequest{Slug: "acme", Name: "Acme"}))
+			require.NoError(t, err)
+			require.NotNil(t, store.Saved)
+			assert.Equal(t, tc.want, store.Saved.CreatedBy)
 		})
 	}
 }

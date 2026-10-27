@@ -18,7 +18,7 @@ mail:
   driver: console
 # production mail (required when env: production; replaces the mail block above):
 # http:
-#   baseURL: https://othra.example.com
+#   baseURL: https://othra.example.com   # one public URL per deployment; the console's sign-in follows it
 # mail:
 #   driver: smtp            # or resend, with resend.apiKey
 #   from: Othra <noreply@example.com>

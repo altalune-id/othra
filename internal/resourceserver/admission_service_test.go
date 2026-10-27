@@ -161,3 +161,31 @@ func TestService_ScopeDescriptions(t *testing.T) {
 		assert.Equal(t, ScopeDescription, e.Reason, name)
 	}
 }
+
+// The console client links to no resource server: link, relink and unlink all answer CLT009.
+func TestService_ConsoleClientTakesNoLinks(t *testing.T) {
+	h := newHarness(t, false)
+	ctx := context.Background()
+	r := h.verified(t, "https://mcp.example.com/mcp")
+	console := ClientRef{ID: uuid.New(), PublicID: "c-console", Name: "Console", System: true}
+	h.clients.byPublic[console.PublicID] = console
+
+	_, err := h.svc.LinkClient(ctx, h.org, h.project, console.PublicID, r.PublicID, []string{"read"})
+	assert.Equal(t, apperror.CodeClientSystemManaged, codeOf(err))
+	_, err = h.svc.UpdateLink(ctx, h.org, h.project, console.PublicID, r.PublicID, []string{"read"})
+	assert.Equal(t, apperror.CodeClientSystemManaged, codeOf(err))
+	assert.Equal(t, apperror.CodeClientSystemManaged, codeOf(h.svc.UnlinkClient(ctx, h.org, h.project, console.PublicID, r.PublicID)))
+	assert.True(t, IsClientSystemManagedError(&ClientSystemManagedError{}))
+}
+
+// PRJ011: the console project takes no resource server.
+func TestService_ConsoleProjectTakesNoResourceServer(t *testing.T) {
+	h := newHarness(t, false)
+	h.issuers.system = true
+	_, err := h.svc.Create(context.Background(), CreateRequest{
+		OrgID: h.org, ProjectID: h.project, Name: "API", Identifier: "https://api.example.com", Scopes: []string{"read"}, Person: h.person,
+	})
+	assert.Equal(t, apperror.CodeProjectSystemManaged, codeOf(err))
+	assert.True(t, IsSystemProjectError(err))
+	assert.Empty(t, h.issuers.locked)
+}

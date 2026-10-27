@@ -71,10 +71,10 @@ func (s *Resolver) Resolve(r *http.Request) (*project.Issuer, error) {
 	return e.issuer, nil
 }
 
-// SECURITY: an unknown, reserved or malformed handle are the same ErrUnknownIssuer, and only a well-formed miss reaches the database.
+// SECURITY: an unknown, reserved (but system) or malformed handle is one ErrUnknownIssuer; only a well-formed miss reaches the database.
 func (s *Resolver) entry(r *http.Request) (*issuerEntry, error) {
 	handle := r.PathValue("handle")
-	if project.ValidateIssuerHandle(handle) != nil {
+	if handle != project.SystemHandle && project.ValidateIssuerHandle(handle) != nil {
 		return nil, ErrUnknownIssuer
 	}
 	now := s.now()

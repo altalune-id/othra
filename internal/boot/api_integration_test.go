@@ -74,7 +74,7 @@ func newAPIFixture(t *testing.T) *apiFixture {
 	h := buildHTTPHandler(httpSurfaces{
 		api:             buildAPIHandler(svcs, nil, cfg.API, "", testLogger()),
 		mcp:             buildMCPHandler(buildMCPServer(config.MCPConfig{Enabled: true}, svcs, testLogger()), svcs, testLogger()),
-		routes:          buildRoutes(cfg, svcs, nil, nil),
+		routes:          buildRoutes(cfg, svcs, nil, nil, nil),
 		session:         buildSessionMiddleware(svcs, nil),
 		installRequired: required,
 	})

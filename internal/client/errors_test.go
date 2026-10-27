@@ -2,10 +2,14 @@ package client
 
 import (
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"altalune.id/othra/apperror"
+	clientv1 "altalune.id/othra/gen/go/client/v1"
 )
 
 func TestErrors_CarryTheirCodes(t *testing.T) {
@@ -39,4 +43,14 @@ func TestErrors_CarryTheirCodes(t *testing.T) {
 func TestInvalidRedirectURIError_SendsOnlyWhatItHas(t *testing.T) {
 	meta := (&InvalidRedirectURIError{Field: "redirect_uris", Reason: RedirectURIRequired}).ToAppError().Meta()
 	assert.Equal(t, map[string]string{"field": "redirect_uris", "reason": "required"}, meta)
+}
+
+func TestToProto_SystemRegistration(t *testing.T) {
+	c, err := NewSystem(uuid.New(), uuid.New(), "c1", "http://localhost:5150/oauth/callback", "http://localhost:5150/console/", time.Now())
+	require.NoError(t, err)
+	assert.Equal(t, "Othra console", c.Name, "the hosted pages read \"Sign in to continue to Othra console\"")
+	assert.Equal(t, clientv1.ClientRegistration_CLIENT_REGISTRATION_SYSTEM, toProto(c).GetRegistration())
+	assert.Empty(t, toProto(c).GetSecrets())
+	assert.True(t, IsSystemManagedError(&SystemManagedError{}))
+	assert.Equal(t, apperror.CodeClientSystemManaged, (&SystemManagedError{}).ToAppError().Code())
 }

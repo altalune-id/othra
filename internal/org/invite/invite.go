@@ -93,6 +93,11 @@ func (i *Invite) draft(now time.Time) {
 	i.ExpiresAt, i.UpdatedAt = now.UTC().Add(DraftTTL), now.UTC()
 }
 
+// EmailOnlyOwner reports whether i is the owner seat InviteOwner leaves: no inviter, so the verified email alone claims it.
+func (i *Invite) EmailOnlyOwner() bool {
+	return i.Role == member.RoleOwner && i.InvitedBy == uuid.Nil && !i.Draft
+}
+
 func (i *Invite) live() bool { return i.AcceptedAt == nil && i.RevokedAt == nil }
 
 func (i *Invite) expired(now time.Time) bool { return !now.Before(i.ExpiresAt) }

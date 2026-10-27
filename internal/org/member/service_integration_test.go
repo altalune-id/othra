@@ -18,7 +18,8 @@ import (
 )
 
 func (f *memberFixture) service() *member.Service {
-	return member.NewService(f.store, db.NewTransactor(f.pool), apperror.NewReporter(nil, false).Unexpected)
+	return member.NewService(f.store, db.NewTransactor(f.pool), apperror.NewReporter(nil, false).Unexpected).
+		WithEffects((&effectCalls{orgName: "Acme Corp"}).effects())
 }
 
 func TestService_OwnersRemovingEachOther(t *testing.T) {
@@ -174,6 +175,20 @@ func TestService_LastOwnerOnPostgres(t *testing.T) {
 	assert.Equal(t, member.RoleMember, added.Role)
 	_, err = svc.AddExisting(f.ctx, operator, o.ID, owner.ID, member.RoleAdmin)
 	assert.True(t, member.IsAlreadyMemberError(err), "got %v", err)
+}
+
+// SECURITY: a service whose effects were never wired fails a removal and rolls it back instead of leaving access alive.
+func TestService_MissingEffectsRollBack(t *testing.T) {
+	f := newMemberFixture(t)
+	svc := member.NewService(f.store, db.NewTransactor(f.pool), apperror.NewReporter(nil, false).Unexpected)
+	o := f.org()
+	owner, admin := f.user(), f.user()
+	f.add(o.ID, owner.ID, member.RoleOwner)
+	f.add(o.ID, admin.ID, member.RoleAdmin)
+
+	assert.Error(t, svc.Remove(f.ctx, member.Requester{UserID: owner.ID}, o.ID, admin.ID))
+	_, err := f.store.Find(f.in(o.ID), o.ID, admin.ID)
+	assert.NoError(t, err, "the removal rolled back")
 }
 
 func TestService_FailedEffectRollsBack(t *testing.T) {

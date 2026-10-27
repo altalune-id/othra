@@ -302,7 +302,10 @@ type fakeIssuers struct {
 	locked []uuid.UUID
 	failOn string
 	issuer string
+	system bool
 }
+
+func (f *fakeIssuers) IsSystem(context.Context, uuid.UUID) (bool, error) { return f.system, nil }
 
 func (f *fakeIssuers) Project(context.Context, uuid.UUID) (ProjectRef, error) {
 	if f.failOn == "issuer" {

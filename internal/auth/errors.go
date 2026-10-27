@@ -68,3 +68,64 @@ func (e *ResetNotUsableError) ToAppError() *apperror.AppError {
 		WithMeta(map[string]string{"reason": string(e.Reason)}).
 		WithCause(e)
 }
+
+// NoConsoleReason is why a /p/system sign-in has no console account, sent to clients as meta.reason.
+type NoConsoleReason string
+
+// The reasons a /p/system sign-in has no console account.
+const (
+	NoConsoleNotInvited NoConsoleReason = "not_invited"
+	NoConsoleRemoved    NoConsoleReason = "removed"
+	NoConsoleUnverified NoConsoleReason = "email_unverified"
+)
+
+// NoConsoleAccountError signals a /p/system sign-in with no console account: never invited, or removed since.
+type NoConsoleAccountError struct{ Reason NoConsoleReason }
+
+func (e *NoConsoleAccountError) Error() string {
+	return "auth: no console account: " + string(e.Reason)
+}
+
+// IsNoConsoleAccountError reports whether err's tree contains a *NoConsoleAccountError.
+func IsNoConsoleAccountError(err error) bool {
+	_, ok := errors.AsType[*NoConsoleAccountError](err)
+	return ok
+}
+
+// ToAppError maps NoConsoleAccountError to AUT005 with its reason.
+func (e *NoConsoleAccountError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAuthNoConsoleAccount, "This email has no account on this console").
+		WithMeta(map[string]string{"reason": string(e.Reason)}).WithCause(e)
+}
+
+// SignInExpiredError signals a console sign-in whose state is missing or expired.
+type SignInExpiredError struct{}
+
+func (*SignInExpiredError) Error() string { return "auth: sign-in expired" }
+
+// IsSignInExpiredError reports whether err's tree contains a *SignInExpiredError.
+func IsSignInExpiredError(err error) bool {
+	_, ok := errors.AsType[*SignInExpiredError](err)
+	return ok
+}
+
+// ToAppError maps SignInExpiredError to AUT006.
+func (e *SignInExpiredError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAuthSignInExpired, "This sign-in expired").WithCause(e)
+}
+
+// IdentityConflictError signals a console account already linked to another /p/system identity.
+type IdentityConflictError struct{}
+
+func (*IdentityConflictError) Error() string { return "auth: account linked to another identity" }
+
+// IsIdentityConflictError reports whether err's tree contains an *IdentityConflictError.
+func IsIdentityConflictError(err error) bool {
+	_, ok := errors.AsType[*IdentityConflictError](err)
+	return ok
+}
+
+// ToAppError maps IdentityConflictError to AUT007.
+func (e *IdentityConflictError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeAuthIdentityConflict, "This account is linked to a different Othra sign-in").WithCause(e)
+}

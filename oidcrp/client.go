@@ -9,13 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
@@ -49,39 +46,28 @@ var (
 
 // Client is a relying party for one upstream IdP and one client registration; safe for concurrent use.
 type Client struct {
-	cfg  Config
-	http *http.Client
-	now  func() time.Time
-
-	meta *cache[Metadata]
-	keys *cache[jose.JSONWebKeySet]
-
-	mu          sync.Mutex
-	lastRefetch time.Time
+	cfg Config
+	src *KeySource
 }
 
 // New builds a Client; cfg.HTTPClient should refuse redirects and private hosts, as httpclient.New does.
 func New(cfg Config) *Client {
-	hc := cfg.HTTPClient
-	if hc == nil {
-		hc = &http.Client{
-			Timeout:       defaultTimeout,
-			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-		}
-	}
 	if cfg.ClockSkew <= 0 {
 		cfg.ClockSkew = defaultClockSkew
 	}
-	return &Client{
-		cfg: cfg, http: hc, now: time.Now, meta: &cache[Metadata]{policy: metadataPolicy}, keys: &cache[jose.JSONWebKeySet]{policy: jwksPolicy},
-	}
+	return &Client{cfg: cfg, src: NewKeySource(cfg.Issuer, cfg.HTTPClient)}
 }
 
 // WithClock replaces the clock, for tests.
 func (c *Client) WithClock(now func() time.Time) *Client {
-	c.now = now
+	c.src.WithClock(now)
 	return c
 }
+
+// Keys returns the client's discovery and JWKS cache, for a caller that verifies other tokens from the same issuer.
+func (c *Client) Keys() *KeySource { return c.src }
+
+func (c *Client) now() time.Time { return c.src.now() }
 
 // NewAuthRequest makes the per-attempt secrets: state, nonce and the PKCE verifier, 256 random bits each.
 func NewAuthRequest(prompt, loginHint string) (AuthRequest, error) {
@@ -98,7 +84,7 @@ func NewAuthRequest(prompt, loginHint string) (AuthRequest, error) {
 
 // AuthCodeURL is the upstream IdP's authorization URL for req: the code flow with S256 PKCE, state and nonce (RFC 9700 §2.1.1).
 func (c *Client) AuthCodeURL(ctx context.Context, req AuthRequest) (string, error) {
-	meta, err := c.metadata(ctx)
+	meta, err := c.src.Metadata(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -141,7 +127,7 @@ func (c *Client) Exchange(ctx context.Context, cb Callback, req AuthRequest) (*I
 	if req.State == "" || subtle.ConstantTimeCompare([]byte(cb.State), []byte(req.State)) != 1 {
 		return nil, &Error{Reason: ReasonState, Err: errors.New("state does not match")}
 	}
-	meta, err := c.metadata(ctx)
+	meta, err := c.src.Metadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -178,24 +164,39 @@ func (c *Client) redeem(ctx context.Context, meta *Metadata, code, verifier stri
 	form := url.Values{
 		"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {c.cfg.RedirectURI}, "code_verifier": {verifier},
 	}
+	if c.cfg.ClientSecret == "" {
+		form.Set("client_id", c.cfg.ClientID)
+	}
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, meta.TokenEndpoint, strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", &Error{Reason: ReasonTokenExchange, Err: err}
 	}
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Set("Accept", "application/json")
-	r.SetBasicAuth(url.QueryEscape(c.cfg.ClientID), url.QueryEscape(c.cfg.ClientSecret))
+	if c.cfg.ClientSecret != "" {
+		r.SetBasicAuth(url.QueryEscape(c.cfg.ClientID), url.QueryEscape(c.cfg.ClientSecret))
+	}
 	var out struct {
 		IDToken   string `json:"id_token"`
 		TokenType string `json:"token_type"`
 	}
-	if _, err := c.doJSON(r, ReasonTokenExchange, &out); err != nil {
+	if _, err := c.src.doJSON(r, ReasonTokenExchange, &out); err != nil {
 		return "", err
 	}
-	if out.IDToken == "" {
+	switch {
+	case !strings.EqualFold(strings.TrimSpace(out.TokenType), "Bearer"):
+		return "", &Error{Reason: ReasonTokenExchange, Err: errors.New("the token type is not Bearer")}
+	case out.IDToken == "":
 		return "", &Error{Reason: ReasonTokenExchange, Err: errors.New("the token response has no id_token")}
 	}
 	return out.IDToken, nil
+}
+
+// IsAccessTokenType reports whether a JWS header's typ is RFC 9068's at+jwt or application/at+jwt, compared case-insensitively.
+func IsAccessTokenType(h jose.Header) bool {
+	s, _ := h.ExtraHeaders[jose.HeaderType].(string)
+	s = strings.ToLower(strings.TrimSpace(s))
+	return s == "at+jwt" || s == "application/at+jwt"
 }
 
 type idTokenClaims struct {
@@ -210,6 +211,8 @@ type idTokenClaims struct {
 	EmailVerified flexBool `json:"email_verified"`
 	Name          string   `json:"name"`
 	HostedDomain  string   `json:"hd"`
+	AuthTime      int64    `json:"auth_time"`
+	SessionID     string   `json:"sid"`
 }
 
 // SECURITY: OIDC Core §3.1.3.7: signature by a published key with an allowed alg, iss, aud, azp, exp, iat and nonce, all fail closed.
@@ -219,7 +222,10 @@ func (c *Client) verify(ctx context.Context, meta *Metadata, raw, nonce string) 
 		return nil, &Error{Reason: ReasonIDToken, Err: fmt.Errorf("not a single-signature JWS with an allowed alg: %w", err)}
 	}
 	header := jws.Signatures[0].Header
-	key, err := c.key(ctx, meta, header.KeyID)
+	if IsAccessTokenType(header) {
+		return nil, &Error{Reason: ReasonIDToken, Err: errors.New("an at+jwt access token is not an ID token")}
+	}
+	key, err := c.src.Key(ctx, header.KeyID)
 	if err != nil {
 		return nil, err
 	}
@@ -252,11 +258,39 @@ func (c *Client) verify(ctx context.Context, meta *Metadata, raw, nonce string) 
 	case cl.Subject == "" || len(cl.Subject) > maxSubjectLength:
 		return nil, &Error{Reason: ReasonIDToken, Err: errors.New("sub is missing or too long")}
 	}
-	return &IDToken{
+	tok := &IDToken{
 		Issuer: cl.Issuer, Subject: cl.Subject, Audience: cl.Audience, Email: cl.Email, EmailVerified: bool(cl.EmailVerified),
-		Name: cl.Name, HostedDomain: cl.HostedDomain, IssuedAt: iat, ExpiresAt: time.Unix(cl.ExpiresAt, 0),
-	}, nil
+		Name: cl.Name, HostedDomain: cl.HostedDomain, IssuedAt: iat, ExpiresAt: time.Unix(cl.ExpiresAt, 0), SessionID: cl.SessionID, Raw: raw,
+	}
+	if cl.AuthTime > 0 {
+		tok.AuthTime = time.Unix(cl.AuthTime, 0)
+	}
+	return tok, nil
 }
+
+// EndSessionURL is the issuer's RP-initiated logout URL; empty values are left out, and "" means the issuer has no end_session_endpoint.
+func (c *Client) EndSessionURL(ctx context.Context, idTokenHint, postLogoutRedirectURI, state string) (string, error) {
+	meta, err := c.src.Metadata(ctx)
+	if err != nil || meta.EndSessionEndpoint == "" {
+		return "", err
+	}
+	u, err := url.Parse(meta.EndSessionEndpoint)
+	if err != nil {
+		return "", &Error{Reason: ReasonDiscovery, Err: err}
+	}
+	q := u.Query()
+	q.Set("client_id", c.cfg.ClientID)
+	for k, v := range map[string]string{"id_token_hint": idTokenHint, "post_logout_redirect_uri": postLogoutRedirectURI, "state": state} {
+		if v != "" {
+			q.Set(k, v)
+		}
+	}
+	u.RawQuery = q.Encode()
+	return u.String(), nil
+}
+
+// SigningAlgorithms are the algs a token from this issuer may use: those it advertises, RS256 when none, never none or an HMAC.
+func (m *Metadata) SigningAlgorithms() []jose.SignatureAlgorithm { return signingAlgs(m) }
 
 // NOTE: OIDC Core §3.1.3.7 step 7: the upstream IdP's advertised algs, RS256 when it names none, never beyond allowedAlgs.
 func signingAlgs(meta *Metadata) []jose.SignatureAlgorithm {
@@ -270,123 +304,6 @@ func signingAlgs(meta *Metadata) []jose.SignatureAlgorithm {
 		}
 	}
 	return out
-}
-
-func (c *Client) metadata(ctx context.Context) (*Metadata, error) {
-	return c.meta.get(ctx, c.now(), false, c.fetchMetadata)
-}
-
-// SECURITY: OIDC Discovery §4.3, the document must name the configured issuer exactly, or it describes another upstream IdP.
-func (c *Client) fetchMetadata(ctx context.Context) (*Metadata, http.Header, error) {
-	discovery := strings.TrimRight(c.cfg.Issuer, "/") + "/.well-known/openid-configuration"
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, discovery, http.NoBody)
-	if err != nil {
-		return nil, nil, &Error{Reason: ReasonDiscovery, Err: err}
-	}
-	var meta Metadata
-	h, err := c.doJSON(r, ReasonDiscovery, &meta)
-	switch {
-	case err != nil:
-		return nil, nil, err
-	case meta.Issuer != c.cfg.Issuer:
-		return nil, nil, &Error{Reason: ReasonMisconfigured, Err: errors.New("the discovery issuer does not match")}
-	case !sameScheme(c.cfg.Issuer, meta.AuthorizationEndpoint, meta.TokenEndpoint, meta.JWKSURI):
-		return nil, nil, &Error{Reason: ReasonDiscovery, Err: errors.New("an endpoint is missing or not on the issuer's scheme")}
-	}
-	return &meta, h, nil
-}
-
-// NOTE: OIDC Core §10.1.1 rotation: an unknown kid refetches the JWKS once, at most every 30 s.
-func (c *Client) key(ctx context.Context, meta *Metadata, kid string) (*jose.JSONWebKey, error) {
-	fetch := func(ctx context.Context) (*jose.JSONWebKeySet, http.Header, error) {
-		return c.fetchKeys(ctx, meta.JWKSURI)
-	}
-	now := c.now()
-	set, err := c.keys.get(ctx, now, false, fetch)
-	if err != nil {
-		return nil, err
-	}
-	if k := find(set, kid); k != nil {
-		return k, nil
-	}
-	c.mu.Lock()
-	limited := now.Sub(c.lastRefetch) < jwksMinRefetch
-	if !limited {
-		c.lastRefetch = now
-	}
-	c.mu.Unlock()
-	if limited {
-		return nil, &Error{Reason: ReasonIDToken, Err: errors.New("unknown kid")}
-	}
-	if set, err = c.keys.get(ctx, now, true, fetch); err != nil {
-		return nil, err
-	}
-	if k := find(set, kid); k != nil {
-		return k, nil
-	}
-	return nil, &Error{Reason: ReasonIDToken, Err: errors.New("unknown kid")}
-}
-
-func (c *Client) fetchKeys(ctx context.Context, jwksURI string) (*jose.JSONWebKeySet, http.Header, error) {
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, jwksURI, http.NoBody)
-	if err != nil {
-		return nil, nil, &Error{Reason: ReasonJWKS, Err: err}
-	}
-	var set jose.JSONWebKeySet
-	h, err := c.doJSON(r, ReasonJWKS, &set)
-	if err != nil {
-		return nil, nil, err
-	}
-	return &set, h, nil
-}
-
-func find(set *jose.JSONWebKeySet, kid string) *jose.JSONWebKey {
-	for i, k := range set.Keys {
-		if k.KeyID == kid && k.IsPublic() && (k.Use == "" || k.Use == "sig") {
-			return &set.Keys[i]
-		}
-	}
-	return nil
-}
-
-func (c *Client) doJSON(r *http.Request, reason Reason, dst any) (http.Header, error) {
-	resp, err := c.http.Do(r)
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) || isTimeout(err) {
-			reason = ReasonTimeout
-		}
-		return nil, &Error{Reason: reason, Err: err}
-	}
-	defer func() { _ = resp.Body.Close() }()
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxBodyBytes))
-	switch {
-	case err != nil:
-		return nil, &Error{Reason: reason, Err: err}
-	case resp.StatusCode != http.StatusOK:
-		return nil, &Error{Reason: reason, Err: fmt.Errorf("status %d", resp.StatusCode)}
-	}
-	if err := json.Unmarshal(body, dst); err != nil {
-		return nil, &Error{Reason: reason, Err: err}
-	}
-	return resp.Header, nil
-}
-
-func isTimeout(err error) bool {
-	var ne net.Error
-	return errors.As(err, &ne) && ne.Timeout()
-}
-
-func sameScheme(issuer string, endpoints ...string) bool {
-	scheme := "https://"
-	if strings.HasPrefix(issuer, "http://") {
-		scheme = "http://"
-	}
-	for _, e := range endpoints {
-		if !strings.HasPrefix(e, scheme) || len(e) == len(scheme) {
-			return false
-		}
-	}
-	return true
 }
 
 type audience []string

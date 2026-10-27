@@ -143,6 +143,16 @@ describe('useClientForm (create)', () => {
     expect(f.uriErrors.value.postLogout[0]).toMatch(/^apperror\.CLT002_duplicate\|/);
   });
 
+  it('shows the console project\'s refusal as PRJ011', async () => {
+    setKnownKeys('apperror.PRJ011');
+    createClient.mockRejectedValueOnce(connectError('PRJ011'));
+    const f = useClientForm(projectId);
+    f.fields.value.name = 'Store web';
+    f.fields.value.redirectUris = ['https://a.example/cb'];
+    await f.submit();
+    expect(f.error.value?.message).toBe('apperror.PRJ011');
+  });
+
   it('shows a refusal it cannot place, and the name rule under the name', async () => {
     setKnownKeys('apperror.CLT002', 'apperror.GEN900');
     createClient.mockRejectedValueOnce(connectError('CLT002', { field: 'redirect_uris', uri: 'https://zzz.example/' }));

@@ -115,6 +115,7 @@ func Table() map[string][]string {
 
 		authv1connect.AuthServiceWhoamiProcedure:            {authz.AnyAuthenticated},
 		authv1connect.AuthServiceSetActiveOrgProcedure:      {authz.PersonOnly},
+		authv1connect.AuthServiceCreateOwnOrgProcedure:      {authz.PersonOnly},
 		authv1connect.AuthServiceUpdateProfileProcedure:     {authz.PersonOnly},
 		authv1connect.AuthServiceChangePasswordProcedure:    {authz.PersonOnly},
 		authv1connect.AuthServiceSignOutEverywhereProcedure: {authz.PersonOnly},

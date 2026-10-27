@@ -56,7 +56,7 @@ func TestBoot_RefusesAPoolThatBypassesRLS(t *testing.T) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
 	probeRLS = stubProbe(pg.RLSReport{RowSecurity: "on", Reach: []pg.RoleReach{{Role: "zzz_owner", BypassRLS: true}}})
-	cfg := config.Config{Env: config.EnvDevelopment, Postgres: config.PostgresConfig{DSN: "x"}}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Env: config.EnvDevelopment, Postgres: config.PostgresConfig{DSN: "x"}}
 
 	_, err := Boot(context.Background(), cfg, nil)
 	require.True(t, db.IsRLSError(err), "got %v", err)
@@ -81,7 +81,7 @@ func TestBoot_ProbeErrorStopsTheBoot(t *testing.T) {
 	probeRLS = func(context.Context, *sql.DB, string, string, string, ...string) (pg.RLSReport, error) {
 		return pg.RLSReport{}, errors.New("catalog unreachable")
 	}
-	_, err := Boot(context.Background(), config.Config{Postgres: config.PostgresConfig{DSN: "x"}}, nil)
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
 	require.ErrorContains(t, err, "catalog unreachable")
 }
 
@@ -125,7 +125,7 @@ func TestBoot(t *testing.T) {
 	migrateUp = func(context.Context, *sql.DB, migrator.Config) error { return nil }
 	withLock = passthroughLock
 
-	app, err := Boot(context.Background(), config.Config{DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x", Schema: "public"}}, nil)
+	app, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x", Schema: "public"}}, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, app.Services.Orgs)
 	assert.Same(t, poolDB, app.Kernel.Pool.W)
@@ -155,7 +155,7 @@ func TestBoot_SchedulerEnabled(t *testing.T) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
 
-	app, err := Boot(context.Background(), config.Config{
+	app, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"},
 		Postgres:  config.PostgresConfig{DSN: "x"},
 		Scheduler: config.SchedulerConfig{Enabled: true},
 	}, testLogger())
@@ -173,7 +173,7 @@ func TestBoot_WithSchedulerFalse(t *testing.T) {
 	}
 
 	app, err := Boot(context.Background(),
-		config.Config{Postgres: config.PostgresConfig{DSN: "x"}, Scheduler: config.SchedulerConfig{Enabled: true}},
+		config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}, Scheduler: config.SchedulerConfig{Enabled: true}},
 		testLogger(), WithScheduler(false))
 	require.NoError(t, err)
 	assert.Len(t, app.Supervisor.Workers(), 6) // http + db-health + outbox + mailqueue + apikey-usage + pat-usage
@@ -189,7 +189,7 @@ func TestBoot_SchedulerOnlyDisabled(t *testing.T) {
 	}
 
 	_, err := Boot(context.Background(),
-		config.Config{Postgres: config.PostgresConfig{DSN: "x"}}, testLogger(), WithSchedulerOnly(true))
+		config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}}, testLogger(), WithSchedulerOnly(true))
 	assert.Error(t, err)
 }
 
@@ -202,7 +202,7 @@ func TestBoot_ConsumerOnlyDisabled(t *testing.T) {
 	}
 
 	_, err := Boot(context.Background(),
-		config.Config{Postgres: config.PostgresConfig{DSN: "x"}}, testLogger(), WithConsumerOnly(true))
+		config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}}, testLogger(), WithConsumerOnly(true))
 	assert.Error(t, err)
 }
 
@@ -268,7 +268,7 @@ func TestBoot_NoAutoMigrate(t *testing.T) {
 		return nil, errors.New("should not be called")
 	}
 
-	app, err := Boot(context.Background(), config.Config{DB: config.DBConfig{AutoMigrate: false}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
+	app, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, DB: config.DBConfig{AutoMigrate: false}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, app.Services.Orgs)
 	assert.False(t, migratorCalled)
@@ -278,7 +278,7 @@ func TestBoot_TelemetryError(t *testing.T) {
 	restoreSeams(t)
 	setupTelemetry = stubTelemetry(nil, errors.New("boom"))
 
-	_, err := Boot(context.Background(), config.Config{}, nil)
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}, nil)
 	assert.Error(t, err)
 }
 
@@ -290,7 +290,7 @@ func TestBoot_PoolError(t *testing.T) {
 		return db.Pool{}, errors.New("boom")
 	}
 
-	_, err := Boot(context.Background(), config.Config{Postgres: config.PostgresConfig{DSN: "x"}}, nil)
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
 	assert.Error(t, err)
 	assert.True(t, called)
 }
@@ -306,7 +306,7 @@ func TestBoot_MigratorError(t *testing.T) {
 	}
 	openMigrator = func(context.Context, string, migrator.Config) (*sql.DB, error) { return nil, errors.New("boom") }
 
-	_, err := Boot(context.Background(), config.Config{DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
 	assert.Error(t, err)
 	assert.True(t, called)
 }
@@ -325,7 +325,7 @@ func TestBoot_MigrateError(t *testing.T) {
 	migrateUp = func(context.Context, *sql.DB, migrator.Config) error { return errors.New("boom") }
 	withLock = passthroughLock
 
-	_, err := Boot(context.Background(), config.Config{DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
 	assert.Error(t, err)
 	assert.True(t, called)
 }
@@ -342,7 +342,7 @@ func TestBoot_LockError(t *testing.T) {
 	openMigrator = func(context.Context, string, migrator.Config) (*sql.DB, error) { return migDB, nil }
 	withLock = func(context.Context, *sql.DB, string, func(context.Context) error) error { return errors.New("boom") }
 
-	_, err := Boot(context.Background(), config.Config{DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, DB: config.DBConfig{AutoMigrate: true}, Postgres: config.PostgresConfig{DSN: "x"}}, nil)
 	assert.Error(t, err)
 }
 
@@ -629,7 +629,7 @@ func TestBoot_MailerError(t *testing.T) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
 
-	_, err := Boot(context.Background(), config.Config{
+	_, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"},
 		Postgres: config.PostgresConfig{DSN: "x"},
 		Mail:     config.MailConfig{Driver: config.MailDriverSMTP},
 	}, testLogger())
@@ -637,11 +637,11 @@ func TestBoot_MailerError(t *testing.T) {
 }
 
 func TestCapabilitiesConfig(t *testing.T) {
-	assert.Equal(t, capabilities.Config{Selfhosted: true, EnvGenesis: true}, capabilitiesConfig(config.Config{
+	assert.Equal(t, capabilities.Config{Selfhosted: true, EnvGenesis: true, Passwords: true}, capabilitiesConfig(config.Config{
 		Mode: config.ModeSelfhosted,
 		Auth: config.AuthConfig{Mode: config.AuthModeLocal, Genesis: config.GenesisConfig{Email: "root@example.com"}},
 	}))
-	assert.Equal(t, capabilities.Config{Selfhosted: true, BasicAuth: true}, capabilitiesConfig(config.Config{
+	assert.Equal(t, capabilities.Config{Selfhosted: true, BasicAuth: true, Passwords: true}, capabilitiesConfig(config.Config{
 		Mode: config.ModeSelfhosted, Auth: config.AuthConfig{Mode: config.AuthModeBasic},
 	}))
 	assert.Equal(t, capabilities.Config{Cloud: true}, capabilitiesConfig(config.Config{Mode: config.ModeCloud}))

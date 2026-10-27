@@ -51,6 +51,8 @@ type LinkRequest struct {
 	// Pending is an upstream identity, as JSON, that redeeming the link may add to its end user; it skips the resend cooldown
 	// and the email-link switch.
 	Pending []byte
+	// Operator is the operator CLI printing the link: it skips the resend cooldown; the email-link switch holds as at redeem.
+	Operator bool
 }
 
 // Link is a magic link as stored; the token itself is never kept.

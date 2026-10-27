@@ -10,8 +10,8 @@ const creates = [page('clients/new'), page('resource-servers/new')];
 
 describe('clients and resource server pages', () => {
   it.each([...lists, ...details])('$path tells members why they see no write controls', ({ source }) => {
-    expect(source).toContain('useCanEditProject');
-    expect(source).toContain('<ProjectReadOnlyNote v-if="!canEdit"');
+    expect(source).toMatch(/useCanEditProject|useProjectGuard/);
+    expect(source).toMatch(/<ProjectReadOnlyNote v-(?:else-)?if="!canEdit"/);
   });
 
   it.each(lists)('$path offers New only to editors', ({ source }) => {
@@ -21,7 +21,7 @@ describe('clients and resource server pages', () => {
   });
 
   it.each(details)('$path gates Delete and every write form on canEdit', ({ source }) => {
-    expect(source).toMatch(/<button v-if="canEdit"[^>]*@click="page\.askDelete\(\)"/);
+    expect(source).toMatch(/<button v-if="canEdit(?: && !system)?"[^>]*@click="page\.askDelete\(\)"/);
     for (const form of source.match(/<form\s[^>]*>/g) ?? []) {
       expect(form).toContain('v-if="canEdit"');
     }
@@ -109,11 +109,11 @@ describe('clients and resource server pages', () => {
 
   it('shows a CIMD client as managed by its metadata document: badge, metadata URL, read-only, revoke only', () => {
     const page = details[0]!.source;
-    expect(page).toContain('const editable = computed(() => canEdit.value && !cimd.value);');
+    expect(page).toContain('const editable = computed(() => canEdit.value && !cimd.value && !system.value);');
     expect(page).toMatch(/<span v-if="cimd"[^>]*data-testid="client-cimd-badge"/);
     expect(page).toMatch(/<UrlField\s+v-if="cimd"\s+:label="t\('rs\.metadata_url'\)"\s+:value="client\.metadataUrl"/);
     expect(page).toContain('<template v-if="editable">');
-    expect(page).toMatch(/<ClientSecrets\s+v-if="kind\.secret && !cimd"/);
+    expect(page).toMatch(/<ClientSecrets\s+v-if="kind\.secret && !cimd && !system"/);
     expect(page).toMatch(/<LinkList\s+:rows="linkRows"\s+:can-edit="editable"/);
     expect(page).toContain('cimd ? t(\'rs.cimd_revoke\') : t(\'common.delete\')');
   });

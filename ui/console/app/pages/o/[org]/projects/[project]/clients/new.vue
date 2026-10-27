@@ -3,7 +3,7 @@ import ClientForm from '~/components/client/ClientForm.vue';
 import ClientSecretDialog from '~/components/client/ClientSecretDialog.vue';
 import { clientFormLabels, kindOptions, secretDialogLabels } from '~/components/client/labels';
 import { useClientForm } from '~/components/client/useClientForm';
-import { useCanEditProject } from '~/components/project/useProjectAccess';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectDetailStore } from '~/stores/projectDetail';
@@ -14,11 +14,12 @@ const { t } = useI18n();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const detail = useProjectDetailStore();
-const canEdit = useCanEditProject();
-await useAuthStore().load();
-
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const listed = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
+const guard = useProjectGuard(() => listed.value);
+const canEdit = computed(() => guard.value.canConfigure);
+await useAuthStore().load();
+
 if (!listed.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }

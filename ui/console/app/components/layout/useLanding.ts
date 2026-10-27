@@ -4,7 +4,7 @@ import { useOrgsStore } from '~/stores/orgs';
 import { usePinnedStore } from '~/stores/pinned';
 import { useProjectsStore } from '~/stores/projects';
 
-// Lands on the pinned project, else the org's first project, else the overview; picks the requested org, else the pinned, the active, then the first.
+// useLanding resolves where a signed-in person lands: an org's pinned or first project, its overview, onboarding or the org list.
 export function useLanding() {
   const orgs = useOrgsStore();
   const projects = useProjectsStore();
@@ -19,7 +19,7 @@ export function useLanding() {
       ?? orgs.bySlug(auth.me?.activeOrgSlug ?? '')
       ?? orgs.items[0];
     if (!org) {
-      return '/orgs';
+      return auth.me?.orgCreation === true ? '/onboarding' : '/orgs';
     }
     await activeOrg.enter(org.slug);
     await projects.ensureLoaded(org.id);

@@ -23,6 +23,8 @@ type Issuers interface {
 	Project(ctx context.Context, projectID uuid.UUID) (ProjectRef, error)
 	// LockIssuerHandle freezes the project's issuer handle; it joins the caller's unit of work.
 	LockIssuerHandle(ctx context.Context, projectID uuid.UUID) error
+	// IsSystem reports whether the project is the console project, which takes no resource server.
+	IsSystem(ctx context.Context, projectID uuid.UUID) (bool, error)
 }
 
 // Clients reads the project's OAuth clients that links name.

@@ -128,12 +128,14 @@ func (r *orgRow) toOrg() *Org {
 	}
 }
 
-func orgToProto(o *Org) *orgv1.Org {
+// OrgProto is the org.v1 view of o; every id it holds is a public id.
+func OrgProto(o *Org) *orgv1.Org {
 	return &orgv1.Org{
 		Id:        o.PublicID,
 		Slug:      o.Slug,
 		Name:      o.Name,
 		CreatedAt: timestamppb.New(o.CreatedAt),
 		UpdatedAt: timestamppb.New(o.UpdatedAt),
+		System:    o.IsSystem,
 	}
 }

@@ -399,6 +399,10 @@ components:
             type: string
           title: permissions
           description: permissions are what that role grants in this org, so a client can offer only the scopes a key there may hold.
+        system:
+          type: boolean
+          title: system
+          description: system is true for the deployment's system org, which holds the console project.
       title: Org
       additionalProperties: false
     org.v1.UpdateOrgRequest:

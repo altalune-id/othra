@@ -85,7 +85,7 @@ func newFixture(t *testing.T) *fixture {
 	unexpected := apperror.NewReporter(nil, false).Unexpected
 	cfg := enduser.Config{LinkTTL: 15 * time.Minute, ResendAfter: time.Minute, Idle: 24 * time.Hour, Absolute: 48 * time.Hour, MaxAccounts: 5}
 	uow := db.NewTransactor(pool)
-	projects := project.NewService(project.NewStore(pool, schemaName, ""), uow, fakes.NoMemberships{}, nil, "", unexpected)
+	projects := project.NewService(project.NewStore(pool, schemaName, ""), uow, fakes.NoMemberships{}, nil, "", unexpected).WithOrgSlugs(fakes.OrgSlugs(""))
 	f.users = enduser.NewService(enduser.NewStore(pool, schemaName, ""), uow, nil, keptGrants{}, projects, cfg, unexpected)
 	f.with = func(users federation.EndUsers) *federation.Service {
 		return federation.NewService(federation.NewStore(pool, schemaName, ""), uow, upstreams{id: f.up}, users, projects, federation.Config{},

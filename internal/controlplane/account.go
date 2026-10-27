@@ -131,6 +131,7 @@ func Pattern(basePath string) string { return basePath + "/p/{handle}/api/" }
 func (a *AccountPlane) Handler(basePath string) http.Handler {
 	path, connectHandler := accountv1connect.NewAccountServiceHandler(a.svc,
 		connect.WithRecover(a.recoverPanic),
+		connect.WithReadMaxBytes(maxRequestBytes),
 		connect.WithInterceptors(RequestID(), Wrap(a.unexpected), endUserGate(a.now), portalLimits(a.limits), a.validator.interceptor()),
 	)
 	inner := http.NewServeMux()

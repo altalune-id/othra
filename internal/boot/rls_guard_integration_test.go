@@ -17,7 +17,7 @@ import (
 )
 
 func rlsGuardConfig(schema string) config.Config {
-	return config.Config{Env: config.EnvDevelopment, Mode: config.ModeSelfhosted, Postgres: config.PostgresConfig{Schema: schema}}
+	return config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Env: config.EnvDevelopment, Mode: config.ModeSelfhosted, Postgres: config.PostgresConfig{Schema: schema}}
 }
 
 func TestGuardRLS_TheServiceRolePasses(t *testing.T) {

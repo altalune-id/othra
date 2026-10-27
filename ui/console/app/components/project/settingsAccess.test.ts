@@ -13,7 +13,7 @@ describe('project settings pages', () => {
     for (const form of forms) {
       expect(form).toContain('v-if="canEdit"');
     }
-    expect(source).toContain('useCanEditProject');
+    expect(source).toMatch(/useCanEditProject|useProjectGuard/);
   });
 
   it('hides the publish button from people who cannot edit', () => {
@@ -31,7 +31,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 
 describe('project settings markup', () => {
   it.each(pages)('$name tells people who cannot edit why', ({ source }) => {
-    expect(source).toContain('<ProjectReadOnlyNote v-if="!canEdit"');
+    expect(source).toMatch(/<ProjectReadOnlyNote v-(?:else-)?if="!canEdit"/);
   });
 
   it.each(pages)('$name keeps light-theme text neutral: no success or warning coloured text', ({ source }) => {
@@ -102,7 +102,7 @@ describe('m1.5 design re-check', () => {
     const list = read('../../pages/o/[org]/projects/index.vue');
     expect(list).toContain('useCanEditProject');
     expect(list).toMatch(/<AppButton v-if="org && canEdit"[^>]*@click="ui\.openProjectCreate\(\)"/);
-    expect(list).toMatch(/<button v-if="canEdit"[^>]*@click="edit\(project\)"/);
+    expect(list).toMatch(/<button v-if="canEdit && !project\.system"[^>]*@click="edit\(project\)"/);
   });
 
   it('puts the logo file input before its label as a peer, so keyboard focus shows on the label', () => {
@@ -243,7 +243,7 @@ describe('sign-in methods page', () => {
   });
 
   it('gives editing controls to editors only and tells others why', () => {
-    expect(page()).toContain('<ProjectReadOnlyNote v-if="!canEdit"');
+    expect(page()).toMatch(/<ProjectReadOnlyNote v-(?:else-)?if="!canEdit"/);
     expect(page()).toContain('<template v-if="canEdit">');
     expect(page()).toContain(':can-edit="canEdit"');
     expect(card()).toContain('<form v-if="canEdit"');
@@ -257,7 +257,7 @@ describe('sign-in methods page', () => {
   });
 
   it('shows the last-method and linked locks as notes beside disabled controls', () => {
-    expect(page()).toContain(':aria-disabled="emailLocked"');
+    expect(page()).toContain(':aria-disabled="emailLockedOn"');
     expect(card()).toContain(':aria-disabled="locked"');
     expect(card()).toContain(':disabled="busy || locked || removeLocked"');
     expect(page()).not.toContain('role="alert"');
@@ -274,8 +274,8 @@ describe('sign-in methods page', () => {
 
   it('keeps a locked toggle looking On: aria-disabled and a prevented click, never disabled', () => {
     for (const source of [page(), card()]) {
-      expect(source).not.toMatch(/:disabled="busy \|\| (?:emailLocked|locked)"/);
-      expect(source).toMatch(/@click="(?:emailLocked|locked) && \$event\.preventDefault\(\)"/);
+      expect(source).not.toMatch(/:disabled="busy \|\| (?:emailLocked(?:On)?|locked)"/);
+      expect(source).toMatch(/@click="(?:emailLocked(?:On)?|locked) && \$event\.preventDefault\(\)"/);
       expect(source).toContain('\'cursor-not-allowed\'');
     }
   });

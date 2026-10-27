@@ -1,36 +1,17 @@
 <script setup lang="ts">
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
-import FieldError from '#base/components/ui/FieldError.vue';
+import OrgFields from './OrgFields.vue';
 import { useOrgCreate } from './useOrgCreate';
 
 const { t } = useI18n();
-const ids = { name: useId(), nameErr: useId(), slug: useId(), slugHelp: useId(), slugErr: useId() };
 const { open, name, slug, busy, error, fieldErrors, hide, submit } = useOrgCreate();
 </script>
 
 <template>
   <AppModal :open="open" :title="t('org.new')" @close="hide()">
     <form novalidate class="space-y-1" @submit.prevent="submit()">
-      <div class="fieldset">
-        <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
-        <input
-          :id="ids.name" v-model="name" type="text" class="input w-full" :class="{ 'input-error': fieldErrors.name }"
-          :placeholder="t('org.name_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr"
-        >
-        <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
-      </div>
-      <div class="fieldset">
-        <label :for="ids.slug" class="fieldset-legend">{{ t('common.slug') }}</label>
-        <input
-          :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :class="{ 'input-error': fieldErrors.slug }"
-          :placeholder="t('org.slug_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.slug" :aria-describedby="`${ids.slugHelp} ${ids.slugErr}`"
-        >
-        <FieldError :id="ids.slugErr" :message="fieldErrors.slug" />
-        <p :id="ids.slugHelp" class="label whitespace-normal">
-          {{ t('org.slug_random_help') }}
-        </p>
-      </div>
+      <OrgFields v-model:name="name" v-model:slug="slug" :field-errors="fieldErrors" :busy="busy" />
       <ErrorText :error="error" />
     </form>
     <template #footer>

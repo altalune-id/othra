@@ -268,3 +268,29 @@ func TestWhoami_ReportsWhetherFilesMayBeUploaded(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, got.GetFileUploads())
 }
+
+// The console offers Change password only to a person who has one, where password sign-in is on.
+func TestWhoami_ReportsWhetherAPasswordCanChange(t *testing.T) {
+	withPw := &user.User{ID: uuid.New(), PublicID: "adaUserPublicId000001", PasswordHash: "hash"}
+	noPw := &user.User{ID: uuid.New(), PublicID: "bobUserPublicId000001"}
+	users := userByID{withPw.ID: withPw, noPw.ID: noPw}
+	for name, tc := range map[string]struct {
+		on   bool
+		who  *user.User
+		want bool
+	}{
+		"on, has one":     {true, withPw, true},
+		"on, Othra only":  {true, noPw, false},
+		"off, has one":    {false, withPw, false},
+		"off, Othra only": {false, noPw, false},
+	} {
+		p := session.Principal{Source: session.SourceOIDC, UserID: tc.who.ID}
+		got, err := whoami(t, authClient(t, NewControlPlane(orgByID{}, projectByID{}, users, &recordedProfiles{}).WithPasswords(tc.on), p))
+		require.NoError(t, err, name)
+		assert.Equal(t, tc.want, got.GetPasswords(), name)
+	}
+	key := session.Principal{Source: session.SourceAPIKey}
+	got, err := whoami(t, authClient(t, NewControlPlane(orgByID{}, projectByID{}, users, &recordedProfiles{}).WithPasswords(true), key))
+	require.NoError(t, err)
+	assert.False(t, got.GetPasswords(), "a key has no password to change")
+}

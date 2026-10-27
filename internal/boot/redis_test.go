@@ -30,7 +30,7 @@ func redisTestConfig(url string) config.RedisConfig {
 }
 
 func redisFeatureConfig() config.Config {
-	return config.Config{
+	return config.Config{HTTP: config.HTTPConfig{Addr: ":5150"},
 		Postgres: config.PostgresConfig{DSN: "x"},
 		RateLimit: config.RateLimitConfig{
 			Driver: config.RateLimitDriverRedis, Auth: config.RateLimitGroupConfig{Enabled: true},
@@ -73,7 +73,7 @@ func TestBuildRedis_UnusedNeverConnects(t *testing.T) {
 	assert.Zero(t, *calls)
 	assert.Empty(t, logs.String(), "no url, nothing to say")
 
-	cfg := config.Config{Redis: redisTestConfig("redis://:" + redisTestPassword + "@cache.internal:6379")}
+	cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Redis: redisTestConfig("redis://:" + redisTestPassword + "@cache.internal:6379")}
 	cfg.RateLimit.Driver = config.RateLimitDriverRedis
 	rdb, rh, err = buildRedis(t.Context(), k, cfg, nooptrace.NewTracerProvider(), log)
 	require.NoError(t, err)
@@ -121,7 +121,7 @@ func TestBoot_DefaultConfigNeverOpensRedis(t *testing.T) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
 
-	app, err := Boot(context.Background(), config.Config{Postgres: config.PostgresConfig{DSN: "x"}}, testLogger())
+	app, err := Boot(context.Background(), config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}, Postgres: config.PostgresConfig{DSN: "x"}}, testLogger())
 	require.NoError(t, err)
 	assert.Zero(t, *calls)
 	assert.NotContains(t, workerNames(app), "redis-health")

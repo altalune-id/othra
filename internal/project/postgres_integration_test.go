@@ -541,7 +541,7 @@ func TestService_LogoUploadThroughStorage(t *testing.T) {
 	files := storage.NewService(driver, f.files, storage.Config{
 		App: "othra", PublicBaseURL: "https://files.test", UploadURLTTL: time.Minute, PendingTTL: time.Hour,
 	}, apperror.NewReporter(nil, false).Unexpected)
-	svc := project.NewService(f.projects, db.NewTransactor(f.pool), fakes.NoMemberships{}, nil, "", apperror.NewReporter(nil, false).Unexpected).WithStorage(files)
+	svc := project.NewService(f.projects, db.NewTransactor(f.pool), fakes.NoMemberships{}, nil, "", apperror.NewReporter(nil, false).Unexpected).WithOrgSlugs(fakes.OrgSlugs("")).WithStorage(files)
 	ctx := f.in(orgID)
 	png := append([]byte("\x89PNG\r\n\x1a\n"), make([]byte, 24)...)
 

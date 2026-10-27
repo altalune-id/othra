@@ -27,6 +27,7 @@ const (
 // Installer runs the one-time install; *Service implements it.
 type Installer interface {
 	Install(ctx context.Context, r Request) (*user.User, error)
+	Passwords() bool
 }
 
 // WebOpts configures the install layout.
@@ -109,13 +110,11 @@ func (h *Web) postInstall(w http.ResponseWriter, r *http.Request) {
 		h.locked(w, r)
 		return
 	}
-	req := Request{
-		Name:     strings.TrimSpace(r.PostFormValue("name")),
-		Email:    strings.TrimSpace(r.PostFormValue("email")),
-		Password: r.PostFormValue("password"),
-		OrgName:  strings.TrimSpace(r.PostFormValue("org_name")),
+	req := Request{Email: strings.TrimSpace(r.PostFormValue("email")), OrgName: strings.TrimSpace(r.PostFormValue("org_name"))}
+	if h.o.Installer.Passwords() {
+		req.Name, req.Password = strings.TrimSpace(r.PostFormValue("name")), r.PostFormValue("password")
 	}
-	if h.o.Consent.Required {
+	if h.o.Consent.Required && h.o.Installer.Passwords() {
 		if r.PostFormValue("accept_terms") != "1" {
 			h.render(w, r, http.StatusUnprocessableEntity, h.retry(req, "Please accept the terms to continue."))
 			return
@@ -134,6 +133,10 @@ func (h *Web) postInstall(w http.ResponseWriter, r *http.Request) {
 	}
 	h.o.Required.Store(false)
 	h.writeSetupCookie(w, "", -1)
+	if !h.o.Installer.Passwords() {
+		http.Redirect(w, r, h.o.Kit.Path("/login"), http.StatusSeeOther)
+		return
+	}
 	principal, err := h.o.SignIn.LoginLocal(r.Context(), auth.Credentials{Email: req.Email, Password: req.Password})
 	if err != nil {
 		h.o.Kit.Fail(w, r, "web: sign in after install", err)
@@ -166,7 +169,7 @@ func (h *Web) retry(req Request, msg string) views.InstallData {
 }
 
 func (h *Web) render(w http.ResponseWriter, r *http.Request, status int, v views.InstallData) {
-	v.Consent = h.o.Consent
+	v.Consent, v.Passwords = h.o.Consent, h.o.Installer.Passwords()
 	h.o.Kit.Render(w, r, status, views.Install(h.o.Kit.Layout("Set up Othra"), v))
 }
 

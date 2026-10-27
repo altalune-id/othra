@@ -5,6 +5,7 @@ package boot
 import (
 	"cmp"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,8 +36,11 @@ func TestFirstBoot_EnvGenesis(t *testing.T) {
 	svcs, cfg := migratedServices(t, cfg)
 	ctx := t.Context()
 
-	require.NoError(t, firstBoot(ctx, cfg, svcs, testLogger(), true))
-	require.NoError(t, firstBoot(ctx, cfg, svcs, testLogger(), true), "a second boot changes nothing")
+	log, buf := bufferLogger()
+	require.NoError(t, firstBoot(ctx, cfg, svcs, log, true))
+	assert.NotContains(t, buf.String(), "already installed")
+	require.NoError(t, firstBoot(ctx, cfg, svcs, log, true), "a second boot changes nothing")
+	assert.Equal(t, 1, strings.Count(buf.String(), "auth.genesis is set but this instance is already installed"))
 
 	u, err := svcs.Users.ByEmail(ctx, "root@example.com")
 	require.NoError(t, err)

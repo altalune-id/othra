@@ -37,7 +37,7 @@ service ClientService {
   rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse) {
     option (mcp.v1.tool) = {
       name: "client_update"
-      description: "Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change."
+      description: "Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change, and the console client (registration SYSTEM) can't be changed."
       required: ["project_id", "client_id", "name", "redirect_uris", "consent_policy"]
       mutation: true
       destructive: true
@@ -46,7 +46,7 @@ service ClientService {
   rpc DeleteClient(DeleteClientRequest) returns (DeleteClientResponse) {
     option (mcp.v1.tool) = {
       name: "client_delete"
-      description: "Delete an OAuth client and its secrets and links. Apps using its client_id stop signing in."
+      description: "Delete an OAuth client and its secrets and links. Apps using its client_id stop signing in. The console client (registration SYSTEM) can't be deleted."
       required: ["project_id", "client_id"]
       mutation: true
       destructive: true
@@ -91,6 +91,8 @@ enum ClientRegistration {
   CLIENT_REGISTRATION_REGISTERED = 1;
   // CIMD signed in with a Client ID Metadata Document; it is read-only and its OAuth client_id is metadata_url.
   CLIENT_REGISTRATION_CIMD = 2;
+  // SYSTEM is the console client Othra seeds at install; it is read-only on every surface.
+  CLIENT_REGISTRATION_SYSTEM = 3;
 }
 
 // SecretGrace is how long the current secret keeps working after a rotation.

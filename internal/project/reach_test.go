@@ -29,7 +29,7 @@ func TestProjectReach_IDOnlyRPCs(t *testing.T) {
 	orgBPub := refs.Org(orgB)
 	foreign := mustProject(t, orgB)
 	store := &fakes.ProjectStore{Project: foreign}
-	cp := project.NewControlPlane(project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), refs)
+	cp := project.NewControlPlane(project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")), refs)
 	for name, p := range map[string]session.Principal{
 		"member of A": {Source: session.SourceLocal, UserID: uuid.New(), ActiveOrgID: orgA, Scopes: []string{"*"}},
 		"key of A":    {Source: session.SourceAPIKey, ActiveOrgID: orgA, AllProjects: true},
@@ -57,7 +57,7 @@ func TestProjectReach_OrgKeyCannotListAnotherOrg(t *testing.T) {
 	orgA, orgB := uuid.New(), uuid.New()
 	refs.Org(orgA)
 	orgBPub := refs.Org(orgB)
-	cp := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Projects: []*project.Project{mustProject(t, orgB)}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), refs)
+	cp := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Projects: []*project.Project{mustProject(t, orgB)}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")), refs)
 	ctx := session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceAPIKey, ActiveOrgID: orgA, AllProjects: true})
 	for _, orgID := range []string{orgBPub, orgB.String(), orgA.String()} {
 		_, err := cp.ListProjects(ctx, connect.NewRequest(&projectv1.ListProjectsRequest{OrgId: orgID}))
@@ -70,7 +70,7 @@ func TestProjectReach_ListShowsOnlyGrantedProjects(t *testing.T) {
 	orgA := uuid.New()
 	orgAPub := refs.Org(orgA)
 	granted, other := mustProject(t, orgA), mustProject(t, orgA)
-	cp := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Projects: []*project.Project{granted, other}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), refs)
+	cp := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Projects: []*project.Project{granted, other}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")), refs)
 	ctx := session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceAPIKey, ActiveOrgID: orgA, ProjectIDs: []uuid.UUID{granted.ID}})
 	resp, err := cp.ListProjects(ctx, connect.NewRequest(&projectv1.ListProjectsRequest{OrgId: orgAPub}))
 	require.NoError(t, err)
@@ -88,11 +88,11 @@ func TestProjectReach_ProjectKeyCannotReachAnotherProject(t *testing.T) {
 	mine, theirs := mustProject(t, orgA), mustProject(t, orgA)
 	ctx := session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceAPIKey, ActiveOrgID: orgA, ActiveProjectID: mine.ID, ProjectIDs: []uuid.UUID{mine.ID}})
 
-	_, err := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Project: theirs}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), refs).
+	_, err := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Project: theirs}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")), refs).
 		GetProject(ctx, connect.NewRequest(&projectv1.GetProjectRequest{Id: theirs.PublicID}))
 	assert.True(t, project.IsNotFoundError(err))
 
-	resp, err := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Project: mine}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), refs).
+	resp, err := project.NewControlPlane(project.NewService(&fakes.ProjectStore{Project: mine}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")), refs).
 		GetProject(ctx, connect.NewRequest(&projectv1.GetProjectRequest{Id: mine.PublicID}))
 	require.NoError(t, err)
 	assert.Equal(t, mine.PublicID, resp.Msg.GetProject().GetId())

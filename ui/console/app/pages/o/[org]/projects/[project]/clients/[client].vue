@@ -4,13 +4,14 @@ import type { LinkRow } from '~/components/link/LinkList.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import UrlField from '#base/components/ui/UrlField.vue';
 import { useDates } from '#base/composables/useDates';
 import { ConsentPolicy, SecretGrace } from '#gen/client/v1/client_pb';
 import ClientForm from '~/components/client/ClientForm.vue';
 import ClientSecretDialog from '~/components/client/ClientSecretDialog.vue';
 import ClientSecrets from '~/components/client/ClientSecrets.vue';
-import { clientKinds, isCimdClient, kindName } from '~/components/client/kinds';
+import { clientKinds, isCimdClient, isSystemClient, kindName } from '~/components/client/kinds';
 import { clientFormLabels, kindOptions, rotateLabels, secretDialogLabels, secretsLabels } from '~/components/client/labels';
 import RotateSecretDialog from '~/components/client/RotateSecretDialog.vue';
 import { useClientForm } from '~/components/client/useClientForm';
@@ -55,7 +56,8 @@ if (page.notFound.value || !page.client.value) {
 const client = computed(() => page.client.value as Client);
 const kind = computed(() => clientKinds[kindName(client.value.kind)]);
 const cimd = computed(() => isCimdClient(client.value));
-const editable = computed(() => canEdit.value && !cimd.value);
+const system = computed(() => isSystemClient(client.value));
+const editable = computed(() => canEdit.value && !cimd.value && !system.value);
 const issuerUrl = computed(() => detail.get(projectId)?.issuerUrl ?? '');
 const urlLabels = computed(() => ({ copyLabel: t('common.copy_label', { label: '{label}' }), openLabel: t('common.open_new_tab', { label: '{label}' }) }));
 const fetched = computed(() => moment(client.value.metadataFetchedAt));
@@ -171,14 +173,16 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
         <h1 class="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold break-words">
           {{ client.name }}
           <span v-if="cimd" class="badge badge-soft badge-warning badge-sm font-normal" data-testid="client-cimd-badge">{{ t('clients.cimd_badge') }}</span>
+          <SystemBadge v-if="system" :label="t('common.system')" class="font-normal" />
         </h1>
       </div>
-      <button v-if="canEdit" type="button" class="btn btn-ghost btn-sm max-sm:btn-block" @click="page.askDelete()">
+      <button v-if="canEdit && !system" type="button" class="btn btn-ghost btn-sm max-sm:btn-block" @click="page.askDelete()">
         <Icon :name="cimd ? 'lucide:ban' : 'lucide:trash-2'" size="16" class="text-error" />
         {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
       </button>
     </div>
-    <ProjectReadOnlyNote v-if="!canEdit" />
+    <ProjectReadOnlyNote v-if="system" icon="lucide:shield" :text="t('clients.system_client_note')" />
+    <ProjectReadOnlyNote v-else-if="!canEdit" />
 
     <section class="card border border-base-300 bg-base-100" data-testid="client-details">
       <div class="card-body gap-3">
@@ -294,7 +298,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
     </section>
 
     <ClientSecrets
-      v-if="kind.secret && !cimd"
+      v-if="kind.secret && !cimd && !system"
       ref="secretsCard"
       :rows="rows"
       :can-edit="canEdit"

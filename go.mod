@@ -3,6 +3,8 @@ module altalune.id/othra
 go 1.26.9
 
 require (
+	altalune.id/othra/oauthrs v0.0.0
+	altalune.id/othra/oidcrp v0.0.0
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2
 	buf.build/go/protovalidate v1.4.0
 	connectrpc.com/connect v1.21.0
@@ -176,3 +178,7 @@ tool (
 	altalune.id/othra/cmd/protoc-gen-mcp
 	github.com/a-h/templ/cmd/templ
 )
+
+replace altalune.id/othra/oidcrp => ./oidcrp
+
+replace altalune.id/othra/oauthrs => ./oauthrs

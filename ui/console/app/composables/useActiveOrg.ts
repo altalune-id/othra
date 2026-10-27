@@ -1,3 +1,4 @@
+import { isPerson } from '~/lib/auth/person';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 
@@ -10,7 +11,7 @@ export function useActiveOrg() {
     await Promise.all([auth.load(), orgs.ensureLoaded()]);
     const me = auth.me;
     const org = orgs.bySlug(slug);
-    if (!me || !org || me.source !== 'local' || me.activeOrgSlug === slug) {
+    if (!me || !org || !isPerson(me) || me.activeOrgSlug === slug) {
       return;
     }
     if (!me.operator) {

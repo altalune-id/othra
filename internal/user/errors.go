@@ -96,3 +96,5 @@ func IsInvalidNameError(err error) bool {
 func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsAlreadyExistsError(err) || IsInvalidEmailError(err) || IsInvalidNameError(err)
 }
+
+var errLockOutsideTx = errors.New("user.postgres: a row lock needs a transaction")

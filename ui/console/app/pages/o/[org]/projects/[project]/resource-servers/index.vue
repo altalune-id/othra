@@ -4,7 +4,7 @@ import { timestampDate } from '@bufbuild/protobuf/wkt';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import { useDates } from '#base/composables/useDates';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
-import { useCanEditProject } from '~/components/project/useProjectAccess';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { resourceServerListLabels } from '~/components/resourceserver/labels';
 import ResourceServerList from '~/components/resourceserver/ResourceServerList.vue';
 import { useResourceServerList } from '~/components/resourceserver/useResourceServers';
@@ -18,11 +18,11 @@ const { t, locale } = useI18n();
 const { moment } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
-const canEdit = useCanEditProject();
-await useAuthStore().load();
-
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const listed = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
+const guard = useProjectGuard(() => listed.value);
+const canEdit = computed(() => guard.value.canConfigure);
+await useAuthStore().load();
 if (!listed.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }
@@ -69,7 +69,8 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.t
         {{ t('rs.new') }}
       </NuxtLink>
     </div>
-    <ProjectReadOnlyNote v-if="!canEdit" />
+    <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('rs.system_empty')" />
+    <ProjectReadOnlyNote v-else-if="!canEdit" />
 
     <section class="card border border-base-300 bg-base-100" data-testid="resource-servers-card">
       <div class="card-body gap-2">

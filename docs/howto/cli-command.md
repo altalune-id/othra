@@ -3,7 +3,7 @@
 Use this when an operator or a script needs a command. There are two kinds:
 
 - **Remote** (almost all): a Connect client of a running server. It calls an RPC, so the RPC comes first ([rpc.md](rpc.md)). The server checks permission and reach; the command only sends ids and prints the answer.
-- **Operator**: runs on the server with database access. It boots the `App` (no install URL, scheduler or consumer) and calls a service directly as the operator. It refuses `--url`, `--token`, `--token-file` and `--profile`. Today: `user set-password`, `member add`.
+- **Operator**: runs on the server with database access. It boots the `App` (no install URL, scheduler or consumer) and calls a service directly as the operator. It refuses `--url`, `--token`, `--token-file` and `--profile`. Today: `admin set-password`, `admin sign-in-link`, `member add`.
 
 A domain's command tree is its `internal/<domain>/cli.go`. `internal/cli` is only the shell (root, flags, config, URL, token, profile and session-file resolution, and the adapters that feed each `NewCmd`). Never add a command file to `internal/cli`.
 

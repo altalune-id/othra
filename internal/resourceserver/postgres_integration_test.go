@@ -40,6 +40,10 @@ func (people) UserPublicID(context.Context, uuid.UUID) (string, error) {
 	return "usrusrusrusrusrusrusr", nil
 }
 
+func (i issuers) IsSystem(ctx context.Context, id uuid.UUID) (bool, error) {
+	return i.projects.IsSystem(ctx, id)
+}
+
 func (i issuers) LockIssuerHandle(ctx context.Context, id uuid.UUID) error {
 	return i.projects.LockIssuerHandle(ctx, id)
 }
@@ -96,7 +100,7 @@ func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	unexpected := apperror.NewReporter(nil, false).Unexpected
-	projects := project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, issuerBase, unexpected)
+	projects := project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, issuerBase, unexpected).WithOrgSlugs(fakes.OrgSlugs(""))
 	f := &pgFixture{schema: schemaName, db: sqlDB, pool: pool, checker: &passing{}}
 	f.svc = resourceserver.NewService(resourceserver.Deps{
 		Store: resourceserver.NewStore(pool, schemaName, ""), Transactor: db.NewTransactor(pool), Issuers: issuers{projects: projects}, People: people{},
@@ -240,6 +244,8 @@ func (staticIssuer) Project(context.Context, uuid.UUID) (resourceserver.ProjectR
 	return resourceserver.ProjectRef{PublicID: "prjprjprjprjprjprjprj", Issuer: issuerBase}, nil
 }
 func (staticIssuer) LockIssuerHandle(context.Context, uuid.UUID) error { return nil }
+
+func (staticIssuer) IsSystem(context.Context, uuid.UUID) (bool, error) { return false, nil }
 
 type failingChecker struct{}
 

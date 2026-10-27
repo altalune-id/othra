@@ -135,3 +135,5 @@ func IsExpectedError(err error) bool {
 var errLockOutsideTx = errors.New("member.postgres: a row lock needs a transaction")
 
 var errNoDirectory = errors.New("member: no directory wired")
+
+var errNoEffects = errors.New("member: no effects wired")

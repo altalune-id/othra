@@ -240,3 +240,17 @@ func TestService_CreationAllowed(t *testing.T) {
 	assert.True(t, svc.CreationAllowed(), "creation is allowed until WithCreation(false)")
 	assert.False(t, svc.WithCreation(false).CreationAllowed())
 }
+
+// ORG007: the system org holds the console project, so it can't be renamed or re-slugged on any surface.
+func TestService_UpdateRefusesTheSystemOrg(t *testing.T) {
+	sys, err := org.NewSystemOrg("default", "Default", uuid.Nil)
+	require.NoError(t, err)
+	store := &fakes.OrgStore{Org: sys}
+	svc := org.NewService(store, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, testUnexpected())
+	_, err = svc.Update(context.Background(), sys.ID, "Renamed", "renamed")
+	assert.True(t, org.IsSystemManagedError(err), "%v", err)
+	ae, ok := apperror.AsAppError(err)
+	require.True(t, ok)
+	assert.Equal(t, apperror.CodeOrgSystemManaged, ae.Code())
+	assert.Equal(t, "Default", sys.Name)
+}

@@ -96,6 +96,17 @@ describe('useResourceServerCreate', () => {
     expect([c.trustAvailable.value, c.trusted.value]).toEqual([false, false]);
   });
 
+  it('shows the console project\'s refusal as PRJ011', async () => {
+    setKnownKeys('apperror.PRJ011');
+    createResourceServer.mockRejectedValueOnce(connectError('PRJ011'));
+    const c = useResourceServerCreate(projectId);
+    c.name.value = 'Local tools';
+    c.identifier.value = 'http://127.0.0.1:8080/mcp';
+    c.scopes.rows.value = ['tools:run'];
+    await c.submit();
+    expect(c.error.value?.message).toBe('apperror.PRJ011');
+  });
+
   it('puts a trust refusal under the identifier', async () => {
     setKnownKeys('apperror.RSV002_needs_trust', 'apperror.RSV007');
     createResourceServer.mockRejectedValueOnce(connectError('RSV002', { reason: 'needs_trust' })).mockRejectedValueOnce(connectError('RSV007'));

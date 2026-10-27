@@ -36,7 +36,7 @@ func projectsWithKeys(f *projectFixture, ks *keys.Service) *project.Service {
 	return project.NewService(f.projects, db.NewTransactor(f.pool), fakes.NoMemberships{}, func(ctx context.Context, p *project.Project) error {
 		_, err := ks.Generate(ctx, p.OrgID, p.ID)
 		return err
-	}, "", apperror.NewReporter(nil, false).Unexpected).WithStorage(&fakes.FileStorage{})
+	}, "", apperror.NewReporter(nil, false).Unexpected).WithOrgSlugs(fakes.OrgSlugs("")).WithStorage(&fakes.FileStorage{})
 }
 
 func countRows(t *testing.T, f *projectFixture, table string, orgID uuid.UUID) int {

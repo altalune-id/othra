@@ -58,3 +58,8 @@ templ CardWith(title string, lead templ.Component) {
 		</div>
 	</div>
 }
+
+// Divider separates "Continue with Othra" from the password form below it.
+templ Divider(label string) {
+	<div class="divider my-0 text-xs text-base-content/70">{ label }</div>
+}

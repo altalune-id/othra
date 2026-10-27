@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -28,6 +29,18 @@ func TestHandler_MountsUnderBasePathAndTranslatesErrors(t *testing.T) {
 
 	_, err = c.CreateOrg(context.Background(), connect.NewRequest(&orgv1.CreateOrgRequest{Slug: "A", Name: "Acme"}))
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
+}
+
+func TestHandler_RefusesAnOverLimitBody(t *testing.T) {
+	store := &fakes.OrgStore{}
+	srv := New(Services{Orgs: org.NewService(store, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}, nil, Options{})
+	ts := httptest.NewServer(srv.Handler("/app"))
+	t.Cleanup(ts.Close)
+	c := orgv1connect.NewOrgServiceClient(http.DefaultClient, ts.URL+"/app/api")
+
+	_, err := c.CreateOrg(context.Background(), connect.NewRequest(&orgv1.CreateOrgRequest{Slug: "acme", Name: strings.Repeat("a", maxRequestBytes)}))
+	assert.Equal(t, connect.CodeResourceExhausted, connect.CodeOf(err))
+	assert.Nil(t, store.Org, "the handler never ran")
 }
 
 func TestRecoverPanic(t *testing.T) {

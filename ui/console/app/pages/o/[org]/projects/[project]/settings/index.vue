@@ -5,7 +5,7 @@ import ErrorText from '#base/components/ui/ErrorText.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
-import { useCanEditProject } from '~/components/project/useProjectAccess';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -17,13 +17,13 @@ const errorMessage = useErrorMessage();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const { $projectClient: client } = useNuxtApp();
-const canEdit = useCanEditProject();
-await useAuthStore().load();
-
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const project = computed(() =>
   projects.items.find(item => item.orgId === org.value?.id && item.slug === route.params.project),
 );
+const guard = useProjectGuard(() => project.value);
+const canEdit = computed(() => guard.value.canConfigure);
+await useAuthStore().load();
 
 if (!project.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
@@ -75,7 +75,8 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
         {{ t('project.settings_general_subtitle') }}
       </p>
     </div>
-    <ProjectReadOnlyNote v-if="!canEdit" />
+    <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="`${t('project.system_note')} ${t('project.system_general')}`" />
+    <ProjectReadOnlyNote v-else-if="!canEdit" />
 
     <section class="card border border-base-300 bg-base-100">
       <div class="card-body gap-2">

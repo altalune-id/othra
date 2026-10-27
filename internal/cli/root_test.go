@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/config"
 	"altalune.id/othra/internal/boot"
 	"altalune.id/othra/internal/cli"
+	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/reqid"
 )
@@ -25,6 +26,10 @@ func (f fakeApp) RunMCP(context.Context) error { return f.runErr }
 func (f fakeApp) Close(context.Context) error  { return nil }
 
 func (f fakeApp) SetPassword(context.Context, string, string) error { return f.runErr }
+
+func (f fakeApp) SignInLink(context.Context, string) (enduser.IssuedLink, error) {
+	return enduser.IssuedLink{}, f.runErr
+}
 
 func (f fakeApp) AddMember(context.Context, string, string, member.Role) (*member.Member, error) {
 	return nil, f.runErr

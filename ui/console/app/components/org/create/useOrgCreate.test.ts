@@ -37,6 +37,15 @@ describe('useOrgCreate', () => {
     expect(navigateTo).toHaveBeenCalledWith('/o/acme');
   });
 
+  it('goes where the landing option says', async () => {
+    const landing = vi.fn().mockResolvedValue('/o/acme/projects/web');
+    const form = useOrgCreate({ landing });
+    form.name.value = 'Acme';
+    await form.submit();
+    expect(landing).toHaveBeenCalledWith(org);
+    expect(navigateTo).toHaveBeenCalledWith('/o/acme/projects/web');
+  });
+
   it('stays open when the response has no org', async () => {
     createOrg.mockResolvedValue({});
     const form = useOrgCreate();

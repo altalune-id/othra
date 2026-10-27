@@ -46,7 +46,7 @@ func TestRefResolver(t *testing.T) {
 	require.NoError(t, err)
 
 	r := refResolver{
-		projects: project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()),
+		projects: project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs("")),
 		orgs:     org.NewService(&fakes.OrgStore{Org: o}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, testUnexpected()),
 	}
 
@@ -85,19 +85,19 @@ func TestOwnerRoles(t *testing.T) {
 func TestProjectOrgs(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "acme", "Acme", uuid.Nil)
 	require.NoError(t, err)
-	r := projectOrgs{projects: project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())}
+	r := projectOrgs{projects: project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs(""))}
 
 	got, err := r.OrgOf(context.Background(), p.ID)
 	require.NoError(t, err)
 	assert.Equal(t, p.OrgID, got)
 
-	_, err = projectOrgs{projects: project.NewService(&fakes.ProjectStore{Err: &project.NotFoundError{}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())}.OrgOf(context.Background(), uuid.New())
+	_, err = projectOrgs{projects: project.NewService(&fakes.ProjectStore{Err: &project.NotFoundError{}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs(""))}.OrgOf(context.Background(), uuid.New())
 	assert.True(t, project.IsNotFoundError(err))
 }
 
 func TestRefResolver_PropagatesNotFound(t *testing.T) {
 	r := refResolver{
-		projects: project.NewService(&fakes.ProjectStore{Err: &project.NotFoundError{}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()),
+		projects: project.NewService(&fakes.ProjectStore{Err: &project.NotFoundError{}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs("")),
 		orgs:     org.NewService(&fakes.OrgStore{Err: &org.NotFoundError{}}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, testUnexpected()),
 	}
 
@@ -115,15 +115,15 @@ func TestProjectIDs(t *testing.T) {
 	b, err := project.NewProject(orgID, "beta", "Beta", uuid.Nil)
 	require.NoError(t, err)
 
-	ids, err := projectIDs{projects: project.NewService(&fakes.ProjectStore{Projects: []*project.Project{a, b}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())}.ProjectIDs(context.Background(), orgID)
+	ids, err := projectIDs{projects: project.NewService(&fakes.ProjectStore{Projects: []*project.Project{a, b}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs(""))}.ProjectIDs(context.Background(), orgID)
 	require.NoError(t, err)
 	assert.Equal(t, []uuid.UUID{a.ID, b.ID}, ids)
 
-	ids, err = projectIDs{projects: project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())}.ProjectIDs(context.Background(), orgID)
+	ids, err = projectIDs{projects: project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs(""))}.ProjectIDs(context.Background(), orgID)
 	require.NoError(t, err)
 	assert.Empty(t, ids)
 
-	_, err = projectIDs{projects: project.NewService(&fakes.ProjectStore{Err: errors.New("db down")}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())}.ProjectIDs(context.Background(), orgID)
+	_, err = projectIDs{projects: project.NewService(&fakes.ProjectStore{Err: errors.New("db down")}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs(""))}.ProjectIDs(context.Background(), orgID)
 	assert.Error(t, err)
 }
 

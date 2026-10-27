@@ -35,7 +35,7 @@ func TestEndUsersConfig_ZeroFallsBackToTheDefaults(t *testing.T) {
 func TestBuildScheduler_RegistersTheEndUserPrune(t *testing.T) {
 	k := kernel.Kernel{Meter: noopmetric.NewMeterProvider().Meter("test"), Reporter: apperror.NewReporter(nil, false)}
 	svcs := &Services{Sessions: session.NewMemoryStore(), EndUsers: buildEndUsers(k, config.Config{}, fakes.Transactor{}, nil, endUserGrants{},
-		project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil))}
+		project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")))}
 	r, err := buildScheduler(k, config.Config{Scheduler: config.SchedulerConfig{Enabled: true}}, svcs, testLogger())
 	require.NoError(t, err)
 	var names []string

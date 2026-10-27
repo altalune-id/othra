@@ -247,11 +247,20 @@ func TestJWKS_ServesTheProjectKeysWithAnETag(t *testing.T) {
 	assert.Positive(t, f.corsCalls, "public documents go through the CORS middleware")
 }
 
+// The console project's issuer is the one reserved handle that resolves.
+func TestSystemHandleResolves(t *testing.T) {
+	f := newFixture(t, "")
+	f.issuers.byHandle[project.SystemHandle] = &project.Issuer{ProjectID: uuid.New(), OrgID: uuid.New(), Handle: project.SystemHandle, Name: "Othra"}
+	rec := f.do(t, http.MethodGet, "/p/system/.well-known/openid-configuration")
+	assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"issuer":"https://id.example.com/p/system"`)
+}
+
 // SECURITY: an unknown, reserved or malformed handle answers one identical 404, so probing learns nothing.
 func TestUnknownHandlesAnswerOneIdentical404(t *testing.T) {
 	f := newFixture(t, "")
 	var first *httptest.ResponseRecorder
-	for _, handle := range []string{"nobody-here", "system", "Acme-Web", "ACME-WEB", "a_b", "ab", strings.Repeat("a", 41), "acme-web-"} {
+	for _, handle := range []string{"nobody-here", "admin", "Acme-Web", "ACME-WEB", "a_b", "ab", strings.Repeat("a", 41), "acme-web-"} {
 		for _, path := range []string{
 			"/p/" + handle + "/oauth2/jwks.json",
 			"/p/" + handle + "/.well-known/openid-configuration",

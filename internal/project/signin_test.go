@@ -30,7 +30,7 @@ func (m methods) AnyEndUserUnlinked(context.Context, uuid.UUID, uuid.UUID) (bool
 func TestService_SetSignInEmailLink(t *testing.T) {
 	newSvc := func(m project.SignInMethods) (*project.Service, *fakes.ProjectStore) {
 		store := &fakes.ProjectStore{Project: &project.Project{ID: uuid.New(), OrgID: uuid.New(), SignInEmailLink: true}}
-		svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
+		svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs(""))
 		if m != nil {
 			svc.WithSignInMethods(m)
 		}

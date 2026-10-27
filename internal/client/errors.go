@@ -186,6 +186,38 @@ func (e *MetadataManagedError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeClientMetadataManaged, "This app is managed by its metadata document").WithCause(e)
 }
 
+// SystemManagedError signals a change to the console client, which Othra alone defines.
+type SystemManagedError struct{}
+
+func (*SystemManagedError) Error() string { return "client: the console client is managed by Othra" }
+
+// IsSystemManagedError reports whether err's tree contains a *SystemManagedError.
+func IsSystemManagedError(err error) bool {
+	_, ok := errors.AsType[*SystemManagedError](err)
+	return ok
+}
+
+// ToAppError maps SystemManagedError to CLT009.
+func (e *SystemManagedError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeClientSystemManaged, "Othra manages the console app").WithCause(e)
+}
+
+// SystemProjectError signals a new client in the console project, which holds only the client Othra seeds.
+type SystemProjectError struct{}
+
+func (*SystemProjectError) Error() string { return "client: the console project takes no new client" }
+
+// IsSystemProjectError reports whether err's tree contains a *SystemProjectError.
+func IsSystemProjectError(err error) bool {
+	_, ok := errors.AsType[*SystemProjectError](err)
+	return ok
+}
+
+// ToAppError maps SystemProjectError to PRJ011.
+func (e *SystemProjectError) ToAppError() *apperror.AppError {
+	return apperror.New(apperror.CodeProjectSystemManaged, "Othra manages the console project").WithCause(e)
+}
+
 // ProjectNotFoundError signals a project that does not exist or is out of the caller's reach.
 type ProjectNotFoundError struct{}
 
@@ -206,7 +238,7 @@ func (e *ProjectNotFoundError) ToAppError() *apperror.AppError {
 func IsExpectedError(err error) bool {
 	return IsNotFoundError(err) || IsInvalidRedirectURIError(err) || IsInvalidSettingsError(err) || IsNoSecretError(err) ||
 		IsSecretPersonOnlyError(err) || IsSecretNotFoundError(err) || IsSecretExistsError(err) || IsProjectNotFoundError(err) ||
-		IsMetadataManagedError(err)
+		IsMetadataManagedError(err) || IsSystemManagedError(err) || IsSystemProjectError(err)
 }
 
 // MetadataReason is the stable cause of a *MetadataError; it goes only to the log.
@@ -282,3 +314,5 @@ func AsMetadataError(err error) (*MetadataError, bool) {
 }
 
 var errNoLinks = errors.New("client: no resource server links for metadata document clients")
+
+var errNoMetadataHook = errors.New("client: nothing forgets the consents of a metadata document client that changed")

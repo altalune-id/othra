@@ -81,6 +81,8 @@ func samples() []error {
 		errOf(org.NewOrg("new", "Acme", nobody)),
 		errOf(org.NewOrg("acme", "", nobody)),
 		&org.CreationDisabledError{},
+		&org.AlreadyOwnedError{},
+		&org.SystemManagedError{},
 
 		&project.NotFoundError{Slug: "web"},
 		&project.AlreadyExistsError{Slug: "web"},
@@ -96,6 +98,7 @@ func samples() []error {
 		&project.InvalidLogoError{Reason: project.LogoSize},
 		&project.TermsNotSetError{},
 		&project.SignInLastMethodError{},
+		&project.SystemManagedError{},
 
 		&apikey.NotFoundError{ID: "x"},
 		apikey.ValidateName(""),
@@ -141,6 +144,11 @@ func samples() []error {
 		&auth.ResetNotUsableError{Reason: auth.ResetExpired},
 		&auth.ResetNotUsableError{Reason: auth.ResetUsed},
 		&auth.ResetNotUsableError{Reason: auth.ResetNotFound},
+		&auth.NoConsoleAccountError{Reason: auth.NoConsoleNotInvited},
+		&auth.NoConsoleAccountError{Reason: auth.NoConsoleRemoved},
+		&auth.NoConsoleAccountError{Reason: auth.NoConsoleUnverified},
+		&auth.SignInExpiredError{},
+		&auth.IdentityConflictError{},
 		password.Check("short", password.Hints{}),
 		password.Check(strings.Repeat("a", password.MaxLen+1), password.Hints{}),
 		password.Check("iloveyou1234", password.Hints{}),
@@ -204,6 +212,8 @@ func samples() []error {
 		&client.SecretNotFoundError{},
 		&client.SecretExistsError{},
 		&client.MetadataManagedError{},
+		&client.SystemManagedError{},
+		&client.SystemProjectError{},
 
 		&resourceserver.NotFoundError{},
 		&resourceserver.InvalidIdentifierError{Identifier: "https://A.example", Reason: resourceserver.IdentifierNotCanonical, Canonical: "https://a.example"},

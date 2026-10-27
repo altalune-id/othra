@@ -80,6 +80,7 @@ func buildAPIHandler(
 		Account:         accountSlices(svcs),
 		Refs:            newPublicIDs(svcs),
 		FileUploads:     svcs.Caps.FileUploads,
+		Passwords:       svcs.Caps.Passwords,
 	}, unexpected, opts).Handler(basePath)
 	if requireCredentials && svcs.Caps.BasicAuth {
 		h = auth.BasicChallenge(h)
@@ -169,7 +170,7 @@ func warnSampleLegal(cfg config.Config, log *slog.Logger, serving bool) {
 }
 
 func buildIssuerRoutes(
-	cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc,
+	cfg config.Config, svcs *Services, inProcess *http.ServeMux, log *slog.Logger, unexpected apperror.UnexpectedFunc,
 ) (public, hosted []web.Registrar) {
 	if svcs == nil || svcs.IssuerResolver == nil {
 		return nil, nil
@@ -181,7 +182,7 @@ func buildIssuerRoutes(
 		BasePath:   cfg.HTTP.BasePath,
 		CORS:       middleware.PublicCORS,
 	})
-	if svcs.Grants != nil && svcs.Clients != nil && svcs.EndUsers != nil && svcs.Keys != nil {
+	if issuesTokens(svcs) {
 		issuers.WithTokens(oidc.Tokens{
 			Clients: svcs.Clients, Grants: svcs.Grants, EndUsers: svcs.EndUsers, IDTokens: keys.NewSigner(svcs.Keys),
 			IDTokenTTL: cfg.OAuth.IDTokenTTL, CORS: middleware.BearerCORS,
@@ -191,6 +192,7 @@ func buildIssuerRoutes(
 			issuers.WithIntrospection(*in)
 			resolver.WithIntrospection()
 		}
+		issuers.Register(inProcess)
 	}
 	svcs.Keys.WithOnChange(resolver.Forget)
 	svcs.ResourceServers.WithOnAdmissionChange(resolver.Forget)
@@ -205,7 +207,40 @@ func buildIssuerRoutes(
 	return []web.Registrar{issuers}, []web.Registrar{pages}
 }
 
-func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected apperror.UnexpectedFunc) []web.Registrar {
+func issuesTokens(svcs *Services) bool {
+	return svcs != nil && svcs.IssuerResolver != nil && svcs.Grants != nil && svcs.Clients != nil && svcs.EndUsers != nil && svcs.Keys != nil
+}
+
+func inviteMethods(cfg config.Config, rp auth.ConsoleRP) []string {
+	var methods []string
+	if cfg.PasswordsOn() {
+		methods = append(methods, invite.MethodPassword)
+	}
+	if rp != nil {
+		methods = append(methods, invite.MethodOthra)
+	}
+	return methods
+}
+
+func consoleWeb(
+	cfg config.Config, svcs *Services, rp auth.ConsoleRP, kit layout.Kit, sessions auth.CookieSessions, limits layout.Limits,
+) *auth.Web {
+	w := auth.NewWeb(kit, svcs.Auth, sessions, newPublicIDs(svcs)).WithLimits(limits)
+	if cfg.PasswordsOn() {
+		w.WithResets(svcs.Resets)
+	}
+	if rp != nil {
+		w.WithConsoleSignIn(auth.ConsoleSignIn{
+			RP: rp, SignedOut: consoleURIs(cfg.HTTP).PostLogoutURI, PasswordOff: !cfg.PasswordsOn(),
+			OpenSignup: cfg.OpenSignup(),
+		})
+	}
+	return w
+}
+
+func buildRoutes(
+	cfg config.Config, svcs *Services, rp auth.ConsoleRP, log *slog.Logger, unexpected apperror.UnexpectedFunc,
+) []web.Registrar {
 	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
 	legalOpts := legal.WebOpts{Kit: kit, TermsURL: cfg.Compliance.TermsURL, PrivacyURL: cfg.Compliance.PrivacyURL}
 	if svcs == nil || !svcs.Caps.LocalLogin {
@@ -218,7 +253,7 @@ func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected
 	legalOpts.RequireAcceptance = cfg.Compliance.RequireAcceptance
 	return []web.Registrar{
 		legal.NewWeb(legalOpts),
-		auth.NewWeb(kit, svcs.Auth, sessions, newPublicIDs(svcs)).WithLimits(limits).WithResets(svcs.Resets),
+		consoleWeb(cfg, svcs, rp, kit, sessions, limits),
 		install.NewWeb(install.WebOpts{
 			Kit:       kit,
 			Installer: svcs.Install,
@@ -241,7 +276,7 @@ func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected
 			SignIn:       inviteSignIn{svcs.Auth},
 			Sessions:     sessions,
 			Consent:      consentData(cfg),
-			Methods:      []string{invite.MethodPassword},
+			Methods:      inviteMethods(cfg, rp),
 			StateSecret:  svcs.StateSecret,
 			CookieSecure: cfg.HTTP.CookieSecure,
 			Limits:       limits,

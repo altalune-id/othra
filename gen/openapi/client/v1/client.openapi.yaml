@@ -382,6 +382,7 @@ components:
         - CLIENT_REGISTRATION_UNSPECIFIED
         - CLIENT_REGISTRATION_REGISTERED
         - CLIENT_REGISTRATION_CIMD
+        - CLIENT_REGISTRATION_SYSTEM
       description: ClientRegistration is how a client came to the project.
     client.v1.ClientSecret:
       type: object

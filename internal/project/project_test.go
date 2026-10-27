@@ -58,3 +58,12 @@ func TestValidateName(t *testing.T) {
 	assert.True(t, IsInvalidNameError(ValidateName("")))
 	assert.True(t, IsInvalidNameError(ValidateName(strings.Repeat("a", 201))))
 }
+
+func TestProjectToProto_System(t *testing.T) {
+	sys, err := NewSystemProject(uuid.New())
+	require.NoError(t, err)
+	assert.True(t, projectToProto(sys, "o1", "https://id.example/p/system", "").GetSystem())
+	app, err := NewProject(uuid.New(), "app", "App", uuid.Nil)
+	require.NoError(t, err)
+	assert.False(t, projectToProto(app, "o1", "https://id.example/p/app", "").GetSystem())
+}

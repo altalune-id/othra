@@ -120,3 +120,16 @@ func TestSetActiveOrg_SupportStaffMayEnterAnyOrgOnlyWithOrgSupport(t *testing.T)
 		})
 	}
 }
+
+// A console session from Othra sign-in switches orgs like a password one, and keeps its /p/system link for sign-out.
+func TestSetActiveOrg_OIDCSession(t *testing.T) {
+	f := newSwitchFixture(t)
+	p := f.signedIn(t)
+	p.Source, p.IDPIssuer, p.IDPSubject, p.IDToken = session.SourceOIDC, ConsoleIssuer, "sub-1", "the.id.token"
+
+	got, err := f.svc.SetActiveOrg(context.Background(), f.sid, p, f.other.ID)
+	require.NoError(t, err)
+	assert.Equal(t, f.other.ID, got.ActiveOrgID)
+	assert.Equal(t, session.SourceOIDC, got.Source)
+	assert.Equal(t, "the.id.token", f.stored(t).IDToken)
+}

@@ -53,6 +53,12 @@ func (f fakeSignIn) LoginLocal(_ context.Context, c auth.Credentials) (session.P
 
 func (f fakeSignIn) Logout(ctx context.Context, sid string) error { return f.store.Delete(ctx, sid) }
 
+func (fakeSignIn) InviteMismatch(context.Context, string, string) (bool, error) { return false, nil }
+
+func (fakeSignIn) LoginOIDC(context.Context, auth.OIDCSignIn) (session.Principal, error) {
+	return session.Principal{}, &auth.NoConsoleAccountError{Reason: auth.NoConsoleNotInvited}
+}
+
 type storeAuthn struct{ store session.Store }
 
 func (a storeAuthn) Authenticate(ctx context.Context, c authn.Credential) (session.Principal, error) {
@@ -100,7 +106,7 @@ func newTestServer(t *testing.T) *testServer {
 
 	api := controlplane.New(controlplane.Services{
 		Orgs:     org.NewService(&fakes.OrgStore{Org: acme}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil),
-		Projects: project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil),
+		Projects: project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")),
 		Users:    user.NewService(fakes.NewUserStore(), nil),
 		Refs:     ids,
 	}, nil, controlplane.Options{Authn: authn.InterceptorOptions{

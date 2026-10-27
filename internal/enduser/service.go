@@ -94,7 +94,7 @@ func (s *Service) issue(
 	var allowErr error
 	err = s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		since := now.Add(-s.cfg.ResendAfter)
-		if req.Pending != nil {
+		if req.Pending != nil || req.Operator {
 			since = now
 		}
 		recent, err := s.store.HasRecentLink(ctx, p.ID, email, since)

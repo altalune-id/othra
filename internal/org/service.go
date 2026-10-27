@@ -222,6 +222,9 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, name, slug string) (
 	if err != nil {
 		return nil, s.errOrReport(ctx, "org: update", err)
 	}
+	if o.IsSystem {
+		return nil, &SystemManagedError{}
+	}
 	if err := o.Update(name, slug); err != nil {
 		return nil, err
 	}

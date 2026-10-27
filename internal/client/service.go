@@ -60,6 +60,13 @@ func scope(ctx context.Context, orgID, projectID uuid.UUID) context.Context {
 // Create registers a client of kind with settings and locks the project's issuer handle in the same unit of work.
 func (s *Service) Create(ctx context.Context, orgID, projectID uuid.UUID, kind Kind, settings Settings) (*Client, error) {
 	ctx = scope(ctx, orgID, projectID)
+	system, err := s.issuer.IsSystem(ctx, projectID)
+	switch {
+	case err != nil:
+		return nil, s.errOrReport(ctx, "client: create", err)
+	case system:
+		return nil, &SystemProjectError{}
+	}
 	publicID, err := nanoid.New(publicIDLen)
 	if err != nil {
 		return nil, s.unexpected(ctx, "client: create", err)
@@ -85,6 +92,68 @@ func (s *Service) Create(ctx context.Context, orgID, projectID uuid.UUID, kind K
 	return c, nil
 }
 
+// CreateSystem seeds a project's console client and locks the project's issuer handle, in the caller's unit of work.
+func (s *Service) CreateSystem(ctx context.Context, orgID, projectID uuid.UUID, redirectURI, postLogoutURI string) (*Client, error) {
+	ctx = scope(ctx, orgID, projectID)
+	publicID, err := nanoid.New(publicIDLen)
+	if err != nil {
+		return nil, s.unexpected(ctx, "client: create system", err)
+	}
+	c, err := NewSystem(orgID, projectID, publicID, redirectURI, postLogoutURI, s.now().UTC())
+	if err != nil {
+		return nil, err
+	}
+	err = s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		if err := s.store.Insert(ctx, c); err != nil {
+			return err
+		}
+		return s.issuer.LockIssuerHandle(ctx, projectID)
+	})
+	if err != nil {
+		return nil, s.errOrReport(ctx, "client: create system", err)
+	}
+	return c, nil
+}
+
+// ReconcileSystem rewrites the project's console client URIs under its row lock and reports whether they changed.
+func (s *Service) ReconcileSystem(
+	ctx context.Context, orgID, projectID uuid.UUID, redirectURI, postLogoutURI string,
+) (changed bool, err error) {
+	ctx = scope(ctx, orgID, projectID)
+	err = s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		c, err := s.store.LockSystem(ctx, projectID, s.now())
+		if IsNotFoundError(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if changed, err = c.SetSystemURIs(redirectURI, postLogoutURI); err != nil || !changed {
+			return err
+		}
+		c.UpdatedAt = s.now().UTC()
+		return s.store.Update(ctx, c)
+	})
+	if err != nil {
+		return false, s.errOrReport(ctx, "client: reconcile system", err)
+	}
+	return changed, nil
+}
+
+// System returns the project's console client, or *NotFoundError when it has none.
+func (s *Service) System(ctx context.Context, orgID, projectID uuid.UUID) (*Client, error) {
+	list, err := s.List(ctx, orgID, projectID)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range list {
+		if c.System {
+			return c, nil
+		}
+	}
+	return nil, &NotFoundError{}
+}
+
 // Update replaces a client's settings; its kind never changes.
 func (s *Service) Update(ctx context.Context, orgID, projectID uuid.UUID, publicID string, settings Settings) (*Client, error) {
 	ctx = scope(ctx, orgID, projectID)
@@ -94,6 +163,8 @@ func (s *Service) Update(ctx context.Context, orgID, projectID uuid.UUID, public
 		switch {
 		case err != nil:
 			return err
+		case c.System:
+			return &SystemManagedError{}
 		case c.Managed():
 			return &MetadataManagedError{}
 		}
@@ -115,8 +186,11 @@ func (s *Service) Delete(ctx context.Context, orgID, projectID uuid.UUID, public
 	ctx = scope(ctx, orgID, projectID)
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		c, err := s.store.Lock(ctx, projectID, publicID, s.now())
-		if err != nil {
+		switch {
+		case err != nil:
 			return err
+		case c.System:
+			return &SystemManagedError{}
 		}
 		return s.store.Delete(ctx, projectID, c.ID)
 	})
@@ -271,6 +345,8 @@ func secretsAllowed(c *Client, err error) error {
 	switch {
 	case err != nil:
 		return err
+	case c.System:
+		return &SystemManagedError{}
 	case c.Managed():
 		return &MetadataManagedError{}
 	case !c.UsesSecret():

@@ -66,6 +66,10 @@ func (p rsPeople) UserPublicID(ctx context.Context, userID uuid.UUID) (string, e
 	return u.PublicID, nil
 }
 
+func (i rsIssuers) IsSystem(ctx context.Context, projectID uuid.UUID) (bool, error) {
+	return i.projects.IsSystem(ctx, projectID)
+}
+
 func (i rsIssuers) LockIssuerHandle(ctx context.Context, projectID uuid.UUID) error {
 	return i.projects.LockIssuerHandle(ctx, projectID)
 }
@@ -85,7 +89,7 @@ func (c rsClients) Lookup(ctx context.Context, orgID, projectID uuid.UUID, publi
 
 func clientRef(c *client.Client) resourceserver.ClientRef {
 	return resourceserver.ClientRef{
-		ID: c.ID, PublicID: c.PublicID, Name: c.Name, MetadataURL: c.MetadataURL, MetadataFetchedAt: c.MetadataFetchedAt,
+		ID: c.ID, PublicID: c.PublicID, Name: c.Name, MetadataURL: c.MetadataURL, MetadataFetchedAt: c.MetadataFetchedAt, System: c.System,
 	}
 }
 

@@ -51,7 +51,7 @@ func TestRoot_ProjectGet_Remote(t *testing.T) {
 	refs := fakes.NewPublicIDs()
 	orgPublicID := refs.Org(p.OrgID)
 	srv := controlplane.New(controlplane.Services{
-		Projects: project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil),
+		Projects: project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithOrgSlugs(fakes.OrgSlugs("")),
 		Refs:     refs,
 	}, nil, cptest.OperatorOptions())
 	ts := httptest.NewServer(srv.Handler(""))

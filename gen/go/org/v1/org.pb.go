@@ -35,7 +35,9 @@ type Org struct {
 	// role is the caller's role in this org; set only when a person lists the orgs they belong to.
 	Role string `protobuf:"bytes,7,opt,name=role,proto3" json:"role,omitempty"`
 	// permissions are what that role grants in this org, so a client can offer only the scopes a key there may hold.
-	Permissions   []string `protobuf:"bytes,8,rep,name=permissions,proto3" json:"permissions,omitempty"`
+	Permissions []string `protobuf:"bytes,8,rep,name=permissions,proto3" json:"permissions,omitempty"`
+	// system is true for the deployment's system org, which holds the console project.
+	System        bool `protobuf:"varint,9,opt,name=system,proto3" json:"system,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -117,6 +119,13 @@ func (x *Org) GetPermissions() []string {
 		return x.Permissions
 	}
 	return nil
+}
+
+func (x *Org) GetSystem() bool {
+	if x != nil {
+		return x.System
+	}
+	return false
 }
 
 type CreateOrgRequest struct {
@@ -491,7 +500,7 @@ var File_org_v1_org_proto protoreflect.FileDescriptor
 
 const file_org_v1_org_proto_rawDesc = "" +
 	"\n" +
-	"\x10org/v1/org.proto\x12\x06org.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xfa\x01\n" +
+	"\x10org/v1/org.proto\x12\x06org.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\x92\x02\n" +
 	"\x03Org\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12\x12\n" +
@@ -501,7 +510,8 @@ const file_org_v1_org_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x12\n" +
 	"\x04role\x18\a \x01(\tR\x04role\x12 \n" +
-	"\vpermissions\x18\b \x03(\tR\vpermissionsJ\x04\b\x02\x10\x03R\tpublic_id\"S\n" +
+	"\vpermissions\x18\b \x03(\tR\vpermissions\x12\x16\n" +
+	"\x06system\x18\t \x01(\bR\x06systemJ\x04\b\x02\x10\x03R\tpublic_id\"S\n" +
 	"\x10CreateOrgRequest\x12\x1d\n" +
 	"\x04slug\x18\x01 \x01(\tB\t\xbaH\x06r\x04\xa0\xe42\x01R\x04slug\x12 \n" +
 	"\x04name\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x90\xe42\x01R\x04name\"2\n" +

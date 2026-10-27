@@ -932,6 +932,10 @@ components:
           type: string
           title: logo_url
           description: logo_url is the public URL of the project's logo, empty when it has none.
+        system:
+          type: boolean
+          title: system
+          description: system is true for the console project Othra seeds at install; only its branding, terms and upstream IdPs can change.
       title: Project
       additionalProperties: false
     project.v1.UpdateProjectBrandingRequest:

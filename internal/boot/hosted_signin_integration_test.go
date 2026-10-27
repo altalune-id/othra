@@ -67,9 +67,11 @@ func newSignInFixture(t *testing.T, opts ...func(*config.Config)) *signInFixture
 	require.NoError(t, firstBoot(t.Context(), cfg, svcs, testLogger(), false))
 	required, err := installRequired(t.Context(), svcs)
 	require.NoError(t, err)
-	public, hosted := buildIssuerRoutes(cfg, svcs, nil, nil)
+	inProcess := http.NewServeMux()
+	rp := buildConsoleRP(cfg, svcs, inProcess)
+	public, hosted := buildIssuerRoutes(cfg, svcs, inProcess, nil, nil)
 	srv.Config.Handler = buildHTTPHandler(httpSurfaces{
-		routes: buildRoutes(cfg, svcs, nil, nil), public: public, hosted: hosted,
+		routes: buildRoutes(cfg, svcs, rp, nil, nil), public: public, hosted: hosted,
 		session: buildSessionMiddleware(svcs, nil), installRequired: required,
 	})
 	f := &signInFixture{t: t, srv: srv, svcs: svcs, db: sqlDB, pool: pool, cfg: cfg}

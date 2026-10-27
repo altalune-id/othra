@@ -178,7 +178,7 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"redis.connectTimeout 0", func(c *Config) { redisFeature(c); c.Redis.ConnectTimeout = 0 }, invalidSetting("redis.connectTimeout")},
 		{"redis.readTimeout 0", func(c *Config) { redisFeature(c); c.Redis.ReadTimeout = 0 }, invalidSetting("redis.readTimeout")},
 		{"redis.writeTimeout 0", func(c *Config) { redisFeature(c); c.Redis.WriteTimeout = 0 }, invalidSetting("redis.writeTimeout")},
-		{"cloud requires oidc", func(c *Config) { c.Mode = ModeCloud }, func(t *testing.T, err error) { assert.True(t, IsCloudRequiresOIDCError(err), "got %v", err) }},
+		{"cloud with console mail", func(c *Config) { c.Mode, c.Mail.Driver = ModeCloud, MailDriverConsole }, invalidSetting("mail.driver")},
 	}
 	for _, r := range rules {
 		t.Run(r.name, func(t *testing.T) {

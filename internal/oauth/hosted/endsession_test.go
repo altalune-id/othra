@@ -171,3 +171,36 @@ func (f *webFixture) browserOf(c *http.Client) *Browser {
 	require.NoError(f.t, err)
 	return b
 }
+
+// RPL §2: a hint that no longer verifies is left out; client_id names the app and the person confirms before this browser signs out.
+func TestEndSession_WithoutHint(t *testing.T) {
+	f := newWebFixture(t)
+	f.signIn(f.client, "acme", "ana@example.com")
+	for name, q := range map[string]url.Values{
+		"unknown client": {"client_id": {"nope"}},
+		"unregistered":   {"client_id": {"web"}, "post_logout_redirect_uri": {"https://evil.example/bye"}},
+	} {
+		p := f.get(f.client, endSessionURL(q))
+		assert.Equal(t, http.StatusBadRequest, p.status, name)
+		assert.Empty(t, p.location(), name)
+	}
+
+	page := f.get(f.client, endSessionURL(url.Values{"client_id": {"web"}, "post_logout_redirect_uri": {byeRedirect}, "state": {"s-3"}}))
+	require.Equal(t, http.StatusOK, page.status, page.body)
+	assert.Contains(t, page.body, `name="client_id" value="web"`)
+	assert.NotContains(t, page.body, `name="id_token_hint"`)
+	assert.Empty(t, f.grants.ended, "nothing ends without the confirm")
+	assert.NotEmpty(t, f.browserOf(f.client).Accounts)
+
+	forged := f.do(f.client, http.MethodPost, "/p/acme"+endSessionPath, url.Values{"client_id": {"web"}, "confirm": {"1"}, "csrf": {"nope"}})
+	assert.NotEqual(t, http.StatusOK, forged.status)
+	assert.NotEmpty(t, f.browserOf(f.client).Accounts)
+
+	done := f.submit(f.client, page, endSessionPath, nil)
+	require.Equal(t, http.StatusOK, done.status, done.body)
+	assert.Contains(t, done.body, `content="0;url=`+byeRedirect+`?state=s-3"`)
+	assert.Empty(t, f.browserOf(f.client).Accounts, "this browser's account is signed out")
+
+	again := f.submit(f.client, f.get(f.client, endSessionURL(url.Values{"client_id": {"web"}})), endSessionPath, nil)
+	assert.Equal(t, http.StatusSeeOther, again.status, "nothing signed in here: done, not an error")
+}

@@ -83,6 +83,7 @@ func (l *Loader) Load(path string, opts ...Option) (*Config, error) {
 
 	var cfg Config
 	decode := viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
+		blankPointerIsUnset,
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
 	))
@@ -103,6 +104,14 @@ func (l *Loader) Load(path string, opts ...Option) (*Config, error) {
 // Load resolves defaults <- file <- OTHRA_* env <- bound flags. An empty path searches standard locations.
 func Load(path string, opts ...Option) (*Config, error) {
 	return NewLoader().Load(path, opts...)
+}
+
+// NOTE: an optional key (a pointer field) left blank in a file or the env stays unset, so its documented default applies.
+func blankPointerIsUnset(from, to reflect.Type, data any) (any, error) {
+	if s, ok := data.(string); ok && to.Kind() == reflect.Pointer && from.Kind() == reflect.String && strings.TrimSpace(s) == "" {
+		return reflect.Zero(to).Interface(), nil
+	}
+	return data, nil
 }
 
 func setDefaults(v *viper.Viper) {
