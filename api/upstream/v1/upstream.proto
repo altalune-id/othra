@@ -16,6 +16,7 @@ service UpstreamService {
       name: "upstream_list"
       description: "List a project's upstream IdPs (Google) with their client IDs, redirect URIs and whether they are on. Secrets are never shown."
       required: ["project_id"]
+      ui: "app"
     };
   }
   rpc GetUpstream(GetUpstreamRequest) returns (GetUpstreamResponse) {
@@ -23,6 +24,7 @@ service UpstreamService {
       name: "upstream_get"
       description: "Get one upstream IdP of a project, with the redirect URI to register at the upstream. The secret is never shown."
       required: ["project_id", "upstream_id"]
+      ui: "app"
     };
   }
   // SECURITY: create and update carry the upstream's client secret; a signed-in person sends them, never MCP.

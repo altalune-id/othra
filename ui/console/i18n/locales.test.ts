@@ -26,7 +26,7 @@ describe('console locales', () => {
 
 describe('console copy', () => {
   it('writes "upstream IdP" mid-sentence as the glossary does', () => {
-    expect(enUS['endusers.methods_help']).toContain('each linked upstream IdP');
+    expect(baseEnUS['endusers.methods_help']).toContain('each linked upstream IdP');
   });
 
   it('says "berkas", not "file", for a stored file in id-ID', () => {

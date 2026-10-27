@@ -60,6 +60,7 @@ func RegisterResourceServerServiceTools(reg *mcp.Registry, h resourceserverv1con
 		Scopes:      permissionsFor(resourceserverv1connect.ResourceServerServiceListResourceServersProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -89,6 +90,7 @@ func RegisterResourceServerServiceTools(reg *mcp.Registry, h resourceserverv1con
 		Scopes:      permissionsFor(resourceserverv1connect.ResourceServerServiceGetResourceServerProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"resourceServerId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId","resourceServerId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -118,6 +120,7 @@ func RegisterResourceServerServiceTools(reg *mcp.Registry, h resourceserverv1con
 		Scopes:      permissionsFor(resourceserverv1connect.ResourceServerServiceCreateResourceServerProcedure),
 		Mutation:    true,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"name":{"type":"string","minLength":1,"maxLength":100},"identifier":{"type":"string","minLength":1,"maxLength":512},"scopes":{"type":"array","items":{"type":"string","maxLength":128},"minItems":1,"maxItems":64},"trusted":{"type":"boolean"},"scopeDescriptions":{"type":"object","additionalProperties":{"type":"string"}}},"required":["projectId","name","identifier","scopes"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -205,6 +208,7 @@ func RegisterResourceServerServiceTools(reg *mcp.Registry, h resourceserverv1con
 		Scopes:      permissionsFor(resourceserverv1connect.ResourceServerServiceVerifyResourceServerProcedure),
 		Mutation:    true,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"resourceServerId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId","resourceServerId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -234,6 +238,7 @@ func RegisterResourceServerServiceTools(reg *mcp.Registry, h resourceserverv1con
 		Scopes:      permissionsFor(resourceserverv1connect.ResourceServerServiceListLinksProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"clientId":{"type":"string","pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"resourceServerId":{"type":"string","pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

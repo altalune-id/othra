@@ -33,17 +33,17 @@ func NewControlPlane(clients *Service, refs Refs) *ClientService {
 func (s *ClientService) ListClients(
 	ctx context.Context, req *connect.Request[clientv1.ListClientsRequest],
 ) (*connect.Response[clientv1.ListClientsResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachProject)
+	p, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachProject)
 	if err != nil {
 		return nil, err
 	}
-	list, err := s.clients.List(ctx, orgID, projectID)
+	list, err := s.clients.List(ctx, p.OrgID, p.ID)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]*clientv1.Client, 0, len(list))
 	for _, c := range list {
-		out = append(out, toProto(c))
+		out = append(out, p.result(c))
 	}
 	return connect.NewResponse(&clientv1.ListClientsResponse{Clients: out}), nil
 }
@@ -52,22 +52,22 @@ func (s *ClientService) ListClients(
 func (s *ClientService) GetClient(
 	ctx context.Context, req *connect.Request[clientv1.GetClientRequest],
 ) (*connect.Response[clientv1.GetClientResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachProject)
+	p, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachProject)
 	if err != nil {
 		return nil, err
 	}
-	c, err := s.clients.Get(ctx, orgID, projectID, req.Msg.GetClientId())
+	c, err := s.clients.Get(ctx, p.OrgID, p.ID, req.Msg.GetClientId())
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.GetClientResponse{Client: toProto(c)}), nil
+	return connect.NewResponse(&clientv1.GetClientResponse{Client: p.result(c)}), nil
 }
 
 // CreateClient registers a client; it never returns a secret.
 func (s *ClientService) CreateClient(
 	ctx context.Context, req *connect.Request[clientv1.CreateClientRequest],
 ) (*connect.Response[clientv1.CreateClientResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	p, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (s *ClientService) CreateClient(
 	if req.Msg.GetKind() == clientv1.ClientKind_CLIENT_KIND_CLI {
 		kind = KindCLI
 	}
-	c, err := s.clients.Create(ctx, orgID, projectID, kind, Settings{
+	c, err := s.clients.Create(ctx, p.OrgID, p.ID, kind, Settings{
 		Name:                   req.Msg.GetName(),
 		RedirectURIs:           req.Msg.GetRedirectUris(),
 		PostLogoutRedirectURIs: req.Msg.GetPostLogoutRedirectUris(),
@@ -87,18 +87,18 @@ func (s *ClientService) CreateClient(
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.CreateClientResponse{Client: toProto(c)}), nil
+	return connect.NewResponse(&clientv1.CreateClientResponse{Client: p.result(c)}), nil
 }
 
 // UpdateClient replaces a client's settings.
 func (s *ClientService) UpdateClient(
 	ctx context.Context, req *connect.Request[clientv1.UpdateClientRequest],
 ) (*connect.Response[clientv1.UpdateClientResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	p, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
 	if err != nil {
 		return nil, err
 	}
-	c, err := s.clients.Update(ctx, orgID, projectID, req.Msg.GetClientId(), Settings{
+	c, err := s.clients.Update(ctx, p.OrgID, p.ID, req.Msg.GetClientId(), Settings{
 		Name:                   req.Msg.GetName(),
 		RedirectURIs:           req.Msg.GetRedirectUris(),
 		PostLogoutRedirectURIs: req.Msg.GetPostLogoutRedirectUris(),
@@ -110,18 +110,18 @@ func (s *ClientService) UpdateClient(
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.UpdateClientResponse{Client: toProto(c)}), nil
+	return connect.NewResponse(&clientv1.UpdateClientResponse{Client: p.result(c)}), nil
 }
 
 // DeleteClient removes a client with its secrets and links.
 func (s *ClientService) DeleteClient(
 	ctx context.Context, req *connect.Request[clientv1.DeleteClientRequest],
 ) (*connect.Response[clientv1.DeleteClientResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	p, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.clients.Delete(ctx, orgID, projectID, req.Msg.GetClientId()); err != nil {
+	if err := s.clients.Delete(ctx, p.OrgID, p.ID, req.Msg.GetClientId()); err != nil {
 		return nil, err
 	}
 	return connect.NewResponse(&clientv1.DeleteClientResponse{}), nil
@@ -131,71 +131,77 @@ func (s *ClientService) DeleteClient(
 func (s *ClientService) GenerateClientSecret(
 	ctx context.Context, req *connect.Request[clientv1.GenerateClientSecretRequest],
 ) (*connect.Response[clientv1.GenerateClientSecretResponse], error) {
-	orgID, projectID, err := s.personProject(ctx, req.Msg.GetProjectId())
+	p, err := s.personProject(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
-	c, plaintext, err := s.clients.GenerateSecret(ctx, orgID, projectID, req.Msg.GetClientId())
+	c, plaintext, err := s.clients.GenerateSecret(ctx, p.OrgID, p.ID, req.Msg.GetClientId())
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.GenerateClientSecretResponse{Client: toProto(c), Secret: plaintext}), nil
+	return connect.NewResponse(&clientv1.GenerateClientSecretResponse{Client: p.result(c), Secret: plaintext}), nil
 }
 
 // RotateClientSecret makes a new current secret, shown once; the old one keeps working for the grace.
 func (s *ClientService) RotateClientSecret(
 	ctx context.Context, req *connect.Request[clientv1.RotateClientSecretRequest],
 ) (*connect.Response[clientv1.RotateClientSecretResponse], error) {
-	orgID, projectID, err := s.personProject(ctx, req.Msg.GetProjectId())
+	p, err := s.personProject(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
-	c, plaintext, err := s.clients.RotateSecret(ctx, orgID, projectID, req.Msg.GetClientId(), graceFromProto(req.Msg.GetGrace()))
+	c, plaintext, err := s.clients.RotateSecret(ctx, p.OrgID, p.ID, req.Msg.GetClientId(), graceFromProto(req.Msg.GetGrace()))
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.RotateClientSecretResponse{Client: toProto(c), Secret: plaintext}), nil
+	return connect.NewResponse(&clientv1.RotateClientSecretResponse{Client: p.result(c), Secret: plaintext}), nil
 }
 
 // RevokeClientSecret ends one of a client's secrets at once.
 func (s *ClientService) RevokeClientSecret(
 	ctx context.Context, req *connect.Request[clientv1.RevokeClientSecretRequest],
 ) (*connect.Response[clientv1.RevokeClientSecretResponse], error) {
-	orgID, projectID, err := s.personProject(ctx, req.Msg.GetProjectId())
+	p, err := s.personProject(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
-	c, err := s.clients.RevokeSecret(ctx, orgID, projectID, req.Msg.GetClientId(), req.Msg.GetSecretId())
+	c, err := s.clients.RevokeSecret(ctx, p.OrgID, p.ID, req.Msg.GetClientId(), req.Msg.GetSecretId())
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&clientv1.RevokeClientSecretResponse{Client: toProto(c)}), nil
+	return connect.NewResponse(&clientv1.RevokeClientSecretResponse{Client: p.result(c)}), nil
 }
 
 // SECURITY: secrets are created, rotated and revoked by a signed-in person only, never a key or the system.
-func (s *ClientService) personProject(ctx context.Context, publicID string) (orgID, projectID uuid.UUID, err error) {
-	orgID, projectID, err = s.project(ctx, publicID, authz.ReachWholeProject)
+func (s *ClientService) personProject(ctx context.Context, publicID string) (ProjectRef, error) {
+	p, err := s.project(ctx, publicID, authz.ReachWholeProject)
 	if err != nil {
-		return uuid.Nil, uuid.Nil, err
+		return ProjectRef{}, err
 	}
 	if !session.PrincipalFrom(ctx).IsPerson() {
-		return uuid.Nil, uuid.Nil, &SecretPersonOnlyError{}
+		return ProjectRef{}, &SecretPersonOnlyError{}
 	}
-	return orgID, projectID, nil
+	return p, nil
 }
 
 // SECURITY: an unknown project and a project outside the caller's reach answer the same not-found.
 func (s *ClientService) project(
 	ctx context.Context, publicID string, reach func(ctx context.Context, orgID, projectID uuid.UUID) bool,
-) (orgID, projectID uuid.UUID, err error) {
-	projectID, orgID, ok, err := s.refs.ProjectID(ctx, publicID)
+) (ProjectRef, error) {
+	p, ok, err := s.refs.ClientProject(ctx, publicID)
 	if err != nil {
-		return uuid.Nil, uuid.Nil, err
+		return ProjectRef{}, err
 	}
-	if !ok || !reach(ctx, orgID, projectID) {
-		return uuid.Nil, uuid.Nil, &ProjectNotFoundError{}
+	if !ok || !reach(ctx, p.OrgID, p.ID) {
+		return ProjectRef{}, &ProjectNotFoundError{}
 	}
-	return orgID, projectID, nil
+	return p, nil
+}
+
+func (p ProjectRef) result(c *Client) *clientv1.Client {
+	out := toProto(c)
+	out.ConsoleUrl = p.ConsoleURL(c.PublicID)
+	return out
 }
 
 func toProto(c *Client) *clientv1.Client {

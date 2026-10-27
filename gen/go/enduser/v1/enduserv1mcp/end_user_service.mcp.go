@@ -45,6 +45,7 @@ func RegisterEndUserServiceTools(reg *mcp.Registry, h enduserv1connect.EndUserSe
 		Scopes:      permissionsFor(enduserv1connect.EndUserServiceListEndUsersProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"query":{"type":"string","maxLength":254},"limit":{"type":"integer"},"after":{"type":"string","pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -74,6 +75,7 @@ func RegisterEndUserServiceTools(reg *mcp.Registry, h enduserv1connect.EndUserSe
 		Scopes:      permissionsFor(enduserv1connect.EndUserServiceGetEndUserProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"endUserId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId","endUserId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

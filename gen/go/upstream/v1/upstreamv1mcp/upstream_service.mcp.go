@@ -42,6 +42,7 @@ func RegisterUpstreamServiceTools(reg *mcp.Registry, h upstreamv1connect.Upstrea
 		Scopes:      permissionsFor(upstreamv1connect.UpstreamServiceListUpstreamsProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -71,6 +72,7 @@ func RegisterUpstreamServiceTools(reg *mcp.Registry, h upstreamv1connect.Upstrea
 		Scopes:      permissionsFor(upstreamv1connect.UpstreamServiceGetUpstreamProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"upstreamId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId","upstreamId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

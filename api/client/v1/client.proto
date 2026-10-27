@@ -16,6 +16,7 @@ service ClientService {
       name: "client_list"
       description: "List a project's OAuth clients with their redirect URIs and secret hints."
       required: ["project_id"]
+      ui: "app"
     };
   }
   rpc GetClient(GetClientRequest) returns (GetClientResponse) {
@@ -23,6 +24,7 @@ service ClientService {
       name: "client_get"
       description: "Get one OAuth client of a project by its client_id."
       required: ["project_id", "client_id"]
+      ui: "app"
     };
   }
   rpc CreateClient(CreateClientRequest) returns (CreateClientResponse) {
@@ -32,6 +34,7 @@ service ClientService {
       required: ["project_id", "name", "kind", "redirect_uris"]
       mutation: true
       destructive: false
+      ui: "app"
     };
   }
   rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse) {
@@ -138,6 +141,8 @@ message Client {
   string metadata_url = 17;
   // metadata_fetched_at is when Othra last read a CIMD client's metadata document.
   google.protobuf.Timestamp metadata_fetched_at = 18;
+  // console_url is the client's page in the console, where a signed-in person manages its secrets.
+  string console_url = 19;
 }
 
 message ListClientsRequest {

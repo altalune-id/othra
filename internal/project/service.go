@@ -208,6 +208,15 @@ func (s *Service) ByPublicID(ctx context.Context, publicID string) (*Project, er
 	return p, nil
 }
 
+// RefByPublicID loads a project's ids and slugs, with its org's slug, in one read.
+func (s *Service) RefByPublicID(ctx context.Context, publicID string) (*Ref, error) {
+	r, err := s.store.RefByPublicID(ctx, publicID)
+	if err != nil {
+		return nil, s.errOrReport(ctx, "project: ref by public id", err)
+	}
+	return r, nil
+}
+
 // BySlug loads a project by slug within an org.
 func (s *Service) BySlug(ctx context.Context, orgID uuid.UUID, slug string) (*Project, error) {
 	ctx = tenant.WithOrg(ctx, orgID)

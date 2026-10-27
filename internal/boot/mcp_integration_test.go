@@ -169,6 +169,12 @@ func TestMCP_ClientToolsNeverReturnASecret(t *testing.T) {
 	var n int
 	require.NoError(t, f.db.QueryRowContext(t.Context(), `SELECT count(*) FROM oauth_client_secrets WHERE org_id = $1`, s.orgB).Scan(&n))
 	assert.Zero(t, n, "the client has no secret until a person generates one")
+
+	var orgSlug, projectSlug, clientID string
+	require.NoError(t, f.db.QueryRowContext(t.Context(),
+		`SELECT o.slug, p.slug, c.public_id FROM oauth_clients c JOIN projects p ON p.id = c.project_id JOIN orgs o ON o.id = c.org_id WHERE c.name = 'MCP web'`,
+	).Scan(&orgSlug, &projectSlug, &clientID))
+	assert.Contains(t, string(body), "http://localhost:5150/console/o/"+orgSlug+"/projects/"+projectSlug+"/clients/"+clientID)
 }
 
 func snake(name string) string {

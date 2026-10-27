@@ -6,9 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
-// Refs turns a project's public id into its id and org.
+// Refs turns a project's public id, in one read, into its ids and the console page of each of its clients.
 type Refs interface {
-	ProjectID(ctx context.Context, publicID string) (id, orgID uuid.UUID, ok bool, err error)
+	ClientProject(ctx context.Context, publicID string) (ProjectRef, bool, error)
+}
+
+// ProjectRef is a project's ids and the builder of its clients' console page URLs.
+type ProjectRef struct {
+	ID, OrgID  uuid.UUID
+	ConsoleURL func(clientPublicID string) string
 }
 
 // IssuerLock freezes a project's issuer handle; it joins the caller's unit of work.

@@ -44,6 +44,28 @@ func (s *postgresStore) ByPublicID(ctx context.Context, publicID string) (*Proje
 	return row.toProject(), nil
 }
 
+// RefByPublicID loads a project's ids and slugs, with its org's slug, by its public id.
+func (s *postgresStore) RefByPublicID(ctx context.Context, publicID string) (*Ref, error) {
+	p, o := s.projects, s.orgs
+	stmt := postgres.SELECT(p.ID, p.OrgID, p.Slug, o.Slug).
+		FROM(p.INNER_JOIN(o, o.ID.EQ(p.OrgID))).
+		WHERE(p.PublicID.EQ(postgres.String(publicID))).
+		LIMIT(1)
+	var row struct {
+		ID      uuid.UUID `alias:"projects.id"`
+		OrgID   uuid.UUID `alias:"projects.org_id"`
+		Slug    string    `alias:"projects.slug"`
+		OrgSlug string    `alias:"orgs.slug"`
+	}
+	if err := db.Read(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
+		if db.IsNoRows(err) {
+			return nil, &NotFoundError{ID: publicID}
+		}
+		return nil, fmt.Errorf("project.postgres: RefByPublicID: %w", err)
+	}
+	return &Ref{ID: row.ID, OrgID: row.OrgID, Slug: row.Slug, OrgSlug: row.OrgSlug}, nil
+}
+
 // BySlug loads a project by slug within an organization.
 func (s *postgresStore) BySlug(ctx context.Context, orgID uuid.UUID, slug string) (*Project, error) {
 	stmt := postgres.SELECT(s.columns()).

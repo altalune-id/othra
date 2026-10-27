@@ -690,15 +690,15 @@ const file_enduser_v1_enduser_proto_rawDesc = "" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\x12,\n" +
 	"\vend_user_id\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tendUserId\x12'\n" +
 	"\btoken_id\x18\x03 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\atokenId\"\x1c\n" +
-	"\x1aRevokeEndUserTokenResponse2\xe7\t\n" +
-	"\x0eEndUserService\x12\xbb\x01\n" +
-	"\fListEndUsers\x12\x1f.enduser.v1.ListEndUsersRequest\x1a .enduser.v1.ListEndUsersResponse\"h\xca\xf3\x18d\n" +
+	"\x1aRevokeEndUserTokenResponse2\xf1\t\n" +
+	"\x0eEndUserService\x12\xc0\x01\n" +
+	"\fListEndUsers\x12\x1f.enduser.v1.ListEndUsersRequest\x1a .enduser.v1.ListEndUsersResponse\"m\xca\xf3\x18i\n" +
 	"\rend_user_list\x12GList a project's end users, newest first, optionally filtered by email.\x1a\n" +
-	"project_id\x12\xdb\x01\n" +
+	"project_id*\x03app\x12\xe0\x01\n" +
 	"\n" +
-	"GetEndUser\x12\x1d.enduser.v1.GetEndUserRequest\x1a\x1e.enduser.v1.GetEndUserResponse\"\x8d\x01\xca\xf3\x18\x88\x01\n" +
+	"GetEndUser\x12\x1d.enduser.v1.GetEndUserRequest\x1a\x1e.enduser.v1.GetEndUserResponse\"\x92\x01\xca\xf3\x18\x8d\x01\n" +
 	"\fend_user_get\x12_Get one end user with their sign-in methods, live sessions, connected apps and personal tokens.\x1a\n" +
-	"project_id\x1a\vend_user_id\x12\x97\x02\n" +
+	"project_id\x1a\vend_user_id*\x03app\x12\x97\x02\n" +
 	"\x14RevokeEndUserSession\x12'.enduser.v1.RevokeEndUserSessionRequest\x1a(.enduser.v1.RevokeEndUserSessionResponse\"\xab\x01\xca\xf3\x18\xa6\x01\n" +
 	"\x17end_user_session_revoke\x12bSign an end user out of one session. Apps signed in through it lose access, except offline access.\x1a\n" +
 	"project_id\x1a\vend_user_id\x1a\n" +

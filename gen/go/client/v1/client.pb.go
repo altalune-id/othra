@@ -388,8 +388,10 @@ type Client struct {
 	MetadataUrl string `protobuf:"bytes,17,opt,name=metadata_url,json=metadataUrl,proto3" json:"metadata_url,omitempty"`
 	// metadata_fetched_at is when Othra last read a CIMD client's metadata document.
 	MetadataFetchedAt *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=metadata_fetched_at,json=metadataFetchedAt,proto3" json:"metadata_fetched_at,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// console_url is the client's page in the console, where a signed-in person manages its secrets.
+	ConsoleUrl    string `protobuf:"bytes,19,opt,name=console_url,json=consoleUrl,proto3" json:"console_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Client) Reset() {
@@ -546,6 +548,13 @@ func (x *Client) GetMetadataFetchedAt() *timestamppb.Timestamp {
 		return x.MetadataFetchedAt
 	}
 	return nil
+}
+
+func (x *Client) GetConsoleUrl() string {
+	if x != nil {
+		return x.ConsoleUrl
+	}
+	return ""
 }
 
 type ListClientsRequest struct {
@@ -1457,7 +1466,7 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xd6\x06\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xf7\x06\n" +
 	"\x06Client\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12)\n" +
@@ -1480,7 +1489,9 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\rpkce_required\x18\x0f \x01(\bR\fpkceRequired\x12A\n" +
 	"\fregistration\x18\x10 \x01(\x0e2\x1d.client.v1.ClientRegistrationR\fregistration\x12!\n" +
 	"\fmetadata_url\x18\x11 \x01(\tR\vmetadataUrl\x12J\n" +
-	"\x13metadata_fetched_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\x11metadataFetchedAt\"A\n" +
+	"\x13metadata_fetched_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\x11metadataFetchedAt\x12\x1f\n" +
+	"\vconsole_url\x18\x13 \x01(\tR\n" +
+	"consoleUrl\"A\n" +
 	"\x12ListClientsRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\"B\n" +
@@ -1577,18 +1588,18 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\x10SECRET_GRACE_NOW\x10\x01\x12\x15\n" +
 	"\x11SECRET_GRACE_HOUR\x10\x02\x12\x14\n" +
 	"\x10SECRET_GRACE_DAY\x10\x03\x12\x15\n" +
-	"\x11SECRET_GRACE_WEEK\x10\x042\x91\r\n" +
-	"\rClientService\x12\xb6\x01\n" +
-	"\vListClients\x12\x1d.client.v1.ListClientsRequest\x1a\x1e.client.v1.ListClientsResponse\"h\xca\xf3\x18d\n" +
+	"\x11SECRET_GRACE_WEEK\x10\x042\xa0\r\n" +
+	"\rClientService\x12\xbb\x01\n" +
+	"\vListClients\x12\x1d.client.v1.ListClientsRequest\x1a\x1e.client.v1.ListClientsResponse\"m\xca\xf3\x18i\n" +
 	"\vclient_list\x12IList a project's OAuth clients with their redirect URIs and secret hints.\x1a\n" +
-	"project_id\x12\xa4\x01\n" +
-	"\tGetClient\x12\x1b.client.v1.GetClientRequest\x1a\x1c.client.v1.GetClientResponse\"\\\xca\xf3\x18X\n" +
+	"project_id*\x03app\x12\xa9\x01\n" +
+	"\tGetClient\x12\x1b.client.v1.GetClientRequest\x1a\x1c.client.v1.GetClientResponse\"a\xca\xf3\x18]\n" +
 	"\n" +
 	"client_get\x123Get one OAuth client of a project by its client_id.\x1a\n" +
-	"project_id\x1a\tclient_id\x12\xe3\x02\n" +
-	"\fCreateClient\x12\x1e.client.v1.CreateClientRequest\x1a\x1f.client.v1.CreateClientResponse\"\x91\x02\xca\xf3\x18\x8c\x02\n" +
+	"project_id\x1a\tclient_id*\x03app\x12\xe8\x02\n" +
+	"\fCreateClient\x12\x1e.client.v1.CreateClientRequest\x1a\x1f.client.v1.CreateClientResponse\"\x96\x02\xca\xf3\x18\x91\x02\n" +
 	"\rclient_create\x12\xd1\x01Register an OAuth client in a project: WEB for a confidential web app, CLI for a public native app on loopback redirect URIs. It never returns a secret; a person generates a WEB client's secret in the console.\x1a\n" +
-	"project_id\x1a\x04name\x1a\x04kind\x1a\rredirect_uris \x01\x12\xed\x02\n" +
+	"project_id\x1a\x04name\x1a\x04kind\x1a\rredirect_uris \x01*\x03app\x12\xed\x02\n" +
 	"\fUpdateClient\x12\x1e.client.v1.UpdateClientRequest\x1a\x1f.client.v1.UpdateClientResponse\"\x9b\x02\xca\xf3\x18\x96\x02\n" +
 	"\rclient_update\x12\xc4\x01Replace an OAuth client's name, redirect URIs, sign-out return URIs, refresh token setting and consent policy. The kind can't change, and the console client (registration SYSTEM) can't be changed.\x1a\n" +
 	"project_id\x1a\tclient_id\x1a\x04name\x1a\rredirect_uris\x1a\x0econsent_policy \x010\x01\x12\x9a\x02\n" +

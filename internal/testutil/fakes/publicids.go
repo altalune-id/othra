@@ -3,18 +3,21 @@ package fakes
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/google/uuid"
 
+	"altalune.id/othra/internal/client"
 	"altalune.id/othra/nanoid"
 )
 
-// PublicIDs is a public id lookup test double: Org, Project, User and Resource register an id and return its new public id.
+// PublicIDs is a public id lookup test double: Org, Project, User and Resource register an id with a slug and return its new public id.
 type PublicIDs struct {
-	mu   sync.Mutex
-	refs map[string]map[string]publicRef
-	pubs map[string]map[uuid.UUID]string
+	mu    sync.Mutex
+	refs  map[string]map[string]publicRef
+	pubs  map[string]map[uuid.UUID]string
+	slugs map[uuid.UUID]string
 	// Err fails every lookup.
 	Err error
 }
@@ -30,7 +33,7 @@ const (
 
 // NewPublicIDs returns an empty lookup.
 func NewPublicIDs() *PublicIDs {
-	return &PublicIDs{refs: map[string]map[string]publicRef{}, pubs: map[string]map[uuid.UUID]string{}}
+	return &PublicIDs{refs: map[string]map[string]publicRef{}, pubs: map[string]map[uuid.UUID]string{}, slugs: map[uuid.UUID]string{}}
 }
 
 // Org registers an org and returns its public id.
@@ -57,7 +60,15 @@ func (f *PublicIDs) add(kind string, id, orgID uuid.UUID) string {
 	}
 	f.refs[kind][pub] = publicRef{id: id, orgID: orgID}
 	f.pubs[kind][id] = pub
+	f.slugs[id] = kind + "-" + strconv.Itoa(len(f.slugs)+1)
 	return pub
+}
+
+// SlugOf returns the slug registered with id, or "" when none was.
+func (f *PublicIDs) SlugOf(id uuid.UUID) string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.slugs[id]
 }
 
 func (f *PublicIDs) find(kind, publicID string) (publicRef, bool, error) {
@@ -107,6 +118,21 @@ func (f *PublicIDs) OrgPublicID(_ context.Context, id uuid.UUID) (string, error)
 func (f *PublicIDs) ProjectID(_ context.Context, publicID string) (id, orgID uuid.UUID, ok bool, err error) {
 	r, ok, err := f.find(kindProject, publicID)
 	return r.id, r.orgID, ok, err
+}
+
+// ClientProject implements client.Refs; the console route names the org and project by their registered slugs.
+func (f *PublicIDs) ClientProject(_ context.Context, publicID string) (client.ProjectRef, bool, error) {
+	r, ok, err := f.find(kindProject, publicID)
+	if err != nil || !ok {
+		return client.ProjectRef{}, false, err
+	}
+	org, prj := f.SlugOf(r.orgID), f.SlugOf(r.id)
+	return client.ProjectRef{
+		ID: r.id, OrgID: r.orgID,
+		ConsoleURL: func(clientID string) string {
+			return "https://othra.test/console/o/" + org + "/projects/" + prj + "/clients/" + clientID
+		},
+	}, true, nil
 }
 
 // ProjectPublicID implements the project lookup ports.

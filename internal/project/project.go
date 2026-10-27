@@ -314,6 +314,12 @@ func invalidField(field string, reason apperror.FieldReason, param string) error
 	return apperror.Validation([]apperror.Violation{{Field: field, Reason: reason, Param: param}})
 }
 
+// Ref is a project's ids and slug with its org's slug, as a console route names them.
+type Ref struct {
+	ID, OrgID     uuid.UUID
+	Slug, OrgSlug string
+}
+
 type projectRow struct {
 	ID                   uuid.UUID     `alias:"projects.id"`
 	PublicID             string        `alias:"projects.public_id"`

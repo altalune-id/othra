@@ -159,6 +159,24 @@ func TestService_Update_InvalidSlug(t *testing.T) {
 	assert.True(t, project.IsInvalidSlugError(err))
 }
 
+func TestService_RefByPublicID(t *testing.T) {
+	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
+	require.NoError(t, err)
+	svc := func(st *fakes.ProjectStore) *project.Service {
+		return project.NewService(st, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(fakes.OrgSlugs(""))
+	}
+	got, err := svc(&fakes.ProjectStore{Project: p}).RefByPublicID(context.Background(), p.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, project.Ref{ID: p.ID, OrgID: p.OrgID, Slug: "web", OrgSlug: "org-web"}, *got)
+
+	_, err = svc(&fakes.ProjectStore{Project: p}).RefByPublicID(context.Background(), "nope")
+	assert.True(t, project.IsNotFoundError(err))
+	_, err = svc(&fakes.ProjectStore{Err: errors.New("down")}).RefByPublicID(context.Background(), p.PublicID)
+	ae, isApp := apperror.AsAppError(err)
+	require.True(t, isApp)
+	assert.Equal(t, apperror.CodeUnexpected, ae.Code())
+}
+
 func TestService_ByPublicID(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
 	require.NoError(t, err)

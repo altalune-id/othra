@@ -17,6 +17,7 @@ service ResourceServerService {
       name: "resource_server_list"
       description: "List a project's resource servers with their scopes and verification state."
       required: ["project_id"]
+      ui: "app"
     };
   }
   rpc GetResourceServer(GetResourceServerRequest) returns (GetResourceServerResponse) {
@@ -24,6 +25,7 @@ service ResourceServerService {
       name: "resource_server_get"
       description: "Get one resource server of a project, with its verification state and metadata URL."
       required: ["project_id", "resource_server_id"]
+      ui: "app"
     };
   }
   rpc CreateResourceServer(CreateResourceServerRequest) returns (CreateResourceServerResponse) {
@@ -33,6 +35,7 @@ service ResourceServerService {
       required: ["project_id", "name", "identifier", "scopes"]
       mutation: true
       destructive: false
+      ui: "app"
     };
   }
   rpc UpdateResourceServer(UpdateResourceServerRequest) returns (UpdateResourceServerResponse) {
@@ -60,6 +63,7 @@ service ResourceServerService {
       required: ["project_id", "resource_server_id"]
       mutation: true
       destructive: false
+      ui: "app"
     };
   }
   // SECURITY: trust skips verification; a signed-in person sets it, never MCP.
@@ -76,6 +80,7 @@ service ResourceServerService {
       name: "resource_server_link_list"
       description: "List the links of one OAuth client or of one resource server, with the scopes each link allows. Send client_id or resource_server_id."
       required: ["project_id"]
+      ui: "app"
     };
   }
   rpc LinkClient(LinkClientRequest) returns (LinkClientResponse) {

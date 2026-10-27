@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ConfirmHandle } from '../../composables/useConfirm';
+import type { ConfirmHandle } from './types';
 import AppModal from './AppModal.vue';
 import ErrorText from './ErrorText.vue';
 

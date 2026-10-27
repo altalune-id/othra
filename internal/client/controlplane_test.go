@@ -21,6 +21,7 @@ import (
 
 type cpFixture struct {
 	h          *harness
+	refs       *fakes.PublicIDs
 	cp         *client.ClientService
 	projectPub string
 	foreignPub string
@@ -33,7 +34,7 @@ func newCPFixture(t *testing.T) *cpFixture {
 	h := newHarness(t)
 	refs := fakes.NewPublicIDs()
 	refs.Org(h.org)
-	f := &cpFixture{h: h, cp: client.NewControlPlane(h.svc, refs), projectPub: refs.Project(h.project, h.org)}
+	f := &cpFixture{h: h, refs: refs, cp: client.NewControlPlane(h.svc, refs), projectPub: refs.Project(h.project, h.org)}
 	foreignOrg := uuid.New()
 	refs.Org(foreignOrg)
 	f.foreignPub = refs.Project(uuid.New(), foreignOrg)
@@ -228,4 +229,49 @@ func TestGetClient_CIMDFields(t *testing.T) {
 	assert.Equal(t, clientv1.ClientRegistration_CLIENT_REGISTRATION_REGISTERED, web.GetRegistration())
 	assert.Empty(t, web.GetMetadataUrl())
 	assert.Nil(t, web.GetMetadataFetchedAt())
+}
+
+// Every client result links to the client's console page, where a signed-in person manages its secrets; lists look the route up once.
+func TestClientResults_CarryTheConsoleURL(t *testing.T) {
+	f := newCPFixture(t)
+	created := f.createWeb(t, f.person)
+	want := "https://othra.test/console/o/" + f.refs.SlugOf(f.h.org) + "/projects/" + f.refs.SlugOf(f.h.project) + "/clients/" + created.GetId()
+	assert.Equal(t, want, created.GetConsoleUrl())
+
+	got, err := f.cp.GetClient(f.key, connect.NewRequest(&clientv1.GetClientRequest{ProjectId: f.projectPub, ClientId: created.GetId()}))
+	require.NoError(t, err)
+	assert.Equal(t, created.GetConsoleUrl(), got.Msg.GetClient().GetConsoleUrl())
+	list, err := f.cp.ListClients(f.key, connect.NewRequest(&clientv1.ListClientsRequest{ProjectId: f.projectPub}))
+	require.NoError(t, err)
+	require.Len(t, list.Msg.GetClients(), 1)
+	assert.Equal(t, created.GetConsoleUrl(), list.Msg.GetClients()[0].GetConsoleUrl())
+}
+
+// A failed project lookup stops a write before it starts, and its code reaches the caller.
+func TestClientResults_ConsoleURLLookupFails(t *testing.T) {
+	f := newCPFixture(t)
+	created := f.createWeb(t, f.person)
+	before, err := f.h.svc.Get(context.Background(), f.h.org, f.h.project, created.GetId())
+	require.NoError(t, err)
+	f.refs.Err = apperror.New(apperror.CodeUnexpected, "lookup failed")
+
+	_, err = f.cp.CreateClient(f.person, connect.NewRequest(&clientv1.CreateClientRequest{
+		ProjectId: f.projectPub, Name: "Second", Kind: clientv1.ClientKind_CLIENT_KIND_WEB,
+		RedirectUris: []string{"https://app.example/callback"},
+	}))
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+	_, err = f.cp.GenerateClientSecret(f.person, connect.NewRequest(&clientv1.GenerateClientSecretRequest{ProjectId: f.projectPub, ClientId: created.GetId()}))
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+	_, err = f.cp.UpdateClient(f.person, connect.NewRequest(&clientv1.UpdateClientRequest{
+		ProjectId: f.projectPub, ClientId: created.GetId(), Name: "Renamed", RedirectUris: []string{"https://app.example/callback"},
+	}))
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+
+	list, err := f.h.svc.List(context.Background(), f.h.org, f.h.project)
+	require.NoError(t, err)
+	require.Len(t, list, 1, "no client was created")
+	after := list[0]
+	assert.Equal(t, before.Name, after.Name, "the client was not updated")
+	assert.Equal(t, before.UpdatedAt, after.UpdatedAt)
+	assert.Equal(t, len(before.Secrets), len(after.Secrets), "no secret was generated")
 }

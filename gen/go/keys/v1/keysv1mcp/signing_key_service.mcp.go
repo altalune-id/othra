@@ -36,6 +36,7 @@ func RegisterSigningKeyServiceTools(reg *mcp.Registry, h keysv1connect.SigningKe
 		Scopes:      permissionsFor(keysv1connect.SigningKeyServiceListSigningKeysProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -65,6 +66,7 @@ func RegisterSigningKeyServiceTools(reg *mcp.Registry, h keysv1connect.SigningKe
 		Scopes:      permissionsFor(keysv1connect.SigningKeyServiceRotateSigningKeyProcedure),
 		Mutation:    true,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"immediate":{"type":"boolean"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

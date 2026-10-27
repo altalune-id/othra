@@ -45,6 +45,7 @@ func RegisterClientServiceTools(reg *mcp.Registry, h clientv1connect.ClientServi
 		Scopes:      permissionsFor(clientv1connect.ClientServiceListClientsProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -74,6 +75,7 @@ func RegisterClientServiceTools(reg *mcp.Registry, h clientv1connect.ClientServi
 		Scopes:      permissionsFor(clientv1connect.ClientServiceGetClientProcedure),
 		Mutation:    false,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"clientId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"}},"required":["projectId","clientId"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {
@@ -103,6 +105,7 @@ func RegisterClientServiceTools(reg *mcp.Registry, h clientv1connect.ClientServi
 		Scopes:      permissionsFor(clientv1connect.ClientServiceCreateClientProcedure),
 		Mutation:    true,
 		Destructive: false,
+		UI:          "ui://othra/app",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"projectId":{"type":"string","minLength":1,"pattern":"^[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{21}$"},"name":{"type":"string","minLength":1,"maxLength":100},"kind":{"type":"string","enum":["CLIENT_KIND_UNSPECIFIED","CLIENT_KIND_WEB","CLIENT_KIND_CLI"]},"redirectUris":{"type":"array","items":{"type":"string","maxLength":2000},"minItems":1,"maxItems":20},"postLogoutRedirectUris":{"type":"array","items":{"type":"string","maxLength":2000},"maxItems":20},"refreshTokens":{"type":"boolean"},"consentPolicy":{"type":"string","enum":["CONSENT_POLICY_UNSPECIFIED","CONSENT_POLICY_REQUIRE","CONSENT_POLICY_IMPLICIT"]},"authMethod":{"type":"string","enum":["AUTH_METHOD_UNSPECIFIED","AUTH_METHOD_CLIENT_SECRET_BASIC","AUTH_METHOD_CLIENT_SECRET_POST"]},"pkceRequired":{"type":"boolean"}},"required":["projectId","name","kind","redirectUris"],"additionalProperties":false}`),
 		Handler: func(ctx context.Context, input json.RawMessage) (json.RawMessage, error) {
 			if len(input) == 0 {

@@ -404,14 +404,14 @@ const file_keys_v1_keys_proto_rawDesc = "" +
 	"\x17SIGNING_KEY_STATUS_NEXT\x10\x01\x12\x1d\n" +
 	"\x19SIGNING_KEY_STATUS_ACTIVE\x10\x02\x12\x1f\n" +
 	"\x1bSIGNING_KEY_STATUS_RETIRING\x10\x03\x12\x1e\n" +
-	"\x1aSIGNING_KEY_STATUS_RETIRED\x10\x042\xbd\x04\n" +
-	"\x11SigningKeyService\x12\xdd\x01\n" +
-	"\x0fListSigningKeys\x12\x1f.keys.v1.ListSigningKeysRequest\x1a .keys.v1.ListSigningKeysResponse\"\x86\x01\xca\xf3\x18\x81\x01\n" +
+	"\x1aSIGNING_KEY_STATUS_RETIRED\x10\x042\xc7\x04\n" +
+	"\x11SigningKeyService\x12\xe2\x01\n" +
+	"\x0fListSigningKeys\x12\x1f.keys.v1.ListSigningKeysRequest\x1a .keys.v1.ListSigningKeysResponse\"\x8b\x01\xca\xf3\x18\x86\x01\n" +
 	"\x10signing_key_list\x12aList a project's signing keys: the active one, a waiting next key, and retiring and retired keys.\x1a\n" +
-	"project_id\x12\xc7\x02\n" +
-	"\x10RotateSigningKey\x12 .keys.v1.RotateSigningKeyRequest\x1a!.keys.v1.RotateSigningKeyResponse\"\xed\x01\xca\xf3\x18\xe8\x01\n" +
+	"project_id*\x03app\x12\xcc\x02\n" +
+	"\x10RotateSigningKey\x12 .keys.v1.RotateSigningKeyRequest\x1a!.keys.v1.RotateSigningKeyResponse\"\xf2\x01\xca\xf3\x18\xed\x01\n" +
 	"\x12signing_key_rotate\x12\xc3\x01Rotate a project's signing key: publish a new key that starts signing after the pre-publication delay. immediate makes it sign at once; verifiers holding a cached JWKS fail until they refetch it.\x1a\n" +
-	"project_id \x01B~\n" +
+	"project_id \x01*\x03appB~\n" +
 	"\vcom.keys.v1B\tKeysProtoP\x01Z'altalune.id/othra/gen/go/keys/v1;keysv1\xa2\x02\x03KXX\xaa\x02\aKeys.V1\xca\x02\aKeys\\V1\xe2\x02\x13Keys\\V1\\GPBMetadata\xea\x02\bKeys::V1b\x06proto3"
 
 var (

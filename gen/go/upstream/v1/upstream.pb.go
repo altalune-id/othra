@@ -857,14 +857,14 @@ const file_upstream_v1_upstream_proto_rawDesc = "" +
 	"\x16DeleteUpstreamResponse*G\n" +
 	"\fUpstreamKind\x12\x1d\n" +
 	"\x19UPSTREAM_KIND_UNSPECIFIED\x10\x00\x12\x18\n" +
-	"\x14UPSTREAM_KIND_GOOGLE\x10\x012\xd1\t\n" +
-	"\x0fUpstreamService\x12\xf9\x01\n" +
-	"\rListUpstreams\x12!.upstream.v1.ListUpstreamsRequest\x1a\".upstream.v1.ListUpstreamsResponse\"\xa0\x01\xca\xf3\x18\x9b\x01\n" +
+	"\x14UPSTREAM_KIND_GOOGLE\x10\x012\xdb\t\n" +
+	"\x0fUpstreamService\x12\xfe\x01\n" +
+	"\rListUpstreams\x12!.upstream.v1.ListUpstreamsRequest\x1a\".upstream.v1.ListUpstreamsResponse\"\xa5\x01\xca\xf3\x18\xa0\x01\n" +
 	"\rupstream_list\x12~List a project's upstream IdPs (Google) with their client IDs, redirect URIs and whether they are on. Secrets are never shown.\x1a\n" +
-	"project_id\x12\xf1\x01\n" +
-	"\vGetUpstream\x12\x1f.upstream.v1.GetUpstreamRequest\x1a .upstream.v1.GetUpstreamResponse\"\x9e\x01\xca\xf3\x18\x99\x01\n" +
+	"project_id*\x03app\x12\xf6\x01\n" +
+	"\vGetUpstream\x12\x1f.upstream.v1.GetUpstreamRequest\x1a .upstream.v1.GetUpstreamResponse\"\xa3\x01\xca\xf3\x18\x9e\x01\n" +
 	"\fupstream_get\x12pGet one upstream IdP of a project, with the redirect URI to register at the upstream. The secret is never shown.\x1a\n" +
-	"project_id\x1a\vupstream_id\x12Y\n" +
+	"project_id\x1a\vupstream_id*\x03app\x12Y\n" +
 	"\x0eCreateUpstream\x12\".upstream.v1.CreateUpstreamRequest\x1a#.upstream.v1.CreateUpstreamResponse\x12Y\n" +
 	"\x0eUpdateUpstream\x12\".upstream.v1.UpdateUpstreamRequest\x1a#.upstream.v1.UpdateUpstreamResponse\x12\xa7\x02\n" +
 	"\x12SetUpstreamEnabled\x12&.upstream.v1.SetUpstreamEnabledRequest\x1a'.upstream.v1.SetUpstreamEnabledResponse\"\xbf\x01\xca\xf3\x18\xba\x01\n" +

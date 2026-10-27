@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { ResourceServerState, VerificationFailureSchema } from '#gen/resourceserver/v1/resourceserver_pb';
 import { t } from '#test/nuxt-globals';
-import enUS from '../../../i18n/locales/en-US.json';
+import baseEnUS from '../../../../base/i18n/locales/en-US.json';
+import consoleEnUS from '../../../i18n/locales/en-US.json';
 import { identifierProblem, isHttpIdentifier } from './resourceUri';
 import { checkScopes, scopeMessageKey, scopeProblem } from './scopes';
 import { failureReasons, failureText, metadataSnippet, relativeTime, verificationDot, verificationName, verificationStates } from './verification';
@@ -89,6 +90,7 @@ describe('verification', () => {
 
   it('has copy for every state and every failure reason in the lookups', () => {
     const keys = [...Object.values(verificationStates).flatMap(s => [s.labelKey, s.bodyKey]), ...Object.values(failureReasons), 'rs.reason_unknown'];
+    const enUS = { ...baseEnUS, ...consoleEnUS };
     expect(keys.filter(k => !(k in enUS))).toEqual([]);
   });
 

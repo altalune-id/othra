@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/project"
@@ -18,6 +19,7 @@ type publicIDs struct {
 	projects *project.Service
 	users    *user.Service
 	webhooks webhook.Store
+	console  consolePages
 }
 
 func newPublicIDs(s *Services) publicIDs {
@@ -26,7 +28,19 @@ func newPublicIDs(s *Services) publicIDs {
 		projects: s.Projects,
 		users:    s.Users,
 		webhooks: s.WebhookStore,
+		console:  s.ConsolePages,
 	}
+}
+
+func (p publicIDs) ClientProject(ctx context.Context, publicID string) (client.ProjectRef, bool, error) {
+	r, err := p.projects.RefByPublicID(ctx, publicID)
+	if err != nil {
+		return client.ProjectRef{}, false, notFoundIsAbsent(err)
+	}
+	return client.ProjectRef{
+		ID: r.ID, OrgID: r.OrgID,
+		ConsoleURL: func(clientPublicID string) string { return p.console.client(r.OrgSlug, r.Slug, clientPublicID) },
+	}, true, nil
 }
 
 func (p publicIDs) OrgID(ctx context.Context, publicID string) (uuid.UUID, bool, error) {

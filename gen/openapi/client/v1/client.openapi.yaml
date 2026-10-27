@@ -365,6 +365,10 @@ components:
           title: metadata_fetched_at
           description: metadata_fetched_at is when Othra last read a CIMD client's metadata document.
           $ref: '#/components/schemas/google.protobuf.Timestamp'
+        consoleUrl:
+          type: string
+          title: console_url
+          description: console_url is the client's page in the console, where a signed-in person manages its secrets.
       title: Client
       additionalProperties: false
     client.v1.ClientKind:

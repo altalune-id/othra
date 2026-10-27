@@ -88,6 +88,7 @@ type Services struct {
 	Federation      *federation.Service
 	PersonalTokens  *pat.Service
 	TokenUsage      *usage.Worker
+	ConsolePages    consolePages
 }
 
 func buildServices(k kernel.Kernel, cfg config.Config) *Services {
@@ -135,6 +136,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	sessions := buildSessionStore(k, cfg, sl, secretsLog(k.Log, caps))
 	mailQueue := buildMailQueue(k.Pool, cfg, sl)
 	svcs := &Services{
+		ConsolePages: newConsolePages(cfg.HTTP),
 		OrgStore:     orgStore,
 		Orgs:         orgs,
 		ProjectStore: projectStore,

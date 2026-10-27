@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"strings"
 
 	"altalune.id/othra/config"
@@ -18,8 +19,20 @@ import (
 
 // NOTE: the one source of the console client's URIs; install seeds them and every boot reconciles them.
 func consoleURIs(c config.HTTPConfig) install.Console {
-	base := publicBase(c)
-	return install.Console{RedirectURI: base + consoleCallback, PostLogoutURI: base + "/console/"}
+	return install.Console{RedirectURI: publicBase(c) + consoleCallback, PostLogoutURI: newConsolePages(c).root()}
+}
+
+// NOTE: the console SPA's routes (ui/console/app/pages), the one builder of every server-side link into the console.
+type consolePages struct{ base string }
+
+func newConsolePages(c config.HTTPConfig) consolePages {
+	return consolePages{base: publicBase(c) + "/console"}
+}
+
+func (p consolePages) root() string { return p.base + "/" }
+
+func (p consolePages) client(orgSlug, projectSlug, clientPublicID string) string {
+	return p.base + "/o/" + url.PathEscape(orgSlug) + "/projects/" + url.PathEscape(projectSlug) + "/clients/" + url.PathEscape(clientPublicID)
 }
 
 const consoleCallback = "/oauth/callback"

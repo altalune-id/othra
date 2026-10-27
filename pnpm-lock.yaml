@@ -6,6 +6,15 @@ settings:
 
 catalogs:
   default:
+    '@iconify-json/lucide':
+      specifier: ^1.2.142
+      version: 1.2.142
+    '@iconify/vue':
+      specifier: ^5.0.3
+      version: 5.0.3
+    '@tailwindcss/vite':
+      specifier: ^4.3.3
+      version: 4.3.3
     '@types/node':
       specifier: ^26.6.5
       version: 26.6.5
@@ -81,8 +90,11 @@ importers:
         specifier: ^1.2.12
         version: 1.2.12
       '@iconify-json/lucide':
-        specifier: ^1.2.142
+        specifier: 'catalog:'
         version: 1.2.142
+      '@iconify/vue':
+        specifier: 'catalog:'
+        version: 5.0.3(vue@3.5.43(typescript@6.0.3))
       '@nuxt/icon':
         specifier: ^2.5.1
         version: 2.5.1(@nuxt/schema@4.6.1)(confbox@0.2.4)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.3)(oxc-parser@0.141.0)(rolldown@1.2.13)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.13)(rollup@4.64.5)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.43(typescript@6.0.3))
@@ -93,7 +105,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2(@nuxt/schema@4.6.1)(confbox@0.2.4)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.3)(mlly@1.8.2)(oxc-parser@0.141.0)(pinia@4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.43(typescript@6.0.3)))(rolldown@1.2.13)(unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.13)(rollup@4.64.5)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
       '@tailwindcss/vite':
-        specifier: ^4.3.3
+        specifier: 'catalog:'
         version: 4.3.3(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
       daisyui:
         specifier: 'catalog:'
@@ -194,10 +206,10 @@ importers:
         specifier: ^1.2.12
         version: 1.2.12
       '@iconify-json/lucide':
-        specifier: ^1.2.142
+        specifier: 'catalog:'
         version: 1.2.142
       '@iconify/vue':
-        specifier: ^5.0.3
+        specifier: 'catalog:'
         version: 5.0.3(vue@3.5.43(typescript@6.0.3))
       '@intlify/message-compiler':
         specifier: 11.4.14
@@ -221,7 +233,7 @@ importers:
         specifier: ^10.6.1
         version: 10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.0))(typescript@6.0.3)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.43(typescript@6.0.3))
       '@tailwindcss/vite':
-        specifier: ^4.3.3
+        specifier: 'catalog:'
         version: 4.3.3(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
       '@types/node':
         specifier: 'catalog:'
@@ -268,13 +280,40 @@ importers:
       vue:
         specifier: 'catalog:'
         version: 3.5.43(typescript@6.0.3)
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.6
     devDependencies:
+      '@iconify-json/lucide':
+        specifier: 'catalog:'
+        version: 1.2.142
+      '@iconify/vue':
+        specifier: 'catalog:'
+        version: 5.0.3(vue@3.5.43(typescript@6.0.3))
+      '@othra/base':
+        specifier: workspace:*
+        version: link:../base
       '@othra/vitest-config':
         specifier: workspace:*
         version: link:../vitest-config
+      '@tailwindcss/vite':
+        specifier: 'catalog:'
+        version: 4.3.3(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
         version: 6.0.10(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.43(typescript@6.0.3))
+      '@vue/test-utils':
+        specifier: 'catalog:'
+        version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@6.0.3))
+      daisyui:
+        specifier: 'catalog:'
+        version: 5.7.47
+      happy-dom:
+        specifier: 'catalog:'
+        version: 21.0.4
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 4.3.3
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

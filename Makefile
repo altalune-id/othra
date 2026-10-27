@@ -76,7 +76,7 @@ web-js: ## build internal/web/static/password.js
 web: web-css web-js ## build the templ pages' CSS and JS
 
 .PHONY: ui-mcp
-ui-mcp: ## build the MCP App (Vue) and embed it
+ui-mcp: ui-base ## build the MCP App (Vue) and embed it
 	pnpm --filter @othra/mcp-ui build
 	cp ui/mcp/dist/index.html internal/mcp/ui/assets/app.html
 
@@ -85,7 +85,7 @@ ui-test: ui-base ## run every ui/* package's tests
 	pnpm -r --if-present test
 
 .PHONY: ui-base
-ui-base: ## prepare the shared UI layer, whose tsconfig the console and portal builds read
+ui-base: ## prepare the shared UI layer, whose tsconfig the console, portal and MCP builds read
 	pnpm --filter @othra/base exec nuxt prepare
 
 .PHONY: ui-console

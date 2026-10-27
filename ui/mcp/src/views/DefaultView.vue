@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import ViewShell from '../components/ViewShell.vue';
+
 defineProps<{ data: Record<string, unknown> }>();
 </script>
 
 <template>
-  <main class="card">
-    <header><span class="dot" /><strong>Othra</strong></header>
-    <pre>{{ JSON.stringify(data, null, 2) }}</pre>
-  </main>
+  <ViewShell title="Othra">
+    <pre class="overflow-auto font-mono text-xs">{{ JSON.stringify(data, null, 2) }}</pre>
+  </ViewShell>
 </template>

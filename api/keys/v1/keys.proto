@@ -16,6 +16,7 @@ service SigningKeyService {
       name: "signing_key_list"
       description: "List a project's signing keys: the active one, a waiting next key, and retiring and retired keys."
       required: ["project_id"]
+      ui: "app"
     };
   }
   rpc RotateSigningKey(RotateSigningKeyRequest) returns (RotateSigningKeyResponse) {
@@ -25,6 +26,7 @@ service SigningKeyService {
       required: ["project_id"]
       mutation: true
       destructive: false
+      ui: "app"
     };
   }
 }

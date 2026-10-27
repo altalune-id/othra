@@ -386,6 +386,18 @@ func TestProjectStore_ByPublicID(t *testing.T) {
 	}
 }
 
+func TestProjectStore_RefByPublicID(t *testing.T) {
+	f := newProjectFixture(t)
+	p := newProject(t, f.seedOrg(t, "acme"), "web", uuid.Nil)
+	require.NoError(t, f.projects.Save(f.in(p.OrgID), p))
+
+	got, err := f.projects.RefByPublicID(f.in(p.OrgID), p.PublicID)
+	require.NoError(t, err)
+	assert.Equal(t, project.Ref{ID: p.ID, OrgID: p.OrgID, Slug: "web", OrgSlug: "acme"}, *got)
+	_, err = f.projects.RefByPublicID(f.in(uuid.New()), p.PublicID)
+	assert.True(t, project.IsNotFoundError(err), "another org's project is not found")
+}
+
 func pgCode(err error) string {
 	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
 		return pgErr.Code

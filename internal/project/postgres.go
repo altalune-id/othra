@@ -10,6 +10,7 @@ import (
 type postgresStore struct {
 	pool          db.Pool
 	projects      *entity.Projects
+	orgs          *entity.Orgs
 	logoKeyExpr   postgres.Expression
 	handleIndex   string
 	resolveIssuer string
@@ -26,6 +27,7 @@ func NewStore(pool db.Pool, schema, tablePrefix string) *postgresStore {
 	return &postgresStore{
 		pool:        pool,
 		projects:    entity.NewProjects(schema, tablePrefix),
+		orgs:        entity.NewOrgs(schema, tablePrefix),
 		handleIndex: tablePrefix + "projects_issuer_handle_key",
 		// NOTE: Raw because go-jet has no builder for a correlated subquery in a projection.
 		logoKeyExpr: postgres.Raw("(SELECT f.object_key FROM " + fn + "files f WHERE f.id = projects.logo_file_id AND f.status = 'ready')"),

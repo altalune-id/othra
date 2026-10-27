@@ -43,6 +43,15 @@ func (f *ProjectStore) ByID(context.Context, uuid.UUID) (*project.Project, error
 	return f.Project, nil
 }
 
+// RefByPublicID implements project.Store; the org slug is "org-" plus the project's slug.
+func (f *ProjectStore) RefByPublicID(ctx context.Context, publicID string) (*project.Ref, error) {
+	p, err := f.ByPublicID(ctx, publicID)
+	if err != nil {
+		return nil, err
+	}
+	return &project.Ref{ID: p.ID, OrgID: p.OrgID, Slug: p.Slug, OrgSlug: "org-" + p.Slug}, nil
+}
+
 // ByPublicID implements project.Store; it finds Project or one of Projects by public id.
 func (f *ProjectStore) ByPublicID(_ context.Context, publicID string) (*project.Project, error) {
 	if f.Err != nil {

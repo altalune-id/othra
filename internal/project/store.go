@@ -17,6 +17,7 @@ type Store interface {
 type Reader interface {
 	ByID(ctx context.Context, id uuid.UUID) (*Project, error)
 	ByPublicID(ctx context.Context, publicID string) (*Project, error)
+	RefByPublicID(ctx context.Context, publicID string) (*Ref, error)
 	BySlug(ctx context.Context, orgID uuid.UUID, slug string) (*Project, error)
 	List(ctx context.Context, orgID uuid.UUID) ([]*Project, error)
 	// IssuerHandleExists reports whether any org's project uses handle.

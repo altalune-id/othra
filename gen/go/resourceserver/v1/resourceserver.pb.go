@@ -2494,36 +2494,36 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"!RESOURCE_SERVER_STATE_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dRESOURCE_SERVER_STATE_PENDING\x10\x01\x12\"\n" +
 	"\x1eRESOURCE_SERVER_STATE_VERIFIED\x10\x02\x12 \n" +
-	"\x1cRESOURCE_SERVER_STATE_FAILED\x10\x032\xfd\x1c\n" +
-	"\x15ResourceServerService\x12\xe9\x01\n" +
-	"\x13ListResourceServers\x12-.resourceserver.v1.ListResourceServersRequest\x1a..resourceserver.v1.ListResourceServersResponse\"s\xca\xf3\x18o\n" +
+	"\x1cRESOURCE_SERVER_STATE_FAILED\x10\x032\x96\x1d\n" +
+	"\x15ResourceServerService\x12\xee\x01\n" +
+	"\x13ListResourceServers\x12-.resourceserver.v1.ListResourceServersRequest\x1a..resourceserver.v1.ListResourceServersResponse\"x\xca\xf3\x18t\n" +
 	"\x14resource_server_list\x12KList a project's resource servers with their scopes and verification state.\x1a\n" +
-	"project_id\x12\x80\x02\n" +
-	"\x11GetResourceServer\x12+.resourceserver.v1.GetResourceServerRequest\x1a,.resourceserver.v1.GetResourceServerResponse\"\x8f\x01\xca\xf3\x18\x8a\x01\n" +
+	"project_id*\x03app\x12\x85\x02\n" +
+	"\x11GetResourceServer\x12+.resourceserver.v1.GetResourceServerRequest\x1a,.resourceserver.v1.GetResourceServerResponse\"\x94\x01\xca\xf3\x18\x8f\x01\n" +
 	"\x13resource_server_get\x12SGet one resource server of a project, with its verification state and metadata URL.\x1a\n" +
-	"project_id\x1a\x12resource_server_id\x12\xfd\x02\n" +
-	"\x14CreateResourceServer\x12..resourceserver.v1.CreateResourceServerRequest\x1a/.resourceserver.v1.CreateResourceServerResponse\"\x83\x02\xca\xf3\x18\xfe\x01\n" +
+	"project_id\x1a\x12resource_server_id*\x03app\x12\x82\x03\n" +
+	"\x14CreateResourceServer\x12..resourceserver.v1.CreateResourceServerRequest\x1a/.resourceserver.v1.CreateResourceServerResponse\"\x88\x02\xca\xf3\x18\x83\x02\n" +
 	"\x16resource_server_create\x12\xbb\x01Register a resource server: an API or MCP endpoint named by its https identifier, exactly as it checks the token's aud, with the scopes apps can ask for. It starts pending until verified.\x1a\n" +
 	"project_id\x1a\x04name\x1a\n" +
-	"identifier\x1a\x06scopes \x01\x12\xc6\x02\n" +
+	"identifier\x1a\x06scopes \x01*\x03app\x12\xc6\x02\n" +
 	"\x14UpdateResourceServer\x12..resourceserver.v1.UpdateResourceServerRequest\x1a/.resourceserver.v1.UpdateResourceServerResponse\"\xcc\x01\xca\xf3\x18\xc7\x01\n" +
 	"\x16resource_server_update\x12{Replace a resource server's name and scopes. The identifier can't change, and a scope a link still allows can't be removed.\x1a\n" +
 	"project_id\x1a\x12resource_server_id\x1a\x04name\x1a\x06scopes \x010\x01\x12\x84\x02\n" +
 	"\x14DeleteResourceServer\x12..resourceserver.v1.DeleteResourceServerRequest\x1a/.resourceserver.v1.DeleteResourceServerResponse\"\x8a\x01\xca\xf3\x18\x85\x01\n" +
 	"\x16resource_server_delete\x12GDelete a resource server. It is refused while clients are linked to it.\x1a\n" +
-	"project_id\x1a\x12resource_server_id \x010\x01\x12\xae\x02\n" +
-	"\x14VerifyResourceServer\x12..resourceserver.v1.VerifyResourceServerRequest\x1a/.resourceserver.v1.VerifyResourceServerResponse\"\xb4\x01\xca\xf3\x18\xaf\x01\n" +
+	"project_id\x1a\x12resource_server_id \x010\x01\x12\xb3\x02\n" +
+	"\x14VerifyResourceServer\x12..resourceserver.v1.VerifyResourceServerRequest\x1a/.resourceserver.v1.VerifyResourceServerResponse\"\xb9\x01\xca\xf3\x18\xb4\x01\n" +
 	"\x16resource_server_verify\x12sCheck a resource server's RFC 9728 metadata now. A pass verifies it; a failure shows the error and changes nothing.\x1a\n" +
-	"project_id\x1a\x12resource_server_id \x01\x12}\n" +
+	"project_id\x1a\x12resource_server_id \x01*\x03app\x12}\n" +
 	"\x16SetResourceServerTrust\x120.resourceserver.v1.SetResourceServerTrustRequest\x1a1.resourceserver.v1.SetResourceServerTrustResponse\x12\x89\x01\n" +
 	"\x1aSetResourceServerAdmission\x124.resourceserver.v1.SetResourceServerAdmissionRequest\x1a5.resourceserver.v1.SetResourceServerAdmissionResponse\x12}\n" +
 	"\x16SetPersonalTokenAccess\x120.resourceserver.v1.SetPersonalTokenAccessRequest\x1a1.resourceserver.v1.SetPersonalTokenAccessResponse\x12\x8c\x01\n" +
 	"\x1bGenerateIntrospectionSecret\x125.resourceserver.v1.GenerateIntrospectionSecretRequest\x1a6.resourceserver.v1.GenerateIntrospectionSecretResponse\x12\x86\x01\n" +
 	"\x19RotateIntrospectionSecret\x123.resourceserver.v1.RotateIntrospectionSecretRequest\x1a4.resourceserver.v1.RotateIntrospectionSecretResponse\x12\x86\x01\n" +
-	"\x19RevokeIntrospectionSecret\x123.resourceserver.v1.RevokeIntrospectionSecretRequest\x1a4.resourceserver.v1.RevokeIntrospectionSecretResponse\x12\x8d\x02\n" +
-	"\tListLinks\x12#.resourceserver.v1.ListLinksRequest\x1a$.resourceserver.v1.ListLinksResponse\"\xb4\x01\xca\xf3\x18\xaf\x01\n" +
+	"\x19RevokeIntrospectionSecret\x123.resourceserver.v1.RevokeIntrospectionSecretRequest\x1a4.resourceserver.v1.RevokeIntrospectionSecretResponse\x12\x92\x02\n" +
+	"\tListLinks\x12#.resourceserver.v1.ListLinksRequest\x1a$.resourceserver.v1.ListLinksResponse\"\xb9\x01\xca\xf3\x18\xb4\x01\n" +
 	"\x19resource_server_link_list\x12\x85\x01List the links of one OAuth client or of one resource server, with the scopes each link allows. Send client_id or resource_server_id.\x1a\n" +
-	"project_id\x12\x9c\x02\n" +
+	"project_id*\x03app\x12\x9c\x02\n" +
 	"\n" +
 	"LinkClient\x12$.resourceserver.v1.LinkClientRequest\x1a%.resourceserver.v1.LinkClientResponse\"\xc0\x01\xca\xf3\x18\xbb\x01\n" +
 	"\x1bresource_server_link_create\x12gLink an OAuth client to a resource server of the same project, allowing it some of the server's scopes.\x1a\n" +
