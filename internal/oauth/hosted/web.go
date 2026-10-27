@@ -190,15 +190,17 @@ func (h *Web) token(w http.ResponseWriter, r *http.Request, s *site, form string
 
 func (h *Web) returnTo(s *site, raw string) string {
 	if h.consoleHandOff(s, raw) {
-		return raw
+		return h.consoleSignIn()
 	}
 	return ReturnTo(s.issuerURL, raw)
 }
 
 // SECURITY: /p/system may also hand off to the console's own sign-in start, by exact path on this origin only.
 func (h *Web) consoleHandOff(s *site, raw string) bool {
-	return s.issuer.Handle == project.SystemHandle && raw == layout.Path(h.cfg.BasePath, "/login/oidc")
+	return s.issuer.Handle == project.SystemHandle && raw == h.consoleSignIn()
 }
+
+func (h *Web) consoleSignIn() string { return layout.Path(h.cfg.BasePath, "/login/oidc") }
 
 // SECURITY: a form is only handled after its CSRF token and its per-IP limit pass.
 func (h *Web) guard(w http.ResponseWriter, r *http.Request, s *site, form string, rules ...ratelimit.Rule) bool {
@@ -729,7 +731,7 @@ func (h *Web) toPage(w http.ResponseWriter, r *http.Request, s *site, p page, qu
 // SECURITY: RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked.
 func (h *Web) toReturnTo(w http.ResponseWriter, r *http.Request, s *site, raw string) {
 	if h.consoleHandOff(s, raw) {
-		http.Redirect(w, r, raw, http.StatusSeeOther) //nolint:gosec // G710: consoleHandOff allows one fixed path.
+		http.Redirect(w, r, h.consoleSignIn(), http.StatusSeeOther)
 		return
 	}
 	target := ReturnTo(s.issuerURL, raw)
