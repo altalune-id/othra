@@ -49,8 +49,10 @@ env -u GOROOT GOTOOLCHAIN=auto go test -race -shuffle=on ./...
 
 echo "→ buf breaking against origin/main"
 git fetch --quiet origin main 2>/dev/null || true
-if git rev-parse --verify --quiet origin/main >/dev/null; then
+if git rev-parse --verify --quiet origin/main >/dev/null && git ls-tree -r --name-only origin/main | grep -q '\.proto$'; then
   pnpm exec buf breaking --against '.git#ref=refs/remotes/origin/main'
+elif git rev-parse --verify --quiet origin/main >/dev/null; then
+  echo "note: origin/main has no .proto files yet; skipping buf breaking"
 else
   echo "note: no origin/main; skipping buf breaking"
 fi

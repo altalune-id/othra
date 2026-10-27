@@ -82,7 +82,12 @@ jobs:
         run: pnpm exec buf lint
       - name: buf breaking (against main)
         if: github.event_name == 'pull_request'
-        run: pnpm exec buf breaking --against '.git#ref=refs/remotes/origin/main'
+        run: |
+          if git ls-tree -r --name-only origin/main | grep -q '\.proto$'; then
+            pnpm exec buf breaking --against '.git#ref=refs/remotes/origin/main'
+          else
+            echo "origin/main has no .proto files yet; nothing to compare"
+          fi
 
   drift:
     runs-on: ubuntu-latest
