@@ -14,10 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/kernel/usage"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/usage"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 var errBoom = errors.New("boom")

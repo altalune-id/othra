@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"strings"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/health"
-	"altalune.id/othra/internal/kernel"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/health"
+	"github.com/altalune-id/othra/internal/kernel"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 type s3Opener func(context.Context, s3conn.Config) (*s3conn.Client, error)

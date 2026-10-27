@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/password"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/password"
 )
 
 func TestService_UpdateProfile(t *testing.T) {

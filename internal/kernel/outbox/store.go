@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // Store is the driven port for durable outbox persistence.

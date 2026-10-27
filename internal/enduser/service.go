@@ -10,13 +10,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/emailaddr"
-	"altalune.id/othra/internal/kernel/db"
-	ksecret "altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/emailaddr"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	ksecret "github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 const touchEvery = time.Minute

@@ -9,8 +9,8 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/schema/entity"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/schema/entity"
 )
 
 // Save upserts a project by id, bumping updated_at; the issuer handle and its lock change only through their own methods.

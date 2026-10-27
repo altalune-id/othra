@@ -7,10 +7,10 @@
 package resourceserverv1
 
 import (
-	v1 "altalune.id/othra/gen/go/client/v1"
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	v1 "github.com/altalune-id/othra/gen/go/client/v1"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -2534,8 +2534,8 @@ const file_resourceserver_v1_resourceserver_proto_rawDesc = "" +
 	"project_id\x1a\tclient_id\x1a\x12resource_server_id\x1a\x06scopes \x010\x01\x12\x90\x02\n" +
 	"\fUnlinkClient\x12&.resourceserver.v1.UnlinkClientRequest\x1a'.resourceserver.v1.UnlinkClientResponse\"\xae\x01\xca\xf3\x18\xa9\x01\n" +
 	"\x1bresource_server_link_delete\x12[Unlink an OAuth client from a resource server; the client can no longer ask for its scopes.\x1a\n" +
-	"project_id\x1a\tclient_id\x1a\x12resource_server_id \x010\x01B\xce\x01\n" +
-	"\x15com.resourceserver.v1B\x13ResourceserverProtoP\x01Z;altalune.id/othra/gen/go/resourceserver/v1;resourceserverv1\xa2\x02\x03RXX\xaa\x02\x11Resourceserver.V1\xca\x02\x11Resourceserver\\V1\xe2\x02\x1dResourceserver\\V1\\GPBMetadata\xea\x02\x12Resourceserver::V1b\x06proto3"
+	"project_id\x1a\tclient_id\x1a\x12resource_server_id \x010\x01B\xd9\x01\n" +
+	"\x15com.resourceserver.v1B\x13ResourceserverProtoP\x01ZFgithub.com/altalune-id/othra/gen/go/resourceserver/v1;resourceserverv1\xa2\x02\x03RXX\xaa\x02\x11Resourceserver.V1\xca\x02\x11Resourceserver\\V1\xe2\x02\x1dResourceserver\\V1\\GPBMetadata\xea\x02\x12Resourceserver::V1b\x06proto3"
 
 var (
 	file_resourceserver_v1_resourceserver_proto_rawDescOnce sync.Once

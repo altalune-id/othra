@@ -6,9 +6,9 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	"altalune.id/othra/apperror"
-	rootmcp "altalune.id/othra/mcp"
-	"altalune.id/othra/reqid"
+	"github.com/altalune-id/othra/apperror"
+	rootmcp "github.com/altalune-id/othra/mcp"
+	"github.com/altalune-id/othra/reqid"
 )
 
 // ErrorPayload maps a tool failure onto the caller-visible payload; an empty Code leaves it unmapped.

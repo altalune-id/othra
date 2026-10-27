@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"altalune.id/othra/scheduler"
+	"github.com/altalune-id/othra/scheduler"
 )
 
 const (

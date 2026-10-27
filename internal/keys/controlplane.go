@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	keysv1 "altalune.id/othra/gen/go/keys/v1"
-	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
+	keysv1 "github.com/altalune-id/othra/gen/go/keys/v1"
+	keysv1connect "github.com/altalune-id/othra/gen/go/keys/v1/keysv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // SigningKeyService is the SigningKeyService Connect handler.

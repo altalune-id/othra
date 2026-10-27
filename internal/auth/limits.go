@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"altalune.id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 )
 
 // LoginEmailRule counts failed sign-ins per email: 10 per 15 minutes, 5 at once.

@@ -14,8 +14,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/reqid"
-	"altalune.id/othra/scheduler"
+	"github.com/altalune-id/othra/reqid"
+	"github.com/altalune-id/othra/scheduler"
 )
 
 func testLogger() *slog.Logger { return slog.New(slog.NewTextHandler(io.Discard, nil)) }

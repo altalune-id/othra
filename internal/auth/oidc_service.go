@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 // ConsoleIssuer is the issuer a console account's /p/system link is stored under; the issuer URL follows http.baseURL.

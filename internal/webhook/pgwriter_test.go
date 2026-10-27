@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/internal/kernel/db/dbtest"
-	"altalune.id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/kernel/db/dbtest"
+	"github.com/altalune-id/othra/internal/kernel/events"
 )
 
 func TestSave(t *testing.T) {

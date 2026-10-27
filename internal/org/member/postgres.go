@@ -1,8 +1,8 @@
 package member
 
 import (
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/schema/entity"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/schema/entity"
 )
 
 // NOTE: every read goes to the writer: memberships decide authorization, so a lagging replica must never grant or deny.

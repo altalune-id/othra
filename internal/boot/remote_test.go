@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	authv1 "altalune.id/othra/gen/go/auth/v1"
-	"altalune.id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/config"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
+	"github.com/altalune-id/othra/internal/apiclient"
 )
 
 func TestBootRemote(t *testing.T) {

@@ -8,14 +8,14 @@ import (
 	"net/url"
 	"time"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/oauth/hosted/views"
-	"altalune.id/othra/internal/upstream"
-	"altalune.id/othra/oidcrp"
-	"altalune.id/othra/reqid"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/federation"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/oauth/hosted/views"
+	"github.com/altalune-id/othra/internal/upstream"
+	"github.com/altalune-id/othra/oidcrp"
+	"github.com/altalune-id/othra/reqid"
+	"github.com/altalune-id/othra/sealer"
 )
 
 const (

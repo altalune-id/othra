@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/scheduler"
+	"github.com/altalune-id/othra/scheduler"
 )
 
 const (

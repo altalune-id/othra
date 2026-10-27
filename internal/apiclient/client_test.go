@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	authv1 "altalune.id/othra/gen/go/auth/v1"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
 )
 
 func headerRecorder(t *testing.T) (string, *http.Header) {

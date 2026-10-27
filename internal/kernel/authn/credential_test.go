@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 var testSecret = []byte("0123456789abcdef0123456789abcdef")

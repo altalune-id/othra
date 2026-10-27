@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type methods struct {

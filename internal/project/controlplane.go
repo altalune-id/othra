@@ -7,10 +7,10 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	projectv1 "altalune.id/othra/gen/go/project/v1"
-	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
+	projectv1 "github.com/altalune-id/othra/gen/go/project/v1"
+	projectv1connect "github.com/altalune-id/othra/gen/go/project/v1/projectv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // ProjectService implements project.v1.ProjectService; every id it takes and returns is a public id.

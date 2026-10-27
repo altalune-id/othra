@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/upstream"
+	"github.com/altalune-id/othra/internal/upstream"
 )
 
 type fakeStore struct {

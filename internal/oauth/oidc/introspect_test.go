@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
 )
 
 const (

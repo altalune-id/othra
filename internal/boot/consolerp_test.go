@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/oidcrp"
-	"altalune.id/othra/oidcrp/oidcrptest"
+	"github.com/altalune-id/othra/oidcrp"
+	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 )
 
 func signedBy(t *testing.T, kid string) string {

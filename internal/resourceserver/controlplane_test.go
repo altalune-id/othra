@@ -11,13 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
-	resourceserverv1connect "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/permission"
-	"altalune.id/othra/internal/testutil/fakes"
+	resourceserverv1 "github.com/altalune-id/othra/gen/go/resourceserver/v1"
+	resourceserverv1connect "github.com/altalune-id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/permission"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type cpFixture struct {

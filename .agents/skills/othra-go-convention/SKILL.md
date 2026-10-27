@@ -1,6 +1,6 @@
 ---
 name: othra-go-convention
-description: Use when planning or building any change in Othra (altalune.id/othra) — a new or changed RPC, MCP tool, CLI command, domain module, service or store method, migration, config key, error code, worker, webhook event, rate limit, pre-sign-in page or console page — or when asked "how do I add X here", where a file goes, or what the convention is for public ids, the permission table, protovalidate rules, the unit of work or the boot wiring.
+description: Use when planning or building any change in Othra (github.com/altalune-id/othra) — a new or changed RPC, MCP tool, CLI command, domain module, service or store method, migration, config key, error code, worker, webhook event, rate limit, pre-sign-in page or console page — or when asked "how do I add X here", where a file goes, or what the convention is for public ids, the permission table, protovalidate rules, the unit of work or the boot wiring.
 license: Proprietary
 metadata:
   pairs-with: othra-go-review (checks what this skill builds)

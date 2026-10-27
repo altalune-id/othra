@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 // MaxEndpointsPerProject bounds the fan-out of one event.

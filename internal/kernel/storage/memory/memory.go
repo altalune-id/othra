@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"altalune.id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/kernel/storage"
 )
 
 var _ storage.Driver = (*Driver)(nil)

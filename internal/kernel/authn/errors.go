@@ -3,7 +3,7 @@ package authn
 import (
 	"errors"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // UnauthorizedError is the single opaque authentication failure.

@@ -8,12 +8,12 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	clientv1 "altalune.id/othra/gen/go/client/v1"
-	resourceserverv1 "altalune.id/othra/gen/go/resourceserver/v1"
-	resourceserverv1connect "altalune.id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/kernel/session"
+	clientv1 "github.com/altalune-id/othra/gen/go/client/v1"
+	resourceserverv1 "github.com/altalune-id/othra/gen/go/resourceserver/v1"
+	resourceserverv1connect "github.com/altalune-id/othra/gen/go/resourceserver/v1/resourceserverv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // ResourceServerService is the ResourceServerService Connect handler.

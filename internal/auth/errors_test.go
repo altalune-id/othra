@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 func TestInvalidCredentialsError(t *testing.T) {

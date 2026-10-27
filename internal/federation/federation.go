@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/upstream"
+	"github.com/altalune-id/othra/internal/upstream"
 )
 
 // Project is the project a hosted request runs for.

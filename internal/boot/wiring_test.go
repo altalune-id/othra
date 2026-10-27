@@ -11,16 +11,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/sealer"
 )
 
 func TestBuildSealer(t *testing.T) {

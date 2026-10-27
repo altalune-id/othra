@@ -7,9 +7,9 @@
 package projectv1
 
 import (
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -1701,8 +1701,8 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\x11CheckIssuerHandle\x12$.project.v1.CheckIssuerHandleRequest\x1a%.project.v1.CheckIssuerHandleResponse\x12r\n" +
 	"\x17CreateProjectLogoUpload\x12*.project.v1.CreateProjectLogoUploadRequest\x1a+.project.v1.CreateProjectLogoUploadResponse\x12x\n" +
 	"\x19CompleteProjectLogoUpload\x12,.project.v1.CompleteProjectLogoUploadRequest\x1a-.project.v1.CompleteProjectLogoUploadResponse\x12`\n" +
-	"\x11DeleteProjectLogo\x12$.project.v1.DeleteProjectLogoRequest\x1a%.project.v1.DeleteProjectLogoResponseB\x96\x01\n" +
-	"\x0ecom.project.v1B\fProjectProtoP\x01Z-altalune.id/othra/gen/go/project/v1;projectv1\xa2\x02\x03PXX\xaa\x02\n" +
+	"\x11DeleteProjectLogo\x12$.project.v1.DeleteProjectLogoRequest\x1a%.project.v1.DeleteProjectLogoResponseB\xa1\x01\n" +
+	"\x0ecom.project.v1B\fProjectProtoP\x01Z8github.com/altalune-id/othra/gen/go/project/v1;projectv1\xa2\x02\x03PXX\xaa\x02\n" +
 	"Project.V1\xca\x02\n" +
 	"Project\\V1\xe2\x02\x16Project\\V1\\GPBMetadata\xea\x02\vProject::V1b\x06proto3"
 

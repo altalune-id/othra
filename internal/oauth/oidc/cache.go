@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 const publicCache = "public, max-age=300"

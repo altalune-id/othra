@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/testutil/pgtest"
-	"altalune.id/othra/migrator"
-	"altalune.id/othra/schema"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/migrator"
+	"github.com/altalune-id/othra/schema"
 )
 
 func TestMigrations_UpDownUp(t *testing.T) {

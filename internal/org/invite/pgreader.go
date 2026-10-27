@@ -8,7 +8,7 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 // Live returns orgID's invite for email that is neither accepted nor revoked, locked FOR UPDATE.

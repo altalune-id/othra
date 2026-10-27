@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/client"
 )
 
 // ClientStore is an in-memory client.Store; FailOn names a method that returns Err instead.

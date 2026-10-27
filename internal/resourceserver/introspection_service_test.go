@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/secret"
 )
 
 // RFC 7662 §2.1: a resource server introspects with its own secret: shown once, hashed, rotatable with a grace.

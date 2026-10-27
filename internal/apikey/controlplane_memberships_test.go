@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/testutil/fakes"
+	apikeyv1 "github.com/altalune-id/othra/gen/go/apikey/v1"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type membershipsFixture struct {

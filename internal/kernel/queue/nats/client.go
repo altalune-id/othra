@@ -18,10 +18,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/queue"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/queue"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/worker"
 )
 
 // Client is the queue on NATS JetStream.

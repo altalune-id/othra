@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	orgv1 "altalune.id/othra/gen/go/org/v1"
-	"altalune.id/othra/reqid"
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	"github.com/altalune-id/othra/reqid"
 )
 
 func TestRequestID_MintsAndSetsHeader(t *testing.T) {

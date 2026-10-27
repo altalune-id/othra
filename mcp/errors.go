@@ -8,7 +8,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // DefaultUnmappedCode is the Code for a tool failure no ErrorMapper claimed.

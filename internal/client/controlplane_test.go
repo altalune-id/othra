@@ -12,11 +12,11 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"altalune.id/othra/apperror"
-	clientv1 "altalune.id/othra/gen/go/client/v1"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/apperror"
+	clientv1 "github.com/altalune-id/othra/gen/go/client/v1"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type cpFixture struct {

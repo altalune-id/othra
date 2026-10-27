@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // The supported locales; Default is the fallback.

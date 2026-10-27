@@ -8,7 +8,7 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 // ByHash returns the project's token with that hash, in any state, or nil. SECURITY: it reads the primary, so a revoke counts at once.

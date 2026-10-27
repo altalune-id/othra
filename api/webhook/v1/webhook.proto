@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/webhook/v1;webhookv1";
+option go_package = "github.com/altalune-id/othra/gen/go/webhook/v1;webhookv1";
 
 // WebhookService manages webhook endpoints and their deliveries. Every id is a public id.
 service WebhookService {

@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/schema/entity"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/schema/entity"
+	"github.com/altalune-id/othra/sealer"
 )
 
 var (

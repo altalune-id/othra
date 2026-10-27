@@ -3,7 +3,7 @@ package client
 import (
 	"errors"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // NotFoundError signals an OAuth client that does not exist or is out of the caller's reach.

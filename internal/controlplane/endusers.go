@@ -6,15 +6,15 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	enduserv1 "altalune.id/othra/gen/go/enduser/v1"
-	"altalune.id/othra/gen/go/enduser/v1/enduserv1connect"
-	"altalune.id/othra/internal/consent"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/pat"
-	"altalune.id/othra/internal/project"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	enduserv1 "github.com/altalune-id/othra/gen/go/enduser/v1"
+	"github.com/altalune-id/othra/gen/go/enduser/v1/enduserv1connect"
+	"github.com/altalune-id/othra/internal/consent"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/federation"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/pat"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 // ProjectRefs turns a project public id into its id and org.

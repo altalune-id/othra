@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // NotFoundError signals a resource server that does not exist or is out of the caller's reach.

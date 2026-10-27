@@ -8,10 +8,10 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	memberv1 "altalune.id/othra/gen/go/member/v1"
-	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
-	"altalune.id/othra/internal/prompt"
-	"altalune.id/othra/internal/render"
+	memberv1 "github.com/altalune-id/othra/gen/go/member/v1"
+	memberv1connect "github.com/altalune-id/othra/gen/go/member/v1/memberv1connect"
+	"github.com/altalune-id/othra/internal/prompt"
+	"github.com/altalune-id/othra/internal/render"
 )
 
 // ClientFn returns the Member Connect client for a command; the caller resolves URL and token.

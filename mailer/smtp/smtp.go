@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 // The transport security modes.

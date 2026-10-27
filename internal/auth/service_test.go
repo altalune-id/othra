@@ -10,15 +10,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/password"
-	"altalune.id/othra/scope"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/password"
+	"github.com/altalune-id/othra/scope"
 )
 
 type fakeUsers struct {

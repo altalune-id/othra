@@ -20,9 +20,9 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"altalune.id/othra/migrator"
-	"altalune.id/othra/nanoid"
-	"altalune.id/othra/schema"
+	"github.com/altalune-id/othra/migrator"
+	"github.com/altalune-id/othra/nanoid"
+	"github.com/altalune-id/othra/schema"
 )
 
 const (

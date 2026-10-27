@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/queue"
-	natsqueue "altalune.id/othra/internal/kernel/queue/nats"
-	"altalune.id/othra/internal/testutil/natstest"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/queue"
+	natsqueue "github.com/altalune-id/othra/internal/kernel/queue/nats"
+	"github.com/altalune-id/othra/internal/testutil/natstest"
 )
 
 func TestBuildQueue_Disabled(t *testing.T) {

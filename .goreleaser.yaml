@@ -26,9 +26,9 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X altalune.id/othra/version.Version={{ .Version }}
-      - -X altalune.id/othra/version.Commit={{ .ShortCommit }}
-      - -X altalune.id/othra/version.BuildTime={{ .Date }}
+      - -X github.com/altalune-id/othra/version.Version={{ .Version }}
+      - -X github.com/altalune-id/othra/version.Commit={{ .ShortCommit }}
+      - -X github.com/altalune-id/othra/version.BuildTime={{ .Date }}
 
 archives:
   - id: default

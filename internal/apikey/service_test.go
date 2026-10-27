@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/scope"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/scope"
 )
 
 type stubProjects struct {

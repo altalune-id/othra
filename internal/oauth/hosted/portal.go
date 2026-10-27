@@ -5,7 +5,7 @@ import (
 
 	"github.com/a-h/templ"
 
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // Portal serves the end-user portal app's index for one request; boot plugs in the embedded build.

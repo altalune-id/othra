@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/pat"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/pat"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const introspectPath = "/oauth2/introspect"

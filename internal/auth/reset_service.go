@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/othra/internal/auth/views"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/password"
+	"github.com/altalune-id/othra/internal/auth/views"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/password"
 )
 
 const mailTime = "2 January 2006, 15:04 UTC"

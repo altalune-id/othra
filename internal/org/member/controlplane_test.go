@@ -13,15 +13,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
-	memberv1 "altalune.id/othra/gen/go/member/v1"
-	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/apperror"
+	apperrorv1 "github.com/altalune-id/othra/gen/go/apperror/v1"
+	memberv1 "github.com/altalune-id/othra/gen/go/member/v1"
+	memberv1connect "github.com/altalune-id/othra/gen/go/member/v1/memberv1connect"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type cpFixture struct {

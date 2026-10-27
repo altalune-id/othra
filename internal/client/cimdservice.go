@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 // MetadataConfig is how a Service fetches and caches metadata documents; IssuerHost is refused as a client_id host.

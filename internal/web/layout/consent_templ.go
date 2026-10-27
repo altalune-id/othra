@@ -8,7 +8,7 @@ package layout
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/othra/internal/web/i18n"
+import "github.com/altalune-id/othra/internal/web/i18n"
 
 // ConsentData is where the terms and privacy policy live and whether a person must tick the box.
 type ConsentData struct {

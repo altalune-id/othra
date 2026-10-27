@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"altalune.id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 )
 
 // DefaultMaxKeys bounds the map when New gets no positive maxKeys.

@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
-	"altalune.id/othra/internal/kernel/outbox"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/nanoid"
+	webhookv1 "github.com/altalune-id/othra/gen/go/webhook/v1"
+	"github.com/altalune-id/othra/internal/kernel/outbox"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 func TestServiceRetry(t *testing.T) {

@@ -8,13 +8,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/org/member/views"
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/scope"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/org/member/views"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/scope"
 )
 
 // Service is the membership application service.

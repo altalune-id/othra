@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/upstream/v1;upstreamv1";
+option go_package = "github.com/altalune-id/othra/gen/go/upstream/v1;upstreamv1";
 
 // UpstreamService configures a project's upstream IdPs, through which its end users sign in (Google first). Every id is a public id.
 service UpstreamService {

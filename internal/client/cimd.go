@@ -13,7 +13,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"altalune.id/othra/internal/oauth/redirecturi"
+	"github.com/altalune-id/othra/internal/oauth/redirecturi"
 )
 
 // The limits on a Client ID Metadata Document client (CIMD -02).

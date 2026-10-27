@@ -4,9 +4,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	projectv1 "altalune.id/othra/gen/go/project/v1"
-	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
-	"altalune.id/othra/internal/render"
+	projectv1 "github.com/altalune-id/othra/gen/go/project/v1"
+	projectv1connect "github.com/altalune-id/othra/gen/go/project/v1/projectv1connect"
+	"github.com/altalune-id/othra/internal/render"
 )
 
 // ClientFn returns the Project Connect client for a command; the caller resolves URL and token.

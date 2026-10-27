@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/apperror"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 func (h *harness) account() (*AccountService, context.Context) {

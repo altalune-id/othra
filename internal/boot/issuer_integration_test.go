@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
 )
 
 func newIssuerServer(t *testing.T, basePath string) (*httptest.Server, *Services) {

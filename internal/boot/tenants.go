@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 type projectTenants struct {

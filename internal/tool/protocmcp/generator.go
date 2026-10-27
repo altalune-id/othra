@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/pluginpb"
 
-	mcpv1 "altalune.id/othra/gen/go/mcp/v1"
+	mcpv1 "github.com/altalune-id/othra/gen/go/mcp/v1"
 )
 
 const (

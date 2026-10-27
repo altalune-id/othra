@@ -19,16 +19,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/health"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	mcpinternal "altalune.id/othra/internal/mcp"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/permission"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/health"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	mcpinternal "github.com/altalune-id/othra/internal/mcp"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/permission"
 )
 
 type lockdown struct {

@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	authv1 "altalune.id/othra/gen/go/auth/v1"
-	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/password"
-	"altalune.id/othra/scope"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
+	authv1connect "github.com/altalune-id/othra/gen/go/auth/v1/authv1connect"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/password"
+	"github.com/altalune-id/othra/scope"
 )
 
 func TestProfile_ThroughTheAPI(t *testing.T) {

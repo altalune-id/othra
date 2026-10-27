@@ -5,10 +5,10 @@
 package apikeyv1connect
 
 import (
-	v1 "altalune.id/othra/gen/go/apikey/v1"
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
+	v1 "github.com/altalune-id/othra/gen/go/apikey/v1"
 	http "net/http"
 	strings "strings"
 )

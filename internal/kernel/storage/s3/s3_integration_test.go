@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/storage"
-	storages3 "altalune.id/othra/internal/kernel/storage/s3"
-	"altalune.id/othra/internal/testutil/s3test"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/internal/kernel/storage"
+	storages3 "github.com/altalune-id/othra/internal/kernel/storage/s3"
+	"github.com/altalune-id/othra/internal/testutil/s3test"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 func newDriver(t *testing.T) (*storages3.Driver, *s3test.Handle) {

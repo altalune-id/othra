@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/worker"
 )
 
 var _ worker.Worker = (*Worker)(nil)

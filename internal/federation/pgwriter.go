@@ -7,7 +7,7 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 // Insert links id to endUserID, or returns errSubjectTaken or errUpstreamTaken.

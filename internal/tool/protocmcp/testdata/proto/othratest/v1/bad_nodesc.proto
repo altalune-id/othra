@@ -4,7 +4,7 @@ package othratest.v1;
 
 import "mcp/v1/annotations.proto";
 
-option go_package = "altalune.id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
+option go_package = "github.com/altalune-id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
 
 // NoDescService annotates an rpc that carries neither a description nor a leading comment.
 service NoDescService {

@@ -3,7 +3,7 @@ package keys
 import (
 	"errors"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // NoActiveKeyError signals a project with no key that signs; after a project's creation this never happens.

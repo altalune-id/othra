@@ -1,8 +1,8 @@
 package boot
 
 import (
-	"altalune.id/othra/config"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/sealer"
 )
 
 // NOTE: a missing or invalid key yields a Disabled sealer, not a boot failure.

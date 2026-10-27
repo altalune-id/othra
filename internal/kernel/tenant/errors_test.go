@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 func TestErrors(t *testing.T) {

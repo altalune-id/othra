@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"altalune.id/othra/internal/web/assets"
+	"github.com/altalune-id/othra/internal/web/assets"
 )
 
 const (

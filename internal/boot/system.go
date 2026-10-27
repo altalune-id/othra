@@ -8,13 +8,13 @@ import (
 	"net/url"
 	"strings"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/install"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/oauth/redirecturi"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/upstream"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/install"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/oauth/redirecturi"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/upstream"
 )
 
 // NOTE: the one source of the console client's URIs; install seeds them and every boot reconciles them.

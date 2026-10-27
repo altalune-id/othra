@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/upstream"
-	"altalune.id/othra/oidcrp/oidcrptest"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/federation"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/upstream"
+	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 )
 
 // sign in with Google end to end: the login button, the sealed start, the Continue hop, the callback and the account.

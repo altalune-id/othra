@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/schema/entity"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/schema/entity"
 )
 
 type postgresStore struct {

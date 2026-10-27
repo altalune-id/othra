@@ -13,13 +13,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
-	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/testutil/fakes"
+	apikeyv1 "github.com/altalune-id/othra/gen/go/apikey/v1"
+	apikeyv1connect "github.com/altalune-id/othra/gen/go/apikey/v1/apikeyv1connect"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 func withPrincipal(p session.Principal) connect.UnaryInterceptorFunc {

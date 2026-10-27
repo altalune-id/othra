@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/org/member"
 )
 
 // MemberStore is an in-memory member.Store with one membership per org and user; Err, when set, fails every call.

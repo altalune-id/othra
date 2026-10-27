@@ -3,9 +3,9 @@ package invite
 import (
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/scope"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/scope"
 )
 
 // Authorize returns nil when a may invite someone with role, or renew, revoke or confirm an invite with role; it never touches storage.

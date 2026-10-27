@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 func expectScope(mock sqlmock.Sqlmock, tc tenant.Context) *sqlmock.ExpectedExec {

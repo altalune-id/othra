@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/internal/kernel/outbox"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/webhook"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/kernel/outbox"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/webhook"
 )
 
 func newAttempt(tc tenant.Context, endpointID, deliveryID uuid.UUID, n int, at time.Time) webhook.Attempt {

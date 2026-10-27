@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"altalune.id/othra/mcp"
+	"github.com/altalune-id/othra/mcp"
 )
 
 func loopbackPost(host string) *http.Request {

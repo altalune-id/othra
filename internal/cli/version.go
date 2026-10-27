@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"altalune.id/othra/version"
+	"github.com/altalune-id/othra/version"
 )
 
 func newVersionCmd() *cobra.Command {

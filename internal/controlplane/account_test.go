@@ -14,17 +14,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	"altalune.id/othra/gen/go/account/v1/accountv1connect"
-	"altalune.id/othra/internal/consent"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel/ratelimit/memory"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/pat"
-	"altalune.id/othra/internal/permission"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/apperror"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	"github.com/altalune-id/othra/gen/go/account/v1/accountv1connect"
+	"github.com/altalune-id/othra/internal/consent"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/memory"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/pat"
+	"github.com/altalune-id/othra/internal/permission"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 type fakeResolver struct {

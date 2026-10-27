@@ -5,7 +5,7 @@ package othratest.v1;
 import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 
-option go_package = "altalune.id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
+option go_package = "github.com/altalune-id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
 
 // FixtureService exercises every schema shape the generator has to render.
 service FixtureService {

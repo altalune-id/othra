@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/secret"
 )
 
 // Store is the driven port for the resource_servers and oauth_client_resources tables; every call runs under the org and project on ctx.

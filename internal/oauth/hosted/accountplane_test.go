@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
 )
 
 type resolvedEndUser struct {

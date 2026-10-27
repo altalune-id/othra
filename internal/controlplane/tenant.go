@@ -6,8 +6,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 func tenantFromPrincipal() connect.UnaryInterceptorFunc {

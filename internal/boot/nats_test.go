@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/testutil/natstest"
-	natsconn "altalune.id/othra/nats"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/testutil/natstest"
+	natsconn "github.com/altalune-id/othra/nats"
 )
 
 const (

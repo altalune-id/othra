@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/internal/kernel/outbox"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
+	webhookv1 "github.com/altalune-id/othra/gen/go/webhook/v1"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/kernel/outbox"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 func TestWebhookReach(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"altalune.id/othra/internal/apiclient"
-	"altalune.id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/internal/auth"
 )
 
 const defaultProfile = "default"

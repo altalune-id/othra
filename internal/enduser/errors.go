@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // LinkNotUsableError signals a magic link that is unknown, expired or already used. SECURITY: one error for every cause.

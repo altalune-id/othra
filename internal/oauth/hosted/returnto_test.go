@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 const testIssuer = "https://id.example.com/auth/p/acme"

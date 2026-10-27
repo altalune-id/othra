@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/sealer"
 )
 
 func TestSealOpenRoundTrip(t *testing.T) {

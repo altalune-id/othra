@@ -10,8 +10,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"altalune.id/othra/httpclient"
-	"altalune.id/othra/oauthrs"
+	"github.com/altalune-id/othra/httpclient"
+	"github.com/altalune-id/othra/oauthrs"
 )
 
 // MaxMetadataBytes bounds the RFC 9728 metadata document a check reads.

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 
-	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
+	webhookv1 "github.com/altalune-id/othra/gen/go/webhook/v1"
 )
 
 func TestWebhookColumnsAndRow(t *testing.T) {

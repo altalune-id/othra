@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/project/v1;projectv1";
+option go_package = "github.com/altalune-id/othra/gen/go/project/v1;projectv1";
 
 // ProjectService manages projects. Every id is a public id.
 service ProjectService {

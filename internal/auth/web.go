@@ -13,12 +13,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/auth/views"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/auth/views"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const loginFailed = "Invalid email or password"

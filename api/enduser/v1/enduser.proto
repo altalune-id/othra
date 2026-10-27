@@ -8,7 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/enduser/v1;enduserv1";
+option go_package = "github.com/altalune-id/othra/gen/go/enduser/v1;enduserv1";
 
 // EndUserService lets project admins look at a project's end users and revoke their sessions, apps and tokens. Every id is a public id.
 service EndUserService {

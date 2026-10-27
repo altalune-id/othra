@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	"altalune.id/othra/internal/kernel/session"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // AccountService is pat's slice of account.v1: the signed-in end user's personal tokens.

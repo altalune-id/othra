@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/keys"
-	"altalune.id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/keys"
+	"github.com/altalune-id/othra/internal/resourceserver"
 )
 
 const (

@@ -8,17 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/internal/testutil/pgtest"
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 func TestLoginLocal_AgainstPostgres(t *testing.T) {

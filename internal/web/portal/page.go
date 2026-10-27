@@ -5,9 +5,9 @@ import (
 	"html"
 	"net/http"
 
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/internal/web/middleware"
-	"altalune.id/othra/internal/web/spa"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/middleware"
+	"github.com/altalune-id/othra/internal/web/spa"
 )
 
 // Page serves the portal's index.html with one request's layout.PortalValues in Nuxt's runtime config.

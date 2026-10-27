@@ -27,7 +27,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
    ```templ
    package views
 
-   import "altalune.id/othra/internal/web/layout"
+   import "github.com/altalune-id/othra/internal/web/layout"
 
    // ThingData is the thing form's state.
    type ThingData struct {

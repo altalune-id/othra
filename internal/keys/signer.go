@@ -12,7 +12,7 @@ import (
 	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 const jtiLen = 21

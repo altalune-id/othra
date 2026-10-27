@@ -14,13 +14,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/kernel/usage"
-	"altalune.id/othra/internal/pat"
-	"altalune.id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/kernel/usage"
+	"github.com/altalune-id/othra/internal/pat"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
 )
 
 type servers struct{ server pat.Server }

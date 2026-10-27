@@ -8,7 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/resourceserver/v1;resourceserverv1";
+option go_package = "github.com/altalune-id/othra/gen/go/resourceserver/v1;resourceserverv1";
 
 // ResourceServerService registers a project's resource servers, verifies them over RFC 9728 and links OAuth clients to them. Every id is a public id.
 service ResourceServerService {

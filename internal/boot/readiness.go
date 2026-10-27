@@ -1,11 +1,11 @@
 package boot
 
 import (
-	"altalune.id/othra/internal/health"
-	natsconn "altalune.id/othra/nats"
-	"altalune.id/othra/pg"
-	redisconn "altalune.id/othra/redis"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/internal/health"
+	natsconn "github.com/altalune-id/othra/nats"
+	"github.com/altalune-id/othra/pg"
+	redisconn "github.com/altalune-id/othra/redis"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 var _ health.Check = (*pg.HealthMonitor)(nil)

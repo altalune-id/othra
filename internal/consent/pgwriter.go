@@ -7,7 +7,7 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 // NOTE: one statement adds the new scopes to the stored ones, so two approvals at once never narrow or fail.

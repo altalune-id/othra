@@ -5,10 +5,10 @@
 package upstreamv1connect
 
 import (
-	v1 "altalune.id/othra/gen/go/upstream/v1"
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
+	v1 "github.com/altalune-id/othra/gen/go/upstream/v1"
 	http "net/http"
 	strings "strings"
 )

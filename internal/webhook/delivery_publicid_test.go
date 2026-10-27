@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 var uuidShaped = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)

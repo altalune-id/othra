@@ -9,12 +9,12 @@ import (
 
 	"github.com/go-jose/go-jose/v4"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/keys"
-	"altalune.id/othra/internal/oauth/hosted"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/oidcrp"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/keys"
+	"github.com/altalune-id/othra/internal/oauth/hosted"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/oidcrp"
 )
 
 const consoleRPTimeout = 10 * time.Second

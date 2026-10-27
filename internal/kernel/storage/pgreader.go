@@ -8,7 +8,7 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/go-jet/jet/v2/qrm"
 
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 // ByPublicID loads a file, or *UploadNotFoundError when the org has none with that public id.

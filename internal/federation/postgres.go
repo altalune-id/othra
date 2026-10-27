@@ -9,9 +9,9 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/upstream"
-	"altalune.id/othra/schema/entity"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/upstream"
+	"github.com/altalune-id/othra/schema/entity"
 )
 
 type postgresStore struct {

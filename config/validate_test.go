@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/password"
+	"github.com/altalune-id/othra/password"
 )
 
 func valid(t *testing.T, err error) {

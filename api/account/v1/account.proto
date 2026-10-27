@@ -6,7 +6,7 @@ import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/account/v1;accountv1";
+option go_package = "github.com/altalune-id/othra/gen/go/account/v1;accountv1";
 
 // AccountService is the signed-in end user's own account in one project, served at /p/<handle>/api/ to the portal on the same origin.
 // SECURITY: never an MCP tool and never on /api; the end user comes from the browser session, never from a request field.

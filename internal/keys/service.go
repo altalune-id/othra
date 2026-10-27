@@ -14,11 +14,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/nanoid"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/nanoid"
+	"github.com/altalune-id/othra/sealer"
 )
 
 // CacheTTL bounds how long a process serves a project's JWKS and signing key before it reads them again.

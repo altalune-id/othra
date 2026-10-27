@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/mailer"
 )
 
 // MailQueue enqueues a message in the unit of work on ctx.

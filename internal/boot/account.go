@@ -6,18 +6,18 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/consent"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/oauth/hosted"
-	"altalune.id/othra/internal/pat"
-	"altalune.id/othra/internal/resourceserver"
-	"altalune.id/othra/internal/web"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/consent"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/federation"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/oauth/hosted"
+	"github.com/altalune-id/othra/internal/pat"
+	"github.com/altalune-id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/internal/web"
 )
 
 // NOTE: account.v1 is one Connect service made of the domain slices; nil until every slice's service is built.

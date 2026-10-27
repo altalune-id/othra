@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/storage"
-	"altalune.id/othra/internal/kernel/storage/memory"
-	storages3 "altalune.id/othra/internal/kernel/storage/s3"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/kernel/storage/memory"
+	storages3 "github.com/altalune-id/othra/internal/kernel/storage/s3"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 func buildStorageDriver(cfg config.Config, s3c *s3conn.Client) (storage.Driver, error) {

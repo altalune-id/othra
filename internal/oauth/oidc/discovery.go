@@ -1,7 +1,7 @@
 // Package oidc serves each issuer's public OAuth and OpenID Connect endpoints: discovery, metadata, the JWKS, token and userinfo.
 package oidc
 
-import "altalune.id/othra/internal/web/i18n"
+import "github.com/altalune-id/othra/internal/web/i18n"
 
 const (
 	jwksPath       = "/oauth2/jwks.json"

@@ -8,7 +8,7 @@ package layout
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/othra/internal/web/i18n"
+import "github.com/altalune-id/othra/internal/web/i18n"
 
 // BrandHeader is the project's logo, or a letter avatar, and name at the top of a hosted card.
 func BrandHeader(b *Brand) templ.Component {

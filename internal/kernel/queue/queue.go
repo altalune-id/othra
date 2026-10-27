@@ -4,7 +4,7 @@ package queue
 import (
 	"context"
 
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/worker"
 )
 
 // Queue submits jobs and broadcasts and builds the workers that run their handlers and listeners.

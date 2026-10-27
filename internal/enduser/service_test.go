@@ -14,10 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/mailer"
 )
 
 type harness struct {

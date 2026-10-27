@@ -7,7 +7,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
-	"altalune.id/othra/internal/kernel/queue"
+	"github.com/altalune-id/othra/internal/kernel/queue"
 )
 
 const (

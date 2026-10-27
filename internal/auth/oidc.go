@@ -9,12 +9,12 @@ import (
 	"net/url"
 	"time"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/auth/views"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/oidcrp"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/auth/views"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/oidcrp"
 )
 
 const (

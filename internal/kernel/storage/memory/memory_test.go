@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/kernel/storage"
 )
 
 func TestDriver_StandsInForABucket(t *testing.T) {

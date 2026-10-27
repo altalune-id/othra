@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 // TermsAcceptor records that a person accepted the terms.

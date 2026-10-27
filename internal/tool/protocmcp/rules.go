@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	// NOTE: registers the shared predefined rules so their field options parse.
-	_ "altalune.id/othra/gen/go/othra/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 )
 
 //nolint:gochecknoglobals // compiled once; a package-level regexp is the idiom.

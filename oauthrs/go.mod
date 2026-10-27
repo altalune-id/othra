@@ -1,9 +1,9 @@
-module altalune.id/othra/oauthrs
+module github.com/altalune-id/othra/oauthrs
 
 go 1.26.9
 
 require (
-	altalune.id/othra/oidcrp v0.0.0
+	github.com/altalune-id/othra/oidcrp v0.0.0
 	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/stretchr/testify v1.12.1
 )
@@ -13,4 +13,4 @@ require (
 	golang.org/x/sync v0.24.0 // indirect
 )
 
-replace altalune.id/othra/oidcrp => ../oidcrp
+replace github.com/altalune-id/othra/oidcrp => ../oidcrp

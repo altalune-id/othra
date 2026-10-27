@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	keysv1 "altalune.id/othra/gen/go/keys/v1"
-	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
-	"altalune.id/othra/internal/render"
+	keysv1 "github.com/altalune-id/othra/gen/go/keys/v1"
+	keysv1connect "github.com/altalune-id/othra/gen/go/keys/v1/keysv1connect"
+	"github.com/altalune-id/othra/internal/render"
 )
 
 // ClientFn returns the SigningKey Connect client for a command; the caller resolves URL and token.

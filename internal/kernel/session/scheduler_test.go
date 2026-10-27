@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/scheduler"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/scheduler"
 )
 
 type failingSweep struct {

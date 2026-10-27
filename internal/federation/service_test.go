@@ -14,11 +14,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/internal/upstream"
-	"altalune.id/othra/oidcrp"
-	"altalune.id/othra/oidcrp/oidcrptest"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/upstream"
+	"github.com/altalune-id/othra/oidcrp"
+	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 )
 
 const redirectURI = "https://othra.example/p/acme/federation/google/callback"

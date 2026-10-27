@@ -7,8 +7,8 @@
 package accountv1
 
 import (
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -2141,8 +2141,8 @@ const file_account_v1_account_proto_rawDesc = "" +
 	"\x10ListTokenServers\x12#.account.v1.ListTokenServersRequest\x1a$.account.v1.ListTokenServersResponse\x12c\n" +
 	"\x12ListPersonalTokens\x12%.account.v1.ListPersonalTokensRequest\x1a&.account.v1.ListPersonalTokensResponse\x12f\n" +
 	"\x13CreatePersonalToken\x12&.account.v1.CreatePersonalTokenRequest\x1a'.account.v1.CreatePersonalTokenResponse\x12f\n" +
-	"\x13RevokePersonalToken\x12&.account.v1.RevokePersonalTokenRequest\x1a'.account.v1.RevokePersonalTokenResponseB\x96\x01\n" +
-	"\x0ecom.account.v1B\fAccountProtoP\x01Z-altalune.id/othra/gen/go/account/v1;accountv1\xa2\x02\x03AXX\xaa\x02\n" +
+	"\x13RevokePersonalToken\x12&.account.v1.RevokePersonalTokenRequest\x1a'.account.v1.RevokePersonalTokenResponseB\xa1\x01\n" +
+	"\x0ecom.account.v1B\fAccountProtoP\x01Z8github.com/altalune-id/othra/gen/go/account/v1;accountv1\xa2\x02\x03AXX\xaa\x02\n" +
 	"Account.V1\xca\x02\n" +
 	"Account\\V1\xe2\x02\x16Account\\V1\\GPBMetadata\xea\x02\vAccount::V1b\x06proto3"
 

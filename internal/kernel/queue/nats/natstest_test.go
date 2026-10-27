@@ -5,7 +5,7 @@ import (
 
 	"github.com/nats-io/nats-server/v2/server"
 
-	"altalune.id/othra/internal/testutil/natstest"
+	"github.com/altalune-id/othra/internal/testutil/natstest"
 )
 
 func startNATS(t *testing.T) string {

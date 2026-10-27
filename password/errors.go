@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // MismatchError reports that a password does not match its hash.

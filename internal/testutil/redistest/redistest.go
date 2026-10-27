@@ -17,7 +17,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 const (

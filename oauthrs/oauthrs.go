@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/othra/oidcrp"
+	"github.com/altalune-id/othra/oidcrp"
 	"github.com/go-jose/go-jose/v4"
 )
 

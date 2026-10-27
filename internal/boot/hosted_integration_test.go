@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 // SECURITY: an admin who owes Othra's terms is sent to /welcome from admin pages, but a hosted /p/<handle> page never redirects and sets no admin cookie.

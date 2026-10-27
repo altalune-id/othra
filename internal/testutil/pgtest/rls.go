@@ -14,9 +14,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/migrator"
-	"altalune.id/othra/schema"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/migrator"
+	"github.com/altalune-id/othra/schema"
 )
 
 const (

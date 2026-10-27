@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/oauthrs"
+	"github.com/altalune-id/othra/oauthrs"
 )
 
 func withIntrospection(ttl time.Duration) func(*oauthrs.Config) {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"altalune.id/othra/oidcrp"
-	"altalune.id/othra/oidcrp/oidcrptest"
+	"github.com/altalune-id/othra/oidcrp"
+	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 )
 
 func ExampleClient_Exchange() {

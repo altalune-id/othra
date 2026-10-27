@@ -20,17 +20,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/kernel/ratelimit/memory"
-	"altalune.id/othra/internal/kernel/ratelimit/ratelimittest"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/web/i18n"
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/internal/web/middleware"
-	"altalune.id/othra/internal/web/portal"
-	"altalune.id/othra/internal/web/spa"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/memory"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/ratelimittest"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/middleware"
+	"github.com/altalune-id/othra/internal/web/portal"
+	"github.com/altalune-id/othra/internal/web/spa"
 )
 
 type webFixture struct {

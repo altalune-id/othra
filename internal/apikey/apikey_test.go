@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/scope"
+	"github.com/altalune-id/othra/scope"
 )
 
 func future() *time.Time {

@@ -2,7 +2,7 @@
 
 Rules for anyone changing Othra, people and coding agents alike. `CLAUDE.md` is a link to this file.
 
-Othra is one Go binary (module `altalune.id/othra`) that serves an API (Connect RPC), an MCP server, a CLI and a web console. The UI lives in the pnpm workspace under `ui/` (the packages are listed in `pnpm-workspace.yaml`) and is embedded into the binary.
+Othra is one Go binary (module `github.com/altalune-id/othra`) that serves an API (Connect RPC), an MCP server, a CLI and a web console. The UI lives in the pnpm workspace under `ui/` (the packages are listed in `pnpm-workspace.yaml`) and is embedded into the binary.
 
 Setup: see [README.md](README.md). Architecture: [docs/architecture](docs/architecture/README.md).
 
@@ -76,7 +76,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 
 **Style**
 
-- Go: gofmt + gci import groups (stdlib, third-party, `altalune.id/othra`), golangci-lint config in `.golangci.yml`.
+- Go: gofmt + gci import groups (stdlib, third-party, `github.com/altalune-id/othra`), golangci-lint config in `.golangci.yml`.
 - JS/TS/Vue/JSON/Markdown/CSS:
   - ESLint (`@antfu/eslint-config`) is the formatter too; run `pnpm lint:fix`.
   - Statements end with `;`. Interface fields end with `;`; inline object types use `,`.

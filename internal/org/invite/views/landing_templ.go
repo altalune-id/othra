@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/othra/internal/web/layout"
+import "github.com/altalune-id/othra/internal/web/layout"
 
 // State is which invite page a visitor sees.
 type State int

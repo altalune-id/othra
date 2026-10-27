@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"strconv"
 
-	"altalune.id/othra/internal/web/i18n"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // SentData is the "check your inbox" page's state; Email is empty when the flash cookie is gone.

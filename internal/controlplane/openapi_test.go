@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 func openAPIServer(t *testing.T, enabled bool, auth *BasicAuth) *httptest.Server {

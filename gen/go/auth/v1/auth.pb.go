@@ -7,10 +7,10 @@
 package authv1
 
 import (
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	v1 "altalune.id/othra/gen/go/org/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	v1 "github.com/altalune-id/othra/gen/go/org/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -733,8 +733,8 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x0eChangePassword\x12\x1e.auth.v1.ChangePasswordRequest\x1a\x1f.auth.v1.ChangePasswordResponse\"\x00\x12\\\n" +
 	"\x11SignOutEverywhere\x12!.auth.v1.SignOutEverywhereRequest\x1a\".auth.v1.SignOutEverywhereResponse\"\x00\x12M\n" +
 	"\fSetActiveOrg\x12\x1c.auth.v1.SetActiveOrgRequest\x1a\x1d.auth.v1.SetActiveOrgResponse\"\x00\x12M\n" +
-	"\fCreateOwnOrg\x12\x1c.auth.v1.CreateOwnOrgRequest\x1a\x1d.auth.v1.CreateOwnOrgResponse\"\x00B~\n" +
-	"\vcom.auth.v1B\tAuthProtoP\x01Z'altalune.id/othra/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
+	"\fCreateOwnOrg\x12\x1c.auth.v1.CreateOwnOrgRequest\x1a\x1d.auth.v1.CreateOwnOrgResponse\"\x00B\x89\x01\n" +
+	"\vcom.auth.v1B\tAuthProtoP\x01Z2github.com/altalune-id/othra/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
 	file_auth_v1_auth_proto_rawDescOnce sync.Once

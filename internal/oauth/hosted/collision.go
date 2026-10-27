@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/oauth/hosted/views"
+	"github.com/altalune-id/othra/internal/federation"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/oauth/hosted/views"
 )
 
 const (

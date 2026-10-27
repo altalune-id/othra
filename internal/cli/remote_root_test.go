@@ -12,14 +12,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/apiclient"
-	"altalune.id/othra/internal/cli"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/cptest"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/internal/cli"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/cptest"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 // Exercises the real root tree for a remote command: config (no validation), client boot, org.ClientFn.

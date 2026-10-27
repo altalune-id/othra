@@ -8,13 +8,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/legal"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/legal"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 const (

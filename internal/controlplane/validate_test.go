@@ -19,13 +19,13 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"altalune.id/othra/apperror"
-	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
-	authv1 "altalune.id/othra/gen/go/auth/v1"
-	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
-	orgv1 "altalune.id/othra/gen/go/org/v1"
-	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/apperror"
+	apperrorv1 "github.com/altalune-id/othra/gen/go/apperror/v1"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
+	authv1connect "github.com/altalune-id/othra/gen/go/auth/v1/authv1connect"
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	orgv1connect "github.com/altalune-id/othra/gen/go/org/v1/orgv1connect"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // NOTE: testdata/rule_reasons.json is the one reason table; the console tests its reasonOf against it too.

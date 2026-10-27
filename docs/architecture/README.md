@@ -1,6 +1,6 @@
 # Architecture
 
-Othra is Altalune's OAuth 2.1 and OpenID Connect identity provider. This milestone is the platform base: orgs, projects, members, API keys, webhooks, the admin console, CLI and MCP. One Go binary (`othra`, module `altalune.id/othra`) serves every surface from one set of domain services and one Postgres database.
+Othra is Altalune's OAuth 2.1 and OpenID Connect identity provider. This milestone is the platform base: orgs, projects, members, API keys, webhooks, the admin console, CLI and MCP. One Go binary (`othra`, module `github.com/altalune-id/othra`) serves every surface from one set of domain services and one Postgres database.
 
 For step-by-step changes, see the recipes in [docs/howto](../howto/README.md).
 
@@ -79,7 +79,7 @@ Packages at the repo root never import `internal/`: `apperror` (error codes, `co
 
 ## Library modules
 
-`oidcrp` (an OpenID Connect relying party) and `oauthrs` (an OAuth resource server) are their own Go modules, `altalune.id/othra/oidcrp` and `altalune.id/othra/oauthrs`, so apps can import them without the server. They use only the standard library, go-jose and, for `oauthrs`, `oidcrp`; depguard `library-boundary` keeps `internal/` and `config` out.
+`oidcrp` (an OpenID Connect relying party) and `oauthrs` (an OAuth resource server) are their own Go modules, `github.com/altalune-id/othra/oidcrp` and `github.com/altalune-id/othra/oauthrs`, so apps can import them without the server. They use only the standard library, go-jose and, for `oauthrs`, `oidcrp`; depguard `library-boundary` keeps `internal/` and `config` out.
 
 - The root `go.mod` requires both at `v0.0.0` with `replace` lines to `./oidcrp` and `./oauthrs`; `oauthrs/go.mod` replaces `oidcrp` with `../oidcrp`.
 - The Makefile runs every Go target once per module (`GO_MODULES`, `go -C <module>`), and CI and Dependabot cover each module.

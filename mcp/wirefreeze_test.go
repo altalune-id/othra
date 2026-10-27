@@ -9,7 +9,7 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"altalune.id/othra/mcp"
+	"github.com/altalune-id/othra/mcp"
 )
 
 //nolint:gochecknoglobals // a -update flag for golden files has to be package level.

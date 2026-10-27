@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"log/slog"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/migrator"
-	"altalune.id/othra/pg"
-	"altalune.id/othra/schema"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/migrator"
+	"github.com/altalune-id/othra/pg"
+	"github.com/altalune-id/othra/schema"
 )
 
 func buildDBHealth(k kernel.Kernel, cfg config.Config, log *slog.Logger) *pg.HealthMonitor {

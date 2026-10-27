@@ -12,9 +12,9 @@ import (
 	"context"
 	"net/url"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/web/i18n"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // ErrorData is a hosted error: translated Title and Message, the error Code and the request's Reference; an empty Site means an unknown project, NoSignIn hides the way back to sign in and ReturnTo rides along on it.

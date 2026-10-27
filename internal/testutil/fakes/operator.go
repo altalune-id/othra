@@ -5,8 +5,8 @@ import (
 
 	"connectrpc.com/connect"
 
-	"altalune.id/othra/internal/kernel/authn"
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // OperatorToken is the bearer token OperatorAuthn accepts.

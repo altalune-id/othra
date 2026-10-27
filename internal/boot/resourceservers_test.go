@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/resourceserver"
 )
 
 func TestResourceServersConfig(t *testing.T) {

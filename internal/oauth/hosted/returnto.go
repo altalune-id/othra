@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const maxReturnToLen = 4096

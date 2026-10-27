@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"altalune.id/othra/config"
+	"github.com/altalune-id/othra/config"
 )
 
 const (

@@ -7,11 +7,11 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/kernel/ratelimit/memory"
-	ratelimitredis "altalune.id/othra/internal/kernel/ratelimit/redis"
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/memory"
+	ratelimitredis "github.com/altalune-id/othra/internal/kernel/ratelimit/redis"
+	"github.com/altalune-id/othra/worker"
 )
 
 type limiters struct {

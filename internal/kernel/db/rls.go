@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"altalune.id/othra/pg"
+	"github.com/altalune-id/othra/pg"
 )
 
 // RLSConfig tunes the boot row-level-security guard.

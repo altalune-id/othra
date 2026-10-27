@@ -7,9 +7,9 @@
 package upstreamv1
 
 import (
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -872,8 +872,8 @@ const file_upstream_v1_upstream_proto_rawDesc = "" +
 	"project_id\x1a\vupstream_id \x010\x01\x12\xed\x01\n" +
 	"\x0eDeleteUpstream\x12\".upstream.v1.DeleteUpstreamRequest\x1a#.upstream.v1.DeleteUpstreamResponse\"\x91\x01\xca\xf3\x18\x8c\x01\n" +
 	"\x0fupstream_delete\x12\\Remove an upstream IdP. It is refused while any end user has linked it; turn it off instead.\x1a\n" +
-	"project_id\x1a\vupstream_id \x010\x01B\x9e\x01\n" +
-	"\x0fcom.upstream.v1B\rUpstreamProtoP\x01Z/altalune.id/othra/gen/go/upstream/v1;upstreamv1\xa2\x02\x03UXX\xaa\x02\vUpstream.V1\xca\x02\vUpstream\\V1\xe2\x02\x17Upstream\\V1\\GPBMetadata\xea\x02\fUpstream::V1b\x06proto3"
+	"project_id\x1a\vupstream_id \x010\x01B\xa9\x01\n" +
+	"\x0fcom.upstream.v1B\rUpstreamProtoP\x01Z:github.com/altalune-id/othra/gen/go/upstream/v1;upstreamv1\xa2\x02\x03UXX\xaa\x02\vUpstream.V1\xca\x02\vUpstream\\V1\xe2\x02\x17Upstream\\V1\\GPBMetadata\xea\x02\fUpstream::V1b\x06proto3"
 
 var (
 	file_upstream_v1_upstream_proto_rawDescOnce sync.Once

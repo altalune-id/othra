@@ -17,14 +17,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/keys"
-	"altalune.id/othra/internal/oauth/hosted"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/keys"
+	"github.com/altalune-id/othra/internal/oauth/hosted"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/resourceserver"
 )
 
 func postForm(t *testing.T, target string, form url.Values, header ...string) (int, http.Header, map[string]any) {

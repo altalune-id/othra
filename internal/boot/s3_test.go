@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 const s3TestSecret = "hunter2-s3-secret-access-key"

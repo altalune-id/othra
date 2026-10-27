@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"altalune.id/othra/internal/web/i18n"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // Site names the project a hosted view belongs to: its issuer handle for paths and its display name for copy.

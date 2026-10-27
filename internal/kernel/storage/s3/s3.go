@@ -13,8 +13,8 @@ import (
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/smithy-go"
 
-	"altalune.id/othra/internal/kernel/storage"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/internal/kernel/storage"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 var _ storage.Driver = (*Driver)(nil)

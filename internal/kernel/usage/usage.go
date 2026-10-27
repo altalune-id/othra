@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 const drainTimeout = 5 * time.Second

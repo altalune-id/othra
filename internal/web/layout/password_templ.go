@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"strconv"
 
-	"altalune.id/othra/password"
+	"github.com/altalune-id/othra/password"
 )
 
 // PasswordFieldData names a new-password input and the inputs whose values it must not contain.

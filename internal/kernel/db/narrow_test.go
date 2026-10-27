@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 func expectProject(mock sqlmock.Sqlmock, project uuid.UUID) *sqlmock.ExpectedExec {

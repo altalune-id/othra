@@ -8,7 +8,7 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 // InsertCode stores c when its client exists and its user session is live and belongs to its end user, else *SessionGoneError.

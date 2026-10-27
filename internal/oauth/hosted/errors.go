@@ -3,7 +3,7 @@ package hosted
 import (
 	"errors"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // ErrTermsChanged signals an acceptance of terms that changed after the page showed them.

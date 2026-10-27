@@ -100,9 +100,9 @@ const file_othra_v1_rules_proto_rawDesc = "" +
 	"Z\n" +
 	"\x15othra.slug.max_len.64\x1aA!rule || this.size() <= 64 ? '' : 'must be at most 64 characters'\n" +
 	"\xb8\x01\n" +
-	"\x11othra.slug.format\x1a\xa2\x01!rule || this == '' || this.matches('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$') ? '' : 'must be lowercase letters, digits and dashes, not starting or ending with a dash'R\x04slugB\x86\x01\n" +
+	"\x11othra.slug.format\x1a\xa2\x01!rule || this == '' || this.matches('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$') ? '' : 'must be lowercase letters, digits and dashes, not starting or ending with a dash'R\x04slugB\x91\x01\n" +
 	"\fcom.othra.v1B\n" +
-	"RulesProtoP\x01Z)altalune.id/othra/gen/go/othra/v1;othrav1\xa2\x02\x03OXX\xaa\x02\bOthra.V1\xca\x02\bOthra\\V1\xe2\x02\x14Othra\\V1\\GPBMetadata\xea\x02\tOthra::V1"
+	"RulesProtoP\x01Z4github.com/altalune-id/othra/gen/go/othra/v1;othrav1\xa2\x02\x03OXX\xaa\x02\bOthra.V1\xca\x02\bOthra\\V1\xe2\x02\x14Othra\\V1\\GPBMetadata\xea\x02\tOthra::V1"
 
 var file_othra_v1_rules_proto_goTypes = []any{
 	(*validate.StringRules)(nil), // 0: buf.validate.StringRules

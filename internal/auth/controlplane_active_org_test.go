@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	authv1 "altalune.id/othra/gen/go/auth/v1"
-	"altalune.id/othra/internal/kernel/authn"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/user"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 type switchingProfiles struct {

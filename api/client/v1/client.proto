@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/client/v1;clientv1";
+option go_package = "github.com/altalune-id/othra/gen/go/client/v1;clientv1";
 
 // ClientService registers a project's OAuth clients and manages their secrets. Every id is a public id.
 service ClientService {

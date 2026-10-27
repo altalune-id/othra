@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/i18n"
 )
 
 type hostedPages struct{ basePath string }

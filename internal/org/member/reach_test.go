@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	memberv1 "altalune.id/othra/gen/go/member/v1"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org/member"
+	memberv1 "github.com/altalune-id/othra/gen/go/member/v1"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org/member"
 )
 
 func TestMemberService_OutOfReachIsNotFound(t *testing.T) {

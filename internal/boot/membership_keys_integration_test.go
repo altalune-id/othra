@@ -13,12 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
-	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
-	projectv1 "altalune.id/othra/gen/go/project/v1"
-	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/project"
+	apikeyv1 "github.com/altalune-id/othra/gen/go/apikey/v1"
+	apikeyv1connect "github.com/altalune-id/othra/gen/go/apikey/v1/apikeyv1connect"
+	projectv1 "github.com/altalune-id/othra/gen/go/project/v1"
+	projectv1connect "github.com/altalune-id/othra/gen/go/project/v1/projectv1connect"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 // A person who is admin in their active org and a member of another lists that org's projects and sees what they may grant there.

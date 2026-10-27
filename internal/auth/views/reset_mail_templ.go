@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/othra/internal/web/layout"
+import "github.com/altalune-id/othra/internal/web/layout"
 
 // ResetHTML is the password reset email: the link and when it stops working.
 func ResetHTML(link string, expires string) templ.Component {

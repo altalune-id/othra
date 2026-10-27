@@ -147,7 +147,7 @@ func TestPoolHandleAndSessionStateViolationsFindEachKind(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "store.go")
 	src := `package store
 
-import "altalune.id/othra/internal/kernel/db"
+import "github.com/altalune-id/othra/internal/kernel/db"
 
 type s struct{ pool db.Pool }
 
@@ -273,7 +273,7 @@ func TestDBCallsFindsTheNamedFunctions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "x_pgreader.go")
 	src := `package x
 
-import "altalune.id/othra/internal/kernel/db"
+import "github.com/altalune-id/othra/internal/kernel/db"
 
 func a() { _ = db.Write(nil, db.Pool{}, nil); _ = db.ReadPrimary(nil, db.Pool{}, nil); _ = db.InTx(nil, db.Pool{}, nil) }
 `

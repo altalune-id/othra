@@ -2,11 +2,11 @@
 package cptest
 
 import (
-	"altalune.id/othra/internal/apiclient"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/kernel/authn"
-	"altalune.id/othra/internal/permission"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/permission"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 // OperatorOptions makes a controlplane server accept fakes.OperatorToken as the system operator.

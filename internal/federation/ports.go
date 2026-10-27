@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/upstream"
+	"github.com/altalune-id/othra/internal/upstream"
 )
 
 // Upstreams reads a project's upstream IdPs.

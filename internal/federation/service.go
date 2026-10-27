@@ -12,13 +12,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/emailaddr"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/upstream"
-	"altalune.id/othra/nanoid"
-	"altalune.id/othra/oidcrp"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/emailaddr"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/upstream"
+	"github.com/altalune-id/othra/nanoid"
+	"github.com/altalune-id/othra/oidcrp"
 )
 
 const publicIDLen = 21

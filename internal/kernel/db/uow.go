@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 const setScope = `SELECT set_config('app.current_org_id', $1, true),

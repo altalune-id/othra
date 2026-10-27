@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/internal/kernel/outbox"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/kernel/outbox"
 )
 
 func TestServiceDeliveries(t *testing.T) {

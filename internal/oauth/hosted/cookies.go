@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // The hosted cookies; every one is Secure, HttpOnly, SameSite=Lax and scoped to one issuer's path.

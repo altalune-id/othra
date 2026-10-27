@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/testutil/natstest"
+	"github.com/altalune-id/othra/internal/testutil/natstest"
 )
 
 func TestHealth_FollowsTheConnection(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
+	"github.com/altalune-id/othra/apperror"
+	apperrorv1 "github.com/altalune-id/othra/gen/go/apperror/v1"
 )
 
 func TestExitCodeFor(t *testing.T) {

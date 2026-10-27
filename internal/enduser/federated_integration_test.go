@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/enduser"
 )
 
 func TestPostgres_Federated(t *testing.T) {

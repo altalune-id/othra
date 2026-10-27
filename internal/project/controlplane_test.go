@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	projectv1 "altalune.id/othra/gen/go/project/v1"
-	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
-	"altalune.id/othra/internal/kernel/storage"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/fakes"
+	projectv1 "github.com/altalune-id/othra/gen/go/project/v1"
+	projectv1connect "github.com/altalune-id/othra/gen/go/project/v1/projectv1connect"
+	"github.com/altalune-id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 func newProjectServiceClient(t *testing.T, store project.Store, refs project.OrgRefs) projectv1connect.ProjectServiceClient {

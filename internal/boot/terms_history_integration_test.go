@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/legal"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/legal"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
 )
 
 // Task 8: every acceptance of the built-in terms is kept with the exact versions accepted.

@@ -7,7 +7,7 @@ import (
 	"embed"
 	"io/fs"
 
-	"altalune.id/othra/migrator"
+	"github.com/altalune-id/othra/migrator"
 )
 
 //go:embed migrations

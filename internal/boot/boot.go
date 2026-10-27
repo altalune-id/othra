@@ -8,17 +8,17 @@ import (
 	"net/http"
 	"slices"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/config"
-	"altalune.id/othra/httpserver"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/health"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/oauth/hosted"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/scheduler"
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/httpserver"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/health"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/oauth/hosted"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/scheduler"
+	"github.com/altalune-id/othra/worker"
 )
 
 // Boot builds the runtime graph from cfg: telemetry, the DB pool, migrations, and the services.

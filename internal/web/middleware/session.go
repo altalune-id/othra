@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // Refresher rebuilds a stored Principal's authority.

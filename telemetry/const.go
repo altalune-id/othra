@@ -2,5 +2,5 @@ package telemetry
 
 const (
 	serviceName = "othra"
-	scope       = "altalune.id/othra"
+	scope       = "github.com/altalune-id/othra"
 )

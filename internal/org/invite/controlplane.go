@@ -8,12 +8,12 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	invitev1 "altalune.id/othra/gen/go/invite/v1"
-	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
+	invitev1 "github.com/altalune-id/othra/gen/go/invite/v1"
+	invitev1connect "github.com/altalune-id/othra/gen/go/invite/v1/invitev1connect"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
 )
 
 // InviteService implements invite.v1.InviteService; every id it takes and returns is a public id.

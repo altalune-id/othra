@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/othra/internal/web/layout"
+import "github.com/altalune-id/othra/internal/web/layout"
 
 // InviteHTML is the invite email: who invites whom to which org and role, and the link.
 func InviteHTML(org string, inviter string, role string, link string, expires string) templ.Component {

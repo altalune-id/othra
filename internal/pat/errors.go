@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // NotFoundError signals a token that does not exist or is another end user's.

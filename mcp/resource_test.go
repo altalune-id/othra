@@ -6,7 +6,7 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"altalune.id/othra/mcp"
+	"github.com/altalune-id/othra/mcp"
 )
 
 const testUIBody = "<!doctype html><html><head><title>t</title></head><body><div id=\"root\"></div></body></html>"

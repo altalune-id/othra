@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 // PublicIDs is a public id lookup test double: Org, Project, User and Resource register an id with a slug and return its new public id.

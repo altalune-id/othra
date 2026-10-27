@@ -16,17 +16,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/config"
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	"altalune.id/othra/gen/go/account/v1/accountv1connect"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/consent"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/project"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	"github.com/altalune-id/othra/gen/go/account/v1/accountv1connect"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/consent"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 func (f *signInFixture) signInDevice(t *testing.T, base, email string) *http.Client {

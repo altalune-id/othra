@@ -9,8 +9,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"altalune.id/othra/internal/web/i18n"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // AccountTile is one signed-in account of the browser: its user session's public id, its email and whether that session signed in with Google.

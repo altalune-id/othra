@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/web/spa"
+	"github.com/altalune-id/othra/internal/web/spa"
 )
 
 const indexHTML = `<script>window.__NUXT__.config={public:{apiUrl:"",appVersion:""},app:{baseURL:"/",buildAssetsDir:"/_nuxt/"}}</script><script src="/_nuxt/app.js"></script>`

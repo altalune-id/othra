@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	orgv1 "altalune.id/othra/gen/go/org/v1"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/apperror"
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type memberRoles struct {

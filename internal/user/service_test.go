@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/password"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/password"
 )
 
 func newService(store user.Store) *user.Service {

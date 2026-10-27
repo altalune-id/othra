@@ -9,7 +9,7 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"altalune.id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 )
 
 //go:embed gcra.lua

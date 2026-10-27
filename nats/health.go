@@ -8,7 +8,7 @@ import (
 
 	natsgo "github.com/nats-io/nats.go"
 
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/worker"
 )
 
 const probeEvery = 5 * time.Second

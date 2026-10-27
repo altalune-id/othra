@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/mailer"
 )
 
 // Sessions ends a person's sessions.

@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/oauth/redirecturi"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/oauth/redirecturi"
 )
 
 // Kind is the preset a client is created from; it fixes the client type, application type and auth method.

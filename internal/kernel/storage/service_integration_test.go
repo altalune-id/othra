@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/storage"
-	storages3 "altalune.id/othra/internal/kernel/storage/s3"
-	"altalune.id/othra/internal/testutil/s3test"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/storage"
+	storages3 "github.com/altalune-id/othra/internal/kernel/storage/s3"
+	"github.com/altalune-id/othra/internal/testutil/s3test"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 var logo = storage.Purpose{

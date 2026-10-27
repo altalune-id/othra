@@ -14,14 +14,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/keys"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/keys"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const (

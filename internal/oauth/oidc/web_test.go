@@ -17,12 +17,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const jwksBody = `{"keys":[{"kty":"RSA","kid":"k1","use":"sig","alg":"RS256","n":"AQAB","e":"AQAB"}]}`

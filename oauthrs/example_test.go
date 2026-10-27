@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"altalune.id/othra/oidcrp/oidcrptest"
+	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 
-	"altalune.id/othra/oauthrs"
+	"github.com/altalune-id/othra/oauthrs"
 )
 
 func ExampleMiddleware() {

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/oauthrs"
+	"github.com/altalune-id/othra/oauthrs"
 )
 
 const metaURL = "https://notes.example/.well-known/oauth-protected-resource/mcp"

@@ -7,12 +7,12 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	memberv1 "altalune.id/othra/gen/go/member/v1"
-	memberv1connect "altalune.id/othra/gen/go/member/v1/memberv1connect"
-	"altalune.id/othra/internal/kernel/authn"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/scope"
+	memberv1 "github.com/altalune-id/othra/gen/go/member/v1"
+	memberv1connect "github.com/altalune-id/othra/gen/go/member/v1/memberv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/scope"
 )
 
 // MemberService implements member.v1.MemberService; orgs and members are named by public ids.

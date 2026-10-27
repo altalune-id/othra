@@ -5,7 +5,7 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"altalune.id/othra/mcp"
+	"github.com/altalune-id/othra/mcp"
 )
 
 func annotatedTool(t *testing.T, spec mcp.ToolSpec) *sdkmcp.Tool {

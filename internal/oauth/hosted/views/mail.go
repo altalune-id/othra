@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"altalune.id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/i18n"
 )
 
 // MailData is the magic-link email: adding Google when GoogleEmail is set, sign-up when the email has no end user yet, else sign-in.

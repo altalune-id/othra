@@ -1,4 +1,4 @@
-module altalune.id/othra/oidcrp
+module github.com/altalune-id/othra/oidcrp
 
 go 1.26.9
 

@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	enduserv1 "altalune.id/othra/gen/go/enduser/v1"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/project"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	enduserv1 "github.com/altalune-id/othra/gen/go/enduser/v1"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/federation"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 type fakeProjectRefs struct {

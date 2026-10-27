@@ -9,7 +9,7 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 // Add inserts m; a second membership for the same org and user is an *AlreadyMemberError.

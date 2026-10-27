@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"strconv"
 
-	"altalune.id/othra/internal/web/i18n"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // MailHTML is the HTML part of the magic-link email in ctx's locale, with the button in the project's colour.

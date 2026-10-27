@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"altalune.id/othra/oidcrp/oidcrptest"
+	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/oauthrs"
+	"github.com/altalune-id/othra/oauthrs"
 )
 
 const audience = "https://notes.example/mcp"

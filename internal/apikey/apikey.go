@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/scope"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/scope"
 )
 
 // DefaultPrefix marks an Othra key when no prefix is configured.

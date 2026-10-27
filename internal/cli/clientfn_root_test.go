@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/apiclient"
-	"altalune.id/othra/internal/cli"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/testutil/cptest"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/internal/cli"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/testutil/cptest"
 )
 
 func remoteCommands() map[string][]string {

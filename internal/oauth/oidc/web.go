@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 //nolint:gochecknoglobals // fixed response bodies.

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // ForbiddenError signals a Principal without the required permission.

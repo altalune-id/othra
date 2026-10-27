@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
 )
 
 const signOutForm = "signout"

@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/upstream"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/upstream"
 )
 
 // Install seeds /p/system and the console client; every serving boot rewrites only the client's URIs, from the current public URL.

@@ -3,7 +3,7 @@ package consent
 import (
 	"errors"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // AppNotConnectedError signals a Disconnect of a client the end user has no consent or live grant with.

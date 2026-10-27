@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 // APIKeyStore is an apikey.Store test double: reads return Key/Keys or Err, writes record their input.

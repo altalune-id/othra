@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"altalune.id/othra/httpclient"
+	"github.com/altalune-id/othra/httpclient"
 )
 
 // HTTPMetadataFetcher fetches client metadata documents over the SSRF-filtered client, with no redirects and no retry.

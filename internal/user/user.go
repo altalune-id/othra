@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/emailaddr"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/emailaddr"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 const (

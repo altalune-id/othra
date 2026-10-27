@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/boot"
-	"altalune.id/othra/internal/cli"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/reqid"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/boot"
+	"github.com/altalune-id/othra/internal/cli"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/reqid"
 )
 
 type fakeApp struct{ runErr error }

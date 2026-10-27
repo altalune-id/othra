@@ -8,9 +8,9 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/reqid"
-	"altalune.id/othra/telemetry"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/reqid"
+	"github.com/altalune-id/othra/telemetry"
 )
 
 type incidentCounter struct {

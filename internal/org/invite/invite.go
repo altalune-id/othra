@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 const publicIDLen = 21

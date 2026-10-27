@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 import "mcp/v1/annotations.proto";
 
-option go_package = "altalune.id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
+option go_package = "github.com/altalune-id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
 
 // WellKnownService pins the JSON shape protojson accepts for every well-known type.
 service WellKnownService {

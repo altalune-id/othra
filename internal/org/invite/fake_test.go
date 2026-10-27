@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/internal/org/invite"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/org/invite"
+	"github.com/altalune-id/othra/mailer"
 )
 
 type memStore struct {

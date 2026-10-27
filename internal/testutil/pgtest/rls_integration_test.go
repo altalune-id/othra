@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
 )
 
 func TestMigratedRLS_ServiceRoleCannotBypassRLS(t *testing.T) {

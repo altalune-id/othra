@@ -6,15 +6,15 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/usage"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/internal/pat"
-	"altalune.id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/usage"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/pat"
+	"github.com/altalune-id/othra/internal/resourceserver"
 )
 
 const tokenUsageInterval = 10 * time.Minute

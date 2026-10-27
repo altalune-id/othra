@@ -5,9 +5,9 @@ import (
 
 	"connectrpc.com/connect"
 
-	"altalune.id/othra/apperror"
-	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
-	"altalune.id/othra/reqid"
+	"github.com/altalune-id/othra/apperror"
+	apperrorv1 "github.com/altalune-id/othra/gen/go/apperror/v1"
+	"github.com/altalune-id/othra/reqid"
 )
 
 // Wrap converts handler errors into the canonical connect.Error envelope.

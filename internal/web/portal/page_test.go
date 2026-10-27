@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const builtIndex = `<html><head><script type="importmap">{}</script></head><body>` +

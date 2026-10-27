@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/testutil/pgtest"
-	"altalune.id/othra/nanoid"
-	"altalune.id/othra/pg"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/nanoid"
+	"github.com/altalune-id/othra/pg"
 )
 
 const rlsGUC = "app.current_org_id"

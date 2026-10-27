@@ -10,7 +10,7 @@ import (
 )
 
 // DefaultRuntimePackage is the import path of the MCP runtime the generated bindings call into.
-const DefaultRuntimePackage = "altalune.id/othra/mcp"
+const DefaultRuntimePackage = "github.com/altalune-id/othra/mcp"
 
 // Options are the plugin parameters protoc passes through ParamFunc.
 type Options struct {

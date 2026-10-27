@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // RevokeIPRule limits revocation requests per client IP in a project: 60 a minute, 30 at once.

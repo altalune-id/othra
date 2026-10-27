@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
-	"altalune.id/othra/internal/apiclient"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/testutil/cptest"
-	"altalune.id/othra/internal/testutil/fakes"
+	orgv1connect "github.com/altalune-id/othra/gen/go/org/v1/orgv1connect"
+	"github.com/altalune-id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/testutil/cptest"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 func orgClient(t *testing.T, store org.Store) orgv1connect.OrgServiceClient {

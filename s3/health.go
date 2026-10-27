@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/worker"
 )
 
 const probeEvery = 30 * time.Second

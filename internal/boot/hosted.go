@@ -11,18 +11,18 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/consent"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/keys"
-	"altalune.id/othra/internal/oauth/hosted"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/internal/resourceserver"
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/consent"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/keys"
+	"github.com/altalune-id/othra/internal/oauth/hosted"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/mailer"
 )
 
 const (

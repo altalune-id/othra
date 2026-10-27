@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
 )
 
 const unreachableDSN = "postgres://app:app-secret@127.0.0.1:1/none?sslmode=disable&connect_timeout=1"

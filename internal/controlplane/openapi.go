@@ -13,7 +13,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	genassets "altalune.id/othra/gen"
+	genassets "github.com/altalune-id/othra/gen"
 )
 
 // BasicAuth guards the OpenAPI endpoints when set, with the empty value meaning no guard.

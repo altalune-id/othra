@@ -7,12 +7,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/legal"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/legal"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/mailer"
 )
 
 // Members resolves who asks and adds the person who accepts; both join the transaction on ctx.

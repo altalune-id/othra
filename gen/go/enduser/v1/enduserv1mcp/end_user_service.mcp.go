@@ -5,13 +5,13 @@
 package enduserv1mcp
 
 import (
-	v1 "altalune.id/othra/gen/go/enduser/v1"
-	enduserv1connect "altalune.id/othra/gen/go/enduser/v1/enduserv1connect"
-	mcp "altalune.id/othra/mcp"
 	connect "connectrpc.com/connect"
 	context "context"
 	json "encoding/json"
 	fmt "fmt"
+	v1 "github.com/altalune-id/othra/gen/go/enduser/v1"
+	enduserv1connect "github.com/altalune-id/othra/gen/go/enduser/v1/enduserv1connect"
+	mcp "github.com/altalune-id/othra/mcp"
 	protojson "google.golang.org/protobuf/encoding/protojson"
 	proto "google.golang.org/protobuf/proto"
 )

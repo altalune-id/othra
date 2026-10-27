@@ -7,13 +7,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/consent"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/consent"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/resourceserver"
 )
 
 func buildConsents(k kernel.Kernel, cfg config.Config, uow db.Transactor, svcs *Services) *consent.Service {

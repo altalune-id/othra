@@ -11,13 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/grant"
-	"altalune.id/othra/internal/pat"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/resourceserver"
-	"altalune.id/othra/oauthrs"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/grant"
+	"github.com/altalune-id/othra/internal/pat"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/resourceserver"
+	"github.com/altalune-id/othra/oauthrs"
 )
 
 type toTestServer struct{ target *url.URL }

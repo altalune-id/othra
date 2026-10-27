@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 type setPasswordCall struct {

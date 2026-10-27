@@ -3,10 +3,10 @@ package boot
 import (
 	"net/http"
 
-	"altalune.id/othra/internal/web/console"
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/internal/web/portal"
-	"altalune.id/othra/version"
+	"github.com/altalune-id/othra/internal/web/console"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/portal"
+	"github.com/altalune-id/othra/version"
 )
 
 func buildConsoleHandler(basePath string) http.Handler {

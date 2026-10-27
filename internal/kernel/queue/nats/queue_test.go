@@ -17,9 +17,9 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/queue"
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/queue"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 func testJob() queue.Job { return queue.Job{Name: "test.run", Version: 1} }

@@ -4,7 +4,7 @@ package othratest.v1;
 
 import "mcp/v1/annotations.proto";
 
-option go_package = "altalune.id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
+option go_package = "github.com/altalune-id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
 
 // PlaintextService annotates an rpc whose response nests a plaintext field.
 service PlaintextService {

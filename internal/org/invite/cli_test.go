@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	invitev1 "altalune.id/othra/gen/go/invite/v1"
-	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
-	"altalune.id/othra/internal/org/invite"
-	"altalune.id/othra/internal/prompt"
+	invitev1 "github.com/altalune-id/othra/gen/go/invite/v1"
+	invitev1connect "github.com/altalune-id/othra/gen/go/invite/v1/invitev1connect"
+	"github.com/altalune-id/othra/internal/org/invite"
+	"github.com/altalune-id/othra/internal/prompt"
 )
 
 const (

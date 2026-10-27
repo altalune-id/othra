@@ -14,17 +14,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	apikeyv1 "altalune.id/othra/gen/go/apikey/v1"
-	apikeyv1connect "altalune.id/othra/gen/go/apikey/v1/apikeyv1connect"
-	authv1 "altalune.id/othra/gen/go/auth/v1"
-	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
-	orgv1 "altalune.id/othra/gen/go/org/v1"
-	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
-	"altalune.id/othra/internal/apikey"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/nanoid"
+	apikeyv1 "github.com/altalune-id/othra/gen/go/apikey/v1"
+	apikeyv1connect "github.com/altalune-id/othra/gen/go/apikey/v1/apikeyv1connect"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
+	authv1connect "github.com/altalune-id/othra/gen/go/auth/v1/authv1connect"
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	orgv1connect "github.com/altalune-id/othra/gen/go/org/v1/orgv1connect"
+	"github.com/altalune-id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 func (f *apiFixture) setActiveOrg(cookie, bearer, orgID string) (*authv1.WhoamiResponse, error) {

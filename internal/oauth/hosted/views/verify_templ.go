@@ -11,9 +11,9 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"net/url"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/web/i18n"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // VerifyData is the magic link's confirm page; the link token itself stays in its cookie, out of the page, and LinkEmail is the pending Google account to add.

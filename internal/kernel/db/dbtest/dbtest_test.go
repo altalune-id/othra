@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/db/dbtest"
-	"altalune.id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db/dbtest"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 )
 
 func TestExpectTx_MatchesTheTransactionKernelDBOpens(t *testing.T) {

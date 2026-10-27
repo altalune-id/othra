@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/kernel/ratelimit/memory"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/memory"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const claudeURL = "https://claude.ai/oauth/claude-code-client-metadata"

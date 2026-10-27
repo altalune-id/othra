@@ -11,7 +11,7 @@ import (
 	"math/big"
 	"strings"
 
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 const (

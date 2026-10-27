@@ -7,9 +7,9 @@
 package keysv1
 
 import (
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -411,8 +411,8 @@ const file_keys_v1_keys_proto_rawDesc = "" +
 	"project_id*\x03app\x12\xcc\x02\n" +
 	"\x10RotateSigningKey\x12 .keys.v1.RotateSigningKeyRequest\x1a!.keys.v1.RotateSigningKeyResponse\"\xf2\x01\xca\xf3\x18\xed\x01\n" +
 	"\x12signing_key_rotate\x12\xc3\x01Rotate a project's signing key: publish a new key that starts signing after the pre-publication delay. immediate makes it sign at once; verifiers holding a cached JWKS fail until they refetch it.\x1a\n" +
-	"project_id \x01*\x03appB~\n" +
-	"\vcom.keys.v1B\tKeysProtoP\x01Z'altalune.id/othra/gen/go/keys/v1;keysv1\xa2\x02\x03KXX\xaa\x02\aKeys.V1\xca\x02\aKeys\\V1\xe2\x02\x13Keys\\V1\\GPBMetadata\xea\x02\bKeys::V1b\x06proto3"
+	"project_id \x01*\x03appB\x89\x01\n" +
+	"\vcom.keys.v1B\tKeysProtoP\x01Z2github.com/altalune-id/othra/gen/go/keys/v1;keysv1\xa2\x02\x03KXX\xaa\x02\aKeys.V1\xca\x02\aKeys\\V1\xe2\x02\x13Keys\\V1\\GPBMetadata\xea\x02\bKeys::V1b\x06proto3"
 
 var (
 	file_keys_v1_keys_proto_rawDescOnce sync.Once

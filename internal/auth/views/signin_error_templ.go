@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "altalune.id/othra/internal/web/layout"
+import "github.com/altalune-id/othra/internal/web/layout"
 
 // SignInErrorData is a refused "Continue with Othra": Code is AUT005, AUT006 or AUT007, and Reason is AUT005's.
 type SignInErrorData struct {

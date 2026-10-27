@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/secret"
 )
 
 // The limits on a resource server.

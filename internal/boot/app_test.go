@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 type emailAccounts map[string]*user.User

@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	orgv1 "altalune.id/othra/gen/go/org/v1"
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/install"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/member"
+	"github.com/altalune-id/othra/config"
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/install"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/member"
 )
 
 // The console signs in through /p/system over the in-process transport: the owner's verified email links once, then the sub does.

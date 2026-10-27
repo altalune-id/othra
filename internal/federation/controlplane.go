@@ -7,9 +7,9 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/upstream"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/upstream"
 )
 
 // AccountService is federation's slice of account.v1: the signed-in end user's sign-in methods.

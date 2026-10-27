@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/sealer"
 )
 
 type unexpectedCalls struct{ n int }

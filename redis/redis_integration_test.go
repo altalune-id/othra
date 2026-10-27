@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
-	"altalune.id/othra/internal/testutil/redistest"
+	"github.com/altalune-id/othra/internal/testutil/redistest"
 )
 
 func TestOpen_RealServer(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/queue"
-	"altalune.id/othra/internal/testutil/natstest"
+	"github.com/altalune-id/othra/internal/kernel/queue"
+	"github.com/altalune-id/othra/internal/testutil/natstest"
 )
 
 func accountOptions(url, user, password string) testSetup {

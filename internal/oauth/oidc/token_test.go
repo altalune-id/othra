@@ -17,13 +17,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/grant"
-	ksecret "altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/keys"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/grant"
+	ksecret "github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/keys"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const secret = "s3cret/+="

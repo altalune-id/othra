@@ -8,14 +8,14 @@ import (
 	"github.com/google/uuid"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/user"
-	rootmcp "altalune.id/othra/mcp"
-	"altalune.id/othra/worker"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/user"
+	rootmcp "github.com/altalune-id/othra/mcp"
+	"github.com/altalune-id/othra/worker"
 )
 
 // App is the wired runtime graph.

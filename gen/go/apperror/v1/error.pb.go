@@ -169,9 +169,9 @@ const file_apperror_v1_error_proto_rawDesc = "" +
 	"\tViolation\x12\x14\n" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x16\n" +
 	"\x06reason\x18\x02 \x01(\tR\x06reason\x12\x14\n" +
-	"\x05param\x18\x03 \x01(\tR\x05paramB\x9b\x01\n" +
+	"\x05param\x18\x03 \x01(\tR\x05paramB\xa6\x01\n" +
 	"\x0fcom.apperror.v1B\n" +
-	"ErrorProtoP\x01Z/altalune.id/othra/gen/go/apperror/v1;apperrorv1\xa2\x02\x03AXX\xaa\x02\vApperror.V1\xca\x02\vApperror\\V1\xe2\x02\x17Apperror\\V1\\GPBMetadata\xea\x02\fApperror::V1b\x06proto3"
+	"ErrorProtoP\x01Z:github.com/altalune-id/othra/gen/go/apperror/v1;apperrorv1\xa2\x02\x03AXX\xaa\x02\vApperror.V1\xca\x02\vApperror\\V1\xe2\x02\x17Apperror\\V1\\GPBMetadata\xea\x02\fApperror::V1b\x06proto3"
 
 var (
 	file_apperror_v1_error_proto_rawDescOnce sync.Once

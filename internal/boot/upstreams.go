@@ -3,7 +3,7 @@ package boot
 import (
 	"log/slog"
 
-	"altalune.id/othra/config"
+	"github.com/altalune-id/othra/config"
 )
 
 // SECURITY: these qa switches change whom Othra trusts for sign-in, so a deployer sees them at every boot.

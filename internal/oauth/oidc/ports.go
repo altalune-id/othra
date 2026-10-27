@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 // Issuers resolves an issuer handle to its project before any tenant scope exists.

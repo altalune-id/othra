@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/apikey"
+	"github.com/altalune-id/othra/internal/apikey"
 )
 
 func (f *apiFixture) mcpCall(t *testing.T, bearer, body string) (int, http.Header, []byte) {

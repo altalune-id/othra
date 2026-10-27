@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/mailer"
 )
 
 func claimMail(t *testing.T, svcs *Services) []mailer.Message {

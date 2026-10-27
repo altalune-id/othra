@@ -3,7 +3,7 @@ package hosted
 import (
 	"time"
 
-	"altalune.id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 )
 
 // IssueIPRules limit magic-link requests per client IP and project: 10 a minute and 50 an hour.

@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
-	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
+	webhookv1 "github.com/altalune-id/othra/gen/go/webhook/v1"
+	webhookv1connect "github.com/altalune-id/othra/gen/go/webhook/v1/webhookv1connect"
 )
 
 type fakeClient struct{ err error }

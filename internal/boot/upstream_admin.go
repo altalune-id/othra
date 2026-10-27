@@ -5,12 +5,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/upstream"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/upstream"
+	"github.com/altalune-id/othra/sealer"
 )
 
 func buildUpstreams(k kernel.Kernel, cfg config.Config, uow db.Transactor, sl sealer.Sealer, projects *project.Service) *upstream.Service {

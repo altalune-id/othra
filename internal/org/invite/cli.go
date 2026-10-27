@@ -8,11 +8,11 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	invitev1 "altalune.id/othra/gen/go/invite/v1"
-	invitev1connect "altalune.id/othra/gen/go/invite/v1/invitev1connect"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/prompt"
-	"altalune.id/othra/internal/render"
+	invitev1 "github.com/altalune-id/othra/gen/go/invite/v1"
+	invitev1connect "github.com/altalune-id/othra/gen/go/invite/v1/invitev1connect"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/prompt"
+	"github.com/altalune-id/othra/internal/render"
 )
 
 // ClientFn returns the Invite Connect client for a command; the caller resolves URL and token.

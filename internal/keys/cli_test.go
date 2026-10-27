@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	keysv1 "altalune.id/othra/gen/go/keys/v1"
-	keysv1connect "altalune.id/othra/gen/go/keys/v1/keysv1connect"
-	"altalune.id/othra/internal/keys"
+	keysv1 "github.com/altalune-id/othra/gen/go/keys/v1"
+	keysv1connect "github.com/altalune-id/othra/gen/go/keys/v1/keysv1connect"
+	"github.com/altalune-id/othra/internal/keys"
 )
 
 type stubHandler struct {

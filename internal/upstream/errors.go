@@ -3,7 +3,7 @@ package upstream
 import (
 	"errors"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 // NotFoundError signals an upstream IdP that does not exist or is out of the caller's reach.

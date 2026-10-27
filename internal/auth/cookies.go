@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // CookieSessions starts, reads, rotates and ends browser sessions.

@@ -8,9 +8,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
-	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/othra/internal/render"
+	webhookv1 "github.com/altalune-id/othra/gen/go/webhook/v1"
+	webhookv1connect "github.com/altalune-id/othra/gen/go/webhook/v1/webhookv1connect"
+	"github.com/altalune-id/othra/internal/render"
 )
 
 // ClientFn returns the Webhook Connect client for a command; the caller resolves URL and token.

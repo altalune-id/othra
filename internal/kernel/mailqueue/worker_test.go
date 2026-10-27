@@ -19,9 +19,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/mailer/resend"
-	"altalune.id/othra/mailer/smtp"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/mailer/resend"
+	"github.com/altalune-id/othra/mailer/smtp"
 )
 
 type failCall struct {

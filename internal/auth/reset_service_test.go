@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/internal/user"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/mailer"
 )
 
 type memResets struct {

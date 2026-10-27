@@ -7,15 +7,15 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/auth"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/legal"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/org/invite"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/legal"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/org/invite"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 // UserCreator creates the first owner.

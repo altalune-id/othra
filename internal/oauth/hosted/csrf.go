@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 // CSRFCookie is the cookie a hosted form token is bound to; layout.CSRFField carries the token.

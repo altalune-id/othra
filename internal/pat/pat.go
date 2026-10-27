@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/secret"
 )
 
 // Prefix starts every personal token, so secret scanners find a leaked one and introspection routes it here.

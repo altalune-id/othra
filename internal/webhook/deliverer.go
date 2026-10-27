@@ -14,10 +14,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/internal/kernel/outbox"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/kernel/outbox"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/sealer"
 )
 
 const (

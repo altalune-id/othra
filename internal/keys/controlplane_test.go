@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	keysv1 "altalune.id/othra/gen/go/keys/v1"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/testutil/fakes"
+	keysv1 "github.com/altalune-id/othra/gen/go/keys/v1"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type cpFixture struct {

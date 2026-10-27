@@ -8,10 +8,10 @@ import (
 
 	natsgo "github.com/nats-io/nats.go"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/health"
-	"altalune.id/othra/internal/kernel"
-	natsconn "altalune.id/othra/nats"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/health"
+	"github.com/altalune-id/othra/internal/kernel"
+	natsconn "github.com/altalune-id/othra/nats"
 )
 
 type natsOpener func(context.Context, natsconn.Config, *slog.Logger) (*natsgo.Conn, error)

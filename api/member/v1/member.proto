@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "mcp/v1/annotations.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/member/v1;memberv1";
+option go_package = "github.com/altalune-id/othra/gen/go/member/v1;memberv1";
 
 // MemberService manages an organization's members, named by the user's public id.
 service MemberService {

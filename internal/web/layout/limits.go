@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 )
 
 const limiterDownRetry = 5 * time.Second

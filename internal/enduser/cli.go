@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"altalune.id/othra/internal/render"
+	"github.com/altalune-id/othra/internal/render"
 )
 
 // SignInLinkFn issues a printed /p/system sign-in link for a console account; the caller boots the server graph.

@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/scheduler"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/scheduler"
 )
 
 var errBoom = errors.New("boom")

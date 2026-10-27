@@ -7,9 +7,9 @@
 package clientv1
 
 import (
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -1608,8 +1608,8 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"project_id\x1a\tclient_id \x010\x01\x12g\n" +
 	"\x14GenerateClientSecret\x12&.client.v1.GenerateClientSecretRequest\x1a'.client.v1.GenerateClientSecretResponse\x12a\n" +
 	"\x12RotateClientSecret\x12$.client.v1.RotateClientSecretRequest\x1a%.client.v1.RotateClientSecretResponse\x12a\n" +
-	"\x12RevokeClientSecret\x12$.client.v1.RevokeClientSecretRequest\x1a%.client.v1.RevokeClientSecretResponseB\x8e\x01\n" +
-	"\rcom.client.v1B\vClientProtoP\x01Z+altalune.id/othra/gen/go/client/v1;clientv1\xa2\x02\x03CXX\xaa\x02\tClient.V1\xca\x02\tClient\\V1\xe2\x02\x15Client\\V1\\GPBMetadata\xea\x02\n" +
+	"\x12RevokeClientSecret\x12$.client.v1.RevokeClientSecretRequest\x1a%.client.v1.RevokeClientSecretResponseB\x99\x01\n" +
+	"\rcom.client.v1B\vClientProtoP\x01Z6github.com/altalune-id/othra/gen/go/client/v1;clientv1\xa2\x02\x03CXX\xaa\x02\tClient.V1\xca\x02\tClient\\V1\xe2\x02\x15Client\\V1\\GPBMetadata\xea\x02\n" +
 	"Client::V1b\x06proto3"
 
 var (

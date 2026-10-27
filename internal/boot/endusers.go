@@ -4,10 +4,10 @@ import (
 	"cmp"
 	"time"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
 )
 
 const (

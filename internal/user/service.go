@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/password"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/password"
 )
 
 // Service is the user application service.

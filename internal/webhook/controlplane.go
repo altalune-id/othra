@@ -8,13 +8,13 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	webhookv1 "altalune.id/othra/gen/go/webhook/v1"
-	webhookv1connect "altalune.id/othra/gen/go/webhook/v1/webhookv1connect"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/events"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/scope"
+	webhookv1 "github.com/altalune-id/othra/gen/go/webhook/v1"
+	webhookv1connect "github.com/altalune-id/othra/gen/go/webhook/v1/webhookv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/events"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/scope"
 )
 
 // WebhookControlPlane implements webhook.v1.WebhookService; every id it takes and returns is a public id.

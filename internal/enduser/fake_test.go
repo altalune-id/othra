@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/mailer"
 )
 
 var errFake = errors.New("fake store failure")

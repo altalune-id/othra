@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package othratest.v1;
 
-option go_package = "altalune.id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
+option go_package = "github.com/altalune-id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
 
 service PlainService {
   rpc Plain(PlainRequest) returns (PlainResponse);

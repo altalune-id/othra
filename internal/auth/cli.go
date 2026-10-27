@@ -13,14 +13,14 @@ import (
 	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
 
-	"altalune.id/othra/apperror"
-	authv1 "altalune.id/othra/gen/go/auth/v1"
-	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
-	"altalune.id/othra/httpclient"
-	"altalune.id/othra/internal/apiclient"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/prompt"
-	"altalune.id/othra/internal/render"
+	"github.com/altalune-id/othra/apperror"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
+	authv1connect "github.com/altalune-id/othra/gen/go/auth/v1/authv1connect"
+	"github.com/altalune-id/othra/httpclient"
+	"github.com/altalune-id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/prompt"
+	"github.com/altalune-id/othra/internal/render"
 )
 
 // CLISession is a signed-in CLI profile: the server, the session value and who it acts as.

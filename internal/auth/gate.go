@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 const basicChallenge = `Basic realm="Othra"`

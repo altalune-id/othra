@@ -10,12 +10,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 // VerifyCooldown is how long a manual check waits after the last one of the same server.

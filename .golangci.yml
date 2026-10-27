@@ -93,7 +93,7 @@ linters:
             - $gostd
             - github.com/jackc/pgx/v5
             - github.com/pressly/goose/v3
-            - altalune.id/othra/pg
+            - github.com/altalune-id/othra/pg
         httpclient-purity:
           list-mode: strict
           files:
@@ -112,7 +112,7 @@ linters:
             - $gostd
             - github.com/modelcontextprotocol/go-sdk
             - github.com/google/jsonschema-go
-            - altalune.id/othra/apperror
+            - github.com/altalune-id/othra/apperror
         scheduler-purity:
           list-mode: strict
           files:
@@ -122,7 +122,7 @@ linters:
             - $gostd
             - github.com/robfig/cron/v3
             - go.opentelemetry.io/otel
-            - altalune.id/othra/reqid
+            - github.com/altalune-id/othra/reqid
         domain-purity:
           list-mode: strict
           files:
@@ -136,16 +136,16 @@ linters:
             - $gostd
             - github.com/google/uuid
             - google.golang.org/protobuf/types/known/timestamppb
-            - altalune.id/othra/apperror
-            - altalune.id/othra/emailaddr
-            - altalune.id/othra/gen/go
-            - altalune.id/othra/internal/kernel/events
-            - altalune.id/othra/internal/kernel/secret
-            - altalune.id/othra/internal/kernel/usage
-            - altalune.id/othra/internal/oauth/redirecturi
-            - altalune.id/othra/nanoid
-            - altalune.id/othra/scope
-            - altalune.id/othra/slug
+            - github.com/altalune-id/othra/apperror
+            - github.com/altalune-id/othra/emailaddr
+            - github.com/altalune-id/othra/gen/go
+            - github.com/altalune-id/othra/internal/kernel/events
+            - github.com/altalune-id/othra/internal/kernel/secret
+            - github.com/altalune-id/othra/internal/kernel/usage
+            - github.com/altalune-id/othra/internal/oauth/redirecturi
+            - github.com/altalune-id/othra/nanoid
+            - github.com/altalune-id/othra/scope
+            - github.com/altalune-id/othra/slug
         pgx-boundary:
           list-mode: lax
           files:
@@ -167,7 +167,7 @@ linters:
             - "**/redis/**"
             - "**/s3/**"
           deny:
-            - pkg: "altalune.id/othra/config$"
+            - pkg: "github.com/altalune-id/othra/config$"
               desc: "kernel features and connections take their own Config; boot maps config into it"
         nats-boundary:
           list-mode: lax
@@ -237,28 +237,28 @@ linters:
             - "!**/internal/{cli,boot,controlplane,web,kernel,tool,testutil}/**"
             - "!**/*_test.go"
           allow:
-            - altalune.id/othra/internal/web/layout
-            - altalune.id/othra/internal/web/i18n
+            - github.com/altalune-id/othra/internal/web/layout
+            - github.com/altalune-id/othra/internal/web/i18n
           deny:
-            - pkg: "altalune.id/othra/internal/cli$"
+            - pkg: "github.com/altalune-id/othra/internal/cli$"
               desc: "domains never import the CLI shell"
-            - pkg: "altalune.id/othra/internal/cli/"
+            - pkg: "github.com/altalune-id/othra/internal/cli/"
               desc: "domains never import the CLI shell"
-            - pkg: "altalune.id/othra/internal/boot"
+            - pkg: "github.com/altalune-id/othra/internal/boot"
               desc: "domains never import boot"
-            - pkg: "altalune.id/othra/internal/controlplane"
+            - pkg: "github.com/altalune-id/othra/internal/controlplane"
               desc: "domains never import controlplane"
-            - pkg: "altalune.id/othra/internal/web$"
+            - pkg: "github.com/altalune-id/othra/internal/web$"
               desc: "domains import only internal/web/layout and internal/web/i18n"
-            - pkg: "altalune.id/othra/internal/web/"
+            - pkg: "github.com/altalune-id/othra/internal/web/"
               desc: "domains import only internal/web/layout and internal/web/i18n"
-            - pkg: "altalune.id/othra/pg$"
+            - pkg: "github.com/altalune-id/othra/pg$"
               desc: "domains reach Postgres through internal/kernel/db, never the connection"
-            - pkg: "altalune.id/othra/nats$"
+            - pkg: "github.com/altalune-id/othra/nats$"
               desc: "domains reach NATS through internal/kernel/queue, never the connection"
-            - pkg: "altalune.id/othra/redis$"
+            - pkg: "github.com/altalune-id/othra/redis$"
               desc: "domains never use the Redis connection; a feature's driver does"
-            - pkg: "altalune.id/othra/s3$"
+            - pkg: "github.com/altalune-id/othra/s3$"
               desc: "domains reach file storage through internal/kernel/storage, never the connection"
         org-auth-boundary:
           list-mode: lax
@@ -267,7 +267,7 @@ linters:
             # NOTE: a test that imports auth through a cycle fails to compile, so only production files are checked.
             - "!**/*_test.go"
           deny:
-            - pkg: "altalune.id/othra/internal/auth"
+            - pkg: "github.com/altalune-id/othra/internal/auth"
               desc: "org reaches sign-in through a port in its ports.go, wired in boot; auth imports org"
         kernel-boundary:
           list-mode: lax
@@ -275,10 +275,10 @@ linters:
           files:
             - "**/internal/kernel/**"
           allow:
-            - altalune.id/othra/internal/kernel/
-            - altalune.id/othra/internal/testutil/
+            - github.com/altalune-id/othra/internal/kernel/
+            - github.com/altalune-id/othra/internal/testutil/
           deny:
-            - pkg: "altalune.id/othra/internal/"
+            - pkg: "github.com/altalune-id/othra/internal/"
               desc: "kernel imports only kernel packages, never a domain, a surface or boot"
         library-boundary:
           list-mode: lax
@@ -286,10 +286,10 @@ linters:
             - "**/oauthrs/**"
             - "**/oidcrp/**"
           allow:
-            - altalune.id/othra/oauthrs
-            - altalune.id/othra/oidcrp
+            - github.com/altalune-id/othra/oauthrs
+            - github.com/altalune-id/othra/oidcrp
           deny:
-            - pkg: "altalune.id/othra/"
+            - pkg: "github.com/altalune-id/othra/"
               desc: "oidcrp and oauthrs are app libraries: stdlib, go-jose and oidcrp only, never internal/ or config"
         root-boundary:
           list-mode: lax
@@ -318,7 +318,7 @@ linters:
             - "**/worker/**"
             - "!**/internal/**"
           deny:
-            - pkg: "altalune.id/othra/internal"
+            - pkg: "github.com/altalune-id/othra/internal"
               desc: "root-level shared packages must NOT depend on any internal/ package (import inversion)"
 
   exclusions:

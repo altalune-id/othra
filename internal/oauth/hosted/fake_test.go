@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/oauth/oidc"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/mailer"
 )
 
 var errFake = errors.New("fake failure")

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"altalune.id/othra/internal/web/spa"
+	"github.com/altalune-id/othra/internal/web/spa"
 )
 
 //go:embed all:public

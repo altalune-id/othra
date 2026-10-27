@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	orgv1 "altalune.id/othra/gen/go/org/v1"
-	orgv1connect "altalune.id/othra/gen/go/org/v1/orgv1connect"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/testutil/fakes"
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	orgv1connect "github.com/altalune-id/othra/gen/go/org/v1/orgv1connect"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 func TestHandler_MountsUnderBasePathAndTranslatesErrors(t *testing.T) {

@@ -1,8 +1,8 @@
 package org
 
 import (
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/schema/entity"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/schema/entity"
 )
 
 // NOTE: definers are set-returning functions in FROM position, which go-jet cannot build; the aliases mirror jet's so orgRow maps.

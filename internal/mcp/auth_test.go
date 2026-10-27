@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/authn"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/permission"
-	rootmcp "altalune.id/othra/mcp"
-	"altalune.id/othra/scope"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/permission"
+	rootmcp "github.com/altalune-id/othra/mcp"
+	"github.com/altalune-id/othra/scope"
 )
 
 const goodKey = "othra_good"

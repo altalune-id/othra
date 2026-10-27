@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/kernel/ratelimit/memory"
-	"altalune.id/othra/internal/org/invite"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/memory"
+	"github.com/altalune-id/othra/internal/org/invite"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 type downLimiter struct{}

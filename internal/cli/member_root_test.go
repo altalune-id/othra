@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/boot"
-	"altalune.id/othra/internal/cli"
-	"altalune.id/othra/internal/org/member"
-	"altalune.id/othra/internal/user"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/boot"
+	"github.com/altalune-id/othra/internal/cli"
+	"github.com/altalune-id/othra/internal/org/member"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 type memberAddApp struct {

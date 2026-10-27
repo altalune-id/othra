@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/kernel/storage"
 )
 
 // OrgRefs turns an org's public id into its id and back; ok is false for an unknown public id.

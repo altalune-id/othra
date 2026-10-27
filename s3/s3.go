@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"altalune.id/othra/httpclient"
+	"github.com/altalune-id/othra/httpclient"
 )
 
 // Client is the open connection: S3 for server calls, Presign for URLs a browser uses, and the bucket name.

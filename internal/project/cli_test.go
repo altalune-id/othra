@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	projectv1connect "altalune.id/othra/gen/go/project/v1/projectv1connect"
-	"altalune.id/othra/internal/apiclient"
-	"altalune.id/othra/internal/controlplane"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/cptest"
-	"altalune.id/othra/internal/testutil/fakes"
+	projectv1connect "github.com/altalune-id/othra/gen/go/project/v1/projectv1connect"
+	"github.com/altalune-id/othra/internal/apiclient"
+	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/cptest"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 func projectClient(t *testing.T, store project.Store, refs *fakes.PublicIDs) projectv1connect.ProjectServiceClient {

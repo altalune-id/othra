@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/install"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/install"
 )
 
 func TestConsoleURIs(t *testing.T) {

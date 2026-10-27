@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 	noopmetric "go.opentelemetry.io/otel/metric/noop"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 func TestEndUsersConfig(t *testing.T) {

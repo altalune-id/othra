@@ -12,15 +12,15 @@ import (
 	"github.com/stretchr/testify/require"
 	noopmetric "go.opentelemetry.io/otel/metric/noop"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/kernel/storage"
-	"altalune.id/othra/internal/kernel/storage/memory"
-	storages3 "altalune.id/othra/internal/kernel/storage/s3"
-	s3conn "altalune.id/othra/s3"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/kernel/storage/memory"
+	storages3 "github.com/altalune-id/othra/internal/kernel/storage/s3"
+	s3conn "github.com/altalune-id/othra/s3"
 )
 
 func TestBuildStorageDriver(t *testing.T) {

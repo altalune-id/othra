@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/client"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/secret"
-	"altalune.id/othra/internal/kernel/tenant"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/testutil/fakes"
-	"altalune.id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/client"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
 )
 
 type failAfterLock struct {

@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"altalune.id/othra/httpclient"
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/nanoid"
+	"github.com/altalune-id/othra/httpclient"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/nanoid"
 )
 
 // Driver defaults. https://resend.com/docs/api-reference/emails/send-email

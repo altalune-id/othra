@@ -6,14 +6,14 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	authv1 "altalune.id/othra/gen/go/auth/v1"
-	authv1connect "altalune.id/othra/gen/go/auth/v1/authv1connect"
-	"altalune.id/othra/internal/kernel/authn"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/org"
-	"altalune.id/othra/internal/project"
-	"altalune.id/othra/internal/user"
+	authv1 "github.com/altalune-id/othra/gen/go/auth/v1"
+	authv1connect "github.com/altalune-id/othra/gen/go/auth/v1/authv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/user"
 )
 
 // Profiles changes the signed-in person's own account; *Service implements it.

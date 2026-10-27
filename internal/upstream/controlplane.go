@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	upstreamv1 "altalune.id/othra/gen/go/upstream/v1"
-	upstreamv1connect "altalune.id/othra/gen/go/upstream/v1/upstreamv1connect"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	upstreamv1 "github.com/altalune-id/othra/gen/go/upstream/v1"
+	upstreamv1connect "github.com/altalune-id/othra/gen/go/upstream/v1/upstreamv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // UpstreamService is the UpstreamService Connect handler.

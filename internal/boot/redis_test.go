@@ -14,10 +14,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	redisconn "altalune.id/othra/redis"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	redisconn "github.com/altalune-id/othra/redis"
 )
 
 const redisTestPassword = "hunter2-redis-secret"

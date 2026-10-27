@@ -3,7 +3,7 @@ package controlplane
 import (
 	"connectrpc.com/connect"
 
-	"altalune.id/othra/apperror"
+	"github.com/altalune-id/othra/apperror"
 )
 
 func connectCodeOf(code apperror.Code) connect.Code {

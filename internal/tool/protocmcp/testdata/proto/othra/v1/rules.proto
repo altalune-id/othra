@@ -4,7 +4,7 @@ package othra.v1;
 
 import "buf/validate/validate.proto";
 
-option go_package = "altalune.id/othra/gen/go/othra/v1;othrav1";
+option go_package = "github.com/altalune-id/othra/gen/go/othra/v1;othrav1";
 
 // Shared string rules. An empty value passes each one; pair it with `required` when the field must be set.
 // A rule id ending in a number carries that number as the violation's param.

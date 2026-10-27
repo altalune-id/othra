@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	clientv1 "altalune.id/othra/gen/go/client/v1"
+	"github.com/altalune-id/othra/apperror"
+	clientv1 "github.com/altalune-id/othra/gen/go/client/v1"
 )
 
 func TestErrors_CarryTheirCodes(t *testing.T) {

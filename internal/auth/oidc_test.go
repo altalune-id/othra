@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/web"
-	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/internal/web/middleware"
-	"altalune.id/othra/oidcrp"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/web"
+	"github.com/altalune-id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web/middleware"
+	"github.com/altalune-id/othra/oidcrp"
 )
 
 type fakeRP struct {

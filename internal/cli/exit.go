@@ -6,8 +6,8 @@ import (
 
 	"connectrpc.com/connect"
 
-	"altalune.id/othra/apperror"
-	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
+	"github.com/altalune-id/othra/apperror"
+	apperrorv1 "github.com/altalune-id/othra/gen/go/apperror/v1"
 )
 
 const (

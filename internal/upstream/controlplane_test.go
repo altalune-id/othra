@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	accountv1 "altalune.id/othra/gen/go/account/v1"
-	upstreamv1 "altalune.id/othra/gen/go/upstream/v1"
-	"altalune.id/othra/internal/kernel/authz"
-	"altalune.id/othra/internal/kernel/session"
-	"altalune.id/othra/internal/testutil/fakes"
+	accountv1 "github.com/altalune-id/othra/gen/go/account/v1"
+	upstreamv1 "github.com/altalune-id/othra/gen/go/upstream/v1"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
 )
 
 type fakeIssuers struct{ url string }

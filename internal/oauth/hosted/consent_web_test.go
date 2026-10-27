@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/consent"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/consent"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 func natURL(extra ...string) string {

@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 
-	"altalune.id/othra/internal/kernel/authn"
-	"altalune.id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/kernel/session"
 )
 
 // SessionAuthenticator loads a cookie session and rebuilds its authority.

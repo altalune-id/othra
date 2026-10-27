@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/config"
+	"github.com/altalune-id/othra/config"
 )
 
 func TestConsumerOff(t *testing.T) {

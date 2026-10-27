@@ -7,10 +7,10 @@
 package enduserv1
 
 import (
-	v1 "altalune.id/othra/gen/go/account/v1"
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	v1 "github.com/altalune-id/othra/gen/go/account/v1"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -708,8 +708,8 @@ const file_enduser_v1_enduser_proto_rawDesc = "" +
 	"project_id\x1a\vend_user_id\x1a\tclient_id \x010\x01\x12\xf1\x01\n" +
 	"\x12RevokeEndUserToken\x12%.enduser.v1.RevokeEndUserTokenRequest\x1a&.enduser.v1.RevokeEndUserTokenResponse\"\x8b\x01\xca\xf3\x18\x86\x01\n" +
 	"\x15end_user_token_revoke\x12FRevoke one of an end user's personal tokens; it stops working at once.\x1a\n" +
-	"project_id\x1a\vend_user_id\x1a\btoken_id \x010\x01B\x96\x01\n" +
-	"\x0ecom.enduser.v1B\fEnduserProtoP\x01Z-altalune.id/othra/gen/go/enduser/v1;enduserv1\xa2\x02\x03EXX\xaa\x02\n" +
+	"project_id\x1a\vend_user_id\x1a\btoken_id \x010\x01B\xa1\x01\n" +
+	"\x0ecom.enduser.v1B\fEnduserProtoP\x01Z8github.com/altalune-id/othra/gen/go/enduser/v1;enduserv1\xa2\x02\x03EXX\xaa\x02\n" +
 	"Enduser.V1\xca\x02\n" +
 	"Enduser\\V1\xe2\x02\x16Enduser\\V1\\GPBMetadata\xea\x02\vEnduser::V1b\x06proto3"
 

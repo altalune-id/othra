@@ -7,9 +7,9 @@
 package memberv1
 
 import (
-	_ "altalune.id/othra/gen/go/mcp/v1"
-	_ "altalune.id/othra/gen/go/othra/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/othra/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -496,8 +496,8 @@ const file_member_v1_member_proto_rawDesc = "" +
 	"\vmember_list\x125List the members of an organization with their roles.\x1a\x06org_id*\x03app:\fList members\x12R\n" +
 	"\rSetMemberRole\x12\x1f.member.v1.SetMemberRoleRequest\x1a .member.v1.SetMemberRoleResponse\x12O\n" +
 	"\fRemoveMember\x12\x1e.member.v1.RemoveMemberRequest\x1a\x1f.member.v1.RemoveMemberResponse\x12C\n" +
-	"\bLeaveOrg\x12\x1a.member.v1.LeaveOrgRequest\x1a\x1b.member.v1.LeaveOrgResponseB\x8e\x01\n" +
-	"\rcom.member.v1B\vMemberProtoP\x01Z+altalune.id/othra/gen/go/member/v1;memberv1\xa2\x02\x03MXX\xaa\x02\tMember.V1\xca\x02\tMember\\V1\xe2\x02\x15Member\\V1\\GPBMetadata\xea\x02\n" +
+	"\bLeaveOrg\x12\x1a.member.v1.LeaveOrgRequest\x1a\x1b.member.v1.LeaveOrgResponseB\x99\x01\n" +
+	"\rcom.member.v1B\vMemberProtoP\x01Z6github.com/altalune-id/othra/gen/go/member/v1;memberv1\xa2\x02\x03MXX\xaa\x02\tMember.V1\xca\x02\tMember\\V1\xe2\x02\x15Member\\V1\\GPBMetadata\xea\x02\n" +
 	"Member::V1b\x06proto3"
 
 var (

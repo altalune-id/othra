@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"altalune.id/othra/internal/prompt"
-	"altalune.id/othra/password"
+	"github.com/altalune-id/othra/internal/prompt"
+	"github.com/altalune-id/othra/password"
 )
 
 // SetPasswordFn sets a user's password and signs out their sessions; the caller boots the server graph.

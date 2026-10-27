@@ -16,11 +16,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/testutil/pgtest"
-	"altalune.id/othra/mailer"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/testutil/pgtest"
+	"github.com/altalune-id/othra/mailer"
 )
 
 type mailbox struct {

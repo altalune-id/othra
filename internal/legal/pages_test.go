@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"altalune.id/othra/internal/web"
-	"altalune.id/othra/internal/web/layout"
+	"github.com/altalune-id/othra/internal/web"
+	"github.com/altalune-id/othra/internal/web/layout"
 )
 
 func get(t *testing.T, h http.Handler, path string) *httptest.ResponseRecorder {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"altalune.id/othra/internal/boot"
+	"github.com/altalune-id/othra/internal/boot"
 )
 
 func newMCPCmd(bootServer ServerBootFn) *cobra.Command {

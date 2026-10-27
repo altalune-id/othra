@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
 
-	_ "altalune.id/othra/gen/go/mcp/v1"
+	_ "github.com/altalune-id/othra/gen/go/mcp/v1"
 )
 
 const fixturePrefix = "ui://othratest"

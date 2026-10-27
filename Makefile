@@ -7,9 +7,9 @@ VERSION := $(shell cat version/VERSION 2>/dev/null || echo dev)
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD   := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w \
-	-X altalune.id/othra/version.Version=$(VERSION) \
-	-X altalune.id/othra/version.Commit=$(COMMIT) \
-	-X altalune.id/othra/version.BuildTime=$(BUILD)
+	-X github.com/altalune-id/othra/version.Version=$(VERSION) \
+	-X github.com/altalune-id/othra/version.Commit=$(COMMIT) \
+	-X github.com/altalune-id/othra/version.BuildTime=$(BUILD)
 
 .DEFAULT_GOAL := help
 

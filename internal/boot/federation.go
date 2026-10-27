@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/httpclient"
-	"altalune.id/othra/internal/enduser"
-	"altalune.id/othra/internal/federation"
-	"altalune.id/othra/internal/kernel"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/oauth/hosted"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/httpclient"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/federation"
+	"github.com/altalune-id/othra/internal/kernel"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/oauth/hosted"
+	"github.com/altalune-id/othra/sealer"
 )
 
 const upstreamTimeout = 10 * time.Second

@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/consent"
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/consent"
 )
 
 const (

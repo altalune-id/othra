@@ -1,16 +1,16 @@
-module altalune.id/othra
+module github.com/altalune-id/othra
 
 go 1.26.9
 
 require (
-	altalune.id/othra/oauthrs v0.0.0
-	altalune.id/othra/oidcrp v0.0.0
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2
 	buf.build/go/protovalidate v1.4.0
 	connectrpc.com/connect v1.21.0
 	connectrpc.com/otelconnect v0.12.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1070
+	github.com/altalune-id/othra/oauthrs v0.0.0
+	github.com/altalune-id/othra/oidcrp v0.0.0
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.9
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.3
@@ -171,14 +171,14 @@ require (
 )
 
 tool (
-	altalune.id/othra/cmd/comment-lint
-	altalune.id/othra/cmd/gen-apperror
-	altalune.id/othra/cmd/gen-config-example
-	altalune.id/othra/cmd/gen-scope
-	altalune.id/othra/cmd/protoc-gen-mcp
 	github.com/a-h/templ/cmd/templ
+	github.com/altalune-id/othra/cmd/comment-lint
+	github.com/altalune-id/othra/cmd/gen-apperror
+	github.com/altalune-id/othra/cmd/gen-config-example
+	github.com/altalune-id/othra/cmd/gen-scope
+	github.com/altalune-id/othra/cmd/protoc-gen-mcp
 )
 
-replace altalune.id/othra/oidcrp => ./oidcrp
+replace github.com/altalune-id/othra/oidcrp => ./oidcrp
 
-replace altalune.id/othra/oauthrs => ./oauthrs
+replace github.com/altalune-id/othra/oauthrs => ./oauthrs

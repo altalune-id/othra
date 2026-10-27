@@ -14,10 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/db/dbtest"
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/db/dbtest"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/sealer"
 )
 
 type capture struct{ v driver.Value }

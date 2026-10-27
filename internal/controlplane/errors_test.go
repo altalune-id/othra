@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/apperror"
-	apperrorv1 "altalune.id/othra/gen/go/apperror/v1"
-	orgv1 "altalune.id/othra/gen/go/org/v1"
-	"altalune.id/othra/internal/webhook"
-	"altalune.id/othra/reqid"
+	"github.com/altalune-id/othra/apperror"
+	apperrorv1 "github.com/altalune-id/othra/gen/go/apperror/v1"
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	"github.com/altalune-id/othra/internal/webhook"
+	"github.com/altalune-id/othra/reqid"
 )
 
 func TestTranslate_AppError(t *testing.T) {

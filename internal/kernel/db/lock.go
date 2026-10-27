@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"altalune.id/othra/pg"
+	"github.com/altalune-id/othra/pg"
 )
 
 // LockInTx takes a transaction-scoped advisory lock on the unit of work in ctx; Postgres releases it at commit or rollback.

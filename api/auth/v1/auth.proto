@@ -7,7 +7,7 @@ import "mcp/v1/annotations.proto";
 import "org/v1/org.proto";
 import "othra/v1/rules.proto";
 
-option go_package = "altalune.id/othra/gen/go/auth/v1;authv1";
+option go_package = "github.com/altalune-id/othra/gen/go/auth/v1;authv1";
 
 service AuthService {
   // Whoami describes the credential the request was made with.

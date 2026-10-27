@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/internal/kernel/ratelimit"
-	"altalune.id/othra/internal/kernel/ratelimit/memory"
-	"altalune.id/othra/internal/kernel/ratelimit/ratelimittest"
-	ratelimitredis "altalune.id/othra/internal/kernel/ratelimit/redis"
-	"altalune.id/othra/internal/testutil/redistest"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/memory"
+	"github.com/altalune-id/othra/internal/kernel/ratelimit/ratelimittest"
+	ratelimitredis "github.com/altalune-id/othra/internal/kernel/ratelimit/redis"
+	"github.com/altalune-id/othra/internal/testutil/redistest"
 )
 
 func TestStore_Contract(t *testing.T) {

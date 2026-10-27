@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/kernel/storage"
-	"altalune.id/othra/internal/project"
+	"github.com/altalune-id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/project"
 )
 
 // FileStorage is a project.FileStorage test double that answers from its fields and records the files it marks.

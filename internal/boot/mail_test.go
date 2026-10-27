@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"altalune.id/othra/config"
-	"altalune.id/othra/internal/kernel/db"
-	"altalune.id/othra/internal/kernel/mailqueue"
-	"altalune.id/othra/mailer"
-	"altalune.id/othra/mailer/console"
-	"altalune.id/othra/mailer/resend"
-	"altalune.id/othra/mailer/smtp"
-	"altalune.id/othra/sealer"
+	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/mailqueue"
+	"github.com/altalune-id/othra/mailer"
+	"github.com/altalune-id/othra/mailer/console"
+	"github.com/altalune-id/othra/mailer/resend"
+	"github.com/altalune-id/othra/mailer/smtp"
+	"github.com/altalune-id/othra/sealer"
 )
 
 func TestBuildMailer(t *testing.T) {
