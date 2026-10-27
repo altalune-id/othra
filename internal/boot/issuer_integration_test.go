@@ -68,7 +68,7 @@ func fetch(t *testing.T, method, url string) (fetched, string) {
 	return fetched{StatusCode: resp.StatusCode, Header: resp.Header}, string(body)
 }
 
-// K9, K12, K14 through boot: each issuer serves its documents and stubs, under basePath, with no cookie and a public cache.
+// through boot: each issuer serves its documents and stubs, under basePath, with no cookie and a public cache.
 func TestIssuerRoutesThroughBoot(t *testing.T) {
 	for _, basePath := range []string{"", "/auth"} {
 		t.Run("basePath="+basePath, func(t *testing.T) {

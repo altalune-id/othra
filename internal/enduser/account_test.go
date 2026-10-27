@@ -34,13 +34,11 @@ func (g *fakeGrants) RevokeUserSession(_ context.Context, _ Project, userSession
 
 func withGrants(t *testing.T) (*harness, *fakeGrants) {
 	t.Helper()
-	h := newHarness(t)
 	g := &fakeGrants{}
-	h.svc.WithGrants(g)
-	return h, g
+	return newHarnessWith(t, g, nil), g
 }
 
-// G16, P9: every way a user session ends revokes its grants in the same unit of work.
+// every way a user session ends revokes its grants in the same unit of work.
 func TestEndingASessionRevokesItsGrants(t *testing.T) {
 	h, g := withGrants(t)
 	ctx := context.Background()
@@ -97,7 +95,7 @@ func TestEndOtherSessions_KeepsThisOne(t *testing.T) {
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
 }
 
-// A18, A25: a name is clipped to 200 characters, as protovalidate and the column count them, and the change is audited by public id.
+// a name is clipped to 200 characters, as protovalidate and the column count them, and the change is audited by public id.
 func TestProfileAndName(t *testing.T) {
 	h := newHarness(t)
 	var logs bytes.Buffer
@@ -164,7 +162,7 @@ func signedInCtx(h *harness, r *Redeemed) context.Context {
 	})
 }
 
-// M8 G2: enduser's account.v1 slice works on the signed-in end user only.
+// enduser's account.v1 slice works on the signed-in end user only.
 func TestAccountService(t *testing.T) {
 	h, _ := withGrants(t)
 	other := h.signIn(t, "ada@example.com", "")

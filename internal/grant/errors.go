@@ -75,5 +75,3 @@ func IsExpectedError(err error) bool {
 	return IsInvalidGrantError(err) || IsInvalidScopeError(err) || IsInvalidTokenError(err) || IsSessionGoneError(err) ||
 		IsInvalidRequestError(err) || IsInvalidTargetError(err)
 }
-
-var errNoResources = errors.New("grant: no access token signer for resource-bound grants")

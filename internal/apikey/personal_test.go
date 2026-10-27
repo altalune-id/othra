@@ -57,7 +57,7 @@ func TestScheme_MintPersonal(t *testing.T) {
 }
 
 func personalService(store apikey.Store, owners apikey.OwnerRoles, enabled bool) *apikey.Service {
-	return newService(store, stubProjects{}).WithOwnerRoles(owners).WithPersonalKeys(enabled)
+	return newService(store, stubProjects{}, owners).WithPersonalKeys(enabled)
 }
 
 func personalReq(orgID, owner uuid.UUID, scopes ...string) apikey.CreateRequest {
@@ -112,7 +112,6 @@ func TestService_CreatePersonal_Disabled(t *testing.T) {
 
 	for name, svc := range map[string]*apikey.Service{
 		"capability off": personalService(&fakes.APIKeyStore{}, owners, false),
-		"no owner port":  newService(&fakes.APIKeyStore{}, stubProjects{}).WithPersonalKeys(true),
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, _, err := svc.Create(context.Background(), personalReq(orgID, owner, "webhook:read"))
@@ -144,7 +143,7 @@ func TestService_List_HidesOthersPersonalKeys(t *testing.T) {
 	theirs, _ := personalKey(t, orgID, other)
 	machine, _, err := apikey.NewScheme("").MintOrg(orgID, "ci", nil, apikey.ProjectGrant{All: true}, future(), time.Now().UTC())
 	require.NoError(t, err)
-	svc := newService(&fakes.APIKeyStore{Keys: []*apikey.APIKey{mine, theirs, machine}}, stubProjects{})
+	svc := newService(&fakes.APIKeyStore{Keys: []*apikey.APIKey{mine, theirs, machine}}, stubProjects{}, fakes.NoOwnerRoles{})
 
 	got, err := svc.List(context.Background(), orgID, me)
 	require.NoError(t, err)
@@ -160,11 +159,11 @@ func TestService_Revoke_OthersPersonalKeyIsNotFound(t *testing.T) {
 	theirs, _ := personalKey(t, orgID, other)
 	store := &fakes.APIKeyStore{Key: theirs}
 
-	err := newService(store, stubProjects{}).Revoke(context.Background(), orgID, theirs.ID, me, true)
+	err := newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), orgID, theirs.ID, me, true)
 	assert.True(t, apikey.IsNotFoundError(err))
 	assert.Nil(t, store.Saved)
 
-	require.NoError(t, newService(store, stubProjects{}).Revoke(context.Background(), orgID, theirs.ID, other, false))
+	require.NoError(t, newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), orgID, theirs.ID, other, false))
 	assert.NotNil(t, store.Saved.RevokedAt)
 }
 
@@ -224,7 +223,7 @@ func TestService_MachineKeyNeverExceedsCreatorRole(t *testing.T) {
 	orgID, admin, prj := uuid.New(), uuid.New(), uuid.New()
 	owners := &fakeOwners{}
 	owners.set(orgID, admin, member.RoleAdmin)
-	svc := newService(&fakes.APIKeyStore{}, stubProjects{ids: []uuid.UUID{prj}}).WithOwnerRoles(owners).WithPersonalKeys(true)
+	svc := newService(&fakes.APIKeyStore{}, stubProjects{ids: []uuid.UUID{prj}}, owners).WithPersonalKeys(true)
 
 	_, _, err := svc.Create(context.Background(), apikey.CreateRequest{
 		OrgID: orgID, Kind: apikey.KindOrg, Name: "ci", Scopes: []string{"org:write"}, AllProjects: true, ExpiresAt: future(), CreatedBy: admin,
@@ -243,7 +242,7 @@ func TestService_MachineKeyNeverExceedsCreatorRole(t *testing.T) {
 }
 
 func TestService_MachineKeyCreatorMustBeMember(t *testing.T) {
-	svc := newService(&fakes.APIKeyStore{}, stubProjects{}).WithOwnerRoles(&fakeOwners{})
+	svc := newService(&fakes.APIKeyStore{}, stubProjects{}, &fakeOwners{})
 	_, _, err := svc.Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "ci", Scopes: []string{"webhook:read"}, AllProjects: true, ExpiresAt: future(), CreatedBy: uuid.New(),
 	})
@@ -253,7 +252,7 @@ func TestService_MachineKeyCreatorMustBeMember(t *testing.T) {
 func TestService_RevokePersonalOf(t *testing.T) {
 	store := &fakes.APIKeyStore{RevokeCount: 2}
 	orgID, ownerID := uuid.New(), uuid.New()
-	n, err := newService(store, stubProjects{}).RevokePersonalOf(context.Background(), orgID, ownerID)
+	n, err := newService(store, stubProjects{}, fakes.NoOwnerRoles{}).RevokePersonalOf(context.Background(), orgID, ownerID)
 	require.NoError(t, err)
 	assert.Equal(t, 2, n)
 	require.Len(t, store.Revocations, 1)
@@ -263,7 +262,7 @@ func TestService_RevokePersonalOf(t *testing.T) {
 	assert.WithinDuration(t, time.Now(), got.At, time.Minute)
 
 	store.Err = errors.New("db down")
-	_, err = newService(store, stubProjects{}).RevokePersonalOf(context.Background(), orgID, ownerID)
+	_, err = newService(store, stubProjects{}, fakes.NoOwnerRoles{}).RevokePersonalOf(context.Background(), orgID, ownerID)
 	_, ok := apperror.AsAppError(err)
 	assert.True(t, ok, "got %v", err)
 }

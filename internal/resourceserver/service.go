@@ -608,7 +608,7 @@ func (s *Service) admissionChanged(projectID uuid.UUID) {
 	}
 }
 
-// SetAdmission sets whether a server admits metadata document clients (E10); turning it on needs an admissible server.
+// SetAdmission sets whether a server admits metadata document clients; turning it on needs an admissible server.
 func (s *Service) SetAdmission(ctx context.Context, orgID, projectID uuid.UUID, publicID string, a Admission) (*ResourceServer, error) {
 	ctx = scope(ctx, orgID, projectID)
 	if err := ValidateClientHosts(a.Hosts); err != nil {
@@ -661,7 +661,7 @@ func (s *Service) repinMetadataClients(ctx context.Context, r *ResourceServer) e
 	return nil
 }
 
-// Resolve returns the server identifier names exactly and the scopes clientID may ask of it, if admissible and linked (RFC 8707 R4).
+// Resolve returns the server identifier names exactly and the scopes clientID may ask of it, if admissible and linked (RFC 8707).
 func (s *Service) Resolve(
 	ctx context.Context, orgID, projectID, clientID uuid.UUID, identifier string,
 ) (r *ResourceServer, pin []string, ok bool, err error) {
@@ -711,7 +711,7 @@ func (s *Service) LinkMetadataClient(ctx context.Context, orgID, projectID, clie
 	})
 }
 
-// SECURITY: R5, authl gap 5: the server must still be admissible and allow every scope; cimdHost is a CIMD client_id host, else "".
+// SECURITY: the server must still be admissible and allow every scope; cimdHost is a CIMD client_id host, else "".
 func (s *Service) Admits(
 	ctx context.Context, orgID, projectID, serverID, clientID uuid.UUID, cimdHost string, scopes []string,
 ) (identifier string, ok bool, err error) {
@@ -748,7 +748,7 @@ func (s *Service) Admits(
 	return r.Identifier, true, nil
 }
 
-// AcceptsCIMD reports whether any admissible server of the project admits metadata document clients (CIMD §6, pm P3).
+// AcceptsCIMD reports whether any admissible server of the project admits metadata document clients (CIMD §6).
 func (s *Service) AcceptsCIMD(ctx context.Context, orgID, projectID uuid.UUID) (bool, error) {
 	ctx = scope(ctx, orgID, projectID)
 	list, err := s.store.List(ctx, projectID)

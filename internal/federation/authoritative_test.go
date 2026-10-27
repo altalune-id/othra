@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// P8 = A, R-1: a first sign-in Google isn't authoritative for creates nothing and asks the inbox instead.
+// a first sign-in Google isn't authoritative for creates nothing and asks the inbox instead.
 func TestSignIn_UnprovenEmailCreatesNobody(t *testing.T) {
 	h := newHarness(t)
 	id := identity(h)

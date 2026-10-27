@@ -65,7 +65,7 @@ func TestSigner_IDTokenCarriesAtHashAndAzp(t *testing.T) {
 	var claims IDTokenClaims
 	require.NoError(t, parsed.UnsafeClaimsWithoutVerification(&claims))
 	assert.Equal(t, AtHash("at"), claims.AtHash)
-	assert.Len(t, claims.JWTID, 21, "A26: a nanoid, never a UUID on a surface")
+	assert.Len(t, claims.JWTID, 21, "a nanoid, never a UUID on a surface")
 	_, uuidErr := uuid.Parse(claims.JWTID)
 	assert.Error(t, uuidErr)
 	assert.Equal(t, "c1", claims.AuthorizedParty)
@@ -143,7 +143,7 @@ func TestSigner_NeedsAnActiveKey(t *testing.T) {
 	assert.False(t, strings.Contains(err.Error(), "BEGIN"))
 }
 
-// SECURITY: R-5, an ID token always names its client in aud.
+// SECURITY: an ID token always names its client in aud.
 func TestSigner_IDTokenRefusesAWrongAudience(t *testing.T) {
 	h := newHarness(t)
 	h.generate(t)
@@ -231,7 +231,7 @@ func TestSigner_AccessTokenCarriesAuthTime(t *testing.T) {
 	assert.Equal(t, now.Add(-time.Hour).Unix(), claims.AuthTime)
 }
 
-// pm P2, RFC 7519 §4.1.3: an access token with one audience sends aud as a string.
+// RFC 7519 §4.1.3: an access token with one audience sends aud as a string.
 func TestSigner_AccessTokenAudIsAString(t *testing.T) {
 	h := newHarness(t)
 	h.generate(t)

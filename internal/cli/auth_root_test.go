@@ -99,8 +99,8 @@ func newTestServer(t *testing.T) *testServer {
 	ids.User(p.UserID)
 
 	api := controlplane.New(controlplane.Services{
-		Orgs:     org.NewService(&fakes.OrgStore{Org: acme}, fakes.Transactor{}, nil),
-		Projects: project.NewService(&fakes.ProjectStore{}, nil),
+		Orgs:     org.NewService(&fakes.OrgStore{Org: acme}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil),
+		Projects: project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil),
 		Users:    user.NewService(fakes.NewUserStore(), nil),
 		Refs:     ids,
 	}, nil, controlplane.Options{Authn: authn.InterceptorOptions{
@@ -232,7 +232,7 @@ func TestAuthProfiles_StayApart(t *testing.T) {
 	assert.Equal(t, session.CookieName+"="+pb.Session, cookie)
 }
 
-// SECURITY: Review Focus 1 — a profile's session never reaches another server.
+// SECURITY: a profile's session never reaches another server.
 func TestProfileSession_NotSentToAnotherServer(t *testing.T) {
 	for name, redirect := range map[string]func(t *testing.T, url string) []string{
 		"--url": func(_ *testing.T, url string) []string { return []string{"--url", url} },

@@ -22,6 +22,7 @@ import (
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/testutil/pgtest"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/password"
@@ -34,6 +35,7 @@ type installFixture struct {
 	orgs     *org.Service
 	members  *member.Service
 	projects *project.Service
+	terms    *legal.Service
 }
 
 func newInstallFixture(t *testing.T) *installFixture {
@@ -49,11 +51,12 @@ func newInstallFixtureWithConns(t *testing.T, maxOpen int) *installFixture {
 	f := &installFixture{
 		pool:     pool,
 		users:    user.NewService(user.NewStore(pool, schemaName, ""), unexpected),
-		orgs:     org.NewService(org.NewStore(pool, schemaName, ""), db.NewTransactor(pool), unexpected).WithCreation(false),
+		orgs:     org.NewService(org.NewStore(pool, schemaName, ""), db.NewTransactor(pool), fakes.NoMemberRoles{}, nil, unexpected).WithCreation(false),
 		members:  member.NewService(member.NewStore(pool, schemaName, ""), db.NewTransactor(pool), unexpected),
-		projects: project.NewService(project.NewStore(pool, schemaName, ""), unexpected),
+		projects: project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, "", unexpected),
 	}
-	f.svc = install.NewService(db.NewTransactor(pool), f.users, f.orgs, f.members, f.projects).WithTerms(legal.NewService(f.users))
+	f.terms = legal.NewService(f.users, legal.NewStore(pool, schemaName, ""), db.NewTransactor(pool))
+	f.svc = install.NewService(db.NewTransactor(pool), f.users, f.orgs, f.members, f.projects, f.terms, nil)
 	return f
 }
 
@@ -245,16 +248,16 @@ func TestInstall_DependencyFailuresRollBack(t *testing.T) {
 		wrap  func(f *installFixture, pool db.Pool) *install.Service
 	}{
 		{"system org lookup", false, func(f *installFixture, pool db.Pool) *install.Service {
-			return install.NewService(db.NewTransactor(pool), f.users, failSystem{f.orgs}, f.members, f.projects)
+			return install.NewService(db.NewTransactor(pool), f.users, failSystem{f.orgs}, f.members, f.projects, f.terms, nil)
 		}},
 		{"owner count", true, func(f *installFixture, pool db.Pool) *install.Service {
-			return install.NewService(db.NewTransactor(pool), f.users, f.orgs, failCount{f.members}, f.projects)
+			return install.NewService(db.NewTransactor(pool), f.users, f.orgs, failCount{f.members}, f.projects, f.terms, nil)
 		}},
 		{"owner membership", false, func(f *installFixture, pool db.Pool) *install.Service {
-			return install.NewService(db.NewTransactor(pool), f.users, f.orgs, failAdd{f.members}, f.projects)
+			return install.NewService(db.NewTransactor(pool), f.users, f.orgs, failAdd{f.members}, f.projects, f.terms, nil)
 		}},
 		{"default project", false, func(f *installFixture, pool db.Pool) *install.Service {
-			return install.NewService(db.NewTransactor(pool), f.users, f.orgs, f.members, failProjectCreate{f.projects})
+			return install.NewService(db.NewTransactor(pool), f.users, f.orgs, f.members, failProjectCreate{f.projects}, f.terms, nil)
 		}},
 	}
 	for _, tt := range cases {
@@ -280,10 +283,10 @@ func TestEnsureBasicSystemOrg_DependencyFailures(t *testing.T) {
 	f := newInstallFixture(t)
 	ctx := t.Context()
 
-	err := install.NewService(db.NewTransactor(f.pool), f.users, failSystem{f.orgs}, f.members, f.projects).EnsureBasicSystemOrg(ctx)
+	err := install.NewService(db.NewTransactor(f.pool), f.users, failSystem{f.orgs}, f.members, f.projects, f.terms, nil).EnsureBasicSystemOrg(ctx)
 	require.ErrorIs(t, err, errInjected)
 
-	err = install.NewService(db.NewTransactor(f.pool), f.users, f.orgs, f.members, failProjectCreate{f.projects}).EnsureBasicSystemOrg(ctx)
+	err = install.NewService(db.NewTransactor(f.pool), f.users, f.orgs, f.members, failProjectCreate{f.projects}, f.terms, nil).EnsureBasicSystemOrg(ctx)
 	require.ErrorIs(t, err, errInjected)
 	assert.Zero(t, f.orgCount(t), "the system org insert is rolled back with the failed project")
 }
@@ -300,15 +303,16 @@ func TestInstall_RecordsAcceptedTerms(t *testing.T) {
 	assert.True(t, stored.TermsAcceptedAt.After(before))
 }
 
-// M7 F13: the project install creates is seeded once (the upstream IdP from config); a refused install seeds nothing.
+// the project install creates is seeded once (the upstream IdP from config); a refused install seeds nothing.
 func TestInstall_SeedsTheDefaultProjectOnce(t *testing.T) {
 	f := newInstallFixture(t)
 	ctx := t.Context()
 	var seeded []uuid.UUID
-	f.svc.WithProjectSeed(func(_ context.Context, _, projectID uuid.UUID) error {
-		seeded = append(seeded, projectID)
-		return nil
-	})
+	f.svc = install.NewService(db.NewTransactor(f.pool), f.users, f.orgs, f.members, f.projects, f.terms,
+		func(_ context.Context, _, projectID uuid.UUID) error {
+			seeded = append(seeded, projectID)
+			return nil
+		})
 	_, err := f.svc.Install(ctx, install.Request{Email: "ada@example.com", Password: "a-good-password", OrgName: "Acme"})
 	require.NoError(t, err)
 	sys, err := f.orgs.System(ctx)

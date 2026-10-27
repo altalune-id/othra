@@ -41,6 +41,16 @@ type fixture struct {
 	plain   member.Requester
 }
 
+type userTerms struct{ users *user.Service }
+
+func (u userTerms) Accept(ctx context.Context, userID uuid.UUID, _ legal.Source) (time.Time, error) {
+	got, err := u.users.AcceptTerms(ctx, userID)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return *got.TermsAcceptedAt, nil
+}
+
 func newFixture(t *testing.T) *fixture {
 	f := &fixture{
 		t: t, ctx: context.Background(), store: newMemStore(), mail: &mailBox{}, events: &eventLog{}, people: people{},
@@ -49,7 +59,7 @@ func newFixture(t *testing.T) *fixture {
 	f.members = member.NewService(&fakes.MemberStore{}, fakes.Transactor{}, apperror.NewReporter(nil, false).Unexpected)
 	f.users = user.NewService(fakes.NewUserStore(), apperror.NewReporter(nil, false).Unexpected)
 	f.svc = invite.NewService(invite.Deps{
-		Store: f.store, Transactor: fakes.Transactor{}, Members: f.members, Mail: f.mail, Users: f.users, Terms: legal.NewService(f.users), Events: f.events,
+		Store: f.store, Transactor: fakes.Transactor{}, Members: f.members, Mail: f.mail, Users: f.users, Terms: userTerms{users: f.users}, Events: f.events,
 		Orgs: orgNames{f.org: "Acme  Corp"}, People: directory{people: f.people, users: f.users}, From: "othra@example.com", BaseURL: baseURL,
 		Unexpected: apperror.NewReporter(nil, false).Unexpected,
 	}).WithClock(func() time.Time { return f.clock })

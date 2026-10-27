@@ -37,17 +37,17 @@ func (d *fakeDirectory) Servers(context.Context, Project) (map[uuid.UUID]ServerI
 	return d.servers, d.err
 }
 
-// C1, P8: the slice names each app and server and disconnects by client_id, a public id or a metadata document URL.
+// the slice names each app and server and disconnects by client_id, a public id or a metadata document URL.
 func TestAccountService_Apps(t *testing.T) {
 	store := newFakeStore()
-	s, now := newTestService(store)
+	grants := &fakeGrants{}
+	s, now := newTestService(store, grants)
 	p, user := Project{OrgID: uuid.New(), ID: uuid.New()}, uuid.New()
 	web, cimd, rs, gone := uuid.New(), uuid.New(), uuid.New(), uuid.New()
-	grants := &fakeGrants{families: []Family{
+	grants.families = []Family{
 		{ClientID: cimd, Scopes: []string{"openid"}, CreatedAt: *now, LastUsedAt: *now},
 		{ClientID: gone, Scopes: []string{"openid"}, CreatedAt: *now},
-	}}
-	s = s.WithGrants(grants, fakeTx{})
+	}
 	_, err := s.Grant(context.Background(), p, GrantRequest{Key: Key{EndUserID: user, ClientID: web, ResourceServerID: &rs}, Scopes: []string{"read", "write"}})
 	require.NoError(t, err)
 	dir := &fakeDirectory{
@@ -104,9 +104,8 @@ func TestAccountService_Apps(t *testing.T) {
 
 func TestAccountService_ServersFail(t *testing.T) {
 	store := newFakeStore()
-	s, _ := newTestService(store)
 	p, user, web := Project{OrgID: uuid.New(), ID: uuid.New()}, uuid.New(), uuid.New()
-	s = s.WithGrants(&fakeGrants{families: []Family{{ClientID: web}}}, fakeTx{})
+	s, _ := newTestService(store, &fakeGrants{families: []Family{{ClientID: web}}})
 	dir := &fakeDirectory{clients: map[uuid.UUID]ClientInfo{web: {OAuthID: "w"}}}
 	a := NewAccountService(s, &serversDown{dir})
 	_, err := a.Apps(context.Background(), p, user)

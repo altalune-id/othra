@@ -32,8 +32,7 @@ type cpFixture struct {
 
 func newCPFixture(t *testing.T) *cpFixture {
 	t.Helper()
-	h := newHarness(t)
-	h.svc.WithIssuers(fakeIssuers{url: "https://id.example.com/p/acme"})
+	h := newHarnessWith(t, fakeIssuers{url: "https://id.example.com/p/acme"})
 	refs := fakes.NewPublicIDs()
 	refs.Org(h.org)
 	f := &cpFixture{h: h, cp: NewControlPlane(h.svc, refs), projectPub: refs.Project(h.project, h.org)}
@@ -49,7 +48,7 @@ func newCPFixture(t *testing.T) *cpFixture {
 	return f
 }
 
-// F2, N5: a person sets the secret; no response ever carries it; the redirect URI is the project's callback (P11).
+// a person sets the secret; no response ever carries it; the redirect URI is the project's callback.
 func TestControlPlane_Lifecycle(t *testing.T) {
 	f := newCPFixture(t)
 	create := &upstreamv1.CreateUpstreamRequest{

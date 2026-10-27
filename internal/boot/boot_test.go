@@ -592,7 +592,7 @@ func TestTelemetryConfig(t *testing.T) {
 }
 
 func TestBuildMCPServer(t *testing.T) {
-	svcs := &Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, nil)}
+	svcs := &Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}
 
 	assert.Nil(t, buildMCPServer(config.MCPConfig{}, svcs, nil))
 	srv := buildMCPServer(config.MCPConfig{Enabled: true}, svcs, nil)
@@ -602,7 +602,7 @@ func TestBuildMCPServer(t *testing.T) {
 }
 
 func TestBuildMCPServer_AppsUI(t *testing.T) {
-	svcs := &Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, nil)}
+	svcs := &Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}
 	srv := buildMCPServer(config.MCPConfig{Enabled: true, AppsUI: true}, svcs, nil)
 	require.NotNil(t, srv)
 

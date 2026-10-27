@@ -1,4 +1,4 @@
-// Package federation signs end users in through a project's upstream IdPs and links their identities (authl ADR-0014).
+// Package federation signs end users in through a project's upstream IdPs and links their identities.
 package federation
 
 import (
@@ -24,7 +24,7 @@ type Identity struct {
 	Subject       string
 	Email         string
 	EmailVerified bool
-	// HostedDomain is Google's hd claim, the Workspace domain; empty for a consumer account (P8, R-1).
+	// HostedDomain is Google's hd claim, the Workspace domain; empty for a consumer account.
 	HostedDomain string
 	Name         string
 	PublicID     string

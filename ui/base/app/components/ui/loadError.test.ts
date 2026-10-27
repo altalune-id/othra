@@ -27,7 +27,7 @@ describe('loadError', () => {
   });
 });
 
-describe('errorText (M8 design 11)', () => {
+describe('errorText', () => {
   it('announces itself as an alert, and renders nothing without an error', () => {
     expect(mount(ErrorText, { props: { error } }).get('p').attributes('role')).toBe('alert');
     expect(mount(ErrorText, { props: { error: null } }).find('p').exists()).toBe(false);

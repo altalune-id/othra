@@ -57,7 +57,7 @@ func stubS3(t *testing.T) (calls *int, client *s3conn.Client) {
 	return calls, client
 }
 
-// Review Focus 1: with nothing selecting S3, boot never opens it, even when s3.endpoint is set.
+// with nothing selecting S3, boot never opens it, even when s3.endpoint is set.
 func TestBuildS3_UnusedNeverConnects(t *testing.T) {
 	restoreSeams(t)
 	calls, _ := stubS3(t)

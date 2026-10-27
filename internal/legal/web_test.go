@@ -17,13 +17,18 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/web"
 	"altalune.id/othra/internal/web/layout"
 	"altalune.id/othra/internal/web/middleware"
 )
 
-var termsUpdated = NewService(nil).TermsUpdatedAt()
+var termsUpdated = NewService(nil, nil, nil).TermsUpdatedAt()
+
+func accepting(users TermsAcceptor) *Service {
+	return NewService(users, &memStore{snapshots: map[string]Snapshot{}}, fakes.Transactor{})
+}
 
 type fakeUsers struct{ accepted []uuid.UUID }
 
@@ -57,7 +62,7 @@ func newWelcomeFixture(t *testing.T, base string, on bool) *welcomeFixture {
 		SessionGate: WelcomeGate(base, on, termsUpdated),
 		Routes: []web.Registrar{NewWeb(WebOpts{
 			Kit:               layout.Kit{BasePath: base},
-			Service:           NewService(f.users),
+			Service:           accepting(f.users),
 			Sessions:          sessions,
 			RequireAcceptance: on,
 		})},
@@ -276,7 +281,7 @@ func postAccept(h *Web, p *session.Principal) *httptest.ResponseRecorder {
 }
 
 func TestWelcome_PostAnonymousGoesToLogin(t *testing.T) {
-	h := NewWeb(WebOpts{Service: NewService(&fakeUsers{}), Sessions: rotatorFunc(func(session.Principal) error { return nil })})
+	h := NewWeb(WebOpts{Service: accepting(&fakeUsers{}), Sessions: rotatorFunc(func(session.Principal) error { return nil })})
 	rec := postAccept(h, nil)
 	assert.Equal(t, http.StatusSeeOther, rec.Code)
 	assert.Equal(t, "/login?return_to=%2Fwelcome", rec.Header().Get("Location"))
@@ -301,7 +306,7 @@ func TestWelcome_PostFailures(t *testing.T) {
 					reported = msg
 					return nil
 				}},
-				Service: NewService(tt.users),
+				Service: accepting(tt.users),
 				Sessions: rotatorFunc(func(p session.Principal) error {
 					rotated = p
 					return tt.rotate

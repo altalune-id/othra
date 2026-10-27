@@ -35,7 +35,7 @@ func withPrincipal(p session.Principal) connect.UnaryInterceptorFunc {
 
 func newPersonalClient(t *testing.T, refs *fakes.PublicIDs, store apikey.Store, owners apikey.OwnerRoles, p session.Principal) apikeyv1connect.APIKeyServiceClient {
 	t.Helper()
-	svc := apikey.NewService(store, apikey.NewScheme(""), stubProjects{}, testUnexpected()).WithOwnerRoles(owners).WithPersonalKeys(true)
+	svc := apikey.NewService(store, apikey.NewScheme(""), stubProjects{}, owners, testUnexpected()).WithPersonalKeys(true)
 	_, handler := apikeyv1connect.NewAPIKeyServiceHandler(apikey.NewControlPlane(svc, refs),
 		connect.WithInterceptors(controlplane.Wrap(nil), withPrincipal(p)))
 	ts := httptest.NewServer(handler)
@@ -201,7 +201,7 @@ func revoke(orgPub, hint string) *connect.Request[apikeyv1.RevokeAPIKeyRequest] 
 	return connect.NewRequest(&apikeyv1.RevokeAPIKeyRequest{OrgId: orgPub, Hint: hint})
 }
 
-// Review Focus 4: a member manages their own personal keys and nothing wider.
+// a member manages their own personal keys and nothing wider.
 func TestAPIKeyService_MemberManagesOnlyOwnPersonalKeys(t *testing.T) {
 	orgID, me, other := uuid.New(), uuid.New(), uuid.New()
 	refs := fakes.NewPublicIDs()

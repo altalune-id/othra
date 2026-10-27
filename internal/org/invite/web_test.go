@@ -2,6 +2,7 @@ package invite_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -38,10 +39,10 @@ type fakeSignIn struct {
 	logout []string
 }
 
-func (f *fakeSignIn) LoginLocal(ctx context.Context, c auth.Credentials) (session.Principal, error) {
-	u, err := f.users.ByEmail(ctx, c.Email)
+func (f *fakeSignIn) LoginLocal(ctx context.Context, email, _ string) (session.Principal, error) {
+	u, err := f.users.ByEmail(ctx, email)
 	if err != nil {
-		return session.Principal{}, &auth.InvalidCredentialsError{}
+		return session.Principal{}, errors.New("invalid credentials")
 	}
 	return session.Principal{UserID: u.ID, Email: u.Email, Name: u.Name, Source: session.SourceLocal}, nil
 }

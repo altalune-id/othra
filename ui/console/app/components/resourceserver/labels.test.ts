@@ -69,7 +69,7 @@ describe('resource server labels', () => {
     expect(verificationText(failing, 'trusted', issuer, t, format, { passed: false, failure: null })).toEqual({ body: 'rs.trusted_body', lastCheck: '', verifiedAt: '', failure: '', recheck: '', passed: '' });
   });
 
-  it('words the introspection secret for a resource server, never a client (M8 design 10)', () => {
+  it('words the introspection secret for a resource server, never a client', () => {
     const l = introspectionSecretLabels(t);
     expect(l.card.title).toBe('rs.pat_secret_title');
     expect(l.rotate).toMatchObject({ title: 'rs.pat_rotate_title', body: 'rs.pat_rotate_body', nowWarning: 'rs.pat_now_warning' });

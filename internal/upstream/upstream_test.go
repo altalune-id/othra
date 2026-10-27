@@ -9,7 +9,7 @@ import (
 func TestSpecOf(t *testing.T) {
 	g, ok := SpecOf(KindGoogle)
 	assert.True(t, ok)
-	assert.Equal(t, "https://accounts.google.com", g.Issuer, "P3: the canonical issuer stored on identities")
+	assert.Equal(t, "https://accounts.google.com", g.Issuer, "the canonical issuer stored on identities")
 	assert.Equal(t, []string{"accounts.google.com"}, g.AcceptIssuers, "Google's second iss form")
 	assert.Equal(t, "select_account", g.Prompt, "Google has no prompt=login")
 	_, ok = SpecOf("github")

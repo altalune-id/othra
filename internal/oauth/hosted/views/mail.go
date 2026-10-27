@@ -8,7 +8,7 @@ import (
 	"altalune.id/othra/internal/web/i18n"
 )
 
-// MailData is the magic-link email: adding Google when GoogleEmail is set (N2), sign-up when the email has no end user yet, else sign-in.
+// MailData is the magic-link email: adding Google when GoogleEmail is set, sign-up when the email has no end user yet, else sign-in.
 type MailData struct {
 	Project     string
 	Link        string
@@ -17,7 +17,7 @@ type MailData struct {
 	HasReplyTo  bool
 	Primary     string
 	GoogleEmail string
-	// GoogleSignUp is a first Google sign-in whose inbox the link proves (P8); it needs GoogleEmail.
+	// GoogleSignUp is a first Google sign-in whose inbox the link proves; it needs GoogleEmail.
 	GoogleSignUp bool
 }
 

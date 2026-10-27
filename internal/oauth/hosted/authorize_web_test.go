@@ -124,7 +124,7 @@ func (f *webFixture) signInVia(c *http.Client, login hostedPage, email string) h
 	return f.submit(c, verify, "/login/verify", nil)
 }
 
-// A2, A3: before the redirect URI is trusted, a branded 400 page, never a redirect, and no way to the sign-in page.
+// before the redirect URI is trusted, a branded 400 page, never a redirect, and no way to the sign-in page.
 func TestAuthorize_PageErrors(t *testing.T) {
 	f := newWebFixture(t)
 	for path, code := range map[string]string{
@@ -143,7 +143,7 @@ func TestAuthorize_PageErrors(t *testing.T) {
 	}
 }
 
-// E2, S2: after the redirect is trusted, the error, state and iss go to the client.
+// after the redirect is trusted, the error, state and iss go to the client.
 func TestAuthorize_RedirectErrorsCarryStateAndIss(t *testing.T) {
 	f := newWebFixture(t)
 	p := f.get(f.client, authorizeURL("response_type", "token"))
@@ -162,13 +162,13 @@ func TestAuthorize_SignInThenCode(t *testing.T) {
 	require.Equal(t, http.StatusSeeOther, first.status)
 	login := f.get(f.client, first.location())
 	assert.Contains(t, login.body, "Sign in to continue to Openwa Web.")
-	assert.Contains(t, login.body, `value="ana@example.com"`, "A13: login_hint pre-fills the email")
+	assert.Contains(t, login.body, `value="ana@example.com"`, "login_hint pre-fills the email")
 
 	done := f.signInVia(f.client, login, "ana@example.com")
-	require.Equal(t, http.StatusOK, done.status, "G4: a POST whose next stop is /authorize answers with the continue page")
+	require.Equal(t, http.StatusOK, done.status, "a POST whose next stop is /authorize answers with the continue page")
 	assert.Contains(t, done.body, "Continuing to Openwa Web")
 	final := f.follow(f.client, done)
-	assert.Equal(t, http.StatusFound, final.status, "E5: the last hop to the client is a GET 302")
+	assert.Equal(t, http.StatusFound, final.status, "the last hop to the client is a GET 302")
 	q := redirectParams(t, final)
 	assert.NotEmpty(t, q.Get("code"))
 	assert.Equal(t, "st", q.Get("state"))
@@ -189,7 +189,7 @@ func TestAuthorize_SignInThenCode(t *testing.T) {
 	assert.NotEmpty(t, redirectParams(t, silent).Get("code"))
 }
 
-// A9: prompt=none answers without any page.
+// prompt=none answers without any page.
 func TestAuthorize_PromptNone(t *testing.T) {
 	f := newWebFixture(t)
 	q := redirectParams(t, f.get(f.client, authorizeURL("prompt", "none")))
@@ -208,7 +208,7 @@ func TestAuthorize_PromptNone(t *testing.T) {
 	assert.Equal(t, "login_required", q.Get("error"))
 }
 
-// A9–A11, G3: prompt=login and max_age=0 need a fresh sign-in, and the marker stops the loop once it happened.
+// prompt=login and max_age=0 need a fresh sign-in, and the marker stops the loop once it happened.
 func TestAuthorize_PromptLoginDoesNotLoop(t *testing.T) {
 	for _, extra := range [][]string{{"prompt", "login"}, {"max_age", "0"}} {
 		f := newWebFixture(t)
@@ -232,7 +232,7 @@ func TestAuthorize_PromptLoginDoesNotLoop(t *testing.T) {
 	}
 }
 
-// A10: a long max_age is satisfied by the existing sign-in.
+// a long max_age is satisfied by the existing sign-in.
 func TestAuthorize_MaxAgeLong(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -260,7 +260,7 @@ func TestAuthorize_Picker(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, two.status, "two accounts: the picker")
 }
 
-// A18, N6: owed terms send to /terms; prompt=none answers interaction_required; Decline answers access_denied.
+// owed terms send to /terms; prompt=none answers interaction_required; Decline answers access_denied.
 func TestAuthorize_Terms(t *testing.T) {
 	f := newWebFixture(t)
 	f.acme.TermsVersion, f.acme.TermsURL = 1, "https://acme.example/terms"
@@ -296,11 +296,11 @@ func TestTerms_DeclineWithoutAuthorize(t *testing.T) {
 	declined := f.submit(f.client, terms, "/terms", url.Values{"decline": {"1"}})
 	assert.Equal(t, http.StatusOK, declined.status)
 	assert.Contains(t, declined.body, "You didn&#39;t accept the terms")
-	assert.Contains(t, declined.body, "Need help? Email", "qa M2: the project's support email")
+	assert.Contains(t, declined.body, "Need help? Email", "the project's support email")
 	assert.Contains(t, declined.body, `href="mailto:help@acme.example"`)
 }
 
-// D5 retired, C1–C3: prompt=consent asks every client; a require client asks first; prompt=none can only answer consent_required.
+// prompt=consent asks every client; a require client asks first; prompt=none can only answer consent_required.
 func TestAuthorize_Consent(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -313,7 +313,7 @@ func TestAuthorize_Consent(t *testing.T) {
 	assert.Equal(t, "consent_required", q.Get("error"))
 }
 
-// A12: a hint for another account: prompt=none says login_required, otherwise the picker; a forged hint is invalid_request.
+// a hint for another account: prompt=none says login_required, otherwise the picker; a forged hint is invalid_request.
 func TestAuthorize_IDTokenHint(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -332,7 +332,7 @@ func TestAuthorize_IDTokenHint(t *testing.T) {
 	assert.NotEmpty(t, redirectParams(t, f.get(f.client, authorizeURL("prompt", "none", "id_token_hint", "mine"))).Get("code"))
 }
 
-// A1: the authorize endpoint takes a form POST too.
+// the authorize endpoint takes a form POST too.
 func TestAuthorize_Post(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -366,7 +366,7 @@ func TestAuthorize_SessionGoneWhileIssuing(t *testing.T) {
 	assert.Equal(t, "login_required", redirectParams(t, f.get(f.client, authorizeURL("prompt", "none"))).Get("error"))
 }
 
-// G3: the marker lives as long as a magic link; a slow but fresh sign-in passes, a marker older than the link is asked again.
+// the marker lives as long as a magic link; a slow but fresh sign-in passes, a marker older than the link is asked again.
 func TestAuthorize_MarkerLivesAsLongAsTheLink(t *testing.T) {
 	for wait, wantCode := range map[time.Duration]bool{2 * time.Minute: true, 16 * time.Minute: false} {
 		f := newWebFixture(t)
@@ -385,7 +385,7 @@ func TestAuthorize_MarkerLivesAsLongAsTheLink(t *testing.T) {
 	}
 }
 
-// F1: the id_token_hint never reaches a return_to (login, picker, terms, magic link); its subject crosses signed.
+// the id_token_hint never reaches a return_to (login, picker, terms, magic link); its subject crosses signed.
 func TestAuthorize_HintNeverInReturnTo(t *testing.T) {
 	f := newWebFixture(t)
 	f.acme.TermsVersion, f.acme.TermsURL = 1, "https://acme.example/terms"
@@ -419,7 +419,7 @@ func TestAuthorize_HintNeverInReturnTo(t *testing.T) {
 	assert.NotContains(t, issued.ReturnTo, "id_token_hint", "the magic link's return_to")
 }
 
-// F1: a request whose way back can't fit a magic link's return_to is refused, never a 500.
+// a request whose way back can't fit a magic link's return_to is refused, never a 500.
 func TestAuthorize_TooLongToComeBack(t *testing.T) {
 	f := newWebFixture(t)
 	long := strings.Repeat("/", maxParamLen)
@@ -428,7 +428,7 @@ func TestAuthorize_TooLongToComeBack(t *testing.T) {
 	assert.Equal(t, long, q.Get("state"))
 }
 
-// F7, OIDC §3.1.2.2: after the picker, an account other than the hinted one answers login_required.
+// OIDC §3.1.2.2: after the picker, an account other than the hinted one answers login_required.
 func TestAuthorize_HintedAccountNotChosen(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -468,7 +468,7 @@ func (f *webFixture) accountOf(email string) Account {
 	return Account{}
 }
 
-// N1: a signed hint subject that expired or was forged answers login_required, so waiting can't skip the account check.
+// a signed hint subject that expired or was forged answers login_required, so waiting can't skip the account check.
 func TestAuthorize_HintSubjectExpired(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -490,7 +490,7 @@ func TestAuthorize_HintSubjectExpired(t *testing.T) {
 	assert.Equal(t, "login_required", forged.Get("error"))
 }
 
-// N2: ui_locales goes back to /authorize with the rest of the request.
+// ui_locales goes back to /authorize with the rest of the request.
 func TestAuthorize_KeepsUILocales(t *testing.T) {
 	f := newWebFixture(t)
 	first := f.get(f.client, authorizeURL("ui_locales", "id-ID en"))

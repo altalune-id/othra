@@ -78,7 +78,7 @@ func TestError(t *testing.T) {
 
 var placeholder = regexp.MustCompile(`\{[a-z_]+\}`)
 
-// D2: every locale has the same keys, no empty message, and the same placeholders per key.
+// every locale has the same keys, no empty message, and the same placeholders per key.
 func TestCatalogs_Parity(t *testing.T) {
 	c := catalogs()
 	base := slices.Sorted(maps.Keys(c[Default]))
@@ -110,7 +110,7 @@ func codesByName(t *testing.T, root string) map[string]string {
 	return out
 }
 
-// D2: every key a Go or templ file asks for exists in the catalogs.
+// every key a Go or templ file asks for exists in the catalogs.
 func TestCatalogs_HaveEveryUsedKey(t *testing.T) {
 	root, err := filepath.Abs("../../..")
 	require.NoError(t, err)

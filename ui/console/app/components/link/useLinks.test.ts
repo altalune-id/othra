@@ -168,7 +168,7 @@ describe('useLinks on a resource server', () => {
   });
 });
 
-describe('useLinks and apps without registration (M6)', () => {
+describe('useLinks and apps without registration', () => {
   it('drops a revoked app from the list and never offers a CIMD client as a link target', async () => {
     const cimd = create(ClientSchema, { id: 'Cc2n2Xq8RtY5uVw3zA9bC', name: 'Claude Code', registration: ClientRegistration.CIMD });
     const web = create(ClientSchema, { id: clientId, name: 'Store web', registration: ClientRegistration.REGISTERED });

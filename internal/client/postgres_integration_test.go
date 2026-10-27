@@ -20,6 +20,7 @@ import (
 	"altalune.id/othra/internal/kernel/secret"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/testutil/pgtest"
 )
 
@@ -47,9 +48,14 @@ func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	unexpected := apperror.NewReporter(nil, false).Unexpected
-	issuer := &failAfterLock{projects: project.NewService(project.NewStore(pool, schemaName, ""), unexpected)}
-	svc := client.NewService(client.NewStore(pool, schemaName, ""), db.NewTransactor(pool), issuer, unexpected)
+	issuer := &failAfterLock{projects: project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, "", unexpected)}
+	svc := client.NewService(client.NewStore(pool, schemaName, ""), db.NewTransactor(pool), issuer, docFetcher{}, client.MetadataConfig{}, unexpected)
 	return &pgFixture{db: sqlDB, pool: pool, schema: schemaName, svc: svc, issuer: issuer}
+}
+
+func (f *pgFixture) withMetadata(fetcher client.MetadataFetcher, cfg client.MetadataConfig) *client.Service {
+	return client.NewService(client.NewStore(f.pool, f.schema, ""), db.NewTransactor(f.pool), f.issuer, fetcher, cfg,
+		apperror.NewReporter(nil, false).Unexpected).WithLinks(noLinks{})
 }
 
 func (f *pgFixture) seed(t *testing.T) (org, prj uuid.UUID) {
@@ -231,19 +237,17 @@ func (d docFetcher) FetchMetadata(context.Context, string) (*client.FetchedMetad
 	return &client.FetchedMetadata{Body: []byte(body), ContentType: "application/json", CacheControl: "max-age=1"}, nil
 }
 
-// A16, M11, E10: a shadow client is one row per project and URL, read by its URL, hidden from the list, and passes the 026 checks.
+// a shadow client is one row per project and URL, read by its URL, hidden from the list, and passes the 026 checks.
 func TestPostgres_ShadowClient(t *testing.T) {
 	f := newPGFixture(t)
 	org, prj := f.seed(t)
 	ctx := t.Context()
 	const metadataURL = "https://claude.ai/oauth/claude-code-client-metadata"
 	cfg := client.MetadataConfig{Cache: client.MetadataCache{Min: 0, Max: time.Hour, Default: time.Hour}, IssuerHost: "othra.example.com"}
-	f.svc.WithMetadata(docFetcher{name: "Claude Code"}, noLinks{}, cfg)
-	first, err := f.svc.Admit(ctx, org, prj, client.AdmitRequest{URL: metadataURL, ResourceServerID: uuid.New()})
+	first, err := f.withMetadata(docFetcher{name: "Claude Code"}, cfg).Admit(ctx, org, prj, client.AdmitRequest{URL: metadataURL, ResourceServerID: uuid.New()})
 	require.NoError(t, err)
 	time.Sleep(1100 * time.Millisecond)
-	f.svc.WithMetadata(docFetcher{name: "Claude Code 2"}, noLinks{}, cfg)
-	second, err := f.svc.Admit(ctx, org, prj, client.AdmitRequest{URL: metadataURL, ResourceServerID: uuid.New()})
+	second, err := f.withMetadata(docFetcher{name: "Claude Code 2"}, cfg).Admit(ctx, org, prj, client.AdmitRequest{URL: metadataURL, ResourceServerID: uuid.New()})
 	require.NoError(t, err)
 	assert.Equal(t, first.ID, second.ID)
 	assert.Equal(t, first.PublicID, second.PublicID)
@@ -265,7 +269,7 @@ func TestPostgres_ShadowClient(t *testing.T) {
 	assert.Equal(t, "cimd", kind)
 }
 
-// M11, A20: an expired shadow with no consent and no live grant is pruned; one with a consent stays.
+// an expired shadow with no consent and no live grant is pruned; one with a consent stays.
 func TestPostgres_PruneShadows(t *testing.T) {
 	f := newPGFixture(t)
 	org, prj := f.seed(t)

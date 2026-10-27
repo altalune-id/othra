@@ -9,7 +9,7 @@ A dimension list for scoring OAuth 2.0 / 2.1 conformance. Load once per review; 
 
 ## Othra profile
 
-In Othra, the target profile is `docs/othra-handoff/02-oauth-profile.md`, with decisions in `docs/othra-handoff/01-context.md` (O1–O20). The owner keeps that handoff pack on this machine, uncommitted; if it is missing, ask for it. The profile narrows the spec: score what it requires, flag anything it says "never" or "not in v1" that is live or advertised.
+In Othra, the target profile is [references/othra-profile.md](references/othra-profile.md): required, never and deferred items, the decisions a reviewer needs, the URL map and the token design. The profile narrows the spec: score what it requires, and flag anything it lists under never or deferred that is live or advertised.
 
 ## Two questions before reading
 
@@ -101,7 +101,7 @@ In Othra, the target profile is `docs/othra-handoff/02-oauth-profile.md`, with d
 **Resource-server verification (RFC 9728, AS side)** — [RFC 9728 Section 3](https://datatracker.ietf.org/doc/html/rfc9728#section-3)
 - Metadata URL built by inserting `/.well-known/oauth-protected-resource` between host and path of the registered resource URI ([Section 3](https://datatracker.ietf.org/doc/html/rfc9728#section-3), [3.1](https://datatracker.ietf.org/doc/html/rfc9728#section-3.1)).
 - `resource` in the response identical to the registered URI, else the document is not used ([Section 3.3](https://datatracker.ietf.org/doc/html/rfc9728#section-3.3)); `authorization_servers` contains this issuer exactly ([Section 2](https://datatracker.ietf.org/doc/html/rfc9728#section-2)). Prefix, case-folded or normalised matches — Sev 1.
-- SSRF-safe fetch, timeouts, size cap, no cross-host redirects ([Section 7.7](https://datatracker.ietf.org/doc/html/rfc9728#section-7.7)); TLS ([Section 7.1](https://datatracker.ietf.org/doc/html/rfc9728#section-7.1)); cached and re-checked ([Section 7.10](https://datatracker.ietf.org/doc/html/rfc9728#section-7.10)). An unverified resource never becomes a token audience (profile rule; Othra O20).
+- SSRF-safe fetch, timeouts, size cap, no cross-host redirects ([Section 7.7](https://datatracker.ietf.org/doc/html/rfc9728#section-7.7)); TLS ([Section 7.1](https://datatracker.ietf.org/doc/html/rfc9728#section-7.1)); cached and re-checked ([Section 7.10](https://datatracker.ietf.org/doc/html/rfc9728#section-7.10)). An unverified resource never becomes a token audience (Othra profile rule).
 
 **Device authorization grant** — [RFC 8628 Section 3](https://datatracker.ietf.org/doc/html/rfc8628#section-3)
 - Not shipped → `device_authorization_endpoint` absent from metadata ([Section 4](https://datatracker.ietf.org/doc/html/rfc8628#section-4)) and the `urn:ietf:params:oauth:grant-type:device_code` grant rejected. Advertised without a working flow — Sev 1. (Othra: v1.1, not v1.)
@@ -162,3 +162,5 @@ Aggregate per section = arithmetic mean of in-scope dimensions. Overall = mean o
 ## References
 
 `references/rfc-index.md` — RFC + OIDC + MCP + FAPI index, with the specific section anchors this skill cites. Copy the anchor URL from there instead of constructing one.
+
+`references/othra-profile.md` — the Othra v1 OAuth profile that narrows these dimensions for an Othra review.

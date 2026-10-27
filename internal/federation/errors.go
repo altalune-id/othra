@@ -7,7 +7,7 @@ import (
 	"altalune.id/othra/oidcrp"
 )
 
-// CollisionError signals a new upstream identity whose verified email already belongs to an end user: nothing is linked (ADR-0014).
+// CollisionError signals a new upstream identity whose verified email already belongs to an end user: nothing is linked.
 type CollisionError struct {
 	Email    string
 	Identity Identity
@@ -26,7 +26,7 @@ func IsCollisionError(err error) bool {
 	return ok
 }
 
-// UnprovenEmailError signals a first sign-in whose email Google isn't authoritative for: nothing is created, the inbox proves it (P8).
+// UnprovenEmailError signals a first sign-in whose email Google isn't authoritative for: nothing is created, the inbox proves it.
 type UnprovenEmailError struct {
 	Email    string
 	Identity Identity

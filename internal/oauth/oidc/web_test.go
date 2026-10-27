@@ -89,6 +89,7 @@ type fixture struct {
 	web       *oidc.Web
 	mux       *http.ServeMux
 	resolver  *oidc.Resolver
+	cimd      *cimdProjects
 	acme      *project.Issuer
 	reported  []string
 	corsCalls int
@@ -100,13 +101,14 @@ func newFixture(t *testing.T, basePath string) *fixture {
 	f := &fixture{
 		issuers: &issuers{byHandle: map[string]*project.Issuer{"acme-web": acme}},
 		keys:    &publisher{body: jwksBody},
+		cimd:    &cimdProjects{},
 		acme:    acme,
 	}
 	kit := layout.Kit{BasePath: basePath, Unexpected: func(_ context.Context, msg string, err error, _ ...any) *apperror.AppError {
 		f.reported = append(f.reported, msg)
 		return apperror.New(apperror.CodeUnexpected, "unexpected").WithCause(err)
 	}}
-	f.resolver = oidc.NewResolver(f.issuers, f.keys, "https://id.example.com"+basePath, kit.Unexpected)
+	f.resolver = oidc.NewResolver(f.issuers, f.keys, f.cimd, "https://id.example.com"+basePath, kit.Unexpected)
 	f.web = oidc.NewWeb(f.resolver, kit, oidc.Config{
 		PublicBase: "https://id.example.com" + basePath,
 		BasePath:   basePath,
@@ -184,7 +186,7 @@ func TestDiscovery_HasEveryRequiredField(t *testing.T) {
 	assert.Equal(t, []any{"client_secret_basic", "client_secret_post", "none"}, doc["token_endpoint_auth_methods_supported"])
 	assert.Equal(t, []any{"authorization_code", "refresh_token"}, doc["grant_types_supported"])
 	assert.Equal(t, true, doc["authorization_response_iss_parameter_supported"], "RFC 9207")
-	assert.Equal(t, []any{"none", "login", "consent", "select_account"}, doc["prompt_values_supported"], "M6: the consent page shows on prompt=consent")
+	assert.Equal(t, []any{"none", "login", "consent", "select_account"}, doc["prompt_values_supported"], "the consent page shows on prompt=consent")
 	assert.Equal(t, issuer+"/oauth2/revoke", doc["revocation_endpoint"])
 	assert.Equal(t, []any{"client_secret_basic", "client_secret_post", "none"}, doc["revocation_endpoint_auth_methods_supported"])
 	assert.Equal(t, false, doc["client_id_metadata_document_supported"], "CIMD §6: always sent, false until a verified server admits CIMD apps")
@@ -192,10 +194,10 @@ func TestDiscovery_HasEveryRequiredField(t *testing.T) {
 	for _, field := range []string{"request_parameter_supported", "request_uri_parameter_supported", "claims_parameter_supported"} {
 		assert.Equal(t, false, doc[field], "%s: request objects and the claims parameter are refused", field)
 	}
-	assert.Len(t, doc, 24, "nothing is advertised beyond what M6 answers")
+	assert.Len(t, doc, 24, "nothing is advertised beyond what Othra answers")
 }
 
-// K14: every URL a discovery document advertises answers, or answers the spec error; never 404 or 500.
+// every URL a discovery document advertises answers, or answers the spec error; never 404 or 500.
 func TestDiscovery_EveryAdvertisedURLAnswers(t *testing.T) {
 	for _, basePath := range []string{"", "/auth"} {
 		f := newFixture(t, basePath)
@@ -245,7 +247,7 @@ func TestJWKS_ServesTheProjectKeysWithAnETag(t *testing.T) {
 	assert.Positive(t, f.corsCalls, "public documents go through the CORS middleware")
 }
 
-// K13, SECURITY: an unknown, reserved or malformed handle answers one identical 404, so probing learns nothing.
+// SECURITY: an unknown, reserved or malformed handle answers one identical 404, so probing learns nothing.
 func TestUnknownHandlesAnswerOneIdentical404(t *testing.T) {
 	f := newFixture(t, "")
 	var first *httptest.ResponseRecorder
@@ -313,7 +315,7 @@ func TestIssuerCache(t *testing.T) {
 	assert.Equal(t, 3, f.issuers.calls)
 }
 
-// R-10: a renamed handle stops answering at once, not when its cache entry expires.
+// a renamed handle stops answering at once, not when its cache entry expires.
 func TestIssuerCache_AHandleChangeDropsTheOldHandle(t *testing.T) {
 	f := newFixture(t, "")
 	require.Equal(t, http.StatusOK, f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Code)
@@ -415,11 +417,11 @@ func (c *cimdProjects) AcceptsCIMD(ctx context.Context, _, _ uuid.UUID) (bool, e
 	return c.accept, c.err
 }
 
-// pm P3, CIMD §6: discovery says true only while the project admits CIMD clients, read under the project's scope.
+// CIMD §6: discovery says true only while the project admits CIMD clients, read under the project's scope.
 func TestDiscovery_CIMDFlagFollowsTheProject(t *testing.T) {
 	f := newFixture(t, "")
-	admissions := &cimdProjects{accept: true}
-	f.resolver.WithCIMD(admissions)
+	admissions := f.cimd
+	admissions.accept = true
 	var doc map[string]any
 	require.NoError(t, json.Unmarshal(f.do(t, http.MethodGet, "/p/acme-web/.well-known/openid-configuration").Body.Bytes(), &doc))
 	assert.Equal(t, true, doc["client_id_metadata_document_supported"])

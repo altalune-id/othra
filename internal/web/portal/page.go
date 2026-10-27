@@ -5,24 +5,12 @@ import (
 	"html"
 	"net/http"
 
+	"altalune.id/othra/internal/web/layout"
+	"altalune.id/othra/internal/web/middleware"
 	"altalune.id/othra/internal/web/spa"
 )
 
-// Values are one request's portal settings: the router base and this project's endpoints and brand.
-type Values struct {
-	BaseURL    string
-	APIURL     string
-	HostedURL  string
-	Handle     string
-	Project    string
-	LogoURL    string
-	TermsURL   string
-	PrivacyURL string
-	BrandCSS   string
-	Nonce      string
-}
-
-// Page serves the portal's index.html with one request's Values in Nuxt's runtime config.
+// Page serves the portal's index.html with one request's layout.PortalValues in Nuxt's runtime config.
 type Page struct {
 	spa *spa.SPA
 }
@@ -32,12 +20,13 @@ func NewPage(s *spa.SPA) *Page {
 	return &Page{spa: s}
 }
 
-// Serve writes the index for v, never cached. SECURITY: every value is a JSON string literal, so none can close its script.
-func (p *Page) Serve(w http.ResponseWriter, r *http.Request, v Values) {
+// Serve writes v's index, uncached, with its nonce scripts. SECURITY: every value is a JSON string literal, so none can close its script.
+func (p *Page) Serve(w http.ResponseWriter, r *http.Request, v layout.PortalValues) {
+	middleware.AllowNonceScripts(w, v.Nonce)
 	p.spa.Page(w, r, "no-store", replacements(v)...)
 }
 
-func replacements(v Values) []spa.Replacement {
+func replacements(v layout.PortalValues) []spa.Replacement {
 	nonce := html.EscapeString(v.Nonce)
 	rs := []spa.Replacement{
 		{Old: `baseURL:"/"`, New: `baseURL:` + literal(v.BaseURL)},

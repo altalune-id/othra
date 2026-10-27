@@ -79,7 +79,7 @@ func TestMCP_BadKeyIs401(t *testing.T) {
 	assert.Contains(t, string(body), `"code":"GEN002"`)
 }
 
-// Review Focus 1: no MCP tool answers with a UUID, for a key that sees org B.
+// no MCP tool answers with a UUID, for a key that sees org B.
 func TestMCP_ToolResultsHoldNoUUID(t *testing.T) {
 	f := newAPIFixture(t)
 	s := seedReach(t, f)
@@ -134,7 +134,7 @@ func TestMCP_ToolResultsHoldNoUUID(t *testing.T) {
 	assert.Greater(t, answered, len(list.Result.Tools)/2, "most tools must succeed for the check to mean anything")
 }
 
-// SECURITY: D4, no MCP tool hands out a client secret; a web client created over MCP has none.
+// SECURITY: no MCP tool hands out a client secret; a web client created over MCP has none.
 func TestMCP_ClientToolsNeverReturnASecret(t *testing.T) {
 	f := newAPIFixture(t)
 	s := seedReach(t, f)

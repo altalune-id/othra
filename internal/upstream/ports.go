@@ -16,7 +16,7 @@ type Refs interface {
 	ProjectID(ctx context.Context, publicID string) (id, orgID uuid.UUID, ok bool, err error)
 }
 
-// Issuers gives a project's issuer URL, which the redirect URI an admin registers at the upstream starts with (P11).
+// Issuers gives a project's issuer URL, which the redirect URI an admin registers at the upstream starts with.
 type Issuers interface {
 	IssuerURL(ctx context.Context, projectID uuid.UUID) (string, error)
 }

@@ -309,7 +309,7 @@ func TestDiscoveryChecks(t *testing.T) {
 	f := newFakeIDP(t)
 	f.iss = "https://another.example"
 	_, err := f.client().AuthCodeURL(context.Background(), AuthRequest{})
-	assert.Equal(t, ReasonMisconfigured, ReasonOf(err), "OIDC Discovery §4.3: the document names another issuer; A16: the deployer's to fix")
+	assert.Equal(t, ReasonMisconfigured, ReasonOf(err), "OIDC Discovery §4.3: the document names another issuer, the deployer's to fix")
 
 	_, err = New(Config{Issuer: "http://127.0.0.1:1"}).AuthCodeURL(context.Background(), AuthRequest{})
 	assert.Equal(t, ReasonDiscovery, ReasonOf(err), "unreachable")
@@ -365,7 +365,7 @@ func TestTTLPolicy(t *testing.T) {
 	}
 }
 
-// R-3: a failed refetch keeps serving the last good JWKS and discovery, and waits before trying again.
+// a failed refetch keeps serving the last good JWKS and discovery, and waits before trying again.
 func TestCache_ServesStaleAndBacksOff(t *testing.T) {
 	f := newFakeIDP(t)
 	clock := now
@@ -406,7 +406,7 @@ func TestCache_ServesStaleAndBacksOff(t *testing.T) {
 	assert.Equal(t, 3, jwks)
 }
 
-// R-3: Cache-Control max-age sets the discovery TTL.
+// Cache-Control max-age sets the discovery TTL.
 func TestCache_HonoursMaxAge(t *testing.T) {
 	f := newFakeIDP(t)
 	f.maxAge = "public, max-age=600"
@@ -421,7 +421,7 @@ func TestCache_HonoursMaxAge(t *testing.T) {
 	assert.Equal(t, 2, meta, "refetched after max-age, not after the 24 h fallback")
 }
 
-// R-3: a slow JWKS fetch neither blocks discovery readers nor runs once per caller.
+// a slow JWKS fetch neither blocks discovery readers nor runs once per caller.
 func TestCache_FetchesOutsideTheLock(t *testing.T) {
 	f := newFakeIDP(t)
 	c := f.client()
@@ -453,7 +453,7 @@ func TestCache_FetchesOutsideTheLock(t *testing.T) {
 	assert.Equal(t, 1, jwks, "five concurrent misses share one fetch")
 }
 
-// R-5, OIDC Core §3.1.3.7 step 7: only the algs the upstream IdP advertises, and a JWK's alg must be the token's.
+// OIDC Core §3.1.3.7 step 7: only the algs the upstream IdP advertises, and a JWK's alg must be the token's.
 func TestExchange_AlgPinning(t *testing.T) {
 	f := newFakeIDP(t)
 	c := f.client()
@@ -475,7 +475,7 @@ func TestExchange_AlgPinning(t *testing.T) {
 	assert.Equal(t, []jose.SignatureAlgorithm{jose.RS256}, signingAlgs(&Metadata{IDTokenSigningAlgValues: []string{"RS256", "HS256", "none"}}))
 }
 
-// R-6: only a registered error code reaches a log line.
+// only a registered error code reaches a log line.
 func TestExchange_ErrorIsAllowListed(t *testing.T) {
 	f := newFakeIDP(t)
 	c := f.client()
@@ -489,7 +489,7 @@ func TestExchange_ErrorIsAllowListed(t *testing.T) {
 	assert.Contains(t, err.Error(), "other")
 }
 
-// A15, spec V2: Google's two iss forms are accepted for its exact configuration; a downgraded scheme or a longer host is not.
+// Google's two iss forms are accepted for its exact configuration; a downgraded scheme or a longer host is not.
 func TestVerify_GoogleIssuerForms(t *testing.T) {
 	f := newFakeIDP(t)
 	c := New(Config{Issuer: "https://accounts.google.com", ClientID: "cid.apps", AcceptIssuers: []string{"accounts.google.com"}}).

@@ -83,7 +83,7 @@ func (s *Service) Enabled(ctx context.Context, p Project, kind upstream.Kind) (b
 	return slices.Contains(offered, kind), nil
 }
 
-// Start makes one sign-in attempt's secrets after checking the upstream is on; loginHint is P7's linked upstream email, or empty.
+// Start makes one sign-in attempt's secrets once the upstream is on; loginHint is the active account's upstream email or empty.
 func (s *Service) Start(ctx context.Context, p Project, kind upstream.Kind, loginHint string) (oidcrp.AuthRequest, error) {
 	if _, err := s.credentials(ctx, p, kind); err != nil {
 		return oidcrp.AuthRequest{}, err
@@ -108,7 +108,7 @@ func (s *Service) AuthURL(ctx context.Context, p Project, kind upstream.Kind, re
 	return u, nil
 }
 
-// Complete checks the callback against req and returns the upstream's identity, keyed by the kind's canonical issuer (P3).
+// Complete checks the callback against req and returns the upstream's identity, keyed by the kind's canonical issuer.
 func (s *Service) Complete(
 	ctx context.Context, p Project, kind upstream.Kind, redirectURI string, cb oidcrp.Callback, req oidcrp.AuthRequest,
 ) (Identity, error) {
@@ -130,7 +130,7 @@ func (s *Service) Complete(
 	}, nil
 }
 
-// SignIn signs id's person in (ADR-0014): a new verified email creates an end user; another end user's email is a *CollisionError.
+// SignIn signs id's person in: a new verified email creates an end user; another end user's email is a *CollisionError.
 func (s *Service) SignIn(ctx context.Context, p Project, id Identity, req SessionRequest) (*Session, error) {
 	if !trustedEmail(id) {
 		s.refused(ctx, p, id, "email_unverified")
@@ -139,7 +139,7 @@ func (s *Service) SignIn(ctx context.Context, p Project, id Identity, req Sessio
 	ctx = scope(ctx, p)
 	var out *Session
 	var err error
-	// NOTE: A21: a racing request that took the (iss, sub) or its email first is re-read by (iss, sub) and signed in as that end user.
+	// NOTE: a racing request that took the (iss, sub) or its email first is re-read by (iss, sub) and signed in as that end user.
 	for range 2 {
 		out, err = s.signIn(ctx, p, id, req)
 		if !errors.Is(err, errSubjectTaken) && !errors.Is(err, ErrEmailTaken) {
@@ -163,7 +163,7 @@ func (s *Service) SignIn(ctx context.Context, p Project, id Identity, req Sessio
 
 func trustedEmail(id Identity) bool { return id.EmailVerified && id.Email != "" }
 
-// SECURITY: P8 = A, R-1: Google vouches only for its own mailboxes and Workspace (hd) accounts; any other email needs its inbox.
+// SECURITY: Google vouches only for its own mailboxes and Workspace (hd) accounts; any other email needs its inbox.
 func authoritative(id Identity) bool {
 	if id.HostedDomain != "" {
 		return true
@@ -204,7 +204,7 @@ func (s *Service) signIn(ctx context.Context, p Project, id Identity, req Sessio
 	return out, err
 }
 
-// NOTE: A21: each read sees what committed before it, so a race winner can commit between the two; the email hit re-reads (iss, sub).
+// NOTE: each read sees what committed before it, so a race winner can commit between the two; the email hit re-reads (iss, sub).
 func (s *Service) lookup(ctx context.Context, p Project, id Identity) (*storedIdentity, error) {
 	stored, err := s.store.BySubject(ctx, p.ID, id.Issuer, id.Subject)
 	if err != nil || stored != nil {
@@ -225,7 +225,7 @@ func (s *Service) collision(ctx context.Context, p Project, id Identity) error {
 	return &CollisionError{Email: id.Email, Identity: id}
 }
 
-// Link links id to endUserID in the unit of work on ctx; linking it again to the same end user is a no-op (ADR-0014 LinkToUser).
+// Link links id to endUserID in the unit of work on ctx; linking it again to the same end user is a no-op.
 func (s *Service) Link(ctx context.Context, p Project, endUserID uuid.UUID, id Identity) error {
 	ctx = scope(ctx, p)
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
@@ -296,7 +296,7 @@ func (s *Service) Unlink(ctx context.Context, p Project, endUserID uuid.UUID, id
 	return nil
 }
 
-// SECURITY: F8, L7: an identity may go only while another sign-in method is left; Unlink and SignInMethods share this one rule.
+// SECURITY: an identity may go only while another sign-in method is left; Unlink and SignInMethods share this one rule.
 func canRemove(emailLink bool, identities int) bool {
 	left := identities - 1
 	if emailLink {
@@ -371,7 +371,7 @@ func (s *Service) credentials(ctx context.Context, p Project, kind upstream.Kind
 	return creds, err
 }
 
-// NOTE: F11: upstreams.google.issuerOverride swaps Google's issuer for a qa fake IdP, scheme-less in place of accounts.google.com.
+// NOTE: upstreams.google.issuerOverride swaps Google's issuer for a qa fake IdP, scheme-less in place of accounts.google.com.
 func (s *Service) spec(kind upstream.Kind) upstream.Spec {
 	spec, _ := upstream.SpecOf(kind)
 	if kind == upstream.KindGoogle && s.cfg.GoogleIssuerOverride != "" {
@@ -381,7 +381,7 @@ func (s *Service) spec(kind upstream.Kind) upstream.Spec {
 	return spec
 }
 
-// NOTE: R-6: one client per upstream, replaced when its client id, secret, redirect URI or issuer changes, so no old secret stays.
+// NOTE: one client per upstream, replaced when its client id, secret, redirect URI or issuer changes, so no old secret stays.
 func (s *Service) client(
 	ctx context.Context, p Project, kind upstream.Kind, redirectURI string,
 ) (*oidcrp.Client, *upstream.Credentials, error) {
@@ -412,7 +412,7 @@ type cachedClient struct {
 	client      *oidcrp.Client
 }
 
-// NOTE: A16, BL-7: a misconfigured upstream logs at ERROR, a person's own cancel at INFO, any other upstream failure at WARN.
+// NOTE: a misconfigured upstream logs at ERROR, a person's own cancel at INFO, any other upstream failure at WARN.
 func (s *Service) upstreamError(ctx context.Context, p Project, err error) error {
 	reason, level := oidcrp.ReasonOf(err), slog.LevelWarn
 	switch reason {

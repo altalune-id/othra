@@ -16,13 +16,13 @@ func TestConsent_Covers(t *testing.T) {
 	assert.False(t, none.Covers([]string{"openid"}))
 }
 
-// C5, authl gap 1: approving again adds to what was approved, never narrows it.
+// approving again adds to what was approved, never narrows it.
 func TestUnion(t *testing.T) {
 	assert.Equal(t, []string{"openid", "sample:read", "sample:write"}, Union([]string{"openid", "sample:read"}, []string{"sample:write", "openid"}))
 	assert.Equal(t, []string{"a"}, Union(nil, []string{"a", "a"}))
 }
 
-// C5: the page lists the new scopes first, then the ones approved before.
+// the page lists the new scopes first, then the ones approved before.
 func TestSplit(t *testing.T) {
 	c := &Consent{Scopes: []string{"openid", "sample:read"}}
 	fresh, before := c.Split([]string{"openid", "sample:write", "sample:read", "offline_access"})
@@ -34,7 +34,7 @@ func TestSplit(t *testing.T) {
 	assert.Empty(t, before)
 }
 
-// E4, D2, D5 retired, C1–C3: who sees which page.
+// who sees which page.
 func TestDecide(t *testing.T) {
 	t0 := time.Date(2026, 10, 23, 9, 0, 0, 0, time.UTC)
 	stored := &Consent{Scopes: []string{"openid", "sample:read"}, UpdatedAt: t0}

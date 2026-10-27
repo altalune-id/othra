@@ -224,7 +224,7 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, h.open, c.Server)
 }
 
-// M8 P6, P7, A9: every refusal has its code.
+// every refusal has its code.
 func TestCreate_Refused(t *testing.T) {
 	ctx := context.Background()
 	for name, tc := range map[string]struct {
@@ -310,7 +310,7 @@ func TestListRevokeAndServers(t *testing.T) {
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
 }
 
-// RFC 7662 §2.2, M8 P4: a personal token is active only for its own server, while live and while that server takes tokens.
+// RFC 7662 §2.2: a personal token is active only for its own server, while live and while that server takes tokens.
 func TestIntrospect(t *testing.T) {
 	h := newHarness(t)
 	ctx := context.Background()

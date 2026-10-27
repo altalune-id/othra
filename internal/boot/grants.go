@@ -35,11 +35,8 @@ func grantConfig(c config.OAuthConfig) grant.Config {
 
 func buildGrants(k kernel.Kernel, cfg config.Config, uow db.Transactor, signing *keys.Service, audiences grant.Audiences) *grant.Service {
 	store := grant.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
-	svc := grant.NewService(store, uow, grantConfig(cfg.OAuth), k.Reporter.Unexpected).WithLogger(orDiscard(k.Log))
-	if signing != nil {
-		svc.WithResources(accessTokenSigner{signer: keys.NewSigner(signing)}, audiences)
-	}
-	return svc
+	return grant.NewService(store, uow, accessTokenSigner{signer: keys.NewSigner(signing)}, audiences, grantConfig(cfg.OAuth),
+		k.Reporter.Unexpected).WithLogger(orDiscard(k.Log))
 }
 
 type accessTokenSigner struct{ signer *keys.Signer }

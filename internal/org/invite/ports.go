@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel/events"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/legal"
@@ -44,7 +43,7 @@ type Memberships interface {
 
 // SignIn signs a person in with the password they just chose, and ends a session.
 type SignIn interface {
-	LoginLocal(ctx context.Context, c auth.Credentials) (session.Principal, error)
+	LoginLocal(ctx context.Context, email, password string) (session.Principal, error)
 	Logout(ctx context.Context, sid string) error
 }
 

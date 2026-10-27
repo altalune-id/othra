@@ -16,7 +16,7 @@ func TestBuiltinPermissions(t *testing.T) {
 	assert.True(t, scope.Grants(BuiltinPermissions(RoleMember), scope.WebhookWrite))
 	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.ProjectWrite))
 	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.MemberWrite))
-	assert.True(t, scope.Grants(BuiltinPermissions(RoleAdmin), scope.EndUserRevoke), "M8 P14: project admins view and revoke end users")
+	assert.True(t, scope.Grants(BuiltinPermissions(RoleAdmin), scope.EndUserRevoke), "project admins view and revoke end users")
 	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.EndUserRead), "end users' emails and sessions are admin-only")
 	assert.Empty(t, BuiltinPermissions("root"))
 }

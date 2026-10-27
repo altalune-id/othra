@@ -28,7 +28,7 @@ func (h *harness) verified(t *testing.T, identifier string, scopes ...string) *R
 	return got
 }
 
-// E10, RSV010, RSV011, RSV009: admission is turned on only for an admissible server, with valid hosts and catalog scopes.
+// RSV010, RSV011, RSV009: admission is turned on only for an admissible server, with valid hosts and catalog scopes.
 func TestService_SetAdmission(t *testing.T) {
 	h := newHarness(t, false)
 	ctx := context.Background()
@@ -74,7 +74,7 @@ func TestService_SetAdmission(t *testing.T) {
 	assert.True(t, ok)
 }
 
-// R4, M2: a registered client needs a link to an admissible server; a metadata document client needs admission from its host.
+// a registered client needs a link to an admissible server; a metadata document client needs admission from its host.
 func TestService_ResolveAndAdmits(t *testing.T) {
 	h := newHarness(t, false)
 	ctx := context.Background()
@@ -126,7 +126,7 @@ func TestService_ResolveAndAdmits(t *testing.T) {
 	assert.False(t, ok, "an unknown server")
 }
 
-// E10, CLT008: a metadata document client's links change only through admission; its links never block a delete.
+// CLT008: a metadata document client's links change only through admission; its links never block a delete.
 func TestService_ManagedClientLinks(t *testing.T) {
 	h := newHarness(t, false)
 	ctx := context.Background()
@@ -136,7 +136,7 @@ func TestService_ManagedClientLinks(t *testing.T) {
 	assert.Equal(t, apperror.CodeClientMetadataManaged, codeOf(err))
 	assert.Equal(t, apperror.CodeClientMetadataManaged, codeOf(h.svc.UnlinkClient(ctx, h.org, h.project, cimd.PublicID, r.PublicID)))
 	require.NoError(t, h.svc.LinkMetadataClient(ctx, h.org, h.project, cimd.ID, r.ID, []string{"read"}))
-	require.NoError(t, h.svc.Delete(ctx, h.org, h.project, r.PublicID), "qa F-3: CIMD links go with the server")
+	require.NoError(t, h.svc.Delete(ctx, h.org, h.project, r.PublicID), "CIMD links go with the server")
 	assert.Empty(t, h.store.links)
 }
 

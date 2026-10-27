@@ -123,7 +123,7 @@ func TestErrorTemplate(t *testing.T) {
 	assert.Contains(t, out, `href="/app/console/"`)
 }
 
-// SECURITY: S1, an end-user error page never links to the console.
+// SECURITY: an end-user error page never links to the console.
 func TestErrorTemplate_WithoutHome(t *testing.T) {
 	out := renderString(t, Error(LayoutData{BasePath: "/app", Title: "Oops"}, "Try again"))
 	assert.Contains(t, out, "<p>Try again</p>")

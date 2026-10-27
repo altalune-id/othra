@@ -21,7 +21,7 @@ import (
 
 func newOrgServiceClient(t *testing.T, store org.Store) orgv1connect.OrgServiceClient {
 	t.Helper()
-	_, handler := orgv1connect.NewOrgServiceHandler(org.NewControlPlane(org.NewService(store, fakes.Transactor{}, nil)),
+	_, handler := orgv1connect.NewOrgServiceHandler(org.NewControlPlane(org.NewService(store, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)),
 		connect.WithInterceptors(fakes.OperatorInterceptor()))
 	ts := httptest.NewServer(handler)
 	t.Cleanup(ts.Close)
@@ -92,9 +92,9 @@ func TestOrgService_ListOrgs_StoreError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// Review Focus 4: with no request rules in front, the domain still refuses a bad name and slug.
+// with no request rules in front, the domain still refuses a bad name and slug.
 func TestOrgService_DomainRefusesWithoutTheRules(t *testing.T) {
-	h := org.NewControlPlane(org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, nil).WithCreation(true))
+	h := org.NewControlPlane(org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil).WithCreation(true))
 	for name, tc := range map[string]struct {
 		req  *orgv1.CreateOrgRequest
 		want apperror.Code

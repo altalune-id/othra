@@ -15,7 +15,7 @@ import (
 // Prefix starts every personal token, so secret scanners find a leaked one and introspection routes it here.
 const Prefix = "othra_pt_" //nolint:gosec // G101: a prefix, not a credential.
 
-// The personal-token limits (profile §2.5, pm M8 P6).
+// The personal-token limits.
 const (
 	MaxLive     = 20
 	MaxLifetime = 90 * 24 * time.Hour

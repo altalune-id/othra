@@ -30,7 +30,7 @@ type Service struct {
 	now         func() time.Time
 }
 
-// SignInMethods says what else a project's end users can sign in with, for the email-link guard (F8).
+// SignInMethods says what else a project's end users can sign in with, for the email-link guard.
 type SignInMethods interface {
 	UpstreamEnabled(ctx context.Context, orgID, projectID uuid.UUID) (bool, error)
 	AnyEndUserUnlinked(ctx context.Context, orgID, projectID uuid.UUID) (bool, error)
@@ -42,20 +42,20 @@ func (s *Service) WithSignInMethods(m SignInMethods) *Service {
 	return s
 }
 
-// NewService builds a Service over store, without file storage until WithStorage.
-func NewService(store Store, unexpected apperror.UnexpectedFunc) *Service {
-	return &Service{store: store, unexpected: unexpected, files: noStorage{}, now: time.Now}
+// NewService builds a Service over store, issuing under issuerBase; Create runs afterCreate, unless nil, in the new project's unit of work.
+func NewService(
+	store Store, tx db.Transactor, members Members, afterCreate func(ctx context.Context, p *Project) error, issuerBase string,
+	unexpected apperror.UnexpectedFunc,
+) *Service {
+	return &Service{
+		store: store, tx: tx, members: members, afterCreate: afterCreate, issuerBase: issuerBase, unexpected: unexpected,
+		files: noStorage{}, now: time.Now,
+	}
 }
 
-// WithStorage keeps project files such as the logo in files, attaching them in units of work run by tx.
-func (s *Service) WithStorage(files FileStorage, tx db.Transactor) *Service {
-	s.files, s.tx = files, tx
-	return s
-}
-
-// WithAfterCreate runs hook in the new project's unit of work, so a failing hook rolls the project back.
-func (s *Service) WithAfterCreate(hook func(ctx context.Context, p *Project) error) *Service {
-	s.afterCreate = hook
+// WithStorage keeps project files such as the logo in files; without it, uploads are off.
+func (s *Service) WithStorage(files FileStorage) *Service {
+	s.files = files
 	return s
 }
 
@@ -68,12 +68,6 @@ func (s *Service) WithOnIssuerChange(fn func(projectID uuid.UUID)) *Service {
 // WithOrgSlugs names the org slugs a new project's default issuer handle is built from.
 func (s *Service) WithOrgSlugs(o OrgSlugs) *Service {
 	s.orgSlugs = o
-	return s
-}
-
-// WithIssuerBase sets the public base URL every issuer URL starts with.
-func (s *Service) WithIssuerBase(base string) *Service {
-	s.issuerBase = base
 	return s
 }
 
@@ -149,9 +143,6 @@ func (s *Service) save(ctx context.Context, p *Project) (hookErr, err error) {
 		}
 		hookErr = s.afterCreate(ctx, p)
 		return hookErr
-	}
-	if s.tx == nil {
-		return hookErr, run(ctx)
 	}
 	// SECURITY: a new project's unit of work is scoped to its org only, never the caller's active project.
 	scoped := tenant.Into(ctx, tenant.Context{OrgID: p.OrgID, UserID: tenant.Peek(ctx).UserID})
@@ -257,7 +248,7 @@ func (s *Service) LockIssuerHandle(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// SECURITY: F8, R1: with the project row locked, the email link goes off only while every end user can sign in another way.
+// SECURITY: with the project row locked, the email link goes off only while every end user can sign in another way.
 func (s *Service) SetSignInEmailLink(ctx context.Context, id uuid.UUID, on bool) (*Project, error) {
 	var out *Project
 	err := s.inTx(ctx, func(ctx context.Context) error {
@@ -321,9 +312,6 @@ func (s *Service) LockEmailLink(ctx context.Context, id uuid.UUID) (bool, error)
 }
 
 func (s *Service) inTx(ctx context.Context, fn func(ctx context.Context) error) error {
-	if s.tx == nil {
-		return fn(ctx)
-	}
 	return s.tx.RunInTx(ctx, fn)
 }
 
@@ -357,17 +345,8 @@ func (s *Service) issuerChanged(p *Project, err error) (*Project, error) {
 	return p, err
 }
 
-// WithMembers lets a person list the projects of every org they belong to, not only the active one.
-func (s *Service) WithMembers(m Members) *Service {
-	s.members = m
-	return s
-}
-
-// IsMember reports whether userID belongs to orgID; without WithMembers nobody does.
+// IsMember reports whether userID belongs to orgID.
 func (s *Service) IsMember(ctx context.Context, orgID, userID uuid.UUID) (bool, error) {
-	if s.members == nil {
-		return false, nil
-	}
 	ok, err := s.members.IsMember(ctx, orgID, userID)
 	if err != nil {
 		return false, s.errOrReport(ctx, "project: membership", err)

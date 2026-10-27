@@ -120,7 +120,7 @@ func ParseMetadata(clientID string, body []byte) (*Metadata, error) {
 		return nil, &MetadataError{Reason: MetadataClientName}
 	case redirecturi.ValidateList(redirecturi.Native, d.RedirectURIs, true) != nil:
 		return nil, &MetadataError{Reason: MetadataRedirectURIs}
-	// NOTE: R-11, RFC 7591 §2: an omitted token_endpoint_auth_method is client_secret_basic, which a CIMD client can't use.
+	// NOTE: RFC 7591 §2: an omitted token_endpoint_auth_method is client_secret_basic, which a CIMD client can't use.
 	case d.ClientSecret != nil || d.ClientSecretExpiresAt != nil || d.TokenEndpointAuthMethod != AuthNone:
 		return nil, &MetadataError{Reason: MetadataAuthMethod}
 	case !subset(d.GrantTypes, GrantAuthorizationCode, GrantRefreshToken) || !subset(d.ResponseTypes, "code"):

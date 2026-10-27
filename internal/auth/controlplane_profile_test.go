@@ -61,7 +61,7 @@ func TestProfileRPCs(t *testing.T) {
 	ada := &user.User{ID: uuid.New(), PublicID: "adaUserPublicId000001", Email: "ada@example.com"}
 	person := session.Principal{UserID: ada.ID, Email: ada.Email, Source: session.SourceLocal}
 	rec := &recordedProfiles{user: ada}
-	s := NewControlPlane(orgByID{}, projectByID{}, userByID{ada.ID: ada}).WithProfiles(rec)
+	s := NewControlPlane(orgByID{}, projectByID{}, userByID{ada.ID: ada}, rec)
 
 	got, err := s.UpdateProfile(profileCtx(person, "sid-1"), connect.NewRequest(&authv1.UpdateProfileRequest{Name: "Ada Lovelace"}))
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestProfileRPCs(t *testing.T) {
 
 func TestProfileRPCs_PersonOnly(t *testing.T) {
 	rec := &recordedProfiles{user: &user.User{}}
-	s := NewControlPlane(orgByID{}, projectByID{}, userByID{}).WithProfiles(rec)
+	s := NewControlPlane(orgByID{}, projectByID{}, userByID{}, rec)
 	for name, p := range map[string]session.Principal{
 		"api key":      {Source: session.SourceAPIKey, KeyID: uuid.New()},
 		"personal key": {Source: session.SourceAPIKey, KeyID: uuid.New(), OwnerID: uuid.New()},
@@ -111,7 +111,7 @@ func TestProfileRPCs_Errors(t *testing.T) {
 	ada := &user.User{ID: uuid.New(), PublicID: "adaUserPublicId000001"}
 	person := session.Principal{UserID: ada.ID, Source: session.SourceLocal}
 	rec := &recordedProfiles{user: ada, err: &InvalidCredentialsError{}}
-	s := NewControlPlane(orgByID{}, projectByID{}, userByID{}).WithProfiles(rec)
+	s := NewControlPlane(orgByID{}, projectByID{}, userByID{}, rec)
 	_, err := s.UpdateProfile(profileCtx(person, ""), connect.NewRequest(&authv1.UpdateProfileRequest{}))
 	assert.True(t, IsInvalidCredentialsError(err))
 	_, err = s.ChangePassword(profileCtx(person, ""), connect.NewRequest(&authv1.ChangePasswordRequest{}))

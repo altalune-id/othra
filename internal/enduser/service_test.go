@@ -34,11 +34,25 @@ func testConfig() Config {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
+	return newHarnessWith(t, &fakeGrants{}, nil)
+}
+
+type projectSwitch struct{ h *harness }
+
+func (s projectSwitch) LockEmailLink(context.Context, uuid.UUID) (bool, error) {
+	return s.h.project.EmailLink, nil
+}
+
+func newHarnessWith(t *testing.T, grants Grants, signIn SignInSwitch) *harness {
+	t.Helper()
 	h := &harness{
 		store: newFakeStore(), mail: &fakeMail{}, now: time.Date(2026, 10, 21, 9, 0, 0, 0, time.UTC),
 		project: Project{OrgID: uuid.New(), ID: uuid.New(), IssuerURL: "https://id.example.com/p/acme", EmailLink: true},
 	}
-	h.svc = NewService(h.store, fakes.Transactor{}, h.mail, testConfig(), apperror.NewReporter(nil, false).Unexpected).
+	if signIn == nil {
+		signIn = projectSwitch{h}
+	}
+	h.svc = NewService(h.store, fakes.Transactor{}, h.mail, grants, signIn, testConfig(), apperror.NewReporter(nil, false).Unexpected).
 		WithClock(func() time.Time { return h.now })
 	return h
 }
@@ -181,7 +195,7 @@ func TestRedeem_SignsInOnceAndRotatesTheBrowserSecret(t *testing.T) {
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err))
 
 	repeat, err := h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL), BrowserSecret: r.Secret})
-	require.NoError(t, err, "H23: a second Continue from the same browser succeeds")
+	require.NoError(t, err, "a second Continue from the same browser succeeds")
 	assert.Equal(t, r.Secret, repeat.Secret, "and signs nobody new in")
 	assert.Equal(t, r.Account.PublicID, repeat.Account.PublicID)
 
@@ -345,7 +359,7 @@ func TestTerms(t *testing.T) {
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
 }
 
-// F4: an acceptance of the version the page showed only; a changed version shows the current terms again.
+// an acceptance of the version the page showed only; a changed version shows the current terms again.
 func TestAcceptTerms_TheVersionTheUserSaw(t *testing.T) {
 	h := newHarness(t)
 	r := h.signIn(t, "ada@example.com", "")
@@ -397,7 +411,7 @@ func TestSendLink_TheLimitRunsAfterTheCooldown(t *testing.T) {
 	assert.ErrorIs(t, err, errFake, "a limiter error is returned as is")
 }
 
-// F7: a concurrent request that already issued the email's live link answers like the cooldown.
+// a concurrent request that already issued the email's live link answers like the cooldown.
 func TestSendLink_ARaceOnTheLiveLinkIsACooldown(t *testing.T) {
 	h := newHarness(t)
 	h.store.raceInsert = true
@@ -408,7 +422,7 @@ func TestSendLink_ARaceOnTheLiveLinkIsACooldown(t *testing.T) {
 	assert.Empty(t, h.mail.sent)
 }
 
-// F3: one line per sign-in and terms acceptance, with public ids only.
+// one line per sign-in and terms acceptance, with public ids only.
 func TestRedeemAndAcceptTerms_LogOneLineEach(t *testing.T) {
 	h := newHarness(t)
 	var buf bytes.Buffer

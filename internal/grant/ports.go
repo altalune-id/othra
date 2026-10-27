@@ -12,7 +12,7 @@ type Projects interface {
 	Each(ctx context.Context, fn func(ctx context.Context, orgID, projectID uuid.UUID) error) error
 }
 
-// AccessToken is the claim set of an at+jwt access token (RFC 9068 §2.2, owner D4: no profile claims).
+// AccessToken is the claim set of an at+jwt access token (RFC 9068 §2.2, with no profile claims).
 type AccessToken struct {
 	Audience  string
 	Subject   string

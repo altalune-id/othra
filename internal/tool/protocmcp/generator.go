@@ -191,7 +191,7 @@ func newTool(method *protogen.Method, spec *mcpv1.Tool, opts Options) (tool, err
 //nolint:gochecknoglobals // fixed field names.
 var secretFieldNames = []protoreflect.Name{"secret", "plaintext"}
 
-// TODO: remove CreateWebhook once webhook_create stops returning its secret over MCP (BACKLOG, D4).
+// TODO: remove CreateWebhook once webhook_create stops returning its secret over MCP, since a tool result must never carry a secret.
 //
 //nolint:gochecknoglobals // a fixed allowlist.
 var secretToolAllowed = map[protoreflect.FullName]bool{

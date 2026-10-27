@@ -22,7 +22,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
 
 ## Build
 
-1. **View.** Add `internal/<domain>/views/<noun>.templ` (package `views`). The component is a plain noun with an `XxxData` input. It imports only `internal/web/layout`, never its own domain.
+1. **View.** Add `internal/<domain>/views/<noun>.templ` (package `views`). The component is a plain noun with an `XxxData` input. It imports only `internal/web/layout` (and `internal/web/i18n` on a hosted end-user page), never its own domain.
 
    ```templ
    package views
@@ -113,7 +113,7 @@ A server-rendered templ page that a person opens **before** they are signed in: 
 
 - [ ] The page is pre-sign-in. Nothing signed-in was added as templ.
 - [ ] The page sets no cache header of its own: every route on this mux answers `Cache-Control: no-store` (`middleware.NoStore`, `TestPreSignInRoutesAreNeverCached`).
-- [ ] The view lives in `internal/<domain>/views`, has an `XxxData` input and imports only `internal/web/layout`.
+- [ ] The view lives in `internal/<domain>/views`, has an `XxxData` input and imports only `internal/web/layout` (plus `internal/web/i18n` on a hosted page).
 - [ ] `internal/web` imports no domain; the domain imports no `internal/web` other than `layout`.
 - [ ] Every route uses `Kit.Path`; every link `d.Href`; every asset `d.Static`.
 - [ ] Every form that takes an email, password or token is rate limited and answers the same for known and unknown emails.

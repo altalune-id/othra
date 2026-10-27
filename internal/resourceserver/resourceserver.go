@@ -144,7 +144,7 @@ func (f Failure) mismatch() bool {
 	return f.Reason == FailureResourceMismatch || f.Reason == FailureIssuerMissing
 }
 
-// Admissible reports whether tokens may be minted for the server; M6 /authorize, /token and CIMD admission call only this.
+// Admissible reports whether tokens may be minted for the server; /authorize, /token and CIMD admission call only this.
 func (r *ResourceServer) Admissible(trustAvailable bool) bool {
 	return r.State == StateVerified || (r.Trusted && trustAvailable)
 }
@@ -156,7 +156,7 @@ type Admission struct {
 	Scopes []string
 }
 
-// SECURITY: M2, ADR-0021 D1: only an admissible server that accepts metadata document clients, from a listed host (none listed: any).
+// SECURITY: only an admissible server that accepts metadata document clients, from a listed host (none listed: any).
 func (r *ResourceServer) AdmitsMetadataClient(host string, trustAvailable bool) bool {
 	if !r.Admission.Accept || !r.Admissible(trustAvailable) {
 		return false

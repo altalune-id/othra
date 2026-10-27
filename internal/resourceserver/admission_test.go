@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// M2, ADR-0021 D1: admission is off by default, needs an admissible server, and checks the client_id host.
+// admission is off by default, needs an admissible server, and checks the client_id host.
 func TestResourceServer_AdmitsMetadataClient(t *testing.T) {
 	now := time.Now()
 	verified := &ResourceServer{State: StateVerified, VerifiedAt: &now, Scopes: []string{"sample:read", "sample:write"}}
@@ -25,13 +25,13 @@ func TestResourceServer_AdmitsMetadataClient(t *testing.T) {
 	assert.False(t, verified.AdmitsMetadataClient("sub.claude.ai", false), "never a suffix match")
 
 	pending := &ResourceServer{State: StatePending, Admission: Admission{Accept: true}}
-	assert.False(t, pending.AdmitsMetadataClient("claude.ai", true), "R4: only an admissible server")
+	assert.False(t, pending.AdmitsMetadataClient("claude.ai", true), "only an admissible server")
 	trusted := &ResourceServer{State: StatePending, Trusted: true, Admission: Admission{Accept: true}}
 	assert.True(t, trusted.AdmitsMetadataClient("claude.ai", true))
 	assert.False(t, trusted.AdmitsMetadataClient("claude.ai", false))
 }
 
-// R7: CIMD clients get the pinned scopes, or the whole catalog.
+// CIMD clients get the pinned scopes, or the whole catalog.
 func TestResourceServer_MetadataClientScopes(t *testing.T) {
 	r := &ResourceServer{Scopes: []string{"sample:read", "sample:write"}}
 	assert.Equal(t, []string{"sample:read", "sample:write"}, r.MetadataClientScopes())
@@ -42,7 +42,7 @@ func TestResourceServer_MetadataClientScopes(t *testing.T) {
 	assert.Equal(t, "sample:read", r.Admission.Scopes[0], "a copy")
 }
 
-// E10, RSV010: allowed hosts are lower-case DNS names, no IP literals, no repeats, at most 64.
+// RSV010: allowed hosts are lower-case DNS names, no IP literals, no repeats, at most 64.
 func TestValidateClientHosts(t *testing.T) {
 	require.NoError(t, ValidateClientHosts(nil))
 	require.NoError(t, ValidateClientHosts([]string{"claude.ai", "cimd.test", "a-b.example.co.id"}))

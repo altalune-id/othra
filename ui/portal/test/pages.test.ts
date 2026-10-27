@@ -49,14 +49,14 @@ beforeEach(() => {
 });
 
 describe('portal shell', () => {
-  it('sets <html lang> from the locale and keeps the portal\'s own theme key (M8 design 1, 4; N6)', async () => {
+  it('sets <html lang> from the locale and keeps the portal\'s own theme key', async () => {
     await mountPage(App, { global: { stubs: { NuxtLayout: { template: '<slot />' }, NuxtPage: true } } });
     const head = useHead.mock.calls[0]![0] as { htmlAttrs: { lang: { value: string } } };
     expect(head.htmlAttrs.lang.value).toBe('en-US');
     expect(appConfig.theme).toEqual({ storageKey: 'othra_portal_theme', followSystem: true });
   });
 
-  it('opens the account menu from a focusable trigger and switches account back to the portal base (P1-1, P2-11)', async () => {
+  it('opens the account menu from a focusable trigger and switches account back to the portal base', async () => {
     const w = await mountPage(Layout);
     const trigger = w.findAll('.dropdown [role="button"][aria-haspopup="true"]').find(b => b.text().includes('menu.account'))!;
     expect(trigger.element.tagName).toBe('DIV');
@@ -72,7 +72,7 @@ describe('portal shell', () => {
 });
 
 describe('sessions page', () => {
-  it('shows a Retry and no list under a load error (A26)', async () => {
+  it('shows a Retry and no list under a load error', async () => {
     setKnownKeys('apperror.GEN900');
     client.listSessions!.mockRejectedValueOnce(connectError('GEN900'));
     const w = await mountPage(Sessions);
@@ -99,7 +99,7 @@ describe('sessions page', () => {
 });
 
 describe('connected apps page', () => {
-  it('shows the sign-in line alongside the server lines, and words the disconnect by consent (A14, M8 design 7)', async () => {
+  it('shows the sign-in line alongside the server lines, and words the disconnect by consent', async () => {
     client.listConnectedApps!.mockResolvedValueOnce({ apps: [app('Notes CLI', true), { ...app('Sign-in only', false), clientId: 'B6rTn1YkM8wQz3XpL5vGd', resources: [] }] });
     const w = await mountPage(Apps, { attachTo: document.body });
     const [first, second] = w.findAll('[data-testid="app"]');
@@ -141,7 +141,7 @@ describe('sign-in methods page', () => {
     w.unmount();
   });
 
-  it('shows the connected notice once and drops ?linked=1 after mount (pm K-1)', async () => {
+  it('shows the connected notice once and drops ?linked=1 after mount', async () => {
     setRoute({ path: '/sign-in', query: { linked: '1' } });
     const w = await mountPage(SignIn);
     expect(w.get('.alert').text()).toBe('methods.connected');

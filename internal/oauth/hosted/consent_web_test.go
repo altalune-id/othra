@@ -39,7 +39,7 @@ func (f *webFixture) toConsent(c *http.Client, authorize string) hostedPage {
 	return page
 }
 
-// A9, A10, C5, C6: the first consent shows the full page; Allow stores the scopes and the code follows.
+// the first consent shows the full page; Allow stores the scopes and the code follows.
 func TestConsent_FirstTimeThenRemembered(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -57,24 +57,24 @@ func TestConsent_FirstTimeThenRemembered(t *testing.T) {
 	stored := f.consents.stored(f.consentKey("ana@example.com", "nat"))
 	require.NotNil(t, stored)
 	assert.Equal(t, []string{"openid", "profile", "email", "offline_access", "sample:read", "sample:write"}, f.consents.grants[0].Allowed,
-		"R-6: the OIDC scopes and the server's catalog")
+		"the OIDC scopes and the server's catalog")
 	assert.Equal(t, []string{"openid", "sample:read", "offline_access"}, stored.Scopes)
 
 	again := f.toConsent(f.client, natURL())
-	assert.Contains(t, again.body, "Continue to Native App", "D2: remembered on a public client is one click")
+	assert.Contains(t, again.body, "Continue to Native App", "remembered on a public client is one click")
 	assert.NotContains(t, again.body, "Read your samples", "no scope list")
 	done := f.submit(f.client, again, "/consent", nil)
 	assert.NotEmpty(t, redirectParams(t, f.follow(f.client, done)).Get("code"))
 
 	more := f.toConsent(f.client, natURL("scope", "openid sample:read sample:write"))
-	assert.Contains(t, more.body, "sample:write", "C5: a new scope shows the full page")
+	assert.Contains(t, more.body, "sample:write", "a new scope shows the full page")
 	assert.Contains(t, more.body, "Allowed before")
 	f.submit(f.client, more, "/consent", nil)
 	assert.Equal(t, []string{"openid", "sample:read", "offline_access", "sample:write"},
 		f.consents.stored(f.consentKey("ana@example.com", "nat")).Scopes, "the union")
 }
 
-// A11, D2: a confidential client with a remembered consent goes straight through.
+// a confidential client with a remembered consent goes straight through.
 func TestConsent_RememberedConfidential(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -86,7 +86,7 @@ func TestConsent_RememberedConfidential(t *testing.T) {
 	assert.NotEmpty(t, redirectParams(t, p).Get("code"))
 }
 
-// A13, C2, D5 retired: prompt=consent always shows the full page, and approving it does not loop.
+// prompt=consent always shows the full page, and approving it does not loop.
 func TestConsent_PromptConsent(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -101,7 +101,7 @@ func TestConsent_PromptConsent(t *testing.T) {
 	}
 }
 
-// A14, C3, C7: Deny answers access_denied and stores nothing; prompt=none without consent is consent_required.
+// Deny answers access_denied and stores nothing; prompt=none without consent is consent_required.
 func TestConsent_DenyAndPromptNone(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -128,7 +128,7 @@ func TestConsent_DenyAndPromptNone(t *testing.T) {
 	assert.Empty(t, f.consents.grants)
 }
 
-// A9: an implicit client without prompt=consent is admin consent; nothing is stored or shown.
+// an implicit client without prompt=consent is admin consent; nothing is stored or shown.
 func TestConsent_ImplicitClient(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -137,7 +137,7 @@ func TestConsent_ImplicitClient(t *testing.T) {
 	assert.Empty(t, f.consents.grants)
 }
 
-// G3: prompt=login and consent together still end in a code: the consent page keeps the sign-in marker.
+// prompt=login and consent together still end in a code: the consent page keeps the sign-in marker.
 func TestConsent_AfterFreshSignIn(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -152,7 +152,7 @@ func TestConsent_AfterFreshSignIn(t *testing.T) {
 	assert.NotEmpty(t, redirectParams(t, final).Get("code"), "no loop back to sign-in")
 }
 
-// C6, A9: a metadata document client shows its host, the unverified note and the loopback warning.
+// a metadata document client shows its host, the unverified note and the loopback warning.
 func TestConsent_MetadataClient(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -166,7 +166,7 @@ func TestConsent_MetadataClient(t *testing.T) {
 	assert.True(t, strings.HasPrefix(done.location(), "http://localhost:53999/callback?"), done.location())
 }
 
-// R-1: a throttled metadata document fetch is the 429 page with Retry-After, never a 500.
+// a throttled metadata document fetch is the 429 page with Retry-After, never a 500.
 func TestAuthorize_MetadataFetchThrottled(t *testing.T) {
 	f := newWebFixture(t)
 	f.admissions.fail = &layout.RateLimitedError{RetryAfter: 30 * time.Second}

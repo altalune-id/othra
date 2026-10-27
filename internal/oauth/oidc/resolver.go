@@ -36,10 +36,10 @@ type Resolver struct {
 	introspect bool
 }
 
-// NewResolver builds the Resolver; publicBase is the scheme, host and base path every issuer URL starts with.
-func NewResolver(issuers Issuers, keys Publisher, publicBase string, unexpected apperror.UnexpectedFunc) *Resolver {
+// NewResolver builds the Resolver; publicBase starts every issuer URL and cimd says which projects admit CIMD clients.
+func NewResolver(issuers Issuers, keys Publisher, cimd CIMDAdmissions, publicBase string, unexpected apperror.UnexpectedFunc) *Resolver {
 	return &Resolver{
-		issuers: issuers, keys: keys, publicBase: publicBase, unexpected: unexpected, limiter: ratelimit.Disabled(),
+		issuers: issuers, keys: keys, cimd: cimd, publicBase: publicBase, unexpected: unexpected, limiter: ratelimit.Disabled(),
 		cache: &issuerCache{ttl: cacheTTL, entries: map[string]*issuerEntry{}}, now: time.Now,
 	}
 }
@@ -47,12 +47,6 @@ func NewResolver(issuers Issuers, keys Publisher, publicBase string, unexpected 
 // WithLimiter limits cache-missing lookups per client IP, read through trustedHops proxies.
 func (s *Resolver) WithLimiter(l ratelimit.Limiter, trustedHops int) *Resolver {
 	s.limiter, s.hops = l, trustedHops
-	return s
-}
-
-// WithCIMD reads whether each project admits CIMD clients, for client_id_metadata_document_supported.
-func (s *Resolver) WithCIMD(c CIMDAdmissions) *Resolver {
-	s.cimd = c
 	return s
 }
 
@@ -111,11 +105,9 @@ func (s *Resolver) load(ctx context.Context, handle string) (*issuerEntry, error
 	if err != nil {
 		return nil, err
 	}
-	cimd := false
-	if s.cimd != nil {
-		if cimd, err = s.cimd.AcceptsCIMD(scoped, i.OrgID, i.ProjectID); err != nil {
-			return nil, err
-		}
+	cimd, err := s.cimd.AcceptsCIMD(scoped, i.OrgID, i.ProjectID)
+	if err != nil {
+		return nil, err
 	}
 	discovery, err := json.Marshal(Discovery(project.IssuerURL(s.publicBase, i.Handle), Features{CIMD: cimd, Introspection: s.introspect}))
 	if err != nil {

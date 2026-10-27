@@ -24,6 +24,7 @@ import (
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/testutil/pgtest"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/scope"
@@ -813,7 +814,7 @@ func TestPostgres_RevokeByHintRevokesExactlyOneKey(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, target.ID, got.ID, "ByHint finds the live key, not a revoked one with the same hint")
 
-	svc := apikey.NewService(f.store, apikey.NewScheme(""), nil, apperror.NewReporter(nil, false).Unexpected)
+	svc := apikey.NewService(f.store, apikey.NewScheme(""), stubProjects{}, fakes.NoOwnerRoles{}, apperror.NewReporter(nil, false).Unexpected)
 	require.NoError(t, svc.RevokeByHint(t.Context(), orgID, target.SecretHint, uuid.Nil, true))
 	live := f.count(t, `SELECT count(*) FROM api_keys WHERE revoked_at IS NULL AND id = ANY($1)`,
 		pgUUIDs(target.ID, elsewhere.ID, bystander.ID))

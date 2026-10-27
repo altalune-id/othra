@@ -187,7 +187,7 @@ func TestFederation_LoginButton(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, f.get(f.client, "/p/acme/login").status, "a failed lookup hides the button")
 }
 
-// N1, P10, P11, G4: POST start, a sealed state cookie, a GET hop to Google, and a callback that spends the cookie.
+// POST start, a sealed state cookie, a GET hop to Google, and a callback that spends the cookie.
 func TestFederation_SignIn(t *testing.T) {
 	f, fed := newFederationFixture(t)
 	assert.Equal(t, http.StatusMethodNotAllowed, f.get(f.client, "/p/acme/federation/google/start").status)
@@ -195,7 +195,7 @@ func TestFederation_SignIn(t *testing.T) {
 	page, authURL := f.startGoogle(f.client, "/p/acme/login")
 	assert.Contains(t, page.body, `http-equiv="refresh"`)
 	assert.Equal(t, f.srv.URL+"/p/acme/federation/google/callback", authURL.Query().Get("redirect_uri"))
-	assert.Equal(t, []string{""}, fed.hints, "P7: no account, no hint")
+	assert.Equal(t, []string{""}, fed.hints, "no account, no hint")
 	var sealed *http.Cookie
 	for _, c := range f.client.Jar.Cookies(mustURL(t, f.srv.URL+"/p/acme/federation/google/callback")) {
 		if c.Name == federationCookie {
@@ -338,7 +338,7 @@ func TestFederation_Link(t *testing.T) {
 	require.Equal(t, http.StatusSeeOther, done.status, done.body)
 	assert.Equal(t, "/p/acme/account/sign-in?linked=1", done.location(), "back to the portal's sign-in methods")
 	assert.Equal(t, []uuid.UUID{ana.EndUserID}, fed.linked, "the identity goes to the account that asked")
-	assert.Equal(t, []string{""}, fed.hints, "P7: linking sends no hint")
+	assert.Equal(t, []string{""}, fed.hints, "linking sends no hint")
 
 	fed.linkErr = &federation.LinkedElsewhereError{}
 	got := link()
@@ -368,7 +368,7 @@ func browserSecret(t *testing.T, f *webFixture) string {
 	return ""
 }
 
-// R-4, F6, P7, A9–A11: a re-authentication hints the account's linked Google email, and that sign-in satisfies the same URL.
+// a re-authentication hints the account's linked Google email, and that sign-in satisfies the same URL.
 func TestFederation_ReauthHandOff(t *testing.T) {
 	for _, extra := range [][]string{{"prompt", "login"}, {"max_age", "0"}} {
 		f, fed := newFederationFixture(t)
@@ -397,7 +397,7 @@ func TestFederation_ReauthHandOff(t *testing.T) {
 	}
 }
 
-// A25: starting a link is limited per signed-in account, apart from the per-IP form bucket.
+// starting a link is limited per signed-in account, apart from the per-IP form bucket.
 func TestFederation_LinkStartLimitedPerSession(t *testing.T) {
 	f, _ := newFederationFixture(t)
 	clock := ratelimittest.NewClock()
@@ -432,7 +432,7 @@ func (f *webFixture) linkGoogle(t *testing.T, callback url.Values, header ...str
 	return f.get(f.client, "/p/acme/federation/google/callback?"+callback.Encode(), header...)
 }
 
-// MF7: a failed Connect speaks to the signed-in person: "Couldn't connect Google" and back to the account, never to sign in.
+// a failed Connect speaks to the signed-in person: "Couldn't connect Google" and back to the account, never to sign in.
 func TestFederation_ConnectFailureWording(t *testing.T) {
 	f, fed := newFederationFixture(t)
 	f.signIn(f.client, "acme", "ana@acme.test")
@@ -440,7 +440,7 @@ func TestFederation_ConnectFailureWording(t *testing.T) {
 	cancelled := f.linkGoogle(t, url.Values{"error": {"access_denied"}})
 	assert.Equal(t, http.StatusForbidden, cancelled.status)
 	assert.Contains(t, cancelled.body, "Couldn&#39;t connect Google")
-	assert.Contains(t, cancelled.body, "Connecting Google was cancelled. Nothing changed.", "BL-3")
+	assert.Contains(t, cancelled.body, "Connecting Google was cancelled. Nothing changed.", "a cancelled connect says nothing changed")
 	assert.Contains(t, cancelled.body, string(apperror.CodeSignInUpstreamCancelled))
 	assert.Contains(t, cancelled.body, `href="/p/acme/account/">Back to your account</a>`)
 	assert.NotContains(t, cancelled.body, "Back to sign in")

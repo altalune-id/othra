@@ -88,7 +88,7 @@ type Client struct {
 	PostLogoutRedirectURIs  []string
 	ConsentPolicy           ConsentPolicy
 	PKCERequired            bool
-	// MetadataURL is set on a Client ID Metadata Document client, a read-only shadow row its document defines (ADR-0021 D2).
+	// MetadataURL is set on a Client ID Metadata Document client, a read-only shadow row its document defines.
 	MetadataURL       string
 	ClientURI         string
 	MetadataFetchedAt *time.Time

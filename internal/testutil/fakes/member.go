@@ -184,3 +184,25 @@ func (f *MemberStore) ListByOrg(_ context.Context, orgID uuid.UUID) ([]member.Me
 	})
 	return out, nil
 }
+
+// NoMemberships is a project.Members where nobody belongs to any org.
+type NoMemberships struct{}
+
+// IsMember reports false.
+func (NoMemberships) IsMember(context.Context, uuid.UUID, uuid.UUID) (bool, error) { return false, nil }
+
+// NoMemberRoles is an org.MemberRoles where nobody has a role.
+type NoMemberRoles struct{}
+
+// Role reports no role.
+func (NoMemberRoles) Role(context.Context, uuid.UUID, uuid.UUID) (role string, permissions []string, ok bool, err error) {
+	return "", nil, false, nil
+}
+
+// NoOwnerRoles is an apikey.OwnerRoles where nobody has a role.
+type NoOwnerRoles struct{}
+
+// Role reports no role.
+func (NoOwnerRoles) Role(context.Context, uuid.UUID, uuid.UUID) (member.Role, bool, error) {
+	return "", false, nil
+}

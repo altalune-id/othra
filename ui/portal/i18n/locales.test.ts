@@ -21,11 +21,11 @@ describe('portal locales', () => {
   it('leave the shared keys to the base layer, except the portal\'s own wording', () => {
     const overrides = ['methods.only_method'];
     expect(Object.keys(enUS).filter(key => key in baseEnUS && !overrides.includes(key))).toEqual([]);
-    expect(enUS['methods.only_method'], 'M8 design 13').toBe('This is your only way to sign in.');
+    expect(enUS['methods.only_method'], 'the portal speaks to the person').toBe('This is your only way to sign in.');
   });
 });
 
-describe('session copy (M8 R-5)', () => {
+describe('session copy', () => {
   it('never promises that ending a session cuts every app off at once', () => {
     for (const messages of Object.values(locales)) {
       for (const key of ['sessions.sign_out_body', 'sessions.others_body']) {

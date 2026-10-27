@@ -102,7 +102,7 @@ func (e *ProjectNotFoundError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeProjectNotFound, "Project not found").WithCause(e)
 }
 
-// LastMethodError signals turning off or removing the upstream while the project's email link is off (F8).
+// LastMethodError signals turning off or removing the upstream while the project's email link is off.
 type LastMethodError struct{}
 
 func (*LastMethodError) Error() string { return "upstream: it is the project's only sign-in method" }

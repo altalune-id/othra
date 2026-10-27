@@ -68,7 +68,7 @@ func newCIMDServer(t *testing.T, allowPrivate bool) *cimdServer {
 
 var testCache = MetadataConfig{Cache: MetadataCache{Min: 5 * time.Minute, Max: 24 * time.Hour, Default: time.Hour}}
 
-// M3, M5, M9: a 200 JSON document under 5 KB is used for its clamped max-age.
+// a 200 JSON document under 5 KB is used for its clamped max-age.
 func TestLoadMetadata_OK(t *testing.T) {
 	m := newCIMDServer(t, true)
 	got, ttl, err := LoadMetadata(context.Background(), m.fetcher, testCache, m.srv.URL+"/ok")
@@ -77,7 +77,7 @@ func TestLoadMetadata_OK(t *testing.T) {
 	assert.Equal(t, 10*time.Minute, ttl)
 }
 
-// M3–M5: no redirect is followed; any other status, a body over 5 KB, a non-JSON type or a timeout fails.
+// no redirect is followed; any other status, a body over 5 KB, a non-JSON type or a timeout fails.
 func TestLoadMetadata_Failures(t *testing.T) {
 	m := newCIMDServer(t, true)
 	for path, reason := range map[string]MetadataReason{
@@ -96,7 +96,7 @@ func TestLoadMetadata_Failures(t *testing.T) {
 	assert.Zero(t, m.count("/ok"), "the redirect target is never fetched")
 }
 
-// M4: a private address is refused at dial time unless the dev switch is on.
+// a private address is refused at dial time unless the dev switch is on.
 func TestLoadMetadata_PrivateHostBlocked(t *testing.T) {
 	m := newCIMDServer(t, false)
 	_, _, err := LoadMetadata(context.Background(), m.fetcher, testCache, m.srv.URL+"/ok")
@@ -112,7 +112,7 @@ func TestHTTPMetadataFetcher_BadURL(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// M5: oauth.cimd.maxBytes caps the document below 5 KB.
+// oauth.cimd.maxBytes caps the document below 5 KB.
 func TestLoadMetadata_ConfiguredLimit(t *testing.T) {
 	m := newCIMDServer(t, true)
 	small := testCache

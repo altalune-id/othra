@@ -13,7 +13,7 @@ import (
 
 const signOutForm = "signout"
 
-// EndUser resolves the account.v1 caller (M8 G2): the path issuer, this browser's live active account, and the project's terms.
+// EndUser resolves the account.v1 caller: the path issuer, this browser's live active account, and the project's terms.
 func (h *Web) EndUser(w http.ResponseWriter, r *http.Request) (eu session.EndUser, answered bool, err error) {
 	i, err := h.issuers.Resolve(r)
 	var limited *oidc.LookupLimitedError

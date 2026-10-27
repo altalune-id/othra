@@ -111,7 +111,7 @@ func NewServer(opts ServerOpts) http.Handler {
 	return middleware.Recoverer(opts.Log, opts.Unexpected, middleware.RequestID(root))
 }
 
-// SECURITY: O5, end-user pages get their own stack with no admin session, so an admin cookie never reaches them.
+// SECURITY: end-user pages get their own stack with no admin session, so an admin cookie never reaches them.
 func hostedHandler(opts ServerOpts, cop *http.CrossOriginProtection) http.Handler {
 	mux := http.NewServeMux()
 	for _, r := range opts.HostedPages {

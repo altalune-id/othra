@@ -337,7 +337,7 @@ func TestRequestRules_ParamsCarryTheLimit(t *testing.T) {
 	}
 }
 
-// qa A23: the API-key scope rule takes every catalog scope, so a new scope needs no proto edit; the service checks membership.
+// the API-key scope rule takes every catalog scope, so a new scope needs no proto edit; the service checks membership.
 func TestAPIKeyScopeRule_AcceptsEveryCatalogScope(t *testing.T) {
 	v := newTestValidator(t)
 	future := timestamppb.New(time.Now().Add(time.Hour))

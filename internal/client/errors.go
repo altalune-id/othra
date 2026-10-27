@@ -252,7 +252,7 @@ const (
 	AdmissionHost     AdmissionReason = "host"
 )
 
-// NotAdmittedError signals a metadata document client no resource server of the request admits (ADR-0021 D1, D3).
+// NotAdmittedError signals a metadata document client no resource server of the request admits.
 type NotAdmittedError struct {
 	Reason AdmissionReason
 }
@@ -280,3 +280,5 @@ func IsMetadataError(err error) bool {
 func AsMetadataError(err error) (*MetadataError, bool) {
 	return errors.AsType[*MetadataError](err)
 }
+
+var errNoLinks = errors.New("client: no resource server links for metadata document clients")

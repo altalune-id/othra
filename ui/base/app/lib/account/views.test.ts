@@ -21,7 +21,7 @@ const server = create(TokenServerSchema, { id: 'dPm7fmQRJKPVw8PxrgdrN', name: 'N
 const now = new Date('2026-10-26T00:00:00Z');
 const token = create(PersonalTokenSchema, { id: 'K9tWq4ZbN2xLm7VcR5pHs', name: 'cli', hint: 'ab12', server, scopes: ['notes:read'], state: PersonalTokenState.ACTIVE, expiresAt: timestampFromDate(new Date('2026-10-29T00:00:00Z')) });
 
-describe('appView, signing in (A14)', () => {
+describe('appView, signing in', () => {
   it('marks the serverless OIDC entry as signing in, apart from the server lines', () => {
     const oidcOnly = appView(create(ConnectedAppSchema, { consented: true, resources: [create(AppResourceSchema, { scopes: ['openid', 'email'] })] }));
     expect(oidcOnly).toMatchObject({ access: [], signsIn: true });
@@ -85,7 +85,7 @@ describe('tokenView', () => {
   });
 });
 
-describe('tokenWhen (M8 design 5)', () => {
+describe('tokenWhen', () => {
   const at = new Date('2026-11-01T00:00:00Z');
   it('reads a revoked token as revoked, never as expiring', () => {
     expect(tokenWhen({ status: 'revoked', expiry: { kind: 'soon', days: 2 }, expiresAt: at, revokedAt: now })).toEqual({ key: 'tokens.revoked_on', date: now });
@@ -99,7 +99,7 @@ describe('tokenWhen (M8 design 5)', () => {
   });
 });
 
-describe('signInSees (M8 design 6)', () => {
+describe('signInSees', () => {
   it('words the sign-in line from the granted scopes only', () => {
     expect(signInSees(['openid'])).toBe('nothing');
     expect(signInSees(['openid', 'email'])).toBe('email');

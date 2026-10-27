@@ -104,7 +104,7 @@ func TestParseAuthorize_Valid(t *testing.T) {
 	assert.Equal(t, "ana@example.com", req.loginHint)
 }
 
-// A3: a native client's loopback redirect matches on any port; a web one only exactly.
+// a native client's loopback redirect matches on any port; a web one only exactly.
 func TestParseAuthorize_RedirectMatch(t *testing.T) {
 	req, err := parse(t, valid("client_id", "cli", "redirect_uri", "http://127.0.0.1:53123/callback"))
 	require.NoError(t, err)
@@ -113,7 +113,7 @@ func TestParseAuthorize_RedirectMatch(t *testing.T) {
 	assert.Equal(t, apperror.CodeAuthorizeRedirectNotRegistered, pageCode(t, err))
 }
 
-// A2, A16, A6: before the redirect URI is trusted, errors are a page, never a redirect.
+// before the redirect URI is trusted, errors are a page, never a redirect.
 func TestParseAuthorize_PageErrors(t *testing.T) {
 	for name, tc := range map[string]struct {
 		q    url.Values
@@ -144,7 +144,7 @@ func pageCode(t *testing.T, err error) apperror.Code {
 	return pe.Code
 }
 
-// A4, A5, A9, A10, A15, A19, P1–P3, D1: once the redirect is trusted, errors go back to the client.
+// once the redirect is trusted, errors go back to the client.
 func TestParseAuthorize_RedirectErrors(t *testing.T) {
 	for name, tc := range map[string]struct {
 		q    url.Values
@@ -180,11 +180,11 @@ func TestParseAuthorize_RedirectErrors(t *testing.T) {
 		require.True(t, ok, "%s: %v", name, err)
 		assert.Equal(t, tc.want, re.code, name)
 		assert.NotEmpty(t, re.request, "%s: the redirect is known", name)
-		assert.Regexp(t, `^[\x20-\x21\x23-\x5B\x5D-\x7E]*$`, re.description, "%s: E2 safe description", name)
+		assert.Regexp(t, `^[\x20-\x21\x23-\x5B\x5D-\x7E]*$`, re.description, "%s: a safe description", name)
 	}
 }
 
-// A5, A19: unknown scopes are dropped; offline_access only for a client that may refresh.
+// unknown scopes are dropped; offline_access only for a client that may refresh.
 func TestParseAuthorize_Scopes(t *testing.T) {
 	req, err := parse(t, valid("scope", "email address openid"))
 	require.NoError(t, err)
@@ -197,7 +197,7 @@ func TestParseAuthorize_Scopes(t *testing.T) {
 	assert.Equal(t, []string{"openid"}, req.scopes, "a client that can't refresh has offline_access dropped, not refused")
 }
 
-// D1: a confidential client with PKCE turned off may skip it when it sends a nonce.
+// a confidential client with PKCE turned off may skip it when it sends a nonce.
 func TestParseAuthorize_PKCEOffNeedsNonce(t *testing.T) {
 	req, err := parse(t, valid("client_id", "conf", "code_challenge", "-", "code_challenge_method", "-", "nonce", "n"))
 	require.NoError(t, err)
@@ -215,7 +215,7 @@ func redirectCode(t *testing.T, name string, err error) string {
 	return re.code
 }
 
-// E1, R1–R4, R7, E3: one exact resource, linked to the client; its scopes narrowed to the link's pin.
+// one exact resource, linked to the client; its scopes narrowed to the link's pin.
 func TestParseAuthorize_Resource(t *testing.T) {
 	cli := func(extra ...string) url.Values {
 		return valid(append([]string{"client_id", "cli", "redirect_uri", cliRedirect}, extra...)...)
@@ -224,7 +224,7 @@ func TestParseAuthorize_Resource(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, req.resource)
 	assert.Equal(t, mcpResource, req.resource.Identifier)
-	assert.Equal(t, []string{"openid", "sample:read", "offline_access"}, req.scopes, "P1: sample:write is outside the pin, so narrowed")
+	assert.Equal(t, []string{"openid", "sample:read", "offline_access"}, req.scopes, "sample:write is outside the pin, so narrowed")
 
 	q := cli("scope", "sample:read")
 	q["resource"] = []string{mcpResource, mcpResource}
@@ -252,12 +252,12 @@ func TestParseAuthorize_Resource(t *testing.T) {
 		assert.Equal(t, "invalid_target", redirectCode(t, name, err), name)
 	}
 	_, err = parse(t, cli("resource", mcpResource, "scope", "sample:write"))
-	assert.Equal(t, "invalid_scope", redirectCode(t, "only outside the pin", err), "P1: nothing left")
+	assert.Equal(t, "invalid_scope", redirectCode(t, "only outside the pin", err), "nothing left")
 	_, err = parse(t, cli("resource", mcpResource, "scope", "openid sample:write"))
-	assert.Equal(t, "invalid_scope", redirectCode(t, "only openid left", err), "qa O1, E3: no resource scope left, openid doesn't mask it")
+	assert.Equal(t, "invalid_scope", redirectCode(t, "only openid left", err), "no resource scope left, openid doesn't mask it")
 }
 
-// M2, M8, E5: a client_id URL is admitted through the request's resource before its redirect is trusted.
+// a client_id URL is admitted through the request's resource before its redirect is trusted.
 func TestParseAuthorize_MetadataClient(t *testing.T) {
 	q := valid("client_id", cimdClient, "redirect_uri", "http://localhost:53999/callback", "resource", mcpResource, "scope", "sample:read")
 	req, err := parse(t, q)

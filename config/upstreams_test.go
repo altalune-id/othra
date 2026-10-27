@@ -59,11 +59,11 @@ func TestValidate_Upstreams(t *testing.T) {
 			mutate: func(c *Config) { c.Env = EnvDevelopment; c.Upstreams.AllowPrivateHosts = true },
 			check:  func(t *testing.T, err error) { assert.NoError(t, err) },
 		},
-		"BL-8: an override in production": {
+		"an override in production": {
 			mutate: func(c *Config) { c.Upstreams.Google.IssuerOverride = "https://fakeidp.test" },
 			check:  invalidSetting("upstreams"),
 		},
-		"BL-8: private hosts in production": {
+		"private hosts in production": {
 			mutate: func(c *Config) { c.Upstreams.AllowPrivateHosts = true },
 			check:  invalidSetting("upstreams"),
 		},

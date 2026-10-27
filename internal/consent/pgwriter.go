@@ -10,8 +10,8 @@ import (
 	"altalune.id/othra/internal/kernel/db"
 )
 
-// NOTE: C5, authl gap 1: one statement adds the new scopes to the stored ones, so two approvals at once never narrow or fail.
-// NOTE: R-6: stored scopes outside keep go first, so a server's catalog churn can't grow a consent past its 72 scopes.
+// NOTE: one statement adds the new scopes to the stored ones, so two approvals at once never narrow or fail.
+// NOTE: stored scopes outside keep go first, so a server's catalog churn can't grow a consent past its 72 scopes.
 func (s *postgresStore) unionScopes(keep []string) postgres.Expression {
 	stored := s.table + ".scopes"
 	added := " || ARRAY(SELECT s FROM unnest(excluded.scopes) AS s WHERE s <> ALL (" + stored + "))"

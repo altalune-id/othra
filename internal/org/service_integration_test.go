@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/org"
+	"altalune.id/othra/internal/testutil/fakes"
 )
 
 func TestService_CreateWithAFailedHookLeavesNoOrg(t *testing.T) {
@@ -21,11 +22,10 @@ func TestService_CreateWithAFailedHookLeavesNoOrg(t *testing.T) {
 		t.Run("slug="+slug, func(t *testing.T) {
 			store, pool := newOrgStore(t)
 			var hookInTx bool
-			svc := org.NewService(store, db.NewTransactor(pool), apperror.NewReporter(nil, false).Unexpected).
-				WithAfterCreate(func(ctx context.Context, _ *org.Org) error {
-					_, hookInTx = db.CurrentTx(ctx)
-					return errors.New("default project failed")
-				})
+			svc := org.NewService(store, db.NewTransactor(pool), fakes.NoMemberRoles{}, func(ctx context.Context, _ *org.Org) error {
+				_, hookInTx = db.CurrentTx(ctx)
+				return errors.New("default project failed")
+			}, apperror.NewReporter(nil, false).Unexpected)
 
 			_, err := svc.Create(t.Context(), org.CreateRequest{Slug: slug, Name: "Acme"})
 			require.Error(t, err)
@@ -40,11 +40,10 @@ func TestService_CreateWithAFailedHookLeavesNoOrg(t *testing.T) {
 func TestService_CreateRunsTheHookInTheSameUnitOfWork(t *testing.T) {
 	store, pool := newOrgStore(t)
 	var hookInTx bool
-	svc := org.NewService(store, db.NewTransactor(pool), apperror.NewReporter(nil, false).Unexpected).
-		WithAfterCreate(func(ctx context.Context, _ *org.Org) error {
-			_, hookInTx = db.CurrentTx(ctx)
-			return nil
-		})
+	svc := org.NewService(store, db.NewTransactor(pool), fakes.NoMemberRoles{}, func(ctx context.Context, _ *org.Org) error {
+		_, hookInTx = db.CurrentTx(ctx)
+		return nil
+	}, apperror.NewReporter(nil, false).Unexpected)
 
 	o, err := svc.Create(t.Context(), org.CreateRequest{Name: "Acme"})
 	require.NoError(t, err)

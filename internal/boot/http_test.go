@@ -15,9 +15,11 @@ import (
 	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/capabilities"
+	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/oauth/hosted"
 	"altalune.id/othra/internal/oauth/oidc"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/user"
 	"altalune.id/othra/internal/web/layout"
 )
@@ -57,7 +59,7 @@ func TestBuildRoutes_TermsOverride(t *testing.T) {
 
 func TestBuildRoutes_WelcomeFollowsFlag(t *testing.T) {
 	users := &user.Service{}
-	svcs := &Services{Caps: capabilities.Capabilities{LocalLogin: true}, Auth: &auth.Service{}, Users: users, Legal: legal.NewService(users)}
+	svcs := &Services{Caps: capabilities.Capabilities{LocalLogin: true}, Auth: &auth.Service{}, Users: users, Legal: legal.NewService(users, legal.NewStore(db.Pool{}, "", ""), fakes.Transactor{})}
 	cfg := config.Config{}
 	assert.Equal(t, http.StatusNotFound, serveRoutes(cfg, svcs, http.MethodGet, "/welcome").Code)
 
@@ -103,7 +105,7 @@ func TestBuildCrossOrigin(t *testing.T) {
 
 	req = httptest.NewRequest(http.MethodPost, "/app/p/acme/oauth2/authorize", nil)
 	req.Header.Set("Origin", "https://evil.example")
-	assert.NoError(t, cop.Check(req), "S3: a relying party posts the authorize request from its own origin")
+	assert.NoError(t, cop.Check(req), "a relying party posts the authorize request from its own origin")
 	req = httptest.NewRequest(http.MethodPost, "/app/p/acme/oauth2/end-session", nil)
 	req.Header.Set("Origin", "https://evil.example")
 	assert.NoError(t, cop.Check(req), "RPL §2: and the logout request")

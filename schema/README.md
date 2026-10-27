@@ -56,12 +56,12 @@ erDiagram
     oauth_clients ||--o{ grant_families : "issued to"
     end_users ||--o{ grant_families : "signed in as"
     user_sessions |o--o{ grant_families : "signed in through"
-    resource_servers |o--o{ grant_families : "for (M6)"
+    resource_servers |o--o{ grant_families : "for"
     oauth_clients ||--o{ authorization_codes : "issued to"
     end_users ||--o{ authorization_codes : "signed in as"
     user_sessions |o--o{ authorization_codes : "signed in through"
     grant_families |o--o{ authorization_codes : "redeemed into"
-    resource_servers |o--o{ authorization_codes : "for (M6)"
+    resource_servers |o--o{ authorization_codes : "for"
     grant_families ||--o{ access_tokens : holds
     grant_families ||--o{ refresh_tokens : holds
     resource_servers |o--o{ access_tokens : "audience of"
@@ -221,7 +221,7 @@ erDiagram
         uuid browser_session_id FK "(org_id, project_id, browser_session_id) -> browser_sessions"
         uuid end_user_id FK "(org_id, project_id, end_user_id) -> end_users"
         text method "magic_link or google"
-        timestamptz auth_time "for M5 auth_time and max_age"
+        timestamptz auth_time "for auth_time and max_age"
         timestamptz selected_at "the latest live one is the active account"
         timestamptz created_at
         timestamptz last_seen_at
@@ -664,7 +664,7 @@ the owner's default privileges. `lookups_integration_test.go` checks all of this
 | `list_orgs_for_user(uuid)`               | the orgs a person is a member of                                       | `ListOrgs` for a person                                |
 | `resolve_invite_by_token_hash(text)`     | one invite, without `token_hash`                                       | the invite landing page and join                       |
 | `resolve_api_key_by_secret_hash(bytea)`  | one API key and its projects, without the hash                         | API key authentication                                 |
-| `resolve_project_by_issuer_handle(text)` | one project's issuer: ids, handle, branding, terms and sign-in setting | issuer resolution before sign-in (M2 discovery)        |
+| `resolve_project_by_issuer_handle(text)` | one project's issuer: ids, handle, branding, terms and sign-in setting | issuer resolution before sign-in (discovery)           |
 | `issuer_handle_exists(text)`             | whether any org uses a handle                                          | the issuer handle availability check                   |
 
 ## External migrations

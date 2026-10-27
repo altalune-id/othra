@@ -24,7 +24,7 @@ Most bad input does **not** need a new code. A request that breaks its proto rul
 
    `name` becomes the Go constant `Code<Name>`; it is a Go identifier and unique.
 
-2. **Issued list.** Append `PRJ002 ProjectAlreadyExists` as the **last** line of `apperror/issued_codes.txt`. The file is append-only: `TestCatalog_KeepsEveryIssuedCode` fails when a code is missing from it, removed from the catalog, or renamed. Othra's issued list starts at the M0 baseline; every code issued since then stays.
+2. **Issued list.** Append `PRJ002 ProjectAlreadyExists` as the **last** line of `apperror/issued_codes.txt`. The file is append-only: `TestCatalog_KeepsEveryIssuedCode` fails when a code is missing from it, removed from the catalog, or renamed.
 
 3. **`make generate`.** `gen-apperror` rewrites `apperror/codes.gen.go` (the constants and the kind table) and refuses a bad code, a duplicate, an unknown kind, or a param or reason that is not snake_case.
 

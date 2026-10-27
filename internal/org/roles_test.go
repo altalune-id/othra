@@ -38,7 +38,7 @@ func TestListOrgs_APersonSeesTheirRoleInEachOrg(t *testing.T) {
 	person := uuid.New()
 	store := &fakes.OrgStore{Orgs: []*org.Org{orgA, orgB}, ForUser: map[uuid.UUID][]*org.Org{person: {orgA, orgB}}}
 	roles := memberRoles{roles: map[uuid.UUID]string{orgA.ID: "admin", orgB.ID: "member"}}
-	cp := org.NewControlPlane(org.NewService(store, fakes.Transactor{}, nil).WithMemberRoles(roles))
+	cp := org.NewControlPlane(org.NewService(store, fakes.Transactor{}, roles, nil, nil))
 	list := func(p session.Principal) []*orgv1.Org {
 		resp, err := cp.ListOrgs(session.PrincipalInto(context.Background(), p), connect.NewRequest(&orgv1.ListOrgsRequest{}))
 		require.NoError(t, err)
@@ -71,12 +71,12 @@ func TestListOrgs_APersonSeesTheirRoleInEachOrg(t *testing.T) {
 	assert.Equal(t, []string{"member:perm"}, got[1].GetPermissions())
 
 	reporter := apperror.NewReporter(nil, false).Unexpected
-	cp = org.NewControlPlane(org.NewService(store, fakes.Transactor{}, reporter).WithMemberRoles(memberRoles{err: errors.New("db down")}))
+	cp = org.NewControlPlane(org.NewService(store, fakes.Transactor{}, memberRoles{err: errors.New("db down")}, nil, reporter))
 	_, err := cp.ListOrgs(session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceLocal, UserID: person}),
 		connect.NewRequest(&orgv1.ListOrgsRequest{}))
 	require.Error(t, err)
 
-	cp = org.NewControlPlane(org.NewService(store, fakes.Transactor{}, nil))
+	cp = org.NewControlPlane(org.NewService(store, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil))
 	for _, o := range list(session.Principal{Source: session.SourceLocal, UserID: person}) {
 		assert.Empty(t, o.GetRole(), "without a role port nothing is filled")
 	}

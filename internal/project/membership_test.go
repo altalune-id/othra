@@ -33,8 +33,7 @@ func TestProjectReach_APersonListsAnotherMembershipsProjects(t *testing.T) {
 	otherPub, foreignPub := refs.Org(other), refs.Org(foreign)
 	person := uuid.New()
 	p := mustProject(t, other)
-	svc := project.NewService(&fakes.ProjectStore{Projects: []*project.Project{p}}, nil).
-		WithMembers(members{of: map[uuid.UUID]uuid.UUID{person: other}})
+	svc := project.NewService(&fakes.ProjectStore{Projects: []*project.Project{p}}, fakes.Transactor{}, members{of: map[uuid.UUID]uuid.UUID{person: other}}, nil, "", nil)
 	cp := project.NewControlPlane(svc, refs)
 	list := func(pr session.Principal, orgPub string) (*connect.Response[projectv1.ListProjectsResponse], error) {
 		return cp.ListProjects(session.PrincipalInto(context.Background(), pr), connect.NewRequest(&projectv1.ListProjectsRequest{OrgId: orgPub}))
@@ -51,13 +50,13 @@ func TestProjectReach_APersonListsAnotherMembershipsProjects(t *testing.T) {
 	_, err = list(session.Principal{Source: session.SourceAPIKey, UserID: person, ActiveOrgID: active, AllProjects: true}, otherPub)
 	assert.True(t, project.IsNotFoundError(err), "a personal key keeps the reach of its own org: %v", err)
 
-	failing := project.NewControlPlane(project.NewService(&fakes.ProjectStore{}, testUnexpected()).WithMembers(members{err: errors.New("db down")}), refs)
+	failing := project.NewControlPlane(project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, members{err: errors.New("db down")}, nil, "", testUnexpected()), refs)
 	_, err = failing.ListProjects(session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceLocal, UserID: person, ActiveOrgID: active}),
 		connect.NewRequest(&projectv1.ListProjectsRequest{OrgId: otherPub}))
 	require.Error(t, err)
 	assert.False(t, project.IsNotFoundError(err))
 
-	without := project.NewControlPlane(project.NewService(&fakes.ProjectStore{}, nil), refs)
+	without := project.NewControlPlane(project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), refs)
 	_, err = without.ListProjects(session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceLocal, UserID: person, ActiveOrgID: active}),
 		connect.NewRequest(&projectv1.ListProjectsRequest{OrgId: otherPub}))
 	assert.True(t, project.IsNotFoundError(err), "without a membership port only the active org is reached")

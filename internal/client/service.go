@@ -37,10 +37,12 @@ type Service struct {
 	onMetadataChange func(ctx context.Context, orgID, projectID, clientID uuid.UUID) error
 }
 
-// NewService builds the Service; issuer locks the project's issuer handle when its first client is created.
-func NewService(store Store, uow db.Transactor, issuer IssuerLock, unexpected apperror.UnexpectedFunc) *Service {
+// NewService builds the Service; issuer locks the issuer handle at the first client, fetcher and meta admit metadata document clients.
+func NewService(
+	store Store, uow db.Transactor, issuer IssuerLock, fetcher MetadataFetcher, meta MetadataConfig, unexpected apperror.UnexpectedFunc,
+) *Service {
 	return &Service{
-		store: store, uow: uow, issuer: issuer, unexpected: unexpected, now: time.Now, newSecret: NewSecret,
+		store: store, uow: uow, issuer: issuer, fetcher: fetcher, meta: meta, unexpected: unexpected, now: time.Now, newSecret: NewSecret,
 		log: slog.New(slog.DiscardHandler),
 	}
 }

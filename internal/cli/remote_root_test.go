@@ -25,7 +25,7 @@ import (
 // Exercises the real root tree for a remote command: config (no validation), client boot, org.ClientFn.
 func TestRoot_OrgGet_Remote(t *testing.T) {
 	store := &fakes.OrgStore{Org: &org.Org{ID: uuid.New(), PublicID: "pubpubpubpubpubpubpub", Slug: "acme", Name: "Acme"}}
-	srv := controlplane.New(controlplane.Services{Orgs: org.NewService(store, fakes.Transactor{}, nil)}, nil, cptest.OperatorOptions())
+	srv := controlplane.New(controlplane.Services{Orgs: org.NewService(store, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}, nil, cptest.OperatorOptions())
 	ts := httptest.NewServer(srv.Handler(""))
 	t.Cleanup(ts.Close)
 
@@ -51,7 +51,7 @@ func TestRoot_ProjectGet_Remote(t *testing.T) {
 	refs := fakes.NewPublicIDs()
 	orgPublicID := refs.Org(p.OrgID)
 	srv := controlplane.New(controlplane.Services{
-		Projects: project.NewService(&fakes.ProjectStore{Project: p}, nil),
+		Projects: project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil),
 		Refs:     refs,
 	}, nil, cptest.OperatorOptions())
 	ts := httptest.NewServer(srv.Handler(""))

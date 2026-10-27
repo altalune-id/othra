@@ -62,7 +62,7 @@ func (f *signInFixture) callback(p signInPage) url.Values {
 	return back.Query()
 }
 
-// G2, G4, G9: authorize signs the end user in, returns a code with state and iss, and end-session ends the session the hint names.
+// authorize signs the end user in, returns a code with state and iss, and end-session ends the session the hint names.
 func TestHosted_AuthorizeCodeAndEndSession(t *testing.T) {
 	f := newSignInFixture(t)
 	p := f.project("shop", "Shop")
@@ -106,7 +106,7 @@ func TestHosted_AuthorizeCodeAndEndSession(t *testing.T) {
 	require.NoError(t, err)
 	out := url.Values{"id_token_hint": {idToken.Compact}, "post_logout_redirect_uri": {oauthBye}, "state": {"bye-1"}}
 	ended := f.do(f.c, http.MethodGet, base+"/oauth2/end-session?"+out.Encode(), nil)
-	require.Equal(t, http.StatusFound, ended.status, "F6: an expired hint of a revoked family still signs out: %s", ended.body)
+	require.Equal(t, http.StatusFound, ended.status, "an expired hint of a revoked family still signs out: %s", ended.body)
 	assert.Equal(t, oauthBye+"?state=bye-1", ended.header.Get("Location"))
 	family, err := f.svcs.Grants.Family(ctx, gp, sid)
 	require.NoError(t, err)
@@ -121,10 +121,10 @@ func TestHosted_AuthorizeCodeAndEndSession(t *testing.T) {
 	q.Set("id_token_hint", idToken.Compact)
 	hinted := f.do(f.c, http.MethodGet, base+"/oauth2/authorize?"+q.Encode(), nil)
 	require.Equal(t, http.StatusSeeOther, hinted.status, hinted.body)
-	assert.NotContains(t, hinted.header.Get("Location"), "id_token_hint", "F1: the hint never reaches return_to")
+	assert.NotContains(t, hinted.header.Get("Location"), "id_token_hint", "the hint never reaches return_to")
 	relogin := f.do(f.c, http.MethodGet, hinted.header.Get("Location"), nil)
 	resent := f.submit(f.c, relogin, "/login", url.Values{"email": {"ana@example.com"}})
-	assert.Equal(t, http.StatusSeeOther, resent.status, "F1: the magic link's return_to fits: %s", resent.body)
+	assert.Equal(t, http.StatusSeeOther, resent.status, "the magic link's return_to fits: %s", resent.body)
 	for _, m := range claimMail(t, f.svcs) {
 		assert.NotContains(t, m.TextBody, "id_token_hint")
 	}
@@ -188,7 +188,7 @@ func TestHosted_OfflineAccessSurvivesSignOut(t *testing.T) {
 	assert.True(t, live(offline), "an offline_access grant survives sign-out")
 }
 
-// E1, E4, A9–A12: resource, consent page, Allow, a code bound to the server; a public client's second sign-in is one click.
+// resource, consent page, Allow, a code bound to the server; a public client's second sign-in is one click.
 func TestHosted_ResourceAndConsent(t *testing.T) {
 	f := newSignInFixture(t)
 	p := f.project("shop", "Shop")
@@ -230,7 +230,7 @@ func TestHosted_ResourceAndConsent(t *testing.T) {
 	for _, want := range []string{"Shop CLI", "Shop MCP", "Read your orders", "127.0.0.1"} {
 		assert.Contains(t, page.body, want)
 	}
-	assert.NotContains(t, page.body, ">write<", "P1: write is outside the pin")
+	assert.NotContains(t, page.body, ">write<", "write is outside the pin")
 
 	allowed := f.submit(f.c, page, "/consent", nil)
 	m = continueRE.FindStringSubmatch(allowed.body)
@@ -259,12 +259,12 @@ func TestHosted_ResourceAndConsent(t *testing.T) {
 	f.submit(f.c, full, "/consent", nil)
 	var kept []byte
 	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT array_to_json(scopes) FROM scope_consents WHERE client_id = $1`, oc.ID).Scan(&kept))
-	assert.JSONEq(t, `["openid","read","offline_access"]`, string(kept), "R-6: a scope gone from the catalog is dropped on approve")
+	assert.JSONEq(t, `["openid","read","offline_access"]`, string(kept), "a scope gone from the catalog is dropped on approve")
 	q.Del("prompt")
 
 	again = f.do(f.c, http.MethodGet, base+"/oauth2/authorize?"+q.Encode(), nil)
 	require.Equal(t, http.StatusSeeOther, again.status, again.body)
 	remembered := f.do(f.c, http.MethodGet, again.header.Get("Location"), nil)
-	assert.Contains(t, remembered.body, "Continue to Shop CLI", "D2: one click for a public client")
+	assert.Contains(t, remembered.body, "Continue to Shop CLI", "one click for a public client")
 	assert.NotContains(t, remembered.body, "Read your orders")
 }

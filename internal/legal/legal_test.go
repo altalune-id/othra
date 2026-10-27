@@ -92,7 +92,7 @@ func TestSplitFrontmatter_SkipsUnknownAndMalformedLines(t *testing.T) {
 }
 
 func TestService_TermsUpdatedAt(t *testing.T) {
-	builtIn := NewService(nil).TermsUpdatedAt()
+	builtIn := NewService(nil, nil, nil).TermsUpdatedAt()
 	terms, err := BySlug(TermsSlug)
 	require.NoError(t, err)
 	privacy, err := BySlug(PrivacySlug)
@@ -105,8 +105,8 @@ func TestService_TermsUpdatedAt(t *testing.T) {
 	assert.False(t, builtIn.IsZero())
 
 	external := time.Date(2026, 12, 1, 0, 0, 0, 0, time.UTC)
-	assert.Equal(t, external, NewService(nil).WithExternalTerms(external).TermsUpdatedAt(), "the configured date wins for external terms")
-	assert.True(t, NewService(nil).WithExternalTerms(time.Time{}).TermsUpdatedAt().IsZero(), "external terms without a date are never re-asked")
+	assert.Equal(t, external, NewService(nil, nil, nil).WithExternalTerms(external).TermsUpdatedAt(), "the configured date wins for external terms")
+	assert.True(t, NewService(nil, nil, nil).WithExternalTerms(time.Time{}).TermsUpdatedAt().IsZero(), "external terms without a date are never re-asked")
 }
 
 func TestLatest(t *testing.T) {

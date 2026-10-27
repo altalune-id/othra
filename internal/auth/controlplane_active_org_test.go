@@ -46,7 +46,7 @@ func TestSetActiveOrgRPC(t *testing.T) {
 
 	t.Run("a person switches and gets the new whoami", func(t *testing.T) {
 		rec := &switchingProfiles{}
-		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}).WithProfiles(rec)
+		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}, rec)
 		got, err := call(s, profileCtx(person, "sid-1"), acme.PublicID)
 		require.NoError(t, err)
 		assert.Equal(t, "sid-1", rec.sid)
@@ -57,19 +57,19 @@ func TestSetActiveOrgRPC(t *testing.T) {
 	})
 	t.Run("an unknown org is not found", func(t *testing.T) {
 		rec := &switchingProfiles{}
-		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}).WithProfiles(rec)
+		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}, rec)
 		_, err := call(s, profileCtx(person, "sid-1"), "unknownOrgPublicId001")
 		assert.True(t, org.IsNotFoundError(err), "%v", err)
 		assert.Equal(t, uuid.Nil, rec.orgID, "nothing is switched")
 	})
 	t.Run("the service's refusal passes through", func(t *testing.T) {
 		rec := &switchingProfiles{recordedProfiles: recordedProfiles{err: &org.NotFoundError{}}}
-		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}).WithProfiles(rec)
+		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}, rec)
 		_, err := call(s, profileCtx(person, "sid-1"), acme.PublicID)
 		assert.True(t, org.IsNotFoundError(err), "%v", err)
 	})
 	t.Run("only a signed-in person with a session", func(t *testing.T) {
-		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}).WithProfiles(&switchingProfiles{})
+		s := NewControlPlane(orgByID{acme.ID: acme}, projectByID{}, userByID{ada.ID: ada}, &switchingProfiles{})
 		_, err := call(s, context.Background(), acme.PublicID)
 		assert.True(t, authn.IsUnauthorizedError(err), "%v", err)
 		_, err = call(s, profileCtx(session.Principal{Source: session.SourceAPIKey}, ""), acme.PublicID)

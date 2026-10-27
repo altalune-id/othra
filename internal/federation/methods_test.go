@@ -21,7 +21,7 @@ func TestCanRemove(t *testing.T) {
 	assert.True(t, canRemove(false, 2), "another identity remains")
 }
 
-// M8, F8: one read lists the methods with the same removable rule Unlink enforces.
+// one read lists the methods with the same removable rule Unlink enforces.
 func TestSignInMethods(t *testing.T) {
 	ctx := context.Background()
 	h := newHarness(t)
@@ -47,7 +47,7 @@ func TestSignInMethods(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, got, 1, "a disabled upstream's linked identity is still listed, and no email link")
 	assert.True(t, got[0].LastMethod)
-	assert.False(t, got[0].CanRemove, "F8: the same rule as Unlink's SIG019")
+	assert.False(t, got[0].CanRemove, "the same rule as Unlink's SIG019")
 
 	h.upstreams.err = errBoom
 	_, err = h.svc.SignInMethods(ctx, h.p, ana)
@@ -80,10 +80,10 @@ func TestAccountService_Methods(t *testing.T) {
 	assert.NotEmpty(t, ms[1].GetIdentityId())
 
 	_, err = a.UnlinkIdentity(ctx, connect.NewRequest(&accountv1.UnlinkIdentityRequest{IdentityId: "nope"}))
-	assert.Equal(t, apperror.CodeNotFound, codeOf(err), "qa A21: an unknown identity is NotFound")
+	assert.Equal(t, apperror.CodeNotFound, codeOf(err), "an unknown identity is NotFound")
 	h.switches.on = false
 	_, err = a.UnlinkIdentity(ctx, connect.NewRequest(&accountv1.UnlinkIdentityRequest{IdentityId: "nope"}))
-	assert.Equal(t, apperror.CodeNotFound, codeOf(err), "qa A21: ownership before the last-method rule, so never SIG019")
+	assert.Equal(t, apperror.CodeNotFound, codeOf(err), "ownership before the last-method rule, so never SIG019")
 	_, err = a.UnlinkIdentity(ctx, connect.NewRequest(&accountv1.UnlinkIdentityRequest{IdentityId: ms[1].GetIdentityId()}))
 	assert.Equal(t, apperror.CodeSignInLastMethod, codeOf(err))
 	h.switches.on = true
@@ -104,7 +104,7 @@ func TestAccountService_Methods(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// qa A17: /login (Enabled) and the portal (SignInMethods) read the offered upstream IdPs through the one upstream read.
+// /login (Enabled) and the portal (SignInMethods) read the offered upstream IdPs through the one upstream read.
 func TestOfferedIsTheOneRead(t *testing.T) {
 	ctx := context.Background()
 	h := newHarness(t)

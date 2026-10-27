@@ -22,7 +22,7 @@ func (h *harness) account() (*AccountService, context.Context) {
 	})
 }
 
-// M8 P5, P6: pat's account.v1 slice lists servers, creates with the secret once, lists and revokes the signed-in end user's tokens.
+// pat's account.v1 slice lists servers, creates with the secret once, lists and revokes the signed-in end user's tokens.
 func TestAccountService_Tokens(t *testing.T) {
 	h := newHarness(t)
 	a, ctx := h.account()

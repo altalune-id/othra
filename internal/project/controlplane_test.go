@@ -20,7 +20,7 @@ import (
 
 func newProjectServiceClient(t *testing.T, store project.Store, refs project.OrgRefs) projectv1connect.ProjectServiceClient {
 	t.Helper()
-	_, handler := projectv1connect.NewProjectServiceHandler(project.NewControlPlane(project.NewService(store, nil), refs),
+	_, handler := projectv1connect.NewProjectServiceHandler(project.NewControlPlane(project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil), refs),
 		connect.WithInterceptors(fakes.OperatorInterceptor()))
 	ts := httptest.NewServer(handler)
 	t.Cleanup(ts.Close)
@@ -199,7 +199,7 @@ func TestProjectService_LogoUpload(t *testing.T) {
 	store := &fakes.ProjectStore{Project: p}
 	files := &fakes.FileStorage{Files: map[string]*storage.File{}}
 	_, handler := projectv1connect.NewProjectServiceHandler(
-		project.NewControlPlane(project.NewService(store, nil).WithStorage(files, fakes.Transactor{}), refs),
+		project.NewControlPlane(project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil).WithStorage(files), refs),
 		connect.WithInterceptors(fakes.OperatorInterceptor()))
 	ts := httptest.NewServer(handler)
 	t.Cleanup(ts.Close)

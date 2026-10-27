@@ -104,7 +104,7 @@ func TestSigningKeys_OutOfReachIsNotFound(t *testing.T) {
 	assert.Equal(t, map[Status]int{StatusActive: 1}, f.h.store.status(f.h.project), "nothing rotated")
 }
 
-// R-6: every rotation and promotion leaves one structured line, never key material.
+// every rotation and promotion leaves one structured line, never key material.
 func TestRotateAndPromote_LogOneLineEach(t *testing.T) {
 	f := newCPFixture(t)
 	var buf bytes.Buffer

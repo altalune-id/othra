@@ -91,7 +91,7 @@ func (f *adminFixture) as(person bool) context.Context {
 	return session.PrincipalInto(context.Background(), session.Principal{UserID: uuid.New(), ActiveOrgID: uuid.New()})
 }
 
-// M8 G9: the admin view reads an end user through the same slices as the portal.
+// the admin view reads an end user through the same slices as the portal.
 func TestEndUserService_Reads(t *testing.T) {
 	f := newAdminFixture()
 	ctx := f.as(true)
@@ -118,7 +118,7 @@ func TestEndUserService_Revokes(t *testing.T) {
 	_, err := f.svc.RevokeEndUserSession(ctx, connect.NewRequest(&enduserv1.RevokeEndUserSessionRequest{
 		ProjectId: "prj", EndUserId: "eu-ana", SessionId: "us-1",
 	}))
-	require.NoError(t, err, "P14: an admin may end the current session too")
+	require.NoError(t, err, "an admin may end the current session too")
 	assert.Equal(t, []string{"us-1"}, f.users.ended)
 	_, err = f.svc.DisconnectEndUserApp(ctx, connect.NewRequest(&enduserv1.DisconnectEndUserAppRequest{
 		ProjectId: "prj", EndUserId: "eu-ana", ClientId: "web",

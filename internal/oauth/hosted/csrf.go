@@ -21,7 +21,7 @@ const (
 	csrfSkew   = time.Minute
 )
 
-// CSRF issues and checks hosted form tokens: issued_at ‖ HMAC(key, cookie ‖ scope ‖ form ‖ issued_at), with no server storage (D3a).
+// CSRF issues and checks hosted form tokens: issued_at ‖ HMAC(key, cookie ‖ scope ‖ form ‖ issued_at), with no server storage.
 type CSRF struct {
 	key    []byte
 	maxAge time.Duration

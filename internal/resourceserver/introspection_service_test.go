@@ -14,7 +14,7 @@ import (
 	"altalune.id/othra/internal/kernel/secret"
 )
 
-// RFC 7662 §2.1, M8 P3: a resource server introspects with its own secret: shown once, hashed, rotatable with a grace.
+// RFC 7662 §2.1: a resource server introspects with its own secret: shown once, hashed, rotatable with a grace.
 func TestService_IntrospectionSecrets(t *testing.T) {
 	h := newHarness(t, false)
 	ctx := context.Background()
@@ -69,7 +69,7 @@ func TestService_IntrospectionSecrets(t *testing.T) {
 	assert.True(t, IsNotFoundError(err))
 }
 
-// M8 P6, RSV012: personal tokens are switched on only while the server has an introspection secret.
+// RSV012: personal tokens are switched on only while the server has an introspection secret.
 func TestService_PersonalTokenAccess(t *testing.T) {
 	h := newHarness(t, false)
 	ctx := context.Background()
@@ -77,7 +77,7 @@ func TestService_PersonalTokenAccess(t *testing.T) {
 	other := h.create(t, "https://other.example.com/mcp")
 
 	_, err := h.svc.SetPersonalTokenAccess(ctx, h.org, h.project, r.PublicID, true)
-	assert.Equal(t, apperror.CodeResourceServerAdmissionUnverified, codeOf(err), "R-1: a pending server first")
+	assert.Equal(t, apperror.CodeResourceServerAdmissionUnverified, codeOf(err), "a pending server first")
 	assert.Equal(t, "personal_tokens", reasonOf(err), "design 9: personal-token wording, not CIMD's")
 	_, _, err = h.svc.Verify(ctx, h.org, h.project, r.PublicID)
 	require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestService_PersonalTokenAccess(t *testing.T) {
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
 }
 
-// R-1, profile O20: personal tokens work only on an admissible server; one that fails its re-check stops taking them.
+// personal tokens work only on an admissible server; one that fails its re-check stops taking them.
 func TestService_PersonalTokensNeedAnAdmissibleServer(t *testing.T) {
 	h := newHarness(t, false)
 	ctx := context.Background()

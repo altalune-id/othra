@@ -5,12 +5,16 @@ import (
 
 	"github.com/a-h/templ"
 
-	"altalune.id/othra/internal/web/middleware"
-	"altalune.id/othra/internal/web/portal"
+	"altalune.id/othra/internal/web/layout"
 )
 
+// Portal serves the end-user portal app's index for one request; boot plugs in the embedded build.
+type Portal interface {
+	Serve(w http.ResponseWriter, r *http.Request, v layout.PortalValues)
+}
+
 // WithPortal serves the end-user portal app at /account/ from p; without it /account/ is not found.
-func (h *Web) WithPortal(p *portal.Page) *Web {
+func (h *Web) WithPortal(p Portal) *Web {
 	h.portalPage = p
 	return h
 }
@@ -35,12 +39,10 @@ func (h *Web) portal(w http.ResponseWriter, r *http.Request, s *site) {
 		h.toPage(w, r, s, pageTerms, backTo(here))
 		return
 	}
-	nonce := templ.GetNonce(r.Context())
-	middleware.AllowNonceScripts(w, nonce)
 	brand := h.layout(r, s).Brand
-	h.portalPage.Serve(w, r, portal.Values{
+	h.portalPage.Serve(w, r, layout.PortalValues{
 		BaseURL: s.path + "/account/", APIURL: s.path + "/api", HostedURL: s.path,
 		Handle: s.issuer.Handle, Project: s.name, LogoURL: brand.LogoURL, TermsURL: brand.TermsURL, PrivacyURL: brand.PrivacyURL,
-		BrandCSS: brand.CSS(), Nonce: nonce,
+		BrandCSS: brand.CSS(), Nonce: templ.GetNonce(r.Context()),
 	})
 }

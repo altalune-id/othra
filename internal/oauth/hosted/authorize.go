@@ -33,7 +33,7 @@ const (
 	promptConsent       = "consent"
 )
 
-// SECURITY: E2: fixed ASCII descriptions only, never the request echoed.
+// SECURITY: fixed ASCII descriptions only, never the request echoed.
 const (
 	descResponseType = "response_type must be code"
 	descRepeated     = "a parameter is repeated"
@@ -106,7 +106,7 @@ func parseAuthorize(ctx context.Context, o OAuth, p Project, q url.Values) (*aut
 	return req, err
 }
 
-// SECURITY: M2, ADR-0021 D3: a client_id URL is admitted through the request's resource; any miss is a page, never a redirect.
+// SECURITY: a client_id URL is admitted through the request's resource; any miss is a page, never a redirect.
 func client(ctx context.Context, o OAuth, p Project, q url.Values) (Client, *Resource, error) {
 	id := q.Get("client_id")
 	if strings.HasPrefix(id, "https://") {
@@ -135,7 +135,7 @@ func client(ctx context.Context, o OAuth, p Project, q url.Values) (Client, *Res
 	return c, nil, nil
 }
 
-// NOTE: RFC 8707 §2, E1: one resource per token; unknown, unadmissible and unlinked answer alike, so the error is no oracle.
+// NOTE: RFC 8707 §2: one resource per token; unknown, unadmissible and unlinked answer alike, so the error is no oracle.
 func (r *authRequest) target(ctx context.Context, o OAuth, p Project, values []string) error {
 	values = slices.Compact(slices.Clone(values))
 	if len(values) == 0 {
@@ -199,7 +199,7 @@ func (r *authRequest) validate(q url.Values) error {
 
 func (r *authRequest) finish(q url.Values) error {
 	r.scopes = grantedScopes(r.client, r.resource, strings.Fields(q.Get("scope")))
-	// NOTE: qa O1, E3, RFC 6749 §3.3: a named resource needs one of its own scopes left; openid alone doesn't count.
+	// NOTE: RFC 6749 §3.3: a named resource needs one of its own scopes left; openid alone doesn't count.
 	if r.scopes == nil || (r.resource != nil && !slices.ContainsFunc(r.scopes, isResourceScope)) {
 		return r.fail("invalid_scope", descScope)
 	}
@@ -213,7 +213,7 @@ func (r *authRequest) finish(q url.Values) error {
 	return nil
 }
 
-// NOTE: A5, A19, E3: unknown scopes are ignored, offline_access needs refresh, a known OIDC scope the client may not use refuses,
+// NOTE: unknown scopes are ignored, offline_access needs refresh, a known OIDC scope the client may not use refuses,
 // and a resource scope outside the client's pin is narrowed away (RFC 6749 §3.3).
 func grantedScopes(c Client, res *Resource, requested []string) []string {
 	var out []string
@@ -323,7 +323,7 @@ func (h *Web) authorizeFailed(w http.ResponseWriter, r *http.Request, s *site, e
 	return true
 }
 
-// SECURITY: A2, E1, E2: only a redirect URI registered for the client, with state and iss on every answer (RFC 9207).
+// SECURITY: only a redirect URI registered for the client, with state and iss on every answer (RFC 9207).
 func (h *Web) toClient(w http.ResponseWriter, r *http.Request, s *site, req *authRequest, params url.Values) {
 	u, err := url.Parse(req.redirectURI)
 	if err != nil {
@@ -344,7 +344,7 @@ func (h *Web) toClient(w http.ResponseWriter, r *http.Request, s *site, req *aut
 	http.Redirect(w, r, u.String(), http.StatusFound) //nolint:gosec // G710: a redirect URI registered for this client.
 }
 
-// NOTE: OIDC Core §3.1.2.1, m5-port §3.1: the decision table; the marker says when Othra last sent the person to sign in or choose.
+// NOTE: OIDC Core §3.1.2.1: the decision table; the marker says when Othra last sent the person to sign in or choose.
 func (h *Web) decide(w http.ResponseWriter, r *http.Request, s *site, req *authRequest, q url.Values) {
 	ctx := r.Context()
 	secret := h.cookies.browser(r)
@@ -415,12 +415,12 @@ func (h *Web) hint(ctx context.Context, s *site, req *authRequest, q url.Values)
 	return &hint, nil
 }
 
-// NOTE: A10: max_age=0 is prompt=login; a longer max_age needs a sign-in no older than it.
+// NOTE: max_age=0 is prompt=login; a longer max_age needs a sign-in no older than it.
 func (h *Web) staleLogin(req *authRequest, a Account) bool {
 	return req.prompt[promptLogin] || (req.hasMaxAge && (req.maxAge == 0 || time.Since(a.AuthTime) > time.Duration(req.maxAge)*time.Second))
 }
 
-// NOTE: m5-port §3.1: the picker when asked, when several accounts share the browser, or when a hint names another account.
+// NOTE: the picker when asked, when several accounts share the browser, or when a hint names another account.
 func (h *Web) mustChoose(req *authRequest, b *Browser, a Account, hint *Hint) bool {
 	switch {
 	case req.prompt[promptSelectAccount], len(b.Accounts) > 1:
@@ -452,7 +452,7 @@ func (h *Web) interact(
 
 var reentryDropped = []string{"id_token_hint", "request", "request_uri", "registration"} //nolint:gochecknoglobals // fixed list.
 
-// SECURITY: F1: the way back to /authorize keeps the request's own parameters and a signed hint subject, never the id_token_hint.
+// SECURITY: the way back to /authorize keeps the request's own parameters and a signed hint subject, never the id_token_hint.
 func (h *Web) reentry(s *site, req *authRequest, q url.Values) (string, bool) {
 	out := url.Values{}
 	for _, k := range singleParams {
@@ -547,7 +547,7 @@ func (h *Web) pending(r *http.Request, s *site, returnTo string) pending {
 	}
 }
 
-// NOTE: A18, N6: declining the terms records nothing; an authorize request hears access_denied, anything else gets a page.
+// NOTE: declining the terms records nothing; an authorize request hears access_denied, anything else gets a page.
 func (h *Web) declineTerms(w http.ResponseWriter, r *http.Request, s *site, returnTo string) {
 	ctx := r.Context()
 	if h.declineToClient(w, r, s, returnTo, "the end user declined the terms") {

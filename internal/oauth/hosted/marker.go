@@ -21,7 +21,7 @@ const (
 	purposeHint    = "othra-hint"
 )
 
-// Marker signs the time Othra sent a person from /authorize to sign in or choose an account (G3), so re-entry does not loop.
+// Marker signs the time Othra sent a person from /authorize to sign in or choose an account, so re-entry does not loop.
 type Marker struct {
 	key    []byte
 	maxAge time.Duration

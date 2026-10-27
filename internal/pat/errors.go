@@ -85,7 +85,7 @@ func (e *LimitError) ToAppError() *apperror.AppError {
 		WithMeta(map[string]string{"max": strconv.Itoa(e.Max)}).WithCause(e)
 }
 
-// ReauthRequiredError signals a sign-in too old to create a token (pm M8 P7).
+// ReauthRequiredError signals a sign-in too old to create a token.
 type ReauthRequiredError struct{}
 
 func (*ReauthRequiredError) Error() string { return "pat: sign in again to create a token" }

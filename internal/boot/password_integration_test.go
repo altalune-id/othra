@@ -14,7 +14,7 @@ import (
 	"altalune.id/othra/internal/auth"
 )
 
-// Review Focus 5: a password reset ends every session of that user.
+// a password reset ends every session of that user.
 func TestSetPassword_EndsSessions(t *testing.T) {
 	cfg := devLocalConfig()
 	cfg.HTTP.StateSecret = strings.Repeat("s", 40)

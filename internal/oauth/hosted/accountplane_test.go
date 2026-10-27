@@ -50,7 +50,7 @@ func (f *webFixture) resolve(c *http.Client, handle string) (resolvedEndUser, in
 	return out, p.status
 }
 
-// M8 G2: the account plane runs for the browser's active account, with its hosted form tokens; anything else is refused.
+// the account plane runs for the browser's active account, with its hosted form tokens; anything else is refused.
 func TestEndUser_ResolvesTheActiveAccount(t *testing.T) {
 	f := newWebFixture(t)
 	f.withAccountProbe()
@@ -95,7 +95,7 @@ func TestEndUser_ResolvesTheActiveAccount(t *testing.T) {
 	assert.False(t, enduser.IsSignedOutError(nil))
 }
 
-// M8 G5, P7: /login?prompt=login back to a portal page asks this account to sign in again instead of showing the picker.
+// /login?prompt=login back to a portal page asks this account to sign in again instead of showing the picker.
 func TestLogin_PortalReauth(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")

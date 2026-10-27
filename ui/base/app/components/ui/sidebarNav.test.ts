@@ -8,7 +8,7 @@ const items = [
   { key: 'sessions', label: 'Sessions', active: false },
 ];
 
-describe('sidebarNav (M8 design 12)', () => {
+describe('sidebarNav', () => {
   it('is a named navigation landmark that marks only the current page', () => {
     const w = mount(SidebarNav, { props: { label: 'Account', items } });
     expect(w.get('nav').attributes('aria-label')).toBe('Account');

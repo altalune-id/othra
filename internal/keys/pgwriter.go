@@ -38,7 +38,7 @@ func (s *postgresStore) Update(ctx context.Context, k *Key) error {
 		SET(postgres.String(string(k.Status)), timeExpr(k.ActivatesAt), timeExpr(k.ActivatedAt), timeExpr(k.RetireAfter), timeExpr(k.RetiredAt)).
 		WHERE(t.ID.EQ(postgres.UUID(k.ID)).AND(t.ProjectID.EQ(postgres.UUID(k.ProjectID))))
 	if k.Status == StatusRetired {
-		// SECURITY: R-7: a key that never signs again keeps no private key.
+		// SECURITY: a key that never signs again keeps no private key.
 		stmt = t.UPDATE(t.Status, t.ActivatesAt, t.ActivatedAt, t.RetireAfter, t.RetiredAt, t.PrivateKeyEnc).
 			SET(postgres.String(string(k.Status)), timeExpr(k.ActivatesAt), timeExpr(k.ActivatedAt), timeExpr(k.RetireAfter),
 				timeExpr(k.RetiredAt), postgres.NULL).

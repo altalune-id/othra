@@ -14,7 +14,7 @@ import (
 
 const endSessionPath = "/oauth2/end-session"
 
-// CrossSitePOSTs returns the patterns a relying party may POST to from its own origin: authorize (S3) and end-session (RPL §2).
+// CrossSitePOSTs returns the patterns a relying party may POST to from its own origin: authorize and end-session (RPL §2).
 func CrossSitePOSTs(basePath string) []string {
 	p := layout.Path(basePath, "/p/{handle}")
 	return []string{"POST " + p + authorizePath, "POST " + p + endSessionPath}
@@ -107,7 +107,7 @@ func (h *Web) parseEndSession(r *http.Request, s *site, q url.Values) (*endSessi
 	return es, "", nil
 }
 
-// NOTE: F6: the hinted user session when this browser holds it, else this browser's account for the hint's sub.
+// NOTE: the hinted user session when this browser holds it, else this browser's account for the hint's sub.
 func (h *Web) onThisBrowser(r *http.Request, s *site, userSession, subject string) (string, bool) {
 	b, err := h.users.Browser(r.Context(), s.project(), h.cookies.browser(r))
 	if err != nil {
@@ -147,7 +147,7 @@ func (h *Web) afterLogout(w http.ResponseWriter, r *http.Request, s *site, es *e
 	http.Redirect(w, r, u.String(), http.StatusFound) //nolint:gosec // G710: a post-logout URI registered for this client.
 }
 
-// NOTE: A2, RPL §4: a request refused before its redirect is trusted gets a page with no way back into sign-in.
+// NOTE: RPL §4: a request refused before its redirect is trusted gets a page with no way back into sign-in.
 func (h *Web) refused(w http.ResponseWriter, r *http.Request, s *site, code apperror.Code) {
 	ctx := r.Context()
 	title := "error.authorize_title"

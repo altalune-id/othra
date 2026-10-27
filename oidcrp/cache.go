@@ -37,7 +37,7 @@ func (p ttlPolicy) of(h http.Header) time.Duration {
 	return min(max(ttl, p.floor), p.ceiling)
 }
 
-// NOTE: R-3: concurrent misses share one fetch made outside the lock, and a failed refetch serves the last good copy.
+// NOTE: concurrent misses share one fetch made outside the lock, and a failed refetch serves the last good copy.
 type cache[T any] struct {
 	policy ttlPolicy
 	group  singleflight.Group

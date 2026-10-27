@@ -206,7 +206,7 @@ func linkIn(t *testing.T, text string) string {
 	return m
 }
 
-// J1: a first sign-in by magic link lands on the account page.
+// a first sign-in by magic link lands on the account page.
 func TestWeb_FirstSignIn(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, "/p/acme/login")
@@ -230,10 +230,10 @@ func TestWeb_FirstSignIn(t *testing.T) {
 	verifyURL := linkIn(t, f.users.mails[0].TextBody)
 	moved := f.get(f.client, strings.TrimPrefix(verifyURL, f.srv.URL))
 	require.Equal(t, http.StatusSeeOther, moved.status)
-	assert.Equal(t, "/p/acme/login/verify", moved.location(), "H3: the token leaves the URL")
+	assert.Equal(t, "/p/acme/login/verify", moved.location(), "the token leaves the URL")
 	verify := f.get(f.client, moved.location())
 	assert.Contains(t, verify.body, "ana@example.com")
-	assert.Zero(t, f.users.redeems, "C5: GET never redeems")
+	assert.Zero(t, f.users.redeems, "GET never redeems")
 	again := f.get(f.client, moved.location())
 	assert.Equal(t, http.StatusOK, again.status, "a second GET still only shows the page")
 
@@ -242,7 +242,7 @@ func TestWeb_FirstSignIn(t *testing.T) {
 	assert.Equal(t, "/p/acme/account/", done.location())
 	assert.Equal(t, 1, f.users.redeems, "GET twice and POST once give one session")
 	repeat := f.submit(f.client, verify, "/login/verify", nil)
-	assert.Equal(t, http.StatusSeeOther, repeat.status, "H23: a second Continue lands signed in")
+	assert.Equal(t, http.StatusSeeOther, repeat.status, "a second Continue lands signed in")
 	assert.Equal(t, "/p/acme/account/", repeat.location())
 	assert.Equal(t, 1, f.users.redeems)
 
@@ -280,7 +280,7 @@ func TestWeb_Cookies(t *testing.T) {
 	assert.NotContains(t, attrs[BrowserCookie], f.users.issued[0].Email)
 }
 
-// H4, D3a: sign-in renews the CSRF cookie, so a token rendered before it stops working.
+// sign-in renews the CSRF cookie, so a token rendered before it stops working.
 func TestWeb_SignInRenewsTheCSRFCookie(t *testing.T) {
 	f := newWebFixture(t)
 	before := f.get(f.client, "/p/acme/login?add=1")
@@ -289,10 +289,10 @@ func TestWeb_SignInRenewsTheCSRFCookie(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, stale.status)
 	assert.Contains(t, stale.body, "This page expired")
 	assert.Contains(t, stale.body, "SIG004")
-	assert.Contains(t, plain(stale.body), "Go back, reload the page and try again.", "D10: the body does not repeat the title")
+	assert.Contains(t, plain(stale.body), "Go back, reload the page and try again.", "the body does not repeat the title")
 }
 
-// J2, J3, J5: the picker lists both accounts, selects one, and signs one out with a notice.
+// the picker lists both accounts, selects one, and signs one out with a notice.
 func TestWeb_PickerSelectAndSignOut(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -348,7 +348,7 @@ func TestWeb_StaleTile(t *testing.T) {
 	assert.Contains(t, stale.body, "isn&#39;t signed in on this browser anymore")
 }
 
-// J4, S8: the terms gate shows for a new version, records the account named in the form, then continues.
+// the terms gate shows for a new version, records the account named in the form, then continues.
 func TestWeb_TermsGate(t *testing.T) {
 	f := newWebFixture(t)
 	f.acme.TermsVersion, f.acme.TermsURL = 1, "https://acme.example/terms"
@@ -358,7 +358,7 @@ func TestWeb_TermsGate(t *testing.T) {
 	terms := f.get(f.client, done.location())
 	assert.Contains(t, terms.body, "One quick step before we create your Acme account.")
 	assert.Contains(t, terms.body, "https://acme.example/terms")
-	assert.NotContains(t, terms.body, "Privacy Policy", "H20: no privacy URL, no privacy link")
+	assert.NotContains(t, terms.body, "Privacy Policy", "no privacy URL, no privacy link")
 
 	unticked := f.submit(f.client, terms, "/terms", nil)
 	assert.Equal(t, http.StatusUnprocessableEntity, unticked.status)
@@ -381,10 +381,10 @@ func TestWeb_TermsGate(t *testing.T) {
 	updated = f.get(f.client, stale.location())
 	forged := f.submit(f.client, updated, "/terms", url.Values{"accept_terms": {"1"}, "user_session": {"someone-elses"}})
 	assert.Equal(t, http.StatusOK, forged.status)
-	assert.Contains(t, forged.body, "Choose an account", "T4: a session not on this browser is refused")
+	assert.Contains(t, forged.body, "Choose an account", "a session not on this browser is refused")
 }
 
-// D1, S6: two projects in one browser keep separate sessions; the cookie of one never signs in to the other.
+// two projects in one browser keep separate sessions; the cookie of one never signs in to the other.
 func TestWeb_TwoProjectsStayApart(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -406,7 +406,7 @@ func TestWeb_TwoProjectsStayApart(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, page.status, "acme's browser secret means nothing to beta")
 }
 
-// D1: the link opened in another browser signs that browser in, not the one that asked.
+// the link opened in another browser signs that browser in, not the one that asked.
 func TestWeb_CrossDeviceLink(t *testing.T) {
 	f := newWebFixture(t)
 	laptop, phone := f.client, f.newClient()
@@ -422,7 +422,7 @@ func TestWeb_CrossDeviceLink(t *testing.T) {
 	assert.Equal(t, http.StatusSeeOther, f.get(laptop, "/p/acme/account/").status, "the laptop is not signed in")
 }
 
-// J7: an unknown, used or missing link shows the same 400 page.
+// an unknown, used or missing link shows the same 400 page.
 func TestWeb_LinkNotUsable(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -468,7 +468,7 @@ func TestWeb_InvalidEmailAndDisabledEmail(t *testing.T) {
 	assert.Contains(t, off.body, "Signing in by email is turned off")
 }
 
-// D2: the pages follow Accept-Language.
+// the pages follow Accept-Language.
 func TestWeb_Indonesian(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, "/p/acme/login", "Accept-Language", "id-ID,id;q=0.9")
@@ -477,7 +477,7 @@ func TestWeb_Indonesian(t *testing.T) {
 	assert.Contains(t, login.body, "Lanjutkan dengan email")
 }
 
-// D4, H13: the mail is from the project's name at mail.from, with Reply-To the support email, in the request's language.
+// the mail is from the project's name at mail.from, with Reply-To the support email, in the request's language.
 func TestWeb_Mail(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, "/p/acme/login", "Accept-Language", "id")
@@ -502,7 +502,7 @@ func TestWeb_Mail(t *testing.T) {
 	assert.Contains(t, m.From, "<no-reply@othra.example>")
 }
 
-// J8, S11, RL1, RL2: the per-email limits and the cooldown are silent; the per-IP limits answer 429.
+// the per-email limits and the cooldown are silent; the per-IP limits answer 429.
 func TestWeb_RateLimits(t *testing.T) {
 	clock := ratelimittest.NewClock()
 	f := newWebFixture(t)
@@ -529,14 +529,14 @@ func TestWeb_RateLimits(t *testing.T) {
 	assert.Equal(t, http.StatusTooManyRequests, limited.status, "11th send in a minute from one IP")
 	assert.NotEmpty(t, limited.header.Get("Retry-After"))
 	assert.Contains(t, limited.body, "Too many attempts")
-	assert.Contains(t, limited.body, "Try again in "+limited.header.Get("Retry-After")+" seconds.", "B3: the title is not repeated in the body")
+	assert.Contains(t, limited.body, "Try again in "+limited.header.Get("Retry-After")+" seconds.", "the title is not repeated in the body")
 	assert.NotContains(t, limited.body, "Too many attempts. Try again", "the shared AUT003 sentence is not used")
 	assert.Contains(t, limited.body, "AUT003")
 	assert.Contains(t, limited.body, "Back to sign in", "the sign-in flow's own 429 keeps its way back")
 	assert.Equal(t, http.StatusSeeOther, send("beta", "y@example.com").status, "limits are per project")
 }
 
-// qa: a request the cooldown blocks spends no per-email budget, so a send after the cooldown still mails.
+// a request the cooldown blocks spends no per-email budget, so a send after the cooldown still mails.
 func TestWeb_CooldownSpendsNoEmailBudget(t *testing.T) {
 	clock := ratelimittest.NewClock()
 	f := newWebFixture(t)
@@ -556,7 +556,7 @@ func TestWeb_CooldownSpendsNoEmailBudget(t *testing.T) {
 	assert.Len(t, f.users.issued, 2, "the cooled-down resends spent nothing: the send after 61 s mails")
 }
 
-// RL2: the per-email day limit holds after the 15-minute window refills.
+// the per-email day limit holds after the 15-minute window refills.
 func TestWeb_EmailDayLimit(t *testing.T) {
 	clock := ratelimittest.NewClock()
 	f := newWebFixture(t)
@@ -592,7 +592,7 @@ func (brokenLimiter) Allow(context.Context, string, ratelimit.Rule) (ratelimit.R
 
 func (brokenLimiter) Reset(context.Context, string) error { return nil }
 
-// C1, C3: every hosted POST needs its CSRF token, and a cross-site POST is refused even with one.
+// every hosted POST needs its CSRF token, and a cross-site POST is refused even with one.
 func TestWeb_EveryPOSTNeedsItsToken(t *testing.T) {
 	f := newWebFixture(t)
 	for _, path := range []string{"/login", "/login/resend", "/login/verify", "/login/select", "/login/signout", "/terms"} {
@@ -729,7 +729,7 @@ func TestWeb_TermsAlreadyAccepted(t *testing.T) {
 	assert.Equal(t, "/p/acme/account/", done.location())
 }
 
-// H8: the return_to redirect helper runs ReturnTo itself, so an off-issuer value falls back.
+// the return_to redirect helper runs ReturnTo itself, so an off-issuer value falls back.
 func TestWeb_ToReturnToFallsBack(t *testing.T) {
 	f := newWebFixture(t)
 	for _, raw := range []string{"https://evil.example/", "//evil.example", "/p/beta/account/", ""} {
@@ -742,7 +742,7 @@ func TestWeb_ToReturnToFallsBack(t *testing.T) {
 	assert.Equal(t, "/p/acme/login?return_to=%2F%2Fevil", rec.Header().Get("Location"), "a page redirect only encodes values")
 }
 
-// RL1: the per-IP hour cap trips even when every send keeps under the minute cap.
+// the per-IP hour cap trips even when every send keeps under the minute cap.
 func TestWeb_IPHourLimit(t *testing.T) {
 	clock := ratelimittest.NewClock()
 	f := newWebFixture(t)
@@ -761,7 +761,7 @@ func TestWeb_IPHourLimit(t *testing.T) {
 	assert.Equal(t, 60, len(f.users.issued)+refused)
 }
 
-// N5, RL3: 30 redeems a minute per IP and project, counted on the POST only; the verify GET never counts.
+// 30 redeems a minute per IP and project, counted on the POST only; the verify GET never counts.
 func TestWeb_RedeemLimit(t *testing.T) {
 	clock := ratelimittest.NewClock()
 	f := newWebFixture(t)
@@ -795,7 +795,7 @@ func csrfTokenFor(t *testing.T, f *webFixture, p hostedPage, form string) string
 	return ""
 }
 
-// qa F3: the sign-out notice is the email, translated once by the page that shows it.
+// the sign-out notice is the email, translated once by the page that shows it.
 func TestWeb_SignOutNoticeIndonesian(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -806,7 +806,7 @@ func TestWeb_SignOutNoticeIndonesian(t *testing.T) {
 	assert.Contains(t, plain(id.body), "cici@example.com sudah keluar di browser ini.")
 }
 
-// B1: an invalid email in add-account mode keeps the way back to the accounts.
+// an invalid email in add-account mode keeps the way back to the accounts.
 func TestWeb_AddModeKeepsBackOnError(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -823,7 +823,7 @@ func TestWeb_AddModeKeepsBackOnError(t *testing.T) {
 	assert.NotContains(t, plain.body, "Back to accounts", "no accounts, no way back")
 }
 
-// B5: signing out the last tile lands on the email form with the notice, translated once.
+// signing out the last tile lands on the email form with the notice, translated once.
 func TestWeb_LastTileSignOutShowsTheNotice(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
@@ -845,7 +845,7 @@ func TestWeb_CodeErrorNamesTheProject(t *testing.T) {
 	assert.NotContains(t, body, "{project}")
 }
 
-// G1: the portal app is served at every /account/ path to a signed-in account, with its project's values and a script nonce.
+// the portal app is served at every /account/ path to a signed-in account, with its project's values and a script nonce.
 func TestWeb_Portal(t *testing.T) {
 	f := newWebFixture(t)
 	gone := f.get(f.client, "/p/acme/account/sessions")

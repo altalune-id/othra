@@ -76,8 +76,8 @@ func newPGFixture(t *testing.T) *pgFixture {
 	_, err = f.members.Add(f.ctx, o.ID, f.owner.ID, member.RoleOwner)
 	require.NoError(t, err)
 	f.svc = invite.NewService(invite.Deps{
-		Store: f.store, Transactor: db.NewTransactor(pool), Members: f.members, Mail: &mailBox{}, Orgs: orgNames{o.ID: "Acme"},
-		People: userPeople{users: f.users}, Users: user.NewService(f.users, unexpected), Terms: legal.NewService(user.NewService(f.users, unexpected)), BaseURL: baseURL, Unexpected: unexpected,
+		Store: f.store, Transactor: db.NewTransactor(pool), Members: f.members, Mail: &mailBox{}, Events: &eventLog{}, Orgs: orgNames{o.ID: "Acme"},
+		People: userPeople{users: f.users}, Users: user.NewService(f.users, unexpected), Terms: legal.NewService(user.NewService(f.users, unexpected), legal.NewStore(pool, schema, ""), db.NewTransactor(pool)), BaseURL: baseURL, Unexpected: unexpected,
 	}).WithClock(f.now)
 	return f
 }

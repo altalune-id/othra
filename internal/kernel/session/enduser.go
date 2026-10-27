@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// EndUser is the end user an account.v1 call runs for: the browser's active account in one project (M8 G2).
+// EndUser is the end user an account.v1 call runs for: the browser's active account in one project.
 type EndUser struct {
 	OrgID           uuid.UUID
 	ProjectID       uuid.UUID

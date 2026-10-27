@@ -113,7 +113,7 @@ func (f *pgFixture) introspect(t *testing.T, token string) bool {
 	return ok
 }
 
-// pm A7, A8: the hash at rest, active until revoked, inactive on the very next read.
+// the hash at rest, active until revoked, inactive on the very next read.
 func TestPostgres_CreateIntrospectRevoke(t *testing.T) {
 	f := newPGFixture(t)
 	c := f.create(t)
@@ -143,7 +143,7 @@ func TestPostgres_CreateIntrospectRevoke(t *testing.T) {
 	assert.True(t, pat.IsNotFoundError(f.svc.Revoke(t.Context(), f.p, uuid.New(), c.Token.PublicID)), "another end user's token")
 }
 
-// pm P6: the live-token cap holds when creates race, because each locks the end user's row.
+// the live-token cap holds when creates race, because each locks the end user's row.
 func TestPostgres_LiveCapUnderConcurrency(t *testing.T) {
 	f := newPGFixture(t)
 	var wg sync.WaitGroup
@@ -171,7 +171,7 @@ func TestPostgres_LiveCapUnderConcurrency(t *testing.T) {
 	assert.Equal(t, 5, limited)
 }
 
-// pm P11: last use goes through the batcher, flushed per tenant, and never moves back.
+// last use goes through the batcher, flushed per tenant, and never moves back.
 func TestPostgres_LastUsed(t *testing.T) {
 	f := newPGFixture(t)
 	c := f.create(t)
@@ -195,7 +195,7 @@ func TestPostgres_LastUsed(t *testing.T) {
 	assert.True(t, f.now.Equal(*lastUsed()), "never moved back")
 }
 
-// pm A12: tokens revoked or expired over 30 days ago are pruned, the rest kept.
+// tokens revoked or expired over 30 days ago are pruned, the rest kept.
 func TestPostgres_Prune(t *testing.T) {
 	f := newPGFixture(t)
 	revoked, kept := f.create(t), f.create(t)
@@ -213,7 +213,7 @@ func TestPostgres_Prune(t *testing.T) {
 	assert.Empty(t, listed, kept.Token.PublicID)
 }
 
-// pm A21, A22: another project's scope sees none of the tokens, and its servers can't introspect them.
+// another project's scope sees none of the tokens, and its servers can't introspect them.
 func TestPostgres_ProjectsStayApart(t *testing.T) {
 	f := newPGFixture(t)
 	c := f.create(t)

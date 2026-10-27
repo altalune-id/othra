@@ -37,13 +37,13 @@ func testUnexpected() apperror.UnexpectedFunc {
 	return apperror.NewReporter(nil, false).Unexpected
 }
 
-func newService(store apikey.Store, projects apikey.Projects) *apikey.Service {
-	return apikey.NewService(store, apikey.NewScheme(""), projects, testUnexpected())
+func newService(store apikey.Store, projects apikey.Projects, owners apikey.OwnerRoles) *apikey.Service {
+	return apikey.NewService(store, apikey.NewScheme(""), projects, owners, testUnexpected())
 }
 
 func TestService_Create_Project(t *testing.T) {
 	store := &fakes.APIKeyStore{}
-	k, plaintext, err := newService(store, stubProjects{ids: []uuid.UUID{knownProject}}).Create(context.Background(), apikey.CreateRequest{
+	k, plaintext, err := newService(store, stubProjects{ids: []uuid.UUID{knownProject}}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), ProjectID: knownProject, Kind: apikey.KindProject, Name: "ci",
 		Scopes: []string{scope.WebhookRead}, ExpiresAt: future(),
 	})
@@ -56,7 +56,7 @@ func TestService_Create_Project(t *testing.T) {
 func TestService_Create_Org(t *testing.T) {
 	projectID := uuid.New()
 	store := &fakes.APIKeyStore{}
-	k, _, err := newService(store, stubProjects{ids: []uuid.UUID{projectID}}).Create(context.Background(), apikey.CreateRequest{
+	k, _, err := newService(store, stubProjects{ids: []uuid.UUID{projectID}}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "deploy",
 		Scopes: []string{scope.OrgRead}, ProjectIDs: []uuid.UUID{projectID}, ExpiresAt: future(),
 	})
@@ -66,7 +66,7 @@ func TestService_Create_Org(t *testing.T) {
 }
 
 func TestService_Create_Org_AllProjects(t *testing.T) {
-	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{}).Create(context.Background(), apikey.CreateRequest{
+	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "deploy", AllProjects: true, ExpiresAt: future(),
 	})
 	require.NoError(t, err)
@@ -75,21 +75,21 @@ func TestService_Create_Org_AllProjects(t *testing.T) {
 func TestService_Create_Validation(t *testing.T) {
 	ctx := context.Background()
 
-	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{}).Create(ctx, apikey.CreateRequest{Kind: apikey.KindOrg, Name: "x", AllProjects: true, ExpiresAt: future()})
+	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{}, fakes.NoOwnerRoles{}).Create(ctx, apikey.CreateRequest{Kind: apikey.KindOrg, Name: "x", AllProjects: true, ExpiresAt: future()})
 	_, ok := apperror.AsAppError(err)
 	assert.True(t, ok, "missing org")
 
-	_, _, err = newService(&fakes.APIKeyStore{}, stubProjects{}).Create(ctx, apikey.CreateRequest{OrgID: uuid.New(), Kind: apikey.KindProject, Name: "x", ExpiresAt: future()})
+	_, _, err = newService(&fakes.APIKeyStore{}, stubProjects{}, fakes.NoOwnerRoles{}).Create(ctx, apikey.CreateRequest{OrgID: uuid.New(), Kind: apikey.KindProject, Name: "x", ExpiresAt: future()})
 	_, ok = apperror.AsAppError(err)
 	assert.True(t, ok, "project key needs project id")
 
-	_, _, err = newService(&fakes.APIKeyStore{}, stubProjects{}).Create(ctx, apikey.CreateRequest{OrgID: uuid.New(), Kind: "bogus", Name: "x", ExpiresAt: future()})
+	_, _, err = newService(&fakes.APIKeyStore{}, stubProjects{}, fakes.NoOwnerRoles{}).Create(ctx, apikey.CreateRequest{OrgID: uuid.New(), Kind: "bogus", Name: "x", ExpiresAt: future()})
 	_, ok = apperror.AsAppError(err)
 	assert.True(t, ok, "invalid kind")
 }
 
 func TestService_Create_GrantProjectNotInOrg(t *testing.T) {
-	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{ids: []uuid.UUID{uuid.New()}}).Create(context.Background(), apikey.CreateRequest{
+	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{ids: []uuid.UUID{uuid.New()}}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "x", ProjectIDs: []uuid.UUID{uuid.New()}, ExpiresAt: future(),
 	})
 	_, ok := apperror.AsAppError(err)
@@ -97,21 +97,21 @@ func TestService_Create_GrantProjectNotInOrg(t *testing.T) {
 }
 
 func TestService_Create_GrantProjectsError(t *testing.T) {
-	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{err: errors.New("boom")}).Create(context.Background(), apikey.CreateRequest{
+	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{err: errors.New("boom")}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "x", ProjectIDs: []uuid.UUID{uuid.New()}, ExpiresAt: future(),
 	})
 	assert.Error(t, err)
 }
 
 func TestService_Create_UnknownScope(t *testing.T) {
-	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{}).Create(context.Background(), apikey.CreateRequest{
+	_, _, err := newService(&fakes.APIKeyStore{}, stubProjects{}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "x", Scopes: []string{"nope"}, AllProjects: true, ExpiresAt: future(),
 	})
 	assert.IsType(t, &apikey.UnknownScopeError{}, err)
 }
 
 func TestService_Create_StoreError(t *testing.T) {
-	_, _, err := newService(&fakes.APIKeyStore{Err: errors.New("boom")}, stubProjects{}).Create(context.Background(), apikey.CreateRequest{
+	_, _, err := newService(&fakes.APIKeyStore{Err: errors.New("boom")}, stubProjects{}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "x", AllProjects: true, ExpiresAt: future(),
 	})
 	_, ok := apperror.AsAppError(err)
@@ -122,13 +122,13 @@ func TestService_List(t *testing.T) {
 	k, _, err := apikey.NewScheme("").MintOrg(uuid.New(), "x", nil, apikey.ProjectGrant{All: true}, future(), time.Now().UTC())
 	require.NoError(t, err)
 	store := &fakes.APIKeyStore{Keys: []*apikey.APIKey{k}}
-	got, err := newService(store, stubProjects{}).List(context.Background(), k.OrgID, uuid.Nil)
+	got, err := newService(store, stubProjects{}, fakes.NoOwnerRoles{}).List(context.Background(), k.OrgID, uuid.Nil)
 	require.NoError(t, err)
 	assert.Equal(t, []*apikey.APIKey{k}, got)
 }
 
 func TestService_List_Error(t *testing.T) {
-	_, err := newService(&fakes.APIKeyStore{Err: errors.New("boom")}, stubProjects{}).List(context.Background(), uuid.New(), uuid.Nil)
+	_, err := newService(&fakes.APIKeyStore{Err: errors.New("boom")}, stubProjects{}, fakes.NoOwnerRoles{}).List(context.Background(), uuid.New(), uuid.Nil)
 	assert.Error(t, err)
 }
 
@@ -137,20 +137,20 @@ func TestService_Revoke(t *testing.T) {
 	k, _, err := apikey.NewScheme("").MintOrg(orgID, "x", nil, apikey.ProjectGrant{All: true}, future(), time.Now().UTC())
 	require.NoError(t, err)
 	store := &fakes.APIKeyStore{Key: k}
-	require.NoError(t, newService(store, stubProjects{}).Revoke(context.Background(), orgID, k.ID, uuid.Nil, true))
+	require.NoError(t, newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), orgID, k.ID, uuid.Nil, true))
 	assert.NotNil(t, store.Saved.RevokedAt)
 }
 
 func TestService_Revoke_WrongOrg(t *testing.T) {
 	k, _, err := apikey.NewScheme("").MintOrg(uuid.New(), "x", nil, apikey.ProjectGrant{All: true}, future(), time.Now().UTC())
 	require.NoError(t, err)
-	err = newService(&fakes.APIKeyStore{Key: k}, stubProjects{}).Revoke(context.Background(), uuid.New(), k.ID, uuid.Nil, true)
+	err = newService(&fakes.APIKeyStore{Key: k}, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), uuid.New(), k.ID, uuid.Nil, true)
 	assert.IsType(t, &apikey.NotFoundError{}, err)
 }
 
 func TestService_Revoke_NotFound(t *testing.T) {
 	store := &fakes.APIKeyStore{Err: &apikey.NotFoundError{ID: "x"}}
-	err := newService(store, stubProjects{}).Revoke(context.Background(), uuid.New(), uuid.New(), uuid.Nil, true)
+	err := newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), uuid.New(), uuid.New(), uuid.Nil, true)
 	assert.True(t, apikey.IsNotFoundError(err))
 }
 
@@ -160,7 +160,7 @@ func TestService_Revoke_SaveError(t *testing.T) {
 	require.NoError(t, err)
 	store := &fakes.APIKeyStore{Key: k, SaveFn: func(*apikey.APIKey) error { return errors.New("boom") }}
 
-	err = newService(store, stubProjects{}).Revoke(context.Background(), orgID, k.ID, uuid.Nil, true)
+	err = newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), orgID, k.ID, uuid.Nil, true)
 	_, ok := apperror.AsAppError(err)
 	assert.True(t, ok)
 }
@@ -168,7 +168,7 @@ func TestService_Revoke_SaveError(t *testing.T) {
 func TestService_Create_ProjectKeyProjectMustBelongToOrg(t *testing.T) {
 	mine := uuid.New()
 	store := &fakes.APIKeyStore{}
-	svc := newService(store, stubProjects{ids: []uuid.UUID{mine}})
+	svc := newService(store, stubProjects{ids: []uuid.UUID{mine}}, fakes.NoOwnerRoles{})
 
 	_, _, err := svc.Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), ProjectID: uuid.New(), Kind: apikey.KindProject, Name: "ci", Scopes: []string{scope.WebhookRead}, ExpiresAt: future(),
@@ -188,7 +188,7 @@ func TestService_Revoke_OwnPersonalKeyWithoutManage(t *testing.T) {
 	orgID, me := uuid.New(), uuid.New()
 	mine, _ := personalKey(t, orgID, me)
 	store := &fakes.APIKeyStore{Key: mine}
-	require.NoError(t, newService(store, stubProjects{}).Revoke(context.Background(), orgID, mine.ID, me, false))
+	require.NoError(t, newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), orgID, mine.ID, me, false))
 	assert.NotNil(t, store.Saved.RevokedAt)
 }
 
@@ -198,7 +198,7 @@ func TestService_Revoke_OtherKeysNeedManage(t *testing.T) {
 	require.NoError(t, err)
 	store := &fakes.APIKeyStore{Key: k}
 
-	err = newService(store, stubProjects{}).Revoke(context.Background(), orgID, k.ID, me, false)
+	err = newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Revoke(context.Background(), orgID, k.ID, me, false)
 	forbidden, ok := errors.AsType[*authz.ForbiddenError](err)
 	require.True(t, ok, "%v", err)
 	assert.Equal(t, scope.ApikeyWrite, forbidden.Permission)
@@ -214,7 +214,7 @@ func TestService_Create_RemintsOnAHintCollision(t *testing.T) {
 		}
 		return nil
 	}}
-	k, plaintext, err := newService(store, stubProjects{}).Create(context.Background(), apikey.CreateRequest{
+	k, plaintext, err := newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "ci", AllProjects: true, ExpiresAt: future(),
 	})
 	require.NoError(t, err)
@@ -229,7 +229,7 @@ func TestService_Create_GivesUpAfterBoundedReMints(t *testing.T) {
 		saves++
 		return &apikey.HintTakenError{}
 	}}
-	_, _, err := newService(store, stubProjects{}).Create(context.Background(), apikey.CreateRequest{
+	_, _, err := newService(store, stubProjects{}, fakes.NoOwnerRoles{}).Create(context.Background(), apikey.CreateRequest{
 		OrgID: uuid.New(), Kind: apikey.KindOrg, Name: "ci", AllProjects: true, ExpiresAt: future(),
 	})
 	ae, ok := apperror.AsAppError(err)
@@ -247,7 +247,7 @@ func TestService_RevokeByHint(t *testing.T) {
 	}
 	target, other := mint(orgID), mint(orgID)
 	store := &fakes.APIKeyStore{Keys: []*apikey.APIKey{other, target}}
-	svc := newService(store, stubProjects{})
+	svc := newService(store, stubProjects{}, fakes.NoOwnerRoles{})
 
 	require.NoError(t, svc.RevokeByHint(context.Background(), orgID, target.SecretHint, uuid.Nil, true))
 	require.Same(t, target, store.Saved, "only the key with that hint is revoked")
@@ -261,7 +261,7 @@ func TestService_RevokeByHint(t *testing.T) {
 }
 
 func TestService_RevokeByHint_StoreError(t *testing.T) {
-	err := newService(&fakes.APIKeyStore{Err: errors.New("boom")}, stubProjects{}).RevokeByHint(context.Background(), uuid.New(), "abcd", uuid.Nil, true)
+	err := newService(&fakes.APIKeyStore{Err: errors.New("boom")}, stubProjects{}, fakes.NoOwnerRoles{}).RevokeByHint(context.Background(), uuid.New(), "abcd", uuid.Nil, true)
 	_, ok := apperror.AsAppError(err)
 	assert.True(t, ok)
 }
@@ -273,7 +273,7 @@ func TestService_RevokeByHint_AcceptsTheHintAsShown(t *testing.T) {
 	for _, shown := range []string{"…" + k.SecretHint, "..." + k.SecretHint, " " + k.SecretHint + " "} {
 		k.RevokedAt = nil
 		store := &fakes.APIKeyStore{Keys: []*apikey.APIKey{k}}
-		require.NoError(t, newService(store, stubProjects{}).RevokeByHint(context.Background(), orgID, shown, uuid.Nil, true), "%q", shown)
+		require.NoError(t, newService(store, stubProjects{}, fakes.NoOwnerRoles{}).RevokeByHint(context.Background(), orgID, shown, uuid.Nil, true), "%q", shown)
 		assert.NotNil(t, k.RevokedAt, "%q", shown)
 	}
 }

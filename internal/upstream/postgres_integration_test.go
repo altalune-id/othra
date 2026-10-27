@@ -22,6 +22,12 @@ type emailLinkOn struct{}
 
 func (emailLinkOn) EmailLinkOn(context.Context, uuid.UUID) (bool, error) { return true, nil }
 
+type issuerOf struct{}
+
+func (issuerOf) IssuerURL(context.Context, uuid.UUID) (string, error) {
+	return "https://id.example.com/p/acme", nil
+}
+
 func seedProject(t *testing.T, sqlDB *sql.DB) (org, project uuid.UUID) {
 	t.Helper()
 	org, project = uuid.New(), uuid.New()
@@ -41,14 +47,14 @@ func codeOf(err error) apperror.Code {
 	return ""
 }
 
-// F2, ADR-0012, P6, A26: the sealed secret round-trips, one Google per project, UPS004 while linked, and another project sees nothing.
+// the sealed secret round-trips, one Google per project, UPS004 while linked, and another project sees nothing.
 func TestPostgres_Upstreams(t *testing.T) {
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	key, err := sealer.GenerateKey()
 	require.NoError(t, err)
 	seal, err := sealer.New(key)
 	require.NoError(t, err)
-	svc := upstream.NewService(upstream.NewStore(pool, schemaName, ""), db.NewTransactor(pool), seal, emailLinkOn{},
+	svc := upstream.NewService(upstream.NewStore(pool, schemaName, ""), db.NewTransactor(pool), seal, emailLinkOn{}, issuerOf{},
 		apperror.NewReporter(nil, false).Unexpected)
 	ctx := t.Context()
 	org, project := seedProject(t, sqlDB)

@@ -22,15 +22,9 @@ type Service struct {
 	privacy  *Snapshot
 }
 
-// NewService builds a Service; users may be nil when acceptance is never asked for.
-func NewService(users TermsAcceptor) *Service {
-	return &Service{users: users}
-}
-
-// WithStore keeps snapshots of the built-in documents and the acceptance history in store.
-func (s *Service) WithStore(store Store, uow db.Transactor) *Service {
-	s.store, s.uow = store, uow
-	return s
+// NewService builds a Service that keeps snapshots and acceptances in store on uow; all three nil serve the documents read-only.
+func NewService(users TermsAcceptor, store Store, uow db.Transactor) *Service {
+	return &Service{users: users, store: store, uow: uow}
 }
 
 // WithExternalTerms says the terms live at an external URL, last changed at updated; a zero updated never asks again.
@@ -41,7 +35,7 @@ func (s *Service) WithExternalTerms(updated time.Time) *Service {
 
 // Publish stores the built-in documents' current versions; it fails when a stored version's text differs.
 func (s *Service) Publish(ctx context.Context) error {
-	if s.store == nil || s.external != nil {
+	if s.external != nil {
 		return nil
 	}
 	m, err := docs()
@@ -101,7 +95,7 @@ func (s *Service) CanAccept() bool { return s.users != nil }
 // Accept records that userID accepted the current terms at source and returns when; it joins the transaction on ctx.
 func (s *Service) Accept(ctx context.Context, userID uuid.UUID, source Source) (time.Time, error) {
 	var at time.Time
-	err := s.inTx(ctx, func(ctx context.Context) error {
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		u, err := s.users.AcceptTerms(ctx, userID)
 		if err != nil {
 			return err
@@ -123,13 +117,6 @@ func (s *Service) Accept(ctx context.Context, userID uuid.UUID, source Source) (
 		return time.Time{}, err
 	}
 	return at, nil
-}
-
-func (s *Service) inTx(ctx context.Context, fn func(context.Context) error) error {
-	if s.store == nil {
-		return fn(ctx)
-	}
-	return s.uow.RunInTx(ctx, fn)
 }
 
 func latestOf(a, b time.Time) time.Time {

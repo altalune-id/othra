@@ -43,7 +43,7 @@ type IssueRequest struct {
 	Compose func(Link) (mailer.Message, error)
 	// Allow runs once the resend cooldown has passed, before the link is stored; false issues nothing, silently. Nil allows.
 	Allow func(ctx context.Context) (bool, error)
-	// Pending is an upstream identity, as JSON, that redeeming the link on this browser may add to its end user (N2).
+	// Pending is an upstream identity, as JSON, that redeeming the link on this browser may add to its end user.
 	Pending []byte
 }
 
@@ -180,7 +180,7 @@ type Resource struct {
 	Name         string
 	Scopes       []string
 	Descriptions map[string]string
-	// Catalog is every scope the server has, so a stored consent drops the ones it no longer has (R-6).
+	// Catalog is every scope the server has, so a stored consent drops the ones it no longer has.
 	Catalog []string
 }
 
@@ -190,7 +190,7 @@ type Resources interface {
 	Resource(ctx context.Context, p Project, c Client, identifier string) (r Resource, ok bool, err error)
 }
 
-// Admissions admits Client ID Metadata Document clients (CIMD -02, ADR-0021).
+// Admissions admits Client ID Metadata Document clients (CIMD draft -02).
 type Admissions interface {
 	// Admit returns the client of the document at clientURL and the one resource that admits it, fetching the document
 	// when no fresh copy is stored; it fails with SIG010 or SIG011 before any redirect is trusted.
@@ -241,7 +241,7 @@ type Grants interface {
 type Federation interface {
 	// Enabled reports whether the project's upstream of kind is on.
 	Enabled(ctx context.Context, p federation.Project, kind upstream.Kind) (bool, error)
-	// Start makes one attempt's state, nonce and PKCE verifier; loginHint is the active account's linked upstream email, or empty (P7).
+	// Start makes one attempt's state, nonce and PKCE verifier; loginHint is the active account's linked upstream email, or empty.
 	Start(ctx context.Context, p federation.Project, kind upstream.Kind, loginHint string) (oidcrp.AuthRequest, error)
 	// AuthURL is where the browser goes to sign in at the upstream.
 	AuthURL(ctx context.Context, p federation.Project, kind upstream.Kind, redirectURI string, req oidcrp.AuthRequest) (string, error)

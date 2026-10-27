@@ -50,7 +50,7 @@ func (e *FormExpiredError) ToAppError() *apperror.AppError {
 	return apperror.New(apperror.CodeSignInFormExpired, "This page expired").WithCause(e)
 }
 
-// NOTE: E2: the client hears about this failure by redirect, with state and iss.
+// NOTE: the client hears about this failure by redirect, with state and iss.
 type authorizeError struct {
 	code        string
 	description string

@@ -25,7 +25,7 @@ const (
 	modeLink         = "link"
 )
 
-// NOTE: N1: one round trip with an upstream, sealed into a cookie between the start and the callback.
+// NOTE: one round trip with an upstream, sealed into a cookie between the start and the callback.
 type federationState struct {
 	Kind        upstream.Kind      `json:"k"`
 	Request     oidcrp.AuthRequest `json:"q"`
@@ -52,7 +52,7 @@ func (h *Web) registerFederation(mux *http.ServeMux, p string) {
 	mux.HandleFunc("GET "+g+"/callback", h.page(h.federationCallback))
 }
 
-// NOTE: P10: the start is a POST with a CSRF token, so another site can't send a browser through Google.
+// NOTE: the start is a POST with a CSRF token, so another site can't send a browser through Google.
 func methodNotAllowed(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Allow", http.MethodPost)
 	http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -109,7 +109,7 @@ func (h *Web) federationStart(w http.ResponseWriter, r *http.Request, s *site) {
 	http.Redirect(w, r, next, http.StatusSeeOther) //nolint:gosec // G710: a fixed page under this issuer's path.
 }
 
-// SECURITY: G4: the hop to the upstream leaves from a GET page, so the hosted CSP's form-action stays 'self'.
+// SECURITY: the hop to the upstream leaves from a GET page, so the hosted CSP's form-action stays 'self'.
 func (h *Web) federationContinue(w http.ResponseWriter, r *http.Request, s *site) {
 	st, ok := h.federation(r, s)
 	if !ok {
@@ -127,7 +127,7 @@ func (h *Web) federationContinue(w http.ResponseWriter, r *http.Request, s *site
 	h.kit.Render(w, r, http.StatusOK, views.Continue(d, views.ContinueData{Site: s.views(), Client: "Google", Target: target}))
 }
 
-// SECURITY: N1, RFC 9700 §4.7: the state cookie is spent before the code is, so a callback replays nothing.
+// SECURITY: RFC 9700 §4.7: the state cookie is spent before the code is, so a callback replays nothing.
 func (h *Web) federationCallback(w http.ResponseWriter, r *http.Request, s *site) {
 	if !h.allowIP(w, r, s, RedeemIPRule()) {
 		return
@@ -167,7 +167,7 @@ func (h *Web) federationCallback(w http.ResponseWriter, r *http.Request, s *site
 	h.next(w, r, s, got.BrowserSecret, federatedAccount(got), st.ReturnTo)
 }
 
-// SECURITY: P7: the only login_hint sent upstream is the active account's linked email there; never Othra's email or the app's hint.
+// SECURITY: the only login_hint sent upstream is the active account's linked email there; never Othra's email or the app's hint.
 func (h *Web) linkedEmail(w http.ResponseWriter, r *http.Request, s *site, kind upstream.Kind) (string, bool) {
 	b, err := h.users.Browser(r.Context(), s.project(), h.cookies.browser(r))
 	if err != nil {
@@ -217,7 +217,7 @@ func (h *Web) federationLink(w http.ResponseWriter, r *http.Request, s *site, st
 	h.toPage(w, r, s, pageSignIn, url.Values{"linked": {"1"}})
 }
 
-// NOTE: MF7: a failed Connect speaks to a signed-in person: "Couldn't connect Google", back to the account, never to sign in.
+// NOTE: a failed Connect speaks to a signed-in person: "Couldn't connect Google", back to the account, never to sign in.
 func (h *Web) federationFailed(w http.ResponseWriter, r *http.Request, s *site, st federationState, err error) {
 	if st.Mode != modeLink {
 		h.upstreamFailed(w, r, s, st.ReturnTo, err)

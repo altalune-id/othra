@@ -25,7 +25,7 @@ describe('console locales', () => {
 });
 
 describe('console copy', () => {
-  it('writes "upstream IdP" mid-sentence as the glossary does (pm K-9)', () => {
+  it('writes "upstream IdP" mid-sentence as the glossary does', () => {
     expect(enUS['endusers.methods_help']).toContain('each linked upstream IdP');
   });
 

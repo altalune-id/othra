@@ -36,7 +36,7 @@ func (f *webFixture) openLink(c *http.Client) hostedPage {
 	return verify
 }
 
-// N2, ADR-0014: a collision mails the existing account a link; on the same browser, Connect links Google inside the redeem.
+// a collision mails the existing account a link; on the same browser, Connect links Google inside the redeem.
 func TestCollision_LinksOnTheSameBrowser(t *testing.T) {
 	f, fed := newFederationFixture(t)
 	fed.collide = true
@@ -48,7 +48,7 @@ func TestCollision_LinksOnTheSameBrowser(t *testing.T) {
 	assert.Contains(t, string(f.users.issued[0].Pending), `"Subject"`)
 	require.Len(t, f.users.mails, 1)
 	mail := f.users.mails[0]
-	assert.Equal(t, "Add Google to your Acme account", mail.Subject, "A18")
+	assert.Equal(t, "Add Google to your Acme account", mail.Subject, "the subject names adding Google to the account")
 	assert.Contains(t, mail.TextBody, "with Google as ana@gmail.com")
 	assert.Contains(t, mail.HTMLBody, ">Add Google</a>")
 
@@ -72,7 +72,7 @@ func TestCollision_NotNowSignsInWithoutLinking(t *testing.T) {
 	assert.Equal(t, 1, f.users.redeems)
 }
 
-// SECURITY: N2: the victim opening their own link on another device must not attach the Google account that caused the collision.
+// SECURITY: the victim opening their own link on another device must not attach the Google account that caused the collision.
 func TestCollision_AnotherDeviceSignsInPlainly(t *testing.T) {
 	f, fed := newFederationFixture(t)
 	fed.collide = true
@@ -123,7 +123,7 @@ func TestRedeem_EmailLinkTurnedOffAfterIssue(t *testing.T) {
 	assert.Zero(t, f.users.redeems)
 }
 
-// Design must-fix 2, spec §1.3: the collision page is a GET after a 303, so a reload neither replays the code nor mails again.
+// the collision page is a GET after a 303, so a reload neither replays the code nor mails again.
 func TestCollision_PageSurvivesAReload(t *testing.T) {
 	f, fed := newFederationFixture(t)
 	fed.collide = true

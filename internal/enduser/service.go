@@ -36,9 +36,11 @@ type Service struct {
 }
 
 // NewService builds the Service over store; mail enqueues sign-in emails in the same unit of work as their link.
-func NewService(store Store, uow db.Transactor, mail MailQueue, cfg Config, unexpected apperror.UnexpectedFunc) *Service {
+func NewService(
+	store Store, uow db.Transactor, mail MailQueue, grants Grants, signIn SignInSwitch, cfg Config, unexpected apperror.UnexpectedFunc,
+) *Service {
 	return &Service{
-		store: store, uow: uow, mail: mail, cfg: cfg, unexpected: unexpected,
+		store: store, uow: uow, mail: mail, grants: grants, signIn: signIn, cfg: cfg, unexpected: unexpected,
 		now: func() time.Time { return time.Now().UTC() }, newSecret: session.NewID, log: slog.New(slog.DiscardHandler),
 	}
 }
@@ -46,18 +48,6 @@ func NewService(store Store, uow db.Transactor, mail MailQueue, cfg Config, unex
 // WithLogger sets where sign-ins and terms acceptances are logged.
 func (s *Service) WithLogger(log *slog.Logger) *Service {
 	s.log = log
-	return s
-}
-
-// WithGrants sets what revokes a user session's grants in the unit of work that ends the session.
-func (s *Service) WithGrants(g Grants) *Service {
-	s.grants = g
-	return s
-}
-
-// WithSignInSwitch makes a redeem re-read the project's email-link switch before it creates an end user.
-func (s *Service) WithSignInSwitch(sw SignInSwitch) *Service {
-	s.signIn = sw
 	return s
 }
 
@@ -71,7 +61,7 @@ func scope(ctx context.Context, p Project) context.Context {
 	return tenant.WithProject(tenant.WithOrg(ctx, p.OrgID), p.ID)
 }
 
-// IssueLink returns a link for req without mailing it, or nothing inside the cooldown. NOTE: the caller checks req.ReturnTo (H8).
+// IssueLink returns a link for req without mailing it, or nothing inside the cooldown. NOTE: the caller checks req.ReturnTo.
 func (s *Service) IssueLink(ctx context.Context, p Project, req LinkRequest) (IssuedLink, error) {
 	return s.issue(ctx, p, req, nil)
 }
@@ -257,17 +247,15 @@ func (s *Service) Redeem(ctx context.Context, p Project, req RedeemRequest) (*Re
 	return out, nil
 }
 
-// SECURITY: R-2, F8, P8: with the email link off, a redeem creates an end user only if it links the pending Google identity it carries.
+// SECURITY: with the email link off, a redeem creates an end user only if it links the pending Google identity it carries.
 func (s *Service) signUpGated(ctx context.Context, p Project, email string) (known, gated bool, err error) {
 	_, known, err = s.store.EndUserIDByEmail(ctx, p.ID, email)
 	if err != nil || known {
 		return known, false, err
 	}
-	on := p.EmailLink
-	if s.signIn != nil {
-		if on, err = s.signIn.LockEmailLink(ctx, p.ID); err != nil {
-			return false, false, err
-		}
+	on, err := s.signIn.LockEmailLink(ctx, p.ID)
+	if err != nil {
+		return false, false, err
 	}
 	return false, !on, nil
 }
@@ -347,7 +335,7 @@ func (s *Service) CreateFederated(ctx context.Context, p Project, email, name st
 	return id, nil
 }
 
-// FillName gives the end user an upstream IdP's name, in the unit of work on ctx, only while they have none (Q9, P12).
+// FillName gives the end user an upstream IdP's name, in the unit of work on ctx, only while they have none.
 func (s *Service) FillName(ctx context.Context, p Project, endUserID uuid.UUID, name string) error {
 	name = clip(strings.TrimSpace(name), nameMax)
 	if name == "" {
@@ -360,7 +348,7 @@ func (s *Service) FillName(ctx context.Context, p Project, endUserID uuid.UUID, 
 	return nil
 }
 
-// NOTE: H23, a second Continue from the browser that already redeemed the link signs nobody new in but succeeds.
+// NOTE: a second Continue from the browser that already redeemed the link signs nobody new in but succeeds.
 func (s *Service) repeatRedeem(ctx context.Context, p Project, hash, secret string, b *Browser) (*Redeemed, error) {
 	l, err := s.store.LinkByTokenHash(ctx, p.ID, hash)
 	if IsLinkNotUsableError(err) {
@@ -412,7 +400,7 @@ func (s *Service) browser(ctx context.Context, p Project, secret string, now tim
 	return b, nil
 }
 
-// Session returns the browser's live accounts, or nil when the secret names no live browser session; M5 /authorize calls it too.
+// Session returns the browser's live accounts, or nil when the secret names no live browser session; /authorize calls it too.
 func (s *Service) Session(ctx context.Context, p Project, secret string) (*Session, error) {
 	ctx = scope(ctx, p)
 	now := s.now()
@@ -494,11 +482,8 @@ func (s *Service) SignOut(ctx context.Context, p Project, secret, publicID strin
 	return nil
 }
 
-// NOTE: G16, P9: every way a user session ends revokes its grants in the same unit of work; Grants keeps offline_access ones.
+// NOTE: every way a user session ends revokes its grants in the same unit of work; Grants keeps offline_access ones.
 func (s *Service) revoke(ctx context.Context, p Project, publicID string, reason EndReason) error {
-	if s.grants == nil {
-		return nil
-	}
 	return s.grants.RevokeUserSession(ctx, p, publicID, reason)
 }
 
@@ -645,7 +630,7 @@ func (s *Service) EndSession(ctx context.Context, p Project, publicID string) er
 	return nil
 }
 
-// NeedsTerms reports whether a owes the project's current terms and whether it accepted an older one; M5 /authorize calls it too.
+// NeedsTerms reports whether a owes the project's current terms and whether it accepted an older one; /authorize calls it too.
 func (s *Service) NeedsTerms(ctx context.Context, p Project, a Account) (needed, updated bool, err error) {
 	if !p.TermsRequired() {
 		return false, false, nil

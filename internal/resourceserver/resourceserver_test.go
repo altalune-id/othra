@@ -180,7 +180,7 @@ func TestTrustAndUntrust(t *testing.T) {
 	assert.True(t, loop.Trusted)
 }
 
-// R-1: one admission check for M6.
+// one admission check for /authorize, /token and CIMD admission.
 func TestAdmissible(t *testing.T) {
 	for _, tc := range []struct {
 		state          State
@@ -200,7 +200,7 @@ func TestAdmissible(t *testing.T) {
 	}
 }
 
-// R-2: RFC 9728 §3.3: a document that names another resource or omits the issuer fails a server at once; other reasons take three strikes.
+// RFC 9728 §3.3: a document that names another resource or omits the issuer fails a server at once; other reasons take three strikes.
 func TestFail_Policy(t *testing.T) {
 	now := time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC)
 	for _, tc := range []struct {
@@ -228,7 +228,7 @@ func TestFail_Policy(t *testing.T) {
 	}
 }
 
-// R-8: untrusting clears the last check, so the next scheduled run checks the server.
+// untrusting clears the last check, so the next scheduled run checks the server.
 func TestUntrust_ClearsTheLastCheck(t *testing.T) {
 	now := time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC)
 	r := &ResourceServer{Identifier: "https://api.example.com", LastCheckedAt: &now}

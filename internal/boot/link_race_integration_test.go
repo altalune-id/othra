@@ -87,7 +87,7 @@ func (r *linkRace) count(t *testing.T, query string) int {
 	return n
 }
 
-// A21, N2: concurrent confirms of one collision link spend it once and link one identity.
+// concurrent confirms of one collision link spend it once and link one identity.
 func TestLinkRace_ConcurrentConfirmsLinkOnce(t *testing.T) {
 	r := newLinkRace(t)
 	r.existing(t, "ana@example.com")
@@ -116,7 +116,7 @@ func TestLinkRace_ConcurrentConfirmsLinkOnce(t *testing.T) {
 	assert.Equal(t, 1, r.count(t, `SELECT count(*) FROM magic_links WHERE project_id = $1 AND pending_identity IS NOT NULL AND used_at IS NOT NULL`))
 }
 
-// A21, F8: a link confirm racing "email link off" never leaves an end user without a sign-in method.
+// a link confirm racing "email link off" never leaves an end user without a sign-in method.
 func TestLinkRace_ConfirmVersusEmailLinkOff(t *testing.T) {
 	for range 3 {
 		r := newLinkRace(t)
@@ -147,7 +147,7 @@ func TestLinkRace_ConfirmVersusEmailLinkOff(t *testing.T) {
 	}
 }
 
-// P8 = A: with the email link off, a Google sign-up link creates the end user and links the identity together, or neither.
+// with the email link off, a Google sign-up link creates the end user and links the identity together, or neither.
 func TestSignUpLink_CreatesAndLinksInOneUnitOfWork(t *testing.T) {
 	r := newLinkRace(t)
 	_, err := r.f.svcs.Projects.SetSignInEmailLink(r.ctx, r.p.ID, false)

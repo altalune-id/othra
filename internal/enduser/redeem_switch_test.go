@@ -23,11 +23,10 @@ func (f *fakeSwitch) LockEmailLink(context.Context, uuid.UUID) (bool, error) {
 	return f.on, f.err
 }
 
-// R-2, F8: a sign-up link issued before the email link went off creates no end user; an existing one still signs in.
+// a sign-up link issued before the email link went off creates no end user; an existing one still signs in.
 func TestRedeem_EmailLinkOffCreatesNobody(t *testing.T) {
-	h := newHarness(t)
 	sw := &fakeSwitch{on: true}
-	h.svc.WithSignInSwitch(sw)
+	h := newHarnessWith(t, &fakeGrants{}, sw)
 	known := h.signIn(t, "ada@example.com", "")
 	newcomer := h.send(t, "bob@example.com")
 	again := h.send(t, "ada@example.com")
@@ -58,11 +57,10 @@ func TestRedeem_WithoutASwitchTheProjectDecides(t *testing.T) {
 	assert.Empty(t, h.store.users)
 }
 
-// P8 = A: with the email link off, only a redeem that links the pending Google identity it carries may create the end user.
+// with the email link off, only a redeem that links the pending Google identity it carries may create the end user.
 func TestRedeem_EmailLinkOffExceptionIsNarrow(t *testing.T) {
-	h := newHarness(t)
+	h := newHarnessWith(t, &fakeGrants{}, &fakeSwitch{on: false})
 	h.project.EmailLink = false
-	h.svc.WithSignInSwitch(&fakeSwitch{on: false})
 	_, err := h.svc.IssueLink(context.Background(), h.project, LinkRequest{Email: "plain@example.com"})
 	assert.Equal(t, apperror.CodeSignInEmailDisabled, codeOf(err), "a plain link still needs the email link")
 

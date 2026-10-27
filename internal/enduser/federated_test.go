@@ -25,7 +25,7 @@ func TestCreateFederatedAndFindByEmail(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, id, got)
-	assert.Len(t, h.store.users[0].name, nameMax, "P12: the upstream name is clipped")
+	assert.Len(t, h.store.users[0].name, nameMax, "the upstream name is clipped")
 	assert.NotNil(t, h.store.users[0].verifiedAt, "an upstream-verified email is verified")
 
 	_, err = h.svc.CreateFederated(ctx, h.project, "ana@gmail.com", "")
@@ -61,7 +61,7 @@ func TestSignInFederated(t *testing.T) {
 	require.Error(t, err, "an end user that isn't there")
 }
 
-// BL-1, Q9: FillName gives a name only to an end user who has none, trimmed and clipped.
+// FillName gives a name only to an end user who has none, trimmed and clipped.
 func TestFillName(t *testing.T) {
 	h := newHarness(t)
 	ctx := context.Background()

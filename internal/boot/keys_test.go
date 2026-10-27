@@ -41,8 +41,8 @@ func TestKeyProjects_ScopesEachProjectOfEachOrg(t *testing.T) {
 	ob.ID = b
 	p1, err := project.NewProject(a, "web", "Web", uuid.Nil)
 	require.NoError(t, err)
-	orgs := org.NewService(&fakes.OrgStore{Orgs: []*org.Org{oa, ob}}, fakes.Transactor{}, nil)
-	projects := project.NewService(&fakes.ProjectStore{Projects: []*project.Project{p1}}, nil)
+	orgs := org.NewService(&fakes.OrgStore{Orgs: []*org.Org{oa, ob}}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)
+	projects := project.NewService(&fakes.ProjectStore{Projects: []*project.Project{p1}}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil)
 
 	var seen []tenant.Context
 	require.NoError(t, projectTenants{orgs: orgs, projects: projects}.Each(context.Background(), func(ctx context.Context, orgID, projectID uuid.UUID) error {

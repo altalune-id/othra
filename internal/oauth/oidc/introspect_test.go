@@ -85,7 +85,7 @@ func (f *introspectFixture) as(t *testing.T, rs, token string) string {
 	return rec.Body.String()
 }
 
-// RFC 7662 §2.2, pm P10: an access token bound to the caller answers exactly the agreed members, never cached.
+// RFC 7662 §2.2: an access token bound to the caller answers exactly the agreed members, never cached.
 func TestIntrospect_ActiveAccessToken(t *testing.T) {
 	f := newIntrospectFixture(t)
 	rec := f.post(t, introspectURL, url.Values{"token": {"at-1"}, "token_type_hint": {"refresh_token"}}, "Authorization", basic("s1", rsSecret))
@@ -102,7 +102,7 @@ func TestIntrospect_ActiveAccessToken(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), `"active":true`)
 }
 
-// RFC 7662 §2.2, pm P4: every token not active for the caller answers the one identical body.
+// RFC 7662 §2.2: every token not active for the caller answers the one identical body.
 func TestIntrospect_InactiveIsOneBody(t *testing.T) {
 	const inactive = `{"active":false}`
 	f := newIntrospectFixture(t)
@@ -125,7 +125,7 @@ func TestIntrospect_InactiveIsOneBody(t *testing.T) {
 	assert.Equal(t, inactive, f.as(t, "s1", "at-1"), "a client that is gone")
 }
 
-// pm P10, G4: a personal token goes to its own lookup with the caller's id and answers without client_id.
+// a personal token goes to its own lookup with the caller's id and answers without client_id.
 func TestIntrospect_PersonalToken(t *testing.T) {
 	f := newIntrospectFixture(t)
 	assert.Equal(t, `{"active":false}`, f.as(t, "s1", personalToken))
@@ -140,7 +140,7 @@ func TestIntrospect_PersonalToken(t *testing.T) {
 		"iss":"https://id.example.com/p/acme-web","exp":1702592000,"iat":1700000000,"token_type":"Bearer"}`, f.as(t, "s1", personalToken))
 }
 
-// RFC 7662 §2.1, pm A1: only a resource server with its own live secret may introspect; every failure is one 401.
+// RFC 7662 §2.1: only a resource server with its own live secret may introspect; every failure is one 401.
 func TestIntrospect_CallerAuthentication(t *testing.T) {
 	f := newIntrospectFixture(t)
 	cases := map[string][]string{
@@ -162,7 +162,7 @@ func TestIntrospect_CallerAuthentication(t *testing.T) {
 	assert.Equal(t, `Basic realm="https://id.example.com/p/acme-web"`, rec.Header().Get("WWW-Authenticate"))
 
 	rec = f.post(t, introspectURL, url.Values{"token": {"at-1"}, "client_secret": {rsSecret}}, "Authorization", basic("s1", rsSecret))
-	assert.Equal(t, http.StatusBadRequest, rec.Code, "R-7: Basic and post together, as at /token and /revoke")
+	assert.Equal(t, http.StatusBadRequest, rec.Code, "Basic and post together, as at /token and /revoke")
 	assert.Equal(t, "invalid_request", oauthErr(t, rec))
 }
 
@@ -200,7 +200,7 @@ func TestIntrospect_Unavailable(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 }
 
-// pm P13: one rule per client IP, counted before authentication, and one per authenticated resource server.
+// one rule per client IP, counted before authentication, and one per authenticated resource server.
 func TestIntrospect_RateLimited(t *testing.T) {
 	f := newIntrospectFixture(t)
 	f.as(t, "s1", "at-1")
@@ -219,7 +219,7 @@ func TestIntrospect_RateLimited(t *testing.T) {
 	assert.Equal(t, http.StatusTooManyRequests, rec.Code)
 }
 
-// pm A4: discovery advertises the endpoint and its two methods only when introspection is wired.
+// discovery advertises the endpoint and its two methods only when introspection is wired.
 func TestDiscovery_IntrospectionWhenWired(t *testing.T) {
 	f := newIntrospectFixture(t)
 	f.resolver.WithIntrospection()
@@ -234,7 +234,7 @@ func TestDiscovery_IntrospectionWhenWired(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, plain.do(t, http.MethodPost, introspectURL).Code, "not mounted without Introspection")
 }
 
-// pm P12: a personal token is no userinfo token, and /revoke leaves it alone with 200.
+// a personal token is no userinfo token, and /revoke leaves it alone with 200.
 func TestPersonalTokens_ElsewhereRefused(t *testing.T) {
 	f := newIntrospectFixture(t)
 	f.grants.access = nil

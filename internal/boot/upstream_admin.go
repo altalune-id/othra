@@ -15,11 +15,11 @@ import (
 
 func buildUpstreams(k kernel.Kernel, cfg config.Config, uow db.Transactor, sl sealer.Sealer, projects *project.Service) *upstream.Service {
 	return upstream.NewService(upstream.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, sl,
-		upstreamGuard{projects: projects}, k.Reporter.Unexpected).
-		WithLogger(orDiscard(k.Log)).WithIssuers(upstreamIssuers{projects: projects})
+		upstreamGuard{projects: projects}, upstreamIssuers{projects: projects}, k.Reporter.Unexpected).
+		WithLogger(orDiscard(k.Log))
 }
 
-// NOTE: M7 F13: the project install creates gets Google from upstreams.google, once; every other project is set up in the console.
+// NOTE: the project install creates gets Google from upstreams.google, once; every other project is set up in the console.
 func seedUpstreams(cfg config.UpstreamsConfig, upstreams *upstream.Service) func(ctx context.Context, orgID, projectID uuid.UUID) error {
 	return func(ctx context.Context, orgID, projectID uuid.UUID) error {
 		return upstreams.Seed(ctx, orgID, projectID, upstream.KindGoogle, cfg.Google.ClientID, cfg.Google.ClientSecret)
@@ -42,7 +42,7 @@ func (i upstreamIssuers) IssuerURL(ctx context.Context, projectID uuid.UUID) (st
 	return i.projects.IssuerURL(p.IssuerHandle), nil
 }
 
-// NOTE: F8: projectSignInMethods answers the email-link guard: an enabled upstream, and whether every end user linked one.
+// NOTE: projectSignInMethods answers the email-link guard: an enabled upstream, and whether every end user linked one.
 type projectSignInMethods struct {
 	upstreams *upstream.Service
 	linked    endUsersLinked

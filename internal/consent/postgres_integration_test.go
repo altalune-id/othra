@@ -48,13 +48,13 @@ func seed(t *testing.T, db *sql.DB) seeded {
 	return s
 }
 
-// C5, A10, A26: one row per end user, client and resource server; approving again adds scopes; another project sees nothing.
+// one row per end user, client and resource server; approving again adds scopes; another project sees nothing.
 func TestPostgres_GrantFindRevoke(t *testing.T) {
-	pool, db, schemaName := pgtest.MigratedRLS(t)
+	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	now := time.Now().UTC().Truncate(time.Microsecond)
-	svc := consent.NewService(consent.NewStore(pool, schemaName, ""), apperror.NewReporter(nil, false).Unexpected).
-		WithClock(func() time.Time { return now }).WithGrants(noGrants{}, nil)
-	s := seed(t, db)
+	svc := consent.NewService(consent.NewStore(pool, schemaName, ""), db.NewTransactor(pool), noGrants{}, apperror.NewReporter(nil, false).Unexpected).
+		WithClock(func() time.Time { return now })
+	s := seed(t, sqlDB)
 	ctx := t.Context()
 	rsKey := consent.Key{EndUserID: s.endUser, ClientID: s.client, ResourceServerID: &s.server}
 	oidcKey := consent.Key{EndUserID: s.endUser, ClientID: s.client}
@@ -84,15 +84,15 @@ func TestPostgres_GrantFindRevoke(t *testing.T) {
 	require.NoError(t, err)
 	pruned, err := svc.Find(ctx, s.p, rsKey)
 	require.NoError(t, err)
-	assert.Equal(t, []string{"openid", "sample:new"}, pruned.Scopes, "R-6: scopes gone from the catalog are dropped")
+	assert.Equal(t, []string{"openid", "sample:new"}, pruned.Scopes, "scopes gone from the catalog are dropped")
 	oidc, err := svc.Find(ctx, s.p, oidcKey)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"openid", "email"}, oidc.Scopes, "NULLS NOT DISTINCT: one OIDC-only row")
 	var rows int
-	require.NoError(t, db.QueryRowContext(ctx, `SELECT count(*) FROM scope_consents WHERE project_id = $1`, s.p.ID).Scan(&rows))
+	require.NoError(t, sqlDB.QueryRowContext(ctx, `SELECT count(*) FROM scope_consents WHERE project_id = $1`, s.p.ID).Scan(&rows))
 	assert.Equal(t, 2, rows)
 
-	other := seed(t, db)
+	other := seed(t, sqlDB)
 	got, err = svc.Find(ctx, other.p, rsKey)
 	require.NoError(t, err)
 	assert.Nil(t, got, "RLS: another project's scope sees none of these rows")
@@ -116,7 +116,7 @@ func TestPostgres_GrantFindRevoke(t *testing.T) {
 	_, err = svc.Grant(ctx, s.p, consent.GrantRequest{Key: oidcKey, Scopes: []string{"openid"}})
 	require.NoError(t, err)
 
-	_, err = db.ExecContext(ctx, `DELETE FROM oauth_clients WHERE id = $1`, s.client)
+	_, err = sqlDB.ExecContext(ctx, `DELETE FROM oauth_clients WHERE id = $1`, s.client)
 	require.NoError(t, err)
 	got, err = svc.Find(ctx, s.p, oidcKey)
 	require.NoError(t, err)
@@ -135,11 +135,10 @@ func (noGrants) RevokeClient(context.Context, consent.Project, uuid.UUID, uuid.U
 
 func (noGrants) ResourceScopes(scopes []string) []string { return scopes }
 
-// R-5: Disconnect deletes every consent of the client across resource servers in its unit of work, and a second one is ACC003.
+// Disconnect deletes every consent of the client across resource servers in its unit of work, and a second one is ACC003.
 func TestPostgres_Disconnect(t *testing.T) {
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
-	svc := consent.NewService(consent.NewStore(pool, schemaName, ""), apperror.NewReporter(nil, false).Unexpected).
-		WithGrants(noGrants{}, db.NewTransactor(pool))
+	svc := consent.NewService(consent.NewStore(pool, schemaName, ""), db.NewTransactor(pool), noGrants{}, apperror.NewReporter(nil, false).Unexpected)
 	s := seed(t, sqlDB)
 	ctx := t.Context()
 	for _, k := range []consent.Key{

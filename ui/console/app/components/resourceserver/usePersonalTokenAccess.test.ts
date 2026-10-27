@@ -73,7 +73,7 @@ describe('usePersonalTokenAccess', () => {
     expect(a.busy.value).toBe(false);
   });
 
-  it('locks accepting until the server is verified, then until it has a secret (M8 design 9)', () => {
+  it('locks accepting until the server is verified, then until it has a secret', () => {
     const server = ref(create(ResourceServerSchema, { id: resourceServerId, state: ResourceServerState.PENDING }));
     const a = usePersonalTokenAccess(projectId, resourceServerId, () => server.value, () => {});
     expect(a.lockReason.value).toBe('unverified');

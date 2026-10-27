@@ -427,9 +427,6 @@ func (s *Service) issue(ctx context.Context, inv *Invite) (*Created, error) {
 }
 
 func (s *Service) emit(ctx context.Context, orgID uuid.UUID, t events.Type, data any) error {
-	if s.events == nil {
-		return nil
-	}
 	return s.events.EnqueueOrg(ctx, orgID, t, data)
 }
 

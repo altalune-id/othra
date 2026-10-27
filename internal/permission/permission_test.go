@@ -74,7 +74,7 @@ func TestEveryRPCHasAPermission(t *testing.T) {
 	assert.Len(t, table, len(procs), "the table names no procedure that does not exist")
 }
 
-// SECURITY: M8 P2: every procedure is in exactly one plane; the end user's own are all in EndUserTable, none in Table.
+// SECURITY: every procedure is in exactly one plane; the end user's own are all in EndUserTable, none in Table.
 func TestEndUserTable_IsItsOwnPlane(t *testing.T) {
 	account := procedures(accountv1.File_account_v1_account_proto)
 	require.Len(t, account, 13)
@@ -87,7 +87,7 @@ func TestEndUserTable_IsItsOwnPlane(t *testing.T) {
 	for _, proc := range allProcedures() {
 		assert.NotContains(t, own, proc, "%s is an admin procedure", proc)
 	}
-	assert.Equal(t, SelfRecent, own["/account.v1.AccountService/CreatePersonalToken"], "M8 G5: creating a token is the only step-up")
+	assert.Equal(t, SelfRecent, own["/account.v1.AccountService/CreatePersonalToken"], "creating a token is the only step-up")
 }
 
 func TestPermissionTable_Spec15(t *testing.T) {

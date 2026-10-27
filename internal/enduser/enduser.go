@@ -48,7 +48,7 @@ type LinkRequest struct {
 	IP       string
 	// Allow runs only after the cooldown passes, right before issuing: false issues nothing, an error is returned as is.
 	Allow func(ctx context.Context) (bool, error)
-	// Pending is an upstream identity, as JSON, that redeeming the link may add to its end user (N2, P8); it skips the resend cooldown
+	// Pending is an upstream identity, as JSON, that redeeming the link may add to its end user; it skips the resend cooldown
 	// and the email-link switch.
 	Pending []byte
 }

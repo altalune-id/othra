@@ -152,7 +152,7 @@ func TestTokenFlowThroughBoot(t *testing.T) {
 	assert.Len(t, at.JWTID, 21)
 }
 
-// OIDC Core §11 and S9 through the hosted adapters: sign-out keeps offline_access grants; end-session ends the hinted one whatever its scope.
+// OIDC Core §11 through the hosted adapters: sign-out keeps offline_access grants; end-session ends the hinted one whatever its scope.
 func TestSignOutKeepsOfflineGrantsThroughBoot(t *testing.T) {
 	_, svcs := newIssuerServer(t, "")
 	ctx := t.Context()
@@ -241,7 +241,7 @@ func TestResourceBoundTokenThroughBoot(t *testing.T) {
 	assert.Equal(t, false, discovery()["client_id_metadata_document_supported"])
 	_, err = svcs.ResourceServers.SetAdmission(ctx, sys.ID, p.ID, rs.PublicID, resourceserver.Admission{Accept: true})
 	require.NoError(t, err)
-	assert.Equal(t, true, discovery()["client_id_metadata_document_supported"], "pm P3: admission drops the 30 s discovery cache at once")
+	assert.Equal(t, true, discovery()["client_id_metadata_document_supported"], "admission drops the 30 s discovery cache at once")
 
 	eu := enduser.Project{OrgID: sys.ID, ID: p.ID, IssuerURL: issuer, EmailLink: true}
 	link, err := svcs.EndUsers.IssueLink(ctx, eu, enduser.LinkRequest{Email: "ada@example.com", ReturnTo: "/p/acme-web/account/"})
@@ -290,5 +290,5 @@ func TestResourceBoundTokenThroughBoot(t *testing.T) {
 	require.NoError(t, svcs.ResourceServers.UnlinkClient(ctx, sys.ID, p.ID, c.PublicID, rs.PublicID))
 	status, _, body = postForm(t, tokenURL, url.Values{"grant_type": {"refresh_token"}, "refresh_token": {refresh}}, "Authorization", auth)
 	assert.Equal(t, http.StatusBadRequest, status)
-	assert.Equal(t, "invalid_grant", body["error"], "authl gap 5: an unlinked client can't refresh")
+	assert.Equal(t, "invalid_grant", body["error"], "an unlinked client can't refresh")
 }

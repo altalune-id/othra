@@ -16,6 +16,7 @@ import (
 	"altalune.id/othra/internal/org"
 	"altalune.id/othra/internal/org/member"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/testutil/pgtest"
 	"altalune.id/othra/internal/user"
 )
@@ -27,8 +28,8 @@ func TestLoginLocal_AgainstPostgres(t *testing.T) {
 	orgStore := org.NewStore(pool, schemaName, "")
 	users := user.NewService(user.NewStore(pool, schemaName, ""), unexpected)
 	members := member.NewService(member.NewStore(pool, schemaName, ""), db.NewTransactor(pool), unexpected)
-	orgs := org.NewService(orgStore, db.NewTransactor(pool), unexpected)
-	projects := project.NewService(project.NewStore(pool, schemaName, ""), unexpected)
+	orgs := org.NewService(orgStore, db.NewTransactor(pool), fakes.NoMemberRoles{}, nil, unexpected)
+	projects := project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, "", unexpected)
 	svc := auth.NewService(auth.Deps{Users: users, Members: members, Orgs: orgs, Projects: projects, Sessions: session.NewMemoryStore()})
 
 	owner, err := users.Create(ctx, user.CreateRequest{Email: "Owner@Example.com", Name: "Owner", Password: "blue-river-stone-42"})

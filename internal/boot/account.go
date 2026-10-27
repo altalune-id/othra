@@ -20,7 +20,7 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// NOTE: M8 G2: account.v1 is one Connect service made of the domain slices; nil until every slice's service is built.
+// NOTE: account.v1 is one Connect service made of the domain slices; nil until every slice's service is built.
 func accountSlices(svcs *Services) controlplane.AccountSlices {
 	if svcs.EndUsers == nil || svcs.Federation == nil || svcs.Consents == nil || svcs.PersonalTokens == nil {
 		return controlplane.AccountSlices{}

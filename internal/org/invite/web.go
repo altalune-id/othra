@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"altalune.id/othra/apperror"
-	"altalune.id/othra/internal/auth"
 	"altalune.id/othra/internal/kernel/ratelimit"
 	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/org/invite/views"
@@ -146,7 +145,7 @@ func (h *Web) postJoin(w http.ResponseWriter, r *http.Request) {
 		h.joinFailed(w, r, inv, v, err)
 		return
 	}
-	p, err := h.o.SignIn.LoginLocal(r.Context(), auth.Credentials{Email: inv.Email, Password: pass})
+	p, err := h.o.SignIn.LoginLocal(r.Context(), inv.Email, pass)
 	if err != nil {
 		h.o.Kit.Fail(w, r, "web: sign in after join", err)
 		return
@@ -158,7 +157,7 @@ func (h *Web) postJoin(w http.ResponseWriter, r *http.Request) {
 	h.done(w, r, inv)
 }
 
-// TODO(P3): require email_verified and a matching email before accept.
+// TODO: require email_verified and a matching email before accept.
 func (h *Web) postAccept(w http.ResponseWriter, r *http.Request) {
 	inv, ok := h.fromCookie(w, r)
 	if !ok {

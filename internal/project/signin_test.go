@@ -26,11 +26,11 @@ func (m methods) AnyEndUserUnlinked(context.Context, uuid.UUID, uuid.UUID) (bool
 	return m.unlinked, nil
 }
 
-// F8, R1, PRJ010: the email link goes off only while Google is on and every end user has linked it; on is always allowed.
+// PRJ010: the email link goes off only while Google is on and every end user has linked it; on is always allowed.
 func TestService_SetSignInEmailLink(t *testing.T) {
 	newSvc := func(m project.SignInMethods) (*project.Service, *fakes.ProjectStore) {
 		store := &fakes.ProjectStore{Project: &project.Project{ID: uuid.New(), OrgID: uuid.New(), SignInEmailLink: true}}
-		svc := project.NewService(store, testUnexpected()).WithStorage(nil, fakes.Transactor{})
+		svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 		if m != nil {
 			svc.WithSignInMethods(m)
 		}

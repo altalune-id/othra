@@ -82,11 +82,21 @@ func (s *failingStore) Prune(context.Context, uuid.UUID, Cutoffs) (int, error) {
 	return s.pruned, s.err
 }
 
+type unboundResources struct{}
+
+func (unboundResources) Sign(context.Context, Project, AccessToken) (string, error) {
+	return "", errors.New("not bound")
+}
+
+func (unboundResources) Audience(context.Context, Project, uuid.UUID, Client, []string) (string, bool, error) {
+	return "", false, nil
+}
+
 func newFailing(t *testing.T, err error) (*Service, *bytes.Buffer) {
 	t.Helper()
 	var logs bytes.Buffer
 	reporter := apperror.NewReporter(slog.New(slog.NewJSONHandler(&logs, nil)), false)
-	return NewService(&failingStore{err: err}, fakes.Transactor{}, Config{}, reporter.Unexpected), &logs
+	return NewService(&failingStore{err: err}, fakes.Transactor{}, unboundResources{}, unboundResources{}, Config{}, reporter.Unexpected), &logs
 }
 
 func TestVerifyPKCE(t *testing.T) {
@@ -211,7 +221,7 @@ func (p projectList) Each(ctx context.Context, fn func(ctx context.Context, orgI
 
 func TestScheduler_PrunesEveryProject(t *testing.T) {
 	store := &failingStore{pruned: 2}
-	svc := NewService(store, fakes.Transactor{}, Config{}, apperror.NewReporter(nil, false).Unexpected)
+	svc := NewService(store, fakes.Transactor{}, unboundResources{}, unboundResources{}, Config{}, apperror.NewReporter(nil, false).Unexpected)
 	var logs bytes.Buffer
 	projects := projectList{{OrgID: uuid.New(), ID: uuid.New()}, {OrgID: uuid.New(), ID: uuid.New()}}
 	jobs := NewScheduler(svc, projects, slog.New(slog.NewJSONHandler(&logs, nil))).SchedulerJobs()

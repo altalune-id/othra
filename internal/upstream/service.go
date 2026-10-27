@@ -34,25 +34,18 @@ type Service struct {
 	log        *slog.Logger
 }
 
-// NewService builds the Service; seal keeps client secrets and guard reads the project's email-link switch.
-func NewService(store Store, uow db.Transactor, seal sealer.Sealer, guard SignInGuard, unexpected apperror.UnexpectedFunc) *Service {
+// NewService builds the Service; seal keeps client secrets, guard reads the email-link switch and issuers names the redirect URI's issuer.
+func NewService(
+	store Store, uow db.Transactor, seal sealer.Sealer, guard SignInGuard, issuers Issuers, unexpected apperror.UnexpectedFunc,
+) *Service {
 	return &Service{
-		store: store, uow: uow, seal: seal, guard: guard, unexpected: unexpected,
+		store: store, uow: uow, seal: seal, guard: guard, issuers: issuers, unexpected: unexpected,
 		now: func() time.Time { return time.Now().UTC() }, log: slog.New(slog.DiscardHandler),
 	}
 }
 
-// WithIssuers gives the Service the project issuer URLs RedirectURI builds on.
-func (s *Service) WithIssuers(i Issuers) *Service {
-	s.issuers = i
-	return s
-}
-
-// RedirectURI returns the exact URI the admin registers at the upstream for the project (P11).
+// RedirectURI returns the exact URI the admin registers at the upstream for the project.
 func (s *Service) RedirectURI(ctx context.Context, orgID, projectID uuid.UUID, kind Kind) (string, error) {
-	if s.issuers == nil {
-		return "", nil
-	}
 	issuer, err := s.issuers.IssuerURL(scope(ctx, orgID, projectID), projectID)
 	if err != nil {
 		return "", s.errOrReport(ctx, "upstream: redirect uri", err)
@@ -213,7 +206,7 @@ func (s *Service) Delete(ctx context.Context, orgID, projectID uuid.UUID, public
 	return nil
 }
 
-// SECURITY: F8, R1: with the project row locked, an upstream goes off only while the email link stays on.
+// SECURITY: with the project row locked, an upstream goes off only while the email link stays on.
 func (s *Service) keepsAMethod(ctx context.Context, projectID uuid.UUID) error {
 	on, err := s.guard.EmailLinkOn(ctx, projectID)
 	switch {
@@ -267,7 +260,7 @@ func (s *Service) Credentials(ctx context.Context, orgID, projectID uuid.UUID, k
 	return &Credentials{Upstream: *u, ClientSecret: string(secret)}, nil
 }
 
-// Seed adds an enabled upstream of kind from config when the project has none, and never changes one (F13, authl seeder).
+// Seed adds an enabled upstream of kind from config when the project has none, and never changes one.
 func (s *Service) Seed(ctx context.Context, orgID, projectID uuid.UUID, kind Kind, clientID, secret string) error {
 	if clientID == "" || secret == "" {
 		return nil
@@ -297,7 +290,7 @@ func validate(clientID, secret string, create bool) error {
 	return nil
 }
 
-// SECURITY: ADR-0012, authl gap 12: the AAD binds a sealed secret to its project and row, so it can't be moved to another.
+// SECURITY: the AAD binds a sealed secret to its project and row, so it can't be moved to another.
 func aad(u *Upstream) []byte {
 	return []byte("upstream_provider:" + u.ProjectID.String() + ":" + u.ID.String() + ":client_secret")
 }

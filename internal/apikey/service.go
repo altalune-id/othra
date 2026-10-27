@@ -27,21 +27,16 @@ type Service struct {
 	now          func() time.Time
 }
 
-// NewService builds a Service over store.
-func NewService(store Store, scheme Scheme, projects Projects, unexpected apperror.UnexpectedFunc) *Service {
+// NewService builds a Service over store; owners is the port personal keys check their owner's role against.
+func NewService(store Store, scheme Scheme, projects Projects, owners OwnerRoles, unexpected apperror.UnexpectedFunc) *Service {
 	return &Service{
 		store:      store,
 		scheme:     scheme,
 		projects:   projects,
+		owners:     owners,
 		unexpected: unexpected,
 		now:        func() time.Time { return time.Now().UTC() },
 	}
-}
-
-// WithOwnerRoles sets the port personal keys check their owner's role against.
-func (s *Service) WithOwnerRoles(owners OwnerRoles) *Service {
-	s.owners = owners
-	return s
 }
 
 // WithPersonalKeys turns personal keys on or off; they are off by default.
@@ -137,7 +132,7 @@ func (s *Service) minter(ctx context.Context, req CreateRequest) (mintFunc, erro
 }
 
 func (s *Service) requirePersonalAllowed(ownerID uuid.UUID) error {
-	if !s.personalKeys || s.owners == nil {
+	if !s.personalKeys {
 		return &PersonalKeysDisabledError{}
 	}
 	if ownerID == uuid.Nil {
@@ -148,9 +143,6 @@ func (s *Service) requirePersonalAllowed(ownerID uuid.UUID) error {
 
 // SECURITY: no person can mint a key, of any kind, holding a scope their role does not grant.
 func (s *Service) requireWithinRole(ctx context.Context, orgID, userID uuid.UUID, scopes []string) error {
-	if s.owners == nil {
-		return &ScopeExceedsRoleError{}
-	}
 	role, ok, err := s.owners.Role(ctx, orgID, userID)
 	if err != nil {
 		return s.errOrReport(ctx, "apikey: creator role", err)
@@ -168,7 +160,7 @@ func (s *Service) requireWithinRole(ctx context.Context, orgID, userID uuid.UUID
 }
 
 func (s *Service) requireOrgProjects(ctx context.Context, orgID uuid.UUID, grant ProjectGrant) error {
-	if grant.All || s.projects == nil {
+	if grant.All {
 		return nil
 	}
 	ids, err := s.projects.ProjectIDs(ctx, orgID)
@@ -250,11 +242,8 @@ func (s *Service) RevokeOwnByHint(ctx context.Context, orgID uuid.UUID, hint str
 	return s.revoke(ctx, orgID, k, viewer, false)
 }
 
-// IsMember reports whether userID belongs to orgID; without an owner-role port nobody does.
+// IsMember reports whether userID belongs to orgID.
 func (s *Service) IsMember(ctx context.Context, orgID, userID uuid.UUID) (bool, error) {
-	if s.owners == nil {
-		return false, nil
-	}
 	_, ok, err := s.owners.Role(ctx, orgID, userID)
 	return ok, err
 }

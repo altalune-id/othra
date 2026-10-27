@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// AlgRS256 is the one JWS algorithm keys sign with in M2.
+// AlgRS256 is the one JWS algorithm keys sign with.
 const AlgRS256 = "RS256"
 
 // RetiredKeep is how long a retired key stays listed before it is deleted with its sealed private key.

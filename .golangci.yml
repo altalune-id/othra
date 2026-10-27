@@ -126,9 +126,12 @@ linters:
         domain-purity:
           list-mode: strict
           files:
-            - "**/internal/{apikey,auth,client,enduser,install,legal,org,pat,project,resourceserver,user,webhook}/{apikey,auth,client,enduser,install,legal,org,pat,project,resourceserver,user,webhook}.go"
-            - "**/internal/{apikey,auth,client,enduser,install,legal,org,pat,project,resourceserver,user,webhook}/{store,errors}.go"
+            - "**/internal/{apikey,auth,client,consent,enduser,grant,install,keys,legal,org,pat,project,resourceserver,upstream,user,webhook}/{apikey,auth,client,consent,enduser,grant,install,keys,legal,org,pat,project,resourceserver,upstream,user,webhook}.go"
+            - "**/internal/{apikey,auth,client,consent,enduser,grant,install,keys,legal,org,pat,project,resourceserver,upstream,user,webhook}/{store,errors}.go"
+            - "**/internal/oauth/redirecturi/{redirecturi,errors}.go"
+            - "**/internal/oauth/{hosted,oidc}/errors.go"
             # org/member and org/invite are excluded: they share role and error types with their parent domain.
+            # federation is excluded: its identities carry upstream.Kind and its errors oidcrp.Reason.
           allow:
             - $gostd
             - github.com/google/uuid
@@ -228,24 +231,27 @@ linters:
               desc: "services do not speak HTTP; surfaces (controlplane, web, mcp) do"
         domain-boundary:
           list-mode: lax
+          # NOTE: every internal package but the shells, so a new domain is covered without a list.
           files:
-            - "**/internal/{apikey,auth,federation,install,legal,org,pat,project,upstream,user,webhook}/**"
+            - "**/internal/**"
+            - "!**/internal/{cli,boot,controlplane,web,kernel,tool,testutil}/**"
             - "!**/*_test.go"
+          allow:
+            - altalune.id/othra/internal/web/layout
+            - altalune.id/othra/internal/web/i18n
           deny:
-            - pkg: "altalune.id/othra/internal/cli"
+            - pkg: "altalune.id/othra/internal/cli$"
+              desc: "domains never import the CLI shell"
+            - pkg: "altalune.id/othra/internal/cli/"
               desc: "domains never import the CLI shell"
             - pkg: "altalune.id/othra/internal/boot"
               desc: "domains never import boot"
             - pkg: "altalune.id/othra/internal/controlplane"
               desc: "domains never import controlplane"
             - pkg: "altalune.id/othra/internal/web$"
-              desc: "domains import only internal/web/layout"
-            - pkg: "altalune.id/othra/internal/web/middleware"
-              desc: "domains import only internal/web/layout"
-            - pkg: "altalune.id/othra/internal/web/console"
-              desc: "domains import only internal/web/layout"
-            - pkg: "altalune.id/othra/internal/web/assets"
-              desc: "domains import only internal/web/layout"
+              desc: "domains import only internal/web/layout and internal/web/i18n"
+            - pkg: "altalune.id/othra/internal/web/"
+              desc: "domains import only internal/web/layout and internal/web/i18n"
             - pkg: "altalune.id/othra/pg$"
               desc: "domains reach Postgres through internal/kernel/db, never the connection"
             - pkg: "altalune.id/othra/nats$"
@@ -254,37 +260,26 @@ linters:
               desc: "domains never use the Redis connection; a feature's driver does"
             - pkg: "altalune.id/othra/s3$"
               desc: "domains reach file storage through internal/kernel/storage, never the connection"
-        kernel-boundary:
+        org-auth-boundary:
           list-mode: lax
           files:
-            - "**/internal/kernel/**"
+            - "**/internal/org/**"
+            # NOTE: a test that imports auth through a cycle fails to compile, so only production files are checked.
+            - "!**/*_test.go"
           deny:
-            - pkg: "altalune.id/othra/internal/apikey"
-              desc: "kernel must not import domain packages"
             - pkg: "altalune.id/othra/internal/auth"
-              desc: "kernel must not import domain packages"
-            - pkg: "altalune.id/othra/internal/install"
-              desc: "kernel must not import domain packages"
-            - pkg: "altalune.id/othra/internal/legal"
-              desc: "kernel must not import domain packages"
-            - pkg: "altalune.id/othra/internal/org"
-              desc: "kernel must not import domain packages"
-            - pkg: "altalune.id/othra/internal/project"
-              desc: "kernel must not import domain packages"
-            - pkg: "altalune.id/othra/internal/user"
-              desc: "kernel must not import domain packages"
-            - pkg: "altalune.id/othra/internal/webhook"
-              desc: "kernel must not import domain packages"
-            - pkg: "altalune.id/othra/internal/controlplane"
-              desc: "kernel must not import surfaces"
-            - pkg: "altalune.id/othra/internal/web"
-              desc: "kernel must not import surfaces"
-            - pkg: "altalune.id/othra/internal/mcp"
-              desc: "kernel must not import surfaces"
-            - pkg: "altalune.id/othra/internal/cli"
-              desc: "kernel must not import surfaces"
-            - pkg: "altalune.id/othra/internal/boot"
-              desc: "kernel must not import boot"
+              desc: "org reaches sign-in through a port in its ports.go, wired in boot; auth imports org"
+        kernel-boundary:
+          list-mode: lax
+          # NOTE: every other internal package is a domain, a surface or boot, so a new one is covered without a list.
+          files:
+            - "**/internal/kernel/**"
+          allow:
+            - altalune.id/othra/internal/kernel/
+            - altalune.id/othra/internal/testutil/
+          deny:
+            - pkg: "altalune.id/othra/internal/"
+              desc: "kernel imports only kernel packages, never a domain, a surface or boot"
         root-boundary:
           list-mode: lax
           files:

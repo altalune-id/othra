@@ -33,21 +33,12 @@ type Service struct {
 	seed     func(ctx context.Context, orgID, projectID uuid.UUID) error
 }
 
-// NewService builds a Service over the domain services it writes through.
-func NewService(uow db.Transactor, users UserCreator, orgs SystemOrgs, members Owners, projects DefaultProjects) *Service {
-	return &Service{uow: uow, users: users, orgs: orgs, members: members, projects: projects}
-}
-
-// WithProjectSeed runs seed once, on the project install creates, such as the upstream IdP from config (M7 F13).
-func (s *Service) WithProjectSeed(seed func(ctx context.Context, orgID, projectID uuid.UUID) error) *Service {
-	s.seed = seed
-	return s
-}
-
-// WithTerms records the owner's acceptance of the terms through t.
-func (s *Service) WithTerms(t Terms) *Service {
-	s.terms = t
-	return s
+// NewService builds a Service over the domain services it writes through; seed, when not nil, runs once on the project install creates.
+func NewService(
+	uow db.Transactor, users UserCreator, orgs SystemOrgs, members Owners, projects DefaultProjects, terms Terms,
+	seed func(ctx context.Context, orgID, projectID uuid.UUID) error,
+) *Service {
+	return &Service{uow: uow, users: users, orgs: orgs, members: members, projects: projects, terms: terms, seed: seed}
 }
 
 // Required reports whether the instance still needs installing: no system org, or in local mode no owner of it.

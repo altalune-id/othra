@@ -53,17 +53,12 @@ type Service struct {
 	log        *slog.Logger
 }
 
-// NewService builds the Service over store.
-func NewService(store Store, unexpected apperror.UnexpectedFunc) *Service {
+// NewService builds the Service over store; grants are revoked with an app's consents in one unit of work on uow.
+func NewService(store Store, uow db.Transactor, grants Grants, unexpected apperror.UnexpectedFunc) *Service {
 	return &Service{
-		store: store, unexpected: unexpected, now: func() time.Time { return time.Now().UTC() }, log: slog.New(slog.DiscardHandler),
+		store: store, uow: uow, grants: grants, unexpected: unexpected,
+		now: func() time.Time { return time.Now().UTC() }, log: slog.New(slog.DiscardHandler),
 	}
-}
-
-// WithGrants sets the grants ConnectedApps lists and Disconnect revokes, in units of work from uow.
-func (s *Service) WithGrants(g Grants, uow db.Transactor) *Service {
-	s.grants, s.uow = g, uow
-	return s
 }
 
 // WithLogger sets where approvals and revokes are logged.
@@ -139,7 +134,7 @@ func (s *Service) ConnectedApps(ctx context.Context, p Project, endUserID uuid.U
 	return Apps(consents, families, s.grants.ResourceScopes), nil
 }
 
-// Disconnect drops the end user's consents for clientID and revokes its grants in one unit of work (R-5), or *AppNotConnectedError.
+// Disconnect drops the end user's consents for clientID and revokes its grants in one unit of work, or *AppNotConnectedError.
 func (s *Service) Disconnect(ctx context.Context, p Project, c Connection) error {
 	ctx = scope(ctx, p)
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {

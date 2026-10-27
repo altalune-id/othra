@@ -36,7 +36,7 @@ flowchart TB
   BOOT --> CFG["config"]
 ```
 
-Import direction: `cmd` → `internal/cli` → `internal/boot` → `internal/controlplane` → domains → `internal/kernel/*`. Domains never import `internal/cli`, `internal/boot`, `internal/controlplane` or `internal/web` (only `internal/web/layout`). Kernel packages import no domain (depguard `kernel-boundary` in `.golangci.yml`). Kernel packages and connections never import `config` (`config-boundary`): each takes its own `Config` from its `config.go`, and boot maps the app config into it.
+Import direction: `cmd` → `internal/cli` → `internal/boot` → `internal/controlplane` → domains → `internal/kernel/*`. Domains never import `internal/cli`, `internal/boot`, `internal/controlplane` or `internal/web` (only `internal/web/layout` and `internal/web/i18n`, the hosted pages' copy). Kernel packages import no domain (depguard `kernel-boundary` in `.golangci.yml`). Kernel packages and connections never import `config` (`config-boundary`): each takes its own `Config` from its `config.go`, and boot maps the app config into it.
 
 ## Boot
 

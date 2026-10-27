@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// A14: connected apps split a grant's scopes as introspection and at+jwt do.
+// connected apps split a grant's scopes as introspection and at+jwt do.
 func TestConsentGrants_ResourceScopes(t *testing.T) {
 	assert.Equal(t, []string{"read"}, consentGrants{}.ResourceScopes([]string{"openid", "read", "email", "offline_access", "profile"}))
 }

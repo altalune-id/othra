@@ -11,7 +11,7 @@ function mount(query: Record<string, string>) {
   return { replace, mounted };
 }
 
-describe('useLinkedNotice (pm K-1)', () => {
+describe('useLinkedNotice', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });

@@ -24,7 +24,7 @@ func mustOrg(t *testing.T, slug string) *org.Org {
 
 func TestOrgReach_IDOnlyRPCs(t *testing.T) {
 	orgA, orgB := mustOrg(t, "org-a"), mustOrg(t, "org-b")
-	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Org: orgB}, fakes.Transactor{}, nil))
+	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Org: orgB}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil))
 	for name, p := range map[string]session.Principal{
 		"member of A": {Source: session.SourceLocal, UserID: uuid.New(), ActiveOrgID: orgA.ID, Scopes: []string{"*"}},
 		"key of A":    {Source: session.SourceAPIKey, ActiveOrgID: orgA.ID, AllProjects: true, Scopes: []string{"org:read", "org:write"}},
@@ -41,7 +41,7 @@ func TestOrgReach_IDOnlyRPCs(t *testing.T) {
 
 func TestOrgReach_UnknownOrUUIDIDIsNotFound(t *testing.T) {
 	orgA := mustOrg(t, "org-a")
-	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Err: &org.NotFoundError{}}, fakes.Transactor{}, nil))
+	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Err: &org.NotFoundError{}}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil))
 	ctx := session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceLocal, UserID: uuid.New(), ActiveOrgID: orgA.ID, Scopes: []string{"*"}})
 	for _, id := range []string{"not-a-public-id", orgA.ID.String()} {
 		_, err := cp.GetOrg(ctx, connect.NewRequest(&orgv1.GetOrgRequest{Id: id}))
@@ -53,7 +53,7 @@ func TestOrgReach_UnknownOrUUIDIDIsNotFound(t *testing.T) {
 
 func TestOrgReach_OwnOrgAndTrustedCallers(t *testing.T) {
 	o := mustOrg(t, "org-a")
-	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Org: o}, fakes.Transactor{}, nil))
+	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Org: o}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil))
 	for name, ctx := range map[string]context.Context{
 		"system":   fakes.OperatorContext(context.Background()),
 		"member":   session.PrincipalInto(context.Background(), session.Principal{Source: session.SourceLocal, UserID: uuid.New(), ActiveOrgID: o.ID}),
@@ -71,7 +71,7 @@ func TestOrgReach_OwnOrgAndTrustedCallers(t *testing.T) {
 
 func TestOrgReach_ListOrgs(t *testing.T) {
 	orgA, orgB, orgC := mustOrg(t, "org-a"), mustOrg(t, "org-b"), mustOrg(t, "org-c")
-	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Orgs: []*org.Org{orgA, orgB}}, fakes.Transactor{}, nil))
+	cp := org.NewControlPlane(org.NewService(&fakes.OrgStore{Orgs: []*org.Org{orgA, orgB}}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil))
 	ids := func(ctx context.Context) []string {
 		resp, err := cp.ListOrgs(ctx, connect.NewRequest(&orgv1.ListOrgsRequest{}))
 		require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestOrgReach_ListOrgs(t *testing.T) {
 	cp = org.NewControlPlane(org.NewService(&fakes.OrgStore{
 		Orgs:    []*org.Org{orgA, orgB, orgC},
 		ForUser: map[uuid.UUID][]*org.Org{person: {orgA, orgC}},
-	}, fakes.Transactor{}, nil))
+	}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil))
 	assert.Equal(t, []string{orgA.PublicID, orgC.PublicID}, ids(session.PrincipalInto(context.Background(),
 		session.Principal{Source: session.SourceLocal, UserID: person, ActiveOrgID: orgA.ID})),
 		"a person sees every org they belong to, and nothing else")

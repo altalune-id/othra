@@ -23,7 +23,7 @@ import (
 
 func newAPIKeyClient(t *testing.T, store apikey.Store, refs *fakes.PublicIDs) apikeyv1connect.APIKeyServiceClient {
 	t.Helper()
-	svc := apikey.NewService(store, apikey.NewScheme(""), stubProjects{ids: []uuid.UUID{knownProject}}, testUnexpected())
+	svc := apikey.NewService(store, apikey.NewScheme(""), stubProjects{ids: []uuid.UUID{knownProject}}, fakes.NoOwnerRoles{}, testUnexpected())
 	_, handler := apikeyv1connect.NewAPIKeyServiceHandler(apikey.NewControlPlane(svc, refs), connect.WithInterceptors(controlplane.Wrap(nil), fakes.OperatorInterceptor()))
 	ts := httptest.NewServer(handler)
 	t.Cleanup(ts.Close)
@@ -207,14 +207,14 @@ func TestAPIKeyService_Revoke_UnknownOrg(t *testing.T) {
 	assert.Nil(t, store.Saved)
 }
 
-// Review Focus 5: listing an org's keys is org-wide, so a key limited to some projects is refused.
+// listing an org's keys is org-wide, so a key limited to some projects is refused.
 func TestAPIKeyService_List_ProjectLimitedKeyRefused(t *testing.T) {
 	orgID := uuid.New()
 	k, _, err := apikey.NewScheme("").MintOrg(orgID, "x", nil, apikey.ProjectGrant{All: true}, future(), time.Now().UTC())
 	require.NoError(t, err)
 	refs := fakes.NewPublicIDs()
 	orgPub := refs.Org(orgID)
-	svc := apikey.NewService(&fakes.APIKeyStore{Keys: []*apikey.APIKey{k}}, apikey.NewScheme(""), stubProjects{ids: []uuid.UUID{knownProject}}, nil)
+	svc := apikey.NewService(&fakes.APIKeyStore{Keys: []*apikey.APIKey{k}}, apikey.NewScheme(""), stubProjects{ids: []uuid.UUID{knownProject}}, fakes.NoOwnerRoles{}, nil)
 	cp := apikey.NewControlPlane(svc, refs)
 	list := func(p session.Principal) error {
 		_, err := cp.ListAPIKeys(session.PrincipalInto(context.Background(), p), connect.NewRequest(&apikeyv1.ListAPIKeysRequest{OrgId: orgPub}))

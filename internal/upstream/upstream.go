@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Kind is an upstream IdP kind; its issuer, endpoints and scopes are fixed here, never configured (authl gap 3).
+// Kind is an upstream IdP kind; its issuer, endpoints and scopes are fixed here, never configured.
 type Kind string
 
 // KindGoogle is Google's OpenID Connect.
@@ -18,7 +18,7 @@ type Spec struct {
 	Issuer        string
 	AcceptIssuers []string
 	Scopes        []string
-	// Prompt is sent on every start, so the person picks the account each time (pm A6; Google has no prompt=login).
+	// Prompt is sent on every start, so the person picks the account each time (Google has no prompt=login).
 	Prompt string
 }
 
@@ -53,7 +53,7 @@ type Credentials struct {
 	ClientSecret string
 }
 
-// RedirectURI is where the upstream sends the browser back: the project's issuer URL plus the kind's callback path (P11).
+// RedirectURI is where the upstream sends the browser back: the project's issuer URL plus the kind's callback path.
 func RedirectURI(issuerURL string, kind Kind) string {
 	return issuerURL + "/federation/" + string(kind) + "/callback"
 }

@@ -30,7 +30,7 @@ func TestGrantConfig(t *testing.T) {
 
 func TestBuildScheduler_RegistersTheGrantPrune(t *testing.T) {
 	k := kernel.Kernel{Meter: noopmetric.NewMeterProvider().Meter("test"), Reporter: apperror.NewReporter(nil, false)}
-	svcs := &Services{Sessions: session.NewMemoryStore(), Grants: buildGrants(k, config.Config{}, fakes.Transactor{}, nil, nil)}
+	svcs := &Services{Sessions: session.NewMemoryStore(), Grants: buildGrants(k, config.Config{}, fakes.Transactor{}, buildKeys(k, config.Config{}, fakes.Transactor{}, nil), grantAudiences{})}
 	r, err := buildScheduler(k, config.Config{Scheduler: config.SchedulerConfig{Enabled: true}}, svcs, testLogger())
 	require.NoError(t, err)
 	var names []string

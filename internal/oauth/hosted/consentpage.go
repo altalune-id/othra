@@ -18,7 +18,7 @@ const pageConsent page = "/consent"
 
 const descDenied = "the end user denied the request"
 
-// NOTE: R-6: a stored consent keeps only the OIDC scopes and the scopes the server still has.
+// NOTE: a stored consent keeps only the OIDC scopes and the scopes the server still has.
 func (r *authRequest) allowedScopes() []string {
 	if r.resource == nil {
 		return slices.Clone(knownScopes)
@@ -30,7 +30,7 @@ func (r *authRequest) consentKey(a Account) consent.Key {
 	return consent.Key{EndUserID: a.EndUserID, ClientID: r.client.RowID, ResourceServerID: r.resourceID()}
 }
 
-// NOTE: E4, D2: the marker in q says the request came back from a consent page; without one only the stored consent decides.
+// NOTE: the marker in q says the request came back from a consent page; without one only the stored consent decides.
 func (h *Web) consentPage(ctx context.Context, s *site, req *authRequest, q url.Values, a Account) (consent.Page, *consent.Consent, error) {
 	c, err := h.oauth.Consents.Consent(ctx, s.project(), req.consentKey(a))
 	if err != nil {
@@ -43,7 +43,7 @@ func (h *Web) consentPage(ctx context.Context, s *site, req *authRequest, q url.
 	}), c, nil
 }
 
-// SECURITY: G3, E4: the consent page returns to /authorize with the request's marker, or a new one, so approving can't loop.
+// SECURITY: the consent page returns to /authorize with the request's marker, or a new one, so approving can't loop.
 func (h *Web) askConsent(w http.ResponseWriter, r *http.Request, s *site, req *authRequest, q url.Values) {
 	if _, ok := h.oauth.Marker.Since(q, req.client.ID); !ok {
 		q = h.oauth.Marker.Mark(q, req.client.ID)
@@ -90,7 +90,7 @@ func (h *Web) consent(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 }
 
-// NOTE: C6, MCP security: the redirect host is always named, with a warning when it is this device.
+// NOTE: MCP security: the redirect host is always named, with a warning when it is this device.
 func (h *Web) renderConsent(
 	w http.ResponseWriter, r *http.Request, s *site, req *authRequest, a Account, c *consent.Consent, remembered bool, returnTo string,
 ) {
@@ -117,7 +117,7 @@ func (h *Web) renderConsent(
 	h.kit.Render(w, r, http.StatusOK, views.Consent(h.layout(r, s), d))
 }
 
-// SECURITY: C7: a CSRF-checked POST from this browser's active account; Deny records nothing and answers access_denied.
+// SECURITY: a CSRF-checked POST from this browser's active account; Deny records nothing and answers access_denied.
 func (h *Web) answerConsent(w http.ResponseWriter, r *http.Request, s *site) {
 	if !h.guard(w, r, s, "consent", FormIPRule()) {
 		return

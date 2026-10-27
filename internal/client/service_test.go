@@ -48,10 +48,14 @@ func newHarness(t *testing.T) *harness {
 		store: fakes.NewClientStore(), issuer: &issuerLock{}, org: uuid.New(), project: uuid.New(),
 		now: time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC), logs: &bytes.Buffer{},
 	}
-	h.svc = client.NewService(h.store, fakes.Transactor{}, h.issuer, apperror.NewReporter(nil, false).Unexpected).
+	h.build(&fakeFetcher{}, client.MetadataConfig{})
+	return h
+}
+
+func (h *harness) build(f client.MetadataFetcher, meta client.MetadataConfig) {
+	h.svc = client.NewService(h.store, fakes.Transactor{}, h.issuer, f, meta, apperror.NewReporter(nil, false).Unexpected).
 		WithLogger(slog.New(slog.NewJSONHandler(h.logs, nil)))
 	h.svc.SetNow(func() time.Time { return h.now })
-	return h
 }
 
 func web(uris ...string) client.Settings {
@@ -343,7 +347,7 @@ func TestRotateSecret_KeepsAtMostTwoLive(t *testing.T) {
 	assert.Len(t, got.Secrets, 1, "an expired secret is no longer live")
 }
 
-// SECURITY: R-5, a secret authenticates only while live: the current one and the old one through its grace, never a revoked or expired one.
+// SECURITY: a secret authenticates only while live: the current one and the old one through its grace, never a revoked or expired one.
 func TestVerifySecret(t *testing.T) {
 	h := newHarness(t)
 	ctx := context.Background()

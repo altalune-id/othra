@@ -50,7 +50,7 @@ func TestCreate_TrimsTheName(t *testing.T) {
 	assert.Equal(t, "Billing", r.Name)
 }
 
-// D3, C10: trust on create follows SetTrust (self-hosted, a person), and an http loopback identifier exists only trusted.
+// trust on create follows SetTrust (self-hosted, a person), and an http loopback identifier exists only trusted.
 func TestCreate_Trusted(t *testing.T) {
 	loop := func(h *harness, trusted bool, person uuid.UUID) error {
 		_, err := h.svc.Create(context.Background(), CreateRequest{
@@ -182,10 +182,10 @@ func TestVerify_PassPromotes(t *testing.T) {
 	assert.Contains(t, line, `"from":"pending","to":"verified"`)
 	assert.Contains(t, line, `"check":"manual"`)
 	assert.Contains(t, line, `"project":"`+testProjectPublicID+`"`)
-	assert.NotContains(t, line, h.project.String(), "A31: no UUID in the log")
+	assert.NotContains(t, line, h.project.String(), "no UUID in the log")
 }
 
-// C9: a failed "Verify now" shows its error but changes neither the count nor the state.
+// a failed "Verify now" shows its error but changes neither the count nor the state.
 func TestVerify_AFailedManualCheckChangesNothing(t *testing.T) {
 	h := newHarness(t, false)
 	r := h.create(t, "https://api.example.com")
@@ -244,7 +244,7 @@ func TestVerify_Refusals(t *testing.T) {
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
 }
 
-// C10: trust is self-hosted only, logged, and turning it off returns the server to pending.
+// trust is self-hosted only, logged, and turning it off returns the server to pending.
 func TestSetTrust(t *testing.T) {
 	cloud := newHarness(t, false)
 	r := cloud.create(t, "https://api.example.com")
@@ -263,7 +263,7 @@ func TestSetTrust(t *testing.T) {
 	assert.Contains(t, buf.String(), `"trusted":true`)
 	assert.Contains(t, buf.String(), `"by":"usr`+h.person.String()[:18]+`"`)
 	assert.Contains(t, buf.String(), `"project":"`+testProjectPublicID+`"`)
-	assert.NotContains(t, buf.String(), h.person.String(), "A31: no UUID in the log")
+	assert.NotContains(t, buf.String(), h.person.String(), "no UUID in the log")
 	assert.NotContains(t, buf.String(), h.project.String())
 
 	buf.Reset()
@@ -283,7 +283,7 @@ func TestSetTrust(t *testing.T) {
 	assert.True(t, IsNotFoundError(err))
 }
 
-// C9: three scheduled failures turn verified into failed, and a pass resets the count.
+// three scheduled failures turn verified into failed, and a pass resets the count.
 func TestRecheck_ThreeScheduledFailuresFail(t *testing.T) {
 	h := newHarness(t, false)
 	r := h.create(t, "https://api.example.com")

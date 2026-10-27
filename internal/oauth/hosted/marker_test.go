@@ -15,7 +15,7 @@ func newTestMarker(now *time.Time) *Marker {
 	return m
 }
 
-// G3, A11: a signed marker says when Othra sent the person to sign in or choose; only a later sign-in or choice satisfies it.
+// a signed marker says when Othra sent the person to sign in or choose; only a later sign-in or choice satisfies it.
 func TestMarker_RoundTrip(t *testing.T) {
 	now := time.Date(2026, 10, 22, 9, 0, 0, 0, time.UTC)
 	m := newTestMarker(&now)
@@ -62,7 +62,7 @@ func TestMarker_Refusals(t *testing.T) {
 	}
 }
 
-// F1: the subject of an id_token_hint crosses sign-in signed, never as the token itself.
+// the subject of an id_token_hint crosses sign-in signed, never as the token itself.
 func TestMarker_Hint(t *testing.T) {
 	now := time.Date(2026, 10, 22, 9, 0, 0, 0, time.UTC)
 	m := newTestMarker(&now)

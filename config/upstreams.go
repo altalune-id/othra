@@ -17,7 +17,7 @@ type UpstreamsGoogleConfig struct {
 	IssuerOverride string `yaml:"issuerOverride" mapstructure:"issuerOverride"`
 }
 
-// SECURITY: the qa switches change whom Othra trusts, so cloud and production refuse them, as the CIMD and RS switches do (authl gap 3).
+// SECURITY: the qa switches change whom Othra trusts, so cloud and production refuse them, as the CIMD and RS switches do.
 func (c *Config) validateUpstreams() error {
 	u := c.Upstreams
 	switch {

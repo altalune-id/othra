@@ -89,7 +89,7 @@ describe('useClient', () => {
   });
 });
 
-describe('useClientList and apps without registration (M6)', () => {
+describe('useClientList and apps without registration', () => {
   it('lists registered clients only', async () => {
     setClient('$clientClient', { listClients: vi.fn().mockResolvedValue({ clients: [web, create(ClientSchema, { id: 'c', name: 'Claude Code', registration: ClientRegistration.CIMD })] }) });
     const l = useClientList(projectId);

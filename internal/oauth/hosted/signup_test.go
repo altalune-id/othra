@@ -18,7 +18,7 @@ func newUnprovenFixture(t *testing.T) (*webFixture, *fakeFederation) {
 	return f, fed
 }
 
-// P8 = A: a first Google sign-in for budi@acme.test (no hd) creates nobody, mails a sign-up link and lands on a reload-safe GET page.
+// a first Google sign-in for budi@acme.test (no hd) creates nobody, mails a sign-up link and lands on a reload-safe GET page.
 func TestUnproven_MailsALinkAndShowsTheInboxPage(t *testing.T) {
 	f, _ := newUnprovenFixture(t)
 	page := f.collide(f.client)
@@ -44,7 +44,7 @@ func TestUnproven_SameBrowserCreatesAndLinks(t *testing.T) {
 		require.Equal(t, http.StatusOK, f.collide(f.client).status)
 		verify := f.openLink(f.client)
 		assert.NotContains(t, verify.body, `name="skip"`, "a sign-up has nothing to skip")
-		assert.Contains(t, verify.body, "Finish signing up to Acme with Google", "O11")
+		assert.Contains(t, verify.body, "Finish signing up to Acme with Google", "the confirm page names the Google sign-up it finishes")
 		done := f.submit(f.client, verify, "/login/verify", nil)
 		require.Equal(t, http.StatusSeeOther, done.status, done.body)
 		assert.Len(t, fed.linked, 1, "email link on=%v", emailLink)
@@ -75,7 +75,7 @@ func TestUnproven_AnotherBrowser(t *testing.T) {
 	})
 }
 
-// SECURITY: P8: an end user who took the email before the redeem signs in by the link; the Google identity is never auto-linked.
+// SECURITY: an end user who took the email before the redeem signs in by the link; the Google identity is never auto-linked.
 func TestUnproven_EmailTakenByRedeemTimeIsNeverLinked(t *testing.T) {
 	f, fed := newUnprovenFixture(t)
 	require.Equal(t, http.StatusOK, f.collide(f.client).status)
@@ -85,7 +85,7 @@ func TestUnproven_EmailTakenByRedeemTimeIsNeverLinked(t *testing.T) {
 	assert.Empty(t, fed.linked)
 }
 
-// BL-1, Q9: a Google sign-up proven by its inbox keeps Google's name; a collision link never renames an existing account.
+// a Google sign-up proven by its inbox keeps Google's name; a collision link never renames an existing account.
 func TestUnproven_KeepsTheGoogleName(t *testing.T) {
 	f, fed := newUnprovenFixture(t)
 	require.Equal(t, http.StatusOK, f.collide(f.client).status)

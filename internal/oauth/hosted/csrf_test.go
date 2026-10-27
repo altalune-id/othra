@@ -90,7 +90,7 @@ func TestCSRF_AValidTokenPasses(t *testing.T) {
 	assert.NoError(t, f.csrf.Check(post(f.cookie, token), testScope, "login"))
 }
 
-// D3, D3a: no token, a wrong token, an expired one, another form's, another project's or another browser's are all refused.
+// no token, a wrong token, an expired one, another form's, another project's or another browser's are all refused.
 func TestCSRF_Refusals(t *testing.T) {
 	f := newCSRFFixture(t)
 	token := f.csrf.Token(f.cookie, testScope, "login")
@@ -136,7 +136,7 @@ func TestCSRF_Expiry(t *testing.T) {
 	assert.Equal(t, FormExpired, reason(t, f.csrf.Check(post(f.cookie, future), testScope, "login")), "a token from the future")
 }
 
-// D3a: sign-in renews the cookie, so a token issued before it stops verifying.
+// sign-in renews the cookie, so a token issued before it stops verifying.
 func TestCSRF_RenewKillsOldTokens(t *testing.T) {
 	f := newCSRFFixture(t)
 	token := f.csrf.Token(f.cookie, testScope, "login")
@@ -146,7 +146,7 @@ func TestCSRF_RenewKillsOldTokens(t *testing.T) {
 	assert.NoError(t, f.csrf.Check(post(renewed, f.csrf.Token(renewed, testScope, "login")), testScope, "login"))
 }
 
-// D3, C3: http.CrossOriginProtection lets an old browser with neither Sec-Fetch-Site nor Origin through; the token still refuses it.
+// http.CrossOriginProtection lets an old browser with neither Sec-Fetch-Site nor Origin through; the token still refuses it.
 func TestCSRF_BehindCrossOriginProtection(t *testing.T) {
 	f := newCSRFFixture(t)
 	h := http.NewCrossOriginProtection().Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -96,7 +96,7 @@ func TestPostgres_KeyLifecycle(t *testing.T) {
 	assert.Zero(t, n, "within the overlap")
 }
 
-// SECURITY: R-7: once a key is retired its sealed private key is gone; only a retired row may lack one.
+// SECURITY: once a key is retired its sealed private key is gone; only a retired row may lack one.
 func TestPostgres_ARetiredKeyKeepsNoPrivateKey(t *testing.T) {
 	f := newPGFixture(t)
 	org, project := f.seed(t)

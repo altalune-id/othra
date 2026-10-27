@@ -35,15 +35,9 @@ type AuthService struct {
 
 var _ authv1connect.AuthServiceHandler = (*AuthService)(nil)
 
-// NewControlPlane binds the handler to the org, project and user lookups whoami fills names and public ids from.
-func NewControlPlane(orgs OrgGetter, projects ProjectGetter, users UserGetter) *AuthService {
-	return &AuthService{orgs: orgs, projects: projects, users: users}
-}
-
-// WithProfiles serves the profile RPCs over p.
-func (s *AuthService) WithProfiles(p Profiles) *AuthService {
-	s.profiles = p
-	return s
+// NewControlPlane binds the handler to the lookups whoami fills names and public ids from, and to the profile changes.
+func NewControlPlane(orgs OrgGetter, projects ProjectGetter, users UserGetter, profiles Profiles) *AuthService {
+	return &AuthService{orgs: orgs, projects: projects, users: users, profiles: profiles}
 }
 
 // WithFileUploads reports on whoami whether this deployment accepts file uploads.

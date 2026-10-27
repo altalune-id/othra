@@ -72,7 +72,7 @@ func Union(have, add []string) []string {
 // Page is what an authorization request shows before a code is issued.
 type Page int
 
-// The pages: none issues the code at once; full lists the scopes; remembered is the one-click "Continue to {client}" page (D2).
+// The pages: none issues the code at once; full lists the scopes; remembered is the one-click "Continue to {client}" page.
 const (
 	PageNone Page = iota
 	PageFull
@@ -90,7 +90,7 @@ type Request struct {
 	Since  time.Time
 }
 
-// Decide returns the page r shows given the stored consent c (E4, D2, OIDC Core §3.1.2.4).
+// Decide returns the page r shows given the stored consent c (OIDC Core §3.1.2.4).
 func Decide(c *Consent, r Request) Page {
 	switch {
 	case r.Marked && c.Covers(r.Scopes) && c.UpdatedAt.Truncate(time.Millisecond).After(r.Since):

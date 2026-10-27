@@ -208,11 +208,11 @@ func TestToken_CodeGrantWithBasic(t *testing.T) {
 func TestToken_PostAndNoneClients(t *testing.T) {
 	f := newTokenFixture(t)
 	rec := f.post(t, tokenURL, codeForm("client_id", "post", "client_secret", secret))
-	assert.Equal(t, http.StatusOK, rec.Code, "client_secret_post (D2): %s", rec.Body.String())
+	assert.Equal(t, http.StatusOK, rec.Code, "client_secret_post: %s", rec.Body.String())
 	assert.False(t, f.grants.exchange.Client.Refresh)
 
 	rec = f.post(t, tokenURL, codeForm("client_id", "cli"))
-	assert.Equal(t, http.StatusOK, rec.Code, "a public client names itself with client_id (S8): %s", rec.Body.String())
+	assert.Equal(t, http.StatusOK, rec.Code, "a public client names itself with client_id: %s", rec.Body.String())
 
 	rec = f.post(t, tokenURL, codeForm("client_id", "basic"), "Authorization", basic("basic", secret))
 	assert.Equal(t, http.StatusOK, rec.Code, "client_id beside Basic is the same client")
@@ -437,7 +437,7 @@ func TestToken_Resource(t *testing.T) {
 	assert.Equal(t, "invalid_target", oauthErr(t, rec))
 }
 
-// E8-3: a refresh that narrows openid away gets no ID token.
+// a refresh that narrows openid away gets no ID token.
 func TestToken_RefreshWithoutOpenIDGetsNoIDToken(t *testing.T) {
 	f := newTokenFixture(t)
 	f.grants.tokens.Scopes = []string{"offline_access"}
@@ -509,7 +509,7 @@ func TestToken_CIMDClient(t *testing.T) {
 	assert.Equal(t, []string{metadata}, f.idTokens.in.Audience)
 }
 
-// R-8, RFC 8707 §2: two different resources at /token or refresh are invalid_target; a repeated equal one counts once.
+// RFC 8707 §2: two different resources at /token or refresh are invalid_target; a repeated equal one counts once.
 func TestToken_RepeatedResource(t *testing.T) {
 	f := newTokenFixture(t)
 	auth := []string{"Authorization", basic("basic", secret)}

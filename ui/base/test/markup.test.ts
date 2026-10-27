@@ -49,7 +49,7 @@ describe('guard: markup in every app', () => {
     expect(own).toEqual(['base/app/components/ui/AppDropdown.vue']);
   });
 
-  it('gives small checkboxes square corners so they do not look like radios (P-a)', () => {
+  it('gives small checkboxes square corners so they do not look like radios', () => {
     const round = files.flatMap(f => (f.text.match(/class="checkbox checkbox-(?:xs|sm)\b[^"]*"/g) ?? []).filter(c => !c.includes('rounded-sm')).map(c => `${f.path}: ${c}`));
     expect(round).toEqual([]);
   });
@@ -75,7 +75,7 @@ describe('guard: forms that show field errors', () => {
 });
 
 describe('guard: theme contrast', () => {
-  it('darkens the othra-dark primary for button text contrast (O3)', () => {
+  it('darkens the othra-dark primary for button text contrast', () => {
     const theme = readFileSync(join(ui, 'theme.css'), 'utf8');
     const dark = theme.slice(theme.indexOf('name: \'othra-dark\''));
     expect(dark.slice(0, dark.indexOf('}'))).toContain('--color-primary: oklch(55% 0.233 277.117);');

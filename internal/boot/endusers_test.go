@@ -13,6 +13,7 @@ import (
 	"altalune.id/othra/internal/enduser"
 	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/session"
+	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/testutil/fakes"
 )
 
@@ -33,7 +34,8 @@ func TestEndUsersConfig_ZeroFallsBackToTheDefaults(t *testing.T) {
 
 func TestBuildScheduler_RegistersTheEndUserPrune(t *testing.T) {
 	k := kernel.Kernel{Meter: noopmetric.NewMeterProvider().Meter("test"), Reporter: apperror.NewReporter(nil, false)}
-	svcs := &Services{Sessions: session.NewMemoryStore(), EndUsers: buildEndUsers(k, config.Config{}, fakes.Transactor{}, nil)}
+	svcs := &Services{Sessions: session.NewMemoryStore(), EndUsers: buildEndUsers(k, config.Config{}, fakes.Transactor{}, nil, endUserGrants{},
+		project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil))}
 	r, err := buildScheduler(k, config.Config{Scheduler: config.SchedulerConfig{Enabled: true}}, svcs, testLogger())
 	require.NoError(t, err)
 	var names []string

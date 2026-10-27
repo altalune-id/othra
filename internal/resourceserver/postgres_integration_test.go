@@ -18,6 +18,7 @@ import (
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/project"
 	"altalune.id/othra/internal/resourceserver"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/testutil/pgtest"
 )
 
@@ -95,7 +96,7 @@ func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	unexpected := apperror.NewReporter(nil, false).Unexpected
-	projects := project.NewService(project.NewStore(pool, schemaName, ""), unexpected).WithIssuerBase(issuerBase)
+	projects := project.NewService(project.NewStore(pool, schemaName, ""), fakes.Transactor{}, fakes.NoMemberships{}, nil, issuerBase, unexpected)
 	f := &pgFixture{schema: schemaName, db: sqlDB, pool: pool, checker: &passing{}}
 	f.svc = resourceserver.NewService(resourceserver.Deps{
 		Store: resourceserver.NewStore(pool, schemaName, ""), Transactor: db.NewTransactor(pool), Issuers: issuers{projects: projects}, People: people{},
@@ -246,7 +247,7 @@ func (failingChecker) Check(context.Context, string, string) *resourceserver.Fai
 	return &resourceserver.Failure{Reason: resourceserver.FailureTimeout, CheckedAt: time.Now().UTC()}
 }
 
-// S1: the first resource server locks the issuer handle in its own transaction; a failing insert leaves it unlocked.
+// the first resource server locks the issuer handle in its own transaction; a failing insert leaves it unlocked.
 func TestPostgres_FirstServerLocksTheIssuerHandle(t *testing.T) {
 	f := newPGFixture(t)
 	org, project := f.seed(t)
@@ -359,7 +360,7 @@ func TestPostgres_ProjectsStayApart(t *testing.T) {
 	assert.Empty(t, links)
 }
 
-// R-6: the table holds an http identifier only while it is trusted.
+// the table holds an http identifier only while it is trusted.
 func TestPostgres_AnHTTPIdentifierNeedsTrust(t *testing.T) {
 	f := newPGFixture(t)
 	org, project := f.seed(t)
@@ -386,7 +387,7 @@ func (mismatchChecker) Check(context.Context, string, string) *resourceserver.Fa
 	return &resourceserver.Failure{Reason: resourceserver.FailureResourceMismatch, Resource: "https://elsewhere", CheckedAt: time.Now().UTC()}
 }
 
-// R-2: a pending server whose document names another resource is saved failed, with no verified_at.
+// a pending server whose document names another resource is saved failed, with no verified_at.
 func TestPostgres_AMismatchFailsAPendingServer(t *testing.T) {
 	f := newPGFixture(t)
 	org, project := f.seed(t)
@@ -405,7 +406,7 @@ func TestPostgres_AMismatchFailsAPendingServer(t *testing.T) {
 	assert.Equal(t, "https://elsewhere", got.LastError.Resource)
 }
 
-// E10, A16, 026: admission and scope descriptions persist; Resolve and Admits read them; turning admission off is immediate.
+// 026: admission and scope descriptions persist; Resolve and Admits read them; turning admission off is immediate.
 func TestPostgres_AdmissionAndDescriptions(t *testing.T) {
 	f := newPGFixture(t)
 	org, project := f.seed(t)
@@ -452,7 +453,7 @@ func TestPostgres_AdmissionAndDescriptions(t *testing.T) {
 	assert.False(t, ok, "admission off: refresh refused")
 }
 
-// pm P3, A1, A12: introspection secrets authenticate per server and project, rotate with grace, revoke, and go with their server.
+// introspection secrets authenticate per server and project, rotate with grace, revoke, and go with their server.
 func TestPostgres_IntrospectionSecrets(t *testing.T) {
 	f := newPGFixture(t)
 	org, project := f.seed(t)
@@ -466,7 +467,7 @@ func TestPostgres_IntrospectionSecrets(t *testing.T) {
 	}
 
 	_, err := f.svc.SetPersonalTokenAccess(ctx, org, project, r.PublicID, true)
-	assert.True(t, resourceserver.IsAdmissionUnverifiedError(err), "R-1: a pending server takes no personal tokens")
+	assert.True(t, resourceserver.IsAdmissionUnverifiedError(err), "a pending server takes no personal tokens")
 	_, _, err = f.svc.Verify(ctx, org, project, r.PublicID)
 	require.NoError(t, err)
 	_, err = f.svc.SetPersonalTokenAccess(ctx, org, project, r.PublicID, true)
@@ -517,7 +518,7 @@ func TestPostgres_IntrospectionSecrets(t *testing.T) {
 	assert.Zero(t, left, "deleting the server deletes its secrets")
 }
 
-// qa F-3: a server with an admitted metadata document client deletes cleanly, its link with it; never a raw SQL error.
+// a server with an admitted metadata document client deletes cleanly, its link with it; never a raw SQL error.
 func TestPostgres_DeleteWithACIMDLink(t *testing.T) {
 	f := newPGFixture(t)
 	org, project := f.seed(t)

@@ -33,7 +33,7 @@ func signedIn(ctx context.Context) (session.EndUser, Project, error) {
 	return eu, Project{OrgID: eu.OrgID, ID: eu.ProjectID, PublicID: eu.ProjectPublicID}, nil
 }
 
-// ListConnectedApps lists every app the signed-in end user has a consent or a live grant with (C1).
+// ListConnectedApps lists every app the signed-in end user has a consent or a live grant with.
 func (s *AccountService) ListConnectedApps(
 	ctx context.Context, _ *connect.Request[accountv1.ListConnectedAppsRequest],
 ) (*connect.Response[accountv1.ListConnectedAppsResponse], error) {
@@ -48,7 +48,7 @@ func (s *AccountService) ListConnectedApps(
 	return connect.NewResponse(&accountv1.ListConnectedAppsResponse{Apps: apps}), nil
 }
 
-// DisconnectApp withdraws the end user's consents for an app and revokes its grants (R-5); access already held ends within 15 min.
+// DisconnectApp withdraws the end user's consents for an app and revokes its grants; access already held ends within 15 min.
 func (s *AccountService) DisconnectApp(
 	ctx context.Context, req *connect.Request[accountv1.DisconnectAppRequest],
 ) (*connect.Response[accountv1.DisconnectAppResponse], error) {

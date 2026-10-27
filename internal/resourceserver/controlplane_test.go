@@ -145,7 +145,7 @@ func TestControlPlane_Lifecycle(t *testing.T) {
 	assert.True(t, IsNotFoundError(err))
 }
 
-// C10: trust is person-only and self-hosted only; a key is refused before anything changes.
+// trust is person-only and self-hosted only; a key is refused before anything changes.
 func TestControlPlane_Trust(t *testing.T) {
 	f := newCPFixture(t, true)
 	rs := f.create(t, f.owner, "https://api.example.com")
@@ -277,7 +277,7 @@ func uuidOf(t *testing.T, f *cpFixture, publicID string) uuid.UUID {
 	return r.ID
 }
 
-// L1: a member reads resource servers and links but writes nothing; a key never sets trust.
+// a member reads resource servers and links but writes nothing; a key never sets trust.
 func TestPermissions_MemberReadsOnly(t *testing.T) {
 	memberP := session.Principal{Source: session.SourceLocal, UserID: uuid.New(), Scopes: member.BuiltinPermissions(member.RoleMember)}
 	adminP := session.Principal{Source: session.SourceLocal, UserID: uuid.New(), Scopes: member.BuiltinPermissions(member.RoleAdmin)}
@@ -330,7 +330,7 @@ func TestControlPlane_RefsFailure(t *testing.T) {
 	assert.ErrorIs(t, err, errFake)
 }
 
-// E10: SetResourceServerAdmission saves admission; the server and its links show it; out of reach is not-found.
+// SetResourceServerAdmission saves admission; the server and its links show it; out of reach is not-found.
 func TestControlPlane_Admission(t *testing.T) {
 	f := newCPFixture(t, true)
 	rs := f.create(t, f.owner, "http://127.0.0.1:8080/mcp")
@@ -386,7 +386,7 @@ func TestControlPlane_IntrospectionSecretsArePersonOnly(t *testing.T) {
 	access := connect.NewRequest(&resourceserverv1.SetPersonalTokenAccessRequest{ProjectId: f.projectPub, ResourceServerId: rs.GetId()})
 	for _, ctx := range []context.Context{f.key, context.Background()} {
 		_, err := f.cp.SetPersonalTokenAccess(ctx, access)
-		assert.True(t, authz.IsForbiddenError(err), "R-4: %v", err)
+		assert.True(t, authz.IsForbiddenError(err), "%v", err)
 		_, err = f.cp.GenerateIntrospectionSecret(ctx, generate)
 		assert.True(t, authz.IsForbiddenError(err), "%v", err)
 		_, err = f.cp.RotateIntrospectionSecret(ctx, rotate)

@@ -83,12 +83,12 @@ func TestEnabled(t *testing.T) {
 	require.Error(t, err)
 }
 
-// A6, P7: every start asks Google to choose the account, and only the given linked email goes as login_hint.
+// every start asks Google to choose the account, and only the given linked email goes as login_hint.
 func TestStart(t *testing.T) {
 	h := newHarness(t)
 	req, err := h.svc.Start(context.Background(), h.p, upstream.KindGoogle, "")
 	require.NoError(t, err)
-	assert.Equal(t, "select_account", req.Prompt, "A6: a plain start too")
+	assert.Equal(t, "select_account", req.Prompt, "a plain start too")
 	assert.Empty(t, req.LoginHint)
 	assert.NotEmpty(t, req.State)
 
@@ -130,7 +130,7 @@ func TestAuthURL(t *testing.T) {
 	rotated, _, err := h.svc.client(context.Background(), h.p, upstream.KindGoogle, redirectURI)
 	require.NoError(t, err)
 	assert.NotSame(t, first, rotated, "a new secret builds a new client")
-	assert.Len(t, h.svc.clients, 1, "R-6: the client with the old secret is evicted")
+	assert.Len(t, h.svc.clients, 1, "the client with the old secret is evicted")
 
 	h.upstreams.creds.Upstream.ClientID = "cid2.apps"
 	renamed, _, err := h.svc.client(context.Background(), h.p, upstream.KindGoogle, redirectURI)
@@ -157,7 +157,7 @@ func TestComplete(t *testing.T) {
 	assert.Equal(t, Identity{
 		UpstreamID: h.upstreams.creds.Upstream.ID, Issuer: h.idp.Issuer(), Subject: "sub-1", Email: "ana@acme.test", EmailVerified: true,
 		HostedDomain: "acme.test", Name: "Ana", Kind: upstream.KindGoogle,
-	}, id, "hd rides along for the P8 decision")
+	}, id, "hd rides along to decide whether Google is authoritative for the email")
 }
 
 func TestComplete_Refused(t *testing.T) {
@@ -237,7 +237,7 @@ func TestSignIn_Collision(t *testing.T) {
 	h.users.byEmail["ana@gmail.com"] = uuid.New()
 	_, err := h.svc.SignIn(context.Background(), h.p, identity(h), SessionRequest{})
 	cerr, ok := errors.AsType[*CollisionError](err)
-	require.True(t, ok, "ADR-0014: never auto-link by email: %v", err)
+	require.True(t, ok, "never auto-link by email: %v", err)
 	assert.Equal(t, "ana@gmail.com", cerr.Email)
 	assert.Equal(t, "sub-1", cerr.Identity.Subject)
 	assert.Empty(t, h.store.rows)
@@ -271,7 +271,7 @@ func TestSignIn_Races(t *testing.T) {
 			return ErrEmailTaken
 		}
 		got, err := h.svc.SignIn(context.Background(), h.p, identity(h), SessionRequest{})
-		require.NoError(t, err, "A21: the loser re-reads by (iss, sub) and signs in, never the collision page")
+		require.NoError(t, err, "the loser re-reads by (iss, sub) and signs in, never the collision page")
 		assert.Equal(t, winner, got.EndUserID)
 	})
 	t.Run("the same new account committed between the two lookups", func(t *testing.T) {
@@ -282,7 +282,7 @@ func TestSignIn_Races(t *testing.T) {
 			require.NoError(t, h.store.Insert(context.Background(), h.p.OrgID, h.p.ID, winner, identity(h), "idn-winner", time.Now()))
 		}
 		got, err := h.svc.SignIn(context.Background(), h.p, identity(h), SessionRequest{})
-		require.NoError(t, err, "A21: the email hit re-reads (iss, sub) and finds the winner")
+		require.NoError(t, err, "the email hit re-reads (iss, sub) and finds the winner")
 		assert.Equal(t, winner, got.EndUserID)
 		assert.Zero(t, h.users.created)
 	})
@@ -412,7 +412,7 @@ func TestWithConfig(t *testing.T) {
 	assert.NotSame(t, first, again, "a new config drops the cached clients")
 }
 
-// P3: the identity keeps the canonical issuer, whichever accepted form the ID token's iss used.
+// the identity keeps the canonical issuer, whichever accepted form the ID token's iss used.
 func TestComplete_CanonicalIssuer(t *testing.T) {
 	h := newHarness(t)
 	h.idp.Claims = map[string]any{"iss": strings.TrimPrefix(h.idp.Issuer(), "https://")}
@@ -431,7 +431,7 @@ func TestStart_RefusesANonHTTPSIssuer(t *testing.T) {
 	assert.Equal(t, apperror.CodeSignInUpstreamUnavailable, codeOf(err), "never a GEN900 at the identities insert")
 }
 
-// A16: discovery naming another issuer is the deployer's to fix: ERROR with reason misconfigured, answered as SIG015.
+// discovery naming another issuer is the deployer's to fix: ERROR with reason misconfigured, answered as SIG015.
 func TestUpstreamError_Misconfigured(t *testing.T) {
 	h := newHarness(t)
 	var logs bytes.Buffer
@@ -452,7 +452,7 @@ func TestUpstreamError_Misconfigured(t *testing.T) {
 	assert.Contains(t, logs.String(), "reason=discovery")
 }
 
-// BL-7: a person's own cancel is not a fault: INFO, and the log names the upstream IdP, never a bare "provider".
+// a person's own cancel is not a fault: INFO, and the log names the upstream IdP, never a bare "provider".
 func TestUpstreamError_CancelLogsInfo(t *testing.T) {
 	h := newHarness(t)
 	var logs bytes.Buffer

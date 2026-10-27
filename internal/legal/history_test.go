@@ -53,7 +53,7 @@ func historyFixture(t *testing.T) (*Service, *memStore, *user.Service) {
 	t.Helper()
 	users := user.NewService(fakes.NewUserStore(), apperror.NewReporter(nil, false).Unexpected)
 	store := &memStore{snapshots: map[string]Snapshot{}, now: time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC)}
-	svc := NewService(acceptor{users}).WithStore(store, fakes.Transactor{})
+	svc := NewService(acceptor{users}, store, fakes.Transactor{})
 	return svc, store, users
 }
 
@@ -89,7 +89,6 @@ func TestService_PublishSkipsExternalTermsAndFailures(t *testing.T) {
 	svc.WithExternalTerms(time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC))
 	require.NoError(t, svc.Publish(context.Background()))
 	assert.Empty(t, store.snapshots, "custom terms keep no history")
-	require.NoError(t, NewService(nil).Publish(context.Background()), "no store, nothing to publish")
 
 	failing, store2, _ := historyFixture(t)
 	store2.err = errors.New("db down")

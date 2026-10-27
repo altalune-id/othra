@@ -85,7 +85,7 @@ describe('useTheme', () => {
     expect(useTheme().family.value.id).toBe('luxury');
   });
 
-  it('keeps an app\'s own key and follows the OS until the person picks (M8 design 4, pm B-1)', () => {
+  it('keeps an app\'s own key and follows the OS until the person picks', () => {
     let listener: ((e: { matches: boolean }) => void) | undefined;
     vi.stubGlobal('matchMedia', (q: string) => ({
       matches: q === '(prefers-color-scheme: dark)',
@@ -98,7 +98,7 @@ describe('useTheme', () => {
     const switcher = useTheme();
     const theme = useTheme();
     theme.init();
-    expect(switcher.mode.value, 'a component that calls useTheme first changes nothing (N6)').toBe('dark');
+    expect(switcher.mode.value, 'a component that calls useTheme first changes nothing').toBe('dark');
     expect(theme.family.value.id).toBe('othra');
     expect(applied()).toBe('othra-dark');
     expect(storage.data.has('othra_portal_theme'), 'the first load stores nothing').toBe(false);

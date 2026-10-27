@@ -18,7 +18,7 @@ import (
 	"altalune.id/othra/oidcrp/oidcrptest"
 )
 
-// M7 T2: sign in with Google end to end: the login button, the sealed start, the Continue hop, the callback and the account.
+// sign in with Google end to end: the login button, the sealed start, the Continue hop, the callback and the account.
 func TestFederation_SignInWithGoogle(t *testing.T) {
 	idp := oidcrptest.New(t)
 	f := newSignInFixture(t, func(c *config.Config) {
@@ -45,7 +45,7 @@ func TestFederation_SignInWithGoogle(t *testing.T) {
 		raw = strings.ReplaceAll(raw[:strings.IndexAny(raw, `"'`)], "&amp;", "&")
 		authURL, err := url.Parse(raw)
 		require.NoError(t, err)
-		assert.Equal(t, f.srv.URL+base+"/federation/google/callback", authURL.Query().Get("redirect_uri"), "P11")
+		assert.Equal(t, f.srv.URL+base+"/federation/google/callback", authURL.Query().Get("redirect_uri"), "the redirect URI is the project's federation callback")
 		return f.do(c, http.MethodGet, base+"/federation/google/callback?"+idp.Authorize(raw).Encode(), nil)
 	}
 

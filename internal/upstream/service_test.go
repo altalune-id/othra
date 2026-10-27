@@ -28,12 +28,17 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
+	return newHarnessWith(t, fakeIssuers{url: "https://id.example.com/p/acme"})
+}
+
+func newHarnessWith(t *testing.T, issuers Issuers) *harness {
+	t.Helper()
 	key, err := sealer.GenerateKey()
 	require.NoError(t, err)
 	seal, err := sealer.New(key)
 	require.NoError(t, err)
 	h := &harness{store: newFakeStore(), guard: &fakeGuard{on: true}, seal: seal, org: uuid.New(), project: uuid.New(), logs: &bytes.Buffer{}}
-	h.svc = NewService(h.store, passTx{}, seal, h.guard, apperror.NewReporter(nil, false).Unexpected).
+	h.svc = NewService(h.store, passTx{}, seal, h.guard, issuers, apperror.NewReporter(nil, false).Unexpected).
 		WithLogger(slog.New(slog.NewJSONHandler(h.logs, nil))).
 		WithClock(func() time.Time { return time.Date(2026, 10, 24, 9, 0, 0, 0, time.UTC) })
 	return h
@@ -55,7 +60,7 @@ func (h *harness) create(t *testing.T) *Upstream {
 	return u
 }
 
-// F2, ADR-0012: the secret is sealed with AAD bound to the project and the row, and only Credentials opens it.
+// the secret is sealed with AAD bound to the project and the row, and only Credentials opens it.
 func TestService_CreateSealsTheSecret(t *testing.T) {
 	h := newHarness(t)
 	u := h.create(t)
@@ -94,7 +99,7 @@ func TestService_InvalidConfig(t *testing.T) {
 	assert.Equal(t, apperror.CodeUpstreamInvalidConfig, codeOf(err), "an unknown kind")
 }
 
-// F2: updating keeps the secret unless a new one is given.
+// updating keeps the secret unless a new one is given.
 func TestService_Update(t *testing.T) {
 	h := newHarness(t)
 	ctx := context.Background()
@@ -114,7 +119,7 @@ func TestService_Update(t *testing.T) {
 	assert.Equal(t, apperror.CodeUpstreamNotFound, codeOf(err))
 }
 
-// F8, PRJ010: Google can't be turned off or removed while the email link is off; F2, UPS004: never while linked.
+// PRJ010: Google can't be turned off or removed while the email link is off; UPS004: never while linked.
 func TestService_DisableAndDeleteGuards(t *testing.T) {
 	h := newHarness(t)
 	ctx := context.Background()
@@ -131,7 +136,7 @@ func TestService_DisableAndDeleteGuards(t *testing.T) {
 	assert.False(t, off.Enabled)
 	offered, err := h.svc.Offered(ctx, h.org, h.project)
 	require.NoError(t, err)
-	assert.Empty(t, offered, "qa A17: a disabled upstream is not offered")
+	assert.Empty(t, offered, "a disabled upstream is not offered")
 	enabled, err := h.svc.AnyEnabled(ctx, h.org, h.project)
 	require.NoError(t, err)
 	assert.False(t, enabled)
@@ -156,7 +161,7 @@ func TestService_DisableAndDeleteGuards(t *testing.T) {
 	assert.Empty(t, list)
 }
 
-// F13: install seeds Google from config once; a console edit is never overwritten.
+// install seeds Google from config once; a console edit is never overwritten.
 func TestService_Seed(t *testing.T) {
 	h := newHarness(t)
 	ctx := context.Background()

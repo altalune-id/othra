@@ -38,7 +38,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 **Layout and imports**
 
 - Import direction: `cmd` → `internal/cli` → `internal/boot` → `internal/controlplane` → domains → `internal/kernel/*`.
-- Domains never import `internal/cli`, `internal/boot`, `internal/controlplane` or `internal/web` (only `internal/web/layout`).
+- Domains never import `internal/cli`, `internal/boot`, `internal/controlplane` or `internal/web` (only `internal/web/layout` and `internal/web/i18n`, the hosted pages' copy). depguard `domain-boundary` checks every `internal/*` package except the shells and test helpers (`cli`, `boot`, `controlplane`, `web`, `kernel`, `tool`, `testutil`), and no `_test.go` file.
 - Root packages (`apperror`, `config`, `mailer`, `worker` and others) never import `internal/`. The connections are root packages too, generic libraries with no Othra knowledge: `pg`, `nats`, `redis` open, health-check and close one backend each, return the real client (`*sql.DB`, `*nats.Conn`, the go-redis client) and never wrap its API.
 - Features that services use live in `internal/kernel/<feature>`. A feature that may have several backends picks one with a `driver` key and keeps each in a sub-package (`queue/nats`, `ratelimit/memory`, `ratelimit/redis`). A feature that must commit with domain data (`outbox`, `mailqueue`, `session`) keeps its Postgres store in-package.
 - Kernel features and connections never import `config`: one that needs settings takes its own `Config` (in its `config.go`), and boot maps the app config into it. Boot opens a connection only when a feature selects it.
@@ -51,7 +51,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 - Signed-in surfaces (Connect, MCP, signed-in pages) call the `controlplane` handlers, never a service directly.
 - Every RPC has an entry in the permission table (`internal/permission`) and protovalidate rules in its proto.
 - Only pre-sign-in pages (login, install, invite landing, legal) are templ pages. Everything signed-in goes in the console.
-- Exception: the hosted end-user pages under `/p/<handle>/` (sign-in, account picker, terms) are templ too, and `/p/<handle>/account/` is a templ placeholder for signed-in end users until the M8 portal SPA replaces it.
+- Exception: the hosted end-user pages under `/p/<handle>/` (sign-in, account picker, terms) are templ too, and `/p/<handle>/account/` serves the end-user portal SPA (`ui/portal`).
 
 **Data**
 
@@ -84,6 +84,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
   - The default is no comment.
   - Exported symbols get a one-sentence doc.
   - Keep only markers (`TODO`, `NOTE`, `SECURITY`…) or links. No rationale, history or section headers.
+  - Never reference untracked files or IDs defined only in them.
 - Generated code (`gen/`, `*_templ.go`, `ui/base/gen/`) is never edited by hand.
 
 **Versions**

@@ -21,7 +21,7 @@ import (
 
 func apiKeyClient(t *testing.T, refs *fakes.PublicIDs, store apikey.Store) apikeyv1connect.APIKeyServiceClient {
 	t.Helper()
-	svc := apikey.NewService(store, apikey.NewScheme(""), stubProjects{ids: []uuid.UUID{knownProject}}, nil)
+	svc := apikey.NewService(store, apikey.NewScheme(""), stubProjects{ids: []uuid.UUID{knownProject}}, fakes.NoOwnerRoles{}, nil)
 	srv := controlplane.New(controlplane.Services{APIKeys: svc, Refs: refs}, nil, cptest.OperatorOptions())
 	ts := httptest.NewServer(srv.Handler(""))
 	t.Cleanup(ts.Close)

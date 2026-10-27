@@ -43,7 +43,7 @@ func UpstreamError(ctx context.Context, s Site, code apperror.Code, reference, r
 	}
 }
 
-// LinkUpstreamError is the error page for a failed Connect Google, whose way back is the account page (MF7).
+// LinkUpstreamError is the error page for a failed Connect Google, whose way back is the account page.
 func LinkUpstreamError(ctx context.Context, s Site, code apperror.Code, reference string) ErrorData {
 	return ErrorData{
 		Site:          s,

@@ -97,21 +97,23 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	uow := db.NewTransactor(k.Pool)
 	files := buildStorage(k, cfg)
 	caps := capabilities.From(capabilitiesConfig(cfg))
-	projects := project.NewService(projectStore, k.Reporter.Unexpected)
-	orgs := org.NewService(orgStore, uow, k.Reporter.Unexpected).
-		WithCreation(caps.OrgCreation).
-		WithAfterCreate(func(ctx context.Context, o *org.Org) error {
-			_, err := projects.Create(ctx, project.CreateRequest{OrgID: o.ID, Slug: project.DefaultSlug, Name: project.DefaultName})
-			return err
-		})
-	projects.WithOrgSlugs(projectOrgSlugs{orgs: orgs}).WithIssuerBase(publicBase(cfg.HTTP)).WithStorage(files, uow)
-
 	sl := buildSealer(cfg.Secrets)
 	signingKeys := buildKeys(k, cfg, uow, sl)
-	projects.WithAfterCreate(func(ctx context.Context, p *project.Project) error {
-		_, err := signingKeys.Generate(ctx, p.OrgID, p.ID)
-		return err
-	})
+	users := user.NewService(user.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), k.Reporter.Unexpected)
+	members := member.NewService(member.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, k.Reporter.Unexpected).
+		WithOperatorSupport(caps.OperatorOrgSupport)
+	projects := project.NewService(projectStore, uow, memberPermissions{members: members},
+		func(ctx context.Context, p *project.Project) error {
+			_, err := signingKeys.Generate(ctx, p.OrgID, p.ID)
+			return err
+		}, publicBase(cfg.HTTP), k.Reporter.Unexpected).WithStorage(files)
+	orgs := org.NewService(orgStore, uow, memberPermissions{members: members},
+		func(ctx context.Context, o *org.Org) error {
+			_, err := projects.Create(ctx, project.CreateRequest{OrgID: o.ID, Slug: project.DefaultSlug, Name: project.DefaultName})
+			return err
+		}, k.Reporter.Unexpected).WithCreation(caps.OrgCreation)
+	projects.WithOrgSlugs(projectOrgSlugs{orgs: orgs})
+
 	outboxStore := outbox.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 	webhookStore := webhook.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
 	projectOwners := projectOrgs{projects: projects}
@@ -120,17 +122,9 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		refResolver{projects: projects, orgs: orgs}, append(webhookServiceOpts(cfg), webhook.WithProjects(projectOwners))...,
 	)
 
-	users := user.NewService(user.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), k.Reporter.Unexpected)
-	members := member.NewService(member.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, k.Reporter.Unexpected).
-		WithOperatorSupport(caps.OperatorOrgSupport)
-
-	orgs.WithMemberRoles(memberPermissions{members: members})
-	projects.WithMembers(memberPermissions{members: members})
-
 	keyScheme := apikey.NewScheme("")
 	owners := ownerRoles{members: members}
-	apiKeys := apikey.NewService(apiKeyStore, keyScheme, projectIDs{projects: projects}, k.Reporter.Unexpected).
-		WithOwnerRoles(owners).
+	apiKeys := apikey.NewService(apiKeyStore, keyScheme, projectIDs{projects: projects}, owners, k.Reporter.Unexpected).
 		WithPersonalKeys(caps.PersonalKeys)
 	keyUsage := usage.New("apikey-usage", apiKeyStore, keyUsageInterval, k.Log)
 	keyAuthn := apikey.NewAuthenticator(apiKeyStore, keyUsage, keyScheme, owners, k.Reporter.Unexpected)
@@ -150,7 +144,6 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		From:       cfg.Mail.From,
 		BaseURL:    publicBase(cfg.HTTP),
 	}).WithOperatorOrgSupport(caps.OperatorOrgSupport)
-	installer := install.NewService(uow, users, orgs, members, projects)
 
 	svcs := &Services{
 		OrgStore:     orgStore,
@@ -171,29 +164,24 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Members:      members,
 		Sessions:     sessions,
 		Auth:         authn,
-		Install:      installer,
 		Legal:        buildLegal(k, cfg, users),
 		Caps:         caps,
 		AuthLimiter:  ratelimit.Disabled(),
 		Storage:      files,
 		Keys:         signingKeys,
-		Clients: client.NewService(client.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, projects, k.Reporter.Unexpected).
-			WithLogger(orDiscard(k.Log)),
+		Clients:      buildClients(k, cfg, uow, projects),
 	}
-	svcs.EndUsers = buildEndUsers(k, cfg, uow, mailQueue).WithSignInSwitch(projects)
-	svcs.IssuerResolver = oidc.NewResolver(projects, signingKeys, publicBase(cfg.HTTP), k.Reporter.Unexpected)
 	svcs.ResourceServers = buildResourceServers(k, cfg, uow, projects, users, svcs.Clients)
-	svcs.Consents = buildConsents(k, cfg, svcs)
+	svcs.Clients.WithLinks(rsLinks{servers: svcs.ResourceServers})
+	svcs.IssuerResolver = oidc.NewResolver(projects, signingKeys, svcs.ResourceServers, publicBase(cfg.HTTP), k.Reporter.Unexpected)
+	svcs.Grants = buildGrants(k, cfg, uow, signingKeys, grantAudiences{servers: svcs.ResourceServers})
+	svcs.EndUsers = buildEndUsers(k, cfg, uow, mailQueue, endUserGrants{grants: svcs.Grants}, projects)
+	svcs.Consents = buildConsents(k, cfg, uow, svcs)
 	svcs.PersonalTokens, svcs.TokenUsage = buildPersonalTokens(k, cfg, uow, svcs.ResourceServers, svcs.EndUsers)
 	svcs.Upstreams = buildUpstreams(k, cfg, uow, sl, projects)
-	installer.WithProjectSeed(seedUpstreams(cfg.Upstreams, svcs.Upstreams))
-	if svcs.Upstreams != nil {
-		svcs.Federation = buildFederation(k, cfg, uow, svcs.Upstreams, svcs.EndUsers, projects)
-	}
+	svcs.Install = install.NewService(uow, users, orgs, members, projects, svcs.Legal, seedUpstreams(cfg.Upstreams, svcs.Upstreams))
+	svcs.Federation = buildFederation(k, cfg, uow, svcs.Upstreams, svcs.EndUsers, projects)
 	projects.WithSignInMethods(projectSignInMethods{upstreams: svcs.Upstreams, linked: svcs.Federation})
-	svcs.Grants = buildGrants(k, cfg, uow, signingKeys, grantAudiences{servers: svcs.ResourceServers})
-	svcs.EndUsers.WithGrants(endUserGrants{grants: svcs.Grants})
-	svcs.Consents.WithGrants(consentGrants{grants: svcs.Grants}, uow)
 	svcs.Resets = auth.NewResets(auth.ResetDeps{
 		Store:      auth.NewResetStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),
 		Transactor: uow,
@@ -205,7 +193,6 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		BaseURL:    publicBase(cfg.HTTP),
 	})
 	members.WithEffects(memberEffects(cfg, svcs)).WithDirectory(memberDirectory{users: users, orgs: orgs})
-	installer.WithTerms(svcs.Legal)
 	svcs.Invites = invite.NewService(invite.Deps{
 		Store:      invite.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix),
 		Transactor: uow,
@@ -224,7 +211,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 }
 
 func buildLegal(k kernel.Kernel, cfg config.Config, users *user.Service) *legal.Service {
-	l := legal.NewService(users).WithStore(legal.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), db.NewTransactor(k.Pool))
+	l := legal.NewService(users, legal.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), db.NewTransactor(k.Pool))
 	if cfg.Compliance.TermsURL != "" || cfg.Compliance.PrivacyURL != "" {
 		l.WithExternalTerms(cfg.Compliance.TermsUpdated())
 	}
@@ -288,6 +275,12 @@ func (d memberDirectory) OrgIDByPublicID(ctx context.Context, publicID string) (
 		return uuid.Nil, err
 	}
 	return o.ID, nil
+}
+
+type inviteSignIn struct{ *auth.Service }
+
+func (s inviteSignIn) LoginLocal(ctx context.Context, email, password string) (session.Principal, error) {
+	return s.Service.LoginLocal(ctx, auth.Credentials{Email: email, Password: password})
 }
 
 type memberOrgs struct{ orgs *org.Service }

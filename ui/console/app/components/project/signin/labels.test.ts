@@ -4,7 +4,7 @@ import { t } from '#test/nuxt-globals';
 import { googleUpstreamCardLabels } from './labels';
 
 describe('sign-in labels', () => {
-  it('translates the Google card, with its own Remove lock line (MF4)', () => {
+  it('translates the Google card, with its own Remove lock line', () => {
     expect(googleUpstreamCardLabels(t)).toMatchObject({
       title: 'signin.google',
       upstream: 'signin.upstream_label',

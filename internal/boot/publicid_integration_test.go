@@ -104,7 +104,7 @@ func errorText(t *testing.T, err error) string {
 	return b.String()
 }
 
-// Z14, Review Focus 1: no RPC answers with a UUID, as a caller who can see org B's data.
+// no RPC answers with a UUID, as a caller who can see org B's data.
 func TestPublicIDs_NoRPCAnswersWithAUUID(t *testing.T) {
 	f := newAPIFixture(t)
 	s := seedReach(t, f)

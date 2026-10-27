@@ -7,7 +7,7 @@ function render(props: Record<string, unknown>) {
   return mount(AppModal, { props, slots: { default: '<p>Body</p>', footer: '<button>Done</button>' }, attachTo: document.body });
 }
 
-describe('appModal (product M1.5 7, final M1.5 nits)', () => {
+describe('appModal', () => {
   it('opens as a native modal dialog named by its title', async () => {
     const w = render({ open: false, title: 'New organization' });
     const dialog = w.get('dialog');

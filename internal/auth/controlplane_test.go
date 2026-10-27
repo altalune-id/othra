@@ -65,7 +65,7 @@ func (m userByID) ByID(_ context.Context, id uuid.UUID) (*user.User, error) {
 
 func whoamiClient(t *testing.T, orgs OrgGetter, projects ProjectGetter, users UserGetter, p session.Principal) authv1connect.AuthServiceClient {
 	t.Helper()
-	return authClient(t, NewControlPlane(orgs, projects, users), p)
+	return authClient(t, NewControlPlane(orgs, projects, users, &recordedProfiles{}), p)
 }
 
 func authClient(t *testing.T, svc *AuthService, p session.Principal) authv1connect.AuthServiceClient {
@@ -264,7 +264,7 @@ func TestWhoami_ReportsWhetherFilesMayBeUploaded(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, got.GetFileUploads(), "no file storage unless the deployment has one")
 
-	got, err = whoami(t, authClient(t, NewControlPlane(orgByID{}, projectByID{}, userByID{}).WithFileUploads(true), p))
+	got, err = whoami(t, authClient(t, NewControlPlane(orgByID{}, projectByID{}, userByID{}, &recordedProfiles{}).WithFileUploads(true), p))
 	require.NoError(t, err)
 	assert.True(t, got.GetFileUploads())
 }

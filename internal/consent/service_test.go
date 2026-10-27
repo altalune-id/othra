@@ -136,9 +136,9 @@ type fakeTx struct{}
 
 func (fakeTx) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error { return fn(ctx) }
 
-func newTestService(store Store) (*Service, *time.Time) {
+func newTestService(store Store, grants Grants) (*Service, *time.Time) {
 	now := time.Date(2026, 10, 23, 9, 0, 0, 0, time.UTC)
-	s := NewService(store, func(_ context.Context, msg string, err error, _ ...any) *apperror.AppError {
+	s := NewService(store, fakeTx{}, grants, func(_ context.Context, msg string, err error, _ ...any) *apperror.AppError {
 		return apperror.New(apperror.CodeUnexpected, msg).WithCause(err)
 	}).WithClock(func() time.Time { return now })
 	return s, &now
@@ -146,7 +146,7 @@ func newTestService(store Store) (*Service, *time.Time) {
 
 func TestService_GrantAddsScopes(t *testing.T) {
 	store := newFakeStore()
-	s, now := newTestService(store)
+	s, now := newTestService(store, &fakeGrants{})
 	ctx, p := context.Background(), Project{OrgID: uuid.New(), ID: uuid.New(), PublicID: "prj"}
 	rs := uuid.New()
 	key := Key{EndUserID: uuid.New(), ClientID: uuid.New(), ResourceServerID: &rs}
@@ -164,7 +164,7 @@ func TestService_GrantAddsScopes(t *testing.T) {
 	*now = now.Add(time.Minute)
 	second, err := s.Grant(ctx, p, GrantRequest{Key: key, Scopes: []string{"offline_access"}})
 	require.NoError(t, err)
-	assert.Equal(t, []string{"sample:read", "offline_access"}, second.Scopes, "C5: the union")
+	assert.Equal(t, []string{"sample:read", "offline_access"}, second.Scopes, "the union")
 	assert.Equal(t, *now, second.UpdatedAt, "re-entry compares this with the marker")
 
 	oidcOnly := Key{EndUserID: key.EndUserID, ClientID: key.ClientID}
@@ -173,9 +173,9 @@ func TestService_GrantAddsScopes(t *testing.T) {
 	assert.Nil(t, got, "a consent without a resource server is its own row")
 }
 
-// R-6: approving again keeps only stored scopes still allowed, so churn in a server's catalog can't grow a consent past MaxScopes.
+// approving again keeps only stored scopes still allowed, so churn in a server's catalog can't grow a consent past MaxScopes.
 func TestService_GrantDropsScopesNoLongerAllowed(t *testing.T) {
-	s, _ := newTestService(newFakeStore())
+	s, _ := newTestService(newFakeStore(), &fakeGrants{})
 	ctx, p := context.Background(), Project{OrgID: uuid.New(), ID: uuid.New()}
 	key := Key{EndUserID: uuid.New(), ClientID: uuid.New()}
 	_, err := s.Grant(ctx, p, GrantRequest{Key: key, Scopes: []string{"openid", "old:read"}})
@@ -186,7 +186,7 @@ func TestService_GrantDropsScopesNoLongerAllowed(t *testing.T) {
 }
 
 func TestService_GrantRefusesBadScopeCounts(t *testing.T) {
-	s, _ := newTestService(newFakeStore())
+	s, _ := newTestService(newFakeStore(), &fakeGrants{})
 	_, err := s.Grant(context.Background(), Project{}, GrantRequest{})
 	assert.Error(t, err)
 	many := make([]string, MaxScopes+1)
@@ -197,16 +197,15 @@ func TestService_GrantRefusesBadScopeCounts(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// R-5, P8, A25: Disconnect drops every consent of the client across resource servers and revokes its grants; a second one is ACC003.
+// Disconnect drops every consent of the client across resource servers and revokes its grants; a second one is ACC003.
 func TestService_Disconnect(t *testing.T) {
 	store := newFakeStore()
-	s, _ := newTestService(store)
-	var logs bytes.Buffer
-	s.WithLogger(slog.New(slog.NewJSONHandler(&logs, nil)))
 	ctx, p := context.Background(), Project{OrgID: uuid.New(), ID: uuid.New(), PublicID: "prj"}
 	user, client, other, rs := uuid.New(), uuid.New(), uuid.New(), uuid.New()
 	grants := &fakeGrants{families: []Family{{ClientID: client}, {ClientID: other}}}
-	s = s.WithGrants(grants, fakeTx{})
+	s, _ := newTestService(store, grants)
+	var logs bytes.Buffer
+	s.WithLogger(slog.New(slog.NewJSONHandler(&logs, nil)))
 	for _, k := range []Key{{EndUserID: user, ClientID: client}, {EndUserID: user, ClientID: client, ResourceServerID: &rs}} {
 		_, err := s.Grant(ctx, p, GrantRequest{Key: k, Scopes: []string{"openid"}})
 		require.NoError(t, err)
@@ -230,21 +229,21 @@ func TestService_Disconnect(t *testing.T) {
 
 func TestService_ConnectedApps(t *testing.T) {
 	store := newFakeStore()
-	s, now := newTestService(store)
+	grants := &fakeGrants{}
+	s, now := newTestService(store, grants)
 	ctx, p := context.Background(), Project{OrgID: uuid.New(), ID: uuid.New()}
 	user, web, cli, rs := uuid.New(), uuid.New(), uuid.New(), uuid.New()
 	_, err := s.Grant(ctx, p, GrantRequest{Key: Key{EndUserID: user, ClientID: web, ResourceServerID: &rs}, Scopes: []string{"read", "email"}})
 	require.NoError(t, err)
 	_, err = s.Grant(ctx, p, GrantRequest{Key: Key{EndUserID: user, ClientID: web}, Scopes: []string{"openid", "email"}})
 	require.NoError(t, err)
-	grants := &fakeGrants{families: []Family{
+	grants.families = []Family{
 		{
 			ClientID: web, ResourceServerID: &rs, Scopes: []string{"openid", "read", "write", "profile"},
 			CreatedAt: now.Add(time.Hour), LastUsedAt: now.Add(2 * time.Hour),
 		},
 		{ClientID: cli, Scopes: []string{"openid", "offline_access"}, CreatedAt: now.Add(-time.Hour), LastUsedAt: now.Add(3 * time.Hour)},
-	}}
-	s = s.WithGrants(grants, fakeTx{})
+	}
 	apps, err := s.ConnectedApps(ctx, p, user)
 	require.NoError(t, err)
 	require.Len(t, apps, 2)
@@ -257,7 +256,7 @@ func TestService_ConnectedApps(t *testing.T) {
 	assert.Equal(t, now.Add(2*time.Hour), apps[1].LastUsedAt)
 	assert.Equal(t, []Resource{
 		{ResourceServerID: &rs, Scopes: []string{"read", "write"}}, {Scopes: []string{"email", "openid", "profile"}},
-	}, apps[1].Resources, "A14: the OIDC scopes are the sign-in line, never under the resource server")
+	}, apps[1].Resources, "the OIDC scopes are the sign-in line, never under the resource server")
 
 	grants.err = errFake
 	_, err = s.ConnectedApps(ctx, p, user)
@@ -274,10 +273,10 @@ func codeOf(err error) apperror.Code {
 	return ""
 }
 
-// M10, CIMD §8.4: a changed metadata document drops every consent of the client.
+// CIMD §8.4: a changed metadata document drops every consent of the client.
 func TestService_ForgetClient(t *testing.T) {
 	store := newFakeStore()
-	s, _ := newTestService(store)
+	s, _ := newTestService(store, &fakeGrants{})
 	ctx, p := context.Background(), Project{OrgID: uuid.New(), ID: uuid.New()}
 	client, other := uuid.New(), uuid.New()
 	for _, c := range []uuid.UUID{client, client, other} {
@@ -292,7 +291,7 @@ func TestService_ForgetClient(t *testing.T) {
 
 func TestService_StoreFailures(t *testing.T) {
 	store := newFakeStore()
-	s, _ := newTestService(store)
+	s, _ := newTestService(store, &fakeGrants{})
 	ctx, p := context.Background(), Project{}
 	for _, on := range []string{"find", "upsert"} {
 		store.failOn = on

@@ -28,7 +28,10 @@ func endUsersConfig(c config.EndUsersConfig) enduser.Config {
 	}
 }
 
-func buildEndUsers(k kernel.Kernel, cfg config.Config, uow db.Transactor, mail enduser.MailQueue) *enduser.Service {
+func buildEndUsers(
+	k kernel.Kernel, cfg config.Config, uow db.Transactor, mail enduser.MailQueue, grants enduser.Grants, signIn enduser.SignInSwitch,
+) *enduser.Service {
 	store := enduser.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
-	return enduser.NewService(store, uow, mail, endUsersConfig(cfg.EndUsers), k.Reporter.Unexpected).WithLogger(orDiscard(k.Log))
+	return enduser.NewService(store, uow, mail, grants, signIn, endUsersConfig(cfg.EndUsers), k.Reporter.Unexpected).
+		WithLogger(orDiscard(k.Log))
 }

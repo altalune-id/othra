@@ -35,7 +35,7 @@ type SignInMethods interface {
 	SignInMethods(ctx context.Context, p federation.Project, endUserID uuid.UUID) ([]federation.SignInMethod, error)
 }
 
-// EndUserService is the admin view of a project's end users (M8 G9): read and revoke, through the same services as the portal.
+// EndUserService is the admin view of a project's end users: read and revoke, through the same services as the portal.
 type EndUserService struct {
 	enduserv1connect.UnimplementedEndUserServiceHandler
 	users   EndUsers
@@ -139,7 +139,7 @@ func (s *EndUserService) tokens(ctx context.Context, t adminTarget) ([]*accountv
 	return s.slices.Tokens.Tokens(ctx, pat.Project{OrgID: t.orgID, ID: t.projectID, PublicID: t.projectPublicID}, t.user.ID)
 }
 
-// RevokeEndUserSession signs an end user out of one session with its grants; unlike the portal, their current one may go (P14).
+// RevokeEndUserSession signs an end user out of one session with its grants; unlike the portal, their current one may go.
 func (s *EndUserService) RevokeEndUserSession(
 	ctx context.Context, req *connect.Request[enduserv1.RevokeEndUserSessionRequest],
 ) (*connect.Response[enduserv1.RevokeEndUserSessionResponse], error) {

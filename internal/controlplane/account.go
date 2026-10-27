@@ -24,7 +24,7 @@ import (
 	"altalune.id/othra/internal/web/layout"
 )
 
-// EndUserResolver finds who an account.v1 request runs for: the browser's active account in the project of the path (M8 G2).
+// EndUserResolver finds who an account.v1 request runs for: the browser's active account in the project of the path.
 type EndUserResolver interface {
 	EndUser(w http.ResponseWriter, r *http.Request) (eu session.EndUser, answered bool, err error)
 }
@@ -165,7 +165,7 @@ func resolved(ctx context.Context, eu session.EndUser, err error) context.Contex
 	return session.EndUserInto(ctx, eu)
 }
 
-// SECURITY: G2, G5, R4: only a signed-in end user reaches a listed procedure, and a SelfRecent one only after a fresh sign-in.
+// SECURITY: only a signed-in end user reaches a listed procedure, and a SelfRecent one only after a fresh sign-in.
 func endUserGate(now func() time.Time) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
@@ -192,17 +192,17 @@ func (a *AccountPlane) recoverPanic(ctx context.Context, _ connect.Spec, _ http.
 	return Translate(ctx, fmt.Errorf("panic: %v", p), a.unexpected)
 }
 
-// PortalWriteRule limits an end user's portal writes per user session: 30 a minute (M8 P13).
+// PortalWriteRule limits an end user's portal writes per user session: 30 a minute.
 func PortalWriteRule() ratelimit.Rule {
 	return ratelimit.Rule{Name: "account-write-session", Rate: 30, Per: time.Minute, Burst: 30}
 }
 
-// TokenCreateRule limits personal-token creation per user session: 10 an hour (M8 P13).
+// TokenCreateRule limits personal-token creation per user session: 10 an hour.
 func TokenCreateRule() ratelimit.Rule {
 	return ratelimit.Rule{Name: "account-token-create-session", Rate: 10, Per: time.Hour, Burst: 10}
 }
 
-// SECURITY: G11, P13, R-3: every portal write counts against the user session, and creating a token against a tighter rule too.
+// SECURITY: every portal write counts against the user session, and creating a token against a tighter rule too.
 func portalLimits(limits layout.Limits) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {

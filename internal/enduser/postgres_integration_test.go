@@ -44,13 +44,19 @@ type pgFixture struct {
 	logs *bytes.Buffer
 }
 
+type keptGrants struct{}
+
+func (keptGrants) RevokeUserSession(context.Context, enduser.Project, string, enduser.EndReason) error {
+	return nil
+}
+
 func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	f := &pgFixture{pool: pool, db: sqlDB, mail: &mailbox{}, now: time.Now().UTC().Truncate(time.Microsecond), logs: &bytes.Buffer{}}
 	reporter := apperror.NewReporter(slog.New(slog.NewJSONHandler(f.logs, nil)), false)
 	cfg := enduser.Config{LinkTTL: 15 * time.Minute, ResendAfter: time.Minute, Idle: 30 * 24 * time.Hour, Absolute: 90 * 24 * time.Hour, MaxAccounts: 2}
-	f.svc = enduser.NewService(enduser.NewStore(pool, schemaName, ""), db.NewTransactor(pool), f.mail, cfg, reporter.Unexpected).
+	f.svc = enduser.NewService(enduser.NewStore(pool, schemaName, ""), db.NewTransactor(pool), f.mail, keptGrants{}, rowSwitch{pool: pool}, cfg, reporter.Unexpected).
 		WithClock(func() time.Time { return f.now })
 	return f
 }
@@ -185,7 +191,7 @@ func TestPostgres_SignInLifecycle(t *testing.T) {
 	assert.NotContains(t, f.logs.String(), token)
 }
 
-// SECURITY: H3, two redeems of one link at once sign in exactly once.
+// SECURITY: two redeems of one link at once sign in exactly once.
 func TestPostgres_ConcurrentRedeemsWinOnce(t *testing.T) {
 	f := newPGFixture(t)
 	p := f.project(t)
@@ -211,7 +217,7 @@ func TestPostgres_ConcurrentRedeemsWinOnce(t *testing.T) {
 	assert.Equal(t, 1, f.count(t, "browser_sessions", p), "the losers' browser sessions rolled back")
 }
 
-// F7: two requests for one email at once issue one link; the loser answers like the cooldown.
+// two requests for one email at once issue one link; the loser answers like the cooldown.
 func TestPostgres_ConcurrentSendsIssueOneLink(t *testing.T) {
 	f := newPGFixture(t)
 	p := f.project(t)

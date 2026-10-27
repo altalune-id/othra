@@ -249,7 +249,7 @@ func mintableScopes() []string {
 	return slices.DeleteFunc(scope.Names(), func(n string) bool { return !scope.Mintable(n) })
 }
 
-// D7: a caller from another org reaches nothing in org B, and a new RPC fails here until it is covered.
+// a caller from another org reaches nothing in org B, and a new RPC fails here until it is covered.
 func TestReach_AnotherOrgIsRefused(t *testing.T) {
 	for skipped := range noTenantInput {
 		require.Contains(t, permission.Table(), skipped, "noTenantInput names a procedure that does not exist")
@@ -286,7 +286,7 @@ func TestReach_AnotherOrgIsRefused(t *testing.T) {
 	}
 }
 
-// D7, Review Focus 5: a key limited to another project of org B reaches nothing outside it; it may only read its org's name and list what it reaches.
+// a key limited to another project of org B reaches nothing outside it; it may only read its org's name and list what it reaches.
 func TestReach_ProjectLimitedKeyIsRefused(t *testing.T) {
 	for allowed := range limitedKeyAllowed {
 		require.Contains(t, permission.Table(), allowed, "limitedKeyAllowed names a procedure that does not exist")
@@ -331,7 +331,7 @@ func TestReach_ProjectLimitedKeyCannotSubscribeToOrgEvents(t *testing.T) {
 	}
 }
 
-// Z9, Review Focus 2: a UUID or garbage in place of a public id is refused by its shape, and a well-formed unknown id is the same not-found, even for a caller who sees org B.
+// a UUID or garbage in place of a public id is refused by its shape, and a well-formed unknown id is the same not-found, even for a caller who sees org B.
 func TestReach_UUIDsAndGarbageAreRefused(t *testing.T) {
 	f := newAPIFixture(t)
 	s := seedReach(t, f)

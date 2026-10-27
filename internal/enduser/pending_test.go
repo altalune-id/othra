@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// N2: a collision link carries the pending identity, skips the cooldown and hands it to Confirm inside the redeem.
+// a collision link carries the pending identity, skips the cooldown and hands it to Confirm inside the redeem.
 func TestPendingLink_ConfirmRunsInTheRedeem(t *testing.T) {
 	h := newHarness(t)
 	h.send(t, "ada@example.com")

@@ -29,10 +29,12 @@ type Service struct {
 	audiences  Audiences
 }
 
-// NewService builds the Service over store.
-func NewService(store Store, uow db.Transactor, cfg Config, unexpected apperror.UnexpectedFunc) *Service {
+// NewService builds the Service over store; tokens signs at+jwt access tokens for grants bound to a resource server audiences admits.
+func NewService(
+	store Store, uow db.Transactor, tokens AccessTokens, audiences Audiences, cfg Config, unexpected apperror.UnexpectedFunc,
+) *Service {
 	return &Service{
-		store: store, uow: uow, cfg: cfg, unexpected: unexpected,
+		store: store, uow: uow, tokens: tokens, audiences: audiences, cfg: cfg, unexpected: unexpected,
 		now: func() time.Time { return time.Now().UTC() }, newSecret: session.NewID, log: slog.New(slog.DiscardHandler),
 	}
 }
@@ -40,12 +42,6 @@ func NewService(store Store, uow db.Transactor, cfg Config, unexpected apperror.
 // WithLogger sets where revocations are logged.
 func (s *Service) WithLogger(log *slog.Logger) *Service {
 	s.log = log
-	return s
-}
-
-// WithResources signs at+jwt access tokens with tokens for grants bound to a resource server that audiences still admits.
-func (s *Service) WithResources(tokens AccessTokens, audiences Audiences) *Service {
-	s.tokens, s.audiences = tokens, audiences
 	return s
 }
 
@@ -205,7 +201,7 @@ func (s *Service) Refresh(ctx context.Context, p Project, req RefreshRequest) (*
 		case req.Scopes != nil && !subset(req.Scopes, f.Scopes):
 			return &InvalidScopeError{}
 		case req.Scopes != nil && f.ResourceServerID != nil && len(ResourceScopes(req.Scopes)) == 0:
-			// NOTE: qa O1, E3: a resource-bound token keeps at least one of its server's scopes.
+			// NOTE: a resource-bound token keeps at least one of its server's scopes.
 			return &InvalidScopeError{}
 		}
 		scopes := f.Scopes
@@ -245,9 +241,6 @@ func (s *Service) audience(ctx context.Context, p Project, rsID *uuid.UUID, c Cl
 			return "", &InvalidTargetError{}
 		}
 		return "", nil
-	}
-	if s.audiences == nil {
-		return "", errNoResources
 	}
 	aud, ok, err := s.audiences.Audience(ctx, p, *rsID, c, ResourceScopes(scopes))
 	switch {
@@ -298,9 +291,6 @@ func (s *Service) issue(ctx context.Context, p Project, f *Family, req issueRequ
 func (s *Service) accessToken(ctx context.Context, p Project, f *Family, req issueRequest, expires, now time.Time) (string, error) {
 	if f.ResourceServerID == nil {
 		return s.newSecret()
-	}
-	if s.tokens == nil {
-		return "", errNoResources
 	}
 	subject, err := s.store.Subject(ctx, p.ID, f.EndUserID)
 	if err != nil {
@@ -438,7 +428,7 @@ func (s *Service) LiveFamilies(ctx context.Context, p Project, endUserID uuid.UU
 	return fs, nil
 }
 
-// RevokeClient revokes every grant of the end user's client, offline too, and its unused codes (R-5), reporting whether any was live.
+// RevokeClient revokes every grant of the end user's client, offline too, and its unused codes, reporting whether any was live.
 func (s *Service) RevokeClient(ctx context.Context, p Project, endUserID, clientID uuid.UUID) (bool, error) {
 	ctx = scope(ctx, p)
 	var sids []string

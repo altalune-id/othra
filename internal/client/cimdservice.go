@@ -44,9 +44,9 @@ func MetadataFetchHostRule() ratelimit.Rule {
 	return ratelimit.Rule{Name: "cimd-fetch-host", Rate: 30, Per: time.Minute, Burst: 30}
 }
 
-// WithMetadata lets the Service admit metadata document clients, fetched by f and linked through links.
-func (s *Service) WithMetadata(f MetadataFetcher, links Links, cfg MetadataConfig) *Service {
-	s.fetcher, s.links, s.meta = f, links, cfg
+// WithLinks sets where an admitted metadata document client is linked to its resource server, which itself needs this Service.
+func (s *Service) WithLinks(links Links) *Service {
+	s.links = links
 	return s
 }
 
@@ -74,8 +74,11 @@ func (s *Service) MetadataHost(raw string) (string, error) {
 	return u.Hostname(), nil
 }
 
-// SECURITY: M3, M9, ADR-0021 D2: a stored document is used until it expires; then it is fetched again, never used stale.
+// SECURITY: a stored document is used until it expires; then it is fetched again, never used stale.
 func (s *Service) Admit(ctx context.Context, orgID, projectID uuid.UUID, req AdmitRequest) (*Client, error) {
+	if s.links == nil {
+		return nil, s.unexpected(ctx, "client: admit", errNoLinks)
+	}
 	host, err := s.MetadataHost(req.URL)
 	if err != nil {
 		return nil, err
@@ -118,7 +121,7 @@ func (s *Service) Admit(ctx context.Context, orgID, projectID uuid.UUID, req Adm
 func (s *Service) fetchShadow(
 	ctx context.Context, orgID, projectID uuid.UUID, old *Client, metadataURL, host string, now time.Time,
 ) (*Client, error) {
-	// SECURITY: R-1: per project, so one tenant can't spend another's budget; the host ceiling guards the fetcher itself.
+	// SECURITY: per project, so one tenant can't spend another's budget; the host ceiling guards the fetcher itself.
 	limits := []struct {
 		rule    ratelimit.Rule
 		subject string
@@ -160,7 +163,7 @@ func (s *Service) fetchShadow(
 	return c, nil
 }
 
-// NOTE: CIMD §8.4, M10: a new name or redirect URIs drop what end users approved, so they see the consent page again.
+// NOTE: CIMD §8.4: a new name or redirect URIs drop what end users approved, so they see the consent page again.
 func changed(old, now *Client) bool {
 	return old != nil && (old.Name != now.Name || !slices.Equal(old.RedirectURIs, now.RedirectURIs))
 }
@@ -168,7 +171,7 @@ func changed(old, now *Client) bool {
 // ShadowKeep is how long a shadow client outlives its document's expiry while it holds no consent and no live grant.
 const ShadowKeep = 7 * 24 * time.Hour
 
-// PruneShadows deletes the project's unused shadow clients whose document expired over ShadowKeep ago (ADR-0021 D2, M11).
+// PruneShadows deletes the project's unused shadow clients whose document expired over ShadowKeep ago.
 func (s *Service) PruneShadows(ctx context.Context, orgID, projectID uuid.UUID) (int, error) {
 	ctx = scope(ctx, orgID, projectID)
 	n, err := s.store.PruneShadows(ctx, projectID, s.now().UTC().Add(-ShadowKeep))

@@ -54,7 +54,7 @@ func TestLogin_SignedOutNotice(t *testing.T) {
 		i18n.Indonesian: `<span class="break-all">bob@example.com</span> sudah keluar di browser ini.</span></div>`,
 	} {
 		out := html(t, ctxIn(t, locale), Login(page(), LoginData{Site: site, Notice: "bob@example.com"}))
-		assert.Contains(t, out, want, "B5 %s", locale)
+		assert.Contains(t, out, want, "the signed-out notice in %s", locale)
 	}
 }
 
@@ -98,18 +98,18 @@ func TestSent(t *testing.T) {
 	assert.Contains(t, out, `<input type="hidden" name="csrf" value="tok-resend"><input type="hidden" name="email" value="ana@acme.test">`)
 	assert.Contains(t, out, `role="status"`)
 	assert.Contains(t, out, `href="/id/p/acme/login?add=1">Use a different email</a>`)
-	assert.Contains(t, out, "<p>Only the newest link works. If you asked more than once, use the latest email.</p>", "B6")
+	assert.Contains(t, out, "<p>Only the newest link works. If you asked more than once, use the latest email.</p>", "only the newest link works")
 
 	noCookie := html(t, ctxIn(t, i18n.Indonesian), Sent(page(), SentData{Site: site, Minutes: 15}))
 	assert.Contains(t, noCookie, "Kami sudah mengirim tautan masuk. Tautan hanya bisa dipakai sekali, selama 15 menit.")
-	assert.Contains(t, noCookie, "<p>Hanya tautan terbaru yang berlaku. Jika Anda meminta lebih dari sekali, pakai email yang terakhir.</p>", "B6")
+	assert.Contains(t, noCookie, "<p>Hanya tautan terbaru yang berlaku. Jika Anda meminta lebih dari sekali, pakai email yang terakhir.</p>", "only the newest link works, in id-ID")
 	assert.NotContains(t, noCookie, "/login/resend")
 	assert.NotContains(t, noCookie, `role="status"`)
 }
 
 func TestVerifyAndLinkUnusable(t *testing.T) {
 	out := html(t, ctxIn(t, i18n.English), Verify(page(), VerifyData{Site: site, Email: "ana@acme.test", VerifyToken: "tok-verify"}))
-	assert.Contains(t, out, "<title>Confirm sign-in · Acme Store</title>", "B2: the tab does not repeat the project")
+	assert.Contains(t, out, "<title>Confirm sign-in · Acme Store</title>", "the tab does not repeat the project")
 	assert.Contains(t, out, ">Sign in to Acme Store</h1>")
 	assert.Contains(t, out, `You&#39;re signing in as <span class="break-all">ana@acme.test</span> on this device.`)
 	assert.Contains(t, out, `<form method="post" action="/id/p/acme/login/verify"><input type="hidden" name="csrf" value="tok-verify">`)
@@ -197,7 +197,7 @@ func TestSiteHrefs(t *testing.T) {
 	assert.Equal(t, "/p/acme/login?add=1", site.addAccount(d, ""))
 	assert.Empty(t, initial(""))
 	assert.Equal(t, "É", initial("émile@x.test"))
-	assert.Equal(t, "P", initial("product-ana@acme.test"), "B4: the avatar letter is upper-case")
+	assert.Equal(t, "P", initial("product-ana@acme.test"), "the avatar letter is upper-case")
 }
 
 func TestError(t *testing.T) {
@@ -257,7 +257,7 @@ func TestAlerts_CarryAnIconAndNeutralText(t *testing.T) {
 		require.GreaterOrEqual(t, i, 0, name)
 		alert := out[i:]
 		alert = alert[:strings.Index(alert, "</div>")]
-		assert.Contains(t, alert, `aria-hidden="true"`, "%s: MF2 status icon", name)
+		assert.Contains(t, alert, `aria-hidden="true"`, "%s: the status icon is decorative", name)
 		assert.NotContains(t, alert, "text-error\">", name)
 	}
 }
@@ -266,7 +266,7 @@ func TestTerms_HidesTheFooterLinks(t *testing.T) {
 	d := page()
 	d.Brand.TermsURL, d.Brand.PrivacyURL = "https://acme.test/terms", "https://acme.test/privacy"
 	out := html(t, ctxIn(t, i18n.English), Terms(d, TermsData{Site: site, TermsURL: "https://acme.test/terms", PrivacyURL: "https://acme.test/privacy"}))
-	assert.NotContains(t, out, "<nav", "D9: the consent line already links both")
+	assert.NotContains(t, out, "<nav", "the consent line already links both")
 	assert.Equal(t, 1, strings.Count(out, `href="https://acme.test/terms"`))
 	assert.Equal(t, "https://acme.test/terms", d.Brand.TermsURL, "the caller's brand is not changed")
 	assert.Contains(t, html(t, ctxIn(t, i18n.English), Login(d, LoginData{Site: site})), "<nav", "other pages keep the footer")
@@ -341,10 +341,10 @@ func TestLoginAndPicker_ClientContext(t *testing.T) {
 	assert.Contains(t, reauth, `<p class="text-sm text-base-content/70">Openwa Web meminta Anda masuk lagi.</p>`)
 	assert.Contains(t, reauth, "Masuk untuk melanjutkan ke Openwa Web.")
 	portal := html(t, en, Login(page(), LoginData{Site: site, Reauth: true}))
-	assert.Contains(t, portal, "Sign in again to continue.", "M8 G5: the portal's step-up")
+	assert.Contains(t, portal, "Sign in again to continue.", "the portal's step-up")
 	assert.NotContains(t, portal, "asks you to sign in again")
-	assert.Contains(t, portal, "<title>Confirm it&#39;s you", "K-8: the step-up heading matches ACC009")
-	assert.Contains(t, portal, ">Confirm it&#39;s you</h", "K-8")
+	assert.Contains(t, portal, "<title>Confirm it&#39;s you", "the step-up heading matches ACC009")
+	assert.Contains(t, portal, ">Confirm it&#39;s you</h", "the step-up page is titled as a confirmation")
 	assert.NotContains(t, portal, "Welcome")
 	assert.Contains(t, html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Reauth: true})), "Konfirmasi bahwa ini Anda")
 	assert.Contains(t, reauth, "Selamat datang", "an app's prompt=login keeps the sign-in heading")
@@ -356,14 +356,14 @@ func TestLoginAndPicker_ClientContext(t *testing.T) {
 
 func TestLogin_ReauthHasNoWayBackToThePicker(t *testing.T) {
 	out := html(t, ctxIn(t, i18n.English), Login(page(), LoginData{Site: site, Client: "Openwa Web", Reauth: true, FromPicker: true}))
-	assert.NotContains(t, out, "Back to accounts", "M1: the picker would send the user straight back here")
+	assert.NotContains(t, out, "Back to accounts", "the picker would send the user straight back here")
 	assert.Contains(t, out, "Openwa Web asks you to sign in again.")
 }
 
 func TestError_HelpLineOnlyWithSomethingToShare(t *testing.T) {
 	en := ctxIn(t, i18n.English)
 	declined := html(t, en, Error(page(), TermsDeclined(en, site)))
-	assert.NotContains(t, declined, "reference ID", "M2: nothing to share")
+	assert.NotContains(t, declined, "reference ID", "nothing to share")
 	assert.Contains(t, declined, "Back to sign in")
 
 	support := TermsDeclined(en, site)
@@ -494,7 +494,7 @@ func TestLoginAndPicker_CIMDClientShowsItsHost(t *testing.T) {
 	line := `<p class="text-xs text-base-content/70">From claude.ai · unverified app</p>`
 	login := html(t, en, Login(page(), LoginData{Site: site, Client: "Claude Code", ClientHost: "claude.ai"}))
 	assert.Contains(t, login, "Sign in to continue to Claude Code.")
-	assert.Contains(t, login, line, "R-10: a self-asserted name always comes with its host")
+	assert.Contains(t, login, line, "a self-asserted name always comes with its host")
 	assert.Less(t, strings.Index(login, "Claude Code."), strings.Index(login, line))
 
 	picker := html(t, en, Picker(page(), PickerData{Site: site, Client: "Claude Code", ClientHost: "claude.ai"}))
@@ -520,7 +520,7 @@ func TestConsent_AppMarkSitsInTheTitleRow(t *testing.T) {
 		"account":    func() ConsentData { v := consentData(); v.RS, v.RSIdentifier = "", ""; return v }(),
 	} {
 		out := strings.ReplaceAll(html(t, en, Consent(page(), v)), "> <", "><")
-		assert.Regexp(t, `<div class="flex items-center gap-3"><span class="[^"]*rounded-full[^"]*" aria-hidden="true">C</span><h1 `, out, "%s: MF3 the app mark is the title's", name)
+		assert.Regexp(t, `<div class="flex items-center gap-3"><span class="[^"]*rounded-full[^"]*" aria-hidden="true">C</span><h1 `, out, "%s: the app mark sits with the title", name)
 	}
 	first := strings.ReplaceAll(html(t, en, Consent(page(), consentData())), "> <", "><")
 	assert.Contains(t, first, `</h1></div><p class="text-sm"><span class="font-medium">Openwa MCP</span><span class="block font-mono text-xs break-all text-base-content/70">https://openwa.example.com/mcp</span></p>`, "the resource line is text only, under the title")
@@ -535,7 +535,7 @@ func TestLogin_Google(t *testing.T) {
 	assert.Less(t, strings.Index(both, "btn-google"), strings.Index(both, `name="email"`), "Google first, then the email form")
 
 	only := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Google: true, EmailOff: true}))
-	assert.Contains(t, only, "Lanjutkan dengan Google", "MF5: Google's own Indonesian wording")
+	assert.Contains(t, only, "Lanjutkan dengan Google", "Google's own Indonesian wording")
 	assert.NotContains(t, only, `name="email"`)
 	assert.NotContains(t, only, "atau lanjut dengan email")
 
@@ -595,7 +595,7 @@ func TestContinue_ToGoogle(t *testing.T) {
 	assert.Contains(t, out, `href="https://accounts.google.com/o/oauth2/v2/auth?client_id=c&amp;state=s">Continue to Google</a>`)
 }
 
-// A18, N2: the collision link's email says it adds Google, in both locales.
+// the collision link's email says it adds Google, in both locales.
 func TestMail_AddGoogle(t *testing.T) {
 	m := MailData{Project: "Acme Store", Link: "https://x.test/v", Minutes: 15, GoogleEmail: "ana@gmail.com"}
 	en := ctxIn(t, i18n.English)
@@ -620,7 +620,7 @@ func TestUpstreamError_NamesTheProject(t *testing.T) {
 		for _, locale := range []string{i18n.English, i18n.Indonesian} {
 			ctx := ctxIn(t, locale)
 			out := html(t, ctx, Error(page(), UpstreamError(ctx, site, code, "", "")))
-			assert.Contains(t, out, "Acme Store", "MF6 %s %s", code, locale)
+			assert.Contains(t, out, "Acme Store", "the project name %s %s", code, locale)
 			assert.NotContains(t, out, "{project}", "%s %s", code, locale)
 			assert.NotContains(t, out, "this project", "%s %s", code, locale)
 			assert.NotContains(t, out, "proyek ini", "%s %s", code, locale)
@@ -636,7 +636,7 @@ func TestVerify_LinkModeIndonesian(t *testing.T) {
 	assert.Contains(t, login, "atau lanjutkan dengan email")
 }
 
-// MF7: a failed Connect Google is titled as a connect and leads back to the account, never to sign in.
+// a failed Connect Google is titled as a connect and leads back to the account, never to sign in.
 func TestLinkUpstreamError(t *testing.T) {
 	ctx := ctxIn(t, i18n.English)
 	out := html(t, ctx, Error(page(), LinkUpstreamError(ctx, site, apperror.CodeSignInUpstreamLinkedElsewhere, "ref-1")))
@@ -648,7 +648,7 @@ func TestLinkUpstreamError(t *testing.T) {
 	out = html(t, id, Error(page(), LinkUpstreamError(id, site, apperror.CodeSignInUpstreamCancelled, "")))
 	assert.Contains(t, out, "Tidak bisa menghubungkan Google")
 	assert.Contains(t, out, "Kembali ke akun Anda")
-	assert.Contains(t, out, "Menghubungkan Google dibatalkan. Tidak ada yang berubah.", "BL-3: the connect sentence")
+	assert.Contains(t, out, "Menghubungkan Google dibatalkan. Tidak ada yang berubah.", "the connect sentence")
 	assert.NotContains(t, out, "cara masuk lain")
 
 	for code, want := range map[apperror.Code]string{
@@ -662,7 +662,7 @@ func TestLinkUpstreamError(t *testing.T) {
 	}
 }
 
-// P8 = A: the Google sign-up link's email and page, in both locales.
+// the Google sign-up link's email and page, in both locales.
 func TestMailAndPage_GoogleSignUp(t *testing.T) {
 	m := MailData{Project: "Acme Store", Link: "https://x.test/v", Minutes: 15, GoogleEmail: "budi@acme.test", GoogleSignUp: true}
 	en, id := ctxIn(t, i18n.English), ctxIn(t, i18n.Indonesian)
@@ -678,7 +678,7 @@ func TestMailAndPage_GoogleSignUp(t *testing.T) {
 	assert.Contains(t, html(t, id, Collision(page(), v)), "Cek kotak masuk")
 }
 
-// O11, P8: a sign-up link's confirm page says it finishes the Google sign-up, in both locales.
+// a sign-up link's confirm page says it finishes the Google sign-up, in both locales.
 func TestVerify_GoogleSignUp(t *testing.T) {
 	v := VerifyData{Site: site, Email: "budi@acme.test", VerifyToken: "tok", SignUpEmail: "budi@acme.test"}
 	out := html(t, ctxIn(t, i18n.English), Verify(page(), v))

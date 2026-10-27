@@ -8,12 +8,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"altalune.id/othra/internal/web/layout"
 )
 
 const builtIndex = `<html><head><script type="importmap">{}</script></head><body>` +
 	`<script>window.__NUXT__.config={public:{apiUrl:"",handle:"",project:"",logoUrl:"",termsUrl:"",privacyUrl:"",hostedUrl:"",i18n:{baseUrl:""}},app:{baseURL:"/",cdnURL:"/portal/"}}</script></body></html>`
 
-func serve(t *testing.T, v Values) string {
+func serve(t *testing.T, v layout.PortalValues) string {
 	t.Helper()
 	s, err := load(fstest.MapFS{"index.html": {Data: []byte(builtIndex)}}, AssetPath)
 	require.NoError(t, err)
@@ -25,7 +27,7 @@ func serve(t *testing.T, v Values) string {
 
 func TestPage_FillsTheRuntimeConfigPerRequest(t *testing.T) {
 	t.Parallel()
-	out := serve(t, Values{
+	out := serve(t, layout.PortalValues{
 		BaseURL: "/p/acme/account/", APIURL: "/p/acme/api", HostedURL: "/p/acme", Handle: "acme", Project: `Acme "Store" </script>`,
 		LogoURL: "https://files.test/l.png", BrandCSS: ":root{--color-primary:#1e3a8a}", Nonce: "n0nce",
 	})
@@ -42,7 +44,7 @@ func TestPage_FillsTheRuntimeConfigPerRequest(t *testing.T) {
 
 func TestPage_NoBrandNoStyle(t *testing.T) {
 	t.Parallel()
-	out := serve(t, Values{BaseURL: "/p/beta/account/", Nonce: "x"})
+	out := serve(t, layout.PortalValues{BaseURL: "/p/beta/account/", Nonce: "x"})
 	assert.Contains(t, out, `baseURL:"/p/beta/account/"`)
 	assert.NotContains(t, out, "<style")
 }

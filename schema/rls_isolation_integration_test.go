@@ -235,7 +235,7 @@ func isRLSViolation(err error) bool {
 	return ok && pgErr.Code == "42501"
 }
 
-// SECURITY: R1/O18, as the NOBYPASSRLS service role every org-owned table shows one tenant's rows, none without a scope, and refuses cross-tenant writes.
+// SECURITY: as the NOBYPASSRLS service role every org-owned table shows one tenant's rows, none without a scope, and refuses cross-tenant writes.
 func TestRLS_EveryOrgOwnedTableIsolatesTenants(t *testing.T) {
 	f := newRLSFixture(t)
 	scopeA := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: f.a.project})
@@ -358,19 +358,19 @@ func TestRLS_SigningKeysAreProjectScoped(t *testing.T) {
 	}
 }
 
-//nolint:gochecknoglobals // the project-owned M3 tables.
+//nolint:gochecknoglobals // the project-owned client tables.
 var clientTables = []string{"oauth_clients", "oauth_client_secrets", "resource_servers", "oauth_client_resources"}
 
-//nolint:gochecknoglobals // the project-owned M4 tables.
+//nolint:gochecknoglobals // the project-owned end-user tables.
 var endUserTables = []string{"end_users", "browser_sessions", "user_sessions", "end_user_terms", "magic_links"}
 
-//nolint:gochecknoglobals // the project-owned M5 tables.
+//nolint:gochecknoglobals // the project-owned grant tables.
 var grantTables = []string{"grant_families", "authorization_codes", "access_tokens", "refresh_tokens", "scope_consents"}
 
-//nolint:gochecknoglobals // the project-owned M7 tables.
+//nolint:gochecknoglobals // the project-owned federation tables.
 var federationTables = []string{"upstream_providers", "end_user_identities"}
 
-//nolint:gochecknoglobals // the project-owned M8 tables.
+//nolint:gochecknoglobals // the project-owned portal tables.
 var portalTables = []string{"resource_server_secrets", "personal_tokens"}
 
 func (f *rlsFixture) siblingProject(t *testing.T) uuid.UUID {
@@ -505,7 +505,7 @@ func TestRLS_TheProjectScopeFollowsTheJoiningContext(t *testing.T) {
 	assert.True(t, isRLSViolation(err), "B's key is not writable under A's scope: %v", err)
 }
 
-// SECURITY: F5, consent rows are evidence: the service role reads and appends them but can't change or delete them.
+// SECURITY: consent rows are evidence: the service role reads and appends them but can't change or delete them.
 func TestRLS_EndUserTermsAreAppendOnly(t *testing.T) {
 	f := newRLSFixture(t)
 	own := tenant.Into(t.Context(), tenant.Context{OrgID: f.a.org, ProjectID: f.a.project})
@@ -748,7 +748,7 @@ func TestSchema_FederationConstraints(t *testing.T) {
 		VALUES ($1, $2, $3, $4, 'google', 'x', decode(repeat('ab', 40), 'hex'), $5, $5)`, uuid.New(), "u"+uuid.NewString()[:12], f.a.org, f.a.project, now)
 	assert.Equal(t, "23505", pgCode(err), "one Google per project")
 	_, err = f.admin.ExecContext(ctx, `DELETE FROM `+f.schema+`.upstream_providers WHERE id = $1`, f.a.upstream)
-	assert.Equal(t, "23503", pgCode(err), "P6: an upstream with linked identities can't be deleted")
+	assert.Equal(t, "23503", pgCode(err), "an upstream with linked identities can't be deleted")
 
 	_, err = f.admin.ExecContext(ctx, `UPDATE `+f.schema+`.user_sessions SET method = 'google' WHERE id = $1`, f.a.userSession)
 	assert.NoError(t, err, "a federated session")
@@ -766,7 +766,7 @@ func TestSchema_FederationConstraints(t *testing.T) {
 	}
 }
 
-// M8 G4, P6: a personal token lives at most 90 days, has a name, scopes and a versioned hash; one current secret per resource server.
+// a personal token lives at most 90 days, has a name, scopes and a versioned hash; one current secret per resource server.
 func TestSchema_PortalConstraints(t *testing.T) {
 	f := newRLSFixture(t)
 	ctx, now := t.Context(), time.Now().UTC()

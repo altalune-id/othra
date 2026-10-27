@@ -30,7 +30,7 @@ func TestIsMetadataURL(t *testing.T) {
 	assert.False(t, IsMetadataURL("http://claude.ai/x"))
 }
 
-// M1, M4, authl gap 12: the client_id URL rules.
+// the client_id URL rules.
 func TestValidateMetadataURL(t *testing.T) {
 	require.NoError(t, ValidateMetadataURL(claudeURL, "othra.example.com"))
 	require.NoError(t, ValidateMetadataURL("https://app.example.com:8443/client.json", "othra.example.com"), "a port is allowed")
@@ -57,7 +57,7 @@ func TestValidateMetadataURL(t *testing.T) {
 	}
 }
 
-// M6–M8, C5 of ADR-0021: Claude Code's real document is admitted, as a native public client.
+// Claude Code's real document is admitted, as a native public client.
 func TestParseMetadata_ClaudeCode(t *testing.T) {
 	m, err := ParseMetadata(claudeURL, []byte(claudeDocument))
 	require.NoError(t, err)
@@ -111,7 +111,7 @@ func TestParseMetadata_NoRefreshWithoutTheGrant(t *testing.T) {
 	assert.False(t, m.Refresh, "grant_types defaults to authorization_code")
 }
 
-// M9, ADR-0021 D2: Cache-Control max-age clamped to the bounds; anything else gets the default.
+// Cache-Control max-age clamped to the bounds; anything else gets the default.
 func TestMetadataCache_TTL(t *testing.T) {
 	c := MetadataCache{Min: 5 * time.Minute, Max: 24 * time.Hour, Default: time.Hour}
 	for header, want := range map[string]time.Duration{
@@ -142,7 +142,7 @@ func TestIsJSONMediaType(t *testing.T) {
 	}
 }
 
-// E11: every admission miss is SIG010; an unusable document is SIG011, whose reason stays out of the response.
+// every admission miss is SIG010; an unusable document is SIG011, whose reason stays out of the response.
 func TestCIMDErrors_AppErrors(t *testing.T) {
 	app := (&MetadataError{Reason: MetadataTooLarge}).ToAppError()
 	assert.Equal(t, apperror.CodeAuthorizeClientMetadataUnusable, app.Code())

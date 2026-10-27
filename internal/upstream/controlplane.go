@@ -143,7 +143,7 @@ func (s *UpstreamService) DeleteUpstream(
 	return connect.NewResponse(&upstreamv1.DeleteUpstreamResponse{}), nil
 }
 
-// SECURITY: a client secret is written only by a signed-in person, never by an API key (the M3 client-secret rule).
+// SECURITY: a client secret is written only by a signed-in person, never by an API key, as for OAuth client secrets.
 func (s *UpstreamService) personProject(ctx context.Context, publicID string) (orgID, projectID uuid.UUID, err error) {
 	if p := session.PrincipalFrom(ctx); !p.IsPerson() {
 		return uuid.Nil, uuid.Nil, &authz.ForbiddenError{Permission: authz.PersonOnly}

@@ -19,9 +19,16 @@ import (
 	"altalune.id/othra/internal/federation"
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/project"
+	"altalune.id/othra/internal/testutil/fakes"
 	"altalune.id/othra/internal/testutil/pgtest"
 	"altalune.id/othra/internal/upstream"
 )
+
+type keptGrants struct{}
+
+func (keptGrants) RevokeUserSession(context.Context, enduser.Project, string, enduser.EndReason) error {
+	return nil
+}
 
 type endUsers struct{ svc *enduser.Service }
 
@@ -78,8 +85,8 @@ func newFixture(t *testing.T) *fixture {
 	unexpected := apperror.NewReporter(nil, false).Unexpected
 	cfg := enduser.Config{LinkTTL: 15 * time.Minute, ResendAfter: time.Minute, Idle: 24 * time.Hour, Absolute: 48 * time.Hour, MaxAccounts: 5}
 	uow := db.NewTransactor(pool)
-	f.users = enduser.NewService(enduser.NewStore(pool, schemaName, ""), uow, nil, cfg, unexpected)
-	projects := project.NewService(project.NewStore(pool, schemaName, ""), unexpected)
+	projects := project.NewService(project.NewStore(pool, schemaName, ""), uow, fakes.NoMemberships{}, nil, "", unexpected)
+	f.users = enduser.NewService(enduser.NewStore(pool, schemaName, ""), uow, nil, keptGrants{}, projects, cfg, unexpected)
 	f.with = func(users federation.EndUsers) *federation.Service {
 		return federation.NewService(federation.NewStore(pool, schemaName, ""), uow, upstreams{id: f.up}, users, projects, federation.Config{},
 			unexpected)
@@ -249,7 +256,7 @@ func (f *fixture) waitForLock(t *testing.T, done chan error, table string) {
 	}
 }
 
-// A21: two first sign-ins with one new Google account: the loser waits on the winner, then signs in as the same end user.
+// two first sign-ins with one new Google account: the loser waits on the winner, then signs in as the same end user.
 func TestPostgres_SameNewAccountRace(t *testing.T) {
 	f := newFixture(t)
 	ctx := t.Context()
@@ -286,7 +293,7 @@ func TestPostgres_SameNewAccountRace(t *testing.T) {
 	assert.Equal(t, 1, f.count(t, `SELECT count(*) FROM end_user_identities WHERE project_id = $1`, f.p.ID))
 }
 
-// A21: many first sign-ins with one new Google account at once: one end user, one identity, and every one signs in.
+// many first sign-ins with one new Google account at once: one end user, one identity, and every one signs in.
 func TestPostgres_SameNewAccountConcurrent(t *testing.T) {
 	f := newFixture(t)
 	id := f.identity("sub-many", "many@gmail.com")
@@ -321,7 +328,7 @@ func TestPostgres_SameNewAccountConcurrent(t *testing.T) {
 	assert.Equal(t, 4, f.count(t, `SELECT count(*) FROM user_sessions WHERE project_id = $1`, f.p.ID))
 }
 
-// A21, ADR-0014: a Google sign-in racing a magic-link sign-up of the same email never links: it is a collision.
+// a Google sign-in racing a magic-link sign-up of the same email never links: it is a collision.
 func TestPostgres_SignInVersusMagicLinkSignUp(t *testing.T) {
 	f := newFixture(t)
 	ctx := t.Context()
@@ -374,7 +381,7 @@ func (u commitBeforeLookup) EndUserIDByEmail(ctx context.Context, p federation.P
 	return u.endUsers.EndUserIDByEmail(ctx, p, email)
 }
 
-// A21: the race winner commits after the loser's (iss, sub) read and before its email read: the loser still signs in as the winner.
+// the race winner commits after the loser's (iss, sub) read and before its email read: the loser still signs in as the winner.
 func TestPostgres_SameNewAccountCommitsBetweenLookups(t *testing.T) {
 	f := newFixture(t)
 	ctx := t.Context()

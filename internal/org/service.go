@@ -24,9 +24,11 @@ type Service struct {
 	memberRoles     MemberRoles
 }
 
-// NewService builds a Service over store; Create runs as one unit of work on uow and is allowed until WithCreation(false).
-func NewService(store Store, uow db.Transactor, unexpected apperror.UnexpectedFunc) *Service {
-	return &Service{store: store, uow: uow, unexpected: unexpected, creationAllowed: true}
+// NewService builds a Service over store; Create runs afterCreate, unless nil, in its unit of work on uow.
+func NewService(
+	store Store, uow db.Transactor, roles MemberRoles, afterCreate func(ctx context.Context, o *Org) error, unexpected apperror.UnexpectedFunc,
+) *Service {
+	return &Service{store: store, uow: uow, memberRoles: roles, afterCreate: afterCreate, unexpected: unexpected, creationAllowed: true}
 }
 
 // WithCreation sets whether Create may add orgs; boot passes the OrgCreation capability.
@@ -38,23 +40,8 @@ func (s *Service) WithCreation(allowed bool) *Service {
 // CreationAllowed reports whether Create may add orgs on this deployment.
 func (s *Service) CreationAllowed() bool { return s.creationAllowed }
 
-// WithAfterCreate registers a hook run after an org is created (e.g. to seed a default project).
-func (s *Service) WithAfterCreate(hook func(ctx context.Context, o *Org) error) *Service {
-	s.afterCreate = hook
-	return s
-}
-
-// WithMemberRoles lets ListOrgs show a person their role and its permissions in each org they belong to.
-func (s *Service) WithMemberRoles(r MemberRoles) *Service {
-	s.memberRoles = r
-	return s
-}
-
-// MemberRole returns userID's role in orgID and what it grants; ok is false for a non-member or without WithMemberRoles.
+// MemberRole returns userID's role in orgID and what it grants; ok is false for a non-member.
 func (s *Service) MemberRole(ctx context.Context, orgID, userID uuid.UUID) (role string, permissions []string, ok bool, err error) {
-	if s.memberRoles == nil {
-		return "", nil, false, nil
-	}
 	role, permissions, ok, err = s.memberRoles.Role(ctx, orgID, userID)
 	if err != nil {
 		return "", nil, false, s.errOrReport(ctx, "org: member role", err)

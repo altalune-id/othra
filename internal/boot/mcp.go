@@ -59,7 +59,7 @@ func buildMCPServer(cfg config.MCPConfig, svcs *Services, log *slog.Logger, allo
 		admin := controlplane.NewEndUserService(svcs.EndUsers, svcs.Federation, slices, refs)
 		enduserv1mcp.RegisterEndUserServiceTools(registry, admin, permission.For, validate)
 	}
-	authSvc := auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users).WithFileUploads(svcs.Caps.FileUploads)
+	authSvc := auth.NewControlPlane(svcs.Orgs, svcs.Projects, svcs.Users, svcs.Auth).WithFileUploads(svcs.Caps.FileUploads)
 	authv1mcp.RegisterAuthServiceTools(registry, authSvc, permission.For, validate)
 
 	srv := rootmcp.NewServer(

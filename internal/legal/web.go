@@ -27,7 +27,7 @@ type Web struct{ o WebOpts }
 // NewWeb binds the legal pages to their options.
 func NewWeb(o WebOpts) *Web {
 	if o.Service == nil {
-		o.Service = NewService(nil)
+		o.Service = NewService(nil, nil, nil)
 	}
 	return &Web{o: o}
 }

@@ -22,7 +22,6 @@ import (
 	"altalune.id/othra/internal/upstream"
 	"altalune.id/othra/internal/web/i18n"
 	"altalune.id/othra/internal/web/layout"
-	"altalune.id/othra/internal/web/portal"
 	"altalune.id/othra/mailer"
 	"altalune.id/othra/reqid"
 	"altalune.id/othra/sealer"
@@ -64,7 +63,7 @@ type Web struct {
 	fed     Federation
 	fedSeal sealer.Sealer
 
-	portalPage *portal.Page
+	portalPage Portal
 }
 
 // OAuth is what /oauth2/authorize, /consent and /oauth2/end-session need.
@@ -193,7 +192,7 @@ func (h *Web) returnTo(s *site, raw string) string {
 	return ReturnTo(s.issuerURL, raw)
 }
 
-// SECURITY: D3: a form is only handled after its CSRF token and its per-IP limit pass.
+// SECURITY: a form is only handled after its CSRF token and its per-IP limit pass.
 func (h *Web) guard(w http.ResponseWriter, r *http.Request, s *site, form string, rules ...ratelimit.Rule) bool {
 	if err := h.csrf.Check(r, s.issuer.PublicID, form); err != nil {
 		h.formExpired(w, r, s)
@@ -251,7 +250,7 @@ func (h *Web) login(w http.ResponseWriter, r *http.Request, s *site) {
 	})
 }
 
-// NOTE: M8 G5, P7: the portal asks prompt=login before it creates a token; a new sign-in here refreshes the account's auth_time.
+// NOTE: the portal asks prompt=login before it creates a token; a new sign-in here refreshes the account's auth_time.
 func (h *Web) portalReauth(r *http.Request, s *site, returnTo string) bool {
 	u, err := url.Parse(returnTo)
 	return err == nil && r.URL.Query().Get("prompt") == promptLogin && strings.HasPrefix(u.Path, s.path+string(pageAccount))
@@ -312,7 +311,7 @@ func (h *Web) issue(w http.ResponseWriter, r *http.Request, s *site) {
 	h.toPage(w, r, s, pageSent, backTo(returnTo))
 }
 
-// SECURITY: S5, S11: the per-email limit runs after the cooldown, so a cooled-down request spends nothing; both answer as sent.
+// SECURITY: the per-email limit runs after the cooldown, so a cooled-down request spends nothing; both answer as sent.
 func (h *Web) sendLink(
 	w http.ResponseWriter, r *http.Request, s *site, email, returnTo string, pending *pendingLink,
 ) (Link, bool) {
@@ -456,7 +455,7 @@ func (h *Web) redeem(w http.ResponseWriter, r *http.Request, s *site) {
 	h.next(w, r, s, got.BrowserSecret, got.Account, h.returnTo(s, got.ReturnTo))
 }
 
-// NOTE: H23, a second Continue carries a token from before the sign-in's CSRF renewal; it lands on the account page.
+// NOTE: a second Continue carries a token from before the sign-in's CSRF renewal; it lands on the account page.
 func (h *Web) repeatContinue(w http.ResponseWriter, r *http.Request, s *site) {
 	b, err := h.users.Browser(r.Context(), s.project(), h.cookies.browser(r))
 	if err != nil {
@@ -574,7 +573,7 @@ func (h *Web) renderTerms(w http.ResponseWriter, r *http.Request, s *site, statu
 	}))
 }
 
-// SECURITY: T4: the account comes from this browser's sessions; the form only names which of them.
+// SECURITY: the account comes from this browser's sessions; the form only names which of them.
 func (h *Web) acceptTerms(w http.ResponseWriter, r *http.Request, s *site) {
 	if !h.guard(w, r, s, "terms", FormIPRule()) {
 		return
@@ -691,7 +690,7 @@ func (h *Web) renderError(w http.ResponseWriter, r *http.Request, s *site, statu
 	h.kit.Render(w, r, status, views.Error(h.layout(r, s), v))
 }
 
-// NOTE: product-design-m6 §6: an error answering /authorize or /end-session leads back to the app, never into sign-in.
+// NOTE: an error answering /authorize or /end-session leads back to the app, never into sign-in.
 func protocolPage(r *http.Request, s *site) bool {
 	return r.URL.Path == s.path+authorizePath || r.URL.Path == s.path+endSessionPath
 }
@@ -719,17 +718,17 @@ func (h *Web) toPage(w http.ResponseWriter, r *http.Request, s *site, p page, qu
 	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: a fixed page under this issuer's path.
 }
 
-// SECURITY: H8, RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked.
+// SECURITY: RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked.
 func (h *Web) toReturnTo(w http.ResponseWriter, r *http.Request, s *site, raw string) {
 	target := ReturnTo(s.issuerURL, raw)
 	if r.Method == http.MethodPost && strings.HasPrefix(target, s.path+authorizePath+"?") {
 		h.forward(w, r, s, h.pending(r, s, target).client, target)
 		return
 	}
-	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: target is validated by ReturnTo (H8).
+	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: target is validated by ReturnTo.
 }
 
-// SECURITY: G4, S11: after a POST the next hop is a GET, so form-action never blocks the 302; target is ReturnTo's or registered.
+// SECURITY: after a POST the next hop is a GET, so form-action never blocks the 302; target is ReturnTo's or registered.
 func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string) {
 	d := h.layout(r, s)
 	d.Refresh = target

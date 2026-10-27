@@ -133,7 +133,7 @@ func TestRefused_Translated(t *testing.T) {
 	}
 }
 
-// F6: a revoked, expired or pruned family still signs out the hinted user session, or this browser's account with the hint's sub.
+// a revoked, expired or pruned family still signs out the hinted user session, or this browser's account with the hint's sub.
 func TestEndSession_FamilyGone(t *testing.T) {
 	f := newWebFixture(t)
 	hint := f.hintFor(f.client, "ana@example.com")

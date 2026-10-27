@@ -18,7 +18,7 @@ import (
 	"altalune.id/othra/internal/kernel/tenant"
 )
 
-// SECURITY: O5, R1, an admin who owes Othra's terms is sent to /welcome from admin pages, but a hosted /p/<handle> page never redirects and sets no admin cookie.
+// SECURITY: an admin who owes Othra's terms is sent to /welcome from admin pages, but a hosted /p/<handle> page never redirects and sets no admin cookie.
 func TestHostedPages_IgnoreTheAdminSessionAndWelcomeGate(t *testing.T) {
 	cfg := devLocalConfig()
 	cfg.HTTP.StateSecret = strings.Repeat("s", 40)

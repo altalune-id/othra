@@ -12,7 +12,7 @@ function accessibleText(el: Element): string {
   return [...el.childNodes].map(n => (n.nodeType === 3 ? n.textContent ?? '' : accessibleText(n as Element))).join(' ');
 }
 
-describe('userMenu (N7)', () => {
+describe('userMenu', () => {
   it('names its trigger "Signed in as" plus the visible name, without the avatar initials', () => {
     const trigger = mount(UserMenu, { props: { me, logoutUrl: '/logout' } }).get('[role="button"]');
     expect(trigger.attributes('aria-haspopup')).toBe('true');

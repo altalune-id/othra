@@ -45,6 +45,11 @@ type seeded struct {
 
 func newPGFixture(t *testing.T) *pgFixture {
 	t.Helper()
+	return newPGFixtureWith(t, &signedTokens{}, &audiences{})
+}
+
+func newPGFixtureWith(t *testing.T, tokens grant.AccessTokens, audiences grant.Audiences) *pgFixture {
+	t.Helper()
 	pool, sqlDB, schemaName := pgtest.MigratedRLS(t)
 	f := &pgFixture{
 		db: sqlDB, now: time.Now().UTC().Truncate(time.Microsecond), logs: &bytes.Buffer{},
@@ -52,7 +57,7 @@ func newPGFixture(t *testing.T) *pgFixture {
 	}
 	log := slog.New(slog.NewJSONHandler(f.logs, nil))
 	reporter := apperror.NewReporter(log, false)
-	f.svc = grant.NewService(grant.NewStore(pool, schemaName, ""), db.NewTransactor(pool), f.cfg, reporter.Unexpected).
+	f.svc = grant.NewService(grant.NewStore(pool, schemaName, ""), db.NewTransactor(pool), tokens, audiences, f.cfg, reporter.Unexpected).
 		WithLogger(log).WithClock(func() time.Time { return f.now })
 	return f
 }
@@ -149,7 +154,7 @@ func TestPostgres_CodeExchangeAndReplay(t *testing.T) {
 	}
 
 	got, err := f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: code, CodeVerifier: verifier})
-	require.NoError(t, err, "redirect_uri may be left out (S8), and a refused attempt did not spend the code")
+	require.NoError(t, err, "redirect_uri may be left out, and a refused attempt did not spend the code")
 	assert.Equal(t, "n-1", got.Nonce)
 	assert.Equal(t, []string{"openid", "offline_access"}, got.Scopes)
 	assert.NotEmpty(t, got.RefreshToken, "offline_access with the refresh_token grant")
@@ -167,7 +172,7 @@ func TestPostgres_CodeExchangeAndReplay(t *testing.T) {
 	} {
 		_, err = f.svc.Exchange(ctx, s.p, req)
 		assert.True(t, grant.IsInvalidGrantError(err), name)
-		assert.Empty(t, f.reason(t, got.Family.PublicID), "m5-spec T7: %s replaying a stolen code can't revoke the grant", name)
+		assert.Empty(t, f.reason(t, got.Family.PublicID), "%s replaying a stolen code can't revoke the grant", name)
 	}
 	_, err = f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: code, CodeVerifier: verifier})
 	assert.True(t, grant.IsInvalidGrantError(err))
@@ -471,11 +476,10 @@ func (f *pgFixture) resourceServer(t *testing.T, s seeded) uuid.UUID {
 
 // RFC 8707 and RFC 9068: a resource-bound grant mints at+jwt for its server only, rechecked at every token, and never a userinfo token.
 func TestPostgres_ResourceBoundGrant(t *testing.T) {
-	f := newPGFixture(t)
+	signer, aud := &signedTokens{}, &audiences{identifier: "https://api.example/mcp", ok: true}
+	f := newPGFixtureWith(t, signer, aud)
 	s := f.seed(t)
 	ctx := t.Context()
-	signer, aud := &signedTokens{}, &audiences{identifier: "https://api.example/mcp", ok: true}
-	f.svc.WithResources(signer, aud)
 	rs := f.resourceServer(t, s)
 	bound := func() string {
 		req := s.codeRequest("openid", "offline_access", "read")
@@ -492,7 +496,7 @@ func TestPostgres_ResourceBoundGrant(t *testing.T) {
 	assert.Equal(t, grant.AccessToken{
 		Audience: "https://api.example/mcp", Subject: s.sub, ClientID: s.client.OAuthID, SessionID: got.Family.PublicID, Scopes: []string{"read"},
 		AuthTime: got.Family.AuthTime, IssuedAt: f.now, ExpiresAt: f.now.Add(15 * time.Minute),
-	}, signer.last, "owner D4: minimal claims, RFC 9068 §2.2.3: only the server's scopes")
+	}, signer.last, "minimal claims, RFC 9068 §2.2.3: only the server's scopes")
 	assert.Equal(t, []string{"openid", "offline_access", "read"}, got.Scopes, "the response states everything granted")
 	a, err := f.svc.Access(ctx, s.p, got.AccessToken)
 	require.NoError(t, err)
@@ -500,7 +504,7 @@ func TestPostgres_ResourceBoundGrant(t *testing.T) {
 	assert.Equal(t, rs, *a.ResourceServerID)
 
 	_, err = f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: bound(), CodeVerifier: verifier, Resource: "https://other.example/"})
-	assert.True(t, grant.IsInvalidTargetError(err), "R5: a different resource at /token")
+	assert.True(t, grant.IsInvalidTargetError(err), "a different resource at /token")
 	same, err := f.svc.Exchange(ctx, s.p, grant.ExchangeRequest{Client: s.client, Code: bound(), CodeVerifier: verifier, Resource: "https://api.example/mcp"})
 	require.NoError(t, err, "the same resource is fine")
 
@@ -508,10 +512,10 @@ func TestPostgres_ResourceBoundGrant(t *testing.T) {
 	assert.True(t, grant.IsInvalidTargetError(err))
 	aud.ok = false
 	_, err = f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: same.RefreshToken})
-	assert.True(t, grant.IsInvalidGrantError(err), "authl gap 5: an unlinked client or a server no longer admissible can't refresh")
+	assert.True(t, grant.IsInvalidGrantError(err), "an unlinked client or a server no longer admissible can't refresh")
 	aud.ok = true
 	_, err = f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: same.RefreshToken, Scopes: []string{"openid"}})
-	assert.True(t, grant.IsInvalidScopeError(err), "qa O1, E3: narrowing away every server scope is invalid_scope, never scope \"\"")
+	assert.True(t, grant.IsInvalidScopeError(err), "narrowing away every server scope is invalid_scope, never scope \"\"")
 	next, err := f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: same.RefreshToken, Scopes: []string{"read"}})
 	require.NoError(t, err, "a refused refresh spent nothing")
 	assert.Equal(t, "https://api.example/mcp", next.Audience)
@@ -523,7 +527,7 @@ func TestPostgres_ResourceBoundGrant(t *testing.T) {
 	f.exec(t, `DELETE FROM oauth_client_resources WHERE resource_server_id = $1`, rs)
 	f.exec(t, `DELETE FROM resource_servers WHERE id = $1`, rs)
 	_, err = f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: next.RefreshToken})
-	assert.True(t, grant.IsInvalidGrantError(err), "E8-2: deleting the server ends its grants")
+	assert.True(t, grant.IsInvalidGrantError(err), "deleting the server ends its grants")
 }
 
 // RFC 7009: a refresh token revokes its family, an access token only itself, and another client's or an unknown token nothing.
@@ -541,7 +545,7 @@ func TestPostgres_Revoke(t *testing.T) {
 	require.NoError(t, f.svc.Revoke(ctx, s.p, s.client, got.AccessToken, "refresh_token"), "the hint is only a hint")
 	_, err = f.svc.Access(ctx, s.p, got.AccessToken)
 	assert.True(t, grant.IsInvalidTokenError(err))
-	assert.Empty(t, f.reason(t, got.Family.PublicID), "pm P6: revoking an access token leaves the grant")
+	assert.Empty(t, f.reason(t, got.Family.PublicID), "revoking an access token leaves the grant")
 	next, err := f.svc.Refresh(ctx, s.p, grant.RefreshRequest{Client: s.client, RefreshToken: got.RefreshToken})
 	require.NoError(t, err)
 	require.NoError(t, f.svc.Revoke(ctx, s.p, s.client, got.AccessToken, ""), "revoking twice is fine")
@@ -555,7 +559,7 @@ func TestPostgres_Revoke(t *testing.T) {
 	assert.Contains(t, f.logs.String(), got.Family.PublicID)
 }
 
-// R-5, M8 P8: Disconnect revokes every family of the end user's client, offline ones too, and drops its unused codes.
+// Disconnect revokes every family of the end user's client, offline ones too, and drops its unused codes.
 func TestPostgres_RevokeClient(t *testing.T) {
 	f := newPGFixture(t)
 	ctx := t.Context()
@@ -582,8 +586,8 @@ func TestPostgres_RevokeClient(t *testing.T) {
 	var unstamped int
 	require.NoError(t, f.db.QueryRowContext(ctx, `SELECT count(*) FROM access_tokens WHERE project_id = $1 AND revoked_at IS NULL`,
 		s.p.ID).Scan(&unstamped))
-	assert.Zero(t, unstamped, "R-6, A13: every access token of the revoked families has revoked_at")
-	assert.Equal(t, 2, strings.Count(f.logs.String(), `"reason":"consent_revoked"`), "R-6: one line per revoked family")
+	assert.Zero(t, unstamped, "every access token of the revoked families has revoked_at")
+	assert.Equal(t, 2, strings.Count(f.logs.String(), `"reason":"consent_revoked"`), "one line per revoked family")
 
 	live, err = f.svc.LiveFamilies(ctx, s.p, s.endUser)
 	require.NoError(t, err)

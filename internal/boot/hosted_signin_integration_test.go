@@ -37,6 +37,7 @@ type signInFixture struct {
 	c    *http.Client
 	db   *sql.DB
 	pool db.Pool
+	cfg  config.Config
 }
 
 func newSignInFixture(t *testing.T, opts ...func(*config.Config)) *signInFixture {
@@ -71,7 +72,7 @@ func newSignInFixture(t *testing.T, opts ...func(*config.Config)) *signInFixture
 		routes: buildRoutes(cfg, svcs, nil, nil), public: public, hosted: hosted,
 		session: buildSessionMiddleware(svcs, nil), installRequired: required,
 	})
-	f := &signInFixture{t: t, srv: srv, svcs: svcs, db: sqlDB, pool: pool}
+	f := &signInFixture{t: t, srv: srv, svcs: svcs, db: sqlDB, pool: pool, cfg: cfg}
 	f.c = f.client()
 	return f
 }
@@ -177,7 +178,7 @@ func (f *signInFixture) submit(c *http.Client, p signInPage, action string, extr
 	return signInPage{}
 }
 
-// J1, D1, D4: a magic link mailed through the queue signs the end user in on the device that opens it, once.
+// a magic link mailed through the queue signs the end user in on the device that opens it, once.
 func TestHosted_MagicLinkEndToEnd(t *testing.T) {
 	f := newSignInFixture(t)
 	p := f.project("shop", "Shop")
@@ -208,16 +209,16 @@ func TestHosted_MagicLinkEndToEnd(t *testing.T) {
 	require.Equal(t, http.StatusSeeOther, done.status, done.body)
 	assert.Equal(t, base+"/account/", done.header.Get("Location"))
 	twice := f.submit(phone, verify, "/login/verify", nil)
-	assert.Equal(t, http.StatusSeeOther, twice.status, "H23: a second Continue from the same browser still succeeds")
+	assert.Equal(t, http.StatusSeeOther, twice.status, "a second Continue from the same browser still succeeds")
 
 	account := f.do(phone, http.MethodGet, base+"/account/", nil)
 	assert.NotEqual(t, http.StatusSeeOther, account.status, "the portal is served to the signed-in phone, not sent to sign in")
 	status, me := f.profile(phone, base)
 	require.Equal(t, http.StatusOK, status)
 	assert.Equal(t, "ana@example.com", me.Profile.Email, "account.v1 acts as the account the link signed in")
-	assert.Equal(t, http.StatusSeeOther, f.do(f.c, http.MethodGet, base+"/account/", nil).status, "D1: the asking laptop is not signed in")
+	assert.Equal(t, http.StatusSeeOther, f.do(f.c, http.MethodGet, base+"/account/", nil).status, "the asking laptop is not signed in")
 	laptop, _ := f.profile(f.c, base)
-	assert.Equal(t, http.StatusUnauthorized, laptop, "D1: and account.v1 agrees")
+	assert.Equal(t, http.StatusUnauthorized, laptop, "and account.v1 agrees")
 
 	other := f.client()
 	again := f.do(other, http.MethodGet, strings.TrimPrefix(link, f.srv.URL), nil)
@@ -226,7 +227,7 @@ func TestHosted_MagicLinkEndToEnd(t *testing.T) {
 
 	blog := f.project("blog", "Blog")
 	assert.Equal(t, http.StatusSeeOther, f.do(phone, http.MethodGet, "/p/"+blog.IssuerHandle+"/account/", nil).status,
-		"S6: another project's pages see no session")
+		"another project's pages see no session")
 
 	out := f.portalSignOut(phone, base)
 	assert.Equal(t, base+"/signed-out", out.header.Get("Location"))

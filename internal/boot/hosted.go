@@ -243,7 +243,7 @@ func (o hostedOAuth) Resource(ctx context.Context, p hosted.Project, c hosted.Cl
 	return hostedResource(r, pin), true, nil
 }
 
-// SECURITY: M2, ADR-0021 D1: exactly one resource, admitting the client_id host, before any fetch; every miss is the same SIG010.
+// SECURITY: exactly one resource, admitting the client_id host, before any fetch; every miss is the same SIG010.
 func (o hostedOAuth) Admit(
 	ctx context.Context, p hosted.Project, clientURL string, resources []string,
 ) (hosted.Client, hosted.Resource, error) {

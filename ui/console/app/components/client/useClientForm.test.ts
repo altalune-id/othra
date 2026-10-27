@@ -219,7 +219,7 @@ describe('useClientForm (edit)', () => {
   });
 });
 
-describe('useClientForm (M5 web settings)', () => {
+describe('useClientForm web settings', () => {
   it('sends the post method and PKCE off for a web app, and shows the server refusal', async () => {
     setKnownKeys('apperror.CLT003_pkce_native');
     const updateClient = vi.fn().mockRejectedValueOnce(connectError('CLT003', { reason: 'pkce_native' })).mockResolvedValue({ client: web });

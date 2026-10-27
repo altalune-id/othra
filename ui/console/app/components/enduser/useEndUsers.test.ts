@@ -36,7 +36,7 @@ describe('useEndUserList', () => {
     l.query.value = 'budi';
     await l.more();
     expect(listEndUsers).toHaveBeenLastCalledWith({ projectId, query: 'ana', limit: 50, after: 'dPm7fmQRJKPVw8PxrgdrN' });
-    expect(l.shown.value, 'the empty message follows the shown search, not the box (N8)').toBe('ana');
+    expect(l.shown.value, 'the empty message follows the shown search, not the box').toBe('ana');
   });
 
   it('shows a load error', async () => {

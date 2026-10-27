@@ -34,7 +34,7 @@ Use this when Othra needs a new bounded context: a new aggregate with its own ta
    | `ports.go`                                  | interfaces it consumes from other domains (`Events`, `Refs`…)                           |
    | `store.go`                                  | `Store` = `Reader` + `Writer` interfaces                                                |
    | `postgres.go`, `pgreader.go`, `pgwriter.go` | `postgresStore`, `NewStore(pool, schema, tablePrefix)`, reads, writes                   |
-   | `service.go`                                | `Service`, `NewService(...)`, `With*` options, use cases                                |
+   | `service.go`                                | `Service`, `NewService(...)` taking every port it needs, use cases                      |
    | `controlplane.go`                           | the Connect handler, `NewControlPlane(svc, refs)`; resolves public ids and checks reach |
    | `cli.go`                                    | `ClientFn` and `NewCmd(clientFn)`                                                       |
    | `web.go`, `views/`                          | only for pre-sign-in pages                                                              |
@@ -60,7 +60,7 @@ Use this when Othra needs a new bounded context: a new aggregate with its own ta
 ## Review
 
 - [ ] Files sit where the layout says, not only where the plan said. No command file in `internal/cli`; no surface code in `service.go`.
-- [ ] Imports point down only: the domain does not import `internal/cli`, `internal/boot`, `internal/controlplane` or `internal/web` (only `internal/web/layout`). `internal/kernel/*` does not import it.
+- [ ] Imports point down only: the domain does not import `internal/cli`, `internal/boot`, `internal/controlplane` or `internal/web` (only `internal/web/layout` and `internal/web/i18n`, the hosted pages' copy). `internal/kernel/*` does not import it.
 - [ ] Another domain is reached only through a port in `ports.go`, wired in boot.
 - [ ] Signed-in surfaces (Connect, MCP, console) go through `controlplane.go`; only pre-sign-in pages, operator commands and workers call the service directly.
 - [ ] Every id on a surface is a public id; the reach and no-UUID tests cover the new RPCs ([public-ids.md](public-ids.md)).
@@ -74,7 +74,7 @@ Use this when Othra needs a new bounded context: a new aggregate with its own ta
 - Errors: [internal/project/errors.go](../../internal/project/errors.go) (`NotFoundError`, `IsExpectedError`)
 - Ports: [internal/apikey/ports.go](../../internal/apikey/ports.go) (`Refs`), [internal/org/invite/ports.go](../../internal/org/invite/ports.go) (`Events`)
 - Store: [internal/project/store.go](../../internal/project/store.go), [internal/project/postgres.go](../../internal/project/postgres.go) (`NewStore`)
-- Service: [internal/project/service.go](../../internal/project/service.go) (`NewService`); options: [internal/org/member/service.go](../../internal/org/member/service.go) (`WithEffects`, `WithDirectory`), [internal/webhook/service.go](../../internal/webhook/service.go) (`WithProjects`)
+- Service: [internal/project/service.go](../../internal/project/service.go) (`NewService`); a setter that closes a constructor cycle: [internal/org/member/service.go](../../internal/org/member/service.go) (`WithEffects`)
 - Handler: [internal/project/controlplane.go](../../internal/project/controlplane.go) (`ProjectService`, `NewControlPlane`)
 - CLI: [internal/project/cli.go](../../internal/project/cli.go) (`NewCmd`, `ClientFn`)
 - Subdomain: [internal/org/member/](../../internal/org/member/) and [internal/org/invite/](../../internal/org/invite/)

@@ -348,7 +348,7 @@ describe('useResourceServer', () => {
   });
 });
 
-describe('scope descriptions (M6)', () => {
+describe('scope descriptions', () => {
   it('keeps descriptions aligned with their rows through add, remove and reset', () => {
     const s = useScopeRows(['a:read', 'b:write'], { 'b:write': 'Write b' });
     expect(s.descriptions.value).toEqual(['', 'Write b']);

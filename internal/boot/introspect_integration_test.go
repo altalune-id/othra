@@ -24,7 +24,7 @@ func oauthBasic(id, secret string) string {
 	return basicAuth(url.QueryEscape(id), url.QueryEscape(secret))
 }
 
-// RFC 7662 and pm A2, A3, A8, A11 through boot: a resource server learns only about its own tokens, and a revoked personal token dies at once.
+// RFC 7662 through boot: a resource server learns only about its own tokens, and a revoked personal token dies at once.
 func TestIntrospectionThroughBoot(t *testing.T) {
 	ts, svcs := newIssuerServer(t, "")
 	ctx := t.Context()
@@ -115,7 +115,7 @@ func TestIntrospectionThroughBoot(t *testing.T) {
 	assert.Equal(t, true, got["active"])
 	assert.Equal(t, signed.Account.Subject, got["sub"])
 	assert.Equal(t, s1.Identifier, got["aud"])
-	assert.NotContains(t, got, "client_id", "pm P10: a personal token has no client")
+	assert.NotContains(t, got, "client_id", "a personal token has no client")
 	_, _, got = introspect(s2.PublicID, s2Secret, created.Secret)
 	assert.Equal(t, map[string]any{"active": false}, got)
 
@@ -125,11 +125,11 @@ func TestIntrospectionThroughBoot(t *testing.T) {
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	require.NoError(t, resp.Body.Close())
-	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode, "pm P12: not a userinfo token")
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode, "not a userinfo token")
 	status, _, _ = postForm(t, ts.URL+"/p/acme-web/oauth2/revoke", url.Values{"token": {created.Secret}}, "Authorization", clientAuth)
 	assert.Equal(t, http.StatusOK, status)
 	_, _, got = introspect(s1.PublicID, s1Secret, created.Secret)
-	assert.Equal(t, true, got["active"], "pm P12: /revoke leaves a personal token alone")
+	assert.Equal(t, true, got["active"], "/revoke leaves a personal token alone")
 
 	require.NoError(t, svcs.PersonalTokens.Revoke(ctx, pp, signed.Account.EndUserID, created.Token.PublicID))
 	_, _, got = introspect(s1.PublicID, s1Secret, created.Secret)
@@ -142,7 +142,7 @@ func TestIntrospectionThroughBoot(t *testing.T) {
 	_, err = svcs.ResourceServers.SetTrust(ctx, sys.ID, p.ID, s1.PublicID, false, uuid.New())
 	require.NoError(t, err)
 	_, _, got = introspect(s1.PublicID, s1Secret, live.Secret)
-	assert.Equal(t, map[string]any{"active": false}, got, "R-1: a server no longer admissible takes no personal tokens")
+	assert.Equal(t, map[string]any{"active": false}, got, "a server no longer admissible takes no personal tokens")
 	_, err = svcs.PersonalTokens.Create(ctx, pp, pat.CreateRequest{
 		EndUserID: signed.Account.EndUserID, Name: "CLI 3", ServerPublicID: s1.PublicID, Scopes: []string{"read"}, Expiry: pat.Expiry30Days,
 	})

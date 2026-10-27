@@ -29,7 +29,7 @@ describe('project settings pages', () => {
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-describe('project settings markup (M1 review)', () => {
+describe('project settings markup', () => {
   it.each(pages)('$name tells people who cannot edit why', ({ source }) => {
     expect(source).toContain('<ProjectReadOnlyNote v-if="!canEdit"');
   });
@@ -98,20 +98,20 @@ describe('project settings markup (M1 review)', () => {
 });
 
 describe('m1.5 design re-check', () => {
-  it('hides New project and Edit from people who cannot edit projects (O1)', () => {
+  it('hides New project and Edit from people who cannot edit projects', () => {
     const list = read('../../pages/o/[org]/projects/index.vue');
     expect(list).toContain('useCanEditProject');
     expect(list).toMatch(/<AppButton v-if="org && canEdit"[^>]*@click="ui\.openProjectCreate\(\)"/);
     expect(list).toMatch(/<button v-if="canEdit"[^>]*@click="edit\(project\)"/);
   });
 
-  it('puts the logo file input before its label as a peer, so keyboard focus shows on the label (O2)', () => {
+  it('puts the logo file input before its label as a peer, so keyboard focus shows on the label', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
     expect(branding).toMatch(/<input :id="ids\.logo"[^>]*type="file"[^>]*class="peer sr-only"[^>]*>\s*<label :for="ids\.logo" class="btn btn-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-base-content/);
     expect(branding).not.toContain('has-[:focus-visible]');
   });
 
-  it('puts General in a card on a max-w-2xl page with a plain primary Save (O6)', () => {
+  it('puts General in a card on a max-w-2xl page with a plain primary Save', () => {
     const general = pages.find(p => p.name === 'index')!.source;
     expect(general).toContain('<div v-if="project" class="max-w-2xl space-y-6">');
     expect(general).toMatch(/<section class="card border border-base-300 bg-base-100">\s*<div class="card-body gap-2">/);
@@ -123,14 +123,14 @@ describe('m1.5 design re-check', () => {
     expect(general).toContain('project.settings_general_subtitle');
   });
 
-  it('styles the read-only issuer labels alike (P-c) and hides the logo help when storage is off (P-f)', () => {
+  it('styles the read-only issuer labels alike and hides the logo help when storage is off', () => {
     const issuer = pages.find(p => p.name === 'issuer')!.source;
     expect(issuer).not.toContain('text-xs font-semibold');
     const branding = pages.find(p => p.name === 'branding')!.source;
     expect(branding).toMatch(/<p v-if="!storageOff" :id="ids\.logoHelp"/);
   });
 
-  it('says the logo saves on upload, and gives the storage-off next step (product M1.5 1, 6)', () => {
+  it('says the logo saves on upload, and gives the storage-off next step', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
     expect(branding).toContain('<SavedNote v-if="logoSaved" :label="t(\'branding.logo_updated\')" />');
     expect(branding).toContain('branding.logo_instant');
@@ -138,18 +138,18 @@ describe('m1.5 design re-check', () => {
     expect(branding).not.toContain('apperror.STO003');
   });
 
-  it('shows members a neutral line when no terms link is set (product M1.5 4)', () => {
+  it('shows members a neutral line when no terms link is set', () => {
     const legal = pages.find(p => p.name === 'legal')!.source;
     expect(legal).toContain('canEdit ? t(\'legal.no_terms\') : t(\'legal.no_terms_readonly\')');
   });
 
-  it('uses one empty-value dash in the read-only views (P-b)', () => {
+  it('uses one empty-value dash in the read-only views', () => {
     for (const { name, source } of pages) {
       expect(source, name).not.toContain('–');
     }
   });
 
-  it('lets issuer URLs wrap after /p/ (P-d) and calls the Overview link "Edit issuer" (P-e)', () => {
+  it('lets issuer URLs wrap after /p/ and calls the Overview link "Edit issuer"', () => {
     const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
     expect(overview).toContain('issuer.edit');
     expect(overview).toContain('<UrlField');
@@ -232,7 +232,7 @@ describe('m2 design review contrast', () => {
   });
 });
 
-describe('sign-in methods page (M7)', () => {
+describe('sign-in methods page', () => {
   const page = () => read('../../pages/o/[org]/projects/[project]/settings/sign-in.vue');
   const card = () => read('./signin/GoogleUpstreamCard.vue');
 
@@ -264,7 +264,7 @@ describe('sign-in methods page (M7)', () => {
     expect(card()).not.toContain('role="alert"');
   });
 
-  it('puts a refused switch back to the server value and shows the email refusal in its own card (A4)', () => {
+  it('puts a refused switch back to the server value and shows the email refusal in its own card', () => {
     expect(page()).toMatch(/const wanted = input\.checked;\s+input\.checked = emailLink\.value;/);
     expect(card()).toMatch(/emit\('toggle', input\.checked\);\s+input\.checked = google\?\.enabled \?\? false;/);
     expect(page()).toContain('<ErrorText :error="emailError" />');
@@ -272,7 +272,7 @@ describe('sign-in methods page (M7)', () => {
     expect(page()).toContain('signin.email_locked_unlinked');
   });
 
-  it('keeps a locked toggle looking On: aria-disabled and a prevented click, never disabled (MF1)', () => {
+  it('keeps a locked toggle looking On: aria-disabled and a prevented click, never disabled', () => {
     for (const source of [page(), card()]) {
       expect(source).not.toMatch(/:disabled="busy \|\| (?:emailLocked|locked)"/);
       expect(source).toMatch(/@click="(?:emailLocked|locked) && \$event\.preventDefault\(\)"/);
@@ -280,7 +280,7 @@ describe('sign-in methods page (M7)', () => {
     }
   });
 
-  it('only suggests turning Google off when that is allowed (MF4)', () => {
+  it('only suggests turning Google off when that is allowed', () => {
     expect(card()).toMatch(/google\.enabled && !locked \? `\$\{labels\.removeLocked\} \$\{labels\.turnOffInstead\}` : labels\.removeLocked/);
     expect(read('./signin/labels.ts')).not.toContain('apperror.UPS004');
   });

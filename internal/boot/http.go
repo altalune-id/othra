@@ -193,10 +193,7 @@ func buildIssuerRoutes(
 		}
 	}
 	svcs.Keys.WithOnChange(resolver.Forget)
-	if svcs.ResourceServers != nil {
-		resolver.WithCIMD(svcs.ResourceServers)
-		svcs.ResourceServers.WithOnAdmissionChange(resolver.Forget)
-	}
+	svcs.ResourceServers.WithOnAdmissionChange(resolver.Forget)
 	svcs.Projects.WithOnIssuerChange(resolver.Forget)
 	if svcs.EndUsers == nil {
 		return []web.Registrar{issuers}, nil
@@ -241,7 +238,7 @@ func buildRoutes(cfg config.Config, svcs *Services, log *slog.Logger, unexpected
 			Orgs:         memberOrgs{orgs: svcs.Orgs},
 			OrgLinks:     memberOrgs{orgs: svcs.Orgs},
 			People:       memberPeople{users: svcs.Users},
-			SignIn:       svcs.Auth,
+			SignIn:       inviteSignIn{svcs.Auth},
 			Sessions:     sessions,
 			Consent:      consentData(cfg),
 			Methods:      []string{invite.MethodPassword},

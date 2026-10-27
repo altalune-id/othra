@@ -23,6 +23,7 @@ import (
 	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/consent"
 	"altalune.id/othra/internal/enduser"
+	"altalune.id/othra/internal/kernel"
 	"altalune.id/othra/internal/kernel/db"
 	"altalune.id/othra/internal/kernel/tenant"
 	"altalune.id/othra/internal/project"
@@ -72,7 +73,7 @@ func newAccountFixture(t *testing.T) (*signInFixture, *project.Project, string) 
 	return f, p, "/p/" + p.IssuerHandle
 }
 
-// M8 G2, A15, A19: account.v1 serves the signed-in end user on this browser; ending another session ends it and its grants together.
+// account.v1 serves the signed-in end user on this browser; ending another session ends it and its grants together.
 func TestAccount_ProfileAndSessions(t *testing.T) {
 	f, p, base := newAccountFixture(t)
 	phone := f.signInDevice(t, base, "ana@example.com")
@@ -107,7 +108,7 @@ func TestAccount_ProfileAndSessions(t *testing.T) {
 	family := f.seedFamily(t, p, phoneSession)
 	_, err = acc.EndSession(ctx, connect.NewRequest(&accountv1.EndSessionRequest{SessionId: phoneSession}))
 	require.NoError(t, err)
-	assert.Equal(t, "sign_out", f.familyReason(t, family), "A15: the session's grants end with it, in one unit of work")
+	assert.Equal(t, "sign_out", f.familyReason(t, family), "the session's grants end with it, in one unit of work")
 	_, err = f.account(phone, base).GetProfile(ctx, connect.NewRequest(&accountv1.GetProfileRequest{}))
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err), "ACC001: that browser is signed out")
 	_, err = acc.EndSession(ctx, connect.NewRequest(&accountv1.EndSessionRequest{SessionId: phoneSession}))
@@ -120,7 +121,7 @@ func TestAccount_ProfileAndSessions(t *testing.T) {
 	assert.Equal(t, apperror.CodeAccountSignedOut, appCode(t, err))
 }
 
-// R-5, P8: Disconnect deletes the app's consents and revokes its grants together; the app is then gone.
+// Disconnect deletes the app's consents and revokes its grants together; the app is then gone.
 func TestAccount_Disconnect(t *testing.T) {
 	f, p, base := newAccountFixture(t)
 	acc := f.account(f.signInDevice(t, base, "ana@example.com"), base)
@@ -152,13 +153,14 @@ func (g failingConsentGrants) RevokeClient(ctx context.Context, p consent.Projec
 	return false, errMidUnit
 }
 
-// A13, R-5: a failure after the consents are deleted and the grants revoked rolls both back; nothing changes.
+// a failure after the consents are deleted and the grants revoked rolls both back; nothing changes.
 func TestAccount_DisconnectRollsBackTogether(t *testing.T) {
 	f, p, base := newAccountFixture(t)
 	web, endUser, family := f.connectWeb(t, p, f.account(f.signInDevice(t, base, "ana@example.com"), base))
-	f.svcs.Consents.WithGrants(failingConsentGrants{consentGrants{grants: f.svcs.Grants}}, db.NewTransactor(f.pool))
+	consents := consent.NewService(consent.NewStore(f.pool, f.cfg.Postgres.Schema, f.cfg.Postgres.TablePrefix), db.NewTransactor(f.pool),
+		failingConsentGrants{consentGrants{grants: f.svcs.Grants}}, apperror.NewReporter(nil, false).Unexpected)
 
-	err := f.svcs.Consents.Disconnect(t.Context(), consent.Project{OrgID: p.OrgID, ID: p.ID, PublicID: p.PublicID},
+	err := consents.Disconnect(t.Context(), consent.Project{OrgID: p.OrgID, ID: p.ID, PublicID: p.PublicID},
 		consent.Connection{EndUserID: endUser, ClientID: web.ID, ClientOAuthID: web.PublicID})
 	require.Error(t, err)
 	assert.Empty(t, f.familyReason(t, family), "the grant is still live")
@@ -174,7 +176,7 @@ func (g failingEndUserGrants) RevokeUserSession(ctx context.Context, p enduser.P
 	return errMidUnit
 }
 
-// A15: ending a session and revoking its grants is one unit of work; a failure after both rolls both back.
+// ending a session and revoking its grants is one unit of work; a failure after both rolls both back.
 func TestAccount_EndSessionRollsBackTogether(t *testing.T) {
 	f, p, base := newAccountFixture(t)
 	acc := f.account(f.signInDevice(t, base, "ana@example.com"), base)
@@ -182,11 +184,12 @@ func TestAccount_EndSessionRollsBackTogether(t *testing.T) {
 	require.NoError(t, err)
 	here := prof.Msg.GetCurrentSessionId()
 	family := f.seedFamily(t, p, here)
-	f.svcs.EndUsers.WithGrants(failingEndUserGrants{endUserGrants{grants: f.svcs.Grants}})
+	k := kernel.Kernel{Pool: f.pool, Reporter: apperror.NewReporter(nil, false)}
+	endUsers := buildEndUsers(k, f.cfg, db.NewTransactor(f.pool), f.svcs.MailQueue, failingEndUserGrants{endUserGrants{grants: f.svcs.Grants}}, f.svcs.Projects)
 
 	var endUser uuid.UUID
 	require.NoError(t, f.db.QueryRowContext(t.Context(), `SELECT id FROM end_users WHERE public_id = $1`, prof.Msg.GetProfile().GetId()).Scan(&endUser))
-	err = f.svcs.EndUsers.EndUserSession(t.Context(), enduser.Project{OrgID: p.OrgID, ID: p.ID, PublicID: p.PublicID}, endUser, here)
+	err = endUsers.EndUserSession(t.Context(), enduser.Project{OrgID: p.OrgID, ID: p.ID, PublicID: p.PublicID}, endUser, here)
 	require.Error(t, err)
 	assert.Empty(t, f.familyReason(t, family), "the grant is still live")
 	_, err = acc.GetProfile(t.Context(), connect.NewRequest(&accountv1.GetProfileRequest{}))
@@ -216,7 +219,7 @@ func (f *signInFixture) consents(t *testing.T, endUser uuid.UUID) int {
 	return n
 }
 
-// SECURITY: G2, R4, A19: POST JSON from this origin only, never GET; and no account.v1 on the admin /api.
+// SECURITY: POST JSON from this origin only, never GET; and no account.v1 on the admin /api.
 func TestAccount_HTTPGuards(t *testing.T) {
 	f, _, base := newAccountFixture(t)
 	laptop := f.signInDevice(t, base, "ana@example.com")

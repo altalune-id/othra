@@ -22,7 +22,7 @@ func (f *pgFixture) signIn(t *testing.T, p enduser.Project, email, agent string)
 	return r
 }
 
-// M8 P9: an end user's live sessions on every browser; ending one checks it is theirs and live.
+// an end user's live sessions on every browser; ending one checks it is theirs and live.
 func TestPostgres_SessionsAndEndingThem(t *testing.T) {
 	f := newPGFixture(t)
 	ctx := t.Context()

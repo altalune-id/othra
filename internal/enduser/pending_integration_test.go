@@ -56,7 +56,7 @@ type rowSwitch struct{ pool db.Pool }
 func (s rowSwitch) LockEmailLink(ctx context.Context, projectID uuid.UUID) (bool, error) {
 	var on bool
 	err := db.Write(ctx, s.pool, func(q qrm.DB) error {
-		rows, err := q.QueryContext(ctx, `SELECT signin_email_link FROM projects WHERE id = $1 FOR UPDATE`, projectID)
+		rows, err := q.QueryContext(ctx, `SELECT signin_email_link FROM projects WHERE id = $1 FOR NO KEY UPDATE`, projectID)
 		if err != nil {
 			return err
 		}
@@ -71,10 +71,9 @@ func (s rowSwitch) LockEmailLink(ctx context.Context, projectID uuid.UUID) (bool
 	return on, err
 }
 
-// R-2: the switch is read in the redeem's unit of work, and a refused sign-up rolls back, leaving the link unused.
+// the switch is read in the redeem's unit of work, and a refused sign-up rolls back, leaving the link unused.
 func TestPostgres_RedeemRereadsTheEmailLinkSwitch(t *testing.T) {
 	f := newPGFixture(t)
-	f.svc.WithSignInSwitch(rowSwitch{pool: f.pool})
 	p := f.project(t)
 	known, _ := f.link(t, p, "ada@example.com")
 	_, err := f.svc.Redeem(t.Context(), p, enduser.RedeemRequest{Token: known})
@@ -94,7 +93,7 @@ func TestPostgres_RedeemRereadsTheEmailLinkSwitch(t *testing.T) {
 	require.NoError(t, err, "an existing end user still signs in")
 }
 
-// BL-1: FillName writes only an empty name.
+// FillName writes only an empty name.
 func TestPostgres_FillNameOnlyWhenEmpty(t *testing.T) {
 	f := newPGFixture(t)
 	p := f.project(t)

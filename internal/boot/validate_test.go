@@ -50,7 +50,7 @@ func sameRefusalCases() []sameRefusalCase {
 }
 
 func TestInvalidRequest_SameRefusalOverAPIAndMCP(t *testing.T) {
-	svcs := &Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, nil).WithCreation(true)}
+	svcs := &Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil).WithCreation(true)}
 	var err error
 	svcs.Validator, err = controlplane.NewValidator()
 	require.NoError(t, err)

@@ -51,7 +51,7 @@ beforeEach(() => {
 });
 
 describe('console shell', () => {
-  it('sets <html lang> from the locale (M8 design 1)', async () => {
+  it('sets <html lang> from the locale', async () => {
     await mountPage(App, { global: { stubs: { NuxtLayout: { template: '<slot />' }, NuxtPage: true } } });
     const head = useHead.mock.calls[0]![0] as { htmlAttrs: { lang: { value: string } } };
     expect(head.htmlAttrs.lang.value).toBe('en-US');
@@ -86,7 +86,7 @@ describe('end users list', () => {
     expect(w.text()).not.toContain('endusers.empty');
   });
 
-  it('keeps the empty message on the shown search while the box changes (N8), with daisyUI 5 row hover', async () => {
+  it('keeps the empty message on the shown search while the box changes, with daisyUI 5 row hover', async () => {
     endUsers.listEndUsers!.mockResolvedValueOnce({ endUsers: [], next: '' });
     const w = await mountPage(EndUserList);
     expect(w.text()).toContain('endusers.empty');
@@ -111,7 +111,7 @@ describe('end user detail', () => {
     expect(w.text()).toContain('endusers.methods_help');
   });
 
-  it('hides every section under a load error and offers Retry (P1-3)', async () => {
+  it('hides every section under a load error and offers Retry', async () => {
     setKnownKeys('apperror.GEN900');
     endUsers.getEndUser!.mockRejectedValueOnce(connectError('GEN900'));
     const w = await mountPage(EndUserDetail);
@@ -140,7 +140,7 @@ describe('end user detail', () => {
     }
   });
 
-  it('revokes a token behind a confirm and dates the revoke at once (N1)', async () => {
+  it('revokes a token behind a confirm and dates the revoke at once', async () => {
     const w = await mountPage(EndUserDetail, { attachTo: document.body });
     await w.get('[data-testid="end-user-tokens"] button').trigger('click');
     const dialog = [...document.querySelectorAll('dialog')].find(d => d.open)!;

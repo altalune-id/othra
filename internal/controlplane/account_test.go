@@ -117,7 +117,7 @@ func signedIn() session.EndUser {
 	}
 }
 
-// M8 G2: the plane serves the browser's active account, with the tenant scope and the sign-out form's token.
+// the plane serves the browser's active account, with the tenant scope and the sign-out form's token.
 func TestAccountPlane_ServesTheSignedInEndUser(t *testing.T) {
 	base := newPlane(t, &fakeResolver{eu: signedIn()}, fakeProfile{})
 	c := accountv1connect.NewAccountServiceClient(http.DefaultClient, base+"/app/p/acme/api")
@@ -174,7 +174,7 @@ func TestAccountPlane_HTTPGuards(t *testing.T) {
 	status, _ = do(http.MethodPost, "text/plain")
 	assert.Equal(t, http.StatusUnsupportedMediaType, status, "a simple-request body is refused")
 	status, _ = do(http.MethodPost, "application/json", "Sec-Fetch-Site", "cross-site")
-	assert.Equal(t, http.StatusForbidden, status, "R4")
+	assert.Equal(t, http.StatusForbidden, status, "a cross-origin call is refused")
 
 	unknown := newPlane(t, &fakeResolver{answered: true}, fakeProfile{}) + "/app/p/nope/api/account.v1.AccountService/GetProfile"
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, unknown, strings.NewReader("{}"))
@@ -200,7 +200,7 @@ type fakeRequest struct {
 
 func (r fakeRequest) Spec() connect.Spec { return r.spec }
 
-// SECURITY: G2: deny by default, and nothing runs without an end user.
+// SECURITY: deny by default, and nothing runs without an end user.
 func TestEndUserGate(t *testing.T) {
 	ok := func(context.Context, connect.AnyRequest) (connect.AnyResponse, error) { return nil, nil }
 	now := time.Now()
@@ -217,7 +217,7 @@ func TestEndUserGate(t *testing.T) {
 	eu := signedIn()
 	eu.AuthTime = now.Add(-permission.RecentSignIn - time.Second)
 	_, err = gate(session.EndUserInto(context.Background(), eu), create)
-	assert.True(t, pat.IsReauthRequiredError(err), "G5: a stale sign-in can't create a token (ACC009)")
+	assert.True(t, pat.IsReauthRequiredError(err), "a stale sign-in can't create a token (ACC009)")
 	_, err = gate(session.EndUserInto(context.Background(), eu), known)
 	assert.NoError(t, err, "a Self procedure needs no fresh sign-in")
 	eu.AuthTime = now.Add(-time.Minute)
@@ -230,7 +230,7 @@ func TestAccountSlices_Complete(t *testing.T) {
 	assert.True(t, fakeSlices(fakeProfile{}).Complete())
 }
 
-// R-3, G11, P13: the 11th token creation in an hour is refused for the user session; reads are never counted.
+// the 11th token creation in an hour is refused for the user session; reads are never counted.
 func TestAccountPlane_RateLimits(t *testing.T) {
 	eu := signedIn()
 	eu.AuthTime = time.Now()

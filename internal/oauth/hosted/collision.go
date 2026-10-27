@@ -20,7 +20,7 @@ const (
 	linkingPage     = page("/federation/linking")
 )
 
-// NOTE: N2, P8: the identity a magic link carries; SignUp marks a first Google sign-in whose inbox the link proves.
+// NOTE: the identity a magic link carries; SignUp marks a first Google sign-in whose inbox the link proves.
 type pendingLink struct {
 	federation.Identity
 	SignUp bool `json:"sign_up,omitempty"`
@@ -28,8 +28,8 @@ type pendingLink struct {
 
 const modeSignUp = "sign_up"
 
-// SECURITY: N2, ADR-0014: a collision never links; it mails the existing account a link that carries the identity, bound to this browser.
-// NOTE: the answer is a 303 to a GET page, so a reload never replays the spent upstream code (spec §1.3).
+// SECURITY: a collision never links; it mails the existing account a link that carries the identity, bound to this browser.
+// NOTE: the answer is a 303 to a GET page, so a reload never replays the spent upstream code.
 func (h *Web) collision(w http.ResponseWriter, r *http.Request, s *site, cerr *federation.CollisionError, returnTo string) {
 	if s.issuer.SignInEmailLink && !h.sendPending(w, r, s, cerr.Email, returnTo, &pendingLink{Identity: cerr.Identity}) {
 		return
@@ -37,7 +37,7 @@ func (h *Web) collision(w http.ResponseWriter, r *http.Request, s *site, cerr *f
 	h.toLinking(w, r, s, cerr.Email, "", returnTo)
 }
 
-// SECURITY: P8 = A: an unproven first sign-in creates nobody; the link proves the inbox, even with the email link off, on this browser.
+// SECURITY: an unproven first sign-in creates nobody; the link proves the inbox, even with the email link off, on this browser.
 func (h *Web) unproven(w http.ResponseWriter, r *http.Request, s *site, uerr *federation.UnprovenEmailError, returnTo string) {
 	if !h.sendPending(w, r, s, uerr.Email, returnTo, &pendingLink{Identity: uerr.Identity, SignUp: true}) {
 		return
@@ -78,7 +78,7 @@ func (h *Web) linking(w http.ResponseWriter, r *http.Request, s *site) {
 
 func (s *site) verifyPath() string { return s.path + "/login/verify" }
 
-// SECURITY: N2: the binding names the link it was set for and is signed, so only the browser that hit the collision can link.
+// SECURITY: the binding names the link it was set for and is signed, so only the browser that hit the collision can link.
 func (c cookies) setBinding(w http.ResponseWriter, path, linkID string, ttl time.Duration) {
 	http.SetCookie(w, cookie(bindingCookie, path, session.Sign(c.key, bindingCookie+"="+linkID), int(ttl.Seconds())))
 }
@@ -96,7 +96,7 @@ func (c cookies) clearBinding(w http.ResponseWriter, path string) {
 	http.SetCookie(w, cookie(bindingCookie, path, "", -1))
 }
 
-// NOTE: N2: the pending identity of l when this browser holds its binding; another device redeems l as a plain sign-in.
+// NOTE: the pending identity of l when this browser holds its binding; another device redeems l as a plain sign-in.
 func (h *Web) pendingIdentity(r *http.Request, l LinkRef) (pendingLink, bool) {
 	var pend pendingLink
 	if h.fed == nil || l.Pending == nil || !h.cookies.bound(r, l.ID) || json.Unmarshal(l.Pending, &pend) != nil {
@@ -105,7 +105,7 @@ func (h *Web) pendingIdentity(r *http.Request, l LinkRef) (pendingLink, bool) {
 	return pend, true
 }
 
-// SECURITY: P8: a sign-up link links only the end user its redeem creates; one that appeared meanwhile signs in plainly, never auto-linked.
+// SECURITY: a sign-up link links only the end user its redeem creates; one that appeared meanwhile signs in plainly, never auto-linked.
 func (h *Web) confirmPending(
 	r *http.Request, s *site,
 ) func(ctx context.Context, l LinkRef, endUserID uuid.UUID, created bool) (bool, error) {

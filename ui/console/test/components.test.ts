@@ -35,7 +35,7 @@ describe('org create modal copy', () => {
   });
 });
 
-describe('member list (O8)', () => {
+describe('member list', () => {
   it('collapses row actions into a menu below sm, named for the member', () => {
     const w = mount(MemberList, { props: { rows: [{ userId: 'F5pLm2XwQ8kRt3VnZ7bYc', email: 'budi@acme.test', name: 'Budi', role: 'member', initials: 'B', self: false, roles: ['member'], removable: true }] } });
     const menu = w.get('.dropdown');

@@ -21,7 +21,7 @@ func testUnexpected() apperror.UnexpectedFunc {
 
 func TestService_Create(t *testing.T) {
 	store := &fakes.ProjectStore{}
-	svc := project.NewService(store, testUnexpected())
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 
 	orgID := uuid.New()
 	p, err := svc.Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "acme", Name: "Acme", CreatedBy: uuid.New()})
@@ -32,13 +32,13 @@ func TestService_Create(t *testing.T) {
 }
 
 func TestService_Create_MissingOrg(t *testing.T) {
-	_, err := project.NewService(&fakes.ProjectStore{}, testUnexpected()).Create(context.Background(), project.CreateRequest{Name: "Acme"})
+	_, err := project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).Create(context.Background(), project.CreateRequest{Name: "Acme"})
 	_, ok := apperror.AsAppError(err)
 	assert.True(t, ok)
 }
 
 func TestService_Create_GeneratedSlug(t *testing.T) {
-	svc := project.NewService(&fakes.ProjectStore{}, testUnexpected())
+	svc := project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 
 	p, err := svc.Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Name: "Acme"})
 	require.NoError(t, err)
@@ -56,7 +56,7 @@ func TestService_Create_GeneratedSlugRetries(t *testing.T) {
 		return nil
 	}}
 
-	p, err := project.NewService(store, testUnexpected()).Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Name: "Acme"})
+	p, err := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Name: "Acme"})
 	require.NoError(t, err)
 	assert.Equal(t, 3, calls)
 	assert.NotEmpty(t, p.Slug)
@@ -65,13 +65,13 @@ func TestService_Create_GeneratedSlugRetries(t *testing.T) {
 func TestService_Create_GeneratedSlugExhausted(t *testing.T) {
 	store := &fakes.ProjectStore{SaveFn: func(*project.Project) error { return &project.AlreadyExistsError{} }}
 
-	_, err := project.NewService(store, testUnexpected()).Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Name: "Acme"})
+	_, err := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Name: "Acme"})
 	assert.True(t, project.IsAlreadyExistsError(err))
 }
 
 func TestService_Create_Validation(t *testing.T) {
 	store := &fakes.ProjectStore{}
-	svc := project.NewService(store, testUnexpected())
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 
 	_, err := svc.Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Slug: "ab", Name: "Acme"})
 	assert.True(t, project.IsInvalidSlugError(err))
@@ -80,7 +80,7 @@ func TestService_Create_Validation(t *testing.T) {
 
 func TestService_Create_StoreError(t *testing.T) {
 	store := &fakes.ProjectStore{Err: &project.AlreadyExistsError{Slug: "acme"}}
-	svc := project.NewService(store, testUnexpected())
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 
 	_, err := svc.Create(context.Background(), project.CreateRequest{OrgID: uuid.New(), Slug: "acme", Name: "Acme"})
 	assert.True(t, project.IsAlreadyExistsError(err))
@@ -90,7 +90,7 @@ func TestService_GetAndList(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "acme", "Acme", uuid.New())
 	require.NoError(t, err)
 	store := &fakes.ProjectStore{Project: p, Projects: []*project.Project{p}}
-	svc := project.NewService(store, testUnexpected())
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 
 	got, err := svc.Get(context.Background(), p.ID)
 	require.NoError(t, err)
@@ -106,7 +106,7 @@ func TestService_GetAndList(t *testing.T) {
 }
 
 func TestService_Get_StoreError(t *testing.T) {
-	svc := project.NewService(&fakes.ProjectStore{Err: errors.New("boom")}, testUnexpected())
+	svc := project.NewService(&fakes.ProjectStore{Err: errors.New("boom")}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 
 	_, err := svc.Get(context.Background(), uuid.New())
 	assert.Error(t, err)
@@ -117,7 +117,7 @@ func TestService_Get_StoreError(t *testing.T) {
 }
 
 func TestService_Unexpected(t *testing.T) {
-	svc := project.NewService(&fakes.ProjectStore{Err: errors.New("boom")}, testUnexpected())
+	svc := project.NewService(&fakes.ProjectStore{Err: errors.New("boom")}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 
 	_, err := svc.Get(context.Background(), uuid.New())
 	_, ok := apperror.AsAppError(err)
@@ -129,7 +129,7 @@ func TestService_Update(t *testing.T) {
 	require.NoError(t, err)
 	store := &fakes.ProjectStore{Project: p}
 
-	got, err := project.NewService(store, testUnexpected()).Update(context.Background(), p.ID, "Acme Two", "acme-two")
+	got, err := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).Update(context.Background(), p.ID, "Acme Two", "acme-two")
 	require.NoError(t, err)
 	assert.Equal(t, "Acme Two", got.Name)
 	assert.Equal(t, "acme-two", got.Slug)
@@ -139,7 +139,7 @@ func TestService_Update(t *testing.T) {
 func TestService_Update_NotFound(t *testing.T) {
 	store := &fakes.ProjectStore{Err: &project.NotFoundError{ID: "x"}}
 
-	_, err := project.NewService(store, testUnexpected()).Update(context.Background(), uuid.New(), "Acme Two", "acme-two")
+	_, err := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).Update(context.Background(), uuid.New(), "Acme Two", "acme-two")
 	assert.Error(t, err)
 }
 
@@ -147,7 +147,7 @@ func TestService_Update_InvalidName(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "acme", "Acme", uuid.New())
 	require.NoError(t, err)
 
-	_, err = project.NewService(&fakes.ProjectStore{Project: p}, testUnexpected()).Update(context.Background(), p.ID, "", "acme-two")
+	_, err = project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).Update(context.Background(), p.ID, "", "acme-two")
 	assert.True(t, project.IsInvalidNameError(err))
 }
 
@@ -155,20 +155,20 @@ func TestService_Update_InvalidSlug(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "acme", "Acme", uuid.New())
 	require.NoError(t, err)
 
-	_, err = project.NewService(&fakes.ProjectStore{Project: p}, testUnexpected()).Update(context.Background(), p.ID, "Acme", "Bad_Slug")
+	_, err = project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).Update(context.Background(), p.ID, "Acme", "Bad_Slug")
 	assert.True(t, project.IsInvalidSlugError(err))
 }
 
 func TestService_ByPublicID(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
 	require.NoError(t, err)
-	got, err := project.NewService(&fakes.ProjectStore{Project: p}, testUnexpected()).ByPublicID(context.Background(), p.PublicID)
+	got, err := project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).ByPublicID(context.Background(), p.PublicID)
 	require.NoError(t, err)
 	assert.Same(t, p, got)
 
-	_, err = project.NewService(&fakes.ProjectStore{Project: p}, testUnexpected()).ByPublicID(context.Background(), "nope")
+	_, err = project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).ByPublicID(context.Background(), "nope")
 	assert.True(t, project.IsNotFoundError(err))
-	_, err = project.NewService(&fakes.ProjectStore{Err: errors.New("down")}, testUnexpected()).ByPublicID(context.Background(), p.PublicID)
+	_, err = project.NewService(&fakes.ProjectStore{Err: errors.New("down")}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).ByPublicID(context.Background(), p.PublicID)
 	_, isApp := apperror.AsAppError(err)
 	assert.True(t, isApp)
 }
@@ -185,7 +185,7 @@ func (o orgSlugs) Slug(_ context.Context, id uuid.UUID) (string, error) {
 func TestService_Create_DefaultIssuerHandle(t *testing.T) {
 	orgID := uuid.New()
 	store := &fakes.ProjectStore{}
-	svc := project.NewService(store, testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "acme"}).WithIssuerBase("https://id.example.com")
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "https://id.example.com", testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "acme"})
 	p, err := svc.Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "web", Name: "Web"})
 	require.NoError(t, err)
 	assert.Equal(t, "acme-web", p.IssuerHandle)
@@ -205,7 +205,7 @@ func TestService_Create_IssuerHandleCollisions(t *testing.T) {
 		}
 		return nil
 	}}
-	svc := project.NewService(store, testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "acme"})
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "acme"})
 	p, err := svc.Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "web", Name: "Web"})
 	require.NoError(t, err)
 	assert.Equal(t, 1, taken)
@@ -217,7 +217,7 @@ func TestService_Create_IssuerHandleCollisions(t *testing.T) {
 	assert.True(t, project.IsInvalidIssuerHandleError(err))
 
 	reserved := &fakes.ProjectStore{}
-	well, err := project.NewService(reserved, testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "well"}).
+	well, err := project.NewService(reserved, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOrgSlugs(orgSlugs{orgID: "well"}).
 		Create(context.Background(), project.CreateRequest{OrgID: orgID, Slug: "known", Name: "Known"})
 	require.NoError(t, err)
 	assert.Regexp(t, `^well-known-[a-z0-9]{4}$`, well.IssuerHandle, "a reserved default is suffixed")
@@ -228,7 +228,7 @@ func TestService_UpdateIssuerHandle(t *testing.T) {
 	require.NoError(t, err)
 	store := &fakes.ProjectStore{Project: p}
 	var changed []uuid.UUID
-	svc := project.NewService(store, testUnexpected()).WithOnIssuerChange(func(id uuid.UUID) { changed = append(changed, id) })
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOnIssuerChange(func(id uuid.UUID) { changed = append(changed, id) })
 	same, err := svc.UpdateIssuerHandle(context.Background(), p.ID, p.IssuerHandle)
 	require.NoError(t, err)
 	assert.Equal(t, p.IssuerHandle, same.IssuerHandle)
@@ -237,7 +237,7 @@ func TestService_UpdateIssuerHandle(t *testing.T) {
 	got, err := svc.UpdateIssuerHandle(context.Background(), p.ID, " acme-shop ")
 	require.NoError(t, err)
 	assert.Equal(t, "acme-shop", got.IssuerHandle)
-	assert.Equal(t, []uuid.UUID{p.ID}, changed, "R-10: a handle change drops the issuer cache")
+	assert.Equal(t, []uuid.UUID{p.ID}, changed, "a handle change drops the issuer cache")
 
 	store.HandleSetErr = &project.IssuerHandleTakenError{Handle: "acme-taken"}
 	_, err = svc.UpdateIssuerHandle(context.Background(), p.ID, "acme-taken")
@@ -257,7 +257,7 @@ func TestService_Settings(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
 	require.NoError(t, err)
 	store := &fakes.ProjectStore{Project: p}
-	svc := project.NewService(store, testUnexpected())
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 	ctx := context.Background()
 
 	_, err = svc.UpdateBranding(ctx, p.ID, "", "red", "")
@@ -290,7 +290,7 @@ func logoService(t *testing.T) (*project.Service, *fakes.ProjectStore, *fakes.Fi
 	require.NoError(t, err)
 	store := &fakes.ProjectStore{Project: p}
 	files := &fakes.FileStorage{Files: map[string]*storage.File{}}
-	return project.NewService(store, testUnexpected()).WithStorage(files, fakes.Transactor{}), store, files, p
+	return project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithStorage(files), store, files, p
 }
 
 func TestService_CreateLogoUpload(t *testing.T) {
@@ -380,7 +380,7 @@ func TestService_DeleteLogo(t *testing.T) {
 func TestService_LogoWithoutStorage(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
 	require.NoError(t, err)
-	svc := project.NewService(&fakes.ProjectStore{Project: p}, testUnexpected())
+	svc := project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
 	ctx := context.Background()
 
 	_, _, err = svc.CreateLogoUpload(ctx, p.ID, "image/png", 1)
@@ -425,13 +425,13 @@ func TestService_LogoStoreFailures(t *testing.T) {
 	require.Error(t, err)
 }
 
-// qa F2: a terms change drops the issuer cache at once, so the hosted pages never gate on the old version.
+// a terms change drops the issuer cache at once, so the hosted pages never gate on the old version.
 func TestService_TermsChangeDropsTheIssuerCache(t *testing.T) {
 	p, err := project.NewProject(uuid.New(), "web", "Web", uuid.Nil)
 	require.NoError(t, err)
 	store := &fakes.ProjectStore{Project: p}
 	var changed []uuid.UUID
-	svc := project.NewService(store, testUnexpected()).WithOnIssuerChange(func(id uuid.UUID) { changed = append(changed, id) })
+	svc := project.NewService(store, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected()).WithOnIssuerChange(func(id uuid.UUID) { changed = append(changed, id) })
 	ctx := context.Background()
 
 	_, err = svc.UpdateTerms(ctx, p.ID, "https://acme.example/terms", "")

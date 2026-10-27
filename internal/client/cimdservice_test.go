@@ -65,16 +65,17 @@ func (h *harness) withMetadata(f *fakeFetcher, limit bool) *fakeLinks {
 	if limit {
 		limits.Limiter = memory.New(1000)
 	}
-	h.svc.WithMetadata(f, links, client.MetadataConfig{
+	h.build(f, client.MetadataConfig{
 		Cache: client.MetadataCache{Min: 5 * time.Minute, Max: 24 * time.Hour, Default: time.Hour}, IssuerHost: "othra.example.com",
-	}).WithFetchLimits(limits).WithOnMetadataChange(func(_ context.Context, _, _, id uuid.UUID) error {
+	})
+	h.svc.WithLinks(links).WithFetchLimits(limits).WithOnMetadataChange(func(_ context.Context, _, _, id uuid.UUID) error {
 		links.changed = append(links.changed, id)
 		return nil
 	})
 	return links
 }
 
-// A16, M9, M11: a document is fetched once per max-age into a native, public, auth none, require-consent shadow client.
+// a document is fetched once per max-age into a native, public, auth none, require-consent shadow client.
 func TestAdmit_ShadowClient(t *testing.T) {
 	h := newHarness(t)
 	f := &fakeFetcher{body: claudeDoc("Claude Code"), cache: "max-age=600"}
@@ -108,7 +109,7 @@ func TestAdmit_ShadowClient(t *testing.T) {
 	assert.Equal(t, c.ID, got.ID)
 	list, err := h.svc.List(ctx, h.org, h.project)
 	require.NoError(t, err)
-	assert.Empty(t, list, "E10: shadows aren't listed")
+	assert.Empty(t, list, "shadows aren't listed")
 
 	h.now = h.now.Add(2 * time.Minute)
 	f.body = claudeDoc("Claude Code 2")
@@ -117,17 +118,27 @@ func TestAdmit_ShadowClient(t *testing.T) {
 	assert.Equal(t, 2, f.calls)
 	assert.Equal(t, c.PublicID, refreshed.PublicID, "the same shadow row")
 	assert.Equal(t, "Claude Code 2", refreshed.Name)
-	assert.Equal(t, []uuid.UUID{c.ID}, links.changed, "M10: a changed name drops remembered consent")
+	assert.Equal(t, []uuid.UUID{c.ID}, links.changed, "a changed name drops remembered consent")
 
 	h.now = h.now.Add(time.Hour)
 	f.err = errors.New("network down")
 	_, err = h.svc.Admit(ctx, h.org, h.project, req)
-	assert.Equal(t, apperror.CodeAuthorizeClientMetadataUnusable, codeOf(err), "M9: an expired document is never used stale")
+	assert.Equal(t, apperror.CodeAuthorizeClientMetadataUnusable, codeOf(err), "an expired document is never used stale")
 	assert.Contains(t, h.logs.String(), `"reason":"fetch"`)
 	assert.NotContains(t, h.logs.String(), "network down")
 }
 
-// M1, M6: a bad client_id URL is not admitted and never fetched; a bad document is unusable.
+// A Service whose resource server links were never set refuses to admit instead of panicking.
+func TestAdmit_WithoutLinks(t *testing.T) {
+	h := newHarness(t)
+	f := &fakeFetcher{body: claudeDoc("Claude Code")}
+	h.build(f, client.MetadataConfig{IssuerHost: "othra.example.com"})
+	_, err := h.svc.Admit(context.Background(), h.org, h.project, client.AdmitRequest{URL: claudeURL, ResourceServerID: uuid.New()})
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+	assert.Zero(t, f.calls, "nothing is fetched")
+}
+
+// a bad client_id URL is not admitted and never fetched; a bad document is unusable.
 func TestAdmit_Refusals(t *testing.T) {
 	h := newHarness(t)
 	f := &fakeFetcher{body: `{"client_id":"https://claude.ai/other","client_name":"C","redirect_uris":["http://localhost/cb"]}`}
@@ -145,7 +156,7 @@ func TestAdmit_Refusals(t *testing.T) {
 	assert.Equal(t, "claude.ai", host)
 }
 
-// A19: past the per-URL limit the fetch is refused as rate limited.
+// past the per-URL limit the fetch is refused as rate limited.
 func TestAdmit_Throttled(t *testing.T) {
 	h := newHarness(t)
 	f := &fakeFetcher{err: errors.New("down")}
@@ -158,11 +169,11 @@ func TestAdmit_Throttled(t *testing.T) {
 	assert.Equal(t, client.MetadataFetchURLRule().Burst, f.calls)
 
 	_, err := h.svc.Admit(context.Background(), h.org, uuid.New(), client.AdmitRequest{URL: claudeURL})
-	assert.False(t, layout.IsRateLimitedError(err), "R-1: another project keeps its own budget: %v", err)
+	assert.False(t, layout.IsRateLimitedError(err), "another project keeps its own budget: %v", err)
 	assert.Equal(t, client.MetadataFetchURLRule().Burst+1, f.calls)
 }
 
-// R-1: a global per-host ceiling stays as a backstop across projects.
+// a global per-host ceiling stays as a backstop across projects.
 func TestAdmit_HostCeiling(t *testing.T) {
 	h := newHarness(t)
 	f := &fakeFetcher{err: errors.New("down")}
@@ -175,7 +186,7 @@ func TestAdmit_HostCeiling(t *testing.T) {
 	assert.Equal(t, client.MetadataFetchHostCeilingRule().Burst, f.calls)
 }
 
-// E10, CLT008: a shadow client is changed only by its document; deleting it is the revoke.
+// CLT008: a shadow client is changed only by its document; deleting it is the revoke.
 func TestShadowClient_ReadOnly(t *testing.T) {
 	h := newHarness(t)
 	h.withMetadata(&fakeFetcher{body: claudeDoc("Claude Code")}, false)
@@ -217,7 +228,7 @@ func (e eachProject) Each(ctx context.Context, fn func(ctx context.Context, orgI
 	return e.err
 }
 
-// M11, ADR-0021 D2: a shadow unused for ShadowKeep past its document's expiry is swept by the hourly job.
+// a shadow unused for ShadowKeep past its document's expiry is swept by the hourly job.
 func TestPruneShadows(t *testing.T) {
 	h := newHarness(t)
 	h.withMetadata(&fakeFetcher{body: claudeDoc("Claude Code"), cache: "max-age=3600"}, false)

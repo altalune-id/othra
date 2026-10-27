@@ -219,7 +219,7 @@ describe('useSignIn', () => {
     expect(useProjectDetailStore().get(id)?.name).toBe('Acme App');
   });
 
-  it('locks the email link with the reason the server refused it for (A4)', async () => {
+  it('locks the email link with the reason the server refused it for', async () => {
     setKnownKeys('apperror.PRJ010');
     const s = useSignIn(id);
     await s.load();
@@ -249,7 +249,7 @@ describe('useSignIn', () => {
     expect(s.emailLink.value).toBe(false);
   });
 
-  it('shows only the lock line for an unlinked refusal, and clears the email error after any later save (MF3)', async () => {
+  it('shows only the lock line for an unlinked refusal, and clears the email error after any later save', async () => {
     setKnownKeys('apperror.PRJ010');
     const s = useSignIn(id);
     await s.load();

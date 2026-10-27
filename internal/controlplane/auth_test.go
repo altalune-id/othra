@@ -45,8 +45,8 @@ func authServer(t *testing.T, p session.Principal) string {
 func authServerWith(t *testing.T, refs *fakes.PublicIDs, p session.Principal) string {
 	t.Helper()
 	srv := New(Services{
-		Orgs:     org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, nil).WithCreation(true),
-		Projects: project.NewService(&fakes.ProjectStore{}, nil),
+		Orgs:     org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil).WithCreation(true),
+		Projects: project.NewService(&fakes.ProjectStore{}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", nil),
 		Users:    user.NewService(fakes.NewUserStore(), nil),
 		Refs:     refs,
 	}, nil, Options{Authn: authn.InterceptorOptions{

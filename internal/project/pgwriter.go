@@ -137,7 +137,7 @@ func timeExpr(t *time.Time) postgres.TimestampzExpression {
 // LockSignIn locks the project id's row until the unit of work ends and returns its email-link switch.
 func (s *postgresStore) LockSignIn(ctx context.Context, id uuid.UUID) (bool, error) {
 	t := s.projects
-	stmt := postgres.SELECT(t.SignInEmailLink).FROM(t).WHERE(t.ID.EQ(postgres.UUID(id))).FOR(postgres.UPDATE())
+	stmt := postgres.SELECT(t.SignInEmailLink).FROM(t).WHERE(t.ID.EQ(postgres.UUID(id))).FOR(postgres.NO_KEY_UPDATE())
 	var row struct {
 		EmailLink bool `alias:"projects.signin_email_link"`
 	}

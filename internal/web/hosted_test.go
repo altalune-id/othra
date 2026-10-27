@@ -58,7 +58,7 @@ func hostedServer(basePath string) http.Handler {
 	})
 }
 
-// SECURITY: O5, an admin cookie on a hosted page never meets the admin session or the welcome gate.
+// SECURITY: an admin cookie on a hosted page never meets the admin session or the welcome gate.
 func TestHostedPages_NoAdminSessionOrWelcomeGate(t *testing.T) {
 	for _, basePath := range []string{"", "/auth"} {
 		srv := hostedServer(basePath)
@@ -78,7 +78,7 @@ func TestHostedPages_NoAdminSessionOrWelcomeGate(t *testing.T) {
 	}
 }
 
-// SECURITY: S12, hosted pages are never cached, send no Referer, refuse framing, and load only this origin, the storage images and their nonce style.
+// SECURITY: hosted pages are never cached, send no Referer, refuse framing, and load only this origin, the storage images and their nonce style.
 func TestHostedPages_Headers(t *testing.T) {
 	rec := get(t, hostedServer("/auth"), "/auth/p/acme/login")
 	require.Equal(t, http.StatusOK, rec.Code)
@@ -103,7 +103,7 @@ func TestHostedPages_Locale(t *testing.T) {
 	assert.Equal(t, "en-US", get(t, hostedServer(""), "/p/acme/login").Header().Get("X-Locale"))
 }
 
-// SECURITY: D3, a cross-origin form post to a hosted page is refused before its handler.
+// SECURITY: a cross-origin form post to a hosted page is refused before its handler.
 func TestHostedPages_CrossOriginPostIsRefused(t *testing.T) {
 	srv := hostedServer("")
 	post := func(site string) int {

@@ -7,7 +7,7 @@ Use this when a domain that already exists needs a new use case: create, change,
 - [ ] **Where does the rule live?** An invariant on one aggregate goes on the aggregate (`Project.Update`, `project.NewProject`), not in the service. The service loads, calls the verb, saves.
 - [ ] **Inputs.** UUIDs only (`orgID`, `projectID`, `id`). Public ids are resolved at the edge ([public-ids.md](public-ids.md)). More than two or three fields → a `<Verb>Request` struct, like `project.CreateRequest`.
 - [ ] **Writes.** One row → call the store. More than one row, or a row plus an event or a mail → one unit of work through `s.uow.RunInTx`.
-- [ ] **Other domains.** Need something from another domain? Add a port in `ports.go` and a `With<Port>` option; boot wires it.
+- [ ] **Other domains.** Need something from another domain? Add a port in `ports.go` and take it as a `NewService` argument, so boot fails to compile without it; a `With…` setter is only for an optional setting or an edge that closes a constructor cycle.
 - [ ] **Failures.** List the expected failures. Each is a typed error the aggregate or store returns, plus an error code ([error-code.md](error-code.md)). Everything else is unexpected.
 - [ ] **Callers.** Which surface calls it? A signed-in surface calls it from the domain's `controlplane.go`, never directly ([rpc.md](rpc.md)).
 
@@ -35,7 +35,7 @@ Use this when a domain that already exists needs a new use case: create, change,
 2. **Failing test first** in `internal/<domain>/service_test.go` (package `<domain>_test`), over the fake store (plus `fakes.Transactor{}` when the service takes a unit of work):
 
    ```go
-   svc := project.NewService(&fakes.ProjectStore{Project: p}, testUnexpected())
+   svc := project.NewService(&fakes.ProjectStore{Project: p}, fakes.Transactor{}, fakes.NoMemberships{}, nil, "", testUnexpected())
    ```
 
 3. **The method** in `internal/<domain>/service.go`. A one-sentence doc comment. Load, mutate, save, and send every store error through `errOrReport`:
@@ -84,7 +84,7 @@ Use this when a domain that already exists needs a new use case: create, change,
 7. **New store verb?** [store-method.md](store-method.md). **New error?** [error-code.md](error-code.md), and add its `Is…` helper to `IsExpectedError` in `errors.go`.
 8. **Integration test** in `service_integration_test.go` (`//go:build integration`) when the method uses a unit of work: make the second write fail and assert nothing was saved.
 9. **Surface.** Call it from `controlplane.go` ([rpc.md](rpc.md)), `cli.go` via the RPC ([cli-command.md](cli-command.md)), or a worker ([worker.md](worker.md)).
-10. **Gates.** `make check`, `make comment-check`, `make test-integration`, `make cover` (at least 85% for the package). Update `internal/boot/README.md` if the wiring changed (a new port or `With…` option).
+10. **Gates.** `make check`, `make comment-check`, `make test-integration`, `make cover` (at least 85% for the package). Update `internal/boot/README.md` if the wiring changed (a new port or constructor argument).
 
 ## Review
 
@@ -103,8 +103,8 @@ Use this when a domain that already exists needs a new use case: create, change,
 - Load, mutate, save: [internal/project/service.go](../../internal/project/service.go) (`Service.Update`)
 - Create with request struct and generated slug: [internal/project/service.go](../../internal/project/service.go) (`Service.Create`, `createGenerated`)
 - Unit of work with an event: [internal/org/invite/service.go](../../internal/org/invite/service.go) (`Service.Create`, `issue`, `emit`)
-- Unit of work with a hook: [internal/org/service.go](../../internal/org/service.go) (`Service.Create`, `WithAfterCreate`)
-- Ports and options: [internal/org/member/service.go](../../internal/org/member/service.go) (`WithEffects`, `WithDirectory`)
+- Unit of work with a hook: [internal/org/service.go](../../internal/org/service.go) (`Service.Create`, the `afterCreate` constructor argument)
+- Ports as constructor arguments: [internal/consent/service.go](../../internal/consent/service.go) (`NewService` takes `Grants`); a setter only for an optional setting or an edge that closes a cycle: [internal/org/member/service.go](../../internal/org/member/service.go) (`WithEffects`)
 - Transactor: [internal/kernel/db/uow.go](../../internal/kernel/db/uow.go) (`Transactor`, `RunInTx`)
 - Project in org: [internal/kernel/tenant/project.go](../../internal/kernel/tenant/project.go) (`RequireProjectInOrg`)
 - Unexpected errors: [apperror/reporter.go](../../apperror/reporter.go) (`UnexpectedFunc`)

@@ -127,7 +127,7 @@ const (
 	SelfRecent = "self:recent"
 )
 
-// RecentSignIn is how fresh the sign-in behind a SelfRecent call must be (pm M8 P7).
+// RecentSignIn is how fresh the sign-in behind a SelfRecent call must be.
 const RecentSignIn = 10 * time.Minute
 
 // EndUserTable maps each end user's own procedure at /p/<handle>/api/ to Self or SelfRecent. SECURITY: Table never names them.
