@@ -89,7 +89,7 @@ func (s *InviteService) ListInvites(
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&invitev1.ListInvitesResponse{Invites: s.listToProto(pending), Drafts: s.listToProto(drafts)}), nil
+	return connect.NewResponse(&invitev1.ListInvitesResponse{Invites: s.listToProto(ctx, pending), Drafts: s.listToProto(ctx, drafts)}), nil
 }
 
 // DraftInvite records an assistant's suggestion to invite an email as a member; a person must confirm it.
@@ -197,10 +197,10 @@ func (s *InviteService) toProto(ctx context.Context, i *Invite) *invitev1.Invite
 	}
 }
 
-func (s *InviteService) listToProto(list []*Invite) []*invitev1.Invite {
+func (s *InviteService) listToProto(ctx context.Context, list []*Invite) []*invitev1.Invite {
 	out := make([]*invitev1.Invite, 0, len(list))
 	for _, i := range list {
-		out = append(out, s.toProto(context.Background(), i))
+		out = append(out, s.toProto(ctx, i))
 	}
 	return out
 }

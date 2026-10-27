@@ -146,12 +146,17 @@ func TestInviteService_Flow(t *testing.T) {
 	assert.Equal(t, "Acme Corp", draft.Msg.GetOrgName())
 	assert.Equal(t, "member", draft.Msg.GetInvite().GetRole())
 
+	f.asked = nil
 	list, err := c.ListInvites(ctx, connect.NewRequest(&invitev1.ListInvitesRequest{OrgId: orgPublicID}))
 	require.NoError(t, err)
 	assertNoUUID(t, list.Msg)
 	require.Len(t, list.Msg.GetInvites(), 1)
 	require.Len(t, list.Msg.GetDrafts(), 1)
 	assert.Equal(t, "Olga", list.Msg.GetInvites()[0].GetInvitedByName())
+	require.NotEmpty(t, f.asked)
+	for _, p := range f.asked {
+		assert.Equal(t, f.owner.UserID, p.UserID, "the inviter lookup runs on the request's context")
+	}
 
 	confirmed, err := c.ConfirmDraftInvite(ctx, connect.NewRequest(&invitev1.ConfirmDraftInviteRequest{OrgId: orgPublicID, InviteId: draft.Msg.GetInvite().GetId()}))
 	require.NoError(t, err)

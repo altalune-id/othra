@@ -173,8 +173,6 @@ func TestAccountPlane_HTTPGuards(t *testing.T) {
 	assert.Equal(t, http.MethodPost, header.Get("Allow"))
 	status, _ = do(http.MethodPost, "text/plain")
 	assert.Equal(t, http.StatusUnsupportedMediaType, status, "a simple-request body is refused")
-	status, _ = do(http.MethodPost, "application/json", "Sec-Fetch-Site", "cross-site")
-	assert.Equal(t, http.StatusForbidden, status, "a cross-origin call is refused")
 
 	unknown := newPlane(t, &fakeResolver{answered: true}, fakeProfile{}) + "/app/p/nope/api/account.v1.AccountService/GetProfile"
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, unknown, strings.NewReader("{}"))

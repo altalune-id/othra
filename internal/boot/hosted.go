@@ -41,7 +41,7 @@ func buildHosted(cfg config.Config, svcs *Services, kit layout.Kit, resolver *oi
 		CSRFMaxAge: cmp.Or(cfg.EndUsers.CSRF.MaxAge, defaultCSRFMaxAge),
 		LinkTTL:    linkTTL,
 		LogoURL:    svcs.Projects.LogoURL,
-	}).WithLimits(layout.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops})
+	}).WithLimits(authLimits(cfg, svcs))
 	if page, _ := buildPortal(cfg.HTTP.BasePath); page != nil {
 		web.WithPortal(page)
 	}

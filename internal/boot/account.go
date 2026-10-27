@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"altalune.id/othra/apperror"
+	"altalune.id/othra/config"
 	"altalune.id/othra/internal/client"
 	"altalune.id/othra/internal/consent"
 	"altalune.id/othra/internal/controlplane"
@@ -17,7 +18,6 @@ import (
 	"altalune.id/othra/internal/pat"
 	"altalune.id/othra/internal/resourceserver"
 	"altalune.id/othra/internal/web"
-	"altalune.id/othra/internal/web/layout"
 )
 
 // NOTE: account.v1 is one Connect service made of the domain slices; nil until every slice's service is built.
@@ -40,13 +40,13 @@ type accountRoutes struct {
 
 func (a accountRoutes) Register(mux *http.ServeMux) { mux.Handle(a.pattern, a.handler) }
 
-func buildAccountPlane(basePath string, svcs *Services, resolver *hosted.Web, unexpected apperror.UnexpectedFunc) web.Registrar {
+func buildAccountPlane(cfg config.Config, svcs *Services, resolver *hosted.Web, unexpected apperror.UnexpectedFunc) web.Registrar {
 	slices := accountSlices(svcs)
 	if !slices.Complete() {
 		return nil
 	}
-	plane := controlplane.NewAccountPlane(slices, resolver, svcs.Validator, layout.Limits{Limiter: svcs.AuthLimiter}, unexpected)
-	return accountRoutes{pattern: controlplane.Pattern(basePath), handler: plane.Handler(basePath)}
+	plane := controlplane.NewAccountPlane(slices, resolver, svcs.Validator, authLimits(cfg, svcs), unexpected)
+	return accountRoutes{pattern: controlplane.Pattern(cfg.HTTP.BasePath), handler: plane.Handler(cfg.HTTP.BasePath)}
 }
 
 type endUserGrants struct{ grants *grant.Service }

@@ -136,7 +136,7 @@ func (a *AccountPlane) Handler(basePath string) http.Handler {
 	)
 	inner := http.NewServeMux()
 	inner.Handle(path, connectHandler)
-	return http.NewCrossOriginProtection().Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		if r.Method != http.MethodPost {
 			w.Header().Set("Allow", http.MethodPost)
@@ -153,7 +153,7 @@ func (a *AccountPlane) Handler(basePath string) http.Handler {
 		}
 		prefix := basePath + "/p/" + r.PathValue("handle") + "/api"
 		http.StripPrefix(prefix, inner).ServeHTTP(w, r.WithContext(resolved(r.Context(), eu, err)))
-	}))
+	})
 }
 
 type resolvedKey struct{}

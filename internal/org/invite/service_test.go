@@ -14,6 +14,7 @@ import (
 	"altalune.id/othra/apperror"
 	"altalune.id/othra/internal/kernel/authz"
 	"altalune.id/othra/internal/kernel/events"
+	"altalune.id/othra/internal/kernel/session"
 	"altalune.id/othra/internal/legal"
 	"altalune.id/othra/internal/org/invite"
 	"altalune.id/othra/internal/org/member"
@@ -32,6 +33,7 @@ type fixture struct {
 	mail    *mailBox
 	events  *eventLog
 	people  people
+	asked   []session.Principal
 	users   *user.Service
 	svc     *invite.Service
 	org     uuid.UUID
@@ -60,7 +62,7 @@ func newFixture(t *testing.T) *fixture {
 	f.users = user.NewService(fakes.NewUserStore(), apperror.NewReporter(nil, false).Unexpected)
 	f.svc = invite.NewService(invite.Deps{
 		Store: f.store, Transactor: fakes.Transactor{}, Members: f.members, Mail: f.mail, Users: f.users, Terms: userTerms{users: f.users}, Events: f.events,
-		Orgs: orgNames{f.org: "Acme  Corp"}, People: directory{people: f.people, users: f.users}, From: "othra@example.com", BaseURL: baseURL,
+		Orgs: orgNames{f.org: "Acme  Corp"}, People: directory{people: f.people, users: f.users, asked: &f.asked}, From: "othra@example.com", BaseURL: baseURL,
 		Unexpected: apperror.NewReporter(nil, false).Unexpected,
 	}).WithClock(func() time.Time { return f.clock })
 	f.owner = f.person(member.RoleOwner, "olga@example.com", "Olga")
@@ -504,6 +506,7 @@ func TestService_JoinUnusable(t *testing.T) {
 type directory struct {
 	people people
 	users  *user.Service
+	asked  *[]session.Principal
 }
 
 func (d directory) PublicID(ctx context.Context, id uuid.UUID) (string, error) {
@@ -518,6 +521,9 @@ func (d directory) PublicID(ctx context.Context, id uuid.UUID) (string, error) {
 }
 
 func (d directory) Contact(ctx context.Context, id uuid.UUID) (string, string, error) {
+	if d.asked != nil {
+		*d.asked = append(*d.asked, session.PrincipalFrom(ctx))
+	}
 	if c, ok := d.people[id]; ok {
 		return c.email, c.name, nil
 	}

@@ -38,24 +38,29 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if err != nil {
+			_ = shutdown(ctx)
+		}
+	}()
 
 	pool, err := openDB(ctx, cfg, log)
 	if err != nil {
-		_ = shutdown(ctx)
 		return nil, err
 	}
+	defer func() {
+		if err != nil {
+			_ = pool.Close()
+		}
+	}()
 
 	if cfg.DB.AutoMigrate {
 		if err := migrate(ctx, cfg.Postgres); err != nil {
-			_ = pool.Close()
-			_ = shutdown(ctx)
 			return nil, err
 		}
 	}
 
 	if err := guardRLS(ctx, pool, cfg, log); err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 
@@ -73,8 +78,6 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 
 	nc, nh, err := buildNATS(ctx, &k, cfg, log)
 	if err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	if nc != nil {
@@ -87,16 +90,12 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 
 	qclient, err := buildQueueFn(ctx, k, cfg, nc, log)
 	if err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	k.Queue = qclient
 
 	rdb, rh, err := buildRedis(ctx, &k, cfg, tp, log)
 	if err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	if rdb != nil {
@@ -109,8 +108,6 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 
 	s3c, sh, err := buildS3(ctx, &k, cfg, log)
 	if err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	if s3c != nil {
@@ -122,43 +119,29 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	}
 
 	if k.Storage, err = buildStorageDriver(cfg, s3c); err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 
 	svcs := buildServices(k, cfg)
 	if svcs.Mailer, err = buildMailer(cfg); err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	lims, err := buildLimiters(cfg, rdb, log)
 	if err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	svcs.AuthLimiter = lims.auth
-	svcs.Clients.WithFetchLimits(layout.Limits{Limiter: lims.auth, TrustedProxyHops: cfg.HTTP.TrustedProxyHops})
+	svcs.Clients.WithFetchLimits(authLimits(cfg, svcs))
 	if svcs.Validator, err = controlplane.NewValidator(); err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	if err := buildAuthSecrets(cfg, svcs, log); err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	if err := firstBoot(ctx, cfg, svcs, log, logsInstallURL(o)); err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	if svcs.InstallRequired, err = installRequired(ctx, svcs); err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	warnSampleLegal(cfg, log, logsInstallURL(o))
@@ -168,8 +151,6 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	crossSite := slices.Concat(hosted.CrossSitePOSTs(cfg.HTTP.BasePath), oidc.CrossSitePOSTs(cfg.HTTP.BasePath))
 	crossOrigin, err := buildCrossOrigin(cfg.HTTP.BaseURL, crossSite)
 	if err != nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, err
 	}
 	consoleHandler := buildConsoleHandler(cfg.HTTP.BasePath)
@@ -230,8 +211,6 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	if off := schedulerOff(o, cfg); off == "" {
 		r, schedErr := buildScheduler(k, cfg, svcs, log)
 		if schedErr != nil {
-			_ = pool.Close()
-			_ = shutdown(ctx)
 			return nil, schedErr
 		}
 		runner = r
@@ -240,8 +219,6 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		log.Info("boot: scheduler disabled by " + off)
 	}
 	if o.schedulerOnly && runner == nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, fmt.Errorf("boot: scheduler-only requires the scheduler, but it is disabled by %s", schedulerOff(o, cfg))
 	}
 
@@ -249,8 +226,6 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	if off := consumerOff(o, cfg); off == "" {
 		c, cErr := k.Queue.Consumer(ctx, queueHandlers(svcs))
 		if cErr != nil {
-			_ = pool.Close()
-			_ = shutdown(ctx)
 			return nil, fmt.Errorf("boot: queue consumer: %w", cErr)
 		}
 		consumer = c
@@ -259,15 +234,11 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 		log.Info("boot: queue consumer disabled by " + off)
 	}
 	if o.consumerOnly && consumer == nil {
-		_ = pool.Close()
-		_ = shutdown(ctx)
 		return nil, fmt.Errorf("boot: consumer-only requires the queue consumer, but it is disabled by %s", consumerOff(o, cfg))
 	}
 	if cfg.Queue.Enabled {
 		listener, lErr := k.Queue.Listener(ctx, queueListeners(svcs))
 		if lErr != nil {
-			_ = pool.Close()
-			_ = shutdown(ctx)
 			return nil, fmt.Errorf("boot: queue listener: %w", lErr)
 		}
 		sup.Register(listener)

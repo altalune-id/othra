@@ -186,7 +186,7 @@ func buildIssuerRoutes(
 		issuers.WithTokens(oidc.Tokens{
 			Clients: svcs.Clients, Grants: svcs.Grants, EndUsers: svcs.EndUsers, IDTokens: keys.NewSigner(svcs.Keys),
 			IDTokenTTL: cfg.OAuth.IDTokenTTL, CORS: middleware.BearerCORS,
-			Limits: layout.Limits{Limiter: svcs.AuthLimiter, TrustedProxyHops: cfg.HTTP.TrustedProxyHops},
+			Limits: authLimits(cfg, svcs),
 		})
 		if in := buildIntrospection(svcs); in != nil {
 			issuers.WithIntrospection(*in)
@@ -201,7 +201,7 @@ func buildIssuerRoutes(
 		return []web.Registrar{issuers}, nil
 	}
 	pages := buildHosted(cfg, svcs, kit, resolver)
-	if plane := buildAccountPlane(cfg.HTTP.BasePath, svcs, pages, unexpected); plane != nil {
+	if plane := buildAccountPlane(cfg, svcs, pages, unexpected); plane != nil {
 		return []web.Registrar{issuers}, []web.Registrar{pages, plane}
 	}
 	return []web.Registrar{issuers}, []web.Registrar{pages}

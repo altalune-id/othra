@@ -239,10 +239,12 @@ func TestBoot_ConsumerError(t *testing.T) {
 	assert.ErrorContains(t, err, "boom")
 }
 
+// The last step to fail still closes what boot opened: the pool and the telemetry.
 func TestBoot_ListenerError(t *testing.T) {
 	restoreSeams(t)
 	poolDB, _ := newDB(t)
-	setupTelemetry = stubTelemetry(nil, nil)
+	shutDown := false
+	setupTelemetry = stubTelemetry(&shutDown, nil)
 	openPool = func(context.Context, config.PostgresConfig, *slog.Logger) (db.Pool, error) {
 		return db.Pool{W: poolDB, R: poolDB}, nil
 	}
@@ -251,6 +253,8 @@ func TestBoot_ListenerError(t *testing.T) {
 
 	_, err := Boot(context.Background(), natsFeatureConfig(), testLogger())
 	assert.ErrorContains(t, err, "boom")
+	assert.True(t, shutDown, "telemetry shut down")
+	assert.ErrorContains(t, poolDB.PingContext(t.Context()), "database is closed", "the pool closed")
 }
 
 func TestBoot_NoAutoMigrate(t *testing.T) {
