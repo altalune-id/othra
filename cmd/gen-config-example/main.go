@@ -1,0 +1,360 @@
+// Command gen-config-example regenerates .env.reference and config.reference.yml from config struct tags.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"slices"
+	"sort"
+	"strings"
+
+	"github.com/altalune-id/othra/config"
+)
+
+const (
+	formatEnv  = "env"
+	formatYAML = "yaml"
+)
+
+func main() {
+	var (
+		format = flag.String("format", formatEnv, "output format: env | yaml")
+		out    = flag.String("output", "", "output file path (default: .env.reference for env, config.reference.yml for yaml; use '-' for stdout)")
+		check  = flag.Bool("check", false, "exit non-zero if the on-disk file differs from what would be generated")
+	)
+	flag.Parse()
+
+	if *format != formatEnv && *format != formatYAML {
+		fmt.Fprintf(os.Stderr, "gen-config-example: unknown format %q (want %q or %q)\n", *format, formatEnv, formatYAML)
+		os.Exit(2)
+	}
+
+	target := *out
+	if target == "" {
+		if *format == formatYAML {
+			target = "config.reference.yml"
+		} else {
+			target = ".env.reference"
+		}
+	}
+
+	body := generate(*format)
+
+	if target == "-" {
+		if _, err := os.Stdout.WriteString(body); err != nil {
+			fmt.Fprintln(os.Stderr, "gen-config-example:", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if *check {
+		existing, err := os.ReadFile(target) //nolint:gosec // G304: target is a maintainer-supplied flag, not tainted input.
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "gen-config-example: reading %s: %v\n", target, err)
+			os.Exit(2)
+		}
+		if string(existing) == body {
+			fmt.Fprintf(os.Stderr, "gen-config-example: %s is up-to-date\n", target)
+			return
+		}
+		fmt.Fprintf(os.Stderr, "gen-config-example: %s is stale — run `go run ./cmd/gen-config-example --format=%s` to update.\n", target, *format)
+		os.Exit(1)
+	}
+
+	if err := os.WriteFile(target, []byte(body), 0o644); err != nil { //nolint:gosec // G306: example files are committed source, not secrets.
+		fmt.Fprintln(os.Stderr, "gen-config-example:", err)
+		os.Exit(1)
+	}
+	fmt.Fprintf(os.Stderr, "gen-config-example: wrote %s\n", target)
+}
+
+func generate(format string) string {
+	keys := config.WalkEnvKeys(config.EnvPrefix)
+
+	var bootstrap, runtime []config.EnvKey
+	for _, k := range keys {
+		if hasMarker(k.Awareness, "bootstrap") {
+			bootstrap = append(bootstrap, k)
+		} else {
+			runtime = append(runtime, k)
+		}
+	}
+
+	if format == formatYAML {
+		return generateYAML(bootstrap, runtime)
+	}
+	return generateEnv(bootstrap, runtime)
+}
+
+func generateEnv(bootstrap, runtime []config.EnvKey) string {
+	var buf strings.Builder
+	buf.WriteString(envHeader())
+	buf.WriteString(envBootstrapPreamble())
+	writeEnvSection(&buf, bootstrap)
+	buf.WriteString(envRuntimePreamble())
+	writeEnvSection(&buf, runtime)
+	return buf.String()
+}
+
+func writeEnvSection(buf *strings.Builder, keys []config.EnvKey) {
+	groups, order := groupByTopSegment(keys)
+	for _, top := range order {
+		fmt.Fprintf(buf, "\n# ─── %s ───\n", top)
+		for _, k := range groups[top] {
+			writeEnvField(buf, k)
+		}
+	}
+}
+
+func writeEnvField(buf *strings.Builder, k config.EnvKey) {
+	if len(k.Awareness) > 0 {
+		fmt.Fprintf(buf, "# [%s] %s\n", strings.Join(k.Awareness, ", "), k.YAML)
+	} else {
+		fmt.Fprintf(buf, "# %s\n", k.YAML)
+	}
+	value := ""
+	if !hasMarker(k.Awareness, "secret") {
+		value = normalizeDefault(k.FormatDefault())
+	}
+	if k.Optional && value == "" {
+		fmt.Fprintf(buf, "# %s=\n", k.Key)
+		return
+	}
+	fmt.Fprintf(buf, "%s=%s\n", k.Key, value)
+}
+
+func generateYAML(bootstrap, runtime []config.EnvKey) string {
+	var buf strings.Builder
+	buf.WriteString(yamlHeader())
+	writeYAMLTree(&buf, append(append([]config.EnvKey{}, bootstrap...), runtime...))
+	return buf.String()
+}
+
+type yamlNode struct {
+	name     string
+	key      *config.EnvKey
+	children map[string]*yamlNode
+	order    []string
+}
+
+func newYAMLNode(name string) *yamlNode {
+	return &yamlNode{name: name, children: map[string]*yamlNode{}}
+}
+
+func (n *yamlNode) insert(path []string, k config.EnvKey) {
+	if len(path) == 0 {
+		copyK := k
+		n.key = &copyK
+		return
+	}
+	head := path[0]
+	child, ok := n.children[head]
+	if !ok {
+		child = newYAMLNode(head)
+		n.children[head] = child
+		n.order = append(n.order, head)
+	}
+	child.insert(path[1:], k)
+}
+
+func writeYAMLTree(buf *strings.Builder, keys []config.EnvKey) {
+	root := newYAMLNode("")
+	for _, k := range keys {
+		root.insert(strings.Split(k.YAML, "."), k)
+	}
+	sort.Strings(root.order)
+	for _, name := range root.order {
+		buf.WriteByte('\n')
+		writeYAMLNode(buf, root.children[name], 0)
+	}
+}
+
+func writeYAMLNode(buf *strings.Builder, n *yamlNode, indent int) {
+	if len(n.children) > 0 && n.allUnset() {
+		writeCommentedOut(buf, n, indent)
+		return
+	}
+	writeYAMLBlock(buf, n, indent, false)
+}
+
+func writeYAMLBlock(buf *strings.Builder, n *yamlNode, indent int, bare bool) {
+	pad := strings.Repeat("  ", indent)
+	if n.key != nil && len(n.children) == 0 {
+		writeYAMLLeaf(buf, n, indent, bare)
+		return
+	}
+	fmt.Fprintf(buf, "%s%s:\n", pad, n.name)
+	if n.key != nil {
+		writeYAMLLeaf(buf, &yamlNode{name: "value", key: n.key}, indent+1, bare)
+	}
+	sort.Strings(n.order)
+	for _, name := range n.order {
+		if bare {
+			writeYAMLBlock(buf, n.children[name], indent+1, true)
+			continue
+		}
+		writeYAMLNode(buf, n.children[name], indent+1)
+	}
+}
+
+// NOTE: yamllint refuses a mapping that holds only comments, so a block of optional keys is commented out whole.
+func writeCommentedOut(buf *strings.Builder, n *yamlNode, indent int) {
+	var block strings.Builder
+	writeYAMLBlock(&block, n, 0, true)
+	pad := strings.Repeat("  ", indent)
+	for line := range strings.Lines(block.String()) {
+		buf.WriteString(pad + "# " + line)
+	}
+}
+
+func (n *yamlNode) allUnset() bool {
+	if n.key != nil && !unset(*n.key) {
+		return false
+	}
+	for _, c := range n.children {
+		if !c.allUnset() {
+			return false
+		}
+	}
+	return true
+}
+
+func unset(k config.EnvKey) bool {
+	return k.Optional && normalizeDefault(k.FormatDefault()) == ""
+}
+
+func writeYAMLLeaf(buf *strings.Builder, n *yamlNode, indent int, bare bool) {
+	pad := strings.Repeat("  ", indent)
+	if len(n.key.Awareness) > 0 {
+		fmt.Fprintf(buf, "%s# [%s] env: %s\n", pad, strings.Join(n.key.Awareness, ", "), n.key.Key)
+	} else {
+		fmt.Fprintf(buf, "%s# env: %s\n", pad, n.key.Key)
+	}
+	value := ""
+	if !hasMarker(n.key.Awareness, "secret") {
+		value = normalizeDefault(n.key.FormatDefault())
+	}
+	switch {
+	case n.key.Optional && value == "" && bare:
+		fmt.Fprintf(buf, "%s%s:\n", pad, n.name)
+		return
+	case n.key.Optional && value == "":
+		fmt.Fprintf(buf, "%s# %s:\n", pad, n.name)
+		return
+	}
+	fmt.Fprintf(buf, "%s%s: %s\n", pad, n.name, yamlScalar(value))
+}
+
+func yamlScalar(v string) string {
+	if v == "" {
+		return `""`
+	}
+	if strings.ContainsAny(v, ":#\n") || strings.HasPrefix(v, "-") || strings.HasPrefix(v, "&") || strings.HasPrefix(v, "*") {
+		return fmt.Sprintf("%q", v)
+	}
+	return v
+}
+
+func groupByTopSegment(keys []config.EnvKey) (groups map[string][]config.EnvKey, order []string) {
+	groups = map[string][]config.EnvKey{}
+	for _, k := range keys {
+		top := topSegment(k.YAML)
+		if _, ok := groups[top]; !ok {
+			order = append(order, top)
+		}
+		groups[top] = append(groups[top], k)
+	}
+	sort.Strings(order)
+	return groups, order
+}
+
+func normalizeDefault(s string) string {
+	if s == "" {
+		return s
+	}
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		return s
+	}
+	if strings.HasPrefix(s, home) {
+		return "~" + s[len(home):]
+	}
+	return s
+}
+
+func hasMarker(awareness []string, want string) bool {
+	return slices.Contains(awareness, want)
+}
+
+func topSegment(yaml string) string {
+	if top, _, ok := strings.Cut(yaml, "."); ok {
+		return top
+	}
+	return yaml
+}
+
+func envHeader() string {
+	return `# Othra — auto-generated from config struct tags.
+# DO NOT edit by hand. Run ` + "`go run ./cmd/gen-config-example`" + ` to regenerate.
+#
+# Awareness markers on each field (in [brackets] above the env var):
+#   required   — must be non-empty for the app to boot
+#   bootstrap  — set once at first-run; changing later has no effect or breaks things
+#   secret     — never commit; use env vars or a secret store
+#
+# Fields split into two top-level sections:
+#   BOOTSTRAP — locked at first boot, changing later is NOT SAFE
+#   RUNTIME   — safe to change via env + restart
+#
+# RHS shows the built-in default when present. Secret fields intentionally
+# emit no RHS value, even if a default exists internally.
+
+`
+}
+
+func envBootstrapPreamble() string {
+	return `
+# ════════════════════════════════════════════════════════════════════
+#   BOOTSTRAP — set once at first boot; changing later is NOT SAFE
+# ════════════════════════════════════════════════════════════════════
+#
+# Fields in this section lock in behavior for the lifetime of the deployment:
+#   - Changing them after first boot has NO effect on already-persisted data
+#     (e.g. postgres.schema and postgres.tablePrefix require SQL-level intervention).
+#
+# Read every line here BEFORE first ` + "`othra serve`" + `. Set them deliberately.
+#
+# ────────────────────────────────────────────────────────────────────
+`
+}
+
+func envRuntimePreamble() string {
+	return `
+
+# ════════════════════════════════════════════════════════════════════
+#   RUNTIME — safe to change via env + restart
+# ════════════════════════════════════════════════════════════════════
+#
+# Fields in this section can be adjusted between deployments without
+# affecting persisted data. Restarting the app picks up the new values.
+#
+# ────────────────────────────────────────────────────────────────────
+`
+}
+
+func yamlHeader() string {
+	return `# Othra — auto-generated from config struct tags.
+# DO NOT edit by hand. Run ` + "`go run ./cmd/gen-config-example --format=yaml`" + ` to regenerate.
+#
+# Copy to config.yml, uncomment what you need to set, and the app picks it up.
+# Every field maps to an env var (shown as ` + "`env: OTHRA_*`" + ` in the per-field comment).
+# Env vars override YAML.
+#
+# Awareness markers (in [brackets] on the per-field comment):
+#   required   — must be non-empty for the app to boot
+#   bootstrap  — set once at first-run; changing later has no effect or breaks things
+#   secret     — never commit; use env vars or a secret store
+`
+}

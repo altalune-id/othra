@@ -1,0 +1,292 @@
+syntax = "proto3";
+
+package project.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "github.com/altalune-id/othra/gen/go/project/v1;projectv1";
+
+// ProjectService manages projects. Every id is a public id.
+service ProjectService {
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
+    option (mcp.v1.tool) = {
+      name: "project_create"
+      description: "Create a project within an organization, minting a slug when one is not supplied."
+      mutation: true
+      destructive: false
+      ui: "app"
+    };
+  }
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {
+    option (mcp.v1.tool) = {
+      name: "project_get"
+      description: "Get a project by id."
+      required: ["id"]
+      ui: "app"
+    };
+  }
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {
+    option (mcp.v1.tool) = {
+      name: "project_list"
+      description: "List projects in an organization."
+      required: ["org_id"]
+      ui: "app"
+    };
+  }
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+  rpc UpdateProjectIssuer(UpdateProjectIssuerRequest) returns (UpdateProjectIssuerResponse);
+  rpc UpdateProjectBranding(UpdateProjectBrandingRequest) returns (UpdateProjectBrandingResponse);
+  rpc UpdateProjectTerms(UpdateProjectTermsRequest) returns (UpdateProjectTermsResponse);
+  rpc UpdateProjectSignIn(UpdateProjectSignInRequest) returns (UpdateProjectSignInResponse);
+  rpc BumpTermsVersion(BumpTermsVersionRequest) returns (BumpTermsVersionResponse);
+  rpc CheckIssuerHandle(CheckIssuerHandleRequest) returns (CheckIssuerHandleResponse);
+  rpc CreateProjectLogoUpload(CreateProjectLogoUploadRequest) returns (CreateProjectLogoUploadResponse);
+  rpc CompleteProjectLogoUpload(CompleteProjectLogoUploadRequest) returns (CompleteProjectLogoUploadResponse);
+  rpc DeleteProjectLogo(DeleteProjectLogoRequest) returns (DeleteProjectLogoResponse);
+}
+
+message Project {
+  reserved 2, 15, 16;
+  reserved "public_id", "has_logo", "logo_updated_at";
+  string id = 1;
+  string org_id = 3;
+  string slug = 4;
+  string name = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  string issuer_handle = 8;
+  // issuer_url is the project's exact OAuth issuer, https://<host>/p/<issuer_handle>.
+  string issuer_url = 9;
+  bool issuer_handle_locked = 10;
+  google.protobuf.Timestamp issuer_handle_locked_at = 11;
+  string display_name = 12;
+  string primary_color = 13;
+  string support_email = 14;
+  string terms_url = 17;
+  string privacy_url = 18;
+  int32 terms_version = 19;
+  google.protobuf.Timestamp terms_published_at = 20;
+  bool signin_email_link = 21;
+  // logo_url is the public URL of the project's logo, empty when it has none.
+  string logo_url = 22;
+  // system is true for the console project Othra seeds at install; only its branding, terms and upstream IdPs can change.
+  bool system = 23;
+}
+
+message CreateProjectRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string slug = 2 [
+    (buf.validate.field).string.(othra.v1.slug) = true
+  ];
+  string name = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.name) = true
+  ];
+  string issuer_handle = 4 [
+    (buf.validate.field).cel = {id: "project.issuer_handle.min_len.3", expression: "this == '' || this.size() >= 3 ? '' : 'must be at least 3 characters'"},
+    (buf.validate.field).cel = {id: "project.issuer_handle.max_len.40", expression: "this.size() <= 40 ? '' : 'must be at most 40 characters'"},
+    (buf.validate.field).cel = {id: "project.issuer_handle.format", expression: "this == '' || this.matches('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$') ? '' : 'must be lowercase letters, digits and dashes, not starting or ending with a dash'"}
+  ];
+}
+
+message CreateProjectResponse {
+  Project project = 1;
+}
+
+message GetProjectRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GetProjectResponse {
+  Project project = 1;
+}
+
+message ListProjectsRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message ListProjectsResponse {
+  repeated Project projects = 1;
+}
+
+message UpdateProjectRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.name) = true
+  ];
+  string slug = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.slug) = true
+  ];
+}
+
+message UpdateProjectResponse {
+  Project project = 1;
+}
+
+message UpdateProjectIssuerRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string issuer_handle = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).cel = {id: "project.issuer_handle.min_len.3", expression: "this == '' || this.size() >= 3 ? '' : 'must be at least 3 characters'"},
+    (buf.validate.field).cel = {id: "project.issuer_handle.max_len.40", expression: "this.size() <= 40 ? '' : 'must be at most 40 characters'"},
+    (buf.validate.field).cel = {id: "project.issuer_handle.format", expression: "this == '' || this.matches('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$') ? '' : 'must be lowercase letters, digits and dashes, not starting or ending with a dash'"}
+  ];
+}
+
+message UpdateProjectIssuerResponse {
+  Project project = 1;
+}
+
+message UpdateProjectBrandingRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string display_name = 2 [
+    (buf.validate.field).cel = {id: "project.display_name.max_len.60", expression: "this.trim().size() <= 60 ? '' : 'must be at most 60 characters'"}
+  ];
+  string primary_color = 3 [
+    (buf.validate.field).cel = {id: "project.primary_color.format", expression: "this == '' || this.matches('^#[0-9a-fA-F]{6}$') ? '' : 'must be a hex colour like #4F46E5'"}
+  ];
+  string support_email = 4 [
+    (buf.validate.field).string.(othra.v1.email) = true
+  ];
+}
+
+message UpdateProjectBrandingResponse {
+  Project project = 1;
+}
+
+message UpdateProjectTermsRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string terms_url = 2 [
+    (buf.validate.field).cel = {id: "project.url.max_len.2048", expression: "this.size() <= 2048 ? '' : 'must be at most 2048 characters'"},
+    (buf.validate.field).cel = {id: "project.url.format", expression: "this == '' || this.matches('^https://[^\\\\s/?#]+') ? '' : 'must start with https://'"}
+  ];
+  string privacy_url = 3 [
+    (buf.validate.field).cel = {id: "project.url.max_len.2048", expression: "this.size() <= 2048 ? '' : 'must be at most 2048 characters'"},
+    (buf.validate.field).cel = {id: "project.url.format", expression: "this == '' || this.matches('^https://[^\\\\s/?#]+') ? '' : 'must start with https://'"}
+  ];
+}
+
+message UpdateProjectTermsResponse {
+  Project project = 1;
+}
+
+message UpdateProjectSignInRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  bool email_link = 2;
+}
+
+message UpdateProjectSignInResponse {
+  Project project = 1;
+}
+
+message BumpTermsVersionRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message BumpTermsVersionResponse {
+  int32 version = 1;
+  google.protobuf.Timestamp published_at = 2;
+}
+
+message CheckIssuerHandleRequest {
+  string org_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  // project_id names the project being edited, so its own handle counts as available.
+  string project_id = 2 [
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string issuer_handle = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 64
+  ];
+}
+
+message CheckIssuerHandleResponse {
+  bool available = 1;
+  // reason is one of ok, taken, reserved, invalid or locked.
+  string reason = 2;
+}
+
+message CreateProjectLogoUploadRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string content_type = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 100
+  ];
+  uint32 size_bytes = 3 [
+    (buf.validate.field).uint32.gt = 0,
+    (buf.validate.field).uint32.lte = 10485760
+  ];
+}
+
+message CreateProjectLogoUploadResponse {
+  string upload_id = 1;
+  string url = 2;
+  string method = 3;
+  // headers must be sent unchanged with the upload.
+  map<string, string> headers = 4;
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+message CompleteProjectLogoUploadRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string upload_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message CompleteProjectLogoUploadResponse {
+  Project project = 1;
+}
+
+message DeleteProjectLogoRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message DeleteProjectLogoResponse {
+  Project project = 1;
+}

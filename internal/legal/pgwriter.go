@@ -1,0 +1,42 @@
+package legal
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/go-jet/jet/v2/postgres"
+	"github.com/go-jet/jet/v2/qrm"
+
+	"github.com/altalune-id/othra/internal/kernel/db"
+)
+
+// Publish inserts s at the database time unless its slug and version exist, then reads back the stored row.
+func (s *postgresStore) Publish(ctx context.Context, snap Snapshot) (Snapshot, error) {
+	t := s.documents
+	insert := t.INSERT(t.AllColumns).
+		VALUES(snap.ID, snap.Slug, snap.Version, snap.Title, snap.Body, snap.SHA256, postgres.NOW()).
+		ON_CONFLICT(t.Slug, t.Version).DO_NOTHING()
+	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := insert.ExecContext(ctx, q); return err }); err != nil {
+		return Snapshot{}, fmt.Errorf("legal.postgres: Publish: %w", err)
+	}
+	var row snapshotRow
+	stmt := postgres.SELECT(t.AllColumns).FROM(t).
+		WHERE(t.Slug.EQ(postgres.String(snap.Slug)).AND(t.Version.EQ(postgres.String(snap.Version))))
+	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
+		return Snapshot{}, fmt.Errorf("legal.postgres: Publish: read back: %w", err)
+	}
+	snap = Snapshot(row)
+	snap.PublishedAt = snap.PublishedAt.UTC()
+	return snap, nil
+}
+
+// RecordAcceptance appends a.
+func (s *postgresStore) RecordAcceptance(ctx context.Context, a Acceptance) error {
+	t := s.acceptances
+	stmt := t.INSERT(t.AllColumns).
+		VALUES(a.ID, a.PublicID, a.UserID, a.TermsDocumentID, a.PrivacyDocumentID, string(a.Source), a.AcceptedAt.UTC())
+	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
+		return fmt.Errorf("legal.postgres: RecordAcceptance: %w", err)
+	}
+	return nil
+}

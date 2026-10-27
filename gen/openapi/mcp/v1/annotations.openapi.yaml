@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: mcp.v1
+paths: {}
+components:
+  schemas:
+    mcp.v1.Tool:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+        description:
+          type: string
+          title: description
+        required:
+          type: array
+          items:
+            type: string
+          title: required
+        mutation:
+          type: boolean
+          title: mutation
+        ui:
+          type: string
+          title: ui
+        destructive:
+          type: boolean
+          title: destructive
+          description: 'NOTE: destructiveHint defaults to true when absent, so the server always sends it; an inaccurate value desensitizes the host''s confirmation prompt.'
+        title:
+          type: string
+          title: title
+          description: Title overrides the title derived from the tool name, which mangles acronyms.
+        appOnly:
+          type: boolean
+          title: app_only
+          description: 'SECURITY: app_only asks the host to offer the tool to the MCP view only; a host that ignores it shows it to the model. Needs ui.'
+      title: Tool
+      additionalProperties: false
+      description: |-
+        SECURITY: Tool carries no permission. A tool's permissions are its RPC's, declared once in
+         internal/permission and resolved at registration; never add an authorization field to this message.
+security: []

@@ -1,0 +1,19 @@
+package legal
+
+import (
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/schema/entity"
+)
+
+type postgresStore struct {
+	pool        db.Pool
+	documents   *entity.LegalDocuments
+	acceptances *entity.TermsAcceptances
+}
+
+// NewStore builds the Postgres store over pool.
+func NewStore(pool db.Pool, schema, tablePrefix string) *postgresStore {
+	return &postgresStore{
+		pool: pool, documents: entity.NewLegalDocuments(schema, tablePrefix), acceptances: entity.NewTermsAcceptances(schema, tablePrefix),
+	}
+}

@@ -1,0 +1,51 @@
+package views
+
+import (
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+)
+
+// EndSessionData is the sign-out confirm page: the app's name and the end-session request to carry back with the confirmation.
+type EndSessionData struct {
+	Site
+	Client     string
+	ClientID   string
+	Token      string
+	Hint       string
+	PostLogout string
+	State      string
+}
+
+func (v EndSessionData) client() string {
+	if v.Client != "" {
+		return v.Client
+	}
+	return v.Project
+}
+
+// EndSession asks before signing out when an app's sign-out request names a session that isn't on this browser; it shows no email.
+templ EndSession(d layout.LayoutData, v EndSessionData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "end_session.title", "project", v.Project))) {
+		@layout.Card(i18n.T(ctx, "end_session.title", "project", v.Project)) {
+			<p class="break-words">{ i18n.T(ctx, "end_session.body", "client", v.client(), "project", v.Project) }</p>
+			<form method="post" action={ v.href(d, "/oauth2/end-session") }>
+				@layout.CSRFInput(v.Token)
+				<input type="hidden" name="confirm" value="1"/>
+				if v.Hint != "" {
+					<input type="hidden" name="id_token_hint" value={ v.Hint }/>
+				}
+				if v.ClientID != "" {
+					<input type="hidden" name="client_id" value={ v.ClientID }/>
+				}
+				if v.PostLogout != "" {
+					<input type="hidden" name="post_logout_redirect_uri" value={ v.PostLogout }/>
+				}
+				if v.State != "" {
+					<input type="hidden" name="state" value={ v.State }/>
+				}
+				<button class="btn btn-primary btn-block" type="submit">{ i18n.T(ctx, "end_session.submit") }</button>
+			</form>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "end_session.ignore") }</p>
+		}
+	}
+}

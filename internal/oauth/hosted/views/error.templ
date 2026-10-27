@@ -1,0 +1,149 @@
+package views
+
+import (
+	"context"
+	"net/url"
+
+	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+)
+
+// ErrorData is a hosted error: translated Title and Message, the error Code and the request's Reference; an empty Site means an unknown project, NoSignIn hides the way back to sign in and ReturnTo rides along on it.
+type ErrorData struct {
+	Site
+	Title        string
+	Message      string
+	Code         string
+	Reference    string
+	SupportEmail string
+	NoSignIn     bool
+	ReturnTo     string
+	// BackToAccount leads a signed-in person back to the account page instead of to sign in.
+	BackToAccount bool
+}
+
+// UpstreamError is the error page for a failed sign-in with Google, whose way back to sign in keeps returnTo.
+func UpstreamError(ctx context.Context, s Site, code apperror.Code, reference, returnTo string) ErrorData {
+	return ErrorData{
+		Site:      s,
+		Title:     i18n.T(ctx, "error.google_title"),
+		Message:   i18n.Error(ctx, code, "project", s.Project),
+		Code:      string(code),
+		Reference: reference,
+		ReturnTo:  returnTo,
+	}
+}
+
+// LinkUpstreamError is the error page for a failed Connect Google, whose way back is the account page.
+func LinkUpstreamError(ctx context.Context, s Site, code apperror.Code, reference string) ErrorData {
+	return ErrorData{
+		Site:          s,
+		Title:         i18n.T(ctx, "error.google_link_title"),
+		Message:       linkMessage(ctx, code, s.Project),
+		Code:          string(code),
+		Reference:     reference,
+		BackToAccount: true,
+	}
+}
+
+func linkMessage(ctx context.Context, code apperror.Code, project string) string {
+	switch code {
+	case apperror.CodeSignInUpstreamCancelled:
+		return i18n.T(ctx, "error.google_link_cancelled")
+	case apperror.CodeSignInUpstreamResponseInvalid:
+		return i18n.T(ctx, "error.google_link_invalid")
+	}
+	return i18n.Error(ctx, code, "project", project)
+}
+
+// AuthorizeError is the error page for an authorize request that can't be trusted with a redirect: never a way back to sign in.
+func AuthorizeError(ctx context.Context, s Site, code apperror.Code, reference string) ErrorData {
+	return ErrorData{
+		Site:      s,
+		Title:     i18n.T(ctx, "error.authorize_title"),
+		Message:   i18n.Error(ctx, code),
+		Code:      string(code),
+		Reference: reference,
+		NoSignIn:  true,
+	}
+}
+
+// TermsDeclined is the error page for an account that declined the project's terms outside an app's sign-in.
+func TermsDeclined(ctx context.Context, s Site) ErrorData {
+	return ErrorData{
+		Site:    s,
+		Title:   i18n.T(ctx, "terms.declined_title"),
+		Message: i18n.T(ctx, "terms.declined_body", "project", s.Project),
+	}
+}
+
+func (v ErrorData) title(ctx context.Context) string {
+	switch {
+	case v.Handle == "":
+		return i18n.T(ctx, "error.not_found_title")
+	case v.Title != "":
+		return v.Title
+	default:
+		return i18n.T(ctx, "error.title")
+	}
+}
+
+func (v ErrorData) hasReference() bool { return v.Code != "" || v.Reference != "" }
+
+func (v ErrorData) helpEmailKey() string {
+	if v.hasReference() {
+		return "error.help_email"
+	}
+	return "error.help_email_plain"
+}
+
+func (v ErrorData) message(ctx context.Context) string {
+	if v.Handle == "" {
+		return i18n.T(ctx, "error.not_found_body")
+	}
+	return v.Message
+}
+
+// Error is the hosted error page: never a console link, a way back to sign in when the project is known.
+templ Error(d layout.LayoutData, v ErrorData) {
+	@layout.Layout(titled(d, v.title(ctx))) {
+		@layout.Card(v.title(ctx)) {
+			if v.message(ctx) != "" {
+				<p class="break-words">{ v.message(ctx) }</p>
+			}
+			if v.Code != "" || v.Reference != "" {
+				<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-base-content/70">
+					if v.Code != "" {
+						<dt>{ i18n.T(ctx, "error.code") }</dt>
+						<dd class="font-mono">{ v.Code }</dd>
+					}
+					if v.Reference != "" {
+						<dt>{ i18n.T(ctx, "error.reference") }</dt>
+						<dd class="font-mono break-all">{ v.Reference }</dd>
+					}
+				</dl>
+			}
+			if v.Handle != "" {
+				if v.SupportEmail != "" {
+					<p class="text-sm break-words text-base-content/70">
+						for _, p := range splitAround(i18n.T(ctx, v.helpEmailKey()), "{support_email}") {
+							if p == "{support_email}" {
+								<a class="link break-all" href={ templ.SafeURL("mailto:" + v.SupportEmail) }>{ v.SupportEmail }</a>
+							} else {
+								{ p }
+							}
+						}
+					</p>
+				} else if v.hasReference() {
+					<p class="text-sm text-base-content/70">{ i18n.T(ctx, "error.help") }</p>
+				}
+				if v.BackToAccount {
+					<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.href(d, "/account/")) }>{ i18n.T(ctx, "common.back_to_account") }</a>
+				} else if !v.NoSignIn {
+					<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.login(d, url.Values{"return_to": {v.ReturnTo}})) }>{ i18n.T(ctx, "common.back_to_sign_in") }</a>
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,30 @@
+import type { Client } from '@connectrpc/connect';
+import type { APIKeyService } from '#gen/apikey/v1/apikey_pb';
+import type { AuthService } from '#gen/auth/v1/auth_pb';
+import type { ClientService } from '#gen/client/v1/client_pb';
+import type { EndUserService } from '#gen/enduser/v1/enduser_pb';
+import type { InviteService } from '#gen/invite/v1/invite_pb';
+import type { SigningKeyService } from '#gen/keys/v1/keys_pb';
+import type { MemberService } from '#gen/member/v1/member_pb';
+import type { OrgService } from '#gen/org/v1/org_pb';
+import type { ProjectService } from '#gen/project/v1/project_pb';
+import type { ResourceServerService } from '#gen/resourceserver/v1/resourceserver_pb';
+import type { UpstreamService } from '#gen/upstream/v1/upstream_pb';
+import type { WebhookService } from '#gen/webhook/v1/webhook_pb';
+
+declare module '#app' {
+  interface NuxtApp {
+    $orgClient: Client<typeof OrgService>;
+    $projectClient: Client<typeof ProjectService>;
+    $apiKeyClient: Client<typeof APIKeyService>;
+    $webhookClient: Client<typeof WebhookService>;
+    $memberClient: Client<typeof MemberService>;
+    $inviteClient: Client<typeof InviteService>;
+    $signingKeyClient: Client<typeof SigningKeyService>;
+    $clientClient: Client<typeof ClientService>;
+    $resourceServerClient: Client<typeof ResourceServerService>;
+    $authClient: Client<typeof AuthService>;
+    $upstreamClient: Client<typeof UpstreamService>;
+    $endUserClient: Client<typeof EndUserService>;
+  }
+}

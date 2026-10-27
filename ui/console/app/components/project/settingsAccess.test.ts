@@ -1,0 +1,287 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+const pages = ['index', 'issuer', 'branding', 'legal'].map(name => ({
+  name,
+  source: readFileSync(new URL(`../../pages/o/[org]/projects/[project]/settings/${name}.vue`, import.meta.url), 'utf8'),
+}));
+
+describe('project settings pages', () => {
+  it.each(pages)('$name only renders an editable form for people who can edit', ({ source }) => {
+    const forms = [...source.matchAll(/<form\s[^>]*>/g)].map(m => m[0]);
+    expect(forms.length).toBeGreaterThan(0);
+    for (const form of forms) {
+      expect(form).toContain('v-if="canEdit"');
+    }
+    expect(source).toMatch(/useCanEditProject|useProjectGuard/);
+  });
+
+  it('hides the publish button from people who cannot edit', () => {
+    const legal = pages.find(p => p.name === 'legal')!.source;
+    expect(legal).toMatch(/<div v-if="canEdit"[^>]*>\s*<button[^>]*@click="legal\.askBump\(\)"/);
+  });
+
+  it('shows the locked issuer note as a note, not an alert', () => {
+    const issuer = pages.find(p => p.name === 'issuer')!.source;
+    expect(issuer).not.toContain('role="alert"');
+  });
+});
+
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
+describe('project settings markup', () => {
+  it.each(pages)('$name tells people who cannot edit why', ({ source }) => {
+    expect(source).toMatch(/<ProjectReadOnlyNote v-(?:else-)?if="!canEdit"/);
+  });
+
+  it.each(pages)('$name keeps light-theme text neutral: no success or warning coloured text', ({ source }) => {
+    expect(source).not.toMatch(/<(?:span|p)[^>]*class="[^"]*\btext-(?:success|warning)\b/);
+    expect(source).not.toMatch(/alert-(?:info|warning) alert-soft(?![^>]*>\s*<Icon[^>]*class="[^"]*text-)/);
+    expect(source).not.toContain('btn-warning btn-outline');
+  });
+
+  it('uses the shared SavedNote wherever a form says it saved', () => {
+    for (const { name, source } of pages) {
+      expect(source, name).not.toContain('{{ t(\'common.saved\') }}');
+      expect(source, name).toContain('<SavedNote v-if="saved"');
+    }
+    expect(read('../../../../base/app/components/ui/SavedNote.vue')).toContain('text-base-content/70');
+  });
+
+  it('labels the bump versions and the clear-terms action', () => {
+    const legal = pages.find(p => p.name === 'legal')!.source;
+    expect(legal).toContain('legal.bump_versions');
+    expect(legal).toContain('legal.clear_terms_confirm');
+  });
+
+  it('shows the default colour labelled "Default" when no colour is set, not black', () => {
+    const branding = pages.find(p => p.name === 'branding')!.source;
+    expect(branding).not.toContain('#000000');
+    expect(branding).not.toContain('opacity-0');
+    expect(branding).toContain('branding.default_colour');
+  });
+
+  it('prefixes the handle with /p/ only', () => {
+    expect(pages.find(p => p.name === 'issuer')!.source).toContain('prefix="/p/"');
+    expect(read('./create/ProjectCreateModal.vue')).toContain('prefix="/p/"');
+  });
+
+  it('uses product copy in the create modal, not agent-era placeholders', () => {
+    const modal = read('./create/ProjectCreateModal.vue');
+    expect(modal).not.toMatch(/support-?bot/i);
+    expect(modal).not.toContain('input-bordered');
+  });
+
+  it('builds the edit project modal from daisyUI 5 fieldsets', () => {
+    const modal = read('./edit/ProjectEditModal.vue');
+    expect(modal).not.toMatch(/input-(?:sm|bordered)/);
+    expect(modal.match(/class="fieldset"/g)).toHaveLength(2);
+    expect(modal.match(/<label :for="ids\.\w+" class="fieldset-legend">/g)).toHaveLength(2);
+  });
+
+  it('puts the branding form in a card on a width-capped page, like its sibling pages', () => {
+    const branding = pages.find(p => p.name === 'branding')!.source;
+    expect(branding).toMatch(/<div class="max-w-5xl space-y-6">/);
+    expect(branding).toMatch(/<form v-if="canEdit" novalidate class="card self-start border border-base-300 bg-base-100"/);
+  });
+
+  it('calls the slug "Console URL name" on the projects table and edit modal', () => {
+    expect(read('../../pages/o/[org]/projects/index.vue')).not.toContain('common.slug');
+    expect(read('./edit/ProjectEditModal.vue')).not.toContain('common.slug');
+  });
+
+  it('puts the project logo in the Overview header, not the Issuer card title', () => {
+    const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
+    expect(overview).toMatch(/<img v-if="full\?\.logoUrl"[^>]*class="size-10 [^"]*max-sm:size-8/);
+    expect(overview).not.toContain('size-6');
+  });
+});
+
+describe('m1.5 design re-check', () => {
+  it('hides New project and Edit from people who cannot edit projects', () => {
+    const list = read('../../pages/o/[org]/projects/index.vue');
+    expect(list).toContain('useCanEditProject');
+    expect(list).toMatch(/<AppButton v-if="org && canEdit"[^>]*@click="ui\.openProjectCreate\(\)"/);
+    expect(list).toMatch(/<button v-if="canEdit && !project\.system"[^>]*@click="edit\(project\)"/);
+  });
+
+  it('puts the logo file input before its label as a peer, so keyboard focus shows on the label', () => {
+    const branding = pages.find(p => p.name === 'branding')!.source;
+    expect(branding).toMatch(/<input :id="ids\.logo"[^>]*type="file"[^>]*class="peer sr-only"[^>]*>\s*<label :for="ids\.logo" class="btn btn-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-base-content/);
+    expect(branding).not.toContain('has-[:focus-visible]');
+  });
+
+  it('puts General in a card on a max-w-2xl page with a plain primary Save', () => {
+    const general = pages.find(p => p.name === 'index')!.source;
+    expect(general).toContain('<div v-if="project" class="max-w-2xl space-y-6">');
+    expect(general).toMatch(/<section class="card border border-base-300 bg-base-100">\s*<div class="card-body gap-2">/);
+    expect(general).toMatch(/<form v-if="canEdit" novalidate/);
+    expect(general).toMatch(/<dl v-else /);
+    expect(general).not.toContain('text-xs text-base-content/60">{{ t(\'common.id\') }}');
+    expect(general).toContain('<button type="submit" class="btn btn-primary btn-sm"');
+    expect(general).not.toContain('AppButton');
+    expect(general).toContain('project.settings_general_subtitle');
+  });
+
+  it('styles the read-only issuer labels alike and hides the logo help when storage is off', () => {
+    const issuer = pages.find(p => p.name === 'issuer')!.source;
+    expect(issuer).not.toContain('text-xs font-semibold');
+    const branding = pages.find(p => p.name === 'branding')!.source;
+    expect(branding).toMatch(/<p v-if="!storageOff" :id="ids\.logoHelp"/);
+  });
+
+  it('says the logo saves on upload, and gives the storage-off next step', () => {
+    const branding = pages.find(p => p.name === 'branding')!.source;
+    expect(branding).toContain('<SavedNote v-if="logoSaved" :label="t(\'branding.logo_updated\')" />');
+    expect(branding).toContain('branding.logo_instant');
+    expect(branding).toContain('branding.storage_off');
+    expect(branding).not.toContain('apperror.STO003');
+  });
+
+  it('shows members a neutral line when no terms link is set', () => {
+    const legal = pages.find(p => p.name === 'legal')!.source;
+    expect(legal).toContain('canEdit ? t(\'legal.no_terms\') : t(\'legal.no_terms_readonly\')');
+  });
+
+  it('uses one empty-value dash in the read-only views', () => {
+    for (const { name, source } of pages) {
+      expect(source, name).not.toContain('–');
+    }
+  });
+
+  it('lets issuer URLs wrap after /p/ and calls the Overview link "Edit issuer"', () => {
+    const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
+    expect(overview).toContain('issuer.edit');
+    expect(overview).toContain('<UrlField');
+    expect(pages.find(p => p.name === 'issuer')!.source).toContain('<UrlField');
+  });
+});
+
+describe('m2 discovery and signing keys (no RPC)', () => {
+  it('adds a Discovery card with the OIDC, OAuth metadata and JWKS URLs on Issuer', () => {
+    const issuer = pages.find(p => p.name === 'issuer')!.source;
+    expect(issuer).toContain('issuer.discovery_title');
+    expect(issuer).toContain('issuer.discovery_help');
+    const fields = [...issuer.matchAll(/<UrlField[^>]*:value="discovery\.(\w+)"/g)].map(m => m[1]);
+    expect(fields).toEqual(['oidc', 'oauth', 'jwks']);
+  });
+
+  it('shows the issuer and discovery URLs on the Overview, without JWKS or Open', () => {
+    const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
+    expect(overview).toContain('overview.discovery');
+    expect(overview).not.toContain('discovery.jwks');
+    expect(overview).not.toMatch(/<UrlField[^>]*\sopen[\s>]/);
+  });
+
+  it('lists Signing keys after Issuer in the settings sidebar, with its own page', () => {
+    const sidebar = read('./ProjectSettingsSidebar.vue');
+    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'keys\''));
+    expect(sidebar.indexOf('\'keys\'')).toBeLessThan(sidebar.indexOf('\'branding\''));
+    expect(sidebar).toContain('lucide:key-square');
+    const keys = read('../../pages/o/[org]/projects/[project]/settings/keys.vue');
+    expect(keys).toContain('keys.title');
+    expect(keys).toContain('keys.subtitle');
+  });
+});
+
+describe('signing keys page', () => {
+  const page = () => read('../../pages/o/[org]/projects/[project]/settings/keys.vue');
+  const list = () => read('./keys/SigningKeyList.vue');
+
+  it('loads through useSigningKeys and stops its timer on leave', () => {
+    expect(page()).toContain('useSigningKeys(listed.value.id)');
+    expect(page()).toContain('onBeforeUnmount(() => keys.dispose())');
+  });
+
+  it('shows the Rotation card to editors only, and replaces Rotate with the waiting line while a key is Next', () => {
+    const source = page();
+    expect(source).toMatch(/<section v-if="canEdit && loaded" class="card[^"]*" data-testid="rotation-card">/);
+    expect(source).toMatch(/<p v-if="waitingUntil && !noActive" role="status"/);
+    expect(source).toMatch(/<button v-else type="button" class="btn btn-primary btn-sm [^"]*max-sm:btn-block[^"]*" @click="keys\.askRotate\(\)">/);
+    expect(source).toContain('keys.emergency');
+    expect(source).toMatch(/`othra project keys rotate \$\{listed\.value\?\.id\} --now`/);
+  });
+
+  it('tells editors and members apart when the project has no active key', () => {
+    const source = page();
+    expect(source).toContain('canEdit ? t(\'keys.no_active\') : t(\'keys.no_active_member\')');
+  });
+
+  it('confirms with a primary button and shows the server reason in the dialog', () => {
+    const source = page();
+    expect(source).toContain('<AppModal :open="confirming" :title="t(\'keys.rotate_title\')" @close="keys.cancelRotate()">');
+    expect(source).toContain('<ErrorText :error="error" />');
+    expect(source).toMatch(/class="btn btn-primary btn-sm" :disabled="busy" @click="keys\.confirmRotate\(\)"/);
+  });
+
+  it('lists keys as a table on desktop and a stacked list on mobile, with status text and decorative dots', () => {
+    const source = list();
+    expect(source).toMatch(/<table class="table table-sm max-sm:hidden"/);
+    expect(source).toMatch(/<ul class="space-y-2 sm:hidden"/);
+    expect(source).toContain('<span class="status" :class="dot(row.status)" aria-hidden="true" />');
+    expect(source).toContain('labels.retiredNote');
+    expect(source).toContain('skeleton');
+  });
+});
+
+describe('m2 design review contrast', () => {
+  it('dims retired key rows to /60, not /50 (SF1)', () => {
+    const list = read('./keys/SigningKeyList.vue');
+    expect(list).not.toContain('\'text-base-content/50\': row.status === \'retired\'');
+    expect(list.match(/'text-base-content\/60': row\.status === 'retired'/g)).toHaveLength(2);
+  });
+});
+
+describe('sign-in methods page', () => {
+  const page = () => read('../../pages/o/[org]/projects/[project]/settings/sign-in.vue');
+  const card = () => read('./signin/GoogleUpstreamCard.vue');
+
+  it('has its own sidebar item after Issuer', () => {
+    const sidebar = read('./ProjectSettingsSidebar.vue');
+    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'sign-in\''));
+    expect(sidebar).toContain('signin.title');
+  });
+
+  it('gives editing controls to editors only and tells others why', () => {
+    expect(page()).toMatch(/<ProjectReadOnlyNote v-(?:else-)?if="!canEdit"/);
+    expect(page()).toContain('<template v-if="canEdit">');
+    expect(page()).toContain(':can-edit="canEdit"');
+    expect(card()).toContain('<form v-if="canEdit"');
+    expect(card()).toContain('v-if="canEdit && google"');
+  });
+
+  it('never shows the client secret: a password input while typing, then only "Set"', () => {
+    expect(card()).toMatch(/v-model="secret"\s+type="password"/);
+    expect(card()).toContain('google?.secretSet && !replacingSecret');
+    expect(card()).not.toMatch(/\{\{\s*secret\s*\}\}/);
+  });
+
+  it('shows the last-method and linked locks as notes beside disabled controls', () => {
+    expect(page()).toContain(':aria-disabled="emailLockedOn"');
+    expect(card()).toContain(':aria-disabled="locked"');
+    expect(card()).toContain(':disabled="busy || locked || removeLocked"');
+    expect(page()).not.toContain('role="alert"');
+    expect(card()).not.toContain('role="alert"');
+  });
+
+  it('puts a refused switch back to the server value and shows the email refusal in its own card', () => {
+    expect(page()).toMatch(/const wanted = input\.checked;\s+input\.checked = emailLink\.value;/);
+    expect(card()).toMatch(/emit\('toggle', input\.checked\);\s+input\.checked = google\?\.enabled \?\? false;/);
+    expect(page()).toContain('<ErrorText :error="emailError" />');
+    expect(page()).toContain(':toggle-error="toggleError"');
+    expect(page()).toContain('signin.email_locked_unlinked');
+  });
+
+  it('keeps a locked toggle looking On: aria-disabled and a prevented click, never disabled', () => {
+    for (const source of [page(), card()]) {
+      expect(source).not.toMatch(/:disabled="busy \|\| (?:emailLocked(?:On)?|locked)"/);
+      expect(source).toMatch(/@click="(?:emailLocked(?:On)?|locked) && \$event\.preventDefault\(\)"/);
+      expect(source).toContain('\'cursor-not-allowed\'');
+    }
+  });
+
+  it('only suggests turning Google off when that is allowed', () => {
+    expect(card()).toMatch(/google\.enabled && !locked \? `\$\{labels\.removeLocked\} \$\{labels\.turnOffInstead\}` : labels\.removeLocked/);
+    expect(read('./signin/labels.ts')).not.toContain('apperror.UPS004');
+  });
+});

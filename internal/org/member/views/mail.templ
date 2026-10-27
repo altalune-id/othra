@@ -1,0 +1,23 @@
+package views
+
+import "github.com/altalune-id/othra/internal/web/layout"
+
+// RemovedHTML is the notice sent to a person removed from org.
+templ RemovedHTML(org string) {
+	@layout.Mail("en-US", RemovedSubject(org)) {
+		<p style="margin:0 0 12px;">You are no longer a member of { org }.</p>
+		<p style="margin:0 0 12px;">Your sessions have ended and your personal API keys for this organization were revoked.</p>
+		<p style="margin:0;color:#71717a;">If you think this is a mistake, ask an owner or admin of { org } to add you back.</p>
+	}
+}
+
+// RoleChangedHTML is the notice sent to a person whose role in org is now role.
+templ RoleChangedHTML(org string, role string, consoleURL string) {
+	@layout.Mail("en-US", RoleChangedSubject(org, role)) {
+		<p style="margin:0 0 12px;">Your role in { org } is now { role }.</p>
+		<p style="margin:0 0 20px;">Please sign in again to continue with your new permissions.</p>
+		<p style="margin:0;">
+			<a href={ templ.SafeURL(consoleURL) } style="display:inline-block;padding:10px 16px;background:#18181b;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;">Open the console</a>
+		</p>
+	}
+}

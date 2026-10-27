@@ -1,0 +1,96 @@
+package views
+
+import (
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+)
+
+// AccountTile is one signed-in account of the browser: its user session's public id, its email and whether that session signed in with Google.
+type AccountTile struct {
+	SessionID string
+	Email     string
+	Google    bool
+}
+
+// PickerData is the account picker's state; Notice is the bare email just signed out, which the view translates.
+type PickerData struct {
+	Site
+	Accounts     []AccountTile
+	ReturnTo     string
+	SelectToken  string
+	SignOutToken string
+	Notice       string
+	Error        string
+	Client       string
+	ClientHost   string
+}
+
+// Picker lists the browser's signed-in accounts: continue as one, sign one out, or use another account.
+templ Picker(d layout.LayoutData, v PickerData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "picker.title"))) {
+		@layout.Card(i18n.T(ctx, "picker.title")) {
+			if v.Client != "" {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle_client", "client", v.Client) }</p>
+				if v.ClientHost != "" {
+					<p class="text-xs text-base-content/70">{ i18n.T(ctx, "consent.from_host", "host", v.ClientHost) }</p>
+				}
+			} else {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle", "project", v.Project) }</p>
+			}
+			if v.Notice != "" {
+				@alertSuccess() {
+					@withEmail(i18n.T(ctx, "picker.signed_out_notice"), v.Notice)
+				}
+			}
+			if v.Error != "" {
+				@alertError(v.Error)
+			}
+			<ul class="list rounded-box bg-base-200">
+				for _, a := range v.Accounts {
+					<li class="list-row items-center gap-0 p-0">
+						<form method="post" action={ v.href(d, "/login/select") } class="list-col-grow min-w-0">
+							@layout.CSRFInput(v.SelectToken)
+							<input type="hidden" name="user_session" value={ a.SessionID }/>
+							if v.ReturnTo != "" {
+								<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+							}
+							<button type="submit" class="flex min-h-12 w-full items-center gap-3 rounded-box px-4 py-3 text-left" aria-label={ i18n.T(ctx, "picker.continue_as", "email", a.Email) }>
+								<span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-base-300 text-sm font-semibold" aria-hidden="true">{ initial(a.Email) }</span>
+								<span class="min-w-0 grow">
+									<span class="block truncate font-medium" title={ a.Email }>{ a.Email }</span>
+									<span class="block text-xs text-base-content/70">
+										if a.Google {
+											{ i18n.T(ctx, "picker.via_google") }
+										} else {
+											{ i18n.T(ctx, "picker.via_email") }
+										}
+									</span>
+								</span>
+								@iconChevron()
+							</button>
+						</form>
+						<form method="post" action={ v.href(d, "/login/signout") } class="pr-2">
+							@layout.CSRFInput(v.SignOutToken)
+							<input type="hidden" name="user_session" value={ a.SessionID }/>
+							if v.ReturnTo != "" {
+								<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+							}
+							<button type="submit" class="btn btn-ghost btn-square btn-sm" aria-label={ i18n.T(ctx, "picker.sign_out_label", "email", a.Email) } title={ i18n.T(ctx, "picker.sign_out_label", "email", a.Email) }>
+								@iconSignOut()
+							</button>
+						</form>
+					</li>
+				}
+				<li class="list-row p-0">
+					<a class="list-col-grow flex min-h-12 items-center gap-3 rounded-box px-4 py-3" href={ templ.SafeURL(v.addAccount(d, v.ReturnTo)) }>
+						<span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-base-300" aria-hidden="true">
+							@iconPlus()
+						</span>
+						<span class="grow">{ i18n.T(ctx, "picker.use_another") }</span>
+						@iconChevron()
+					</a>
+				</li>
+			</ul>
+		}
+	}
+}

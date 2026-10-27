@@ -1,0 +1,1098 @@
+openapi: 3.1.0
+info:
+  title: project.v1
+paths:
+  /project.v1.ProjectService/BumpTermsVersion:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: BumpTermsVersion
+      operationId: project.v1.ProjectService.BumpTermsVersion
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.BumpTermsVersionRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.BumpTermsVersionResponse'
+  /project.v1.ProjectService/CheckIssuerHandle:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: CheckIssuerHandle
+      operationId: project.v1.ProjectService.CheckIssuerHandle
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.CheckIssuerHandleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.CheckIssuerHandleResponse'
+  /project.v1.ProjectService/CompleteProjectLogoUpload:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: CompleteProjectLogoUpload
+      operationId: project.v1.ProjectService.CompleteProjectLogoUpload
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.CompleteProjectLogoUploadRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.CompleteProjectLogoUploadResponse'
+  /project.v1.ProjectService/CreateProject:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: CreateProject
+      operationId: project.v1.ProjectService.CreateProject
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.CreateProjectRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.CreateProjectResponse'
+  /project.v1.ProjectService/CreateProjectLogoUpload:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: CreateProjectLogoUpload
+      operationId: project.v1.ProjectService.CreateProjectLogoUpload
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.CreateProjectLogoUploadRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.CreateProjectLogoUploadResponse'
+  /project.v1.ProjectService/DeleteProjectLogo:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: DeleteProjectLogo
+      operationId: project.v1.ProjectService.DeleteProjectLogo
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.DeleteProjectLogoRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.DeleteProjectLogoResponse'
+  /project.v1.ProjectService/GetProject:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: GetProject
+      operationId: project.v1.ProjectService.GetProject
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.GetProjectRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.GetProjectResponse'
+  /project.v1.ProjectService/ListProjects:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: ListProjects
+      operationId: project.v1.ProjectService.ListProjects
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.ListProjectsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.ListProjectsResponse'
+  /project.v1.ProjectService/UpdateProject:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProject
+      operationId: project.v1.ProjectService.UpdateProject
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectResponse'
+  /project.v1.ProjectService/UpdateProjectBranding:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectBranding
+      operationId: project.v1.ProjectService.UpdateProjectBranding
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectBrandingRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectBrandingResponse'
+  /project.v1.ProjectService/UpdateProjectIssuer:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectIssuer
+      operationId: project.v1.ProjectService.UpdateProjectIssuer
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectIssuerRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectIssuerResponse'
+  /project.v1.ProjectService/UpdateProjectSignIn:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectSignIn
+      operationId: project.v1.ProjectService.UpdateProjectSignIn
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectSignInRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectSignInResponse'
+  /project.v1.ProjectService/UpdateProjectTerms:
+    post:
+      tags:
+        - project.v1.ProjectService
+      summary: UpdateProjectTerms
+      operationId: project.v1.ProjectService.UpdateProjectTerms
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project.v1.UpdateProjectTermsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/project.v1.UpdateProjectTermsResponse'
+components:
+  schemas:
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+    google.protobuf.Timestamp:
+      type: string
+      examples:
+        - "2023-01-15T01:30:15.01Z"
+        - "2024-12-25T12:00:00Z"
+      format: date-time
+      description: |-
+        A Timestamp represents a point in time independent of any time zone or local
+         calendar, encoded as a count of seconds and fractions of seconds at
+         nanosecond resolution. The count is relative to an epoch at UTC midnight on
+         January 1, 1970, in the proleptic Gregorian calendar which extends the
+         Gregorian calendar backwards to year one.
+
+         All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+         second table is needed for interpretation, using a [24-hour linear
+         smear](https://developers.google.com/time/smear).
+
+         The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+         restricting to that range, we ensure that we can convert to and from [RFC
+         3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+
+         # Examples
+
+         Example 1: Compute Timestamp from POSIX `time()`.
+
+             Timestamp timestamp;
+             timestamp.set_seconds(time(NULL));
+             timestamp.set_nanos(0);
+
+         Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+
+             struct timeval tv;
+             gettimeofday(&tv, NULL);
+
+             Timestamp timestamp;
+             timestamp.set_seconds(tv.tv_sec);
+             timestamp.set_nanos(tv.tv_usec * 1000);
+
+         Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+
+             FILETIME ft;
+             GetSystemTimeAsFileTime(&ft);
+             UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+
+             // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+             // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+             Timestamp timestamp;
+             timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+             timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+
+         Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+
+             long millis = System.currentTimeMillis();
+
+             Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+                 .setNanos((int) ((millis % 1000) * 1000000)).build();
+
+         Example 5: Compute Timestamp from Java `Instant.now()`.
+
+             Instant now = Instant.now();
+
+             Timestamp timestamp =
+                 Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+                     .setNanos(now.getNano()).build();
+
+         Example 6: Compute Timestamp from current time in Python.
+
+             timestamp = Timestamp()
+             timestamp.GetCurrentTime()
+
+         # JSON Mapping
+
+         In JSON format, the Timestamp type is encoded as a string in the
+         [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+         format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+         where {year} is always expressed using four digits while {month}, {day},
+         {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+         seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+         are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+         is required. A ProtoJSON serializer should always use UTC (as indicated by
+         "Z") when printing the Timestamp type and a ProtoJSON parser should be
+         able to accept both UTC and other timezones (as indicated by an offset).
+
+         For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+         01:30 UTC on January 15, 2017.
+
+         In JavaScript, one can convert a Date object to this format using the
+         standard
+         [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+         method. In Python, a standard `datetime.datetime` object can be converted
+         to this format using
+         [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+         the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+         the Joda Time's [`ISODateTimeFormat.dateTime()`](
+         http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+         ) to obtain a formatter capable of generating timestamps in this format.
+    project.v1.BumpTermsVersionRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+      title: BumpTermsVersionRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.BumpTermsVersionResponse:
+      type: object
+      properties:
+        version:
+          type: integer
+          title: version
+          format: int32
+        publishedAt:
+          title: published_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: BumpTermsVersionResponse
+      additionalProperties: false
+    project.v1.CheckIssuerHandleRequest:
+      type: object
+      properties:
+        orgId:
+          type: string
+          title: org_id
+          description: |
+            othra.public_id = true
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            project_id names the project being edited, so its own handle counts as available.
+            othra.public_id = true
+        issuerHandle:
+          type: string
+          title: issuer_handle
+          maxLength: 64
+      title: CheckIssuerHandleRequest
+      required:
+        - orgId
+        - issuerHandle
+      additionalProperties: false
+    project.v1.CheckIssuerHandleResponse:
+      type: object
+      properties:
+        available:
+          type: boolean
+          title: available
+        reason:
+          type: string
+          title: reason
+          description: reason is one of ok, taken, reserved, invalid or locked.
+      title: CheckIssuerHandleResponse
+      additionalProperties: false
+    project.v1.CompleteProjectLogoUploadRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        uploadId:
+          type: string
+          title: upload_id
+          description: |
+            othra.public_id = true
+      title: CompleteProjectLogoUploadRequest
+      required:
+        - id
+        - uploadId
+      additionalProperties: false
+    project.v1.CompleteProjectLogoUploadResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: CompleteProjectLogoUploadResponse
+      additionalProperties: false
+    project.v1.CreateProjectLogoUploadRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        contentType:
+          type: string
+          title: content_type
+          maxLength: 100
+        sizeBytes:
+          exclusiveMinimum: 0
+          type: integer
+          title: size_bytes
+          maximum: 10485760
+      title: CreateProjectLogoUploadRequest
+      required:
+        - id
+        - contentType
+      additionalProperties: false
+    project.v1.CreateProjectLogoUploadResponse:
+      type: object
+      properties:
+        uploadId:
+          type: string
+          title: upload_id
+        url:
+          type: string
+          title: url
+        method:
+          type: string
+          title: method
+        headers:
+          type: object
+          title: headers
+          additionalProperties:
+            type: string
+            title: value
+          description: headers must be sent unchanged with the upload.
+        expiresAt:
+          title: expires_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: CreateProjectLogoUploadResponse
+      additionalProperties: false
+    project.v1.CreateProjectLogoUploadResponse.HeadersEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: HeadersEntry
+      additionalProperties: false
+    project.v1.CreateProjectRequest:
+      type: object
+      properties:
+        orgId:
+          type: string
+          title: org_id
+          description: |
+            othra.public_id = true
+        slug:
+          type: string
+          title: slug
+          description: |
+            othra.slug.format = true
+            othra.slug.max_len.64 = true
+            othra.slug.min_len.3 = true
+        name:
+          type: string
+          title: name
+          description: |
+            othra.name.blank = true
+            othra.name.max_len.200 = true
+        issuerHandle:
+          type: string
+          title: issuer_handle
+          description: |
+            project.issuer_handle.format
+            project.issuer_handle.max_len.40
+            project.issuer_handle.min_len.3
+      title: CreateProjectRequest
+      required:
+        - orgId
+        - name
+      additionalProperties: false
+    project.v1.CreateProjectResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: CreateProjectResponse
+      additionalProperties: false
+    project.v1.DeleteProjectLogoRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+      title: DeleteProjectLogoRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.DeleteProjectLogoResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: DeleteProjectLogoResponse
+      additionalProperties: false
+    project.v1.GetProjectRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+      title: GetProjectRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.GetProjectResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: GetProjectResponse
+      additionalProperties: false
+    project.v1.ListProjectsRequest:
+      type: object
+      properties:
+        orgId:
+          type: string
+          title: org_id
+          description: |
+            othra.public_id = true
+      title: ListProjectsRequest
+      required:
+        - orgId
+      additionalProperties: false
+    project.v1.ListProjectsResponse:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/project.v1.Project'
+          title: projects
+      title: ListProjectsResponse
+      additionalProperties: false
+    project.v1.Project:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        orgId:
+          type: string
+          title: org_id
+        slug:
+          type: string
+          title: slug
+        name:
+          type: string
+          title: name
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        updatedAt:
+          title: updated_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        issuerHandle:
+          type: string
+          title: issuer_handle
+        issuerUrl:
+          type: string
+          title: issuer_url
+          description: issuer_url is the project's exact OAuth issuer, https://<host>/p/<issuer_handle>.
+        issuerHandleLocked:
+          type: boolean
+          title: issuer_handle_locked
+        issuerHandleLockedAt:
+          title: issuer_handle_locked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        displayName:
+          type: string
+          title: display_name
+        primaryColor:
+          type: string
+          title: primary_color
+        supportEmail:
+          type: string
+          title: support_email
+        termsUrl:
+          type: string
+          title: terms_url
+        privacyUrl:
+          type: string
+          title: privacy_url
+        termsVersion:
+          type: integer
+          title: terms_version
+          format: int32
+        termsPublishedAt:
+          title: terms_published_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        signinEmailLink:
+          type: boolean
+          title: signin_email_link
+        logoUrl:
+          type: string
+          title: logo_url
+          description: logo_url is the public URL of the project's logo, empty when it has none.
+        system:
+          type: boolean
+          title: system
+          description: system is true for the console project Othra seeds at install; only its branding, terms and upstream IdPs can change.
+      title: Project
+      additionalProperties: false
+    project.v1.UpdateProjectBrandingRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        displayName:
+          type: string
+          title: display_name
+          description: |
+            project.display_name.max_len.60
+        primaryColor:
+          type: string
+          title: primary_color
+          description: |
+            project.primary_color.format
+        supportEmail:
+          type: string
+          title: support_email
+          description: |
+            othra.email.format = true
+            othra.email.max_len.254 = true
+      title: UpdateProjectBrandingRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.UpdateProjectBrandingResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectBrandingResponse
+      additionalProperties: false
+    project.v1.UpdateProjectIssuerRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        issuerHandle:
+          type: string
+          title: issuer_handle
+          description: |
+            project.issuer_handle.format
+            project.issuer_handle.max_len.40
+            project.issuer_handle.min_len.3
+      title: UpdateProjectIssuerRequest
+      required:
+        - id
+        - issuerHandle
+      additionalProperties: false
+    project.v1.UpdateProjectIssuerResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectIssuerResponse
+      additionalProperties: false
+    project.v1.UpdateProjectRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        name:
+          type: string
+          title: name
+          description: |
+            othra.name.blank = true
+            othra.name.max_len.200 = true
+        slug:
+          type: string
+          title: slug
+          description: |
+            othra.slug.format = true
+            othra.slug.max_len.64 = true
+            othra.slug.min_len.3 = true
+      title: UpdateProjectRequest
+      required:
+        - id
+        - name
+        - slug
+      additionalProperties: false
+    project.v1.UpdateProjectResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectResponse
+      additionalProperties: false
+    project.v1.UpdateProjectSignInRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        emailLink:
+          type: boolean
+          title: email_link
+      title: UpdateProjectSignInRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.UpdateProjectSignInResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectSignInResponse
+      additionalProperties: false
+    project.v1.UpdateProjectTermsRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: |
+            othra.public_id = true
+        termsUrl:
+          type: string
+          title: terms_url
+          description: |
+            project.url.format
+            project.url.max_len.2048
+        privacyUrl:
+          type: string
+          title: privacy_url
+          description: |
+            project.url.format
+            project.url.max_len.2048
+      title: UpdateProjectTermsRequest
+      required:
+        - id
+      additionalProperties: false
+    project.v1.UpdateProjectTermsResponse:
+      type: object
+      properties:
+        project:
+          title: project
+          $ref: '#/components/schemas/project.v1.Project'
+      title: UpdateProjectTermsResponse
+      additionalProperties: false
+security: []
+tags:
+  - name: project.v1.ProjectService
+    description: ProjectService manages projects. Every id is a public id.

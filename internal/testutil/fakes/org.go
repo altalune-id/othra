@@ -1,0 +1,101 @@
+package fakes
+
+import (
+	"context"
+
+	"github.com/google/uuid"
+
+	"github.com/altalune-id/othra/internal/org"
+)
+
+// OrgStore is an org.Store test double. ByID/BySlug/List return Org/Orgs (or Err); Save records the org and returns SaveFn/Err.
+type OrgStore struct {
+	Err     error
+	Org     *org.Org
+	Orgs    []*org.Org
+	ForUser map[uuid.UUID][]*org.Org
+	SaveFn  func(*org.Org) error
+	Saved   *org.Org
+}
+
+var _ org.Store = (*OrgStore)(nil)
+
+// Save implements org.Store.
+func (f *OrgStore) Save(_ context.Context, o *org.Org) error {
+	f.Saved = o
+	if f.SaveFn != nil {
+		return f.SaveFn(o)
+	}
+	return f.Err
+}
+
+// ByID implements org.Store; it returns the org in Orgs with id, else Org.
+func (f *OrgStore) ByID(_ context.Context, id uuid.UUID) (*org.Org, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	for _, o := range f.Orgs {
+		if o.ID == id {
+			return o, nil
+		}
+	}
+	return f.Org, nil
+}
+
+// BySlug implements org.Store.
+func (f *OrgStore) BySlug(context.Context, string) (*org.Org, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	return f.Org, nil
+}
+
+// ByPublicID implements org.Store; it returns Org when the public id matches, else *org.NotFoundError.
+func (f *OrgStore) ByPublicID(_ context.Context, publicID string) (*org.Org, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	if f.Org == nil || f.Org.PublicID != publicID {
+		return nil, &org.NotFoundError{ID: publicID}
+	}
+	return f.Org, nil
+}
+
+// System implements org.Store; it returns Org when that is a system org, else *org.NotFoundError.
+func (f *OrgStore) System(context.Context) (*org.Org, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	if f.Org == nil || !f.Org.IsSystem {
+		return nil, &org.NotFoundError{}
+	}
+	return f.Org, nil
+}
+
+// List implements org.Store.
+func (f *OrgStore) List(context.Context) ([]*org.Org, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	return f.Orgs, nil
+}
+
+// ListForUser implements org.Store; it returns ForUser[userID] when ForUser is set, else Orgs.
+func (f *OrgStore) ListForUser(_ context.Context, userID uuid.UUID) ([]*org.Org, error) {
+	if f.ForUser != nil && f.Err == nil {
+		return f.ForUser[userID], nil
+	}
+	return f.List(context.Background())
+}
+
+// IDs implements org.Store; it returns the ids of Orgs.
+func (f *OrgStore) IDs(context.Context) ([]uuid.UUID, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	out := make([]uuid.UUID, 0, len(f.Orgs))
+	for _, o := range f.Orgs {
+		out = append(out, o.ID)
+	}
+	return out, nil
+}

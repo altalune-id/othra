@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package othratest.v1;
+
+import "mcp/v1/annotations.proto";
+
+option go_package = "github.com/altalune-id/othra/internal/tool/protocmcp/testdata/gen/othratest/v1;othratestv1";
+
+// PlaintextService annotates an rpc whose response nests a plaintext field.
+service PlaintextService {
+  rpc IssueKey(IssueKeyRequest) returns (IssueKeyResponse) {
+    option (mcp.v1.tool) = {
+      name: "key_issue"
+      description: "Issue a key."
+    };
+  }
+}
+
+message IssueKeyRequest {}
+
+message IssueKeyResponse {
+  IssuedKey key = 1;
+}
+
+message IssuedKey {
+  string id = 1;
+  string plaintext = 2;
+}

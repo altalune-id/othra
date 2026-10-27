@@ -1,0 +1,40 @@
+package layout
+
+import "github.com/altalune-id/othra/internal/web/i18n"
+
+// ConsentData is where the terms and privacy policy live and whether a person must tick the box.
+type ConsentData struct {
+	TermsURL   string
+	PrivacyURL string
+	Required   bool
+}
+
+// Consent shows the terms and privacy links on an account form, with a required checkbox named accept_terms when c.Required; a branded page shows only the links it has, in the page's language.
+templ Consent(d LayoutData, c ConsentData) {
+	if c.Required {
+		<label class="label cursor-pointer items-start gap-3 whitespace-normal">
+			<input class="checkbox checkbox-primary" type="checkbox" name="accept_terms" value="1" required/>
+			<span class="text-base-content">
+				@sentence(consentSentence(ctx, d, c))
+			</span>
+		</label>
+	} else {
+		<p class="text-sm text-base-content/70">
+			@sentence(consentSentence(ctx, d, c))
+		</p>
+	}
+}
+
+templ sentence(parts []sentencePart) {
+	for _, p := range parts {
+		if p.URL == "" {
+			{ p.Text }
+		} else {
+			@newTabLink(p.URL, p.Text)
+		}
+	}
+}
+
+templ newTabLink(href, label string) {
+	<a class="link" href={ templ.SafeURL(href) } target="_blank" rel="noopener noreferrer">{ label }<span class="sr-only">{ " " + i18n.T(ctx, "common.opens_new_tab") }</span></a>
+}

@@ -1,0 +1,57 @@
+package views
+
+import (
+	"strconv"
+
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+)
+
+// SentData is the "check your inbox" page's state; Email is empty when the flash cookie is gone.
+type SentData struct {
+	Site
+	Email       string
+	Minutes     int
+	ReturnTo    string
+	ResendToken string
+	Resent      bool
+}
+
+// Sent tells the person to open the link from their inbox, with the same answer for every email.
+templ Sent(d layout.LayoutData, v SentData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "sent.title"))) {
+		@layout.Card(i18n.T(ctx, "sent.title")) {
+			@iconCircle() {
+				@iconMail("size-6")
+			}
+			if v.Resent {
+				@alertSuccess() {
+					{ i18n.T(ctx, "sent.resent") }
+				}
+			}
+			if v.Email != "" {
+				<p>
+					@withEmail(i18n.T(ctx, "sent.body", "minutes", strconv.Itoa(v.Minutes)), v.Email)
+				</p>
+			} else {
+				<p>{ i18n.T(ctx, "sent.body_no_email", "minutes", strconv.Itoa(v.Minutes)) }</p>
+			}
+			<p>{ i18n.T(ctx, "sent.device_hint") }</p>
+			<p>{ i18n.T(ctx, "sent.newest_only") }</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "sent.spam_hint") }</p>
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+				if v.Email != "" {
+					<form method="post" action={ v.href(d, "/login/resend") }>
+						@layout.CSRFInput(v.ResendToken)
+						<input type="hidden" name="email" value={ v.Email }/>
+						if v.ReturnTo != "" {
+							<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+						}
+						<button class="btn max-sm:btn-block" type="submit">{ i18n.T(ctx, "sent.resend") }</button>
+					</form>
+				}
+				<a class="link text-sm" href={ templ.SafeURL(v.addAccount(d, v.ReturnTo)) }>{ i18n.T(ctx, "sent.change_email") }</a>
+			</div>
+		}
+	}
+}

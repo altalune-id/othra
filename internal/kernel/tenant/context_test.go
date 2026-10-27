@@ -1,0 +1,60 @@
+package tenant_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+)
+
+func TestFrom_Missing(t *testing.T) {
+	_, err := tenant.From(context.Background())
+	assert.True(t, tenant.IsMissingError(err))
+}
+
+func TestFrom_Unscoped(t *testing.T) {
+	ctx := tenant.Into(context.Background(), tenant.Context{})
+	_, err := tenant.From(ctx)
+	assert.True(t, tenant.IsUnscopedError(err))
+}
+
+func TestRoundTrip(t *testing.T) {
+	org, project, user := uuid.New(), uuid.New(), uuid.New()
+	ctx := tenant.Into(context.Background(), tenant.Context{OrgID: org, ProjectID: project, UserID: user})
+
+	tc, err := tenant.From(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, org, tc.OrgID)
+	assert.Equal(t, project, tc.ProjectID)
+	assert.Equal(t, user, tc.UserID)
+}
+
+func TestWithProjectOrg(t *testing.T) {
+	ctx := context.Background()
+	pid, oid := uuid.New(), uuid.New()
+
+	tc, err := tenant.From(tenant.WithProject(tenant.WithOrg(ctx, oid), pid))
+	require.NoError(t, err)
+	assert.Equal(t, oid, tc.OrgID)
+	assert.Equal(t, pid, tc.ProjectID)
+}
+
+func TestPeek(t *testing.T) {
+	assert.Equal(t, tenant.Context{}, tenant.Peek(context.Background()), "no scope peeks as the zero Context")
+
+	tc := tenant.Context{OrgID: uuid.New(), ProjectID: uuid.New(), UserID: uuid.New()}
+	assert.Equal(t, tc, tenant.Peek(tenant.Into(context.Background(), tc)))
+
+	userOnly := tenant.Context{UserID: uuid.New()}
+	assert.Equal(t, userOnly, tenant.Peek(tenant.Into(context.Background(), userOnly)), "Peek never rejects an unscoped Context")
+}
+
+func TestWithUser(t *testing.T) {
+	org, user := uuid.New(), uuid.New()
+	tc := tenant.Peek(tenant.WithUser(tenant.WithOrg(context.Background(), org), user))
+	assert.Equal(t, tenant.Context{OrgID: org, UserID: user}, tc)
+}

@@ -1,0 +1,768 @@
+openapi: 3.1.0
+info:
+  title: enduser.v1
+paths:
+  /enduser.v1.EndUserService/DisconnectEndUserApp:
+    post:
+      tags:
+        - enduser.v1.EndUserService
+      summary: DisconnectEndUserApp
+      operationId: enduser.v1.EndUserService.DisconnectEndUserApp
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/enduser.v1.DisconnectEndUserAppRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/enduser.v1.DisconnectEndUserAppResponse'
+  /enduser.v1.EndUserService/GetEndUser:
+    post:
+      tags:
+        - enduser.v1.EndUserService
+      summary: GetEndUser
+      operationId: enduser.v1.EndUserService.GetEndUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/enduser.v1.GetEndUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/enduser.v1.GetEndUserResponse'
+  /enduser.v1.EndUserService/ListEndUsers:
+    post:
+      tags:
+        - enduser.v1.EndUserService
+      summary: ListEndUsers
+      operationId: enduser.v1.EndUserService.ListEndUsers
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/enduser.v1.ListEndUsersRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/enduser.v1.ListEndUsersResponse'
+  /enduser.v1.EndUserService/RevokeEndUserSession:
+    post:
+      tags:
+        - enduser.v1.EndUserService
+      summary: RevokeEndUserSession
+      operationId: enduser.v1.EndUserService.RevokeEndUserSession
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/enduser.v1.RevokeEndUserSessionRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/enduser.v1.RevokeEndUserSessionResponse'
+  /enduser.v1.EndUserService/RevokeEndUserToken:
+    post:
+      tags:
+        - enduser.v1.EndUserService
+      summary: RevokeEndUserToken
+      operationId: enduser.v1.EndUserService.RevokeEndUserToken
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/enduser.v1.RevokeEndUserTokenRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/enduser.v1.RevokeEndUserTokenResponse'
+components:
+  schemas:
+    account.v1.AppResource:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: id is the resource server's public id; empty for sign-in only (OIDC).
+        name:
+          type: string
+          title: name
+        identifier:
+          type: string
+          title: identifier
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          additionalProperties:
+            type: string
+            title: value
+      title: AppResource
+      additionalProperties: false
+    account.v1.AppResource.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
+      additionalProperties: false
+    account.v1.ConnectedApp:
+      type: object
+      properties:
+        clientId:
+          type: string
+          title: client_id
+          description: 'client_id is the app''s client_id: a public id, or the https URL of an app without registration (CIMD).'
+        name:
+          type: string
+          title: name
+        metadataHost:
+          type: string
+          title: metadata_host
+          description: metadata_host is the host of an app without registration; empty for a registered app.
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.AppResource'
+          title: resources
+        consented:
+          type: boolean
+          title: consented
+          description: consented is false for a first-party app that never showed a consent page.
+        offline:
+          type: boolean
+          title: offline
+          description: offline is true while the app holds access that outlives a sign-out (offline_access).
+        connectedAt:
+          title: connected_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastUsedAt:
+          title: last_used_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: ConnectedApp
+      additionalProperties: false
+    account.v1.PersonalToken:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type: string
+          title: name
+        hint:
+          type: string
+          title: hint
+          description: hint is the token's last 4 characters.
+        server:
+          title: server
+          $ref: '#/components/schemas/account.v1.TokenServer'
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+        state:
+          title: state
+          $ref: '#/components/schemas/account.v1.PersonalTokenState'
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        expiresAt:
+          title: expires_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastUsedAt:
+          title: last_used_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        revokedAt:
+          title: revoked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: PersonalToken
+      additionalProperties: false
+    account.v1.PersonalTokenState:
+      type: string
+      title: PersonalTokenState
+      enum:
+        - PERSONAL_TOKEN_STATE_UNSPECIFIED
+        - PERSONAL_TOKEN_STATE_ACTIVE
+        - PERSONAL_TOKEN_STATE_EXPIRED
+        - PERSONAL_TOKEN_STATE_REVOKED
+      description: PersonalTokenState is where a personal token stands.
+    account.v1.Session:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        method:
+          title: method
+          $ref: '#/components/schemas/account.v1.SignInMethodKind'
+        userAgent:
+          type: string
+          title: user_agent
+          description: user_agent is the browser's own description, raw; the portal shortens it.
+        authTime:
+          title: auth_time
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastSeenAt:
+          title: last_seen_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        current:
+          type: boolean
+          title: current
+          description: current is the session this request came from.
+      title: Session
+      additionalProperties: false
+    account.v1.SignInMethod:
+      type: object
+      properties:
+        kind:
+          title: kind
+          $ref: '#/components/schemas/account.v1.SignInMethodKind'
+        linked:
+          type: boolean
+          title: linked
+          description: linked is false for an upstream IdP the project offers that this end user hasn't connected.
+        identityId:
+          type: string
+          title: identity_id
+          description: identity_id names a linked upstream identity, for UnlinkIdentity.
+        email:
+          type: string
+          title: email
+          description: email is the address this method signs in with.
+        linkedAt:
+          title: linked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastUsedAt:
+          title: last_used_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        canRemove:
+          type: boolean
+          title: can_remove
+        lock:
+          title: lock
+          $ref: '#/components/schemas/account.v1.SignInMethodLock'
+      title: SignInMethod
+      additionalProperties: false
+    account.v1.SignInMethodKind:
+      type: string
+      title: SignInMethodKind
+      enum:
+        - SIGN_IN_METHOD_KIND_UNSPECIFIED
+        - SIGN_IN_METHOD_KIND_EMAIL_LINK
+        - SIGN_IN_METHOD_KIND_GOOGLE
+      description: SignInMethodKind is a way to sign in.
+    account.v1.SignInMethodLock:
+      type: string
+      title: SignInMethodLock
+      enum:
+        - SIGN_IN_METHOD_LOCK_UNSPECIFIED
+        - SIGN_IN_METHOD_LOCK_LAST_METHOD
+      description: SignInMethodLock is why a method can't be removed now.
+    account.v1.TokenServer:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type: string
+          title: name
+        identifier:
+          type: string
+          title: identifier
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          additionalProperties:
+            type: string
+            title: value
+      title: TokenServer
+      additionalProperties: false
+    account.v1.TokenServer.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
+      additionalProperties: false
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+    enduser.v1.DisconnectEndUserAppRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        endUserId:
+          type: string
+          title: end_user_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          maxLength: 2048
+      title: DisconnectEndUserAppRequest
+      required:
+        - projectId
+        - endUserId
+        - clientId
+      additionalProperties: false
+    enduser.v1.DisconnectEndUserAppResponse:
+      type: object
+      title: DisconnectEndUserAppResponse
+      additionalProperties: false
+    enduser.v1.EndUser:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        email:
+          type: string
+          title: email
+        name:
+          type: string
+          title: name
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastSignInAt:
+          title: last_sign_in_at
+          description: last_sign_in_at is the latest sign-in of any live session; unset when none.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: EndUser
+      additionalProperties: false
+    enduser.v1.GetEndUserRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        endUserId:
+          type: string
+          title: end_user_id
+          description: |
+            othra.public_id = true
+      title: GetEndUserRequest
+      required:
+        - projectId
+        - endUserId
+      additionalProperties: false
+    enduser.v1.GetEndUserResponse:
+      type: object
+      properties:
+        endUser:
+          title: end_user
+          $ref: '#/components/schemas/enduser.v1.EndUser'
+        methods:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.SignInMethod'
+          title: methods
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.Session'
+          title: sessions
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.ConnectedApp'
+          title: apps
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.PersonalToken'
+          title: tokens
+      title: GetEndUserResponse
+      additionalProperties: false
+    enduser.v1.ListEndUsersRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        query:
+          type: string
+          title: query
+          maxLength: 254
+        limit:
+          type: integer
+          title: limit
+          maximum: 100
+          minimum: 0
+          format: int32
+        after:
+          type: string
+          title: after
+          description: |
+            othra.public_id = true
+      title: ListEndUsersRequest
+      required:
+        - projectId
+      additionalProperties: false
+    enduser.v1.ListEndUsersResponse:
+      type: object
+      properties:
+        endUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/enduser.v1.EndUser'
+          title: end_users
+        next:
+          type: string
+          title: next
+          description: next is the after value for the next page; empty on the last page.
+      title: ListEndUsersResponse
+      additionalProperties: false
+    enduser.v1.RevokeEndUserSessionRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        endUserId:
+          type: string
+          title: end_user_id
+          description: |
+            othra.public_id = true
+        sessionId:
+          type: string
+          title: session_id
+          description: |
+            othra.public_id = true
+      title: RevokeEndUserSessionRequest
+      required:
+        - projectId
+        - endUserId
+        - sessionId
+      additionalProperties: false
+    enduser.v1.RevokeEndUserSessionResponse:
+      type: object
+      title: RevokeEndUserSessionResponse
+      additionalProperties: false
+    enduser.v1.RevokeEndUserTokenRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        endUserId:
+          type: string
+          title: end_user_id
+          description: |
+            othra.public_id = true
+        tokenId:
+          type: string
+          title: token_id
+          description: |
+            othra.public_id = true
+      title: RevokeEndUserTokenRequest
+      required:
+        - projectId
+        - endUserId
+        - tokenId
+      additionalProperties: false
+    enduser.v1.RevokeEndUserTokenResponse:
+      type: object
+      title: RevokeEndUserTokenResponse
+      additionalProperties: false
+    google.protobuf.Timestamp:
+      type: string
+      examples:
+        - "2023-01-15T01:30:15.01Z"
+        - "2024-12-25T12:00:00Z"
+      format: date-time
+      description: |-
+        A Timestamp represents a point in time independent of any time zone or local
+         calendar, encoded as a count of seconds and fractions of seconds at
+         nanosecond resolution. The count is relative to an epoch at UTC midnight on
+         January 1, 1970, in the proleptic Gregorian calendar which extends the
+         Gregorian calendar backwards to year one.
+
+         All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+         second table is needed for interpretation, using a [24-hour linear
+         smear](https://developers.google.com/time/smear).
+
+         The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+         restricting to that range, we ensure that we can convert to and from [RFC
+         3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+
+         # Examples
+
+         Example 1: Compute Timestamp from POSIX `time()`.
+
+             Timestamp timestamp;
+             timestamp.set_seconds(time(NULL));
+             timestamp.set_nanos(0);
+
+         Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+
+             struct timeval tv;
+             gettimeofday(&tv, NULL);
+
+             Timestamp timestamp;
+             timestamp.set_seconds(tv.tv_sec);
+             timestamp.set_nanos(tv.tv_usec * 1000);
+
+         Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+
+             FILETIME ft;
+             GetSystemTimeAsFileTime(&ft);
+             UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+
+             // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+             // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+             Timestamp timestamp;
+             timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+             timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+
+         Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+
+             long millis = System.currentTimeMillis();
+
+             Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+                 .setNanos((int) ((millis % 1000) * 1000000)).build();
+
+         Example 5: Compute Timestamp from Java `Instant.now()`.
+
+             Instant now = Instant.now();
+
+             Timestamp timestamp =
+                 Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+                     .setNanos(now.getNano()).build();
+
+         Example 6: Compute Timestamp from current time in Python.
+
+             timestamp = Timestamp()
+             timestamp.GetCurrentTime()
+
+         # JSON Mapping
+
+         In JSON format, the Timestamp type is encoded as a string in the
+         [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+         format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+         where {year} is always expressed using four digits while {month}, {day},
+         {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+         seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+         are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+         is required. A ProtoJSON serializer should always use UTC (as indicated by
+         "Z") when printing the Timestamp type and a ProtoJSON parser should be
+         able to accept both UTC and other timezones (as indicated by an offset).
+
+         For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+         01:30 UTC on January 15, 2017.
+
+         In JavaScript, one can convert a Date object to this format using the
+         standard
+         [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+         method. In Python, a standard `datetime.datetime` object can be converted
+         to this format using
+         [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+         the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+         the Joda Time's [`ISODateTimeFormat.dateTime()`](
+         http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+         ) to obtain a formatter capable of generating timestamps in this format.
+security: []
+tags:
+  - name: enduser.v1.EndUserService
+    description: EndUserService lets project admins look at a project's end users and revoke their sessions, apps and tokens. Every id is a public id.

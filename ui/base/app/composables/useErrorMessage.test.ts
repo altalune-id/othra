@@ -1,0 +1,48 @@
+import { describe, expect, it, vi } from 'vitest';
+
+import { connectError, setKnownKeys } from '../../test/nuxt-globals';
+import { useErrorMessage } from './useErrorMessage';
+
+describe('useErrorMessage', () => {
+  it('turns a Connect error into a translated message with a reference', () => {
+    setKnownKeys('apperror.ORG003');
+    const shown = useErrorMessage()(connectError('ORG003', { slug: 'a' }, 'req-9'), 'error.load_orgs');
+    expect(shown).toEqual({ message: 'apperror.ORG003|{"slug":"a"}', reference: 'error.ref|{"id":"req-9"}' });
+  });
+
+  it('passes scope labels to the message', () => {
+    setKnownKeys('apperror.GEN007');
+    const shown = useErrorMessage()(connectError('GEN007', { permission: 'webhook:read' }, ''), 'error.load_orgs');
+    expect(shown).toEqual({ message: 'apperror.GEN007|{"permission":"scope.webhook_read"}' });
+  });
+
+  it('passes field labels to the message', () => {
+    setKnownKeys('apperror.GEN004', 'field.organization_id');
+    const shown = useErrorMessage()(connectError('GEN004', { field: 'organization_id' }, ''), 'error.load_orgs');
+    expect(shown).toEqual({ message: 'apperror.GEN004|{"field":"field.organization_id"}' });
+  });
+
+  it('shows a time param as a local time and leaves a non-time value alone', () => {
+    setKnownKeys('apperror.RSV008');
+    const iso = '2026-10-20T14:05:30Z';
+    const local = new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date(iso));
+    expect(useErrorMessage()(connectError('RSV008', { time: iso }, ''), 'error.verify_rs')).toEqual({ message: `apperror.RSV008|${JSON.stringify({ time: local })}` });
+    expect(useErrorMessage()(connectError('RSV008', { time: 'soon' }, ''), 'error.verify_rs')).toEqual({ message: 'apperror.RSV008|{"time":"soon"}' });
+  });
+
+  it('translates the fallback key for a plain error', () => {
+    expect(useErrorMessage()(new Error('boom'), 'error.load_orgs')).toEqual({ message: 'error.load_orgs' });
+  });
+});
+
+// A route middleware creates stores before any component exists; vue-i18n's useI18n throws there (MUST_BE_CALL_SETUP_TOP).
+describe('useErrorMessage outside a component setup', () => {
+  it('never calls useI18n, at creation or when it maps an error', () => {
+    vi.stubGlobal('useI18n', () => {
+      throw new SyntaxError('26');
+    });
+    setKnownKeys('apperror.ORG003');
+    const errorMessage = useErrorMessage();
+    expect(errorMessage(connectError('ORG003', { slug: 'a' }, ''), 'error.load_orgs')).toEqual({ message: 'apperror.ORG003|{"slug":"a"}' });
+  });
+});

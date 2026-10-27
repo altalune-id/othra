@@ -1,0 +1,21 @@
+package views
+
+import (
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+)
+
+// SignedOutData is the signed-out page's state.
+type SignedOutData struct {
+	Site
+}
+
+// SignedOut confirms the sign-out and offers to sign in again.
+templ SignedOut(d layout.LayoutData, v SignedOutData) {
+	@layout.Layout(titled(d, i18n.T(ctx, "signed_out.title"))) {
+		@layout.Card(i18n.T(ctx, "signed_out.title")) {
+			<p>{ i18n.T(ctx, "signed_out.body", "project", v.Project) }</p>
+			<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.href(d, "/login")) }>{ i18n.T(ctx, "signed_out.sign_in") }</a>
+		}
+	}
+}

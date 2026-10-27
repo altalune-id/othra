@@ -1,0 +1,46 @@
+package views
+
+import (
+	"strconv"
+
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+)
+
+// CollisionData is the page after an upstream sign-in whose verified email already has an account; Email is empty when it isn't carried over.
+type CollisionData struct {
+	Site
+	Email    string
+	Minutes  int
+	ReturnTo string
+	// SignUp is a first Google sign-in whose inbox the link proves rather than a collision.
+	SignUp bool
+}
+
+func (v CollisionData) key(base string) string {
+	if v.SignUp {
+		return base + "_sign_up"
+	}
+	return base
+}
+
+// Collision says a magic link went to the inbox, and that opening it adds Google to that account or finishes the Google sign-up.
+templ Collision(d layout.LayoutData, v CollisionData) {
+	@layout.Layout(titled(d, i18n.T(ctx, v.key("link.collision_title")))) {
+		@layout.Card(i18n.T(ctx, v.key("link.collision_title"))) {
+			@iconCircle() {
+				@iconMail("size-6")
+			}
+			if v.Email != "" {
+				<p>
+					@withEmail(i18n.T(ctx, v.key("link.collision_body"), "project", v.Project), v.Email)
+				</p>
+			} else {
+				<p>{ i18n.T(ctx, "link.collision_body_no_email", "project", v.Project) }</p>
+			}
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "link.collision_hint", "minutes", strconv.Itoa(v.Minutes)) }</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "link.collision_spam") }</p>
+			<a class="link text-sm" href={ templ.SafeURL(v.addAccount(d, v.ReturnTo)) }>{ i18n.T(ctx, "link.collision_other") }</a>
+		}
+	}
+}

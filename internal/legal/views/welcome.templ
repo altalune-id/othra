@@ -1,0 +1,29 @@
+package views
+
+import "github.com/altalune-id/othra/internal/web/layout"
+
+// WelcomeData is the terms acceptance form's state.
+type WelcomeData struct {
+	TermsURL   string
+	PrivacyURL string
+	ReturnTo   string
+	Error      string
+}
+
+templ Welcome(d layout.LayoutData, v WelcomeData) {
+	@layout.Layout(d) {
+		@layout.Card(d.Title) {
+			<p>Before you continue, please read and accept the terms of this instance.</p>
+			if v.Error != "" {
+				<div role="alert" class="alert alert-error alert-soft">{ v.Error }</div>
+			}
+			<form method="post" action={ d.Href("/welcome") } class="flex flex-col gap-4">
+				if v.ReturnTo != "" {
+					<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+				}
+				@layout.Consent(d, layout.ConsentData{TermsURL: v.TermsURL, PrivacyURL: v.PrivacyURL, Required: true})
+				<button class="btn btn-primary" type="submit">Continue</button>
+			</form>
+		}
+	}
+}

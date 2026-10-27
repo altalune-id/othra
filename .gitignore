@@ -1,0 +1,43 @@
+# Go build and test output
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+
+# Local config and secrets (examples live in config.example.yml and .env.example)
+/config.yml
+.env
+othra-db-credentials.env
+
+# Node
+node_modules/
+
+# UI builds embedded into the binary (make ui); only the .gitkeep, the logo and the favicons are tracked
+ui/*/dist/
+internal/web/console/public/*
+!internal/web/console/public/.gitkeep
+internal/web/portal/public/*
+!internal/web/portal/public/.gitkeep
+internal/mcp/ui/assets/app.html
+internal/web/static/*
+!internal/web/static/altalune-logo.png
+!internal/web/static/apple-touch-icon.png
+!internal/web/static/favicon-32x32.png
+!internal/web/static/favicon.ico
+!internal/web/static/google-sans-flex-500.woff2
+!internal/web/static/google-sans-flex-OFL.txt
+
+# SDD workspace (scratch, not shipped)
+/.superpowers/
+/docs/superpowers/
+
+# Playwright: MCP snapshots/screenshots and test-runner output
+.playwright-mcp/
+playwright-report/
+blob-report/
+test-results/
+playwright/.cache/
+
+# OS
+.DS_Store

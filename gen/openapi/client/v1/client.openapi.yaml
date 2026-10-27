@@ -1,0 +1,884 @@
+openapi: 3.1.0
+info:
+  title: client.v1
+paths:
+  /client.v1.ClientService/CreateClient:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: CreateClient
+      operationId: client.v1.ClientService.CreateClient
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.CreateClientRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.CreateClientResponse'
+  /client.v1.ClientService/DeleteClient:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: DeleteClient
+      operationId: client.v1.ClientService.DeleteClient
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.DeleteClientRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.DeleteClientResponse'
+  /client.v1.ClientService/GenerateClientSecret:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: GenerateClientSecret
+      description: 'SECURITY: the secret RPCs answer with a one-time secret or end one; a signed-in person calls them, never MCP.'
+      operationId: client.v1.ClientService.GenerateClientSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.GenerateClientSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.GenerateClientSecretResponse'
+  /client.v1.ClientService/GetClient:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: GetClient
+      operationId: client.v1.ClientService.GetClient
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.GetClientRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.GetClientResponse'
+  /client.v1.ClientService/ListClients:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: ListClients
+      operationId: client.v1.ClientService.ListClients
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.ListClientsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.ListClientsResponse'
+  /client.v1.ClientService/RevokeClientSecret:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: RevokeClientSecret
+      operationId: client.v1.ClientService.RevokeClientSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.RevokeClientSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.RevokeClientSecretResponse'
+  /client.v1.ClientService/RotateClientSecret:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: RotateClientSecret
+      operationId: client.v1.ClientService.RotateClientSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.RotateClientSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.RotateClientSecretResponse'
+  /client.v1.ClientService/UpdateClient:
+    post:
+      tags:
+        - client.v1.ClientService
+      summary: UpdateClient
+      operationId: client.v1.ClientService.UpdateClient
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/client.v1.UpdateClientRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/client.v1.UpdateClientResponse'
+components:
+  schemas:
+    client.v1.AuthMethod:
+      type: string
+      title: AuthMethod
+      enum:
+        - AUTH_METHOD_UNSPECIFIED
+        - AUTH_METHOD_CLIENT_SECRET_BASIC
+        - AUTH_METHOD_CLIENT_SECRET_POST
+      description: AuthMethod is how a WEB client sends its secret to the token endpoint; a CLI client always uses none.
+    client.v1.Client:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: id is the client's public id and, for a registered client, its OAuth client_id.
+        name:
+          type: string
+          title: name
+        kind:
+          title: kind
+          $ref: '#/components/schemas/client.v1.ClientKind'
+        redirectUris:
+          type: array
+          items:
+            type: string
+          title: redirect_uris
+        postLogoutRedirectUris:
+          type: array
+          items:
+            type: string
+          title: post_logout_redirect_uris
+        refreshTokens:
+          type: boolean
+          title: refresh_tokens
+        consentPolicy:
+          title: consent_policy
+          $ref: '#/components/schemas/client.v1.ConsentPolicy'
+        grantTypes:
+          type: array
+          items:
+            type: string
+          title: grant_types
+        allowedScopes:
+          type: array
+          items:
+            type: string
+          title: allowed_scopes
+        tokenEndpointAuthMethod:
+          type: string
+          title: token_endpoint_auth_method
+        secrets:
+          type: array
+          items:
+            $ref: '#/components/schemas/client.v1.ClientSecret'
+          title: secrets
+        issuerHandleLocked:
+          type: boolean
+          title: issuer_handle_locked
+          description: issuer_handle_locked is true once the project's issuer handle can no longer change.
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        updatedAt:
+          title: updated_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        pkceRequired:
+          type: boolean
+          title: pkce_required
+          description: pkce_required is false only for a WEB client that can't send PKCE; it must then send a nonce.
+        registration:
+          title: registration
+          $ref: '#/components/schemas/client.v1.ClientRegistration'
+        metadataUrl:
+          type: string
+          title: metadata_url
+          description: metadata_url is a CIMD client's OAuth client_id, where its metadata document lives; empty for a registered client.
+        metadataFetchedAt:
+          title: metadata_fetched_at
+          description: metadata_fetched_at is when Othra last read a CIMD client's metadata document.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        consoleUrl:
+          type: string
+          title: console_url
+          description: console_url is the client's page in the console, where a signed-in person manages its secrets.
+      title: Client
+      additionalProperties: false
+    client.v1.ClientKind:
+      type: string
+      title: ClientKind
+      enum:
+        - CLIENT_KIND_UNSPECIFIED
+        - CLIENT_KIND_WEB
+        - CLIENT_KIND_CLI
+      description: ClientKind is fixed at create.
+    client.v1.ClientRegistration:
+      type: string
+      title: ClientRegistration
+      enum:
+        - CLIENT_REGISTRATION_UNSPECIFIED
+        - CLIENT_REGISTRATION_REGISTERED
+        - CLIENT_REGISTRATION_CIMD
+        - CLIENT_REGISTRATION_SYSTEM
+      description: ClientRegistration is how a client came to the project.
+    client.v1.ClientSecret:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        hint:
+          type: string
+          title: hint
+          description: hint is the secret's last 4 characters.
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        expiresAt:
+          title: expires_at
+          description: expires_at is unset on the current secret and set on an old one that still works until then.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: ClientSecret
+      additionalProperties: false
+    client.v1.ConsentPolicy:
+      type: string
+      title: ConsentPolicy
+      enum:
+        - CONSENT_POLICY_UNSPECIFIED
+        - CONSENT_POLICY_REQUIRE
+        - CONSENT_POLICY_IMPLICIT
+      description: ConsentPolicy says whether end users see the consent page.
+    client.v1.CreateClientRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        name:
+          type: string
+          title: name
+          description: |
+            client.name.blank
+            client.name.max_len.100
+        kind:
+          title: kind
+          $ref: '#/components/schemas/client.v1.ClientKind'
+        redirectUris:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          title: redirect_uris
+          maxItems: 20
+          minItems: 1
+        postLogoutRedirectUris:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          title: post_logout_redirect_uris
+          maxItems: 20
+        refreshTokens:
+          type: boolean
+          title: refresh_tokens
+        consentPolicy:
+          title: consent_policy
+          $ref: '#/components/schemas/client.v1.ConsentPolicy'
+        authMethod:
+          title: auth_method
+          $ref: '#/components/schemas/client.v1.AuthMethod'
+        pkceRequired:
+          type:
+            - boolean
+            - "null"
+          title: pkce_required
+      title: CreateClientRequest
+      required:
+        - projectId
+        - name
+        - kind
+      additionalProperties: false
+    client.v1.CreateClientResponse:
+      type: object
+      properties:
+        client:
+          title: client
+          $ref: '#/components/schemas/client.v1.Client'
+      title: CreateClientResponse
+      additionalProperties: false
+    client.v1.DeleteClientRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+      title: DeleteClientRequest
+      required:
+        - projectId
+        - clientId
+      additionalProperties: false
+    client.v1.DeleteClientResponse:
+      type: object
+      title: DeleteClientResponse
+      additionalProperties: false
+    client.v1.GenerateClientSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+      title: GenerateClientSecretRequest
+      required:
+        - projectId
+        - clientId
+      additionalProperties: false
+    client.v1.GenerateClientSecretResponse:
+      type: object
+      properties:
+        client:
+          title: client
+          $ref: '#/components/schemas/client.v1.Client'
+        secret:
+          type: string
+          title: secret
+          description: secret is the one-time secret. It is never present on any other response.
+      title: GenerateClientSecretResponse
+      additionalProperties: false
+    client.v1.GetClientRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+      title: GetClientRequest
+      required:
+        - projectId
+        - clientId
+      additionalProperties: false
+    client.v1.GetClientResponse:
+      type: object
+      properties:
+        client:
+          title: client
+          $ref: '#/components/schemas/client.v1.Client'
+      title: GetClientResponse
+      additionalProperties: false
+    client.v1.ListClientsRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+      title: ListClientsRequest
+      required:
+        - projectId
+      additionalProperties: false
+    client.v1.ListClientsResponse:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: '#/components/schemas/client.v1.Client'
+          title: clients
+      title: ListClientsResponse
+      additionalProperties: false
+    client.v1.RevokeClientSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+        secretId:
+          type: string
+          title: secret_id
+          description: |
+            othra.public_id = true
+      title: RevokeClientSecretRequest
+      required:
+        - projectId
+        - clientId
+        - secretId
+      additionalProperties: false
+    client.v1.RevokeClientSecretResponse:
+      type: object
+      properties:
+        client:
+          title: client
+          $ref: '#/components/schemas/client.v1.Client'
+      title: RevokeClientSecretResponse
+      additionalProperties: false
+    client.v1.RotateClientSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+        grace:
+          title: grace
+          $ref: '#/components/schemas/client.v1.SecretGrace'
+      title: RotateClientSecretRequest
+      required:
+        - projectId
+        - clientId
+      additionalProperties: false
+    client.v1.RotateClientSecretResponse:
+      type: object
+      properties:
+        client:
+          title: client
+          $ref: '#/components/schemas/client.v1.Client'
+        secret:
+          type: string
+          title: secret
+          description: secret is the new one-time secret. It is never present on any other response.
+      title: RotateClientSecretResponse
+      additionalProperties: false
+    client.v1.SecretGrace:
+      type: string
+      title: SecretGrace
+      enum:
+        - SECRET_GRACE_UNSPECIFIED
+        - SECRET_GRACE_NOW
+        - SECRET_GRACE_HOUR
+        - SECRET_GRACE_DAY
+        - SECRET_GRACE_WEEK
+      description: SecretGrace is how long the current secret keeps working after a rotation.
+    client.v1.UpdateClientRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+        name:
+          type: string
+          title: name
+          description: |
+            client.name.blank
+            client.name.max_len.100
+        redirectUris:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          title: redirect_uris
+          maxItems: 20
+          minItems: 1
+        postLogoutRedirectUris:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          title: post_logout_redirect_uris
+          maxItems: 20
+        refreshTokens:
+          type: boolean
+          title: refresh_tokens
+        consentPolicy:
+          title: consent_policy
+          $ref: '#/components/schemas/client.v1.ConsentPolicy'
+        authMethod:
+          title: auth_method
+          $ref: '#/components/schemas/client.v1.AuthMethod'
+        pkceRequired:
+          type:
+            - boolean
+            - "null"
+          title: pkce_required
+      title: UpdateClientRequest
+      required:
+        - projectId
+        - clientId
+        - name
+        - consentPolicy
+      additionalProperties: false
+    client.v1.UpdateClientResponse:
+      type: object
+      properties:
+        client:
+          title: client
+          $ref: '#/components/schemas/client.v1.Client'
+      title: UpdateClientResponse
+      additionalProperties: false
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+    google.protobuf.Timestamp:
+      type: string
+      examples:
+        - "2023-01-15T01:30:15.01Z"
+        - "2024-12-25T12:00:00Z"
+      format: date-time
+      description: |-
+        A Timestamp represents a point in time independent of any time zone or local
+         calendar, encoded as a count of seconds and fractions of seconds at
+         nanosecond resolution. The count is relative to an epoch at UTC midnight on
+         January 1, 1970, in the proleptic Gregorian calendar which extends the
+         Gregorian calendar backwards to year one.
+
+         All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+         second table is needed for interpretation, using a [24-hour linear
+         smear](https://developers.google.com/time/smear).
+
+         The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+         restricting to that range, we ensure that we can convert to and from [RFC
+         3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+
+         # Examples
+
+         Example 1: Compute Timestamp from POSIX `time()`.
+
+             Timestamp timestamp;
+             timestamp.set_seconds(time(NULL));
+             timestamp.set_nanos(0);
+
+         Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+
+             struct timeval tv;
+             gettimeofday(&tv, NULL);
+
+             Timestamp timestamp;
+             timestamp.set_seconds(tv.tv_sec);
+             timestamp.set_nanos(tv.tv_usec * 1000);
+
+         Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+
+             FILETIME ft;
+             GetSystemTimeAsFileTime(&ft);
+             UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+
+             // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+             // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+             Timestamp timestamp;
+             timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+             timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+
+         Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+
+             long millis = System.currentTimeMillis();
+
+             Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+                 .setNanos((int) ((millis % 1000) * 1000000)).build();
+
+         Example 5: Compute Timestamp from Java `Instant.now()`.
+
+             Instant now = Instant.now();
+
+             Timestamp timestamp =
+                 Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+                     .setNanos(now.getNano()).build();
+
+         Example 6: Compute Timestamp from current time in Python.
+
+             timestamp = Timestamp()
+             timestamp.GetCurrentTime()
+
+         # JSON Mapping
+
+         In JSON format, the Timestamp type is encoded as a string in the
+         [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+         format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+         where {year} is always expressed using four digits while {month}, {day},
+         {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+         seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+         are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+         is required. A ProtoJSON serializer should always use UTC (as indicated by
+         "Z") when printing the Timestamp type and a ProtoJSON parser should be
+         able to accept both UTC and other timezones (as indicated by an offset).
+
+         For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+         01:30 UTC on January 15, 2017.
+
+         In JavaScript, one can convert a Date object to this format using the
+         standard
+         [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+         method. In Python, a standard `datetime.datetime` object can be converted
+         to this format using
+         [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+         the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+         the Joda Time's [`ISODateTimeFormat.dateTime()`](
+         http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+         ) to obtain a formatter capable of generating timestamps in this format.
+security: []
+tags:
+  - name: client.v1.ClientService
+    description: ClientService registers a project's OAuth clients and manages their secrets. Every id is a public id.

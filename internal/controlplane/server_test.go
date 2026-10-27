@@ -1,0 +1,59 @@
+package controlplane
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"connectrpc.com/connect"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	orgv1 "github.com/altalune-id/othra/gen/go/org/v1"
+	orgv1connect "github.com/altalune-id/othra/gen/go/org/v1/orgv1connect"
+	"github.com/altalune-id/othra/internal/org"
+	"github.com/altalune-id/othra/internal/testutil/fakes"
+)
+
+func TestHandler_MountsUnderBasePathAndTranslatesErrors(t *testing.T) {
+	srv := New(Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}, nil, Options{})
+	ts := httptest.NewServer(srv.Handler("/app"))
+	t.Cleanup(ts.Close)
+	c := orgv1connect.NewOrgServiceClient(http.DefaultClient, ts.URL+"/app/api")
+
+	resp, err := c.CreateOrg(context.Background(), connect.NewRequest(&orgv1.CreateOrgRequest{Slug: "acme", Name: "Acme"}))
+	require.NoError(t, err)
+	assert.Equal(t, "acme", resp.Msg.GetOrg().GetSlug())
+
+	_, err = c.CreateOrg(context.Background(), connect.NewRequest(&orgv1.CreateOrgRequest{Slug: "A", Name: "Acme"}))
+	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
+}
+
+func TestHandler_RefusesAnOverLimitBody(t *testing.T) {
+	store := &fakes.OrgStore{}
+	srv := New(Services{Orgs: org.NewService(store, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}, nil, Options{})
+	ts := httptest.NewServer(srv.Handler("/app"))
+	t.Cleanup(ts.Close)
+	c := orgv1connect.NewOrgServiceClient(http.DefaultClient, ts.URL+"/app/api")
+
+	_, err := c.CreateOrg(context.Background(), connect.NewRequest(&orgv1.CreateOrgRequest{Slug: "acme", Name: strings.Repeat("a", maxRequestBytes)}))
+	assert.Equal(t, connect.CodeResourceExhausted, connect.CodeOf(err))
+	assert.Nil(t, store.Org, "the handler never ran")
+}
+
+func TestRecoverPanic(t *testing.T) {
+	s := New(Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}, nil, Options{})
+	err := s.recoverPanic(context.Background(), connect.Spec{}, nil, "boom")
+	assert.Equal(t, connect.CodeInternal, connect.CodeOf(err))
+}
+
+func TestRecoverHTTP(t *testing.T) {
+	s := New(Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil)}, nil, Options{})
+	h := s.recoverHTTP(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("boom") }))
+
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}

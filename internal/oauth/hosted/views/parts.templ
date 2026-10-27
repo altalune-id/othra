@@ -1,0 +1,116 @@
+package views
+
+import (
+	"github.com/altalune-id/othra/internal/web/i18n"
+	"github.com/altalune-id/othra/internal/web/layout"
+)
+
+templ svgIcon(class string) {
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class={ "shrink-0", class } aria-hidden="true">
+		{ children... }
+	</svg>
+}
+
+templ iconError() {
+	@svgIcon("mt-0.5 size-4 text-error") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<line x1="12" x2="12" y1="8" y2="12"></line>
+		<line x1="12" x2="12.01" y1="16" y2="16"></line>
+	}
+}
+
+templ iconChevron() {
+	@svgIcon("size-4 text-base-content/60") {
+		<path d="m9 18 6-6-6-6"></path>
+	}
+}
+
+templ iconSignOut() {
+	@svgIcon("size-4") {
+		<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+		<polyline points="16 17 21 12 16 7"></polyline>
+		<line x1="21" x2="9" y1="12" y2="12"></line>
+	}
+}
+
+templ iconPlus() {
+	@svgIcon("size-4") {
+		<path d="M5 12h14"></path>
+		<path d="M12 5v14"></path>
+	}
+}
+
+templ iconMail(class string) {
+	@svgIcon(class) {
+		<rect width="20" height="16" x="2" y="4" rx="2"></rect>
+		<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+	}
+}
+
+templ iconCircle() {
+	<div class="flex size-12 items-center justify-center self-center rounded-full bg-base-200">
+		{ children... }
+	</div>
+}
+
+templ iconCheck() {
+	@svgIcon("mt-0.5 size-4 text-success") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<path d="m9 12 2 2 4-4"></path>
+	}
+}
+
+templ alertError(msg string) {
+	<div role="alert" class="alert alert-error alert-soft items-start">
+		@iconError()
+		<span>{ msg }</span>
+	</div>
+}
+
+templ alertSuccess() {
+	<div role="status" class="alert alert-success alert-soft items-start">
+		@iconCheck()
+		<span class="min-w-0">
+			{ children... }
+		</span>
+	</div>
+}
+
+templ withEmail(msg, email string) {
+	@highlight(msg, "{email}", email, "break-all")
+}
+
+templ highlight(msg, placeholder, value, class string) {
+	for _, p := range splitAround(msg, placeholder) {
+		if p == placeholder {
+			<span class={ class }>{ value }</span>
+		} else {
+			{ p }
+		}
+	}
+}
+
+templ accountTile(d layout.LayoutData, s Site, email, returnTo string) {
+	<div class="flex items-center justify-between gap-3 rounded-box bg-base-200 px-4 py-3 text-sm">
+		<span class="min-w-0">
+			<span class="block text-xs text-base-content/70">{ i18n.T(ctx, "common.signing_in_as") }</span>
+			<span class="block truncate font-medium" title={ email }>{ email }</span>
+		</span>
+		<a class="link shrink-0 text-xs" href={ templ.SafeURL(s.addAccount(d, returnTo)) }>{ i18n.T(ctx, "common.use_another") }</a>
+	</div>
+}
+
+templ iconShieldAlert() {
+	@svgIcon("size-5 text-warning") {
+		<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+		<path d="M12 8v4"></path>
+		<path d="M12 16h.01"></path>
+	}
+}
+
+templ iconReturn() {
+	@svgIcon("mt-0.5 size-4") {
+		<polyline points="9 10 4 15 9 20"></polyline>
+		<path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+	}
+}

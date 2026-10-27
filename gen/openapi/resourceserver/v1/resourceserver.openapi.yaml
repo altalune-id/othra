@@ -1,0 +1,1536 @@
+openapi: 3.1.0
+info:
+  title: resourceserver.v1
+paths:
+  /resourceserver.v1.ResourceServerService/CreateResourceServer:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: CreateResourceServer
+      operationId: resourceserver.v1.ResourceServerService.CreateResourceServer
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.CreateResourceServerRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.CreateResourceServerResponse'
+  /resourceserver.v1.ResourceServerService/DeleteResourceServer:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: DeleteResourceServer
+      operationId: resourceserver.v1.ResourceServerService.DeleteResourceServer
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.DeleteResourceServerRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.DeleteResourceServerResponse'
+  /resourceserver.v1.ResourceServerService/GenerateIntrospectionSecret:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: GenerateIntrospectionSecret
+      operationId: resourceserver.v1.ResourceServerService.GenerateIntrospectionSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.GenerateIntrospectionSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.GenerateIntrospectionSecretResponse'
+  /resourceserver.v1.ResourceServerService/GetResourceServer:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: GetResourceServer
+      operationId: resourceserver.v1.ResourceServerService.GetResourceServer
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.GetResourceServerRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.GetResourceServerResponse'
+  /resourceserver.v1.ResourceServerService/LinkClient:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: LinkClient
+      operationId: resourceserver.v1.ResourceServerService.LinkClient
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.LinkClientRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.LinkClientResponse'
+  /resourceserver.v1.ResourceServerService/ListLinks:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: ListLinks
+      operationId: resourceserver.v1.ResourceServerService.ListLinks
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.ListLinksRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.ListLinksResponse'
+  /resourceserver.v1.ResourceServerService/ListResourceServers:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: ListResourceServers
+      operationId: resourceserver.v1.ResourceServerService.ListResourceServers
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.ListResourceServersRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.ListResourceServersResponse'
+  /resourceserver.v1.ResourceServerService/RevokeIntrospectionSecret:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: RevokeIntrospectionSecret
+      operationId: resourceserver.v1.ResourceServerService.RevokeIntrospectionSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.RevokeIntrospectionSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.RevokeIntrospectionSecretResponse'
+  /resourceserver.v1.ResourceServerService/RotateIntrospectionSecret:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: RotateIntrospectionSecret
+      operationId: resourceserver.v1.ResourceServerService.RotateIntrospectionSecret
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.RotateIntrospectionSecretRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.RotateIntrospectionSecretResponse'
+  /resourceserver.v1.ResourceServerService/SetPersonalTokenAccess:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: SetPersonalTokenAccess
+      description: 'SECURITY: personal tokens and the RFC 7662 introspection secret are set by a signed-in person, never MCP; a secret is shown once.'
+      operationId: resourceserver.v1.ResourceServerService.SetPersonalTokenAccess
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.SetPersonalTokenAccessRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.SetPersonalTokenAccessResponse'
+  /resourceserver.v1.ResourceServerService/SetResourceServerAdmission:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: SetResourceServerAdmission
+      description: 'SECURITY: CIMD admission lets unregistered apps ask for this server''s scopes; a signed-in person sets it, never MCP.'
+      operationId: resourceserver.v1.ResourceServerService.SetResourceServerAdmission
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.SetResourceServerAdmissionRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.SetResourceServerAdmissionResponse'
+  /resourceserver.v1.ResourceServerService/SetResourceServerTrust:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: SetResourceServerTrust
+      description: 'SECURITY: trust skips verification; a signed-in person sets it, never MCP.'
+      operationId: resourceserver.v1.ResourceServerService.SetResourceServerTrust
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.SetResourceServerTrustRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.SetResourceServerTrustResponse'
+  /resourceserver.v1.ResourceServerService/UnlinkClient:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: UnlinkClient
+      operationId: resourceserver.v1.ResourceServerService.UnlinkClient
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.UnlinkClientRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.UnlinkClientResponse'
+  /resourceserver.v1.ResourceServerService/UpdateLink:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: UpdateLink
+      operationId: resourceserver.v1.ResourceServerService.UpdateLink
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.UpdateLinkRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.UpdateLinkResponse'
+  /resourceserver.v1.ResourceServerService/UpdateResourceServer:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: UpdateResourceServer
+      operationId: resourceserver.v1.ResourceServerService.UpdateResourceServer
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.UpdateResourceServerRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.UpdateResourceServerResponse'
+  /resourceserver.v1.ResourceServerService/VerifyResourceServer:
+    post:
+      tags:
+        - resourceserver.v1.ResourceServerService
+      summary: VerifyResourceServer
+      operationId: resourceserver.v1.ResourceServerService.VerifyResourceServer
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/resourceserver.v1.VerifyResourceServerRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceserver.v1.VerifyResourceServerResponse'
+components:
+  schemas:
+    client.v1.ClientSecret:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        hint:
+          type: string
+          title: hint
+          description: hint is the secret's last 4 characters.
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        expiresAt:
+          title: expires_at
+          description: expires_at is unset on the current secret and set on an old one that still works until then.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: ClientSecret
+      additionalProperties: false
+    client.v1.SecretGrace:
+      type: string
+      title: SecretGrace
+      enum:
+        - SECRET_GRACE_UNSPECIFIED
+        - SECRET_GRACE_NOW
+        - SECRET_GRACE_HOUR
+        - SECRET_GRACE_DAY
+        - SECRET_GRACE_WEEK
+      description: SecretGrace is how long the current secret keeps working after a rotation.
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+    google.protobuf.Timestamp:
+      type: string
+      examples:
+        - "2023-01-15T01:30:15.01Z"
+        - "2024-12-25T12:00:00Z"
+      format: date-time
+      description: |-
+        A Timestamp represents a point in time independent of any time zone or local
+         calendar, encoded as a count of seconds and fractions of seconds at
+         nanosecond resolution. The count is relative to an epoch at UTC midnight on
+         January 1, 1970, in the proleptic Gregorian calendar which extends the
+         Gregorian calendar backwards to year one.
+
+         All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+         second table is needed for interpretation, using a [24-hour linear
+         smear](https://developers.google.com/time/smear).
+
+         The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+         restricting to that range, we ensure that we can convert to and from [RFC
+         3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+
+         # Examples
+
+         Example 1: Compute Timestamp from POSIX `time()`.
+
+             Timestamp timestamp;
+             timestamp.set_seconds(time(NULL));
+             timestamp.set_nanos(0);
+
+         Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+
+             struct timeval tv;
+             gettimeofday(&tv, NULL);
+
+             Timestamp timestamp;
+             timestamp.set_seconds(tv.tv_sec);
+             timestamp.set_nanos(tv.tv_usec * 1000);
+
+         Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+
+             FILETIME ft;
+             GetSystemTimeAsFileTime(&ft);
+             UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+
+             // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+             // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+             Timestamp timestamp;
+             timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+             timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+
+         Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+
+             long millis = System.currentTimeMillis();
+
+             Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+                 .setNanos((int) ((millis % 1000) * 1000000)).build();
+
+         Example 5: Compute Timestamp from Java `Instant.now()`.
+
+             Instant now = Instant.now();
+
+             Timestamp timestamp =
+                 Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+                     .setNanos(now.getNano()).build();
+
+         Example 6: Compute Timestamp from current time in Python.
+
+             timestamp = Timestamp()
+             timestamp.GetCurrentTime()
+
+         # JSON Mapping
+
+         In JSON format, the Timestamp type is encoded as a string in the
+         [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+         format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+         where {year} is always expressed using four digits while {month}, {day},
+         {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+         seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+         are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+         is required. A ProtoJSON serializer should always use UTC (as indicated by
+         "Z") when printing the Timestamp type and a ProtoJSON parser should be
+         able to accept both UTC and other timezones (as indicated by an offset).
+
+         For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+         01:30 UTC on January 15, 2017.
+
+         In JavaScript, one can convert a Date object to this format using the
+         standard
+         [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+         method. In Python, a standard `datetime.datetime` object can be converted
+         to this format using
+         [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+         the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+         the Joda Time's [`ISODateTimeFormat.dateTime()`](
+         http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+         ) to obtain a formatter capable of generating timestamps in this format.
+    resourceserver.v1.CIMDAdmission:
+      type: object
+      properties:
+        accept:
+          type: boolean
+          title: accept
+          description: accept is off by default and can be turned on only while the server is verified or trusted.
+        hosts:
+          type: array
+          items:
+            type: string
+          title: hosts
+          description: hosts are the lower-case host names a client_id URL may have; empty means any host.
+        allScopes:
+          type: boolean
+          title: all_scopes
+          description: all_scopes follows the server's scopes; false allows only scopes.
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+      title: CIMDAdmission
+      additionalProperties: false
+      description: CIMDAdmission is a resource server's admission of apps that sign in with a Client ID Metadata Document.
+    resourceserver.v1.CreateResourceServerRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        name:
+          type: string
+          title: name
+          description: |
+            resource_server.name.blank
+            resource_server.name.max_len.100
+        identifier:
+          type: string
+          title: identifier
+          maxLength: 512
+        scopes:
+          type: array
+          items:
+            type: string
+            maxLength: 128
+          title: scopes
+          maxItems: 64
+          minItems: 1
+        trusted:
+          type: boolean
+          title: trusted
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          maxProperties: 64
+          additionalProperties:
+            type: string
+            title: value
+            maxLength: 120
+            minLength: 1
+      title: CreateResourceServerRequest
+      required:
+        - projectId
+        - name
+        - identifier
+      additionalProperties: false
+    resourceserver.v1.CreateResourceServerRequest.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
+      additionalProperties: false
+    resourceserver.v1.CreateResourceServerResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: CreateResourceServerResponse
+      additionalProperties: false
+    resourceserver.v1.DeleteResourceServerRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+      title: DeleteResourceServerRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.DeleteResourceServerResponse:
+      type: object
+      title: DeleteResourceServerResponse
+      additionalProperties: false
+    resourceserver.v1.GenerateIntrospectionSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+      title: GenerateIntrospectionSecretRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.GenerateIntrospectionSecretResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+        secret:
+          type: string
+          title: secret
+          description: secret is the one-time secret. It is never present on any other response.
+      title: GenerateIntrospectionSecretResponse
+      additionalProperties: false
+    resourceserver.v1.GetResourceServerRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+      title: GetResourceServerRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.GetResourceServerResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: GetResourceServerResponse
+      additionalProperties: false
+    resourceserver.v1.Link:
+      type: object
+      properties:
+        clientId:
+          type: string
+          title: client_id
+        clientName:
+          type: string
+          title: client_name
+        resourceServerId:
+          type: string
+          title: resource_server_id
+        resourceServerName:
+          type: string
+          title: resource_server_name
+        resourceServerIdentifier:
+          type: string
+          title: resource_server_identifier
+        resourceServerState:
+          title: resource_server_state
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServerState'
+        resourceServerTrusted:
+          type: boolean
+          title: resource_server_trusted
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+          description: scopes are the resource server scopes the client may ask for.
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        clientMetadataUrl:
+          type: string
+          title: client_metadata_url
+          description: client_metadata_url is the client_id URL of an app without registration (CIMD); empty for a registered client.
+        metadataFetchedAt:
+          title: metadata_fetched_at
+          description: metadata_fetched_at is when Othra last read that app's metadata document.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: Link
+      additionalProperties: false
+    resourceserver.v1.LinkClientRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        scopes:
+          type: array
+          items:
+            type: string
+            maxLength: 128
+          title: scopes
+          maxItems: 64
+          minItems: 1
+      title: LinkClientRequest
+      required:
+        - projectId
+        - clientId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.LinkClientResponse:
+      type: object
+      properties:
+        link:
+          title: link
+          $ref: '#/components/schemas/resourceserver.v1.Link'
+      title: LinkClientResponse
+      additionalProperties: false
+    resourceserver.v1.ListLinksRequest:
+      type: object
+      allOf:
+        - properties:
+            projectId:
+              type: string
+              title: project_id
+              description: |
+                othra.public_id = true
+        - oneOf:
+            - type: object
+              properties:
+                clientId:
+                  type: string
+                  title: client_id
+                  description: |
+                    othra.public_id = true
+              title: client_id
+              required:
+                - clientId
+            - type: object
+              properties:
+                resourceServerId:
+                  type: string
+                  title: resource_server_id
+                  description: |
+                    othra.public_id = true
+              title: resource_server_id
+              required:
+                - resourceServerId
+      title: ListLinksRequest
+      required:
+        - projectId
+      additionalProperties: false
+    resourceserver.v1.ListLinksResponse:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/resourceserver.v1.Link'
+          title: links
+      title: ListLinksResponse
+      additionalProperties: false
+    resourceserver.v1.ListResourceServersRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+      title: ListResourceServersRequest
+      required:
+        - projectId
+      additionalProperties: false
+    resourceserver.v1.ListResourceServersResponse:
+      type: object
+      properties:
+        resourceServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+          title: resource_servers
+        trustAvailable:
+          type: boolean
+          title: trust_available
+          description: trust_available is true when this deployment allows trust without verification.
+      title: ListResourceServersResponse
+      additionalProperties: false
+    resourceserver.v1.ResourceServer:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type: string
+          title: name
+        identifier:
+          type: string
+          title: identifier
+          description: identifier is the audience, exactly as the resource server checks it.
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+        state:
+          title: state
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServerState'
+        trusted:
+          type: boolean
+          title: trusted
+          description: trusted skips verification, on self-hosted Othra only.
+        verifiedAt:
+          title: verified_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastCheckedAt:
+          title: last_checked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastError:
+          title: last_error
+          description: last_error is why the latest check failed, unset after a pass.
+          $ref: '#/components/schemas/resourceserver.v1.VerificationFailure'
+        consecutiveFailures:
+          type: integer
+          title: consecutive_failures
+          format: int32
+        metadataUrl:
+          type: string
+          title: metadata_url
+          description: metadata_url is where Othra fetches the RFC 9728 metadata.
+        trustAvailable:
+          type: boolean
+          title: trust_available
+          description: trust_available is true when this deployment allows trust without verification.
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        updatedAt:
+          title: updated_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          additionalProperties:
+            type: string
+            title: value
+          description: scope_descriptions says what each scope lets an app do, shown on the consent page; a scope may have none.
+        cimd:
+          title: cimd
+          description: cimd is whether apps without registration (CIMD) may ask for this server's scopes.
+          $ref: '#/components/schemas/resourceserver.v1.CIMDAdmission'
+        acceptPersonalTokens:
+          type: boolean
+          title: accept_personal_tokens
+          description: accept_personal_tokens lets end users mint personal tokens for this server; it needs an introspection secret.
+        introspectionSecrets:
+          type: array
+          items:
+            $ref: '#/components/schemas/client.v1.ClientSecret'
+          title: introspection_secrets
+          description: 'introspection_secrets are the credentials this server introspects with (RFC 7662 §2.1): the current one and any in its grace.'
+      title: ResourceServer
+      additionalProperties: false
+    resourceserver.v1.ResourceServer.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
+      additionalProperties: false
+    resourceserver.v1.ResourceServerState:
+      type: string
+      title: ResourceServerState
+      enum:
+        - RESOURCE_SERVER_STATE_UNSPECIFIED
+        - RESOURCE_SERVER_STATE_PENDING
+        - RESOURCE_SERVER_STATE_VERIFIED
+        - RESOURCE_SERVER_STATE_FAILED
+      description: ResourceServerState is where RFC 9728 verification stands.
+    resourceserver.v1.RevokeIntrospectionSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        secretId:
+          type: string
+          title: secret_id
+          description: |
+            othra.public_id = true
+      title: RevokeIntrospectionSecretRequest
+      required:
+        - projectId
+        - resourceServerId
+        - secretId
+      additionalProperties: false
+    resourceserver.v1.RevokeIntrospectionSecretResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: RevokeIntrospectionSecretResponse
+      additionalProperties: false
+    resourceserver.v1.RotateIntrospectionSecretRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        grace:
+          title: grace
+          $ref: '#/components/schemas/client.v1.SecretGrace'
+      title: RotateIntrospectionSecretRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.RotateIntrospectionSecretResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+        secret:
+          type: string
+          title: secret
+          description: secret is the new one-time secret. It is never present on any other response.
+      title: RotateIntrospectionSecretResponse
+      additionalProperties: false
+    resourceserver.v1.SetPersonalTokenAccessRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        accept:
+          type: boolean
+          title: accept
+      title: SetPersonalTokenAccessRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.SetPersonalTokenAccessResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: SetPersonalTokenAccessResponse
+      additionalProperties: false
+    resourceserver.v1.SetResourceServerAdmissionRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        accept:
+          type: boolean
+          title: accept
+        hosts:
+          type: array
+          items:
+            type: string
+            maxLength: 253
+          title: hosts
+          maxItems: 64
+        allScopes:
+          type: boolean
+          title: all_scopes
+        scopes:
+          type: array
+          items:
+            type: string
+            maxLength: 128
+          title: scopes
+          maxItems: 64
+      title: SetResourceServerAdmissionRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.SetResourceServerAdmissionResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: SetResourceServerAdmissionResponse
+      additionalProperties: false
+    resourceserver.v1.SetResourceServerTrustRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        trusted:
+          type: boolean
+          title: trusted
+      title: SetResourceServerTrustRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.SetResourceServerTrustResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: SetResourceServerTrustResponse
+      additionalProperties: false
+    resourceserver.v1.UnlinkClientRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+      title: UnlinkClientRequest
+      required:
+        - projectId
+        - clientId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.UnlinkClientResponse:
+      type: object
+      title: UnlinkClientResponse
+      additionalProperties: false
+    resourceserver.v1.UpdateLinkRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        clientId:
+          type: string
+          title: client_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        scopes:
+          type: array
+          items:
+            type: string
+            maxLength: 128
+          title: scopes
+          maxItems: 64
+          minItems: 1
+      title: UpdateLinkRequest
+      required:
+        - projectId
+        - clientId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.UpdateLinkResponse:
+      type: object
+      properties:
+        link:
+          title: link
+          $ref: '#/components/schemas/resourceserver.v1.Link'
+      title: UpdateLinkResponse
+      additionalProperties: false
+    resourceserver.v1.UpdateResourceServerRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+        name:
+          type: string
+          title: name
+          description: |
+            resource_server.name.blank
+            resource_server.name.max_len.100
+        scopes:
+          type: array
+          items:
+            type: string
+            maxLength: 128
+          title: scopes
+          maxItems: 64
+          minItems: 1
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          maxProperties: 64
+          additionalProperties:
+            type: string
+            title: value
+            maxLength: 120
+            minLength: 1
+      title: UpdateResourceServerRequest
+      required:
+        - projectId
+        - resourceServerId
+        - name
+      additionalProperties: false
+    resourceserver.v1.UpdateResourceServerRequest.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
+      additionalProperties: false
+    resourceserver.v1.UpdateResourceServerResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+      title: UpdateResourceServerResponse
+      additionalProperties: false
+    resourceserver.v1.VerificationFailure:
+      type: object
+      properties:
+        reason:
+          type: string
+          title: reason
+          description: reason is not_found, status, redirect, not_json, too_large, resource_mismatch, issuer_missing, timeout, network or blocked.
+        status:
+          type: integer
+          title: status
+          format: int32
+          description: status is the HTTP status on reason status.
+        resource:
+          type: string
+          title: resource
+          description: resource is the metadata's resource value on reason resource_mismatch.
+        checkedAt:
+          title: checked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: VerificationFailure
+      additionalProperties: false
+      description: VerificationFailure is why an RFC 9728 check failed.
+    resourceserver.v1.VerifyResourceServerRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          title: project_id
+          description: |
+            othra.public_id = true
+        resourceServerId:
+          type: string
+          title: resource_server_id
+          description: |
+            othra.public_id = true
+      title: VerifyResourceServerRequest
+      required:
+        - projectId
+        - resourceServerId
+      additionalProperties: false
+    resourceserver.v1.VerifyResourceServerResponse:
+      type: object
+      properties:
+        resourceServer:
+          title: resource_server
+          $ref: '#/components/schemas/resourceserver.v1.ResourceServer'
+        passed:
+          type: boolean
+          title: passed
+          description: passed is false when this check failed; resource_server then shows its state before the check.
+        error:
+          title: error
+          description: error is why this check failed.
+          $ref: '#/components/schemas/resourceserver.v1.VerificationFailure'
+      title: VerifyResourceServerResponse
+      additionalProperties: false
+security: []
+tags:
+  - name: resourceserver.v1.ResourceServerService
+    description: ResourceServerService registers a project's resource servers, verifies them over RFC 9728 and links OAuth clients to them. Every id is a public id.

@@ -1,0 +1,77 @@
+package views
+
+import "github.com/altalune-id/othra/internal/web/layout"
+
+// LoginData is the sign-in form's state; the password is never echoed back.
+type LoginData struct {
+	Email    string
+	ReturnTo string
+	Error    string
+	// EmailLocked shows Email read-only, with a link to sign in with another account.
+	EmailLocked  bool
+	AnotherLogin string
+	// ForgotURL links to the password reset form when password reset is on.
+	ForgotURL string
+	Notice    string
+	// OthraURL is "Continue with Othra", the main button; empty hides it.
+	OthraURL string
+	// PasswordOff hides the password form, as with auth.password.enabled off and in cloud.
+	PasswordOff bool
+	// NewHere tells a newcomer the button also creates their account, in cloud.
+	NewHere bool
+}
+
+templ Login(d layout.LayoutData, v LoginData) {
+	@layout.Layout(d) {
+		@layout.Card(d.Title) {
+			if v.Notice != "" {
+				<div role="status" class="alert alert-success alert-soft">{ v.Notice }</div>
+			}
+			if v.Error != "" {
+				<div role="alert" class="alert alert-error alert-soft">{ v.Error }</div>
+			}
+			if v.OthraURL != "" {
+				<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.OthraURL) }>Continue with Othra</a>
+				if v.NewHere {
+					<p class="text-sm text-base-content/70">New here? Continue with Othra to create your account.</p>
+				}
+				if !v.PasswordOff {
+					@layout.Divider("or sign in with a password")
+				}
+			}
+			if !v.PasswordOff {
+				@passwordForm(d, v)
+			}
+			<p class="text-xs text-base-content/60">
+				<a class="link" href={ d.Href("/terms") }>Terms</a> · <a class="link" href={ d.Href("/privacy") }>Privacy</a>
+			</p>
+		}
+	}
+}
+
+templ passwordForm(d layout.LayoutData, v LoginData) {
+	<form method="post" action={ d.Href("/login") } class="flex flex-col gap-3">
+		if v.ReturnTo != "" {
+			<input type="hidden" name="return_to" value={ v.ReturnTo }/>
+		}
+		<label class="floating-label">
+			<span>Email</span>
+			if v.EmailLocked {
+				<input class="input w-full" type="email" name="email" value={ v.Email } placeholder="Email" autocomplete="username" required readonly/>
+			} else {
+				<input class="input w-full" type="email" name="email" value={ v.Email } placeholder="Email" autocomplete="username" required autofocus?={ v.OthraURL == "" }/>
+			}
+		</label>
+		<label class="floating-label">
+			<span>Password</span>
+			<input class="input w-full" type="password" name="password" placeholder="Password" autocomplete="current-password" required autofocus?={ v.EmailLocked && v.OthraURL == "" }/>
+		</label>
+		<button class={ "btn mt-2", templ.KV("btn-outline", v.OthraURL != ""), templ.KV("btn-primary", v.OthraURL == "") } type="submit">Sign in</button>
+	</form>
+	if v.ForgotURL != "" {
+		<p class="text-sm"><a class="link" href={ templ.SafeURL(v.ForgotURL) }>Forgot password?</a></p>
+	}
+	if v.EmailLocked {
+		<p class="text-sm"><a class="link" href={ templ.SafeURL(v.AnotherLogin) }>Use another account</a></p>
+	}
+}

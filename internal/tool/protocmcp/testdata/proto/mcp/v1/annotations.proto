@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package mcp.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/altalune-id/othra/gen/go/mcp/v1;mcpv1";
+
+extend google.protobuf.MethodOptions {
+  Tool tool = 51001;
+}
+
+// SECURITY: Tool carries no permission. A tool's permissions are its RPC's, declared once in
+// internal/permission and resolved at registration; never add an authorization field to this message.
+message Tool {
+  string name = 1;
+  string description = 2;
+  repeated string required = 3;
+  bool mutation = 4;
+  string ui = 5;
+  // NOTE: destructiveHint defaults to true when absent, so the server always sends it; an inaccurate value desensitizes the host's confirmation prompt.
+  bool destructive = 6;
+  // Title overrides the title derived from the tool name, which mangles acronyms.
+  string title = 7;
+  // SECURITY: app_only asks the host to offer the tool to the MCP view only; a host that ignores it shows it to the model. Needs ui.
+  bool app_only = 8;
+}

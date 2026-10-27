@@ -1,0 +1,194 @@
+GOTOOLCHAIN ?= auto
+GO := env -u GOROOT -u GOVERSION GOTOOLCHAIN=$(GOTOOLCHAIN) go
+BUF ?= pnpm exec buf
+
+BIN     := bin/othra
+VERSION := $(shell cat version/VERSION 2>/dev/null || echo dev)
+COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+BUILD   := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+LDFLAGS := -s -w \
+	-X github.com/altalune-id/othra/version.Version=$(VERSION) \
+	-X github.com/altalune-id/othra/version.Commit=$(COMMIT) \
+	-X github.com/altalune-id/othra/version.BuildTime=$(BUILD)
+
+.DEFAULT_GOAL := help
+
+.PHONY: help
+help: ## list targets
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  make %-16s %s\n", $$1, $$2}'
+
+.PHONY: build
+build: ## build the othra binary into bin/
+	CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(BIN) ./cmd/othra
+
+.PHONY: webhook-pong
+webhook-pong: ## build the webhook-pong example into bin/
+	CGO_ENABLED=0 $(GO) build -trimpath -o bin/webhook-pong ./examples/webhook-pong
+
+.PHONY: install
+install: ## install othra into GOBIN/GOPATH/bin
+	CGO_ENABLED=0 $(GO) install -trimpath -ldflags "$(LDFLAGS)" ./cmd/othra
+
+.PHONY: run
+run: ## run the othra serve command
+	$(GO) run ./cmd/othra serve
+
+.PHONY: config-examples
+config-examples: ## regenerate .env.reference and config.reference.yml from struct tags
+	$(GO) tool gen-config-example
+	$(GO) tool gen-config-example --format=yaml
+
+.PHONY: generate
+generate: templ ## regenerate protos (connect, openapi, mcp tools), scope names, error codes and templ components
+	env -u GOROOT -u GOVERSION GOTOOLCHAIN=$(GOTOOLCHAIN) $(BUF) generate
+	env -u GOROOT -u GOVERSION GOTOOLCHAIN=$(GOTOOLCHAIN) $(BUF) generate --template buf.gen.mcp.yaml
+	$(GO) tool gen-scope
+	$(GO) tool gen-apperror
+
+.PHONY: generate-check
+generate-check: generate ## fail when make generate changes a tracked file (run on a clean tree)
+	@if [ -n "$$(git status --porcelain -- . ':!pnpm-lock.yaml')" ]; then git status --short; echo "generated code is stale: run make generate and commit it"; exit 1; fi
+
+.PHONY: config-check
+config-check: ## fail when .env.reference or config.reference.yml drifted from the config structs
+	$(GO) tool gen-config-example --check
+	$(GO) tool gen-config-example --format=yaml --check
+
+GOVULNCHECK_VERSION ?= v1.9.0
+
+.PHONY: vulncheck
+vulncheck: ## scan dependencies and the standard library for known vulnerabilities
+	@for m in $(GO_MODULES); do $(GO) -C $$m run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./... || exit 1; done
+
+.PHONY: templ
+templ: ## generate templ components
+	$(GO) tool templ generate -path internal
+
+.PHONY: web-css
+web-css: ## compile internal/web/static/app.css
+	pnpm --filter @othra/web build
+
+.PHONY: web-js
+web-js: ## build internal/web/static/password.js
+	pnpm --filter @othra/web build:js
+
+.PHONY: web
+web: web-css web-js ## build the templ pages' CSS and JS
+
+.PHONY: ui-mcp
+ui-mcp: ui-base ## build the MCP App (Vue) and embed it
+	pnpm --filter @othra/mcp-ui build
+	cp ui/mcp/dist/index.html internal/mcp/ui/assets/app.html
+
+.PHONY: ui-test
+ui-test: ui-base ## run every ui/* package's tests
+	pnpm -r --if-present test
+
+.PHONY: ui-base
+ui-base: ## prepare the shared UI layer, whose tsconfig the console, portal and MCP builds read
+	pnpm --filter @othra/base exec nuxt prepare
+
+.PHONY: ui-console
+ui-console: ui-base ## build the console SPA and embed it
+	pnpm --filter @othra/console generate
+	@mkdir -p internal/web/console/public
+	@find internal/web/console/public -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
+	@cp -R ui/console/.output/public/. internal/web/console/public/
+	node ui/scripts/compress.mts internal/web/console/public
+
+.PHONY: ui
+.PHONY: ui-portal
+ui-portal: ui-base ## build the end-user portal SPA and embed it
+	pnpm --filter @othra/portal generate
+	@mkdir -p internal/web/portal/public
+	@find internal/web/portal/public -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
+	@cp -R ui/portal/.output/public/. internal/web/portal/public/
+	node ui/scripts/compress.mts internal/web/portal/public
+
+ui: web ui-mcp ui-console ui-portal ## build all embedded web assets
+
+.PHONY: build-all
+build-all: ui ## build embedded web assets, then the othra binary
+	@$(MAKE) build
+
+GOLANGCI_VERSION ?= v2.14.0
+# the installed golangci-lint when it is GOLANGCI_VERSION, else that exact version through go run
+GOLANGCI := $(shell v=$$(golangci-lint version --short 2>/dev/null); \
+	if [ "v$$v" = "$(GOLANGCI_VERSION)" ]; then echo "env -u GOROOT -u GOVERSION GOTOOLCHAIN=$(GOTOOLCHAIN) golangci-lint"; \
+	else echo "$(GO) run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION)"; fi)
+
+.PHONY: fmt
+fmt: ## format all Go files (gofmt + gci import groups, settings from .golangci.yml)
+	@for m in $(GO_MODULES); do (cd $$m && $(GOLANGCI) fmt -c $(CURDIR)/.golangci.yml ./...) || exit 1; done
+
+# the main module and the root libraries that are modules of their own
+GO_MODULES := . oidcrp oauthrs
+
+.PHONY: vet
+vet: ## run go vet (unit and integration files)
+	@for m in $(GO_MODULES); do $(GO) -C $$m vet -tags integration ./... || exit 1; done
+
+.PHONY: lint
+lint: lint-go lint-js lint-config ## run every linter
+
+.PHONY: lint-go
+lint-go: ## run golangci-lint (GOLANGCI_VERSION)
+	@for m in $(GO_MODULES); do (cd $$m && $(GOLANGCI) run -c $(CURDIR)/.golangci.yml --timeout=3m ./...) || exit 1; done
+
+.PHONY: lint-js
+lint-js: ## run ESLint over ui/, docs and every JS/TS/Vue/JSON/Markdown/CSS file
+	pnpm lint
+
+.PHONY: lint-config
+lint-config: ## run yamllint, hadolint, actionlint and shellcheck (binary, else Docker, else skipped)
+	scripts/lint/tool.sh yamllint --strict -c .yamllint.yaml .
+	@if ls Dockerfile* >/dev/null 2>&1; then scripts/lint/tool.sh hadolint Dockerfile*; fi
+	@if ls .github/workflows/*.y*ml >/dev/null 2>&1; then scripts/lint/tool.sh actionlint; fi
+	scripts/lint/tool.sh shellcheck $$(git ls-files -co --exclude-standard -- '*.sh' .husky/pre-commit .husky/pre-push ':!:.agents' ':!:.claude')
+
+.PHONY: comment-check
+comment-check: ## fail on any comment that breaks the comment discipline
+	$(GO) tool comment-lint .
+
+.PHONY: comment-list
+comment-list: ## list comment-discipline violations without failing
+	@$(GO) tool comment-lint -list .
+
+.PHONY: test
+test: ## run tests with the race detector
+	@for m in $(GO_MODULES); do $(GO) -C $$m test -race ./... || exit 1; done
+
+INTEGRATION_TIMEOUT ?= 10m
+
+.PHONY: test-integration
+test-integration: ## run integration tests (TEST_PG_DSN if set, else one Postgres container per package)
+	@for m in $(GO_MODULES); do $(GO) -C $$m test -race -shuffle=on -tags integration -timeout $(INTEGRATION_TIMEOUT) ./... || exit 1; done
+
+.PHONY: test-all
+test-all: test test-integration ## unit + integration tests
+
+COVER_MIN ?= 85
+# generated code, templ views, test helpers and main wiring
+COVER_SKIP ?= /gen(/|$$)|/views$$|/testutil/|/sessiontest$$|/ratelimittest$$|/oidcrptest$$|/examples/|/cmd/othra$$
+
+.PHONY: cover
+cover: ## unit + integration coverage; fails when a package is under COVER_MIN percent
+	@for m in $(GO_MODULES); do \
+		PATH="$$($(GO) env GOROOT)/bin:$$PATH" $(GO) -C $$m test -tags integration -count=1 -timeout $(INTEGRATION_TIMEOUT) -cover ./... || echo FAIL; \
+	done \
+		| tee /dev/stderr \
+		| awk -v min=$(COVER_MIN) -v skip='$(COVER_SKIP)' ' \
+			$$1 == "FAIL" { bad = 1 } \
+			{ pkg = ""; pct = -1 } \
+			$$1 == "ok" { pkg = $$2; for (i = 1; i <= NF; i++) if ($$i == "coverage:") pct = $$(i + 1) + 0 } \
+			$$1 == "?" { pkg = $$2; pct = 0 } \
+			$$2 == "coverage:" { pkg = $$1; pct = $$3 + 0 } \
+			pkg != "" && pkg !~ skip && pct < min { printf "cover: %s is at %.1f%% (min %d%%)\n", pkg, pct, min > "/dev/stderr"; bad = 1 } \
+			END { exit bad }'
+
+.PHONY: tidy
+tidy: ## run go mod tidy in every module
+	@for m in $(GO_MODULES); do $(GO) -C $$m mod tidy || exit 1; done
+
+.PHONY: check
+check: vet lint test ## vet + lint + test

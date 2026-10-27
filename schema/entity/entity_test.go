@@ -1,0 +1,295 @@
+package entity_test
+
+import (
+	"testing"
+
+	jetpg "github.com/go-jet/jet/v2/postgres"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/altalune-id/othra/schema/entity"
+)
+
+type binding struct {
+	table   jetpg.Table
+	columns jetpg.ColumnList
+}
+
+func TestBindings(t *testing.T) {
+	cases := []struct {
+		name    string
+		build   func(schema, prefix string) binding
+		columns []string
+	}{
+		{
+			"api_key_projects",
+			func(s, p string) binding { b := entity.NewAPIKeyProjects(s, p); return binding{b, b.AllColumns} },
+			[]string{"org_id", "key_id", "project_id", "created_at"},
+		},
+		{
+			"api_keys",
+			func(s, p string) binding { b := entity.NewAPIKeys(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "org_id", "project_id", "kind", "all_projects", "name", "secret_hash", "secret_hint",
+				"scopes", "resource_ids", "created_by", "created_at", "expires_at", "revoked_at", "last_used_at",
+			},
+		},
+		{
+			"signing_keys",
+			func(s, p string) binding { b := entity.NewSigningKeys(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "kid", "alg", "public_jwk", "private_key_enc", "status",
+				"created_at", "activates_at", "activated_at", "retire_after", "retired_at",
+			},
+		},
+		{
+			"oauth_clients",
+			func(s, p string) binding { b := entity.NewOAuthClients(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "name", "client_type", "application_type",
+				"token_endpoint_auth_method", "grant_types", "allowed_scopes", "redirect_uris",
+				"post_logout_redirect_uris", "consent_policy", "pkce_required", "registration_kind", "metadata_url",
+				"metadata_fetched_at", "metadata_expires_at", "client_uri", "created_at", "updated_at",
+			},
+		},
+		{
+			"oauth_client_secrets",
+			func(s, p string) binding { b := entity.NewOAuthClientSecrets(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "org_id", "project_id", "client_id", "secret_hash", "hint", "created_at", "expires_at"},
+		},
+		{
+			"resource_servers",
+			func(s, p string) binding { b := entity.NewResourceServers(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "name", "identifier", "scopes", "verification_state",
+				"verified_at", "last_checked_at", "last_error", "consecutive_failures", "trusted", "trusted_at",
+				"trusted_by", "accept_cimd_clients", "cimd_client_hosts", "cimd_scopes", "scope_descriptions",
+				"accept_personal_tokens", "created_at", "updated_at",
+			},
+		},
+		{
+			"resource_server_secrets",
+			func(s, p string) binding { b := entity.NewResourceServerSecrets(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "org_id", "project_id", "resource_server_id", "secret_hash", "hint", "created_at", "expires_at"},
+		},
+		{
+			"personal_tokens",
+			func(s, p string) binding { b := entity.NewPersonalTokens(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "end_user_id", "resource_server_id", "name", "token_hash", "hint",
+				"scopes", "created_at", "expires_at", "last_used_at", "revoked_at",
+			},
+		},
+		{
+			"oauth_client_resources",
+			func(s, p string) binding { b := entity.NewOAuthClientResources(s, p); return binding{b, b.AllColumns} },
+			[]string{"org_id", "project_id", "client_id", "resource_server_id", "scopes", "created_at", "updated_at"},
+		},
+		{
+			"end_users",
+			func(s, p string) binding { b := entity.NewEndUsers(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "email", "email_verified_at", "name", "last_sign_in_at",
+				"created_at", "updated_at",
+			},
+		},
+		{
+			"browser_sessions",
+			func(s, p string) binding { b := entity.NewBrowserSessions(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "org_id", "project_id", "secret_hash", "user_agent", "created_at", "last_seen_at",
+				"absolute_expires_at", "ended_at",
+			},
+		},
+		{
+			"user_sessions",
+			func(s, p string) binding { b := entity.NewUserSessions(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "browser_session_id", "end_user_id", "method", "auth_time",
+				"selected_at", "created_at", "last_seen_at", "ended_at",
+			},
+		},
+		{
+			"end_user_terms",
+			func(s, p string) binding { b := entity.NewEndUserTerms(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"org_id", "project_id", "end_user_id", "terms_version", "terms_url", "privacy_url", "accepted_at",
+				"user_session_id", "user_session_public_id", "ip", "user_agent",
+			},
+		},
+		{
+			"magic_links",
+			func(s, p string) binding { b := entity.NewMagicLinks(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "token_hash", "email", "return_to", "request_ip",
+				"created_at", "expires_at", "used_at", "browser_session_id", "pending_identity",
+			},
+		},
+		{
+			"upstream_providers",
+			func(s, p string) binding { b := entity.NewUpstreamProviders(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "kind", "client_id", "client_secret_sealed", "enabled", "created_at", "updated_at",
+			},
+		},
+		{
+			"end_user_identities",
+			func(s, p string) binding { b := entity.NewEndUserIdentities(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "end_user_id", "upstream_provider_id", "issuer", "subject", "email",
+				"email_verified", "linked_at", "last_used_at",
+			},
+		},
+		{
+			"grant_families",
+			func(s, p string) binding { b := entity.NewGrantFamilies(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "client_id", "end_user_id", "user_session_id", "user_session_public_id",
+				"scopes", "auth_time", "created_at", "last_used_at", "absolute_expires_at", "revoked_at", "revoked_reason",
+				"resource_server_id",
+			},
+		},
+		{
+			"authorization_codes",
+			func(s, p string) binding { b := entity.NewAuthorizationCodes(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "org_id", "project_id", "code_hash", "client_id", "end_user_id", "user_session_id", "redirect_uri", "scopes",
+				"code_challenge", "code_challenge_method", "nonce", "auth_time", "created_at", "expires_at", "used_at", "family_id",
+				"resource_server_id",
+			},
+		},
+		{
+			"access_tokens",
+			func(s, p string) binding { b := entity.NewAccessTokens(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "org_id", "project_id", "family_id", "token_hash", "scopes", "created_at", "expires_at", "resource_server_id",
+				"revoked_at",
+			},
+		},
+		{
+			"scope_consents",
+			func(s, p string) binding { b := entity.NewScopeConsents(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "end_user_id", "client_id", "resource_server_id", "scopes",
+				"granted_at", "updated_at", "granted_ip", "granted_user_agent",
+			},
+		},
+		{
+			"refresh_tokens",
+			func(s, p string) binding { b := entity.NewRefreshTokens(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "org_id", "project_id", "family_id", "token_hash", "created_at", "expires_at", "used_at"},
+		},
+		{
+			"files",
+			func(s, p string) binding { b := entity.NewFiles(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "owner_kind", "owner_id", "purpose", "visibility", "object_key", "content_type",
+				"size_bytes", "original_name", "status", "created_at", "completed_at", "expires_at",
+			},
+		},
+		{
+			"invites",
+			func(s, p string) binding { b := entity.NewInvites(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "email", "role", "token_hash", "draft", "invited_by",
+				"expires_at", "accepted_at", "accepted_by", "revoked_at", "created_at", "updated_at",
+			},
+		},
+		{
+			"legal_documents",
+			func(s, p string) binding { b := entity.NewLegalDocuments(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "slug", "version", "title", "body", "sha256", "published_at"},
+		},
+		{
+			"mail_queue",
+			func(s, p string) binding { b := entity.NewMailQueue(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "payload", "sealed", "status", "attempt", "next_attempt_at", "last_error", "created_at", "settled_at"},
+		},
+		{
+			"memberships",
+			func(s, p string) binding { b := entity.NewMemberships(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "org_id", "user_id", "role", "created_at"},
+		},
+		{
+			"orgs",
+			func(s, p string) binding { b := entity.NewOrgs(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "slug", "name", "created_by", "created_at", "updated_at", "is_system"},
+		},
+		{
+			"outbox_entries",
+			func(s, p string) binding { b := entity.NewOutboxEntries(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "event_id", "org_id", "project_id", "target", "payload", "attempt",
+				"next_attempt_at", "status", "last_error", "created_at", "delivered_at", "public_id", "event_public_id",
+			},
+		},
+		{
+			"projects",
+			func(s, p string) binding { b := entity.NewProjects(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "org_id", "slug", "name", "created_by", "created_at", "updated_at", "issuer_handle", "issuer_handle_locked_at", "display_name", "primary_color", "support_email", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link", "logo_file_id"},
+		},
+		{
+			"password_resets",
+			func(s, p string) binding { b := entity.NewPasswordResets(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "user_id", "token_hash", "expires_at", "used_at", "created_at"},
+		},
+		{
+			"sessions",
+			func(s, p string) binding { b := entity.NewSessions(s, p); return binding{b, b.AllColumns} },
+			[]string{"sid", "user_id", "payload", "expires_at", "created_at"},
+		},
+		{
+			"terms_acceptances",
+			func(s, p string) binding { b := entity.NewTermsAcceptances(s, p); return binding{b, b.AllColumns} },
+			[]string{"id", "public_id", "user_id", "terms_document_id", "privacy_document_id", "source", "accepted_at"},
+		},
+		{
+			"users",
+			func(s, p string) binding { b := entity.NewUsers(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "email", "name", "avatar_url", "password_hash", "idp_issuer", "idp_subject",
+				"locale", "terms_accepted_at", "created_at", "updated_at",
+			},
+		},
+		{
+			"webhook_deliveries",
+			func(s, p string) binding { b := entity.NewWebhookDeliveries(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "org_id", "project_id", "endpoint_id", "delivery_id", "event_id", "event_type", "attempt",
+				"status_code", "error", "response_body", "response_truncated", "response_headers", "duration_ms", "created_at",
+			},
+		},
+		{
+			"webhook_endpoints",
+			func(s, p string) binding { b := entity.NewWebhookEndpoints(s, p); return binding{b, b.AllColumns} },
+			[]string{
+				"id", "public_id", "org_id", "project_id", "url", "description", "event_types",
+				"secret_primary", "secret_secondary", "active", "created_at", "updated_at",
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			b := tt.build("tenant", "oa_")
+			assert.Equal(t, "tenant", b.table.SchemaName())
+			assert.Equal(t, "oa_"+tt.name, b.table.TableName())
+			assert.Equal(t, tt.name, b.table.Alias())
+
+			names := make([]string, 0, len(b.columns))
+			for _, c := range b.columns {
+				names = append(names, c.Name())
+				assert.Equal(t, tt.name, c.TableName(), "column %s", c.Name())
+			}
+			assert.Equal(t, tt.columns, names)
+
+			query, _ := jetpg.SELECT(b.columns).FROM(b.table).Sql()
+			assert.Contains(t, query, "FROM tenant.oa_"+tt.name+" AS "+tt.name)
+		})
+		t.Run(tt.name+" defaults to public schema", func(t *testing.T) {
+			b := tt.build("", "")
+			require.NotNil(t, b.table)
+			assert.Equal(t, "public", b.table.SchemaName())
+			assert.Equal(t, tt.name, b.table.TableName())
+		})
+	}
+}

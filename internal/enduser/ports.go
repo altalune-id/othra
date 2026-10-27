@@ -1,0 +1,32 @@
+package enduser
+
+import (
+	"context"
+
+	"github.com/google/uuid"
+
+	"github.com/altalune-id/othra/mailer"
+)
+
+// MailQueue enqueues a message in the unit of work on ctx.
+type MailQueue interface {
+	Enqueue(ctx context.Context, m mailer.Message) (uuid.UUID, error)
+}
+
+// Projects runs fn once for every project, with ctx scoped to its org and the project.
+type Projects interface {
+	Each(ctx context.Context, fn func(ctx context.Context, orgID, projectID uuid.UUID) error) error
+}
+
+// SignInSwitch reads a project's email-link switch and locks the project row until the unit of work on ctx ends.
+type SignInSwitch interface {
+	LockEmailLink(ctx context.Context, projectID uuid.UUID) (bool, error)
+}
+
+// ComposeFunc builds the sign-in email for a freshly issued link.
+type ComposeFunc func(ctx context.Context, link IssuedLink) (mailer.Message, error)
+
+// Grants revokes the grants issued under a user session, in the unit of work on ctx, when the session ends.
+type Grants interface {
+	RevokeUserSession(ctx context.Context, p Project, userSession string, reason EndReason) error
+}

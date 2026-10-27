@@ -1,0 +1,372 @@
+version: "2"
+
+# Run locally: make lint (pinned golangci-lint version, see GOLANGCI_VERSION in the Makefile).
+
+run:
+  timeout: 3m
+  tests: true
+  build-tags:
+    - integration
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - depguard
+    - errorlint
+    - forbidigo
+    - gochecknoglobals
+    - gocritic
+    - gosec
+    - lll
+    - misspell
+    - modernize
+    - nilerr
+    - prealloc
+    - revive
+    - unconvert
+    - unparam
+    - whitespace
+
+  settings:
+    lll:
+      line-length: 140
+      tab-width: 1
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      disabled-checks:
+        - ifElseChain
+        - hugeParam
+        - rangeValCopy
+    gosec:
+      excludes:
+        - G104    # duplicates errcheck
+        - G404    # weak random OK for non-crypto uses
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+        - name: unexported-return
+          disabled: true   # constructors returning *unexported are our pattern
+        # A rules list replaces revive's defaults, so the defaults we want are listed.
+        - name: var-naming
+        - name: error-return
+        - name: error-naming
+        - name: error-strings
+        - name: dot-imports
+        - name: blank-imports
+        - name: context-as-argument
+          arguments:
+            - allowTypesBefore: "*testing.T"
+        - name: context-keys-type
+        - name: increment-decrement
+        - name: range
+        - name: receiver-naming
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: redefines-builtin-id
+    forbidigo:
+      forbid:
+        - pattern: 'fmt\.Print(f|ln|)\('
+          msg: "use cmd.OutOrStdout() or slog for output"
+        - pattern: 'slog\.(Info|Warn|Error|Debug)Context\('
+          msg: "use an injected *slog.Logger, not the slog default"
+      exclude-godoc-examples: true
+      analyze-types: true
+    depguard:
+      rules:
+        migrator-purity:
+          list-mode: strict
+          files:
+            - "**/migrator/*.go"
+            - "!**/migrator/*_test.go"
+          allow:
+            - $gostd
+            - github.com/jackc/pgx/v5
+            - github.com/pressly/goose/v3
+            - github.com/altalune-id/othra/pg
+        httpclient-purity:
+          list-mode: strict
+          files:
+            - "**/httpclient/*.go"
+            - "!**/httpclient/*_test.go"
+          allow:
+            - $gostd
+            - go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+        mcp-purity:
+          list-mode: strict
+          files:
+            - "**/mcp/*.go"
+            - "!**/internal/mcp/*.go"
+            - "!**/mcp/*_test.go"
+          allow:
+            - $gostd
+            - github.com/modelcontextprotocol/go-sdk
+            - github.com/google/jsonschema-go
+            - github.com/altalune-id/othra/apperror
+        scheduler-purity:
+          list-mode: strict
+          files:
+            - "**/scheduler/*.go"
+            - "!**/scheduler/*_test.go"
+          allow:
+            - $gostd
+            - github.com/robfig/cron/v3
+            - go.opentelemetry.io/otel
+            - github.com/altalune-id/othra/reqid
+        domain-purity:
+          list-mode: strict
+          files:
+            - "**/internal/{apikey,auth,client,consent,enduser,grant,install,keys,legal,org,pat,project,resourceserver,upstream,user,webhook}/{apikey,auth,client,consent,enduser,grant,install,keys,legal,org,pat,project,resourceserver,upstream,user,webhook}.go"
+            - "**/internal/{apikey,auth,client,consent,enduser,grant,install,keys,legal,org,pat,project,resourceserver,upstream,user,webhook}/{store,errors}.go"
+            - "**/internal/oauth/redirecturi/{redirecturi,errors}.go"
+            - "**/internal/oauth/{hosted,oidc}/errors.go"
+            # org/member and org/invite are excluded: they share role and error types with their parent domain.
+            # federation is excluded: its identities carry upstream.Kind and its errors oidcrp.Reason.
+          allow:
+            - $gostd
+            - github.com/google/uuid
+            - google.golang.org/protobuf/types/known/timestamppb
+            - github.com/altalune-id/othra/apperror
+            - github.com/altalune-id/othra/emailaddr
+            - github.com/altalune-id/othra/gen/go
+            - github.com/altalune-id/othra/internal/kernel/events
+            - github.com/altalune-id/othra/internal/kernel/secret
+            - github.com/altalune-id/othra/internal/kernel/usage
+            - github.com/altalune-id/othra/internal/oauth/redirecturi
+            - github.com/altalune-id/othra/nanoid
+            - github.com/altalune-id/othra/scope
+            - github.com/altalune-id/othra/slug
+        pgx-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!$test"
+            - "!**/pg/**"
+            - "!**/internal/kernel/db/**"
+            - "!**/migrator/**"
+            - "!**/internal/testutil/pgtest/**"
+          deny:
+            - pkg: github.com/jackc/pgx
+              desc: "only pg, internal/kernel/db, migrator and pgtest import the Postgres driver"
+        config-boundary:
+          list-mode: lax
+          files:
+            - "**/internal/kernel/**"
+            - "**/pg/**"
+            - "**/nats/**"
+            - "**/redis/**"
+            - "**/s3/**"
+          deny:
+            - pkg: "github.com/altalune-id/othra/config$"
+              desc: "kernel features and connections take their own Config; boot maps config into it"
+        nats-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/nats/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/testutil/natstest/**"
+          deny:
+            - pkg: github.com/nats-io
+              desc: "only the nats connection, the queue/nats driver, boot and natstest import NATS"
+        redis-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/redis/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/testutil/redistest/**"
+          deny:
+            - pkg: github.com/redis/go-redis
+              desc: "only the redis connection, the ratelimit/redis driver, boot and redistest import go-redis"
+        s3-boundary:
+          list-mode: lax
+          files:
+            - $all
+            - "!**/s3/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/testutil/s3test/**"
+          deny:
+            - pkg: github.com/aws/aws-sdk-go-v2
+              desc: "only the s3 connection, the storage/s3 driver, boot and s3test import the AWS SDK"
+        internal-driver-boundary:
+          list-mode: lax
+          files:
+            - "**/internal/**"
+            - "!$test"
+            - "!**/internal/kernel/db/**"
+            - "!**/internal/kernel/queue/nats/**"
+            - "!**/internal/kernel/ratelimit/redis/**"
+            - "!**/internal/boot/**"
+            - "!**/internal/kernel/storage/s3/**"
+            - "!**/internal/testutil/{pgtest,natstest,redistest,s3test}/**"
+          deny:
+            - pkg: github.com/jackc/pgx
+              desc: "inside internal/, only kernel/db imports the Postgres driver"
+            - pkg: github.com/nats-io
+              desc: "inside internal/, only the queue/nats driver and boot import NATS"
+            - pkg: github.com/redis/go-redis
+              desc: "inside internal/, only the ratelimit/redis driver and boot import go-redis"
+            - pkg: github.com/aws/aws-sdk-go-v2
+              desc: "inside internal/, only the storage/s3 driver and boot import the AWS SDK"
+        application-purity:
+          list-mode: lax
+          files:
+            - "**/internal/*/service.go"
+            - "**/internal/*/*/service.go"
+          deny:
+            - pkg: "database/sql"
+              desc: "services reach the database through their Store and db.Transactor"
+            - pkg: "net/http"
+              desc: "services do not speak HTTP; surfaces (controlplane, web, mcp) do"
+        domain-boundary:
+          list-mode: lax
+          # NOTE: every internal package but the shells, so a new domain is covered without a list.
+          files:
+            - "**/internal/**"
+            - "!**/internal/{cli,boot,controlplane,web,kernel,tool,testutil}/**"
+            - "!**/*_test.go"
+          allow:
+            - github.com/altalune-id/othra/internal/web/layout
+            - github.com/altalune-id/othra/internal/web/i18n
+          deny:
+            - pkg: "github.com/altalune-id/othra/internal/cli$"
+              desc: "domains never import the CLI shell"
+            - pkg: "github.com/altalune-id/othra/internal/cli/"
+              desc: "domains never import the CLI shell"
+            - pkg: "github.com/altalune-id/othra/internal/boot"
+              desc: "domains never import boot"
+            - pkg: "github.com/altalune-id/othra/internal/controlplane"
+              desc: "domains never import controlplane"
+            - pkg: "github.com/altalune-id/othra/internal/web$"
+              desc: "domains import only internal/web/layout and internal/web/i18n"
+            - pkg: "github.com/altalune-id/othra/internal/web/"
+              desc: "domains import only internal/web/layout and internal/web/i18n"
+            - pkg: "github.com/altalune-id/othra/pg$"
+              desc: "domains reach Postgres through internal/kernel/db, never the connection"
+            - pkg: "github.com/altalune-id/othra/nats$"
+              desc: "domains reach NATS through internal/kernel/queue, never the connection"
+            - pkg: "github.com/altalune-id/othra/redis$"
+              desc: "domains never use the Redis connection; a feature's driver does"
+            - pkg: "github.com/altalune-id/othra/s3$"
+              desc: "domains reach file storage through internal/kernel/storage, never the connection"
+        org-auth-boundary:
+          list-mode: lax
+          files:
+            - "**/internal/org/**"
+            # NOTE: a test that imports auth through a cycle fails to compile, so only production files are checked.
+            - "!**/*_test.go"
+          deny:
+            - pkg: "github.com/altalune-id/othra/internal/auth"
+              desc: "org reaches sign-in through a port in its ports.go, wired in boot; auth imports org"
+        kernel-boundary:
+          list-mode: lax
+          # NOTE: every other internal package is a domain, a surface or boot, so a new one is covered without a list.
+          files:
+            - "**/internal/kernel/**"
+          allow:
+            - github.com/altalune-id/othra/internal/kernel/
+            - github.com/altalune-id/othra/internal/testutil/
+          deny:
+            - pkg: "github.com/altalune-id/othra/internal/"
+              desc: "kernel imports only kernel packages, never a domain, a surface or boot"
+        library-boundary:
+          list-mode: lax
+          files:
+            - "**/oauthrs/**"
+            - "**/oidcrp/**"
+          allow:
+            - github.com/altalune-id/othra/oauthrs
+            - github.com/altalune-id/othra/oidcrp
+          deny:
+            - pkg: "github.com/altalune-id/othra/"
+              desc: "oidcrp and oauthrs are app libraries: stdlib, go-jose and oidcrp only, never internal/ or config"
+        root-boundary:
+          list-mode: lax
+          files:
+            - "**/apperror/**"
+            - "**/config/**"
+            - "**/httpclient/**"
+            - "**/httpserver/**"
+            - "**/mailer/**"
+            - "**/mcp/**"
+            - "**/migrator/**"
+            - "**/nanoid/**"
+            - "**/nats/**"
+            - "**/oauthrs/**"
+            - "**/oidcrp/**"
+            - "**/password/**"
+            - "**/pg/**"
+            - "**/redis/**"
+            - "**/reqid/**"
+            - "**/scheduler/**"
+            - "**/scope/**"
+            - "**/sealer/**"
+            - "**/slug/**"
+            - "**/telemetry/**"
+            - "**/version/**"
+            - "**/worker/**"
+            - "!**/internal/**"
+          deny:
+            - pkg: "github.com/altalune-id/othra/internal"
+              desc: "root-level shared packages must NOT depend on any internal/ package (import inversion)"
+
+  exclusions:
+    generated: strict
+    warn-unused: false
+    rules:
+      - path: version/version\.go
+        linters:
+          - gochecknoglobals
+      - path: httpclient/safe\.go
+        linters:
+          - gochecknoglobals
+      - path: gen/
+        linters:
+          - all
+      - path: _templ\.go
+        linters:
+          - all
+      - path: cmd/gen-config-example/
+        linters:
+          - lll
+      # A root package's tests may use the shared container helpers.
+      - path: _test\.go
+        text: internal/testutil/(pgtest|natstest|redistest)
+        linters:
+          - depguard
+      - path: _test\.go
+        linters:
+          - lll
+          - errcheck
+          - gochecknoglobals
+          - gocritic
+          - gosec
+          - prealloc
+          - unparam
+
+formatters:
+  enable:
+    - gofmt
+    - gci
+  settings:
+    gci:
+      # stdlib, then third-party, then this module; each group sorted
+      sections:
+        - standard
+        - default
+        - localmodule
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

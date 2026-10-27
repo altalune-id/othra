@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package org.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "github.com/altalune-id/othra/gen/go/org/v1;orgv1";
+
+// OrgService manages organizations. Every id is a public id.
+service OrgService {
+  rpc CreateOrg(CreateOrgRequest) returns (CreateOrgResponse) {
+    option (mcp.v1.tool) = {
+      name: "org_create"
+      description: "Create an organization, minting a slug when one is not supplied."
+      mutation: true
+      destructive: false
+      ui: "app"
+    };
+  }
+  rpc GetOrg(GetOrgRequest) returns (GetOrgResponse) {
+    option (mcp.v1.tool) = {
+      name: "org_get"
+      description: "Get an organization by id."
+      required: ["id"]
+      ui: "app"
+    };
+  }
+  rpc ListOrgs(ListOrgsRequest) returns (ListOrgsResponse) {
+    option (mcp.v1.tool) = {
+      name: "org_list"
+      description: "List organizations, ordered by creation time."
+      ui: "app"
+    };
+  }
+  rpc UpdateOrg(UpdateOrgRequest) returns (UpdateOrgResponse);
+}
+
+message Org {
+  reserved 2;
+  reserved "public_id";
+  string id = 1;
+  string slug = 3;
+  string name = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  // role is the caller's role in this org; set only when a person lists the orgs they belong to.
+  string role = 7;
+  // permissions are what that role grants in this org, so a client can offer only the scopes a key there may hold.
+  repeated string permissions = 8;
+  // system is true for the deployment's system org, which holds the console project.
+  bool system = 9;
+}
+
+message CreateOrgRequest {
+  string slug = 1 [
+    (buf.validate.field).string.(othra.v1.slug) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.name) = true
+  ];
+}
+
+message CreateOrgResponse {
+  Org org = 1;
+}
+
+message GetOrgRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message GetOrgResponse {
+  Org org = 1;
+}
+
+message ListOrgsRequest {}
+
+message ListOrgsResponse {
+  repeated Org orgs = 1;
+}
+
+message UpdateOrgRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  string name = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.name) = true
+  ];
+  string slug = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.slug) = true
+  ];
+}
+
+message UpdateOrgResponse {
+  Org org = 1;
+}

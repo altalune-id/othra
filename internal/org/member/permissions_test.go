@@ -1,0 +1,38 @@
+package member
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/altalune-id/othra/scope"
+)
+
+func TestBuiltinPermissions(t *testing.T) {
+	assert.Equal(t, []string{"*"}, BuiltinPermissions(RoleOwner))
+	assert.False(t, scope.Grants(BuiltinPermissions(RoleAdmin), scope.OrgWrite), "org settings are owner-only")
+	assert.True(t, scope.Grants(BuiltinPermissions(RoleAdmin), scope.MemberWrite))
+	assert.True(t, scope.Grants(BuiltinPermissions(RoleMember), scope.WebhookWrite))
+	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.ProjectWrite))
+	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.MemberWrite))
+	assert.True(t, scope.Grants(BuiltinPermissions(RoleAdmin), scope.EndUserRevoke), "project admins view and revoke end users")
+	assert.False(t, scope.Grants(BuiltinPermissions(RoleMember), scope.EndUserRead), "end users' emails and sessions are admin-only")
+	assert.Empty(t, BuiltinPermissions("root"))
+}
+
+func TestBuiltinPermissions_OnlyCatalogNames(t *testing.T) {
+	for _, r := range []Role{RoleOwner, RoleAdmin, RoleMember} {
+		for _, p := range BuiltinPermissions(r) {
+			if p == "*" {
+				continue
+			}
+			if res, ok := strings.CutSuffix(p, ":*"); ok {
+				assert.True(t, scope.Grants([]string{p}, res+":read") || scope.Grants([]string{p}, res+":write"), p)
+				assert.True(t, scope.Valid(res+":read") || scope.Valid(res+":write"), "wildcard %q must cover a real resource", p)
+				continue
+			}
+			assert.True(t, scope.Valid(p), p)
+		}
+	}
+}

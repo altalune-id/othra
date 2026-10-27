@@ -1,0 +1,356 @@
+# Othra — auto-generated from config struct tags.
+# DO NOT edit by hand. Run `go run ./cmd/gen-config-example --format=yaml` to regenerate.
+#
+# Copy to config.yml, uncomment what you need to set, and the app picks it up.
+# Every field maps to an env var (shown as `env: OTHRA_*` in the per-field comment).
+# Env vars override YAML.
+#
+# Awareness markers (in [brackets] on the per-field comment):
+#   required   — must be non-empty for the app to boot
+#   bootstrap  — set once at first-run; changing later has no effect or breaks things
+#   secret     — never commit; use env vars or a secret store
+
+api:
+  openapi:
+    # [secret] env: OTHRA_API_OPENAPI_BASIC_AUTH_PASSWORD
+    basicAuthPassword: ""
+    # env: OTHRA_API_OPENAPI_BASIC_AUTH_USER
+    basicAuthUser: ""
+    # env: OTHRA_API_OPENAPI_ENABLED
+    enabled: true
+    # env: OTHRA_API_OPENAPI_REQUIRE_BASIC_AUTH
+    requireBasicAuth: true
+
+auth:
+  basic:
+    # [secret] env: OTHRA_AUTH_BASIC_PASSWORD
+    password: ""
+    # env: OTHRA_AUTH_BASIC_USER
+    user: ""
+  genesis:
+    # env: OTHRA_AUTH_GENESIS_EMAIL
+    email: ""
+    # [secret] env: OTHRA_AUTH_GENESIS_PASSWORD
+    password: ""
+  # env: OTHRA_AUTH_MODE
+  mode: local
+  # password:
+  #   # env: OTHRA_AUTH_PASSWORD_ENABLED
+  #   enabled:
+  # env: OTHRA_AUTH_SESSION_TTL
+  sessionTTL: 24h
+
+cli:
+  # env: OTHRA_CLI_SESSION_FILE
+  sessionFile: ~/.othra/session.json
+
+compliance:
+  # env: OTHRA_COMPLIANCE_PRIVACY_URL
+  privacyURL: ""
+  # env: OTHRA_COMPLIANCE_REQUIRE_ACCEPTANCE
+  requireAcceptance: ""
+  # env: OTHRA_COMPLIANCE_TERMS_URL
+  termsURL: ""
+  # env: OTHRA_COMPLIANCE_TERMS_UPDATED_AT
+  termsUpdatedAt: ""
+
+db:
+  # env: OTHRA_DB_AUTO_MIGRATE
+  autoMigrate: true
+  # env: OTHRA_DB_DRIVER
+  driver: postgres
+  rls:
+    # [bootstrap] env: OTHRA_DB_RLS_ALLOW_BYPASS
+    allowBypass: false
+
+endUsers:
+  csrf:
+    # env: OTHRA_END_USERS_CSRF_MAX_AGE
+    maxAge: 1h
+  magicLink:
+    # env: OTHRA_END_USERS_MAGIC_LINK_RESEND_AFTER
+    resendAfter: 60s
+    # env: OTHRA_END_USERS_MAGIC_LINK_TTL
+    ttl: 15m
+  session:
+    # env: OTHRA_END_USERS_SESSION_ABSOLUTE
+    absolute: 2160h
+    # env: OTHRA_END_USERS_SESSION_IDLE
+    idle: 720h
+    # env: OTHRA_END_USERS_SESSION_MAX_ACCOUNTS
+    maxAccounts: 20
+
+# [required, bootstrap] env: OTHRA_ENV
+env: production
+
+http:
+  # [required] env: OTHRA_HTTP_ADDR
+  addr: ":5150"
+  # env: OTHRA_HTTP_BASE_PATH
+  basePath: ""
+  # env: OTHRA_HTTP_BASE_URL
+  baseURL: ""
+  # env: OTHRA_HTTP_COOKIE_SECURE
+  cookieSecure: true
+  # [secret] env: OTHRA_HTTP_STATE_SECRET
+  stateSecret: ""
+  # env: OTHRA_HTTP_TRUSTED_PROXY_HOPS
+  trustedProxyHops: 0
+
+install:
+  # [secret] env: OTHRA_INSTALL_TOKEN
+  token: ""
+
+keys:
+  rotation:
+    # env: OTHRA_KEYS_ROTATION_OVERLAP
+    overlap: 168h
+    # env: OTHRA_KEYS_ROTATION_PRE_PUBLISH
+    prePublish: 10m
+  # env: OTHRA_KEYS_RSA_BITS
+  rsaBits: 2048
+
+mail:
+  # env: OTHRA_MAIL_DRIVER
+  driver: console
+  # env: OTHRA_MAIL_FROM
+  from: ""
+  resend:
+    # [secret] env: OTHRA_MAIL_RESEND_API_KEY
+    apiKey: ""
+  smtp:
+    # env: OTHRA_MAIL_SMTP_HOST
+    host: ""
+    # [secret] env: OTHRA_MAIL_SMTP_PASSWORD
+    password: ""
+    # env: OTHRA_MAIL_SMTP_PORT
+    port: 587
+    # env: OTHRA_MAIL_SMTP_TIMEOUT
+    timeout: 10s
+    # env: OTHRA_MAIL_SMTP_TLS
+    tls: starttls
+    # env: OTHRA_MAIL_SMTP_USERNAME
+    username: ""
+
+mcp:
+  # env: OTHRA_MCP_APPS_UI
+  appsUI: ""
+  # env: OTHRA_MCP_ENABLED
+  enabled: false
+
+# [required, bootstrap] env: OTHRA_MODE
+mode: selfhosted
+
+nats:
+  # env: OTHRA_NATS_CONNECT_TIMEOUT
+  connectTimeout: 10s
+  # env: OTHRA_NATS_NAME
+  name: othra
+  # [secret] env: OTHRA_NATS_PASSWORD
+  password: ""
+  # [secret] env: OTHRA_NATS_TOKEN
+  token: ""
+  # [secret] env: OTHRA_NATS_URL
+  url: ""
+  # env: OTHRA_NATS_USER
+  user: ""
+
+oauth:
+  # env: OTHRA_OAUTH_ACCESS_TOKEN_TTL
+  accessTokenTTL: 15m
+  cimd:
+    # env: OTHRA_OAUTH_CIMD_ALLOW_PRIVATE_HOSTS
+    allowPrivateHosts: false
+    # env: OTHRA_OAUTH_CIMD_CACHE_MAX
+    cacheMax: 24h
+    # env: OTHRA_OAUTH_CIMD_CACHE_MIN
+    cacheMin: 5m
+    # env: OTHRA_OAUTH_CIMD_FETCH_TIMEOUT
+    fetchTimeout: 5s
+    # env: OTHRA_OAUTH_CIMD_MAX_BYTES
+    maxBytes: 5120
+  # env: OTHRA_OAUTH_CODE_TTL
+  codeTTL: 60s
+  # env: OTHRA_OAUTH_ID_TOKEN_TTL
+  idTokenTTL: 5m
+  refresh:
+    # env: OTHRA_OAUTH_REFRESH_ABSOLUTE
+    absolute: 2160h
+    # env: OTHRA_OAUTH_REFRESH_IDLE
+    idle: 720h
+
+postgres:
+  # env: OTHRA_POSTGRES_CONN_MAX_IDLE_TIME
+  connMaxIdleTime: ""
+  # env: OTHRA_POSTGRES_CONN_MAX_LIFETIME
+  connMaxLifetime: ""
+  # env: OTHRA_POSTGRES_CONNECT_BACKOFF
+  connectBackoff: 250ms
+  # env: OTHRA_POSTGRES_CONNECT_TIMEOUT
+  connectTimeout: 5s
+  # [required, secret] env: OTHRA_POSTGRES_DSN
+  dsn: ""
+  health:
+    # env: OTHRA_POSTGRES_HEALTH_INTERVAL
+    interval: 30s
+    # env: OTHRA_POSTGRES_HEALTH_TIMEOUT
+    timeout: 2s
+  # env: OTHRA_POSTGRES_MAX_IDLE_CONNS
+  maxIdleConns: ""
+  # env: OTHRA_POSTGRES_MAX_OPEN_CONNS
+  maxOpenConns: ""
+  migrator:
+    # [secret] env: OTHRA_POSTGRES_MIGRATOR_DSN
+    dsn: ""
+    # env: OTHRA_POSTGRES_MIGRATOR_ROLE
+    role: ""
+  reader:
+    # env: OTHRA_POSTGRES_READER_CONN_MAX_IDLE_TIME
+    connMaxIdleTime: ""
+    # env: OTHRA_POSTGRES_READER_CONN_MAX_LIFETIME
+    connMaxLifetime: ""
+    # [secret] env: OTHRA_POSTGRES_READER_DSN
+    dsn: ""
+    # env: OTHRA_POSTGRES_READER_MAX_IDLE_CONNS
+    maxIdleConns: ""
+    # env: OTHRA_POSTGRES_READER_MAX_OPEN_CONNS
+    maxOpenConns: ""
+    # env: OTHRA_POSTGRES_READER_ROLE
+    role: ""
+  # env: OTHRA_POSTGRES_ROLE
+  role: ""
+  # [bootstrap] env: OTHRA_POSTGRES_SCHEMA
+  schema: public
+  # [bootstrap] env: OTHRA_POSTGRES_TABLE_PREFIX
+  tablePrefix: ""
+
+queue:
+  # env: OTHRA_QUEUE_DRIVER
+  driver: nats
+  # env: OTHRA_QUEUE_ENABLED
+  enabled: false
+
+rateLimit:
+  auth:
+    # env: OTHRA_RATE_LIMIT_AUTH_ENABLED
+    enabled: true
+  # env: OTHRA_RATE_LIMIT_DRIVER
+  driver: memory
+  # env: OTHRA_RATE_LIMIT_MAX_KEYS
+  maxKeys: 100000
+
+redis:
+  # env: OTHRA_REDIS_CONNECT_TIMEOUT
+  connectTimeout: 5s
+  # env: OTHRA_REDIS_KEY_PREFIX
+  keyPrefix: "othra:"
+  # env: OTHRA_REDIS_MAX_CONNECTIONS
+  maxConnections: 10
+  # env: OTHRA_REDIS_MAX_IDLE_TIME
+  maxIdleTime: 5m
+  # env: OTHRA_REDIS_MIN_IDLE_CONNECTIONS
+  minIdleConnections: 0
+  # env: OTHRA_REDIS_READ_TIMEOUT
+  readTimeout: 3s
+  # [secret] env: OTHRA_REDIS_URL
+  url: ""
+  # env: OTHRA_REDIS_WRITE_TIMEOUT
+  writeTimeout: 3s
+
+resourceServers:
+  verification:
+    # env: OTHRA_RESOURCE_SERVERS_VERIFICATION_ALLOW_PRIVATE_HOSTS
+    allowPrivateHosts: false
+    # env: OTHRA_RESOURCE_SERVERS_VERIFICATION_INTERVAL
+    interval: 1h
+    # env: OTHRA_RESOURCE_SERVERS_VERIFICATION_STALE_AFTER
+    staleAfter: 24h
+    # env: OTHRA_RESOURCE_SERVERS_VERIFICATION_TIMEOUT
+    timeout: 5s
+
+s3:
+  # [secret] env: OTHRA_S3_ACCESS_KEY_ID
+  accessKeyID: ""
+  # env: OTHRA_S3_BROWSER_ENDPOINT
+  browserEndpoint: ""
+  # env: OTHRA_S3_BUCKET
+  bucket: ""
+  # env: OTHRA_S3_ENDPOINT
+  endpoint: ""
+  # env: OTHRA_S3_REGION
+  region: ""
+  # [secret] env: OTHRA_S3_SECRET_ACCESS_KEY
+  secretAccessKey: ""
+  # env: OTHRA_S3_TIMEOUT
+  timeout: 10s
+  # env: OTHRA_S3_USE_PATH_STYLE
+  usePathStyle: true
+
+scheduler:
+  # env: OTHRA_SCHEDULER_ENABLED
+  enabled: true
+  # env: OTHRA_SCHEDULER_SHUTDOWN_GRACE
+  shutdownGrace: 30s
+
+secrets:
+  # env: OTHRA_SECRETS_ENCRYPTION_KEY
+  encryptionKey: ""
+
+storage:
+  # env: OTHRA_STORAGE_APP
+  app: othra
+  # env: OTHRA_STORAGE_DRIVER
+  driver: ""
+  # env: OTHRA_STORAGE_IMAGE_TRANSFORM
+  imageTransform: none
+  private:
+    # env: OTHRA_STORAGE_PRIVATE_SIGNER
+    signer: presign
+    # env: OTHRA_STORAGE_PRIVATE_URL_TTL
+    urlTTL: 5m
+  # env: OTHRA_STORAGE_PUBLIC_BASE_URL
+  publicBaseURL: ""
+  upload:
+    # env: OTHRA_STORAGE_UPLOAD_PENDING_TTL
+    pendingTTL: 1h
+    # env: OTHRA_STORAGE_UPLOAD_URL_TTL
+    urlTTL: 10m
+
+telemetry:
+  metrics:
+    # env: OTHRA_TELEMETRY_METRICS_ENABLED
+    enabled: ""
+    # env: OTHRA_TELEMETRY_METRICS_EXPORT_INTERVAL
+    exportInterval: 30s
+    prometheus:
+      # env: OTHRA_TELEMETRY_METRICS_PROMETHEUS_ADDR
+      addr: ":9090"
+      # env: OTHRA_TELEMETRY_METRICS_PROMETHEUS_ENABLED
+      enabled: ""
+      # env: OTHRA_TELEMETRY_METRICS_PROMETHEUS_PATH
+      path: /metrics
+  otlp:
+    # env: OTHRA_TELEMETRY_OTLP_ENDPOINT
+    endpoint: ""
+    # env: OTHRA_TELEMETRY_OTLP_HEADERS
+    headers: ""
+    # env: OTHRA_TELEMETRY_OTLP_INSECURE
+    insecure: ""
+    # env: OTHRA_TELEMETRY_OTLP_PROTOCOL
+    protocol: ""
+  tracing:
+    # env: OTHRA_TELEMETRY_TRACING_ENABLED
+    enabled: ""
+    # env: OTHRA_TELEMETRY_TRACING_SAMPLE_RATIO
+    sampleRatio: ""
+
+upstreams:
+  # env: OTHRA_UPSTREAMS_ALLOW_PRIVATE_HOSTS
+  allowPrivateHosts: ""
+  google:
+    # env: OTHRA_UPSTREAMS_GOOGLE_CLIENT_ID
+    clientId: ""
+    # [secret] env: OTHRA_UPSTREAMS_GOOGLE_CLIENT_SECRET
+    clientSecret: ""
+    # env: OTHRA_UPSTREAMS_GOOGLE_ISSUER_OVERRIDE
+    issuerOverride: ""

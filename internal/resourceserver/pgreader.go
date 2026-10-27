@@ -1,0 +1,155 @@
+package resourceserver
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/go-jet/jet/v2/postgres"
+	"github.com/go-jet/jet/v2/qrm"
+	"github.com/google/uuid"
+
+	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/secret"
+)
+
+func (s *postgresStore) serverColumns() postgres.ProjectionList {
+	t := s.servers
+	return postgres.ProjectionList{
+		t.ID, t.PublicID, t.OrgID, t.ProjectID, t.Name, t.Identifier, db.ArrayAsJSON(t.Scopes, "resource_servers.scopes"),
+		t.VerificationState, t.VerifiedAt, t.LastCheckedAt, postgres.CAST(t.LastError).AS_TEXT().AS("resource_servers.last_error"),
+		t.ConsecutiveFailures, t.Trusted, t.TrustedAt, t.TrustedBy, t.CreatedAt, t.UpdatedAt, t.AcceptCIMDClients,
+		db.ArrayAsJSON(t.CIMDClientHosts, "resource_servers.cimd_client_hosts"),
+		db.ArrayAsJSON(t.CIMDScopes, "resource_servers.cimd_scopes"),
+		postgres.CAST(t.ScopeDescriptions).AS_TEXT().AS("resource_servers.scope_descriptions"), t.AcceptPersonalTokens,
+	}
+}
+
+// List returns the project's servers, by name.
+func (s *postgresStore) List(ctx context.Context, projectID uuid.UUID) ([]*ResourceServer, error) {
+	t := s.servers
+	stmt := postgres.SELECT(s.serverColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID))).
+		ORDER_BY(t.Name.ASC(), t.CreatedAt.ASC())
+	return s.query(ctx, "List", stmt)
+}
+
+// ByIdentifier returns the project's server whose identifier is exactly identifier, or *NotFoundError.
+func (s *postgresStore) ByIdentifier(ctx context.Context, projectID uuid.UUID, identifier string) (*ResourceServer, error) {
+	t := s.servers
+	return s.one(ctx, "ByIdentifier", postgres.SELECT(s.serverColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.Identifier.EQ(postgres.String(identifier)))))
+}
+
+// ByID returns the project's server id, or *NotFoundError.
+func (s *postgresStore) ByID(ctx context.Context, projectID, id uuid.UUID) (*ResourceServer, error) {
+	t := s.servers
+	return s.one(ctx, "ByID", postgres.SELECT(s.serverColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ID.EQ(postgres.UUID(id)))))
+}
+
+// ByPublicID returns the project's server publicID, or *NotFoundError.
+func (s *postgresStore) ByPublicID(ctx context.Context, projectID uuid.UUID, publicID string) (*ResourceServer, error) {
+	return s.one(ctx, "ByPublicID", s.byPublicID(projectID, publicID))
+}
+
+// Due returns up to limit untrusted servers never checked or last checked before cutoff, oldest first.
+func (s *postgresStore) Due(ctx context.Context, projectID uuid.UUID, cutoff time.Time, limit int) ([]*ResourceServer, error) {
+	t := s.servers
+	stmt := postgres.SELECT(s.serverColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.Trusted.IS_FALSE()).
+			AND(t.LastCheckedAt.IS_NULL().OR(t.LastCheckedAt.LT(postgres.TimestampzT(cutoff.UTC()))))).
+		ORDER_BY(t.LastCheckedAt.ASC().NULLS_FIRST(), t.CreatedAt.ASC()).
+		LIMIT(int64(limit))
+	return s.query(ctx, "Due", stmt)
+}
+
+// Links returns the project's links of clientID or of serverID (whichever is not uuid.Nil), with their servers.
+func (s *postgresStore) Links(ctx context.Context, projectID, clientID, serverID uuid.UUID) ([]*Link, error) {
+	t, l := s.servers, s.links
+	where := l.ProjectID.EQ(postgres.UUID(projectID))
+	if clientID != uuid.Nil {
+		where = where.AND(l.ClientID.EQ(postgres.UUID(clientID)))
+	}
+	if serverID != uuid.Nil {
+		where = where.AND(l.ResourceServerID.EQ(postgres.UUID(serverID)))
+	}
+	stmt := postgres.SELECT(
+		s.serverColumns(), l.ClientID, db.ArrayAsJSON(l.Scopes, "oauth_client_resources.scopes"), l.CreatedAt, l.UpdatedAt,
+	).FROM(l.INNER_JOIN(t, t.ID.EQ(l.ResourceServerID).AND(t.ProjectID.EQ(l.ProjectID)))).
+		WHERE(where).
+		ORDER_BY(t.Name.ASC(), l.CreatedAt.ASC())
+	var rows []linkRow
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, fmt.Errorf("resourceserver.postgres: Links: %w", err)
+	}
+	out := make([]*Link, 0, len(rows))
+	for i := range rows {
+		link, err := rows[i].toLink()
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, link)
+	}
+	return out, nil
+}
+
+func (s *postgresStore) byPublicID(projectID uuid.UUID, publicID string) postgres.SelectStatement {
+	t := s.servers
+	return postgres.SELECT(s.serverColumns()).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.PublicID.EQ(postgres.String(publicID))))
+}
+
+func (s *postgresStore) one(ctx context.Context, op string, stmt postgres.SelectStatement) (*ResourceServer, error) {
+	var row serverRow
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &row) }); err != nil {
+		if db.IsNoRows(err) {
+			return nil, &NotFoundError{}
+		}
+		return nil, fmt.Errorf("resourceserver.postgres: %s: %w", op, err)
+	}
+	return row.toServer()
+}
+
+func (s *postgresStore) query(ctx context.Context, op string, stmt postgres.SelectStatement) ([]*ResourceServer, error) {
+	var rows []serverRow
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, fmt.Errorf("resourceserver.postgres: %s: %w", op, err)
+	}
+	out := make([]*ResourceServer, 0, len(rows))
+	for i := range rows {
+		r, err := rows[i].toServer()
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+// IntrospectionSecrets returns the live introspection secrets of the servers ids at now, by server, oldest first.
+func (s *postgresStore) IntrospectionSecrets(
+	ctx context.Context, projectID uuid.UUID, ids []uuid.UUID, now time.Time, withHash bool,
+) (map[uuid.UUID][]secret.Stored, error) {
+	out := map[uuid.UUID][]secret.Stored{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	t := s.secrets
+	servers := make([]postgres.Expression, len(ids))
+	for i, id := range ids {
+		servers[i] = postgres.UUID(id)
+	}
+	stmt := postgres.SELECT(t.ID, t.PublicID, t.ResourceServerID, t.Hint, t.CreatedAt, t.ExpiresAt, t.SecretHash).FROM(t).
+		WHERE(t.ProjectID.EQ(postgres.UUID(projectID)).AND(t.ResourceServerID.IN(servers...)).
+			AND(t.ExpiresAt.IS_NULL().OR(t.ExpiresAt.GT(postgres.TimestampzT(now.UTC()))))).
+		ORDER_BY(t.CreatedAt.ASC(), t.PublicID.ASC())
+	var rows []secretRow
+	if err := db.ReadPrimary(ctx, s.pool, func(q qrm.DB) error { return stmt.QueryContext(ctx, q, &rows) }); err != nil && !db.IsNoRows(err) {
+		return nil, fmt.Errorf("resourceserver.postgres: IntrospectionSecrets: %w", err)
+	}
+	for i := range rows {
+		out[rows[i].ServerID] = append(out[rows[i].ServerID], rows[i].toStored(withHash))
+	}
+	return out, nil
+}

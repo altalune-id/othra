@@ -1,0 +1,52 @@
+package layout
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestResolveReturnTo(t *testing.T) {
+	cases := []struct {
+		base, raw, want string
+	}{
+		{"", "", "/console/"},
+		{"", "/console/o/acme", "/console/o/acme"},
+		{"", "/console/x?tab=keys#top", "/console/x?tab=keys#top"},
+		{"", "//evil.com", "/console/"},
+		{"", "///evil.com", "/console/"},
+		{"", `/\evil.com`, "/console/"},
+		{"", `\\evil.com`, "/console/"},
+		{"", "https://evil.com", "/console/"},
+		{"", "https://evil.com/console/", "/console/"},
+		{"", "javascript:alert(1)", "/console/"},
+		{"", "JavaScript:alert(1)", "/console/"},
+		{"", "data:text/html,hi", "/console/"},
+		{"", "console/x", "/console/"},
+		{"", "/\t/evil.com", "/console/"},
+		{"", "/\n/evil.com", "/console/"},
+		{"", "http:/evil.com", "/console/"},
+		{"", "/%2F/evil.com", "/console/"},
+		{"", "/%2f%2fevil.com", "/console/"},
+		{"", "%2F%2Fevil.com", "/console/"},
+		{"", "/%5Cevil.com", "/%5Cevil.com"},
+		{"/app", "/app/console/x", "/app/console/x"},
+		{"/app", "/app", "/app"},
+		{"/app", "/console/x", "/app/console/"},
+		{"/app", "/appx/console", "/app/console/"},
+		{"/app", "//evil.com/app/", "/app/console/"},
+		{"/app/", "/app/console/", "/app/console/"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.base+" "+tc.raw, func(t *testing.T) {
+			assert.Equal(t, tc.want, ResolveReturnTo(tc.base, tc.raw))
+		})
+	}
+}
+
+func TestResolveReturnToOr(t *testing.T) {
+	assert.Equal(t, "/auth/p/acme/account/", ResolveReturnToOr("/auth/p/acme", "https://evil.example/", "/auth/p/acme/account/"))
+	assert.Equal(t, "/auth/p/acme/account/", ResolveReturnToOr("/auth/p/acme", "", "/auth/p/acme/account/"))
+	assert.Equal(t, "/auth/p/acme/x?y=1", ResolveReturnToOr("/auth/p/acme", "/auth/p/acme/x?y=1", "/fallback"))
+	assert.Equal(t, "/fallback", ResolveReturnToOr("/auth/p/acme", "/auth/p/acmeevil/x", "/fallback"))
+}

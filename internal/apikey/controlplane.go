@@ -1,0 +1,271 @@
+package apikey
+
+import (
+	"context"
+	"time"
+
+	"connectrpc.com/connect"
+	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/altalune-id/othra/apperror"
+	apikeyv1 "github.com/altalune-id/othra/gen/go/apikey/v1"
+	apikeyv1connect "github.com/altalune-id/othra/gen/go/apikey/v1/apikeyv1connect"
+	"github.com/altalune-id/othra/internal/kernel/authn"
+	"github.com/altalune-id/othra/internal/kernel/authz"
+	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
+	"github.com/altalune-id/othra/scope"
+)
+
+// APIKeyService implements apikey.v1.APIKeyService; ids are public ids and a key is named by its hint.
+type APIKeyService struct {
+	keys *Service
+	refs Refs
+}
+
+// NewControlPlane binds the handler to the api key service and the public id lookups.
+func NewControlPlane(keys *Service, refs Refs) *APIKeyService {
+	return &APIKeyService{keys: keys, refs: refs}
+}
+
+var _ apikeyv1connect.APIKeyServiceHandler = (*APIKeyService)(nil)
+
+// CreateAPIKey mints a key and returns its one-time plaintext secret.
+func (s *APIKeyService) CreateAPIKey(
+	ctx context.Context,
+	req *connect.Request[apikeyv1.CreateAPIKeyRequest],
+) (*connect.Response[apikeyv1.CreateAPIKeyResponse], error) {
+	kind := Kind(req.Msg.GetKind())
+	p := session.PrincipalFrom(ctx)
+	var orgID uuid.UUID
+	var err error
+	if kind == KindPersonal && p.IsPerson() {
+		ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId())
+	} else {
+		ctx, orgID, err = s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+	}
+	if err != nil {
+		return nil, err
+	}
+	var projectID uuid.UUID
+	if raw := req.Msg.GetProjectId(); raw != "" {
+		if projectID, err = s.project(ctx, orgID, raw); err != nil {
+			return nil, err
+		}
+	}
+	projectIDs := make([]uuid.UUID, 0, len(req.Msg.GetProjectIds()))
+	for _, raw := range req.Msg.GetProjectIds() {
+		id, err := s.project(ctx, orgID, raw)
+		if err != nil {
+			return nil, err
+		}
+		projectIDs = append(projectIDs, id)
+	}
+	resourceIDs := make([]uuid.UUID, 0, len(req.Msg.GetResourceIds()))
+	for _, raw := range req.Msg.GetResourceIds() {
+		id, ok, err := s.refs.ResourceID(ctx, orgID, raw)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, apperror.Invalid("resource_ids", apperror.FieldInvalid)
+		}
+		resourceIDs = append(resourceIDs, id)
+	}
+	var expiresAt *time.Time
+	if ts := req.Msg.GetExpiresAt(); ts != nil {
+		t := ts.AsTime()
+		expiresAt = &t
+	}
+	switch {
+	case kind == KindPersonal && !p.IsPerson():
+		return nil, &authn.UnauthorizedError{}
+	case kind != KindPersonal && !manages(p):
+		return nil, &authz.ForbiddenError{Permission: scope.ApikeyWrite}
+	}
+	var createdBy uuid.UUID
+	if p.IsPerson() {
+		createdBy = p.UserID
+	}
+	k, plaintext, err := s.keys.Create(ctx, CreateRequest{
+		OrgID:       orgID,
+		ProjectID:   projectID,
+		Kind:        kind,
+		Name:        req.Msg.GetName(),
+		Scopes:      req.Msg.GetScopes(),
+		ProjectIDs:  projectIDs,
+		AllProjects: req.Msg.GetAllProjects(),
+		ResourceIDs: resourceIDs,
+		ExpiresAt:   expiresAt,
+		CreatedBy:   createdBy,
+	})
+	if err != nil {
+		return nil, err
+	}
+	out, err := s.toProto(ctx, k, req.Msg.GetOrgId())
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&apikeyv1.CreateAPIKeyResponse{Key: out, Plaintext: plaintext}), nil
+}
+
+// ListAPIKeys lists an org's keys, without plaintext. SECURITY: keys never see personal keys; project-limited keys see none.
+func (s *APIKeyService) ListAPIKeys(
+	ctx context.Context,
+	req *connect.Request[apikeyv1.ListAPIKeysRequest],
+) (*connect.Response[apikeyv1.ListAPIKeysResponse], error) {
+	p := session.PrincipalFrom(ctx)
+	ctx, orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachWholeOrg)
+	ownOnly := false
+	if IsNotFoundError(err) && p.IsPerson() {
+		ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId())
+		ownOnly = true
+	}
+	if err != nil {
+		return nil, err
+	}
+	keys, err := s.keys.List(ctx, orgID, p.UserID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*apikeyv1.APIKey, 0, len(keys))
+	for _, k := range keys {
+		if p.Source == session.SourceAPIKey && k.Kind == KindPersonal {
+			continue
+		}
+		if ownOnly && (k.Kind != KindPersonal || k.CreatedBy != p.UserID) {
+			continue
+		}
+		pk, err := s.toProto(ctx, k, req.Msg.GetOrgId())
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, pk)
+	}
+	return connect.NewResponse(&apikeyv1.ListAPIKeysResponse{Keys: out}), nil
+}
+
+// RevokeAPIKey revokes the org's live key with the given hint.
+func (s *APIKeyService) RevokeAPIKey(
+	ctx context.Context,
+	req *connect.Request[apikeyv1.RevokeAPIKeyRequest],
+) (*connect.Response[apikeyv1.RevokeAPIKeyResponse], error) {
+	p := session.PrincipalFrom(ctx)
+	ctx, orgID, err := s.org(ctx, req.Msg.GetOrgId(), authz.ReachOrg)
+	if IsNotFoundError(err) && p.IsPerson() {
+		if ctx, orgID, err = s.memberOrg(ctx, req.Msg.GetOrgId()); err != nil {
+			return nil, err
+		}
+		if err := s.keys.RevokeOwnByHint(ctx, orgID, req.Msg.GetHint(), p.UserID); err != nil {
+			return nil, err
+		}
+		return connect.NewResponse(&apikeyv1.RevokeAPIKeyResponse{}), nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	manage := manages(p)
+	if !manage && !p.IsPerson() {
+		return nil, &authz.ForbiddenError{Permission: scope.ApikeyWrite}
+	}
+	if err := s.keys.RevokeByHint(ctx, orgID, req.Msg.GetHint(), p.UserID, manage); err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&apikeyv1.RevokeAPIKeyResponse{}), nil
+}
+
+// SECURITY: a member manages only their own personal keys; other keys need apikey:write. No Principal (pre-lockdown) manages all.
+func manages(p session.Principal) bool {
+	return p.Source == "" || authz.Allowed(p, scope.ApikeyWrite)
+}
+
+// SECURITY: a person handles their own personal keys in any org they belong to, checked on every call; any other org is not found.
+func (s *APIKeyService) memberOrg(ctx context.Context, publicID string) (context.Context, uuid.UUID, error) {
+	p := session.PrincipalFrom(ctx)
+	id, ok, err := s.refs.OrgID(ctx, publicID)
+	if err != nil {
+		return ctx, uuid.Nil, err
+	}
+	if !ok || !p.IsPerson() {
+		return ctx, uuid.Nil, &NotFoundError{}
+	}
+	member, err := s.keys.IsMember(ctx, id, p.UserID)
+	if err != nil {
+		return ctx, uuid.Nil, err
+	}
+	if !member {
+		return ctx, uuid.Nil, &NotFoundError{}
+	}
+	return tenant.WithOrg(ctx, id), id, nil
+}
+
+// SECURITY: an unknown org and an org out of reach answer the same not-found; a reached org scopes the rest of the call to itself.
+func (s *APIKeyService) org(
+	ctx context.Context, publicID string, reach func(context.Context, uuid.UUID) bool,
+) (context.Context, uuid.UUID, error) {
+	id, ok, err := s.refs.OrgID(ctx, publicID)
+	if err != nil {
+		return ctx, uuid.Nil, err
+	}
+	if !ok || !reach(ctx, id) {
+		return ctx, uuid.Nil, &NotFoundError{}
+	}
+	return tenant.WithOrg(ctx, id), id, nil
+}
+
+// SECURITY: an unknown project and another org's project are the same refused grant.
+func (s *APIKeyService) project(ctx context.Context, orgID uuid.UUID, publicID string) (uuid.UUID, error) {
+	id, projectOrg, ok, err := s.refs.ProjectID(ctx, publicID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if !ok || projectOrg != orgID {
+		return uuid.Nil, &GrantOutsideOrgError{}
+	}
+	return id, nil
+}
+
+func (s *APIKeyService) toProto(ctx context.Context, k *APIKey, orgPublicID string) (*apikeyv1.APIKey, error) {
+	out := &apikeyv1.APIKey{
+		OrgId:       orgPublicID,
+		Kind:        string(k.Kind),
+		Name:        k.Name,
+		Scopes:      k.Scopes,
+		AllProjects: k.AllProjects,
+		SecretHint:  k.SecretHint,
+		CreatedAt:   timestamppb.New(k.CreatedAt),
+	}
+	var err error
+	if k.ProjectID != uuid.Nil {
+		if out.ProjectId, err = s.refs.ProjectPublicID(ctx, k.ProjectID); err != nil {
+			return nil, err
+		}
+	}
+	for _, id := range k.ProjectIDs {
+		pub, err := s.refs.ProjectPublicID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		out.ProjectIds = append(out.ProjectIds, pub)
+	}
+	for _, id := range k.ResourceIDs {
+		pub, ok, err := s.refs.ResourcePublicID(ctx, k.OrgID, id)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			out.ResourceIds = append(out.ResourceIds, pub)
+		}
+	}
+	if k.ExpiresAt != nil {
+		out.ExpiresAt = timestamppb.New(*k.ExpiresAt)
+	}
+	if k.RevokedAt != nil {
+		out.RevokedAt = timestamppb.New(*k.RevokedAt)
+	}
+	if k.LastUsedAt != nil {
+		out.LastUsedAt = timestamppb.New(*k.LastUsedAt)
+	}
+	return out, nil
+}

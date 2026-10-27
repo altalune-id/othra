@@ -1,0 +1,36 @@
+{
+  "name": "@othra/mcp-ui",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@modelcontextprotocol/core": "^2.3.1",
+    "@modelcontextprotocol/ext-apps": "^2.0.3",
+    "vue": "catalog:",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "catalog:",
+    "@iconify/vue": "catalog:",
+    "@othra/base": "workspace:*",
+    "@othra/vitest-config": "workspace:*",
+    "@tailwindcss/vite": "catalog:",
+    "@vitejs/plugin-vue": "catalog:",
+    "@vue/test-utils": "catalog:",
+    "daisyui": "catalog:",
+    "happy-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "unplugin-auto-import": "^21.1.0",
+    "vite": "catalog:",
+    "vite-plugin-singlefile": "^2.1.0",
+    "vitest": "catalog:",
+    "vue-tsc": "catalog:"
+  }
+}

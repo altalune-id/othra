@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package keys.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "mcp/v1/annotations.proto";
+import "othra/v1/rules.proto";
+
+option go_package = "github.com/altalune-id/othra/gen/go/keys/v1;keysv1";
+
+// SigningKeyService lists and rotates a project's token signing keys. Every id is a public id.
+service SigningKeyService {
+  rpc ListSigningKeys(ListSigningKeysRequest) returns (ListSigningKeysResponse) {
+    option (mcp.v1.tool) = {
+      name: "signing_key_list"
+      description: "List a project's signing keys: the active one, a waiting next key, and retiring and retired keys."
+      required: ["project_id"]
+      ui: "app"
+    };
+  }
+  rpc RotateSigningKey(RotateSigningKeyRequest) returns (RotateSigningKeyResponse) {
+    option (mcp.v1.tool) = {
+      name: "signing_key_rotate"
+      description: "Rotate a project's signing key: publish a new key that starts signing after the pre-publication delay. immediate makes it sign at once; verifiers holding a cached JWKS fail until they refetch it."
+      required: ["project_id"]
+      mutation: true
+      destructive: false
+      ui: "app"
+    };
+  }
+}
+
+// SigningKeyStatus is where a key is in its life.
+enum SigningKeyStatus {
+  SIGNING_KEY_STATUS_UNSPECIFIED = 0;
+  // NEXT keys are published in the JWKS but do not sign yet.
+  SIGNING_KEY_STATUS_NEXT = 1;
+  // ACTIVE is the one key that signs.
+  SIGNING_KEY_STATUS_ACTIVE = 2;
+  // RETIRING keys no longer sign and stay published until retire_after.
+  SIGNING_KEY_STATUS_RETIRING = 3;
+  // RETIRED keys are no longer published.
+  SIGNING_KEY_STATUS_RETIRED = 4;
+}
+
+message SigningKey {
+  string public_id = 1;
+  // kid is the key id in the JWKS and in every signed token header.
+  string kid = 2;
+  string alg = 3;
+  SigningKeyStatus status = 4;
+  google.protobuf.Timestamp created_at = 5;
+  // activates_at is when a NEXT key starts signing.
+  google.protobuf.Timestamp activates_at = 6;
+  google.protobuf.Timestamp activated_at = 7;
+  // retire_after is when a RETIRING key leaves the JWKS.
+  google.protobuf.Timestamp retire_after = 8;
+}
+
+message ListSigningKeysRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+}
+
+message ListSigningKeysResponse {
+  repeated SigningKey keys = 1;
+}
+
+message RotateSigningKeyRequest {
+  string project_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  bool immediate = 2;
+}
+
+message RotateSigningKeyResponse {
+  SigningKey key = 1;
+}

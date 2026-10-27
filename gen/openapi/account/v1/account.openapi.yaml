@@ -1,0 +1,1122 @@
+openapi: 3.1.0
+info:
+  title: account.v1
+paths:
+  /account.v1.AccountService/CreatePersonalToken:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: CreatePersonalToken
+      description: 'SECURITY: needs a sign-in in the last 10 minutes (ACC009); the token is in this response only.'
+      operationId: account.v1.AccountService.CreatePersonalToken
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.CreatePersonalTokenRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.CreatePersonalTokenResponse'
+  /account.v1.AccountService/DisconnectApp:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: DisconnectApp
+      operationId: account.v1.AccountService.DisconnectApp
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.DisconnectAppRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.DisconnectAppResponse'
+  /account.v1.AccountService/EndOtherSessions:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: EndOtherSessions
+      operationId: account.v1.AccountService.EndOtherSessions
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.EndOtherSessionsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.EndOtherSessionsResponse'
+  /account.v1.AccountService/EndSession:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: EndSession
+      operationId: account.v1.AccountService.EndSession
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.EndSessionRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.EndSessionResponse'
+  /account.v1.AccountService/GetProfile:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: GetProfile
+      operationId: account.v1.AccountService.GetProfile
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.GetProfileRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.GetProfileResponse'
+  /account.v1.AccountService/GetSignInMethods:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: GetSignInMethods
+      operationId: account.v1.AccountService.GetSignInMethods
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.GetSignInMethodsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.GetSignInMethodsResponse'
+  /account.v1.AccountService/ListConnectedApps:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: ListConnectedApps
+      operationId: account.v1.AccountService.ListConnectedApps
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.ListConnectedAppsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.ListConnectedAppsResponse'
+  /account.v1.AccountService/ListPersonalTokens:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: ListPersonalTokens
+      operationId: account.v1.AccountService.ListPersonalTokens
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.ListPersonalTokensRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.ListPersonalTokensResponse'
+  /account.v1.AccountService/ListSessions:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: ListSessions
+      operationId: account.v1.AccountService.ListSessions
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.ListSessionsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.ListSessionsResponse'
+  /account.v1.AccountService/ListTokenServers:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: ListTokenServers
+      operationId: account.v1.AccountService.ListTokenServers
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.ListTokenServersRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.ListTokenServersResponse'
+  /account.v1.AccountService/RevokePersonalToken:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: RevokePersonalToken
+      operationId: account.v1.AccountService.RevokePersonalToken
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.RevokePersonalTokenRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.RevokePersonalTokenResponse'
+  /account.v1.AccountService/UnlinkIdentity:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: UnlinkIdentity
+      operationId: account.v1.AccountService.UnlinkIdentity
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.UnlinkIdentityRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.UnlinkIdentityResponse'
+  /account.v1.AccountService/UpdateProfile:
+    post:
+      tags:
+        - account.v1.AccountService
+      summary: UpdateProfile
+      operationId: account.v1.AccountService.UpdateProfile
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/account.v1.UpdateProfileRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account.v1.UpdateProfileResponse'
+components:
+  schemas:
+    account.v1.AppResource:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: id is the resource server's public id; empty for sign-in only (OIDC).
+        name:
+          type: string
+          title: name
+        identifier:
+          type: string
+          title: identifier
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          additionalProperties:
+            type: string
+            title: value
+      title: AppResource
+      additionalProperties: false
+    account.v1.AppResource.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
+      additionalProperties: false
+    account.v1.ConnectedApp:
+      type: object
+      properties:
+        clientId:
+          type: string
+          title: client_id
+          description: 'client_id is the app''s client_id: a public id, or the https URL of an app without registration (CIMD).'
+        name:
+          type: string
+          title: name
+        metadataHost:
+          type: string
+          title: metadata_host
+          description: metadata_host is the host of an app without registration; empty for a registered app.
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.AppResource'
+          title: resources
+        consented:
+          type: boolean
+          title: consented
+          description: consented is false for a first-party app that never showed a consent page.
+        offline:
+          type: boolean
+          title: offline
+          description: offline is true while the app holds access that outlives a sign-out (offline_access).
+        connectedAt:
+          title: connected_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastUsedAt:
+          title: last_used_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: ConnectedApp
+      additionalProperties: false
+    account.v1.CreatePersonalTokenRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+          maxLength: 100
+          description: |
+            othra.name.blank = true
+            othra.name.max_len.200 = true
+        serverId:
+          type: string
+          title: server_id
+          description: |
+            othra.public_id = true
+        scopes:
+          type: array
+          items:
+            type: string
+            maxLength: 128
+            minLength: 1
+          title: scopes
+          maxItems: 64
+          minItems: 1
+          uniqueItems: true
+        expiry:
+          not:
+            enum:
+              - TOKEN_EXPIRY_UNSPECIFIED
+          title: expiry
+          $ref: '#/components/schemas/account.v1.TokenExpiry'
+      title: CreatePersonalTokenRequest
+      required:
+        - name
+        - serverId
+      additionalProperties: false
+    account.v1.CreatePersonalTokenResponse:
+      type: object
+      properties:
+        token:
+          title: token
+          $ref: '#/components/schemas/account.v1.PersonalToken'
+        secret:
+          type: string
+          title: secret
+          description: secret is the one-time token. It is never present on any other response.
+      title: CreatePersonalTokenResponse
+      additionalProperties: false
+    account.v1.DisconnectAppRequest:
+      type: object
+      properties:
+        clientId:
+          type: string
+          title: client_id
+          maxLength: 2048
+      title: DisconnectAppRequest
+      required:
+        - clientId
+      additionalProperties: false
+    account.v1.DisconnectAppResponse:
+      type: object
+      title: DisconnectAppResponse
+      additionalProperties: false
+    account.v1.EndOtherSessionsRequest:
+      type: object
+      title: EndOtherSessionsRequest
+      additionalProperties: false
+    account.v1.EndOtherSessionsResponse:
+      type: object
+      properties:
+        ended:
+          type: integer
+          title: ended
+          format: int32
+      title: EndOtherSessionsResponse
+      additionalProperties: false
+    account.v1.EndSessionRequest:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          title: session_id
+          description: |
+            othra.public_id = true
+      title: EndSessionRequest
+      required:
+        - sessionId
+      additionalProperties: false
+    account.v1.EndSessionResponse:
+      type: object
+      title: EndSessionResponse
+      additionalProperties: false
+    account.v1.GetProfileRequest:
+      type: object
+      title: GetProfileRequest
+      additionalProperties: false
+    account.v1.GetProfileResponse:
+      type: object
+      properties:
+        profile:
+          title: profile
+          $ref: '#/components/schemas/account.v1.Profile'
+        signOutToken:
+          type: string
+          title: sign_out_token
+          description: sign_out_token is the CSRF token of the hosted sign-out form (POST /p/<handle>/login/signout).
+        currentSessionId:
+          type: string
+          title: current_session_id
+          description: current_session_id is the public id of this browser's active user session, the one the sign-out form ends.
+      title: GetProfileResponse
+      additionalProperties: false
+    account.v1.GetSignInMethodsRequest:
+      type: object
+      title: GetSignInMethodsRequest
+      additionalProperties: false
+    account.v1.GetSignInMethodsResponse:
+      type: object
+      properties:
+        methods:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.SignInMethod'
+          title: methods
+        linkToken:
+          type: string
+          title: link_token
+          description: link_token is the CSRF token of the hosted connect form (POST /p/<handle>/federation/google/start, intent=link).
+      title: GetSignInMethodsResponse
+      additionalProperties: false
+    account.v1.ListConnectedAppsRequest:
+      type: object
+      title: ListConnectedAppsRequest
+      additionalProperties: false
+    account.v1.ListConnectedAppsResponse:
+      type: object
+      properties:
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.ConnectedApp'
+          title: apps
+      title: ListConnectedAppsResponse
+      additionalProperties: false
+    account.v1.ListPersonalTokensRequest:
+      type: object
+      title: ListPersonalTokensRequest
+      additionalProperties: false
+    account.v1.ListPersonalTokensResponse:
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.PersonalToken'
+          title: tokens
+      title: ListPersonalTokensResponse
+      additionalProperties: false
+    account.v1.ListSessionsRequest:
+      type: object
+      title: ListSessionsRequest
+      additionalProperties: false
+    account.v1.ListSessionsResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.Session'
+          title: sessions
+      title: ListSessionsResponse
+      additionalProperties: false
+    account.v1.ListTokenServersRequest:
+      type: object
+      title: ListTokenServersRequest
+      additionalProperties: false
+    account.v1.ListTokenServersResponse:
+      type: object
+      properties:
+        servers:
+          type: array
+          items:
+            $ref: '#/components/schemas/account.v1.TokenServer'
+          title: servers
+      title: ListTokenServersResponse
+      additionalProperties: false
+    account.v1.PersonalToken:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type: string
+          title: name
+        hint:
+          type: string
+          title: hint
+          description: hint is the token's last 4 characters.
+        server:
+          title: server
+          $ref: '#/components/schemas/account.v1.TokenServer'
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+        state:
+          title: state
+          $ref: '#/components/schemas/account.v1.PersonalTokenState'
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        expiresAt:
+          title: expires_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastUsedAt:
+          title: last_used_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        revokedAt:
+          title: revoked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: PersonalToken
+      additionalProperties: false
+    account.v1.PersonalTokenState:
+      type: string
+      title: PersonalTokenState
+      enum:
+        - PERSONAL_TOKEN_STATE_UNSPECIFIED
+        - PERSONAL_TOKEN_STATE_ACTIVE
+        - PERSONAL_TOKEN_STATE_EXPIRED
+        - PERSONAL_TOKEN_STATE_REVOKED
+      description: PersonalTokenState is where a personal token stands.
+    account.v1.Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        email:
+          type: string
+          title: email
+        name:
+          type: string
+          title: name
+          description: name is what apps see as the name claim; empty shows none.
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: Profile
+      additionalProperties: false
+    account.v1.RevokePersonalTokenRequest:
+      type: object
+      properties:
+        tokenId:
+          type: string
+          title: token_id
+          description: |
+            othra.public_id = true
+      title: RevokePersonalTokenRequest
+      required:
+        - tokenId
+      additionalProperties: false
+    account.v1.RevokePersonalTokenResponse:
+      type: object
+      title: RevokePersonalTokenResponse
+      additionalProperties: false
+    account.v1.Session:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        method:
+          title: method
+          $ref: '#/components/schemas/account.v1.SignInMethodKind'
+        userAgent:
+          type: string
+          title: user_agent
+          description: user_agent is the browser's own description, raw; the portal shortens it.
+        authTime:
+          title: auth_time
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastSeenAt:
+          title: last_seen_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        current:
+          type: boolean
+          title: current
+          description: current is the session this request came from.
+      title: Session
+      additionalProperties: false
+    account.v1.SignInMethod:
+      type: object
+      properties:
+        kind:
+          title: kind
+          $ref: '#/components/schemas/account.v1.SignInMethodKind'
+        linked:
+          type: boolean
+          title: linked
+          description: linked is false for an upstream IdP the project offers that this end user hasn't connected.
+        identityId:
+          type: string
+          title: identity_id
+          description: identity_id names a linked upstream identity, for UnlinkIdentity.
+        email:
+          type: string
+          title: email
+          description: email is the address this method signs in with.
+        linkedAt:
+          title: linked_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        lastUsedAt:
+          title: last_used_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        canRemove:
+          type: boolean
+          title: can_remove
+        lock:
+          title: lock
+          $ref: '#/components/schemas/account.v1.SignInMethodLock'
+      title: SignInMethod
+      additionalProperties: false
+    account.v1.SignInMethodKind:
+      type: string
+      title: SignInMethodKind
+      enum:
+        - SIGN_IN_METHOD_KIND_UNSPECIFIED
+        - SIGN_IN_METHOD_KIND_EMAIL_LINK
+        - SIGN_IN_METHOD_KIND_GOOGLE
+      description: SignInMethodKind is a way to sign in.
+    account.v1.SignInMethodLock:
+      type: string
+      title: SignInMethodLock
+      enum:
+        - SIGN_IN_METHOD_LOCK_UNSPECIFIED
+        - SIGN_IN_METHOD_LOCK_LAST_METHOD
+      description: SignInMethodLock is why a method can't be removed now.
+    account.v1.TokenExpiry:
+      type: string
+      title: TokenExpiry
+      enum:
+        - TOKEN_EXPIRY_UNSPECIFIED
+        - TOKEN_EXPIRY_7_DAYS
+        - TOKEN_EXPIRY_30_DAYS
+        - TOKEN_EXPIRY_90_DAYS
+      description: TokenExpiry is how long a new personal token lives; never more than 90 days.
+    account.v1.TokenServer:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type: string
+          title: name
+        identifier:
+          type: string
+          title: identifier
+        scopes:
+          type: array
+          items:
+            type: string
+          title: scopes
+        scopeDescriptions:
+          type: object
+          title: scope_descriptions
+          additionalProperties:
+            type: string
+            title: value
+      title: TokenServer
+      additionalProperties: false
+    account.v1.TokenServer.ScopeDescriptionsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type: string
+          title: value
+      title: ScopeDescriptionsEntry
+      additionalProperties: false
+    account.v1.UnlinkIdentityRequest:
+      type: object
+      properties:
+        identityId:
+          type: string
+          title: identity_id
+          description: |
+            othra.public_id = true
+      title: UnlinkIdentityRequest
+      required:
+        - identityId
+      additionalProperties: false
+    account.v1.UnlinkIdentityResponse:
+      type: object
+      title: UnlinkIdentityResponse
+      additionalProperties: false
+    account.v1.UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+          maxLength: 200
+      title: UpdateProfileRequest
+      additionalProperties: false
+    account.v1.UpdateProfileResponse:
+      type: object
+      properties:
+        profile:
+          title: profile
+          $ref: '#/components/schemas/account.v1.Profile'
+      title: UpdateProfileResponse
+      additionalProperties: false
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+    google.protobuf.Timestamp:
+      type: string
+      examples:
+        - "2023-01-15T01:30:15.01Z"
+        - "2024-12-25T12:00:00Z"
+      format: date-time
+      description: |-
+        A Timestamp represents a point in time independent of any time zone or local
+         calendar, encoded as a count of seconds and fractions of seconds at
+         nanosecond resolution. The count is relative to an epoch at UTC midnight on
+         January 1, 1970, in the proleptic Gregorian calendar which extends the
+         Gregorian calendar backwards to year one.
+
+         All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+         second table is needed for interpretation, using a [24-hour linear
+         smear](https://developers.google.com/time/smear).
+
+         The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+         restricting to that range, we ensure that we can convert to and from [RFC
+         3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+
+         # Examples
+
+         Example 1: Compute Timestamp from POSIX `time()`.
+
+             Timestamp timestamp;
+             timestamp.set_seconds(time(NULL));
+             timestamp.set_nanos(0);
+
+         Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+
+             struct timeval tv;
+             gettimeofday(&tv, NULL);
+
+             Timestamp timestamp;
+             timestamp.set_seconds(tv.tv_sec);
+             timestamp.set_nanos(tv.tv_usec * 1000);
+
+         Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+
+             FILETIME ft;
+             GetSystemTimeAsFileTime(&ft);
+             UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+
+             // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+             // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+             Timestamp timestamp;
+             timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+             timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+
+         Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+
+             long millis = System.currentTimeMillis();
+
+             Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+                 .setNanos((int) ((millis % 1000) * 1000000)).build();
+
+         Example 5: Compute Timestamp from Java `Instant.now()`.
+
+             Instant now = Instant.now();
+
+             Timestamp timestamp =
+                 Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+                     .setNanos(now.getNano()).build();
+
+         Example 6: Compute Timestamp from current time in Python.
+
+             timestamp = Timestamp()
+             timestamp.GetCurrentTime()
+
+         # JSON Mapping
+
+         In JSON format, the Timestamp type is encoded as a string in the
+         [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+         format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+         where {year} is always expressed using four digits while {month}, {day},
+         {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+         seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+         are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+         is required. A ProtoJSON serializer should always use UTC (as indicated by
+         "Z") when printing the Timestamp type and a ProtoJSON parser should be
+         able to accept both UTC and other timezones (as indicated by an offset).
+
+         For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+         01:30 UTC on January 15, 2017.
+
+         In JavaScript, one can convert a Date object to this format using the
+         standard
+         [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+         method. In Python, a standard `datetime.datetime` object can be converted
+         to this format using
+         [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+         the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+         the Joda Time's [`ISODateTimeFormat.dateTime()`](
+         http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+         ) to obtain a formatter capable of generating timestamps in this format.
+security: []
+tags:
+  - name: account.v1.AccountService
+    description: |-
+      AccountService is the signed-in end user's own account in one project, served at /p/<handle>/api/ to the portal on the same origin.
+       SECURITY: never an MCP tool and never on /api; the end user comes from the browser session, never from a request field.

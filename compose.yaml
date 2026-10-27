@@ -1,0 +1,160 @@
+name: othra
+
+# Local dependencies: `docker compose up -d`. The app itself runs with `make run`, or in a container with
+# `docker compose --profile app up -d --build`. Host ports can be moved with the *_PORT variables.
+services:
+  # First start runs scripts/db/provision.sh: othra_owner, othra_migrator and othra_service with dev-only passwords.
+  # postgres/postgres is the superuser for psql; the app never uses it. Alone: `podman compose up -d postgres`.
+  postgres:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: othra
+      OTHRA_DB_MIGRATOR_PASSWORD: "${OTHRA_DB_MIGRATOR_PASSWORD:-othra-dev-migrator-password}"
+      OTHRA_DB_SERVICE_PASSWORD: "${OTHRA_DB_SERVICE_PASSWORD:-othra-dev-service-password}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./scripts/db:/othra/scripts/db:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d othra"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7.4.11-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One account per app, like the shared Altalune NATS (docker/nats/nats-server.conf); passwords at least 16 characters.
+  # TODO: run ghcr.io/altalune-id/nats once it has a version tag and an OTHRA account.
+  nats:
+    image: nats:2.15.0-alpine3.22
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/etc/nats/require-passwords.sh"]
+    command: ["nats-server", "--config", "/etc/nats/nats-server.conf"]
+    environment:
+      OTHRA_NATS_PASSWORD: "${OTHRA_NATS_PASSWORD:-othra-dev-nats-password}"
+      OTHER_NATS_PASSWORD: "${OTHER_NATS_PASSWORD:-other-dev-nats-password}"
+    ports:
+      - "${NATS_PORT:-4222}:4222"
+    volumes:
+      - ./docker/nats/nats-server.conf:/etc/nats/nats-server.conf:ro
+      - ./docker/nats/require-passwords.sh:/etc/nats/require-passwords.sh:ro
+      - nats:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz?js-enabled-only=true"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # S3-compatible storage for uploads. Dev-only keys; the browser uploads to localhost:3900 and reads public files
+  # from http://altalune-files.localhost:3902 (the website endpoint). garage-init prepares the bucket on every start.
+  garage:
+    image: dxflrs/garage:v2.4.1
+    restart: unless-stopped
+    ports:
+      - "${GARAGE_S3_PORT:-3900}:3900"
+      - "${GARAGE_WEB_PORT:-3902}:3902"
+    volumes:
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+      - garage:/var/lib/garage
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  garage-init:
+    image: curlimages/curl:8.22.0
+    entrypoint: ["/bin/sh", "/init.sh"]
+    environment:
+      GARAGE_ADMIN_TOKEN: othra-dev-garage-admin-token
+      GARAGE_BUCKET: altalune-files
+      GARAGE_KEY_ID: GK000000000000000000000001
+      GARAGE_KEY_SECRET: "0000000000000000000000000000000000000000000000000000000000000001"
+      GARAGE_CORS_ORIGINS: "http://localhost:${OTHRA_PORT:-5150}"
+    volumes:
+      - ./docker/garage/init.sh:/init.sh:ro
+    depends_on:
+      garage:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:v1.31.5
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025" # web UI at http://localhost:8025
+
+  othra:
+    profiles: [app]
+    build:
+      context: .
+    image: othra:dev
+    restart: unless-stopped
+    stop_grace_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+      garage-init:
+        condition: service_completed_successfully
+    ports:
+      - "${OTHRA_PORT:-5150}:5150"
+    environment:
+      OTHRA_ENV: development
+      OTHRA_HTTP_ADDR: ":5150"
+      OTHRA_HTTP_BASE_URL: "http://localhost:${OTHRA_PORT:-5150}"
+      OTHRA_POSTGRES_DSN: "postgres://othra_service:${OTHRA_DB_SERVICE_PASSWORD:-othra-dev-service-password}\
+        @postgres:5432/othra?sslmode=disable"
+      OTHRA_POSTGRES_MIGRATOR_DSN: "postgres://othra_migrator:\
+        ${OTHRA_DB_MIGRATOR_PASSWORD:-othra-dev-migrator-password}@postgres:5432/othra?sslmode=disable"
+      OTHRA_POSTGRES_MIGRATOR_ROLE: othra_owner
+      # dev-only values; generate real ones with: openssl rand -hex 32
+      OTHRA_HTTP_STATE_SECRET: "6f1c0a3e2b9d4f7a8c5e1d0b3a6f9c2e4d7b0a1c3e5f7a9b2d4c6e8f0a1b3c5d"
+      OTHRA_SECRETS_ENCRYPTION_KEY: "0d2f4b6a8c1e3f5a7b9d2c4e6f8a0b1c3d5e7f9a2b4c6d8e0f1a3b5c7d9e2f4a"
+      OTHRA_MAIL_DRIVER: smtp
+      OTHRA_MAIL_FROM: "Othra <noreply@othra.local>"
+      OTHRA_MAIL_SMTP_HOST: mailpit
+      OTHRA_MAIL_SMTP_PORT: "1025"
+      OTHRA_MAIL_SMTP_TLS: "none"
+      OTHRA_REDIS_URL: "redis://redis:6379/0"
+      OTHRA_RATE_LIMIT_DRIVER: redis
+      OTHRA_RATE_LIMIT_AUTH_ENABLED: "true"
+      OTHRA_QUEUE_ENABLED: "true"
+      OTHRA_NATS_URL: "nats://nats:4222"
+      OTHRA_NATS_USER: othra
+      OTHRA_NATS_PASSWORD: "${OTHRA_NATS_PASSWORD:-othra-dev-nats-password}"
+      OTHRA_STORAGE_DRIVER: s3
+      OTHRA_STORAGE_PUBLIC_BASE_URL: "http://altalune-files.localhost:${GARAGE_WEB_PORT:-3902}"
+      OTHRA_S3_ENDPOINT: "http://garage:3900"
+      OTHRA_S3_BROWSER_ENDPOINT: "http://localhost:${GARAGE_S3_PORT:-3900}"
+      OTHRA_S3_REGION: garage
+      OTHRA_S3_BUCKET: altalune-files
+      OTHRA_S3_ACCESS_KEY_ID: GK000000000000000000000001
+      OTHRA_S3_SECRET_ACCESS_KEY: "0000000000000000000000000000000000000000000000000000000000000001"
+
+volumes:
+  postgres:
+  nats:
+  garage:

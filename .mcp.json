@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@0.0.83",
+        "--isolated"
+      ],
+      "env": {}
+    },
+    "playwright-webkit": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@0.0.83",
+        "--isolated",
+        "--browser",
+        "webkit"
+      ],
+      "env": {}
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
+    },
+    "daisyui": {
+      "type": "http",
+      "url": "https://gitmcp.io/saadeghi/daisyui"
+    }
+  }
+}
