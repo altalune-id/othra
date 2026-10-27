@@ -251,13 +251,15 @@ func TestToken_InvalidClient(t *testing.T) {
 		header []string
 		basic  bool
 	}{
-		"no client":                                {form: codeForm()},
-		"unknown":                                  {form: codeForm("client_id", "nope")},
-		"a wrong secret":                           {form: codeForm(), header: []string{"Authorization", basic("basic", "wrong")}, basic: true},
-		"basic for a post client":                  {form: codeForm(), header: []string{"Authorization", basic("post", secret)}, basic: true},
-		"post for a basic client":                  {form: codeForm("client_id", "basic", "client_secret", secret)},
-		"a public client's secret":                 {form: codeForm("client_id", "cli", "client_secret", secret)},
-		"a confidential client without its secret": {form: codeForm("client_id", "basic")},
+		"no client":                {form: codeForm()},
+		"unknown":                  {form: codeForm("client_id", "nope")},
+		"a wrong secret":           {form: codeForm(), header: []string{"Authorization", basic("basic", "wrong")}, basic: true},
+		"basic for a post client":  {form: codeForm(), header: []string{"Authorization", basic("post", secret)}, basic: true},
+		"post for a basic client":  {form: codeForm("client_id", "basic", "client_secret", secret)},
+		"a public client's secret": {form: codeForm("client_id", "cli", "client_secret", secret)},
+		"a confidential client without its secret": {
+			form: codeForm("client_id", "basic"),
+		},
 		"a secret that is not form-encoded": {
 			form: codeForm(), header: []string{"Authorization", "Basic " + base64.StdEncoding.EncodeToString([]byte("pct:a%zz"))}, basic: true,
 		},

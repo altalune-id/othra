@@ -66,13 +66,13 @@ func (f *fakeAdmissions) Admit(_ context.Context, _ Project, clientURL string, r
 	case clientURL != cimdClient || len(slices.Compact(slices.Clone(resources))) != 1 || resources[0] != mcpResource:
 		return Client{}, Resource{}, apperror.New(apperror.CodeAuthorizeClientNotAdmitted, "not admitted")
 	}
-	return Client{
-			ID: cimdClient, RowID: rowID(cimdClient), MetadataHost: "claude.ai", Name: "Claude Code", Native: true,
-			RedirectURIs:  []string{"http://localhost/callback", "http://127.0.0.1/callback"},
-			AllowedScopes: []string{"openid", "profile", "email", "offline_access"}, Refresh: true, PKCERequired: true, ConsentRequired: true,
-		}, Resource{
-			ID: rowID(mcpResource), Identifier: mcpResource, Name: "Sample MCP", Scopes: []string{"sample:read"},
-		}, nil
+	c := Client{
+		ID: cimdClient, RowID: rowID(cimdClient), MetadataHost: "claude.ai", Name: "Claude Code", Native: true,
+		RedirectURIs:  []string{"http://localhost/callback", "http://127.0.0.1/callback"},
+		AllowedScopes: []string{"openid", "profile", "email", "offline_access"}, Refresh: true, PKCERequired: true, ConsentRequired: true,
+	}
+	r := Resource{ID: rowID(mcpResource), Identifier: mcpResource, Name: "Sample MCP", Scopes: []string{"sample:read"}}
+	return c, r, nil
 }
 
 type fakeConsents struct {

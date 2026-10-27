@@ -11,7 +11,7 @@ Today it is the platform base: orgs, projects, members, invites, API keys, webho
 
 ## Requirements
 
-- Go 1.26.9
+- Go 1.26.10
 - Node 24.15 or newer
 - pnpm 10 (`corepack enable` picks the version pinned in `package.json`)
 - Docker, for local dependencies and the integration tests

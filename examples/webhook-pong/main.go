@@ -81,19 +81,19 @@ func verify(secret string, h http.Header, body []byte, now time.Time) bool {
 
 func logDelivery(r *http.Request, body []byte) {
 	log.Printf("--- %s %s ---", r.Method, r.URL.Path) //nolint:gosec // G706: echoes the raw delivery for inspection
-	for _, h := range []string{
-		"Content-Type", "User-Agent",
-		"X-Othra-Event-Type", "X-Othra-Event-Id", "X-Othra-Delivery-Id", "X-Othra-Timestamp",
-	} {
-		if v := r.Header.Get(h); v != "" {
-			log.Printf("  %s: %q", h, v) //nolint:gosec // G706
-		}
-	}
-	if sig := r.Header.Get("X-Othra-Signature"); sig != "" {
-		log.Print("  X-Othra-Signature: (present)")
-	}
+	logHeader("Content-Type", r.Header.Get("Content-Type"))
+	logHeader("User-Agent", r.Header.Get("User-Agent"))
+	logHeader("X-Othra-Event-Type", r.Header.Get("X-Othra-Event-Type"))
+	logHeader("X-Othra-Event-Id", r.Header.Get("X-Othra-Event-Id"))
+	logHeader("X-Othra-Delivery-Id", r.Header.Get("X-Othra-Delivery-Id"))
 	if len(body) > 0 {
 		log.Printf("  body: %s", body) //nolint:gosec // G706
+	}
+}
+
+func logHeader(name, value string) {
+	if value != "" {
+		log.Printf("  %s: %q", name, value) //nolint:gosec // G706
 	}
 }
 
