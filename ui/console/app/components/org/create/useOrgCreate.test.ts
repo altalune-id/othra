@@ -2,9 +2,11 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { connectError, deferred, navigateTo, setClient, setKnownKeys } from '#test/nuxt-globals';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useUIStore } from '~/stores/ui';
 import { useOrgCreate } from './useOrgCreate';
+import { useOrgCreation } from './useOrgCreation';
 
 const org = { id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme' };
 
@@ -31,7 +33,7 @@ describe('useOrgCreate', () => {
     form.slug.value = ' acme ';
     await form.submit();
     expect(createOrg).toHaveBeenCalledWith({ name: 'Acme', slug: 'acme' });
-    expect(useOrgsStore().items).toEqual([org]);
+    expect(useOrgsStore().items).toEqual([{ ...org, role: 'owner' }]);
     expect(form.open.value).toBe(false);
     expect([form.name.value, form.slug.value]).toEqual(['', '']);
     expect(navigateTo).toHaveBeenCalledWith('/o/acme');
@@ -42,8 +44,18 @@ describe('useOrgCreate', () => {
     const form = useOrgCreate({ landing });
     form.name.value = 'Acme';
     await form.submit();
-    expect(landing).toHaveBeenCalledWith(org);
+    expect(landing).toHaveBeenCalledWith({ ...org, role: 'owner' });
     expect(navigateTo).toHaveBeenCalledWith('/o/acme/projects/web');
+  });
+
+  it('stops offering New organization once the caller owns the org it just created', async () => {
+    useAuthStore().me = { orgCreation: true } as never;
+    const creation = useOrgCreation();
+    expect(creation.canCreate.value).toBe(true);
+    const form = useOrgCreate();
+    form.name.value = 'Acme';
+    await form.submit();
+    expect(creation.canCreate.value).toBe(false);
   });
 
   it('stays open when the response has no org', async () => {

@@ -90,7 +90,7 @@ func start(t testing.TB) *IDP {
 func (f *IDP) fatal(err error) {
 	if f.t != nil {
 		f.t.Helper()
-		f.fatal(err)
+		f.t.Fatal(err)
 	}
 	panic(err)
 }

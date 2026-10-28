@@ -55,7 +55,7 @@ export function useOrgCreate(options: OrgCreateOptions = {}) {
       const res = await (options.create ?? (r => client.createOrg(r)))(req);
       const org = res.org;
       if (org) {
-        const added = { id: org.id, slug: org.slug, name: org.name };
+        const added = { id: org.id, slug: org.slug, name: org.name, role: 'owner' };
         orgs.add(added);
         ui.closeOrgCreate();
         name.value = '';
