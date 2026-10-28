@@ -1,13 +1,13 @@
 # Othra
 
-Othra is Altalune's identity provider, on its way to a full OAuth 2.1 / OpenID Connect authorization server with multi-tenant orgs and projects. It is one Go binary that serves:
+Othra is Altalune's identity provider: a multi-tenant OAuth 2.1 / OpenID Connect authorization server. Every project gets its own issuer at `/p/<handle>`, with its own end users, branding and upstream IdPs. It is one Go binary that serves:
 
 - an API (Connect RPC)
-- an MCP server
+- an MCP server, with an MCP App UI for the admin tools
 - a CLI
-- a web console
+- a web console, the hosted sign-in pages and an end-user portal
 
-Today it is the platform base: orgs, projects, members, invites, API keys, webhooks and an admin console, with an API, a CLI and MCP admin tools. Sign-in for apps (OAuth clients, tokens, hosted login) is not built yet.
+It covers authorize, token, userinfo, revoke, RFC 7662 introspection and RP-initiated logout; registered and CIMD clients; resource servers verified through RFC 9728 metadata; magic-link and Google sign-in; personal tokens; and webhooks. The console itself signs in through Othra's own `/p/system` issuer. The `oidcrp` and `oauthrs` modules are the relying-party and resource-server libraries for apps.
 
 ## Requirements
 
@@ -208,4 +208,4 @@ instances with different URLs would keep undoing each other. Operator commands n
 
 ## License
 
-[MIT](LICENSE)
+[Apache License 2.0](LICENSE). See [NOTICE](NOTICE).

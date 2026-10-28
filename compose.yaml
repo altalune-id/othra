@@ -62,7 +62,7 @@ services:
   # S3-compatible storage for uploads. Dev-only keys; the browser uploads to localhost:3900 and reads public files
   # from http://altalune-files.localhost:3902 (the website endpoint). garage-init prepares the bucket on every start.
   garage:
-    image: dxflrs/garage:v2.4.1
+    image: dxflrs/garage:v2.5.0
     restart: unless-stopped
     ports:
       - "${GARAGE_S3_PORT:-3900}:3900"
@@ -77,7 +77,7 @@ services:
       retries: 10
 
   garage-init:
-    image: curlimages/curl:8.22.0
+    image: curlimages/curl:8.23.0
     entrypoint: ["/bin/sh", "/init.sh"]
     environment:
       GARAGE_ADMIN_TOKEN: othra-dev-garage-admin-token
@@ -92,7 +92,7 @@ services:
         condition: service_healthy
 
   mailpit:
-    image: axllent/mailpit:v1.31.5
+    image: axllent/mailpit:v1.32.0
     restart: unless-stopped
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "true"
