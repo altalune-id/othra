@@ -232,7 +232,7 @@ func consoleWeb(
 	if rp != nil {
 		w.WithConsoleSignIn(auth.ConsoleSignIn{
 			RP: rp, SignedOut: consoleURIs(cfg.HTTP).PostLogoutURI, PasswordOff: !cfg.PasswordsOn(),
-			OpenSignup: cfg.OpenSignup(),
+			OpenSignup: cfg.OpenSignup(), RememberLastUser: cfg.Auth.RememberLastUser,
 		})
 	}
 	return w

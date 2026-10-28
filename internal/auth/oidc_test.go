@@ -73,7 +73,7 @@ func newConsoleFixture(t *testing.T, passwordOff bool) *consoleFixture {
 	sessions := testSessions(f.store)
 	sessions.Cookie.Path = "/"
 	f.web = NewWeb(layout.Kit{Unexpected: f.report}, f.auth, sessions, f.ids).WithConsoleSignIn(ConsoleSignIn{
-		RP: f.rp, SignedOut: "http://othra.test/console/", PasswordOff: passwordOff,
+		RP: f.rp, SignedOut: "http://othra.test/console/", PasswordOff: passwordOff, RememberLastUser: true,
 	})
 	f.srv = web.NewServer(web.ServerOpts{
 		Console: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("console")) }),
@@ -116,7 +116,7 @@ func TestConsoleSignIn_Start(t *testing.T) {
 	assert.Equal(t, "select_account", f.rp.started.Prompt)
 	assert.Equal(t, "ada@example.com", f.rp.started.LoginHint)
 
-	_ = f.do(httptest.NewRequest(http.MethodGet, "/login/oidc?prompt=none", nil))
+	_ = f.do(httptest.NewRequest(http.MethodGet, "/login/oidc?prompt=none&login_hint=ada@example.com", nil))
 	assert.Empty(t, f.rp.started.Prompt, "only select_account and login pass through")
 
 	f.rp.startErr = errors.New("discovery down")
@@ -301,4 +301,97 @@ func TestConsoleSignIn_LimitedPerIP(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "Too many attempts")
 	assert.Equal(t, http.StatusTooManyRequests, f.do(from("/login/oidc", "198.51.100.7")).Code, "the start shares the bucket")
 	assert.Equal(t, http.StatusBadRequest, f.do(from("/oauth/callback?code=c&state=s", "198.51.100.8")).Code, "another IP goes on")
+}
+
+func lastUserOf(t *testing.T, rec *httptest.ResponseRecorder) *http.Cookie {
+	t.Helper()
+	return cookieNamed(rec, lastUserCookieName)
+}
+
+// After a sign-in the verified email is remembered: HttpOnly, Lax, 90 days; a hint only, never signed.
+func TestConsoleSignIn_RemembersTheLastUser(t *testing.T) {
+	f := newConsoleFixture(t, false)
+	f.rp.token.Email = "Ada@Example.com"
+	c, state := f.start(t, "")
+	rec := f.callback("code=c1&state="+state, c)
+	require.Equal(t, http.StatusSeeOther, rec.Code, rec.Body.String())
+	last := lastUserOf(t, rec)
+	require.NotNil(t, last)
+	assert.Equal(t, "ada@example.com", last.Value)
+	assert.True(t, last.HttpOnly)
+	assert.Equal(t, http.SameSiteLaxMode, last.SameSite)
+	assert.Equal(t, int(lastUserTTL.Seconds()), last.MaxAge)
+	assert.Equal(t, "/", last.Path)
+
+	off := newConsoleFixture(t, false)
+	off.web.console.RememberLastUser = false
+	c, state = off.start(t, "")
+	assert.Nil(t, lastUserOf(t, off.callback("code=c1&state="+state, c)), "auth.rememberLastUser off")
+}
+
+// SECURITY: OIDC Core §3.1.2.1: no account in mind means the picker, never a silent sign-in to whatever session is live.
+func TestConsoleSignIn_PromptAndHint(t *testing.T) {
+	f := newConsoleFixture(t, false)
+	start := func(query string, cookies ...*http.Cookie) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodGet, "/login/oidc?"+query, nil)
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+		rec := f.do(req)
+		require.Equal(t, http.StatusFound, rec.Code, rec.Body.String())
+		return rec
+	}
+
+	start("")
+	assert.Equal(t, "select_account", f.rp.started.Prompt, "no hint at all")
+	assert.Empty(t, f.rp.started.LoginHint)
+
+	start("login_hint=ada@example.com")
+	assert.Equal(t, "ada@example.com", f.rp.started.LoginHint)
+	assert.Empty(t, f.rp.started.Prompt, "a hint and no prompt")
+
+	remembered := &http.Cookie{Name: lastUserCookieName, Value: "ada@example.com"}
+	start("", remembered)
+	assert.Equal(t, "ada@example.com", f.rp.started.LoginHint, "the remembered email is the hint")
+	assert.Empty(t, f.rp.started.Prompt)
+
+	start("", &http.Cookie{Name: lastUserCookieName, Value: "not an email"})
+	assert.Empty(t, f.rp.started.LoginHint, "a malformed cookie is ignored")
+	assert.Equal(t, "select_account", f.rp.started.Prompt)
+
+	rec := start("prompt=select_account", remembered)
+	assert.Equal(t, "select_account", f.rp.started.Prompt)
+	assert.Empty(t, f.rp.started.LoginHint, "use another account drops the remembered hint")
+	cleared := lastUserOf(t, rec)
+	require.NotNil(t, cleared)
+	assert.Negative(t, cleared.MaxAge, "and forgets it")
+}
+
+func TestConsoleSignIn_LoginPageContinueAs(t *testing.T) {
+	f := newConsoleFixture(t, false)
+	req := httptest.NewRequest(http.MethodGet, "/login?return_to=/console/x", nil)
+	req.AddCookie(&http.Cookie{Name: lastUserCookieName, Value: "ada@example.com"})
+	body := f.do(req).Body.String()
+	assert.Contains(t, body, "Continue as")
+	assert.Contains(t, body, "ada@example.com")
+	assert.Contains(t, body, `/login/oidc?login_hint=ada%40example.com&amp;return_to=%2Fconsole%2Fx`)
+	assert.Contains(t, body, `/login/oidc?prompt=select_account&amp;return_to=%2Fconsole%2Fx`)
+	assert.Contains(t, body, "Use another account")
+
+	body = f.do(httptest.NewRequest(http.MethodGet, "/login", nil)).Body.String()
+	assert.Contains(t, body, "Continue with Othra")
+	assert.NotContains(t, body, "Continue as")
+}
+
+// Logout ends the session, not the memory of the account.
+func TestConsoleSignIn_LogoutKeepsTheLastUser(t *testing.T) {
+	f := newConsoleFixture(t, false)
+	f.auth.principal.Source, f.auth.principal.IDToken = session.SourceOIDC, "the.id.token"
+	c, state := f.start(t, "")
+	sid := cookieNamed(f.callback("code=c1&state="+state, c), session.CookieName)
+	require.NotNil(t, sid)
+	req := httptest.NewRequest(http.MethodPost, "/logout", nil)
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.AddCookie(sid)
+	assert.Nil(t, lastUserOf(t, f.do(req)))
 }

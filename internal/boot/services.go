@@ -329,7 +329,7 @@ func (c consoleInvites) OwnerSeat(ctx context.Context, orgID uuid.UUID, email st
 	if err != nil {
 		return nil, noSeat(err)
 	}
-	if !inv.EmailOnlyOwner() {
+	if !inv.EmailOnly {
 		return nil, nil
 	}
 	return &auth.Seat{ID: inv.ID, OrgID: inv.OrgID, Email: inv.Email}, nil

@@ -424,3 +424,34 @@ func TestPostgresInvite_ByPublicIDIsScopedAndResolveIsNot(t *testing.T) {
 	assert.Equal(t, c.Invite.ID, resolved.ID)
 	assert.Empty(t, resolved.TokenHash, "the definer returns no hash")
 }
+
+// SECURITY: the owner seat is marked, not inferred; an operator's re-invite clears it, and the CHECK refuses the flag on any other invite.
+func TestPostgresInvite_EmailOnlyOwnerSeat(t *testing.T) {
+	f := newPGFixture(t)
+	scoped := tenant.Into(f.ctx, tenant.Context{OrgID: f.org.ID})
+	email := "seat-" + uuid.NewString()[:8] + "@example.com"
+	seat, err := f.svc.InviteOwner(f.ctx, f.org.ID, email)
+	require.NoError(t, err)
+	stored, err := f.store.ByID(scoped, seat.ID)
+	require.NoError(t, err)
+	assert.True(t, stored.EmailOnly)
+
+	for name, edit := range map[string]func(i *invite.Invite){
+		"a member invite":           func(i *invite.Invite) { i.Role = member.RoleMember },
+		"an invite with an inviter": func(i *invite.Invite) { i.InvitedBy = f.owner.ID },
+		"a draft":                   func(i *invite.Invite) { i.Draft = true },
+	} {
+		bad := *stored
+		edit(&bad)
+		err := db.NewTransactor(f.pool).RunInTx(scoped, func(ctx context.Context) error { return f.store.Update(ctx, &bad) })
+		require.Error(t, err, name)
+		assert.Contains(t, err.Error(), "invites_email_only_owner", name)
+	}
+
+	c, err := f.svc.Create(f.ctx, member.Requester{Operator: true}, f.org.ID, email, member.RoleOwner)
+	require.NoError(t, err)
+	assert.Equal(t, seat.ID, c.Invite.ID)
+	cleared, err := f.store.ByID(scoped, seat.ID)
+	require.NoError(t, err)
+	assert.False(t, cleared.EmailOnly, "a re-invite needs its link")
+}

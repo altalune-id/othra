@@ -26,10 +26,10 @@ import (
 
 // The console signs in through /p/system over the in-process transport: the owner's verified email links once, then the sub does.
 func TestConsoleSignIn_ThroughSystem(t *testing.T) {
-	f := newSignInFixture(t)
+	f := newSignInFixture(t, func(c *config.Config) { c.Auth.RememberLastUser = true })
 	browser := f.signInDevice(t, "/p/system", "root@example.com")
 
-	start := f.do(browser, http.MethodGet, "/login/oidc?return_to=/console/", nil)
+	start := f.do(browser, http.MethodGet, "/login/oidc?return_to=/console/&login_hint=root@example.com", nil)
 	require.Equal(t, http.StatusFound, start.status, start.body)
 	authorize := start.header.Get("Location")
 	require.True(t, strings.HasPrefix(authorize, f.srv.URL+"/p/system/oauth2/authorize?"), authorize)
@@ -41,6 +41,9 @@ func TestConsoleSignIn_ThroughSystem(t *testing.T) {
 	done := f.do(browser, http.MethodGet, strings.TrimPrefix(callback, f.srv.URL), nil)
 	require.Equal(t, http.StatusSeeOther, done.status, done.body)
 	assert.Equal(t, "/console/", done.header.Get("Location"))
+	next := f.do(browser, http.MethodGet, "/login/oidc", nil)
+	assert.Contains(t, next.header.Get("Location"), "login_hint=root%40example.com", "the last console user is remembered")
+	assert.NotContains(t, next.header.Get("Location"), "prompt=")
 
 	root, err := f.svcs.Users.ByEmail(t.Context(), "root@example.com")
 	require.NoError(t, err)
@@ -67,7 +70,7 @@ func TestConsoleSignIn_ThroughSystem(t *testing.T) {
 // NOTE: the console's "Continue with Othra" on browser, through /p/system, back to /console/.
 func consoleSignIn(t *testing.T, f *signInFixture, browser *http.Client) {
 	t.Helper()
-	start := f.do(browser, http.MethodGet, "/login/oidc?return_to=/console/", nil)
+	start := f.do(browser, http.MethodGet, "/login/oidc?return_to=/console/&login_hint=root@example.com", nil)
 	require.Equal(t, http.StatusFound, start.status, start.body)
 	granted := f.do(browser, http.MethodGet, strings.TrimPrefix(start.header.Get("Location"), f.srv.URL), nil)
 	callback := granted.header.Get("Location")
@@ -173,7 +176,7 @@ func TestFirstBoot_CloudReconcilesTheConsoleClient(t *testing.T) {
 	assert.Equal(t, []string{"https://moved.example.com/oauth/callback"}, redirects())
 }
 
-// SECURITY: a verified email alone claims only the email-only owner seat; an invite someone made, or for another role, needs its link.
+// SECURITY: a verified email alone claims only the email-only owner seat; an invite someone made, an operator's owner invite, or one for another role needs its link.
 func TestConsoleSignIn_OnlyTheEmailOnlyOwnerSeat(t *testing.T) {
 	svcs, _ := migratedServices(t, devLocalConfig())
 	ctx := t.Context()
@@ -187,10 +190,12 @@ func TestConsoleSignIn_OnlyTheEmailOnlyOwnerSeat(t *testing.T) {
 	require.NoError(t, err)
 	_, err = svcs.Invites.Create(ctx, member.Requester{Operator: true}, sys.ID, "mem@example.com", member.RoleMember)
 	require.NoError(t, err)
+	_, err = svcs.Invites.Create(ctx, member.Requester{Operator: true}, sys.ID, "op@example.com", member.RoleOwner)
+	require.NoError(t, err)
 	_, err = svcs.Invites.InviteOwner(ctx, sys.ID, "seat@example.com")
 	require.NoError(t, err)
 
-	for _, email := range []string{"co@example.com", "mem@example.com"} {
+	for _, email := range []string{"co@example.com", "mem@example.com", "op@example.com"} {
 		seat, err := seats.OwnerSeat(ctx, sys.ID, email)
 		require.NoError(t, err)
 		assert.Nil(t, seat, email)

@@ -54,24 +54,18 @@ func TestService_InviteOwner(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// SECURITY: only the seat InviteOwner leaves is claimed by email alone; any other invite needs its link.
-func TestInvite_EmailOnlyOwner(t *testing.T) {
-	for name, tc := range map[string]struct {
-		inv  invite.Invite
-		want bool
-	}{
-		"install's owner seat": {invite.Invite{Role: member.RoleOwner}, true},
-		"an owner's invite":    {invite.Invite{Role: member.RoleOwner, InvitedBy: uuid.New()}, false},
-		"a member invite":      {invite.Invite{Role: member.RoleMember}, false},
-		"an admin invite":      {invite.Invite{Role: member.RoleAdmin}, false},
-		"a draft":              {invite.Invite{Role: member.RoleOwner, Draft: true}, false},
-	} {
-		assert.Equal(t, tc.want, tc.inv.EmailOnlyOwner(), name)
-	}
+// SECURITY: only the seat InviteOwner leaves is claimed by email alone; an operator's re-invite of that email needs its link.
+func TestService_EmailOnlyOwnerSeat(t *testing.T) {
 	f := newFixture(t)
-	inv, err := f.svc.InviteOwner(f.ctx, uuid.New(), "owner@example.com")
+	inv, err := f.svc.InviteOwner(f.ctx, f.org, "owner@example.com")
 	require.NoError(t, err)
-	assert.True(t, inv.EmailOnlyOwner())
+	assert.True(t, inv.EmailOnly)
+
+	c, err := f.svc.Create(f.ctx, member.Requester{Operator: true}, f.org, "owner@example.com", member.RoleOwner)
+	require.NoError(t, err)
+	assert.Equal(t, inv.PublicID, c.Invite.PublicID, "the live row is reused")
+	assert.False(t, c.Invite.EmailOnly)
+	assert.Equal(t, uuid.Nil, c.Invite.InvitedBy)
 }
 
 // Usable reads the service's clock, so a caller outside the package never brings its own.
