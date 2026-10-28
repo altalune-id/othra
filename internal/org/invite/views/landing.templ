@@ -51,9 +51,6 @@ templ Landing(d layout.LayoutData, v LandingData) {
 					if v.OthraURL != "" {
 						<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.OthraURL) }>Continue with Othra</a>
 					}
-					if v.OthraURL == "" && !v.Password {
-						<p class="text-sm text-base-content/70">Ask your admin to turn on sign-in for this console.</p>
-					}
 					if v.OthraURL != "" && v.Password {
 						@layout.Divider("or join with a password")
 					}

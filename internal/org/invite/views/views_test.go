@@ -28,10 +28,8 @@ func TestLanding_OnePrimaryButton(t *testing.T) {
 	assert.Contains(t, out, `class="btn btn-primary btn-block"`, "Continue with Othra leads")
 	assert.Contains(t, out, `class="btn mt-2 btn-outline" type="submit">Join Acme`)
 	assert.Contains(t, out, "or join with a password")
-	assert.NotContains(t, out, "Ask your admin")
 
-	v.OthraURL, v.Password = "", false
-	out = render(v)
-	assert.Contains(t, out, "Ask your admin to turn on sign-in for this console.", "the join page is never without a way forward")
+	out = render(LandingData{State: StateNoMethod, Org: "Acme", Inviter: "Ana", Role: "member"})
+	assert.Contains(t, out, "this server has no way to sign in yet", "no sign-in method gets its own state, never an empty join page")
 	assert.NotContains(t, out, "<form")
 }

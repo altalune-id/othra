@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { connectError, fakeStorage, navigateTo, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useOrgsStore } from '~/stores/orgs';
+import { useOrgCreation } from '../create/useOrgCreation';
 import { useOnboarding } from './useOnboarding';
 
 const org = { id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme' };
@@ -37,6 +38,17 @@ describe('useOnboarding', () => {
     expect(useOrgsStore().bySlug('acme')?.id).toBe(org.id);
     expect(listProjects).toHaveBeenCalledWith({ orgId: org.id });
     expect(navigateTo).toHaveBeenCalledWith('/o/acme/projects/default');
+  });
+
+  it('stops offering New organization once onboarding created the caller\'s own org', async () => {
+    const orgs = useOrgsStore();
+    orgs.loaded = true;
+    const creation = useOrgCreation();
+    const form = useOnboarding();
+    form.name.value = 'Acme';
+    await form.submit();
+    expect(orgs.bySlug('acme')?.role).toBe('owner');
+    expect(creation.ownsOne.value).toBe(true);
   });
 
   it('takes someone who already owns an org there', async () => {
