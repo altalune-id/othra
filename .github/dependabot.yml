@@ -7,9 +7,6 @@ updates:
     groups:
       go-minor-patch:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: [version-update:semver-major]
 
   - package-ecosystem: gomod
     directory: /oidcrp
@@ -18,9 +15,6 @@ updates:
     groups:
       go-minor-patch:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: [version-update:semver-major]
 
   - package-ecosystem: gomod
     directory: /oauthrs
@@ -29,9 +23,6 @@ updates:
     groups:
       go-minor-patch:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
     directory: /
@@ -41,8 +32,6 @@ updates:
       npm-minor-patch:
         update-types: [minor, patch]
     ignore:
-      - dependency-name: "*"
-        update-types: [version-update:semver-major]
       # pnpm stays on 10 (packageManager)
       - dependency-name: pnpm
         update-types: [version-update:semver-major]
@@ -54,25 +43,13 @@ updates:
     groups:
       actions-minor-patch:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
-    ignore:
-      - dependency-name: "*"
-        update-types: [version-update:semver-major]
-      # Go stays on 1.26
-      - dependency-name: golang
-        update-types: [version-update:semver-minor]
 
   - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
-    ignore:
-      - dependency-name: "*"
-        update-types: [version-update:semver-major]
