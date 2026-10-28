@@ -62,7 +62,7 @@ services:
   # S3-compatible storage for uploads. Dev-only keys; the browser uploads to localhost:3900 and reads public files
   # from http://altalune-files.localhost:3902 (the website endpoint). garage-init prepares the bucket on every start.
   garage:
-    image: dxflrs/garage:v2.4.1
+    image: dxflrs/garage:v2.5.0
     restart: unless-stopped
     ports:
       - "${GARAGE_S3_PORT:-3900}:3900"
