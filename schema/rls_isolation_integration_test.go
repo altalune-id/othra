@@ -177,7 +177,7 @@ func rlsInserts() []rlsInsert {
 			return []any{uuid.New(), "t" + id()[:12], tn.org, tn.project, tn.endUser, tn.rs, id(), now}
 		}},
 		{"invites", func(s string) string {
-			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, $6, $6, $6)`
+			return `INSERT INTO ` + s + `.invites (id, public_id, org_id, email, role, token_hash, email_only, expires_at, created_at, updated_at) VALUES ($1, $2, $3, $4, 'member', $5, false, $6, $6, $6)`
 		}, func(tn rlsTenant, _ string) []any {
 			return []any{uuid.New(), "i" + id()[:12], tn.org, "i" + id()[:8] + "@example.com", id(), now}
 		}},

@@ -128,6 +128,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("mcp.enabled", false)
 	v.SetDefault("auth.mode", string(AuthModeLocal))
 	v.SetDefault("auth.sessionTTL", "24h")
+	v.SetDefault("auth.rememberLastUser", true)
 	v.SetDefault("cli.sessionFile", "~/.othra/session.json")
 	v.SetDefault("mail.driver", string(MailDriverConsole))
 	v.SetDefault("mail.smtp.port", 587)

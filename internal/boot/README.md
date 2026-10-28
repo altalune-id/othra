@@ -283,7 +283,10 @@ validated ID token to `auth.Service.LoginOIDC`: the account linked to the `/p/sy
 issuer `othra:system`, so a public-URL change keeps every link), else one unlinked account with that verified email,
 linked once and never re-pointed (AUT007), else the invite the sign-in started from or the system org's email-only owner
 seat, which creates a passwordless account and accepts the invite in one unit of work; in cloud any other verified email
-gets an account with no org, elsewhere AUT005. Sign-out ends the console session, ends in process the `/p/system` grant
+gets an account with no org, elsewhere AUT005. With `auth.rememberLastUser` (default on) the callback keeps the verified
+email in an `othra_last_user` cookie (90 days, a hint only); `/login` then offers "Continue as …" with that `login_hint`,
+"Use another account" sends `prompt=select_account` and forgets it, and a start with no hint sends `prompt=select_account`
+so `/p/system` never signs in silently to whichever session is live. Sign-out ends the console session, ends in process the `/p/system` grant
 the ID token's `sid` names and its user session (`consoleRP.EndSystemSession`), then sends the browser to
 its end-session with the ID token as the hint, or with `client_id` alone once the hint's key is no longer published, and
 back to `/login` when `/p/system` names no end-session endpoint. `auth.Service` is built after the invite service for this. The invite

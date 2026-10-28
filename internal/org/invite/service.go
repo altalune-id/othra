@@ -117,7 +117,7 @@ func (s *Service) InviteOwner(ctx context.Context, orgID uuid.UUID, email string
 		if err != nil {
 			return err
 		}
-		inv.Role, inv.InvitedBy = member.RoleOwner, uuid.Nil
+		inv.Role, inv.InvitedBy, inv.EmailOnly = member.RoleOwner, uuid.Nil, true
 		if _, err := inv.issue(s.now()); err != nil {
 			return err
 		}
@@ -439,7 +439,7 @@ func (s *Service) claim(ctx context.Context, a member.Actor, orgID uuid.UUID, em
 	if err := Authorize(a, inv.Role); err != nil {
 		return nil, err
 	}
-	inv.InvitedBy = a.UserID
+	inv.InvitedBy, inv.EmailOnly = a.UserID, false
 	return inv, nil
 }
 

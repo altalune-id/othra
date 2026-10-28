@@ -166,6 +166,11 @@ func (h *Web) getLogin(w http.ResponseWriter, r *http.Request) {
 			view.AnotherLogin += "?return_to=" + url.QueryEscape(view.ReturnTo)
 		}
 	}
+	if hint == "" {
+		if hint = h.lastUser(r); hint != "" {
+			view.LastUser, view.SwitchURL = hint, h.switchAccountURL(view.ReturnTo)
+		}
+	}
 	view.OthraURL = h.othraURL(view.ReturnTo, hint)
 	if h.console != nil {
 		view.PasswordOff, view.NewHere = h.console.PasswordOff, h.console.OpenSignup

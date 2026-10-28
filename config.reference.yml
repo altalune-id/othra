@@ -37,6 +37,8 @@ auth:
   # password:
   #   # env: OTHRA_AUTH_PASSWORD_ENABLED
   #   enabled:
+  # env: OTHRA_AUTH_REMEMBER_LAST_USER
+  rememberLastUser: true
   # env: OTHRA_AUTH_SESSION_TTL
   sessionTTL: 24h
 

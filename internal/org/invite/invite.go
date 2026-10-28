@@ -48,6 +48,7 @@ type Invite struct {
 	Role        member.Role
 	TokenHash   string
 	Draft       bool
+	EmailOnly   bool
 	InvitedBy   uuid.UUID
 	InviterName string
 	ExpiresAt   time.Time
@@ -93,11 +94,6 @@ func (i *Invite) draft(now time.Time) {
 	i.ExpiresAt, i.UpdatedAt = now.UTC().Add(DraftTTL), now.UTC()
 }
 
-// EmailOnlyOwner reports whether i is the owner seat InviteOwner leaves: no inviter, so the verified email alone claims it.
-func (i *Invite) EmailOnlyOwner() bool {
-	return i.Role == member.RoleOwner && i.InvitedBy == uuid.Nil && !i.Draft
-}
-
 func (i *Invite) live() bool { return i.AcceptedAt == nil && i.RevokedAt == nil }
 
 func (i *Invite) expired(now time.Time) bool { return !now.Before(i.ExpiresAt) }
@@ -136,6 +132,7 @@ type inviteRow struct {
 	Role       string         `alias:"invites.role"`
 	TokenHash  sql.NullString `alias:"invites.token_hash"`
 	Draft      bool           `alias:"invites.draft"`
+	EmailOnly  bool           `alias:"invites.email_only"`
 	InvitedBy  uuid.NullUUID  `alias:"invites.invited_by"`
 	ExpiresAt  time.Time      `alias:"invites.expires_at"`
 	AcceptedAt *time.Time     `alias:"invites.accepted_at"`
@@ -148,7 +145,7 @@ type inviteRow struct {
 func (r *inviteRow) toInvite() *Invite {
 	return &Invite{
 		ID: r.ID, OrgID: r.OrgID, PublicID: r.PublicID, Email: r.Email, Role: member.Role(r.Role),
-		TokenHash: r.TokenHash.String, Draft: r.Draft, InvitedBy: r.InvitedBy.UUID, ExpiresAt: r.ExpiresAt,
+		TokenHash: r.TokenHash.String, Draft: r.Draft, EmailOnly: r.EmailOnly, InvitedBy: r.InvitedBy.UUID, ExpiresAt: r.ExpiresAt,
 		AcceptedAt: r.AcceptedAt, AcceptedBy: r.AcceptedBy.UUID, RevokedAt: r.RevokedAt,
 		CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
