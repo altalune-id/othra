@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/altalune-id/oidcrp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/altalune-id/othra/internal/web"
 	"github.com/altalune-id/othra/internal/web/layout"
 	"github.com/altalune-id/othra/internal/web/middleware"
-	"github.com/altalune-id/othra/oidcrp"
 )
 
 type fakeRP struct {

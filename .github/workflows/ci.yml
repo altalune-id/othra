@@ -31,16 +31,6 @@ jobs:
         with:
           version: v2.14.0
           args: --timeout=3m ./...
-      - uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.14.0
-          working-directory: oidcrp
-          args: --config=../.golangci.yml --timeout=3m ./...
-      - uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.14.0
-          working-directory: oauthrs
-          args: --config=../.golangci.yml --timeout=3m ./...
       - name: Comment discipline
         run: make comment-check
 
@@ -139,7 +129,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: make web
       - name: Unit tests (race, shuffle)
-        run: for m in . oidcrp oauthrs; do go -C "$m" test -race -shuffle=on ./... || exit 1; done
+        run: go test -race -shuffle=on ./...
 
   go-cover:
     needs: lint-gate

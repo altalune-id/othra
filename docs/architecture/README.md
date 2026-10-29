@@ -79,11 +79,11 @@ Packages at the repo root never import `internal/`: `apperror` (error codes, `co
 
 ## Library modules
 
-`oidcrp` (an OpenID Connect relying party) and `oauthrs` (an OAuth resource server) are their own Go modules, `github.com/altalune-id/othra/oidcrp` and `github.com/altalune-id/othra/oauthrs`, so apps can import them without the server. They use only the standard library, go-jose and, for `oauthrs`, `oidcrp`; depguard `library-boundary` keeps `internal/` and `config` out.
+`oidcrp` (an OpenID Connect relying party) and `oauthrs` (an OAuth resource server) live in their own repos, [`github.com/altalune-id/oidcrp`](https://github.com/altalune-id/oidcrp) and [`github.com/altalune-id/oauthrs`](https://github.com/altalune-id/oauthrs), so apps import them without the server. They use only the standard library, go-jose and, for `oauthrs`, `oidcrp`.
 
-- The root `go.mod` requires both at `v0.0.0` with `replace` lines to `./oidcrp` and `./oauthrs`; `oauthrs/go.mod` replaces `oidcrp` with `../oidcrp`.
-- The Makefile runs every Go target once per module (`GO_MODULES`, `go -C <module>`), and CI and Dependabot cover each module.
-- Releases tag `oidcrp/vX.Y.Z` first, then point `oauthrs` at that tag and drop its `replace` before the first `oauthrs/vX.Y.Z`, as the `go-release` skill's checklist says.
+- Othra uses them like any app: the console sign-in and federation through `oidcrp`, resource-server verification through `oauthrs`.
+- Until they are tagged, `go.mod` pins a commit (a pseudo-version); bump it with `go get github.com/altalune-id/oidcrp@<commit>`.
+- A change to a library lands in its repo first, then Othra and the apps bump to it.
 
 ## UI builds
 

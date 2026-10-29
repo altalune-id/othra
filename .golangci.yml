@@ -280,17 +280,6 @@ linters:
           deny:
             - pkg: "github.com/altalune-id/othra/internal/"
               desc: "kernel imports only kernel packages, never a domain, a surface or boot"
-        library-boundary:
-          list-mode: lax
-          files:
-            - "**/oauthrs/**"
-            - "**/oidcrp/**"
-          allow:
-            - github.com/altalune-id/othra/oauthrs
-            - github.com/altalune-id/othra/oidcrp
-          deny:
-            - pkg: "github.com/altalune-id/othra/"
-              desc: "oidcrp and oauthrs are app libraries: stdlib, go-jose and oidcrp only, never internal/ or config"
         root-boundary:
           list-mode: lax
           files:
@@ -303,8 +292,6 @@ linters:
             - "**/migrator/**"
             - "**/nanoid/**"
             - "**/nats/**"
-            - "**/oauthrs/**"
-            - "**/oidcrp/**"
             - "**/password/**"
             - "**/pg/**"
             - "**/redis/**"

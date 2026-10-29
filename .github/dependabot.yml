@@ -8,22 +8,6 @@ updates:
       go-minor-patch:
         update-types: [minor, patch]
 
-  - package-ecosystem: gomod
-    directory: /oidcrp
-    schedule:
-      interval: weekly
-    groups:
-      go-minor-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: gomod
-    directory: /oauthrs
-    schedule:
-      interval: weekly
-    groups:
-      go-minor-patch:
-        update-types: [minor, patch]
-
   - package-ecosystem: npm
     directory: /
     schedule:
