@@ -106,7 +106,7 @@ git push origin v1.4.0
 ```
 
 - Tag the module root. In a multi-module repo, prefix with the module directory: `submod/v1.4.0`.
-- In Othra, `oauthrs` requires `oidcrp`: tag `oidcrp/vX.Y.Z` first, then point `oauthrs/go.mod` at that tag and drop its `replace` before the first `oauthrs/vX.Y.Z` tag.
+- `oauthrs` requires `oidcrp`: tag `oidcrp` first, then point `oauthrs/go.mod` at that tag before tagging `oauthrs`.
 - Write release notes for humans: what's new, what's deprecated, any behavior changes. Link migration guidance for anything deprecated.
 
 ### The Proxy Is Forever: Fixing a Bad Release

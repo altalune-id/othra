@@ -5,12 +5,11 @@ import (
 	"crypto/rsa"
 	"testing"
 
+	"github.com/altalune-id/oidcrp"
+	"github.com/altalune-id/oidcrp/oidcrptest"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/altalune-id/othra/oidcrp"
-	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 )
 
 func signedBy(t *testing.T, kid string) string {

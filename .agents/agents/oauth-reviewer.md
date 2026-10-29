@@ -1,6 +1,6 @@
 ---
 name: oauth-reviewer
-description: Independent OAuth 2.1 / OpenID Connect conformance review of Othra with per-dimension scoring against the Othra v1 profile. Works on the authorization server, the oidcrp relying-party library, the oauthrs resource-server library, or an app's MCP resource server. Cites file:line evidence and produces a severity-ordered recommendation plan. Use when asked to score, audit, or check OAuth / OIDC / MCP authorization conformance, or after touching /authorize, the hosted pages, /token, discovery, JWKS, /userinfo, /introspect, /revoke, end-session, CIMD fetching, resource-server verification, signing keys, oidcrp/ or oauthrs/.
+description: Independent OAuth 2.1 / OpenID Connect conformance review of Othra with per-dimension scoring against the Othra v1 profile. Works on the authorization server, the oidcrp relying-party library, the oauthrs resource-server library, or an app's MCP resource server. Cites file:line evidence and produces a severity-ordered recommendation plan. Use when asked to score, audit, or check OAuth / OIDC / MCP authorization conformance, or after touching /authorize, the hosted pages, /token, discovery, JWKS, /userinfo, /introspect, /revoke, end-session, CIMD fetching, resource-server verification, signing keys, or the oidcrp / oauthrs libraries.
 tools: Read, Grep, Glob, Bash
 model: opus
 ---

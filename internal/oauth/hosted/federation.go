@@ -8,12 +8,13 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/altalune-id/oidcrp"
+
 	"github.com/altalune-id/othra/apperror"
 	"github.com/altalune-id/othra/internal/federation"
 	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 	"github.com/altalune-id/othra/internal/oauth/hosted/views"
 	"github.com/altalune-id/othra/internal/upstream"
-	"github.com/altalune-id/othra/oidcrp"
 	"github.com/altalune-id/othra/reqid"
 	"github.com/altalune-id/othra/sealer"
 )

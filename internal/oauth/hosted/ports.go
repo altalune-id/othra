@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/altalune-id/oidcrp"
 	"github.com/google/uuid"
 
 	"github.com/altalune-id/othra/internal/consent"
 	"github.com/altalune-id/othra/internal/federation"
 	"github.com/altalune-id/othra/internal/upstream"
 	"github.com/altalune-id/othra/mailer"
-	"github.com/altalune-id/othra/oidcrp"
 )
 
 // Project is the project a hosted request runs for, with the settings sign-in follows; every EndUsers call is scoped to it.

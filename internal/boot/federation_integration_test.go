@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/altalune-id/oidcrp/oidcrptest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/altalune-id/othra/internal/federation"
 	"github.com/altalune-id/othra/internal/kernel/tenant"
 	"github.com/altalune-id/othra/internal/upstream"
-	"github.com/altalune-id/othra/oidcrp/oidcrptest"
 )
 
 // sign in with Google end to end: the login button, the sealed start, the Continue hop, the callback and the account.

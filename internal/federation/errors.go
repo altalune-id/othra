@@ -3,8 +3,9 @@ package federation
 import (
 	"errors"
 
+	"github.com/altalune-id/oidcrp"
+
 	"github.com/altalune-id/othra/apperror"
-	"github.com/altalune-id/othra/oidcrp"
 )
 
 // CollisionError signals a new upstream identity whose verified email already belongs to an end user: nothing is linked.

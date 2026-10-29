@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/altalune-id/oauthrs"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,6 @@ import (
 	"github.com/altalune-id/othra/internal/pat"
 	"github.com/altalune-id/othra/internal/project"
 	"github.com/altalune-id/othra/internal/resourceserver"
-	"github.com/altalune-id/othra/oauthrs"
 )
 
 type toTestServer struct{ target *url.URL }

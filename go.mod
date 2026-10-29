@@ -9,8 +9,8 @@ require (
 	connectrpc.com/otelconnect v0.12.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/a-h/templ v0.3.1070
-	github.com/altalune-id/othra/oauthrs v0.0.0
-	github.com/altalune-id/othra/oidcrp v0.0.0
+	github.com/altalune-id/oauthrs v0.0.0-20261029065122-4e8e30d405a5
+	github.com/altalune-id/oidcrp v0.0.0-20261029065038-4ad7d20c0569
 	github.com/aws/aws-sdk-go-v2 v1.47.4
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.5
@@ -178,7 +178,3 @@ tool (
 	github.com/altalune-id/othra/cmd/gen-scope
 	github.com/altalune-id/othra/cmd/protoc-gen-mcp
 )
-
-replace github.com/altalune-id/othra/oidcrp => ./oidcrp
-
-replace github.com/altalune-id/othra/oauthrs => ./oauthrs

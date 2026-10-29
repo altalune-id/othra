@@ -122,7 +122,7 @@ fmt: ## format all Go files (gofmt + gci import groups, settings from .golangci.
 	@for m in $(GO_MODULES); do (cd $$m && $(GOLANGCI) fmt -c $(CURDIR)/.golangci.yml ./...) || exit 1; done
 
 # the main module and the root libraries that are modules of their own
-GO_MODULES := . oidcrp oauthrs
+GO_MODULES := .
 
 .PHONY: vet
 vet: ## run go vet (unit and integration files)
@@ -169,7 +169,7 @@ test-all: test test-integration ## unit + integration tests
 
 COVER_MIN ?= 85
 # generated code, templ views, test helpers and main wiring
-COVER_SKIP ?= /gen(/|$$)|/views$$|/testutil/|/sessiontest$$|/ratelimittest$$|/oidcrptest$$|/examples/|/cmd/othra$$
+COVER_SKIP ?= /gen(/|$$)|/views$$|/testutil/|/sessiontest$$|/ratelimittest$$|/examples/|/cmd/othra$$
 
 .PHONY: cover
 cover: ## unit + integration coverage; fails when a package is under COVER_MIN percent

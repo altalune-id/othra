@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/altalune-id/oidcrp"
 	"github.com/go-jose/go-jose/v4"
 
 	"github.com/altalune-id/othra/config"
@@ -14,7 +15,6 @@ import (
 	"github.com/altalune-id/othra/internal/keys"
 	"github.com/altalune-id/othra/internal/oauth/hosted"
 	"github.com/altalune-id/othra/internal/oauth/oidc"
-	"github.com/altalune-id/othra/oidcrp"
 )
 
 const consoleRPTimeout = 10 * time.Second

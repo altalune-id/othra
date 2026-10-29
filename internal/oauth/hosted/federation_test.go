@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/altalune-id/oidcrp"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,6 @@ import (
 	"github.com/altalune-id/othra/internal/upstream"
 	"github.com/altalune-id/othra/internal/web/i18n"
 	"github.com/altalune-id/othra/internal/web/layout"
-	"github.com/altalune-id/othra/oidcrp"
 	"github.com/altalune-id/othra/sealer"
 )
 

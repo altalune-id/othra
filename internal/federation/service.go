@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/altalune-id/oidcrp"
 	"github.com/google/uuid"
 
 	"github.com/altalune-id/othra/apperror"
@@ -18,7 +19,6 @@ import (
 	"github.com/altalune-id/othra/internal/kernel/tenant"
 	"github.com/altalune-id/othra/internal/upstream"
 	"github.com/altalune-id/othra/nanoid"
-	"github.com/altalune-id/othra/oidcrp"
 )
 
 const publicIDLen = 21
