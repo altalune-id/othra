@@ -86,7 +86,7 @@ func TestOAuthRSVerifiesOthraTokens(t *testing.T) {
 	verifier := func(audience string) *oauthrs.Verifier {
 		v, err := oauthrs.New(oauthrs.Config{
 			Issuer: issuer, Audience: audience, HTTPClient: httpClient,
-			Introspection: &oauthrs.Introspection{ClientID: notes.PublicID, ClientSecret: notesSecret, CacheTTL: -1},
+			Introspection: &oauthrs.Introspection{ClientID: notes.PublicID, ClientSecret: notesSecret, TokenPrefix: pat.Prefix, CacheTTL: -1},
 		})
 		require.NoError(t, err)
 		return v
