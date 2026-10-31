@@ -34,6 +34,13 @@ describe('appModal', () => {
     expect(w.find('form.modal-backdrop').exists()).toBe(false);
   });
 
+  it('asks the browser not to close it while not dismissible, since a repeated Esc skips the cancel event', async () => {
+    const w = render({ open: true, title: 'Save the client secret', dismissible: false });
+    expect(w.get('dialog').attributes('closedby')).toBe('none');
+    await w.setProps({ dismissible: true });
+    expect(w.get('dialog').attributes('closedby')).toBeUndefined();
+  });
+
   it('has no name without a title', () => {
     expect(render({ open: true }).get('dialog').attributes('aria-labelledby')).toBeUndefined();
   });
