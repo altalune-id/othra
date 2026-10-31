@@ -58,7 +58,7 @@ function roleLabel(r: string): string {
 </script>
 
 <template>
-  <AppModal :open="open" :title="labels.title" @close="emit('close')">
+  <AppModal :open="open" :title="labels.title" :dismissible="!sentLink" @close="emit('close')">
     <div v-if="sentLink" class="space-y-3">
       <p class="text-sm">
         {{ sentMessage }}

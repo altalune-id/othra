@@ -35,7 +35,7 @@ onMounted(sync);
 </script>
 
 <template>
-  <dialog ref="dialog" class="modal" :aria-labelledby="title ? titleId : undefined" @cancel.prevent="cancel()">
+  <dialog ref="dialog" class="modal" :closedby="dismissible ? undefined : 'none'" :aria-labelledby="title ? titleId : undefined" @cancel.prevent="cancel()">
     <div class="modal-box">
       <h3 v-if="title" :id="titleId" class="text-lg font-bold">
         {{ title }}
