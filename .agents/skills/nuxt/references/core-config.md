@@ -30,7 +30,7 @@ The default `srcDir` is `app/`, so path aliases resolve as:
 | `~~` / `@@` | `<rootDir>` (project root) |
 | `#shared` | `<rootDir>/shared` |
 
-Reference root-level paths with `~~`. Othra adds its own aliases for Go-shared code (`@shared/scope`, `@shared/apperror`) and keeps generated Connect code in `~~/gen`:
+Reference root-level paths with `~~`. Othra adds its own aliases for Go-shared code (`@shared/scope`, `@shared/apperror`) and keeps generated Connect code in `ui/base/gen`, imported as `#gen`:
 
 ```ts
 export default defineNuxtConfig({
