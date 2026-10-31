@@ -58,13 +58,13 @@ export default defineNuxtConfig({
 | `~~` / `@@` | `<rootDir>` (project root) |
 | `#shared` | `<rootDir>/shared` |
 
-Because `~` points at `app/`, reference root-level files with `~~` — e.g. `~~/gen/org/v1/org_pb` for Othra's generated Connect code.
+Because `~` points at `app/`, reference root-level files with `~~`. Othra's generated Connect code lives in `ui/base/gen` and is imported as `#gen/org/v1/org_pb`.
 
 ### `app/components/`
 
 Vue components auto-imported by name (by default):
 
-> **In othra:** `components: { dirs: [] }` turns this off. Import every component explicitly: `import AppButton from '~/components/ui/AppButton.vue';`. Only module components such as `<Icon>` and Nuxt built-ins (`<NuxtLink>`, `<NuxtPage>`) are global.
+> **In othra:** `components: { dirs: [] }` turns this off. Import every component explicitly: `import AppButton from '#base/components/ui/AppButton.vue';`. Only module components such as `<Icon>` and Nuxt built-ins (`<NuxtLink>`, `<NuxtPage>`) are global.
 
 ```
 components/
@@ -92,7 +92,7 @@ components/
 
 Vue composables auto-imported (top-level files only, by default):
 
-> **In othra:** `imports: { scan: false }` turns scanning off. Import your composables explicitly (`import { useErrorMessage } from '~/composables/useErrorMessage';`); Vue, Nuxt and module APIs stay auto-imported.
+> **In othra:** `imports: { scan: false }` turns scanning off. Import your composables explicitly (`import { useErrorMessage } from '#base/composables/useErrorMessage';`); Vue, Nuxt and module APIs stay auto-imported.
 
 ```
 composables/

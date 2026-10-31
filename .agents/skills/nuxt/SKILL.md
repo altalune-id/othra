@@ -20,7 +20,7 @@ metadata:
 
 > Based on Nuxt 4.x docs (https://nuxt.com/docs/4.x). Othra pins `nuxt@^4.5`. Upstream material for Nuxt 5, Nitro v3, server routes, SSR and hybrid rendering was removed because the console is client-only.
 
-> **Directory layout:** the `srcDir` is `app/` — Vue app code (`app.vue`, `components/`, `composables/`, `pages/`, `layouts/`, `plugins/`, `stores/`) lives under `app/`, while `nuxt.config.ts`, `i18n/`, `test/` and generated `gen/` stay at the package root. The `~`/`@` aliases point at `app/`; use `~~`/`@@` for the root.
+> **Directory layout:** the `srcDir` is `app/` — Vue app code (`app.vue`, `components/`, `composables/`, `pages/`, `layouts/`, `plugins/`, `stores/`) lives under `app/`, while `nuxt.config.ts`, `i18n/` and `test/` stay at the package root; generated `gen/` lives in the `ui/base` layer. The `~`/`@` aliases point at `app/`; use `~~`/`@@` for the root.
 
 ## Core
 
