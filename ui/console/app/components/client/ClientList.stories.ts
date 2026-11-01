@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import ClientList from './ClientList.vue';
 
 const rows = [
-  { id: 'Lq3vT8nWx2KpZr6YbM9cD', name: 'Othra console', kind: 'Web app', created: 'Oct 20, 2026', to: '#', system: true },
-  { id: 'dPm7fmQRJKPVw8PxrgdrN', name: 'Storefront web', kind: 'Web app', created: 'Oct 20, 2026', to: '#' },
-  { id: 'H9MspUj32ux8pfYKYsu2a', name: 'Storefront CLI', kind: 'CLI or desktop app', created: 'Oct 20, 2026', to: '#' },
+  { id: 'Lq3vT8nWx2KpZr6YbM9cD', name: 'Othra console', kind: 'Web app', created: 'Oct 20, 2026', lastUsed: '2 days ago', to: '#', system: true },
+  { id: 'dPm7fmQRJKPVw8PxrgdrN', name: 'Storefront web', kind: 'Web app', created: 'Oct 20, 2026', lastUsed: '2 days ago', to: '#' },
+  { id: 'H9MspUj32ux8pfYKYsu2a', name: 'Storefront CLI', kind: 'CLI or desktop app', created: 'Oct 20, 2026', lastUsed: '2 days ago', to: '#' },
 ];
 
 const meta = {

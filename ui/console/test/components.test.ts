@@ -58,7 +58,7 @@ describe('org fields', () => {
 
 describe('client list', () => {
   it('marks the console client with the system badge', () => {
-    const row = { name: 'App', kind: 'Web app', created: 'Oct 20, 2026', to: '#' };
+    const row = { name: 'App', kind: 'Web app', created: 'Oct 20, 2026', lastUsed: 'Never', to: '#' };
     const w = mount(ClientList, { props: { rows: [{ ...row, id: 'Lq3vT8nWx2KpZr6YbM9cD', system: true }, { ...row, id: 'dPm7fmQRJKPVw8PxrgdrN' }] } });
     const cells = w.findAll('tbody tr').map(r => r.find('td').text());
     expect(cells).toEqual(['App System', 'App']);
