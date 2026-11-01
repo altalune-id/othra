@@ -84,6 +84,7 @@ export function fakeStorage() {
 
 export const navigateTo = vi.fn(async (_to: string) => undefined);
 export const useRuntimeConfig = vi.fn(() => runtimeConfig);
+export const clearError = vi.fn(async (_options?: { redirect?: string }) => undefined);
 
 Object.assign(globalThis, {
   ref,
@@ -100,6 +101,7 @@ Object.assign(globalThis, {
   createError: (input: { statusCode: number, statusMessage?: string }) => Object.assign(new Error(input.statusMessage), input),
   defineStore,
   navigateTo,
+  clearError,
   useRuntimeConfig,
   useAppConfig: () => appConfig,
   defineAppConfig: <T>(config: T) => config,
@@ -125,6 +127,7 @@ beforeEach(() => {
   router.replace.mockClear();
   router.push.mockClear();
   navigateTo.mockClear();
+  clearError.mockClear();
   useRuntimeConfig.mockClear();
 });
 

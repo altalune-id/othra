@@ -75,7 +75,7 @@ describe('project environment tag', () => {
     seed(env);
     useOrgsStore().loaded = true;
     vi.stubGlobal('definePageMeta', vi.fn());
-    const stubs = { NuxtPage: true, ProjectSidebar: true, ProjectSettingsSidebar: true, AppSidebar: true, SettingsSidebar: true };
+    const stubs = { NuxtPage: true, ProjectSidebar: true, AppSidebar: true };
     const w = await mountPage(OrgShell, { global: { stubs } });
     expect(w.find('[data-testid="environment-banner"]').exists()).toBe(shown);
   });

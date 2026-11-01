@@ -20,6 +20,7 @@
   "error.save_profile": "Failed to save your profile",
   "error.unlink": "Failed to disconnect Google",
   "menu.account": "Your account",
+  "menu.close": "Close the menu",
   "menu.open": "Open the menu",
   "menu.sign_out": "Sign out",
   "menu.switch": "Switch account",

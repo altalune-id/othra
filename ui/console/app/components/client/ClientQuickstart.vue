@@ -22,7 +22,7 @@ async function trySignIn() {
 
 <template>
   <Section :title="t('clients.quickstart_title', { name })" :description="t('clients.quickstart_body')">
-    <KeyValue :items="items" :copy-label="t('common.copy')" />
+    <KeyValue :items="items" :copy-label="t('common.copy_label', { label: '{label}' })" />
     <div class="space-y-2">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-medium">

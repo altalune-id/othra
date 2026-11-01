@@ -56,16 +56,15 @@ describe('portal shell', () => {
     expect(appConfig.theme).toEqual({ storageKey: 'othra_portal_theme', followSystem: true });
   });
 
-  it('opens the account menu from a focusable trigger and switches account back to the portal base', async () => {
+  it('opens the account menu from a popover button and switches account back to the portal base', async () => {
     const w = await mountPage(Layout);
-    const trigger = w.findAll('.dropdown [role="button"][aria-haspopup="true"]').find(b => b.text().includes('menu.account'))!;
-    expect(trigger.element.tagName).toBe('DIV');
-    expect(trigger.attributes('tabindex')).toBe('0');
+    const trigger = w.findAll('button[popovertarget][aria-haspopup="true"]').find(b => b.text().includes('menu.account'))!;
+    expect(trigger.element.tagName).toBe('BUTTON');
     expect(trigger.text()).toContain('ana@acme.test');
     expect(router.resolve).toHaveBeenCalledWith('/');
-    const menu = trigger.element.parentElement!;
-    expect(menu.querySelector('.dropdown-content a')!.getAttribute('href')).toBe('/p/acme/login?add=1&return_to=%2Fbase%2F');
-    const form = menu.querySelector('.dropdown-content form')!;
+    const menu = trigger.element.parentElement!.querySelector('[popover]')!;
+    expect(menu.querySelector('a')!.getAttribute('href')).toBe('/p/acme/login?add=1&return_to=%2Fbase%2F');
+    const form = menu.querySelector('form')!;
     expect(form.getAttribute('action')).toBe('/p/acme/login/signout');
     expect((form.querySelector('input[name="user_session"]') as HTMLInputElement).value).toBe(here.id);
   });
