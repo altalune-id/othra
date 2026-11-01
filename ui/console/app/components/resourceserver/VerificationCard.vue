@@ -103,13 +103,13 @@ const trusted = () => props.status === 'trusted';
       <UrlField v-if="metadataUrl" :label="labels.metadataUrl" :value="metadataUrl" size="sm" open :copy-label="labels.copyLabel" :open-label="labels.openLabel" />
       <dl v-if="lastCheck || verifiedAt" class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
         <template v-if="lastCheck">
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ labels.lastCheck }}
           </dt>
           <dd>{{ lastCheck }}</dd>
         </template>
         <template v-if="verifiedAt">
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ labels.verifiedAt }}
           </dt>
           <dd>{{ verifiedAt }}</dd>

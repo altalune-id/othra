@@ -35,7 +35,7 @@ await list.load();
       <h1 class="text-2xl font-bold">
         {{ t('endusers.title') }}
       </h1>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ t('endusers.subtitle') }}
       </p>
     </div>
@@ -47,7 +47,7 @@ await list.load();
       </AppButton>
     </form>
     <LoadError :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
-    <p v-if="!loading && users.length === 0 && !loadError" class="text-sm text-base-content/60">
+    <p v-if="!loading && users.length === 0 && !loadError" class="text-sm text-base-content/70">
       {{ shown ? t('endusers.none_found') : t('endusers.empty') }}
     </p>
     <div v-else-if="!loadError" class="overflow-x-auto rounded-box border border-base-300">

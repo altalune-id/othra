@@ -54,7 +54,7 @@ async function confirmRevoke() {
 
 <template>
   <ErrorText v-if="keys.error" :error="keys.error" />
-  <p v-else-if="keys.shared.length === 0" class="text-sm text-base-content/60">
+  <p v-else-if="keys.shared.length === 0" class="text-sm text-base-content/70">
     {{ t('apikeys.empty') }}
   </p>
   <div v-else class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
@@ -73,10 +73,10 @@ async function confirmRevoke() {
         <tr v-for="k in rows" :key="k.rowKey" class="hover:bg-base-200">
           <td>{{ k.name }}</td>
           <td>{{ kindLabel(k.kind) }}</td>
-          <td class="text-base-content/60">
+          <td class="text-base-content/70">
             {{ k.scopes.map(scopeLabel).join(', ') }}
           </td>
-          <td class="font-mono text-xs text-base-content/60">
+          <td class="font-mono text-xs text-base-content/70">
             …{{ k.secretHint }}
           </td>
           <td>

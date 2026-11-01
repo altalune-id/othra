@@ -53,7 +53,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('sign
       <h1 class="text-2xl font-bold">
         {{ t('signin.title') }}
       </h1>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ t('signin.subtitle') }}
       </p>
     </div>

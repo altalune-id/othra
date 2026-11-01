@@ -74,7 +74,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
     <ProjectReadOnlyNote v-else-if="!canEdit" :text="t('settings.read_only')" />
 
     <div class="space-y-1">
-      <span class="block text-xs text-base-content/60">{{ t('common.id') }}</span>
+      <span class="block text-xs text-base-content/70">{{ t('common.id') }}</span>
       <div class="flex items-center gap-1">
         <code class="rounded bg-base-200 px-2 py-1 font-mono text-xs">{{ org.id }}</code>
         <CopyButton :value="org.id" :label="t('common.copy')" />

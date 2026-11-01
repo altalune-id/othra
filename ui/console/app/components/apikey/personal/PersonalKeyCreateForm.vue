@@ -149,7 +149,7 @@ function onOrgChange(event: Event) {
       <legend class="fieldset-legend">
         {{ labels.scopes }}
       </legend>
-      <p v-if="!orgId" class="text-sm text-base-content/60">
+      <p v-if="!orgId" class="text-sm text-base-content/70">
         {{ labels.scopesPickOrg }}
       </p>
       <template v-else>

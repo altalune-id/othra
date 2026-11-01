@@ -75,6 +75,15 @@ describe('guard: forms that show field errors', () => {
 });
 
 describe('guard: theme contrast', () => {
+  it('keeps muted text at /70 or darker: /60, /50 and /40 fail AA in some themes (decorative icons excepted)', () => {
+    const lines = files.flatMap(f => f.text.split('\n').filter(l => /text-base-content\/[1-6]0\b/.test(l) && !/<Icon\b/.test(l)).map(l => `${f.path}: ${l.trim()}`));
+    expect(lines).toEqual([]);
+  });
+
+  it('never colours links or body text with primary: it fails AA in several themes', () => {
+    expect(offenders(/\blink-primary\b/)).toEqual([]);
+  });
+
   const theme = readFileSync(join(ui, 'theme.css'), 'utf8');
   const block = (name: string) => {
     const from = theme.slice(theme.indexOf(`name: '${name}'`));

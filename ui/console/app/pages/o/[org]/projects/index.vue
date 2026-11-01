@@ -64,11 +64,11 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
             </td>
             <td>
               <span class="inline-flex items-center gap-1">
-                <span class="font-mono text-xs text-base-content/60">{{ project.id }}</span>
+                <span class="font-mono text-xs text-base-content/70">{{ project.id }}</span>
                 <CopyButton :value="project.id" :label="t('common.copy')" />
               </span>
             </td>
-            <td class="text-base-content/60">
+            <td class="text-base-content/70">
               {{ project.slug }}
             </td>
             <td class="whitespace-nowrap text-right">
@@ -85,7 +85,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
         </tbody>
       </table>
     </div>
-    <p v-else class="text-sm text-base-content/60">
+    <p v-else class="text-sm text-base-content/70">
       {{ t('project.empty') }}
     </p>
 

@@ -72,21 +72,21 @@ const help = computed(() => props.labels.help.replace('{email}', props.model.sup
           <button type="button" class="btn btn-primary btn-sm" tabindex="-1">
             {{ labels.cta }}
           </button>
-          <p v-if="model.termsUrl || model.privacyUrl" class="text-xs text-base-content/60">
+          <p v-if="model.termsUrl || model.privacyUrl" class="text-xs text-base-content/70">
             <span v-if="model.termsUrl" class="link">{{ labels.terms }}</span>
             <span v-if="model.termsUrl && model.privacyUrl"> · </span>
             <span v-if="model.privacyUrl" class="link">{{ labels.privacy }}</span>
           </p>
-          <p v-if="model.supportEmail" class="text-xs text-base-content/60">
+          <p v-if="model.supportEmail" class="text-xs text-base-content/70">
             {{ help }}
           </p>
-          <p class="text-center text-xs text-base-content/50">
+          <p class="text-center text-xs text-base-content/70">
             {{ labels.secured }}
           </p>
         </div>
       </div>
     </div>
-    <p class="text-xs text-base-content/60">
+    <p class="text-xs text-base-content/70">
       {{ labels.note }}
     </p>
   </section>

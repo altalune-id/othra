@@ -71,7 +71,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
       <h1 class="text-2xl font-bold">
         {{ t('issuer.title') }}
       </h1>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ t('issuer.subtitle') }}
       </p>
     </div>
@@ -121,7 +121,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
               {{ t('issuer.locked') }}
             </span>
           </p>
-          <p v-if="locked" role="note" class="text-sm text-base-content/60">
+          <p v-if="locked" role="note" class="text-sm text-base-content/70">
             {{ t('issuer.locked_note') }}
           </p>
         </div>

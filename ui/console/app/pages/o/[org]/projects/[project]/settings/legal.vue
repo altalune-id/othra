@@ -40,7 +40,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
       <h1 class="text-2xl font-bold">
         {{ t('legal.title') }}
       </h1>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ t('legal.subtitle') }}
       </p>
     </div>
@@ -84,7 +84,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
             <template v-if="termsUrl">
               {{ termsUrl }}
             </template>
-            <span v-else class="text-base-content/50">—</span>
+            <span v-else class="text-base-content/70">—</span>
           </dd>
         </div>
         <div>
@@ -95,7 +95,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
             <template v-if="privacyUrl">
               {{ privacyUrl }}
             </template>
-            <span v-else class="text-base-content/50">—</span>
+            <span v-else class="text-base-content/70">—</span>
           </dd>
         </div>
       </div>
@@ -110,7 +110,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
           <p class="font-medium" data-testid="terms-version">
             {{ t('legal.current_version', { version, date: published }) }}
           </p>
-          <p class="text-sm text-base-content/60">
+          <p class="text-sm text-base-content/70">
             {{ t('legal.acceptance_body') }}
           </p>
           <SavedNote v-if="bumpedTo" :label="t('legal.bump_done', { version: bumpedTo })" />
@@ -121,7 +121,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
             </button>
           </div>
         </template>
-        <p v-else class="text-sm text-base-content/60">
+        <p v-else class="text-sm text-base-content/70">
           {{ canEdit ? t('legal.no_terms') : t('legal.no_terms_readonly') }}
         </p>
       </div>

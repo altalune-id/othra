@@ -62,7 +62,7 @@ function dot(status: KeyStatus): string {
         </tr>
       </tbody>
       <tbody v-else>
-        <tr v-for="row in rows" :key="row.id" :class="{ 'text-base-content/60': row.status === 'retired' }">
+        <tr v-for="row in rows" :key="row.id" :class="{ 'text-base-content/70': row.status === 'retired' }">
           <td>
             <span class="inline-flex items-center gap-1">
               <code class="font-mono text-xs" :title="row.kid">{{ row.short }}…</code>
@@ -75,7 +75,7 @@ function dot(status: KeyStatus): string {
               <span class="status" :class="dot(row.status)" aria-hidden="true" />
               {{ labels[row.status] }}
             </span>
-            <p v-if="row.help" class="text-xs text-base-content/60">
+            <p v-if="row.help" class="text-xs text-base-content/70">
               {{ row.help }}
             </p>
           </td>
@@ -84,7 +84,7 @@ function dot(status: KeyStatus): string {
             <template v-if="row.retires">
               {{ row.retires }}
             </template>
-            <span v-else class="text-base-content/50">—</span>
+            <span v-else class="text-base-content/70">—</span>
           </td>
         </tr>
       </tbody>
@@ -97,7 +97,7 @@ function dot(status: KeyStatus): string {
         </li>
       </template>
       <template v-else>
-        <li v-for="row in rows" :key="row.id" class="space-y-1 rounded-box border border-base-300 p-3" :class="{ 'text-base-content/60': row.status === 'retired' }">
+        <li v-for="row in rows" :key="row.id" class="space-y-1 rounded-box border border-base-300 p-3" :class="{ 'text-base-content/70': row.status === 'retired' }">
           <div class="flex items-center justify-between gap-2">
             <span class="inline-flex items-center gap-1">
               <code class="font-mono text-xs" :title="row.kid">{{ row.short }}…</code>
@@ -108,33 +108,33 @@ function dot(status: KeyStatus): string {
               {{ labels[row.status] }}
             </span>
           </div>
-          <p v-if="row.help" class="text-xs text-base-content/60">
+          <p v-if="row.help" class="text-xs text-base-content/70">
             {{ row.help }}
           </p>
           <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
-            <dt class="text-base-content/60">
+            <dt class="text-base-content/70">
               {{ labels.alg }}
             </dt>
             <dd>{{ row.alg }}</dd>
-            <dt class="text-base-content/60">
+            <dt class="text-base-content/70">
               {{ labels.created }}
             </dt>
             <dd>{{ row.created }}</dd>
-            <dt class="text-base-content/60">
+            <dt class="text-base-content/70">
               {{ labels.retires }}
             </dt>
             <dd>
               <template v-if="row.retires">
                 {{ row.retires }}
               </template>
-              <span v-else class="text-base-content/50">—</span>
+              <span v-else class="text-base-content/70">—</span>
             </dd>
           </dl>
         </li>
       </template>
     </ul>
 
-    <p v-if="!loading && rows.some(r => r.status === 'retired')" class="text-xs text-base-content/60">
+    <p v-if="!loading && rows.some(r => r.status === 'retired')" class="text-xs text-base-content/70">
       {{ labels.retiredNote }}
     </p>
   </div>

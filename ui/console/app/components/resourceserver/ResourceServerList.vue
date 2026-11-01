@@ -62,7 +62,7 @@ const { rows, loading = false, labels = {
             </td>
             <td class="whitespace-nowrap" :title="row.checkedTitle || undefined">
               <span v-if="row.checked">{{ row.checked }}</span>
-              <span v-else class="text-base-content/60">—</span>
+              <span v-else class="text-base-content/70">—</span>
             </td>
           </tr>
         </tbody>

@@ -70,7 +70,7 @@ useHead({ title: () => `${t('apikeys.personal_title')} · Othra` });
         <h1 class="text-2xl font-bold">
           {{ t('apikeys.personal_title') }}
         </h1>
-        <p class="text-sm text-base-content/60">
+        <p class="text-sm text-base-content/70">
           {{ t('apikeys.personal_subtitle') }}
         </p>
       </div>

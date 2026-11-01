@@ -72,7 +72,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
 <template>
   <div class="max-w-2xl space-y-6">
     <div>
-      <NuxtLink :to="base" class="inline-flex items-center gap-1 text-xs text-base-content/60 transition-colors hover:text-base-content">
+      <NuxtLink :to="base" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
         <Icon name="lucide:chevron-left" size="14" />
         {{ t('clients.title') }}
       </NuxtLink>
