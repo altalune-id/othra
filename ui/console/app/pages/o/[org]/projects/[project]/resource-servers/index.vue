@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ResourceServerRow } from '~/components/resourceserver/ResourceServerList.vue';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
-import ErrorText from '#base/components/ui/ErrorText.vue';
+import EmptyState from '#base/components/ui/EmptyState.vue';
+import LoadError from '#base/components/ui/LoadError.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import { useDates } from '#base/composables/useDates';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useProjectGuard } from '~/components/project/useProjectAccess';
@@ -55,46 +57,28 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.t
 
 <template>
   <div class="max-w-4xl space-y-6">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold" tabindex="-1">
-          {{ t('rs.title') }}
-        </h1>
-        <p class="text-sm text-base-content/70">
-          {{ t('rs.subtitle') }}
-        </p>
-      </div>
-      <NuxtLink v-if="canEdit" :to="`${base}/new`" class="btn btn-primary btn-sm max-sm:btn-block">
-        <Icon name="lucide:plus" size="16" />
-        {{ t('rs.new') }}
-      </NuxtLink>
-    </div>
+    <PageHeader :title="t('rs.title')" :description="t('rs.subtitle')">
+      <template v-if="canEdit" #actions>
+        <NuxtLink :to="`${base}/new`" class="btn btn-primary btn-sm max-sm:btn-block">
+          <Icon name="lucide:plus" size="16" />
+          {{ t('rs.new') }}
+        </NuxtLink>
+      </template>
+    </PageHeader>
     <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('rs.system_empty')" />
     <ProjectReadOnlyNote v-else-if="!canEdit" />
 
     <section class="card border border-base-300 bg-base-100" data-testid="resource-servers-card">
       <div class="card-body gap-2">
-        <template v-if="loadError">
-          <ErrorText :error="loadError" />
-          <div>
-            <button type="button" class="btn btn-sm" @click="list.load()">
-              {{ t('common.retry') }}
-            </button>
-          </div>
-        </template>
-        <div v-else-if="!loading && rows.length === 0" class="flex flex-col items-center gap-2 py-6 text-center">
-          <Icon name="lucide:server" size="28" class="text-base-content/70" />
-          <p class="font-medium">
-            {{ t('rs.empty_title') }}
-          </p>
-          <p class="max-w-md text-sm text-base-content/70">
-            {{ t('rs.empty_body') }}
-          </p>
-          <NuxtLink v-if="canEdit" :to="`${base}/new`" class="btn btn-primary btn-sm mt-2">
-            <Icon name="lucide:plus" size="16" />
-            {{ t('rs.new') }}
-          </NuxtLink>
-        </div>
+        <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
+        <EmptyState v-else-if="!loading && rows.length === 0" icon="lucide:server" :title="t('rs.empty_title')" :body="t('rs.empty_body')">
+          <template v-if="canEdit" #actions>
+            <NuxtLink :to="`${base}/new`" class="btn btn-primary btn-sm">
+              <Icon name="lucide:plus" size="16" />
+              {{ t('rs.new') }}
+            </NuxtLink>
+          </template>
+        </EmptyState>
         <ResourceServerList v-else :rows="rows" :loading="loading" :labels="labels" />
       </div>
     </section>
