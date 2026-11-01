@@ -527,6 +527,7 @@
   "secret.copy_client_id": "Copy client ID",
   "secret.copy_secret": "Copy client secret",
   "secret.label": "Client secret",
+  "secret.leave_first": "Store the secret and tick “I've stored this secret somewhere safe” before you leave. It is not shown again.",
   "secret.title": "Store this secret now",
   "secrets.created": "Created {date}",
   "secrets.grace": "Keep the current secret working for",

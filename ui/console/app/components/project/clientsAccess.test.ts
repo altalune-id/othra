@@ -39,7 +39,7 @@ describe('clients and resource server pages', () => {
   });
 
   it('holds the page while a new secret is shown and drops it once saved', () => {
-    expect(creates[0]!.source).toContain('onBeforeRouteLeave(() => !holding.value);');
+    expect(creates[0]!.source).toContain('onBeforeRouteLeave(');
     expect(creates[0]!.source).toContain('<SecretReveal');
     expect(details[0]!.source).toContain('onBeforeRouteLeave(() => !revealed.value);');
     expect(details[0]!.source).toContain('<ClientSecretDialog');

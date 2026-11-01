@@ -5,6 +5,7 @@ import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useToast } from '#base/components/ui/toast';
 import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
 import { ClientKind, ClientSchema } from '#gen/client/v1/client_pb';
 import { ProjectSchema } from '#gen/project/v1/project_pb';
@@ -68,6 +69,23 @@ describe('new client: secret then quickstart', () => {
     await flushPromises();
     expect(generateClientSecret).toHaveBeenCalledTimes(2);
     expect(w.text()).toContain('othra_cs_x');
+  });
+
+  it('holds navigation on the secret step and says why, then lets go once it is stored', async () => {
+    generateClientSecret.mockReset().mockResolvedValue({ client: web, secret: 'othra_cs_x' });
+    const guard = vi.fn();
+    vi.stubGlobal('onBeforeRouteLeave', guard);
+    const w = await created();
+    const leave = guard.mock.calls[0]![0] as () => boolean;
+    const { toasts } = useToast();
+    toasts.splice(0);
+    expect(leave()).toBe(false);
+    expect(toasts.map(t => [t.kind, t.text])).toEqual([['info', 'secret.leave_first']]);
+    await w.get('input[type="checkbox"]').setValue(true);
+    await button(w, 'clients.continue_quickstart').trigger('click');
+    await flushPromises();
+    expect(leave()).toBe(true);
+    toasts.splice(0);
   });
 
   it('opens the quickstart with the real values once the secret is stored, the secret in the .env', async () => {

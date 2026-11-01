@@ -527,6 +527,7 @@
   "secret.copy_client_id": "Salin client ID",
   "secret.copy_secret": "Salin rahasia klien",
   "secret.label": "Rahasia klien",
+  "secret.leave_first": "Simpan rahasia dan centang “Saya sudah menyimpan rahasia ini di tempat aman” sebelum keluar. Rahasia tidak ditampilkan lagi.",
   "secret.title": "Simpan rahasia ini sekarang",
   "secrets.created": "Dibuat {date}",
   "secrets.grace": "Rahasia saat ini tetap berlaku selama",

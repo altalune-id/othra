@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SecretReveal from '#base/components/ui/SecretReveal.vue';
+import { useToast } from '#base/components/ui/toast';
 import ClientForm from '~/components/client/ClientForm.vue';
 import ClientKindPicker from '~/components/client/ClientKindPicker.vue';
 import ClientQuickstart from '~/components/client/ClientQuickstart.vue';
@@ -84,7 +85,15 @@ function warnLeave(event: BeforeUnloadEvent) {
   }
 }
 
-onBeforeRouteLeave(() => !holding.value);
+const toast = useToast();
+
+onBeforeRouteLeave(() => {
+  if (!holding.value) {
+    return true;
+  }
+  toast.push('info', t('secret.leave_first'));
+  return false;
+});
 onMounted(() => window.addEventListener('beforeunload', warnLeave));
 onBeforeUnmount(() => window.removeEventListener('beforeunload', warnLeave));
 
