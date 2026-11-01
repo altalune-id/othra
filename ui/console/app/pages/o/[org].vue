@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppSidebar from '~/components/layout/AppSidebar.vue';
 import SettingsSidebar from '~/components/org/SettingsSidebar.vue';
+import { environmentLabelKey, showsBanner } from '~/components/project/environment';
 import ProjectSettingsSidebar from '~/components/project/ProjectSettingsSidebar.vue';
 import ProjectSidebar from '~/components/project/ProjectSidebar.vue';
 import { useOrgsStore } from '~/stores/orgs';
@@ -28,6 +29,7 @@ if (!org.value) {
 }
 
 const projectSlug = computed(() => route.params.project as string | undefined);
+const project = computed(() => (projectSlug.value ? projects.forOrg(org.value!.id).find(p => p.slug === projectSlug.value) : undefined));
 const inSettings = computed(() => route.path.startsWith(`/o/${route.params.org}/settings`));
 const inProjectSettings = computed(() => !!projectSlug.value && route.path.startsWith(`/o/${route.params.org}/projects/${projectSlug.value}/settings`));
 
@@ -60,6 +62,10 @@ await projects.ensureLoaded(org.value.id);
       </div>
     </div>
     <main class="min-w-0 flex-1 p-4 sm:p-6">
+      <p v-if="showsBanner(project?.environment)" role="note" class="mb-4 alert alert-info alert-soft text-sm" data-testid="environment-banner">
+        <Icon name="lucide:flask-conical" size="16" />
+        {{ t('environment.banner', { env: t(environmentLabelKey(project?.environment)) }) }}
+      </p>
       <NuxtPage />
     </main>
   </div>

@@ -4,6 +4,7 @@ import CopyButton from '#base/components/ui/CopyButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
+import ProjectEnvironmentCard from '~/components/project/ProjectEnvironmentCard.vue';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
@@ -131,5 +132,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
         </dl>
       </div>
     </section>
+
+    <ProjectEnvironmentCard v-if="!guard.system" :project-id="project.id" :environment="project.environment" :can-edit="canEdit" />
   </div>
 </template>
