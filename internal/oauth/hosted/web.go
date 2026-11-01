@@ -348,8 +348,10 @@ func (h *Web) sendLink(
 	}
 	l, _, err := h.users.IssueLink(r.Context(), IssueRequest{
 		Project: s.project(), Email: email, ReturnTo: returnTo, IP: layout.ClientIP(r, h.limits.TrustedProxyHops),
-		Compose: func(l Link) (mailer.Message, error) { return h.compose(r, s, l, pending) },
-		Allow:   allow, Pending: raw,
+		Compose: func(l Link) (mailer.Message, error) {
+			return h.compose(r, s, l, h.pending(r, s, returnTo).registeredName(), pending)
+		},
+		Allow: allow, Pending: raw,
 	})
 	switch {
 	case limiterErr != nil:
@@ -362,9 +364,9 @@ func (h *Web) sendLink(
 	return l, true
 }
 
-func (h *Web) compose(r *http.Request, s *site, l Link, pending *pendingLink) (mailer.Message, error) {
+func (h *Web) compose(r *http.Request, s *site, l Link, client string, pending *pendingLink) (mailer.Message, error) {
 	m := views.MailData{
-		Project: s.name, Link: l.URL, Minutes: int(h.cfg.LinkTTL / time.Minute), SignUp: l.SignUp,
+		Project: s.name, Client: client, Link: l.URL, Minutes: int(h.cfg.LinkTTL / time.Minute), SignUp: l.SignUp,
 		HasReplyTo: s.issuer.SupportEmail != "", Primary: s.issuer.PrimaryColor,
 	}
 	if pending != nil {

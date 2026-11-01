@@ -1,6 +1,7 @@
 package views
 
 import (
+	"cmp"
 	"context"
 	"strconv"
 	"strings"
@@ -10,7 +11,9 @@ import (
 
 // MailData is the magic-link email: adding Google when GoogleEmail is set, sign-up when the email has no end user yet, else sign-in.
 type MailData struct {
-	Project     string
+	Project string
+	// Client is the registered app the sign-in returns to; the subject names it instead of the project.
+	Client      string
 	Link        string
 	Minutes     int
 	SignUp      bool
@@ -36,7 +39,7 @@ func (m MailData) key(base string) string {
 
 // MailSubject is the magic-link email's subject in ctx's locale.
 func MailSubject(ctx context.Context, m MailData) string {
-	return i18n.T(ctx, m.key("mail.subject"), "project", m.Project)
+	return i18n.T(ctx, m.key("mail.subject"), "project", cmp.Or(m.Client, m.Project))
 }
 
 func (m MailData) intro(ctx context.Context) string {

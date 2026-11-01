@@ -174,6 +174,9 @@ func TestMail(t *testing.T) {
 	m := MailData{Project: "Acme Store", Link: "https://id.example.com/p/acme/login/verify?token=abc", Minutes: 15, HasReplyTo: true, Primary: "#facc15"}
 	en := ctxIn(t, i18n.English)
 	assert.Equal(t, "Sign in to Acme Store", MailSubject(en, m))
+	app := m
+	app.Client = "OAgent"
+	assert.Equal(t, "Sign in to OAgent", MailSubject(en, app), "the subject names the app the person returns to")
 	assert.Equal(t, "Someone asked to sign in to Acme Store with this email address.\n\n"+
 		"Open this link to sign in. It works once, for 15 minutes:\n"+
 		"https://id.example.com/p/acme/login/verify?token=abc\n\n"+
