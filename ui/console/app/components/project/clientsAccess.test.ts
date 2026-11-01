@@ -37,10 +37,10 @@ describe('clients and resource server pages', () => {
   });
 
   it('holds the page while a new secret is shown and drops it once saved', () => {
-    for (const { source } of [creates[0]!, details[0]!]) {
-      expect(source).toContain('onBeforeRouteLeave(() => !revealed.value);');
-      expect(source).toContain('<ClientSecretDialog');
-    }
+    expect(creates[0]!.source).toContain('onBeforeRouteLeave(() => !holding.value);');
+    expect(creates[0]!.source).toContain('<SecretReveal');
+    expect(details[0]!.source).toContain('onBeforeRouteLeave(() => !revealed.value);');
+    expect(details[0]!.source).toContain('<ClientSecretDialog');
   });
 
   it('checks a new resource server once, right after create', () => {
@@ -78,8 +78,8 @@ describe('clients and resource server pages', () => {
     expect(read('../client/RedirectUriList.vue')).toMatch(/function set\(index: number, value: string\) \{[^}]+emit\('edit', index\);/);
   });
 
-  it('puts focus back after the secret is saved on create and after Verify now', () => {
-    expect(creates[0]!.source).toContain('query: { focus: \'secrets\' }');
+  it('ends create on the quickstart, and puts focus back on the secrets card and after Verify now', () => {
+    expect(creates[0]!.source).toContain('<ClientQuickstart');
     expect(details[0]!.source).toMatch(/route\.query\.focus !== 'secrets'[\s\S]+secretsCard\.value\?\.focusTitle\(\);/);
     expect(details[1]!.source).toMatch(/async function verifyNow\(\) \{\s+await page\.verify\(\);\s+await nextTick\(\);\s+verifyCard\.value\?\.focusVerify\(\);/);
     expect(read('../resourceserver/VerificationCard.vue')).toContain('defineExpose({ focusVerify: () => verifyButton.value?.focus() });');

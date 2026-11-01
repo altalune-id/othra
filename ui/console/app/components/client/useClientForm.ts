@@ -173,5 +173,16 @@ export function useClientForm(projectId: string, saved?: Client) {
     revealed.value = null;
   }
 
-  return { fields, kind, warnings, uriErrors, nameError, busy, error, done, secretError, revealed, result, setKind, clearRow, removeRow, submit, forget };
+  async function retrySecret() {
+    if (result.value && !busy.value) {
+      busy.value = true;
+      try {
+        await generate(result.value.id);
+      } finally {
+        busy.value = false;
+      }
+    }
+  }
+
+  return { fields, kind, warnings, uriErrors, nameError, busy, error, done, secretError, revealed, result, setKind, clearRow, removeRow, submit, forget, retrySecret };
 }
