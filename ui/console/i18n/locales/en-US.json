@@ -381,6 +381,7 @@
   "profile.password_title": "Password",
   "profile.sessions_body": "Sign out of Othra in every browser and on every device, this one too.",
   "profile.sessions_title": "Sessions",
+  "profile.sign_out_confirm_apps": "Apps with offline access, such as the CLI, keep working until you disconnect them.",
   "profile.sign_out_confirm_body": "You will need to sign in again on every device, this one too.",
   "profile.sign_out_confirm_title": "Sign out everywhere?",
   "profile.sign_out_everywhere": "Sign out everywhere",

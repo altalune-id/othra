@@ -39,7 +39,7 @@ const sessionLabels = computed(() => ({
   body: t('profile.sessions_body'),
   signOut: t('profile.sign_out_everywhere'),
   confirmTitle: t('profile.sign_out_confirm_title'),
-  confirmBody: t('profile.sign_out_confirm_body'),
+  confirmBody: `${t('profile.sign_out_confirm_body')} ${t('profile.sign_out_confirm_apps')}`,
   cancel: t('common.cancel'),
 }));
 
