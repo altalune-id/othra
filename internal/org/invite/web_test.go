@@ -486,6 +486,7 @@ func TestWeb_JoinWithOthraOnly(t *testing.T) {
 	assert.Contains(t, body, "Continue with Othra")
 	assert.Contains(t, body, "/login/oidc?invite="+c.Invite.PublicID)
 	assert.Contains(t, body, "login_hint=bob%40x.io")
+	assert.Contains(t, body, "return_to=%2Fconsole%2Fo%2Facme", "the console opens the org the invite joins")
 	assert.NotContains(t, body, `name="password"`)
 
 	rec = f.post("/invite/join", url.Values{"name": {"Bob"}, "password": {"quiet forest lamp nine"}}, ck)
