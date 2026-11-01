@@ -529,5 +529,11 @@
   "mcp.whoami_org": "Org",
   "mcp.whoami_system": "Sistem (stdio)",
   "mcp.your_role": "Peran Anda",
-  "mcp.sign_out_title": "Keluarkan sesi ini?"
+  "mcp.sign_out_title": "Keluarkan sesi ini?",
+  "error_page.not_found_title": "Halaman tidak ditemukan",
+  "error_page.not_found_body": "Halaman ini tidak ada, atau sudah dipindahkan.",
+  "error_page.forbidden_title": "Anda tidak punya akses",
+  "error_page.forbidden_body": "Minta akses kepada pemilik atau admin organisasi ini.",
+  "error_page.failed_title": "Halaman ini gagal dimuat",
+  "error_page.failed_body": "Terjadi kesalahan di pihak kami. Coba lagi sebentar lagi."
 }
