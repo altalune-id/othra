@@ -54,3 +54,12 @@ func TestToProto_SystemRegistration(t *testing.T) {
 	assert.True(t, IsSystemManagedError(&SystemManagedError{}))
 	assert.Equal(t, apperror.CodeClientSystemManaged, (&SystemManagedError{}).ToAppError().Code())
 }
+
+func TestToProto_LastUsedAt(t *testing.T) {
+	c, err := NewSystem(uuid.New(), uuid.New(), "c1", "http://localhost:5150/oauth/callback", "http://localhost:5150/console/", time.Now())
+	require.NoError(t, err)
+	assert.Nil(t, toProto(c).GetLastUsedAt(), "never used")
+	at := time.Date(2026, 11, 2, 9, 0, 0, 0, time.UTC)
+	c.LastUsedAt = &at
+	assert.Equal(t, at, toProto(c).GetLastUsedAt().AsTime())
+}

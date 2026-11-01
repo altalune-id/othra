@@ -9,6 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"cmp"
 	"net/url"
 
 	"github.com/altalune-id/othra/apperror"
@@ -16,9 +17,10 @@ import (
 	"github.com/altalune-id/othra/internal/web/layout"
 )
 
-// VerifyData is the magic link's confirm page; the link token itself stays in its cookie, out of the page, and LinkEmail is the pending Google account to add.
+// VerifyData is the magic link's confirm page; the link token itself stays in its cookie, out of the page, LinkEmail is the pending Google account to add and Client the app the sign-in returns to.
 type VerifyData struct {
 	Site
+	Client      string
 	Email       string
 	VerifyToken string
 	LinkEmail   string
@@ -134,7 +136,7 @@ func verifySignIn(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "verify.warning"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 40, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 42, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -147,7 +149,7 @@ func verifySignIn(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var6 templ.SafeURL
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(v.href(d, "/login/verify"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 41, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 43, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -168,7 +170,7 @@ func verifySignIn(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.continue"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 43, Col: 102}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 45, Col: 102}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -180,7 +182,7 @@ func verifySignIn(d layout.LayoutData, v VerifyData) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = layout.Card(i18n.T(ctx, "verify.title", "project", v.Project)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = layout.Card(i18n.T(ctx, "verify.title", "project", cmp.Or(v.Client, v.Project))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -254,7 +256,7 @@ func verifySignUp(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "verify.warning"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 55, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 57, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -267,7 +269,7 @@ func verifySignUp(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var12 templ.SafeURL
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(v.href(d, "/login/verify"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 56, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 58, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -288,7 +290,7 @@ func verifySignUp(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "link.sign_up_continue"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 58, Col: 108}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 60, Col: 108}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -374,7 +376,7 @@ func verifyLink(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "verify.warning"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 70, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 72, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -387,7 +389,7 @@ func verifyLink(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var18 templ.SafeURL
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinURLErrs(v.href(d, "/login/verify"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 71, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 73, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -408,7 +410,7 @@ func verifyLink(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "link.confirm_add"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 73, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 75, Col: 103}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -421,7 +423,7 @@ func verifyLink(d layout.LayoutData, v VerifyData) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "link.confirm_skip"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 74, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 76, Col: 114}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -506,7 +508,7 @@ func LinkUnusable(d layout.LayoutData, v LinkUnusableData) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.Error(ctx, apperror.CodeSignInLinkNotUsable))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 90, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 92, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -519,7 +521,7 @@ func LinkUnusable(d layout.LayoutData, v LinkUnusableData) templ.Component {
 				var templ_7745c5c3_Var25 templ.SafeURL
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.login(d, url.Values{"return_to": {v.ReturnTo}})))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 91, Col: 111}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 93, Col: 111}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -532,7 +534,7 @@ func LinkUnusable(d layout.LayoutData, v LinkUnusableData) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "verify.request_new"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 91, Col: 149}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `oauth/hosted/views/verify.templ`, Line: 93, Col: 149}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {

@@ -72,3 +72,33 @@ func TestService_SignOutEverywhere(t *testing.T) {
 		assert.Equal(t, want, ok, sid)
 	}
 }
+
+func TestService_SignOutEverywhereEndsTheSystemSessions(t *testing.T) {
+	f := newFixture(t, BasicCredentials{})
+	linked := f.addUser(t, "ada@example.com", false)
+	linked.IDPIssuer, linked.IDPSubject = ConsoleIssuer, "eu_ada"
+	local := f.addUser(t, "bob@example.com", true)
+	require.NoError(t, f.svc.SignOutEverywhere(t.Context(), linked.ID))
+	require.NoError(t, f.svc.SignOutEverywhere(t.Context(), local.ID))
+	assert.Equal(t, []string{"eu_ada"}, f.system.ended, "only an account linked to /p/system has sessions there")
+}
+
+func TestService_SignOutEverywhereEndsConsoleSessionsWhateverFailsAfter(t *testing.T) {
+	f := newFixture(t, BasicCredentials{})
+	linked := f.addUser(t, "ada@example.com", false)
+	linked.IDPIssuer, linked.IDPSubject = ConsoleIssuer, "eu_ada"
+	unknown, err := user.New("ghost@example.com", "Ghost")
+	require.NoError(t, err)
+	ctx := t.Context()
+	require.NoError(t, f.sessions.Save(ctx, "a1", sessionOf(linked), time.Now().Add(time.Hour)))
+	require.NoError(t, f.sessions.Save(ctx, "g1", sessionOf(unknown), time.Now().Add(time.Hour)))
+	f.system.err = errors.New("system down")
+
+	assert.ErrorIs(t, f.svc.SignOutEverywhere(ctx, linked.ID), f.system.err, "the /p/system failure is reported")
+	assert.Error(t, f.svc.SignOutEverywhere(ctx, unknown.ID), "the account lookup failure is reported")
+	for _, sid := range []string{"a1", "g1"} {
+		_, ok, err := f.sessions.Load(ctx, sid)
+		require.NoError(t, err)
+		assert.False(t, ok, "%s ended anyway", sid)
+	}
+}

@@ -21,6 +21,7 @@ import (
 	"github.com/altalune-id/othra/internal/enduser"
 	"github.com/altalune-id/othra/internal/grant"
 	ksecret "github.com/altalune-id/othra/internal/kernel/secret"
+	"github.com/altalune-id/othra/internal/kernel/tenant"
 	"github.com/altalune-id/othra/internal/keys"
 	"github.com/altalune-id/othra/internal/oauth/oidc"
 	"github.com/altalune-id/othra/internal/web/layout"
@@ -100,7 +101,12 @@ type tokenFixture struct {
 	idTokens *idTokens
 	users    *endUsers
 	limiter  *limiter
+	usage    *usageLog
 }
+
+type usageLog struct{ used []uuid.UUID }
+
+func (u *usageLog) Record(_ tenant.Context, id uuid.UUID, _ time.Time) { u.used = append(u.used, id) }
 
 func webClient(id, method string, grantTypes ...string) *client.Client {
 	return &client.Client{
@@ -111,7 +117,7 @@ func webClient(id, method string, grantTypes ...string) *client.Client {
 
 func newTokenFixture(t *testing.T) *tokenFixture {
 	t.Helper()
-	f := &tokenFixture{fixture: newFixture(t, ""), idTokens: &idTokens{}, limiter: &limiter{allow: true}}
+	f := &tokenFixture{fixture: newFixture(t, ""), idTokens: &idTokens{}, limiter: &limiter{allow: true}, usage: &usageLog{}}
 	family := &grant.Family{PublicID: "sid-1", EndUserID: uuid.New(), Scopes: []string{"openid", "email", "profile", "offline_access"}, AuthTime: time.Unix(1700000000, 0)}
 	f.grants = &grants{tokens: &grant.Tokens{
 		Family: family, AccessToken: "at-1", ExpiresAt: time.Now().Add(15 * time.Minute), Scopes: family.Scopes, RefreshToken: "rt-1", Nonce: "n-1",
@@ -131,7 +137,7 @@ func newTokenFixture(t *testing.T) *tokenFixture {
 			},
 		},
 		Grants: f.grants, EndUsers: f.users, IDTokens: f.idTokens, IDTokenTTL: 5 * time.Minute,
-		Limits: layout.Limits{Limiter: f.limiter},
+		Limits: layout.Limits{Limiter: f.limiter}, Usage: f.usage,
 	})
 	f.mux = http.NewServeMux()
 	f.web.Register(f.mux)
@@ -207,6 +213,7 @@ func TestToken_CodeGrantWithBasic(t *testing.T) {
 	assert.Equal(t, time.Unix(1700000000, 0), in.AuthTime)
 	assert.Equal(t, 5*time.Minute, in.ExpiresAt.Sub(in.IssuedAt))
 	assert.Equal(t, &keys.Profile{Email: "ada@example.com", EmailVerified: true, Name: "Ada", WithEmail: true, WithName: true}, in.Profile)
+	assert.Len(t, f.usage.used, 1, "a token issue records the client's use once")
 }
 
 func TestToken_PostAndNoneClients(t *testing.T) {
@@ -353,6 +360,7 @@ func TestToken_GrantErrors(t *testing.T) {
 	rec = f.post(t, tokenURL, codeForm(), auth...)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code, "an end user deleted mid-exchange")
 	assert.Contains(t, f.reported, "oidc: id token end user")
+	assert.Empty(t, f.usage.used, "a failed request records no use")
 }
 
 // RFC 6749 §6: a refresh may narrow the scope; without openid there is no ID token.

@@ -7,9 +7,10 @@ import (
 	"github.com/altalune-id/othra/internal/web/layout"
 )
 
-// SentData is the "check your inbox" page's state; Email is empty when the flash cookie is gone.
+// SentData is the "check your inbox" page's state; Email is empty when the flash cookie is gone, Client is the app the sign-in returns to.
 type SentData struct {
 	Site
+	Client      string
 	Email       string
 	Minutes     int
 	ReturnTo    string
@@ -21,6 +22,9 @@ type SentData struct {
 templ Sent(d layout.LayoutData, v SentData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "sent.title"))) {
 		@layout.Card(i18n.T(ctx, "sent.title")) {
+			if v.Client != "" {
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "picker.subtitle_client", "client", v.Client) }</p>
+			}
 			@iconCircle() {
 				@iconMail("size-6")
 			}

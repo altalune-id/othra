@@ -105,6 +105,10 @@ func TestSent(t *testing.T) {
 	assert.Contains(t, noCookie, "<p>Hanya tautan terbaru yang berlaku. Jika Anda meminta lebih dari sekali, pakai email yang terakhir.</p>", "only the newest link works, in id-ID")
 	assert.NotContains(t, noCookie, "/login/resend")
 	assert.NotContains(t, noCookie, `role="status"`)
+	assert.NotContains(t, out, "to continue to", "no app, no app line")
+
+	app := html(t, ctxIn(t, i18n.English), Sent(page(), SentData{Site: site, Minutes: 15, Client: "OAgent"}))
+	assert.Contains(t, app, `<p class="text-sm text-base-content/70">to continue to OAgent</p>`, "the app the person returns to")
 }
 
 func TestVerifyAndLinkUnusable(t *testing.T) {
@@ -115,6 +119,9 @@ func TestVerifyAndLinkUnusable(t *testing.T) {
 	assert.Contains(t, out, `<form method="post" action="/id/p/acme/login/verify"><input type="hidden" name="csrf" value="tok-verify">`)
 	assert.Contains(t, out, `type="submit" autofocus>Continue</button>`)
 	assert.NotContains(t, out, "token=", "the link token never reaches the page")
+
+	app := html(t, ctxIn(t, i18n.English), Verify(page(), VerifyData{Site: site, Email: "ana@acme.test", Client: "OAgent"}))
+	assert.Contains(t, app, ">Sign in to OAgent</h1>", "the app, not the project, names the sign-in")
 
 	bad := html(t, ctxIn(t, i18n.Indonesian), LinkUnusable(page(), LinkUnusableData{Site: site, ReturnTo: "/id/p/acme/account/"}))
 	assert.Contains(t, bad, "Tautan ini tidak bisa dipakai")
@@ -167,6 +174,9 @@ func TestMail(t *testing.T) {
 	m := MailData{Project: "Acme Store", Link: "https://id.example.com/p/acme/login/verify?token=abc", Minutes: 15, HasReplyTo: true, Primary: "#facc15"}
 	en := ctxIn(t, i18n.English)
 	assert.Equal(t, "Sign in to Acme Store", MailSubject(en, m))
+	app := m
+	app.Client = "OAgent"
+	assert.Equal(t, "Sign in to OAgent", MailSubject(en, app), "the subject names the app the person returns to")
 	assert.Equal(t, "Someone asked to sign in to Acme Store with this email address.\n\n"+
 		"Open this link to sign in. It works once, for 15 minutes:\n"+
 		"https://id.example.com/p/acme/login/verify?token=abc\n\n"+

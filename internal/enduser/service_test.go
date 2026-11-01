@@ -222,6 +222,9 @@ func TestRedeem_SignsInOnceAndRotatesTheBrowserSecret(t *testing.T) {
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err), "single use from another browser")
 	_, err = h.svc.LinkByToken(context.Background(), h.project, tokenOf(t, l.URL))
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err))
+	spent, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Equal(t, "/p/acme/account/", spent.ReturnTo, "a spent link still says where it was going, for a new request")
 
 	repeat, err := h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL), BrowserSecret: r.Secret})
 	require.NoError(t, err, "a second Continue from the same browser succeeds")

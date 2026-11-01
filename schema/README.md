@@ -146,6 +146,7 @@ erDiagram
         text client_uri "https, from the document"
         timestamptz created_at
         timestamptz updated_at
+        timestamptz last_used_at "last token issue, batched; NULL when never used"
     }
     oauth_client_secrets {
         uuid id PK

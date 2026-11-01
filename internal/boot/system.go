@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/altalune-id/othra/config"
+	"github.com/altalune-id/othra/internal/enduser"
 	"github.com/altalune-id/othra/internal/install"
 	"github.com/altalune-id/othra/internal/kernel/db"
 	"github.com/altalune-id/othra/internal/oauth/redirecturi"
@@ -32,6 +33,10 @@ func newConsolePages(c config.HTTPConfig) consolePages {
 }
 
 func (p consolePages) root() string { return p.base + "/" }
+
+func (p consolePages) members(orgSlug string) string {
+	return p.base + "/o/" + url.PathEscape(orgSlug) + "/settings/members"
+}
 
 func (p consolePages) client(orgSlug, projectSlug, clientPublicID string) string {
 	return p.base + "/o/" + url.PathEscape(orgSlug) + "/projects/" + url.PathEscape(projectSlug) + "/clients/" + url.PathEscape(clientPublicID)
@@ -92,6 +97,26 @@ func consoleProject(ctx context.Context, s *Services) (*org.Org, *project.Projec
 		return nil, nil, err
 	}
 	return sys, p, nil
+}
+
+// NOTE: auth.SystemSessions over the end users of /p/system, so sign out everywhere reaches the console's identity provider too.
+type systemSessions struct{ svcs *Services }
+
+func (s systemSessions) EndAll(ctx context.Context, subject string) error {
+	sys, p, err := consoleProject(ctx, s.svcs)
+	if err != nil || p == nil {
+		return err
+	}
+	ep := enduser.Project{OrgID: sys.ID, ID: p.ID, PublicID: p.PublicID}
+	u, err := s.svcs.EndUsers.ByPublicID(ctx, ep, subject)
+	if enduser.IsEndUserNotFoundError(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	_, err = s.svcs.EndUsers.EndOtherSessions(ctx, ep, u.ID, "")
+	return err
 }
 
 // SECURITY: every boot puts the console client's URIs back to the ones derived from http.baseURL, so a URL change never locks admins out.

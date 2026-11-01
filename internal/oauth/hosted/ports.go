@@ -85,11 +85,12 @@ func (b *Browser) Find(userSession string) (Account, bool) {
 	return Account{}, false
 }
 
-// LinkRef is a live magic link: its public id and the email it signs in.
+// LinkRef is a live magic link: its public id, the email it signs in and where it returns.
 type LinkRef struct {
-	ID      string
-	Email   string
-	Pending []byte
+	ID       string
+	Email    string
+	ReturnTo string
+	Pending  []byte
 }
 
 // RedeemRequest spends the link Token for the browser that holds BrowserSecret ("" when it has none).

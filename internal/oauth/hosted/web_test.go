@@ -46,6 +46,7 @@ type webFixture struct {
 	grants     *fakeGrants
 	admissions *fakeAdmissions
 	consents   *fakeConsents
+	clients    fakeClients
 }
 
 func newIssuer(handle, name string) *project.Issuer {
@@ -79,9 +80,9 @@ func newWebFixture(t *testing.T) *webFixture {
 	f.grants = newFakeGrants(f.users)
 	marker := NewMarker([]byte("marker-key-marker-key-marker-key"), 15*time.Minute)
 	marker.now = f.users.stamp.now
-	f.admissions, f.consents = &fakeAdmissions{}, newFakeConsents(f.users.stamp.now)
+	f.admissions, f.consents, f.clients = &fakeAdmissions{}, newFakeConsents(f.users.stamp.now), testClients()
 	f.web.WithOAuth(OAuth{
-		Clients: testClients(), Resources: testResources(), Admissions: f.admissions, Consents: f.consents, Grants: f.grants, Marker: marker,
+		Clients: f.clients, Resources: testResources(), Admissions: f.admissions, Consents: f.consents, Grants: f.grants, Marker: marker,
 	})
 	f.web.WithPortal(testPortal(t))
 	f.web.Register(mux)
@@ -292,6 +293,16 @@ func TestWeb_SignInRenewsTheCSRFCookie(t *testing.T) {
 	assert.Contains(t, plain(stale.body), "Go back, reload the page and try again.", "the body does not repeat the title")
 }
 
+// an expired form's way back to sign in keeps where the person was going.
+func TestWeb_FormExpiredKeepsReturnTo(t *testing.T) {
+	f := newWebFixture(t)
+	before := f.get(f.client, "/p/acme/login?add=1&return_to="+url.QueryEscape("/p/acme/oauth2/authorize?client_id=app"))
+	f.signIn(f.client, "acme", "ana@example.com")
+	stale := f.submit(f.client, before, "/login", url.Values{"email": {"ana@example.com"}})
+	assert.Equal(t, http.StatusForbidden, stale.status)
+	assert.Contains(t, stale.body, "return_to=%2Fp%2Facme%2Foauth2%2Fauthorize%3Fclient_id%3Dapp")
+}
+
 // the picker lists both accounts, selects one, and signs one out with a notice.
 func TestWeb_PickerSelectAndSignOut(t *testing.T) {
 	f := newWebFixture(t)
@@ -435,6 +446,16 @@ func TestWeb_LinkNotUsable(t *testing.T) {
 		assert.Contains(t, page.body, "This link can&#39;t be used", name)
 	}
 	assert.Equal(t, http.StatusBadRequest, f.get(f.newClient(), "/p/acme/login/verify").status, "no cookie at all")
+
+	authorize := "/p/acme/oauth2/authorize?client_id=app"
+	login := f.get(other, "/p/acme/login?add=1&return_to="+url.QueryEscape(authorize))
+	f.submit(other, login, "/login", url.Values{"email": {"budi@example.com"}})
+	link, err := url.Parse(linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody))
+	require.NoError(t, err)
+	f.users.links[link.Query().Get("t")].used = true
+	hop := f.get(other, link.RequestURI())
+	spent := f.get(other, hop.location())
+	assert.Contains(t, spent.body, "return_to="+url.QueryEscape(authorize), "a new link continues where the spent one was going")
 	beta := f.newClient()
 	moved := f.get(beta, "/p/beta/login/verify?t=whatever")
 	assert.Equal(t, http.StatusBadRequest, f.get(beta, moved.location()).status)

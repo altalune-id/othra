@@ -15,6 +15,7 @@ import (
 
 	"github.com/altalune-id/othra/apperror"
 	"github.com/altalune-id/othra/emailaddr"
+	"github.com/altalune-id/othra/internal/enduser"
 	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 	"github.com/altalune-id/othra/internal/oauth/hosted/views"
 	"github.com/altalune-id/othra/internal/oauth/oidc"
@@ -347,8 +348,10 @@ func (h *Web) sendLink(
 	}
 	l, _, err := h.users.IssueLink(r.Context(), IssueRequest{
 		Project: s.project(), Email: email, ReturnTo: returnTo, IP: layout.ClientIP(r, h.limits.TrustedProxyHops),
-		Compose: func(l Link) (mailer.Message, error) { return h.compose(r, s, l, pending) },
-		Allow:   allow, Pending: raw,
+		Compose: func(l Link) (mailer.Message, error) {
+			return h.compose(r, s, l, h.pending(r, s, returnTo).registeredName(), pending)
+		},
+		Allow: allow, Pending: raw,
 	})
 	switch {
 	case limiterErr != nil:
@@ -361,9 +364,9 @@ func (h *Web) sendLink(
 	return l, true
 }
 
-func (h *Web) compose(r *http.Request, s *site, l Link, pending *pendingLink) (mailer.Message, error) {
+func (h *Web) compose(r *http.Request, s *site, l Link, client string, pending *pendingLink) (mailer.Message, error) {
 	m := views.MailData{
-		Project: s.name, Link: l.URL, Minutes: int(h.cfg.LinkTTL / time.Minute), SignUp: l.SignUp,
+		Project: s.name, Client: client, Link: l.URL, Minutes: int(h.cfg.LinkTTL / time.Minute), SignUp: l.SignUp,
 		HasReplyTo: s.issuer.SupportEmail != "", Primary: s.issuer.PrimaryColor,
 	}
 	if pending != nil {
@@ -391,7 +394,8 @@ func (h *Web) sent(w http.ResponseWriter, r *http.Request, s *site) {
 		return
 	}
 	h.kit.Render(w, r, http.StatusOK, views.Sent(h.layout(r, s), views.SentData{
-		Site: s.views(), Email: email, Minutes: int(h.cfg.LinkTTL / time.Minute), ReturnTo: returnTo,
+		Site: s.views(), Client: h.pending(r, s, returnTo).registeredName(), Email: email,
+		Minutes: int(h.cfg.LinkTTL / time.Minute), ReturnTo: returnTo,
 		ResendToken: h.token(w, r, s, "resend"), Resent: r.URL.Query().Get("resent") == "1",
 	}))
 }
@@ -423,7 +427,10 @@ func (h *Web) verify(w http.ResponseWriter, r *http.Request, s *site) {
 		h.linkFailed(w, r, s, err)
 		return
 	}
-	v := views.VerifyData{Site: s.views(), Email: l.Email, VerifyToken: h.token(w, r, s, "verify")}
+	v := views.VerifyData{
+		Site: s.views(), Client: h.pending(r, s, h.returnTo(s, l.ReturnTo)).registeredName(), Email: l.Email,
+		VerifyToken: h.token(w, r, s, "verify"),
+	}
 	if pend, ok := h.pendingIdentity(r, l); ok && pend.SignUp {
 		v.SignUpEmail = cmp.Or(pend.Email, l.Email)
 	} else if ok {
@@ -484,9 +491,13 @@ func (h *Web) linkFailed(w http.ResponseWriter, r *http.Request, s *site, err er
 		h.fail(w, r, s, "hosted: magic link", err)
 		return
 	}
+	var known string
+	if spent, ok := errors.AsType[*enduser.LinkNotUsableError](err); ok {
+		known = spent.ReturnTo
+	}
 	h.cookies.clearLink(w, s.path+"/login/verify")
 	h.kit.Render(w, r, http.StatusBadRequest, views.LinkUnusable(h.layout(r, s), views.LinkUnusableData{
-		Site: s.views(), ReturnTo: h.returnTo(s, ""),
+		Site: s.views(), ReturnTo: h.returnTo(s, known),
 	}))
 }
 
@@ -657,8 +668,11 @@ func (h *Web) unknown(w http.ResponseWriter, r *http.Request) {
 
 func (h *Web) formExpired(w http.ResponseWriter, r *http.Request, s *site) {
 	ctx := r.Context()
-	h.renderError(w, r, s, http.StatusForbidden, i18n.T(ctx, "error.form_expired_title"), i18n.T(ctx, "error.form_expired_body"),
-		apperror.CodeSignInFormExpired)
+	v := views.ErrorData{Title: i18n.T(ctx, "error.form_expired_title"), Message: i18n.T(ctx, "error.form_expired_body")}
+	if raw := r.PostFormValue("return_to"); raw != "" {
+		v.ReturnTo = h.returnTo(s, raw)
+	}
+	h.renderErrorData(w, r, s, http.StatusForbidden, v, apperror.CodeSignInFormExpired)
 }
 
 // SECURITY: a limited form answers 429 with Retry-After; a broken limiter fails closed with 503.
@@ -692,7 +706,11 @@ func (h *Web) codeError(w http.ResponseWriter, r *http.Request, s *site, status 
 }
 
 func (h *Web) renderError(w http.ResponseWriter, r *http.Request, s *site, status int, title, message string, code apperror.Code) {
-	v := views.ErrorData{Title: title, Message: message, Code: string(code), Reference: reqid.FromContext(r.Context())}
+	h.renderErrorData(w, r, s, status, views.ErrorData{Title: title, Message: message}, code)
+}
+
+func (h *Web) renderErrorData(w http.ResponseWriter, r *http.Request, s *site, status int, v views.ErrorData, code apperror.Code) {
+	v.Code, v.Reference = string(code), reqid.FromContext(r.Context())
 	if s != nil {
 		v.Site, v.SupportEmail = s.views(), s.issuer.SupportEmail
 		v.NoSignIn = protocolPage(r, s)

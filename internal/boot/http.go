@@ -192,7 +192,7 @@ func buildIssuerRoutes(
 		issuers.WithTokens(oidc.Tokens{
 			Clients: svcs.Clients, Grants: svcs.Grants, EndUsers: svcs.EndUsers, IDTokens: keys.NewSigner(svcs.Keys),
 			IDTokenTTL: cfg.OAuth.IDTokenTTL, CORS: middleware.BearerCORS,
-			Limits: authLimits(cfg, svcs),
+			Limits: authLimits(cfg, svcs), Usage: clientUsage(svcs),
 		})
 		if in := buildIntrospection(svcs); in != nil {
 			issuers.WithIntrospection(*in)
@@ -211,6 +211,13 @@ func buildIssuerRoutes(
 		return []web.Registrar{issuers}, []web.Registrar{pages, plane}
 	}
 	return []web.Registrar{issuers}, []web.Registrar{pages}
+}
+
+func clientUsage(svcs *Services) oidc.Usage {
+	if svcs.ClientUsage == nil {
+		return nil
+	}
+	return svcs.ClientUsage
 }
 
 func issuesTokens(svcs *Services) bool {

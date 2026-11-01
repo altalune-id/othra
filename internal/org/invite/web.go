@@ -97,7 +97,7 @@ func (h *Web) getLink(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	inv, err := h.o.Invites.Lookup(r.Context(), r.PathValue("token"))
 	if err != nil {
-		h.failed(w, r, nil, err)
+		h.failed(w, r, inv, err)
 		return
 	}
 	h.cookie.Set(w, inv.PublicID+"|"+strconv.FormatInt(inv.ExpiresAt.Unix(), 10), inv.ExpiresAt)
@@ -235,7 +235,11 @@ func (h *Web) landing(r *http.Request, inv *Invite) (views.LandingData, error) {
 		}
 		v.Password = slices.Contains(h.o.Methods, MethodPassword)
 		if slices.Contains(h.o.Methods, MethodOthra) {
-			v.OthraURL = h.othraURL(inv)
+			slug, err := h.o.OrgLinks.Slug(ctx, inv.OrgID)
+			if err != nil {
+				return views.LandingData{}, err
+			}
+			v.OthraURL = h.othraURL(inv, slug)
 		}
 		v.State = views.StateJoin
 		if !v.Password && v.OthraURL == "" {
@@ -285,7 +289,16 @@ func (h *Web) failed(w http.ResponseWriter, r *http.Request, inv *Invite, err er
 	h.cookie.Clear(w)
 	v := views.GoneData{Message: goneMessage(reason)}
 	p := session.PrincipalFrom(r.Context())
-	v.SignIn = reason == ReasonUsed && !p.IsPerson()
+	v.SignIn = (reason == ReasonUsed || reason == ReasonExpired) && !p.IsPerson()
+	if reason == ReasonExpired && p.IsPerson() {
+		v.OpenURL, v.OpenOrg = h.o.Kit.Path("/console/"), "the console"
+	}
+	if inv != nil && reason == ReasonExpired {
+		if org, oerr := h.o.Orgs.Name(r.Context(), inv.OrgID); oerr == nil {
+			v.Message = "Your invite to join " + strings.Join(strings.Fields(org), " ") + " has expired. Ask " +
+				h.o.Invites.inviterName(r.Context(), inv.InvitedBy) + " to send you a new one."
+		}
+	}
 	if inv != nil && reason == ReasonUsed && p.IsPerson() && inv.AcceptedBy == p.UserID {
 		if slug, serr := h.o.OrgLinks.Slug(r.Context(), inv.OrgID); serr == nil {
 			v.OpenURL = h.consoleURL(slug)
@@ -340,8 +353,8 @@ func (h *Web) consoleURL(slug string) string {
 }
 
 // NOTE: the console's sign-in claims the invite by its public id, and only for this invite's verified email.
-func (h *Web) othraURL(inv *Invite) string {
-	q := url.Values{"invite": {inv.PublicID}, "login_hint": {inv.Email}, "return_to": {h.o.Kit.Path("/console/")}}
+func (h *Web) othraURL(inv *Invite, orgSlug string) string {
+	q := url.Values{"invite": {inv.PublicID}, "login_hint": {inv.Email}, "return_to": {h.consoleURL(orgSlug)}}
 	return h.o.Kit.Path("/login/oidc") + "?" + q.Encode()
 }
 
