@@ -2,6 +2,7 @@
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SecretReveal from '#base/components/ui/SecretReveal.vue';
 import ClientForm from '~/components/client/ClientForm.vue';
+import ClientKindPicker from '~/components/client/ClientKindPicker.vue';
 import ClientQuickstart from '~/components/client/ClientQuickstart.vue';
 import { clientFormLabels, kindOptions } from '~/components/client/labels';
 import { useClientForm } from '~/components/client/useClientForm';
@@ -37,6 +38,7 @@ const { fields, kind, warnings, uriErrors, nameError, busy, error, done, result,
 const labels = computed(() => clientFormLabels(t, 'create'));
 const kinds = computed(() => kindOptions(t));
 
+const typeDone = ref(false);
 const stored = ref(false);
 const secretLabels = computed(() => ({
   once: t('secret.body'),
@@ -49,11 +51,12 @@ const secretDone = ref(false);
 const withSecret = computed(() => kind.value.secret);
 const step = computed(() => {
   if (!done.value || !result.value) {
-    return 'details';
+    return typeDone.value ? 'details' : 'type';
   }
   return withSecret.value && !secretDone.value ? 'secret' : 'quickstart';
 });
 const steps = computed(() => [
+  { key: 'type', label: t('clients.step_type') },
   { key: 'details', label: t('clients.step_details') },
   ...(withSecret.value ? [{ key: 'secret', label: t('clients.step_secret') }] : []),
   { key: 'quickstart', label: t('clients.step_quickstart') },
@@ -106,10 +109,37 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
       {{ t('clients.step_of', { n: stepIndex + 1, total: steps.length }) }}
     </p>
 
-    <section v-if="step === 'details'" class="card border border-base-300 bg-base-100">
-      <div class="card-body">
+    <section v-if="step === 'type'" class="card border border-base-300 bg-base-100" data-testid="type-step">
+      <div class="card-body gap-4">
+        <ClientKindPicker
+          :kinds="kinds"
+          :model-value="fields.kind"
+          :legend="t('clients.kind')"
+          :note="t('clients.kind_fixed')"
+          @update:model-value="form.setKind"
+        />
+        <div class="flex justify-end gap-2">
+          <NuxtLink :to="base" class="btn btn-ghost btn-sm">
+            {{ t('common.cancel') }}
+          </NuxtLink>
+          <button type="button" class="btn btn-primary btn-sm" @click="typeDone = true">
+            {{ t('clients.continue_details') }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section v-else-if="step === 'details'" class="card border border-base-300 bg-base-100">
+      <div class="card-body gap-4">
+        <p class="flex flex-wrap items-center gap-2 text-sm">
+          <span>{{ t('clients.type_line', { kind: kinds.find(k => k.value === fields.kind)?.label ?? '' }) }}</span>
+          <button type="button" class="btn btn-link btn-sm h-auto min-h-0 px-0" :disabled="busy" @click="typeDone = false">
+            {{ t('clients.change_type') }}
+          </button>
+        </p>
         <ClientForm
           v-model:fields="fields"
+          :kind-chosen="true"
           mode="create"
           :kinds="kinds"
           :uri-errors="uriErrors"

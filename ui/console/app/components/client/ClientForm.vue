@@ -6,6 +6,7 @@ import type { RedirectUriListLabels } from './RedirectUriList.vue';
 import { computed, useId } from 'vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
+import ClientKindPicker from './ClientKindPicker.vue';
 import RedirectUriList from './RedirectUriList.vue';
 
 export interface ClientKindOption {
@@ -56,6 +57,7 @@ const props = withDefaults(defineProps<{
   busy?: boolean,
   error?: ShownError | null,
   labels?: ClientFormLabels,
+  kindChosen?: boolean,
 }>(), {
   mode: 'create',
   uriErrors: () => ({ redirect: [], postLogout: [] }),
@@ -111,39 +113,15 @@ function patch(next: Partial<ClientFields>) {
 
 <template>
   <form novalidate class="space-y-2" @submit.prevent="emit('submit')">
-    <fieldset v-if="props.mode === 'create'" class="fieldset">
-      <legend class="fieldset-legend">
-        {{ labels.kind }}
-      </legend>
-      <div class="grid gap-3 sm:grid-cols-2">
-        <label
-          v-for="k in props.kinds"
-          :key="k.value"
-          class="flex cursor-pointer items-start gap-3 rounded-box border p-3"
-          :class="fields.kind === k.value ? 'border-primary' : 'border-base-300'"
-        >
-          <input
-            type="radio"
-            name="client-kind"
-            class="radio radio-sm radio-primary mt-0.5"
-            :value="k.value"
-            :checked="fields.kind === k.value"
-            :disabled="busy"
-            @change="emit('kind', k.value)"
-          >
-          <span class="space-y-0.5">
-            <span class="flex items-center gap-1.5 text-sm font-medium">
-              <Icon :name="k.icon" size="16" />
-              {{ k.label }}
-            </span>
-            <span class="block text-xs text-base-content/70">{{ k.help }}</span>
-          </span>
-        </label>
-      </div>
-      <p class="label whitespace-normal">
-        {{ labels.kindFixed }}
-      </p>
-    </fieldset>
+    <ClientKindPicker
+      v-if="props.mode === 'create' && !props.kindChosen"
+      :kinds="props.kinds"
+      :model-value="fields.kind"
+      :busy="busy"
+      :legend="labels.kind"
+      :note="labels.kindFixed"
+      @update:model-value="emit('kind', $event)"
+    />
 
     <div class="fieldset">
       <label :for="ids.name" class="fieldset-legend">{{ labels.name }}</label>

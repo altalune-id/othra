@@ -11,6 +11,7 @@ import { ProjectSchema } from '#gen/project/v1/project_pb';
 import { mountPage } from '#test/mount-page';
 import { connectError, setClient, setRoute } from '#test/nuxt-globals';
 import ClientForm from '~/components/client/ClientForm.vue';
+import ClientKindPicker from '~/components/client/ClientKindPicker.vue';
 import ClientNew from '~/pages/o/[org]/projects/[project]/clients/new.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -38,11 +39,15 @@ beforeEach(() => {
 
 async function created(kind?: 'cli') {
   const w = await mountPage(ClientNew);
-  const form = w.findComponent(ClientForm);
+  expect(w.find('[data-testid="type-step"]').exists()).toBe(true);
   if (kind) {
-    form.vm.$emit('kind', kind);
+    w.findComponent(ClientKindPicker).vm.$emit('update:modelValue', kind);
     await flushPromises();
   }
+  await w.findAll('button').find(b => b.text().includes('clients.continue_details'))!.trigger('click');
+  await flushPromises();
+  const form = w.findComponent(ClientForm);
+  expect(form.props('kindChosen')).toBe(true);
   form.vm.$emit('update:fields', { ...form.props('fields'), name: 'Store', redirectUris: [kind ? 'http://127.0.0.1/callback' : 'https://store.example/cb'] });
   await flushPromises();
   form.vm.$emit('submit');
@@ -82,6 +87,16 @@ describe('new client: secret then quickstart', () => {
     await button(w, 'clients.try_signin').trigger('click');
     await vi.waitFor(() => expect(open).toHaveBeenCalled());
     expect(open.mock.calls[0]![0]).toMatch(new RegExp(`^${issuer}/oauth2/authorize\\?`));
+  });
+
+  it('starts on Type, and Change goes back to it from Details', async () => {
+    const w = await mountPage(ClientNew);
+    await w.findAll('button').find(b => b.text().includes('clients.continue_details'))!.trigger('click');
+    await flushPromises();
+    expect(w.text()).toContain('clients.type_line');
+    await w.findAll('button').find(b => b.text().includes('clients.change_type'))!.trigger('click');
+    await flushPromises();
+    expect(w.find('[data-testid="type-step"]').exists()).toBe(true);
   });
 
   it('goes straight to the quickstart for a public client, with no secret anywhere', async () => {
