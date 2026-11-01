@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ClientRow } from '~/components/client/ClientList.vue';
+import { timestampDate } from '@bufbuild/protobuf/wkt';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import { useDates } from '#base/composables/useDates';
+import { relativeTime } from '#base/lib/tokens/keyStatus';
 import ClientList from '~/components/client/ClientList.vue';
 import { clientKinds, isSystemClient, kindName } from '~/components/client/kinds';
 import { useClientList } from '~/components/client/useClients';
@@ -12,8 +14,9 @@ import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { date } = useDates();
+const now = new Date();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const org = computed(() => orgs.bySlug(route.params.org as string));
@@ -34,6 +37,7 @@ const rows = computed<ClientRow[]>(() => {
     name: c.name,
     kind: t(clientKinds[kindName(c.kind)].labelKey),
     created: date(c.createdAt),
+    lastUsed: c.lastUsedAt ? relativeTime(timestampDate(c.lastUsedAt), now, locale.value) : t('clients.never_used'),
     to: `${base.value}/${c.id}`,
     system: isSystemClient(c),
   }));
@@ -43,6 +47,7 @@ const labels = computed(() => ({
   clientId: t('clients.client_id'),
   kind: t('clients.kind'),
   created: t('clients.col_created'),
+  lastUsed: t('clients.col_last_used'),
   copyFor: t('clients.copy_id_for', { name: '{name}' }),
   system: t('common.system'),
 }));

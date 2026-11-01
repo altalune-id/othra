@@ -7,6 +7,7 @@ export interface ClientRow {
   name: string;
   kind: string;
   created: string;
+  lastUsed: string;
   to: string;
   system?: boolean;
 }
@@ -16,6 +17,7 @@ export interface ClientListLabels {
   clientId: string;
   kind: string;
   created: string;
+  lastUsed: string;
   copyFor: string;
   system: string;
 }
@@ -25,6 +27,7 @@ const { rows, loading = false, labels = {
   clientId: 'Client ID',
   kind: 'Kind',
   created: 'Created',
+  lastUsed: 'Last used',
   copyFor: 'Copy client ID for {name}',
   system: 'System',
 } } = defineProps<{ rows: ClientRow[], loading?: boolean, labels?: ClientListLabels }>();
@@ -40,11 +43,12 @@ const { rows, loading = false, labels = {
             <th>{{ labels.clientId }}</th>
             <th>{{ labels.kind }}</th>
             <th>{{ labels.created }}</th>
+            <th>{{ labels.lastUsed }}</th>
           </tr>
         </thead>
         <tbody v-if="loading">
           <tr v-for="n in 3" :key="n">
-            <td v-for="c in 4" :key="c">
+            <td v-for="c in 5" :key="c">
               <div class="skeleton h-4 w-24" />
             </td>
           </tr>
@@ -69,6 +73,9 @@ const { rows, loading = false, labels = {
             <td class="whitespace-nowrap">
               {{ row.created }}
             </td>
+            <td class="whitespace-nowrap">
+              {{ row.lastUsed }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -92,7 +99,7 @@ const { rows, loading = false, labels = {
             <CopyButton :value="row.id" :label="labels.copyFor.replace('{name}', row.name)" />
           </span>
           <p class="text-xs text-base-content/70">
-            {{ row.kind }} · {{ row.created }}
+            {{ row.kind }} · {{ row.created }} · {{ labels.lastUsed }} {{ row.lastUsed }}
           </p>
         </li>
       </template>
