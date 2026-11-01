@@ -69,9 +69,29 @@ type Project struct {
 	TermsVersion         int32
 	TermsPublishedAt     *time.Time
 	SignInEmailLink      bool
+	Environment          string
 	CreatedBy            uuid.NullUUID
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
+}
+
+// The environment tags a project may carry; EnvironmentNone is no tag.
+const (
+	EnvironmentNone        = ""
+	EnvironmentProduction  = "production"
+	EnvironmentStaging     = "staging"
+	EnvironmentDevelopment = "development"
+	EnvironmentLabs        = "labs"
+)
+
+// SetEnvironment tags the project with env, one of the Environment constants.
+func (p *Project) SetEnvironment(env string) error {
+	switch env {
+	case EnvironmentNone, EnvironmentProduction, EnvironmentStaging, EnvironmentDevelopment, EnvironmentLabs:
+		p.Environment = env
+		return nil
+	}
+	return invalidField("environment", apperror.FieldInvalid, "")
 }
 
 // Issuer is the public face of a project resolved by its handle before sign-in; it is never saved.
@@ -338,6 +358,7 @@ type projectRow struct {
 	TermsVersion         int32         `alias:"projects.terms_version"`
 	TermsPublishedAt     *time.Time    `alias:"projects.terms_published_at"`
 	SignInEmailLink      bool          `alias:"projects.signin_email_link"`
+	Environment          string        `alias:"projects.environment"`
 	CreatedBy            uuid.NullUUID `alias:"projects.created_by"`
 	CreatedAt            time.Time     `alias:"projects.created_at"`
 	UpdatedAt            time.Time     `alias:"projects.updated_at"`
@@ -350,7 +371,7 @@ func (r *projectRow) toProject() *Project {
 		DisplayName: r.DisplayName, PrimaryColor: r.PrimaryColor, SupportEmail: r.SupportEmail,
 		LogoFileID: r.LogoFileID, LogoKey: derefString(r.LogoKey),
 		TermsURL: r.TermsURL, PrivacyURL: r.PrivacyURL, TermsVersion: r.TermsVersion, TermsPublishedAt: utcPtr(r.TermsPublishedAt),
-		SignInEmailLink: r.SignInEmailLink, CreatedBy: r.CreatedBy, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
+		SignInEmailLink: r.SignInEmailLink, Environment: r.Environment, CreatedBy: r.CreatedBy, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
 }
 
@@ -391,7 +412,25 @@ func projectToProto(p *Project, orgPublicID, issuerURL, logoURL string) *project
 		TermsPublishedAt:     timestampOrNil(p.TermsPublishedAt),
 		SigninEmailLink:      p.SignInEmailLink,
 		LogoUrl:              logoURL,
+		Environment:          environmentToProto[p.Environment],
 	}
+}
+
+//nolint:gochecknoglobals // the fixed mapping between the stored tag and the wire enum.
+var environmentToProto = map[string]projectv1.ProjectEnvironment{
+	EnvironmentProduction:  projectv1.ProjectEnvironment_PROJECT_ENVIRONMENT_PRODUCTION,
+	EnvironmentStaging:     projectv1.ProjectEnvironment_PROJECT_ENVIRONMENT_STAGING,
+	EnvironmentDevelopment: projectv1.ProjectEnvironment_PROJECT_ENVIRONMENT_DEVELOPMENT,
+	EnvironmentLabs:        projectv1.ProjectEnvironment_PROJECT_ENVIRONMENT_LABS,
+}
+
+func environmentFromProto(e projectv1.ProjectEnvironment) string {
+	for tag, v := range environmentToProto {
+		if v == e {
+			return tag
+		}
+	}
+	return EnvironmentNone
 }
 
 func timestampOrNil(t *time.Time) *timestamppb.Timestamp {
