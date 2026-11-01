@@ -99,7 +99,7 @@ type Deps struct {
 	Identities Identities
 	Invites    ConsoleInvites
 	OrgCreator OrgCreator
-	// SystemSessions is nil when this deployment issues no tokens, so no account signs in through /p/system.
+	// SystemSessions ends the person's /p/system sessions on sign out everywhere; nil skips that step.
 	SystemSessions SystemSessions
 	// OpenSignup lets a /p/system sign-in with no account create one (cloud); otherwise only an invite does.
 	OpenSignup bool

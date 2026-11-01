@@ -131,7 +131,7 @@ func logoFileExpr(id *uuid.UUID) postgres.Expression {
 
 func timeExpr(t *time.Time) postgres.TimestampzExpression {
 	if t == nil {
-		return postgres.TimestampzExp(postgres.NULL)
+		return entity.NullTimestampz()
 	}
 	return postgres.TimestampzT(t.UTC())
 }
