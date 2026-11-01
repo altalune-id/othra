@@ -369,6 +369,10 @@ components:
           type: string
           title: console_url
           description: console_url is the client's page in the console, where a signed-in person manages its secrets.
+        lastUsedAt:
+          title: last_used_at
+          description: last_used_at is when the client last got tokens, recorded within about ten minutes; unset when it never has.
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
       title: Client
       additionalProperties: false
     client.v1.ClientKind:
