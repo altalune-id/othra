@@ -14,8 +14,10 @@ import ClientList from '~/components/client/ClientList.vue';
 import MemberList from '~/components/member/MemberList.vue';
 import OrgCreateModal from '~/components/org/create/OrgCreateModal.vue';
 import OrgFields from '~/components/org/create/OrgFields.vue';
+import ProjectSelector from '~/components/project/ProjectSelector.vue';
 import WebhookList from '~/components/webhook/list/WebhookList.vue';
 import OrgSettings from '~/pages/o/[org]/settings/index.vue';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 
 const orgId = 'B6rTn1YkM8wQz3XpL5vGd';
@@ -94,6 +96,17 @@ describe('member-visible write actions', () => {
     const remove = w.findAll('button').find(b => b.text().includes('common.delete'))!;
     await remove.trigger('click');
     expect(openDialog()!.textContent).toContain('webhooks.delete_title');
+  });
+
+  it('offers New project only to people with project:write', async () => {
+    useOrgsStore().items = [{ id: orgId, slug: 'acme', name: 'Acme', role: 'member', permissions: [] }];
+    setRoute({ path: '/o/acme', params: { org: 'acme' } });
+    useAuthStore().me = { permissions: ['project:read'] } as never;
+    const member = mount(ProjectSelector);
+    expect(member.text()).not.toContain('project.new');
+    member.unmount();
+    useAuthStore().me = { permissions: ['project:*'] } as never;
+    expect(mount(ProjectSelector).text()).toContain('project.new');
   });
 
   it('makes org settings read-only for people without org:write', async () => {
