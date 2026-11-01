@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import ErrorText from '#base/components/ui/ErrorText.vue';
+import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
 import InviteModal from '~/components/member/invite/InviteModal.vue';
 import PendingInvites from '~/components/member/invite/PendingInvites.vue';
@@ -90,31 +91,28 @@ const inviteLabels = computed(() => ({
   copy: t('invites.copy'),
 }));
 
-await members.load();
-if (canInvite.value) {
-  await invite.load();
+async function load() {
+  await members.load();
+  if (canInvite.value) {
+    await invite.load();
+  }
 }
+void load();
 
 useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('members.title')} · Othra` });
 </script>
 
 <template>
   <div v-if="org" class="space-y-6">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-bold">
-          {{ t('members.title') }}
-        </h1>
-        <p class="text-sm text-base-content/70">
-          {{ t('members.subtitle') }}
-        </p>
-      </div>
-      <button v-if="canInvite" type="button" class="btn btn-primary btn-sm" @click="invite.open">
-        <Icon name="lucide:user-plus" size="16" />
-        {{ t('invites.invite') }}
-      </button>
-    </div>
-    <ErrorText v-if="loadError" :error="loadError" />
+    <PageHeader :title="t('members.title')" :description="t('members.subtitle')">
+      <template v-if="canInvite" #actions>
+        <button type="button" class="btn btn-primary btn-sm" @click="invite.open">
+          <Icon name="lucide:user-plus" size="16" />
+          {{ t('invites.invite') }}
+        </button>
+      </template>
+    </PageHeader>
+    <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="load" />
     <LoadingStatus v-else-if="loading" :label="t('common.loading')" />
     <MemberList
       v-else
@@ -132,7 +130,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('members.tit
       @cancel="members.cancel"
     />
     <SavedNote v-if="inviteNotice" :label="inviteNotice" />
-    <ErrorText v-if="canInvite && inviteLoadError" :error="inviteLoadError" />
+    <LoadError v-if="canInvite && inviteLoadError" :error="inviteLoadError" :retry-label="t('common.retry')" @retry="invite.load()" />
     <PendingInvites
       v-else-if="canInvite"
       :pending="pending"
