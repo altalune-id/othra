@@ -45,7 +45,7 @@
   "profile.email_help": "Ini email yang Anda pakai untuk masuk. Belum bisa diubah.",
   "profile.name": "Nama",
   "profile.name_help": "Aplikasi melihat nama ini. Kosongkan jika tidak ingin menampilkannya.",
-  "profile.subtitle": "Cara Anda tampil di aplikasi {project}.",
+  "profile.subtitle": "Cara Anda tampil di aplikasi yang Anda masuki dengan {project}.",
   "sessions.others_body": "Semua perangkat lain akan keluar, beserta aplikasinya, kecuali aplikasi yang Anda izinkan tetap terhubung. Akses yang sudah dimiliki bisa bertahan hingga 15 menit. Perangkat ini tetap masuk.",
   "sessions.others_title": "Keluarkan sesi lain?",
   "sessions.sign_out": "Keluar",

@@ -45,7 +45,7 @@
   "profile.email_help": "This is the email you sign in with. Changing it isn't available yet.",
   "profile.name": "Name",
   "profile.name_help": "Apps see this name. Leave it empty to show none.",
-  "profile.subtitle": "How you appear in {project} apps.",
+  "profile.subtitle": "How you appear to apps you sign in to with {project}.",
   "sessions.others_body": "Every other device is signed out, with its apps, except apps you allowed to stay connected. Access they already have can last up to 15 minutes. This device stays signed in.",
   "sessions.others_title": "Sign out other sessions?",
   "sessions.sign_out": "Sign out",
