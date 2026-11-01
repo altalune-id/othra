@@ -34,3 +34,11 @@ describe('console copy', () => {
     expect(Object.entries(id).filter(([, text]) => /\bfile\b/i.test(text)).map(([key]) => key)).toEqual([]);
   });
 });
+
+describe('secret step copy', () => {
+  it.each([['en-US', enUS], ['id-ID', idID]] as const)('names the exact tick label and Continue button that release the leave guard (%s)', (_, messages) => {
+    const m = messages as Record<string, string>;
+    expect(m['secret.leave_first']).toContain(m['secret.confirm']);
+    expect(m['secret.leave_first']).toContain(m['clients.continue_quickstart']);
+  });
+});
