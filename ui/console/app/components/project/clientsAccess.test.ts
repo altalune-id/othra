@@ -15,8 +15,10 @@ describe('clients and resource server pages', () => {
   });
 
   it.each(lists)('$path offers New only to editors', ({ source }) => {
-    for (const link of source.match(/<NuxtLink[^>]*\/new`[^>]*>/g) ?? []) {
-      expect(link).toContain('v-if="canEdit"');
+    for (const m of source.matchAll(/<NuxtLink[^>]*\/new`[^>]*>/g)) {
+      const opener = source.slice(0, m.index).split('\n').slice(-1)[0]! + m[0];
+      const slot = source.slice(0, m.index).match(/<template[^>]*>\s*$/)?.[0] ?? '';
+      expect(opener + slot).toContain('v-if="canEdit"');
     }
   });
 

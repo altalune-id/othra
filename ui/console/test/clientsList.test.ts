@@ -30,5 +30,6 @@ describe('clients list', () => {
     const cells = w.findAll('tbody tr').map(r => r.findAll('td').at(-1)!.text());
     expect(cells).toEqual(['2 days ago', 'clients.never_used']);
     expect(w.get('thead').text()).toContain('clients.col_last_used');
+    expect(w.text()).not.toContain('clients.new');
   });
 });
