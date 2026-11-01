@@ -190,7 +190,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, keepSID,
 	})
 }
 
-// SignOutEverywhere ends every session of the person, their /p/system sessions too; the console sessions end even when the rest fails.
+// SignOutEverywhere ends the person's console and /p/system sessions, the console ones even when the rest fails; offline grants stay.
 func (s *Service) SignOutEverywhere(ctx context.Context, userID uuid.UUID) error {
 	return errors.Join(s.deps.Sessions.DeleteByUser(ctx, userID), s.endSystemSessions(ctx, userID))
 }
