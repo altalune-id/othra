@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { Webhook } from '~/stores/webhooks';
 import AppModal from '#base/components/ui/AppModal.vue';
-import ErrorText from '#base/components/ui/ErrorText.vue';
+import EmptyState from '#base/components/ui/EmptyState.vue';
+import LoadError from '#base/components/ui/LoadError.vue';
+import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
 import SecretField from '#base/components/ui/SecretField.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import { webhookEvents } from '~/components/webhook/events';
@@ -15,7 +17,7 @@ const errorMessage = useErrorMessage();
 const webhooks = useWebhooksStore();
 const { $webhookClient: client } = useNuxtApp();
 
-await webhooks.ensureLoaded(orgId, projectId);
+void webhooks.ensureLoaded(orgId, projectId);
 
 const items = computed(() => webhooks.forProject(projectId));
 const labelByName = new Map(webhookEvents.map(e => [e.name, e.labelKey]));
@@ -104,10 +106,9 @@ function closeRotate() {
 </script>
 
 <template>
-  <ErrorText v-if="webhooks.error" :error="webhooks.error" />
-  <p v-else-if="items.length === 0" class="text-sm text-base-content/70">
-    {{ t('webhooks.empty') }}
-  </p>
+  <LoadError v-if="webhooks.error" :error="webhooks.error" :busy="webhooks.loading" :retry-label="t('common.retry')" @retry="webhooks.load(orgId, projectId)" />
+  <LoadingStatus v-else-if="webhooks.loading && items.length === 0" :label="t('common.loading')" />
+  <EmptyState v-else-if="items.length === 0" icon="lucide:webhook" :title="t('webhooks.empty')" />
   <div v-else class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
     <table class="table table-sm">
       <thead>

@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
 import { mountPage } from '#test/mount-page';
 import { setClient, setRoute } from '#test/nuxt-globals';
+import WebhookList from '~/components/webhook/list/WebhookList.vue';
 import ResourceServers from '~/pages/o/[org]/projects/[project]/resource-servers/index.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -34,5 +35,18 @@ describe('resource servers page', () => {
     expect(listResourceServers).toHaveBeenCalledTimes(2);
     expect(w.get('h2').text()).toBe('rs.empty_title');
     expect(w.text()).toContain('rs.new');
+  });
+});
+
+describe('webhooks list', () => {
+  it('offers Retry after a failed load, then shows the empty state', async () => {
+    const listWebhooks = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ webhooks: [] });
+    setClient('$webhookClient', { listWebhooks });
+    const w = await mountPage(WebhookList, { pageProps: { orgId, projectId } });
+    await flushPromises();
+    await retry(w).trigger('click');
+    await flushPromises();
+    expect(listWebhooks).toHaveBeenCalledTimes(2);
+    expect(w.get('h2').text()).toBe('webhooks.empty');
   });
 });
