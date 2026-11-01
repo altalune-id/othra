@@ -90,6 +90,15 @@ describe('member-visible write actions', () => {
     expect(openDialog()!.textContent).toContain('apikeys.revoke_body');
   });
 
+  it('shows an expired org key as Expired, with no Revoke', async () => {
+    const expired = create(APIKeySchema, { id: 'M4pXc7RtV2nKw9BsL6yQd', name: 'old-bot', kind: 'org', secretHint: 'cd34', expiresAt: { seconds: 1n, nanos: 0 } });
+    setClient('$apiKeyClient', { listAPIKeys: vi.fn().mockResolvedValue({ keys: [expired] }) });
+    const w = await mountPage(APIKeyList, { pageProps: { orgId, canManage: true } });
+    expect(w.get('tbody').text()).toContain('tokens.status_expired');
+    expect(w.get('tbody').text()).not.toContain('tokens.status_active');
+    expect(w.findAll('tbody button')).toHaveLength(0);
+  });
+
   it('asks before deleting a webhook', async () => {
     setClient('$webhookClient', { listWebhooks: vi.fn().mockResolvedValue({ webhooks: [create(WebhookSchema, { id: 'H3nVb8XqT1wLp6RkZ2mJc', projectId, url: 'https://hooks.acme.test/othra', active: true, eventTypes: [] })] }) });
     const w = await mountPage(WebhookList, { pageProps: { orgId, projectId }, attachTo: document.body });
