@@ -392,7 +392,8 @@ func (h *Web) sent(w http.ResponseWriter, r *http.Request, s *site) {
 		return
 	}
 	h.kit.Render(w, r, http.StatusOK, views.Sent(h.layout(r, s), views.SentData{
-		Site: s.views(), Client: h.pending(r, s, returnTo).registeredName(), Email: email, Minutes: int(h.cfg.LinkTTL / time.Minute), ReturnTo: returnTo,
+		Site: s.views(), Client: h.pending(r, s, returnTo).registeredName(), Email: email,
+		Minutes: int(h.cfg.LinkTTL / time.Minute), ReturnTo: returnTo,
 		ResendToken: h.token(w, r, s, "resend"), Resent: r.URL.Query().Get("resent") == "1",
 	}))
 }
@@ -425,7 +426,8 @@ func (h *Web) verify(w http.ResponseWriter, r *http.Request, s *site) {
 		return
 	}
 	v := views.VerifyData{
-		Site: s.views(), Client: h.pending(r, s, h.returnTo(s, l.ReturnTo)).registeredName(), Email: l.Email, VerifyToken: h.token(w, r, s, "verify"),
+		Site: s.views(), Client: h.pending(r, s, h.returnTo(s, l.ReturnTo)).registeredName(), Email: l.Email,
+		VerifyToken: h.token(w, r, s, "verify"),
 	}
 	if pend, ok := h.pendingIdentity(r, l); ok && pend.SignUp {
 		v.SignUpEmail = cmp.Or(pend.Email, l.Email)

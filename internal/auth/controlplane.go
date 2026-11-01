@@ -86,7 +86,7 @@ func (s *AuthService) ChangePassword(
 	return connect.NewResponse(&authv1.ChangePasswordResponse{}), nil
 }
 
-// SignOutEverywhere ends every session of the signed-in person, this one and their /p/system ones too; offline app access stays until revoked.
+// SignOutEverywhere ends the caller's sessions, this and /p/system ones too; offline app access stays until revoked.
 func (s *AuthService) SignOutEverywhere(
 	ctx context.Context,
 	_ *connect.Request[authv1.SignOutEverywhereRequest],

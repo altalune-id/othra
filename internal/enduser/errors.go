@@ -7,7 +7,7 @@ import (
 	"github.com/altalune-id/othra/apperror"
 )
 
-// LinkNotUsableError signals a magic link that is unknown, expired or already used. SECURITY: one error type and message for every cause; only a known link adds its ReturnTo.
+// LinkNotUsableError signals an unknown, expired or used link. SECURITY: one type and message for all causes; a known link adds ReturnTo.
 type LinkNotUsableError struct {
 	// ReturnTo is where a known link was going, so a new sign-in can continue there; empty for an unknown one.
 	ReturnTo string
