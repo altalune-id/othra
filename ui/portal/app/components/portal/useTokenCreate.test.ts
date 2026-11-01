@@ -59,6 +59,25 @@ describe('useTokenCreate', () => {
     expect(f.loadError.value?.message).toBe('apperror.GEN900');
   });
 
+  it('keeps the form through the fresh sign-in that ACC009 asks for, once', async () => {
+    setKnownKeys('apperror.ACC009');
+    const store = new Map<string, string>();
+    vi.stubGlobal('sessionStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v), removeItem: (k: string) => store.delete(k) });
+    const first = useTokenCreate();
+    await first.load();
+    first.name.value = 'Laptop';
+    first.scopes.value = ['messages:read'];
+    first.expiry.value = TokenExpiry.TOKEN_EXPIRY_90_DAYS;
+    client.createPersonalToken!.mockRejectedValueOnce(connectError('ACC009'));
+    await first.submit();
+    const back = useTokenCreate();
+    await back.load();
+    expect([back.name.value, back.serverId.value, back.scopes.value, back.expiry.value]).toEqual(['Laptop', first.serverId.value, ['messages:read'], TokenExpiry.TOKEN_EXPIRY_90_DAYS]);
+    const again = useTokenCreate();
+    await again.load();
+    expect(again.name.value).toBe('');
+  });
+
   it('ignores a second create while one runs and keeps an answer without a token row', async () => {
     let finish!: (v: unknown) => void;
     client.createPersonalToken!.mockReturnValueOnce(new Promise((resolve) => {
