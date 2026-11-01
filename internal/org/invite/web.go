@@ -97,7 +97,7 @@ func (h *Web) getLink(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	inv, err := h.o.Invites.Lookup(r.Context(), r.PathValue("token"))
 	if err != nil {
-		h.failed(w, r, nil, err)
+		h.failed(w, r, inv, err)
 		return
 	}
 	h.cookie.Set(w, inv.PublicID+"|"+strconv.FormatInt(inv.ExpiresAt.Unix(), 10), inv.ExpiresAt)
@@ -289,7 +289,13 @@ func (h *Web) failed(w http.ResponseWriter, r *http.Request, inv *Invite, err er
 	h.cookie.Clear(w)
 	v := views.GoneData{Message: goneMessage(reason)}
 	p := session.PrincipalFrom(r.Context())
-	v.SignIn = reason == ReasonUsed && !p.IsPerson()
+	v.SignIn = (reason == ReasonUsed || reason == ReasonExpired) && !p.IsPerson()
+	if inv != nil && reason == ReasonExpired {
+		if org, oerr := h.o.Orgs.Name(r.Context(), inv.OrgID); oerr == nil {
+			v.Message = "Your invite to join " + strings.Join(strings.Fields(org), " ") + " has expired. Ask " +
+				h.o.Invites.inviterName(r.Context(), inv.InvitedBy) + " to send you a new one."
+		}
+	}
 	if inv != nil && reason == ReasonUsed && p.IsPerson() && inv.AcceptedBy == p.UserID {
 		if slug, serr := h.o.OrgLinks.Slug(r.Context(), inv.OrgID); serr == nil {
 			v.OpenURL = h.consoleURL(slug)
