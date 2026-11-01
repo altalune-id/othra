@@ -117,7 +117,7 @@ func (u hostedUsers) LinkByToken(ctx context.Context, p hosted.Project, token st
 }
 
 func hostedLinkRef(l *enduser.Link) hosted.LinkRef {
-	return hosted.LinkRef{ID: l.PublicID, Email: l.Email, Pending: l.Pending}
+	return hosted.LinkRef{ID: l.PublicID, Email: l.Email, ReturnTo: l.ReturnTo, Pending: l.Pending}
 }
 
 func (u hostedUsers) Redeem(ctx context.Context, req hosted.RedeemRequest) (*hosted.Redeemed, error) {

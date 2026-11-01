@@ -124,6 +124,18 @@ func (f *webFixture) signInVia(c *http.Client, login hostedPage, email string) h
 	return f.submit(c, verify, "/login/verify", nil)
 }
 
+// check-inbox and confirm keep the app's name, so the person knows where the link returns them.
+func TestAuthorize_SentAndVerifyNameTheClient(t *testing.T) {
+	f := newWebFixture(t)
+	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
+	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
+	inbox := f.get(f.client, sent.location())
+	assert.Contains(t, inbox.body, "to continue to Openwa Web")
+	link := linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody)
+	verify := f.get(f.client, f.get(f.client, strings.TrimPrefix(link, f.srv.URL)).location())
+	assert.Contains(t, verify.body, ">Sign in to Openwa Web</h1>")
+}
+
 // before the redirect URI is trusted, a branded 400 page, never a redirect, and no way to the sign-in page.
 func TestAuthorize_PageErrors(t *testing.T) {
 	f := newWebFixture(t)

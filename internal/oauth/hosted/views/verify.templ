@@ -1,6 +1,7 @@
 package views
 
 import (
+	"cmp"
 	"net/url"
 
 	"github.com/altalune-id/othra/apperror"
@@ -8,9 +9,10 @@ import (
 	"github.com/altalune-id/othra/internal/web/layout"
 )
 
-// VerifyData is the magic link's confirm page; the link token itself stays in its cookie, out of the page, and LinkEmail is the pending Google account to add.
+// VerifyData is the magic link's confirm page; the link token itself stays in its cookie, out of the page, LinkEmail is the pending Google account to add and Client the app the sign-in returns to.
 type VerifyData struct {
 	Site
+	Client      string
 	Email       string
 	VerifyToken string
 	LinkEmail   string
@@ -31,7 +33,7 @@ templ Verify(d layout.LayoutData, v VerifyData) {
 
 templ verifySignIn(d layout.LayoutData, v VerifyData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "verify.tab"))) {
-		@layout.Card(i18n.T(ctx, "verify.title", "project", v.Project)) {
+		@layout.Card(i18n.T(ctx, "verify.title", "project", cmp.Or(v.Client, v.Project))) {
 			if v.Email != "" {
 				<p>
 					@withEmail(i18n.T(ctx, "verify.body"), v.Email)

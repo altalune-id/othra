@@ -144,7 +144,7 @@ func (f *fakeUsers) LinkByToken(_ context.Context, p Project, token string) (Lin
 	case l.used:
 		return LinkRef{}, &enduser.LinkNotUsableError{ReturnTo: l.returnTo}
 	}
-	return LinkRef{ID: "id-" + token, Email: l.email, Pending: l.pending}, nil
+	return LinkRef{ID: "id-" + token, Email: l.email, ReturnTo: l.returnTo, Pending: l.pending}, nil
 }
 
 func (f *fakeUsers) Redeem(ctx context.Context, req RedeemRequest) (*Redeemed, error) {
