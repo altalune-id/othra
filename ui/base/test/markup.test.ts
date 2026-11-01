@@ -159,6 +159,10 @@ describe('guard: theme contrast', () => {
     expect(failures).toEqual([]);
   });
 
+  it('lifts daisyUI table headers from base-content/60 to the AA muted /70', () => {
+    expect(theme).toMatch(/\.table :where\(thead, tfoot\) \{\s+color: color-mix\(in oklab, var\(--color-base-content\) 70%, transparent\);/);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });
