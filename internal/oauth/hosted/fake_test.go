@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/enduser"
 	"github.com/altalune-id/othra/internal/oauth/oidc"
 	"github.com/altalune-id/othra/internal/project"
 	"github.com/altalune-id/othra/mailer"
@@ -137,8 +138,11 @@ func (f *fakeUsers) LinkByToken(_ context.Context, p Project, token string) (Lin
 		return LinkRef{}, errFake
 	}
 	l, ok := f.links[token]
-	if !ok || l.used || l.project.ID != p.ID {
+	switch {
+	case !ok || l.project.ID != p.ID:
 		return LinkRef{}, notUsable()
+	case l.used:
+		return LinkRef{}, &enduser.LinkNotUsableError{ReturnTo: l.returnTo}
 	}
 	return LinkRef{ID: "id-" + token, Email: l.email, Pending: l.pending}, nil
 }

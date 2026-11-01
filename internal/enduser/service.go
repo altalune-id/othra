@@ -177,7 +177,7 @@ func (s *Service) usable(ctx context.Context, l *Link, err error) (*Link, error)
 		return nil, s.errOrReport(ctx, "enduser: link", err)
 	}
 	if !l.Usable(s.now()) {
-		return nil, &LinkNotUsableError{}
+		return nil, &LinkNotUsableError{ReturnTo: l.ReturnTo}
 	}
 	return l, nil
 }

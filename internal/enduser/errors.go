@@ -8,7 +8,10 @@ import (
 )
 
 // LinkNotUsableError signals a magic link that is unknown, expired or already used. SECURITY: one error for every cause.
-type LinkNotUsableError struct{}
+type LinkNotUsableError struct {
+	// ReturnTo is where a known link was going, so a new sign-in can continue there; empty for an unknown one.
+	ReturnTo string
+}
 
 func (*LinkNotUsableError) Error() string { return "enduser: sign-in link not usable" }
 
