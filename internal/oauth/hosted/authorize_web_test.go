@@ -136,6 +136,22 @@ func TestAuthorize_SentAndVerifyNameTheClient(t *testing.T) {
 	assert.Contains(t, verify.body, ">Sign in to Openwa Web</h1>")
 }
 
+// SECURITY: a metadata document client names itself, so check-inbox and confirm keep the project's name instead.
+func TestAuthorize_SentAndVerifyNeverNameAMetadataClient(t *testing.T) {
+	f := newWebFixture(t)
+	f.clients[cimdClient] = Client{ID: cimdClient, RowID: rowID(cimdClient), MetadataHost: "claude.ai", Name: "Claude Code", Native: true}
+	u := authorizeURL("client_id", cimdClient, "redirect_uri", "http://localhost:53999/callback", "resource", mcpResource, "scope", "sample:read")
+	login := f.get(f.client, f.get(f.client, u).location())
+	require.Contains(t, login.body, "claude.ai", "the login page shows the unverified host")
+	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
+	inbox := f.get(f.client, sent.location())
+	assert.NotContains(t, inbox.body, "Claude Code")
+	link := linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody)
+	verify := f.get(f.client, f.get(f.client, strings.TrimPrefix(link, f.srv.URL)).location())
+	assert.NotContains(t, verify.body, "Claude Code")
+	assert.Contains(t, verify.body, ">Sign in to Acme</h1>", "the admin-set project name stays")
+}
+
 // before the redirect URI is trusted, a branded 400 page, never a redirect, and no way to the sign-in page.
 func TestAuthorize_PageErrors(t *testing.T) {
 	f := newWebFixture(t)

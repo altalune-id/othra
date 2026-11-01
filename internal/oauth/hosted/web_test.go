@@ -46,6 +46,7 @@ type webFixture struct {
 	grants     *fakeGrants
 	admissions *fakeAdmissions
 	consents   *fakeConsents
+	clients    fakeClients
 }
 
 func newIssuer(handle, name string) *project.Issuer {
@@ -79,9 +80,9 @@ func newWebFixture(t *testing.T) *webFixture {
 	f.grants = newFakeGrants(f.users)
 	marker := NewMarker([]byte("marker-key-marker-key-marker-key"), 15*time.Minute)
 	marker.now = f.users.stamp.now
-	f.admissions, f.consents = &fakeAdmissions{}, newFakeConsents(f.users.stamp.now)
+	f.admissions, f.consents, f.clients = &fakeAdmissions{}, newFakeConsents(f.users.stamp.now), testClients()
 	f.web.WithOAuth(OAuth{
-		Clients: testClients(), Resources: testResources(), Admissions: f.admissions, Consents: f.consents, Grants: f.grants, Marker: marker,
+		Clients: f.clients, Resources: testResources(), Admissions: f.admissions, Consents: f.consents, Grants: f.grants, Marker: marker,
 	})
 	f.web.WithPortal(testPortal(t))
 	f.web.Register(mux)

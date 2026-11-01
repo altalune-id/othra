@@ -530,6 +530,14 @@ type pending struct {
 	reauth bool
 }
 
+// SECURITY: a metadata document client names itself, so only a registered client's name may stand in for the project's.
+func (p pending) registeredName() string {
+	if p.host != "" {
+		return ""
+	}
+	return p.client
+}
+
 func (h *Web) pending(r *http.Request, s *site, returnTo string) pending {
 	u, err := url.Parse(returnTo)
 	if err != nil || h.oauth.Clients == nil || u.Path != s.path+authorizePath {
