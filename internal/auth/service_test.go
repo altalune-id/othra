@@ -115,6 +115,7 @@ type fixture struct {
 	verifies  int
 	dummies   int
 	mail      *fakeMail
+	system    *fakeSystemSessions
 }
 
 const testPassword = "correct horse battery"
@@ -130,11 +131,12 @@ func newFixture(t *testing.T, basic BasicCredentials) *fixture {
 	}
 	f.passwords = &fakePasswords{users: f.users}
 	f.mail = &fakeMail{}
+	f.system = &fakeSystemSessions{}
 	f.svc = NewService(Deps{
 		Users: f.users, Members: f.members, Orgs: f.orgs, Projects: f.projects,
 		Sessions: f.sessions, Passwords: f.passwords, Basic: basic,
 		Profiles: fakeProfiles{f.users}, Transactor: fakes.Transactor{}, Mail: f.mail,
-		From: "noreply@example.com", BaseURL: "https://othra.example.com",
+		From: "noreply@example.com", BaseURL: "https://othra.example.com", SystemSessions: f.system,
 	})
 	verify, dummy := f.svc.verify, f.svc.verifyDummy
 	f.svc.verify = func(hash, plain string) error { f.verifies++; return verify(hash, plain) }
@@ -478,6 +480,13 @@ func TestSetPassword_UnknownEmailIsNotFound(t *testing.T) {
 }
 
 type fakeProfiles struct{ users *fakeUsers }
+
+type fakeSystemSessions struct{ ended []string }
+
+func (f *fakeSystemSessions) EndAll(_ context.Context, subject string) error {
+	f.ended = append(f.ended, subject)
+	return nil
+}
 
 func (f fakeProfiles) ByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
 	return resetUsers(f).ByID(ctx, id)

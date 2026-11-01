@@ -189,9 +189,19 @@ func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, keepSID,
 	})
 }
 
-// SignOutEverywhere ends every session of the person.
+// SignOutEverywhere ends every session of the person, their /p/system sessions too.
 func (s *Service) SignOutEverywhere(ctx context.Context, userID uuid.UUID) error {
-	return s.deps.Sessions.DeleteByUser(ctx, userID)
+	u, err := s.deps.Profiles.ByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if err := s.deps.Sessions.DeleteByUser(ctx, userID); err != nil {
+		return err
+	}
+	if s.deps.SystemSessions == nil || u.IDPIssuer != ConsoleIssuer || u.IDPSubject == "" {
+		return nil
+	}
+	return s.deps.SystemSessions.EndAll(ctx, u.IDPSubject)
 }
 
 // Logout deletes the session sid.

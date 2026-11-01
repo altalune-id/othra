@@ -72,3 +72,13 @@ func TestService_SignOutEverywhere(t *testing.T) {
 		assert.Equal(t, want, ok, sid)
 	}
 }
+
+func TestService_SignOutEverywhereEndsTheSystemSessions(t *testing.T) {
+	f := newFixture(t, BasicCredentials{})
+	linked := f.addUser(t, "ada@example.com", false)
+	linked.IDPIssuer, linked.IDPSubject = ConsoleIssuer, "eu_ada"
+	local := f.addUser(t, "bob@example.com", true)
+	require.NoError(t, f.svc.SignOutEverywhere(t.Context(), linked.ID))
+	require.NoError(t, f.svc.SignOutEverywhere(t.Context(), local.ID))
+	assert.Equal(t, []string{"eu_ada"}, f.system.ended, "only an account linked to /p/system has sessions there")
+}
