@@ -34,6 +34,10 @@ func newConsolePages(c config.HTTPConfig) consolePages {
 
 func (p consolePages) root() string { return p.base + "/" }
 
+func (p consolePages) members(orgSlug string) string {
+	return p.base + "/o/" + url.PathEscape(orgSlug) + "/settings/members"
+}
+
 func (p consolePages) client(orgSlug, projectSlug, clientPublicID string) string {
 	return p.base + "/o/" + url.PathEscape(orgSlug) + "/projects/" + url.PathEscape(projectSlug) + "/clients/" + url.PathEscape(clientPublicID)
 }
