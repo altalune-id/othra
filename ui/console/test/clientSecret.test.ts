@@ -56,7 +56,8 @@ describe('new client: secret then quickstart', () => {
   it('shows a failed first secret with Generate again instead of moving on silently', async () => {
     const w = await created();
     const step = w.get('[data-testid="secret-step"]');
-    expect(step.get('[role="alert"]').exists()).toBe(true);
+    expect(step.findAll('[role="alert"]')).toHaveLength(1);
+    expect(step.findAll('[role="alert"] [role="alert"]')).toHaveLength(0);
     expect(button(w, 'clients.continue_quickstart').attributes('disabled')).toBeDefined();
     await button(w, 'clients.generate_again').trigger('click');
     await flushPromises();
