@@ -153,9 +153,6 @@ onMounted(async () => {
   if (route.query.focus !== 'secrets') {
     return;
   }
-  if (route.query.secret === 'failed') {
-    secretError.value = { message: t('clients.secret_not_generated') };
-  }
   await navigateTo({ query: {} }, { replace: true });
   await nextTick();
   secretsCard.value?.focusTitle();
