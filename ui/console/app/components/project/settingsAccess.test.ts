@@ -117,7 +117,7 @@ describe('m1.5 design re-check', () => {
     expect(general).toMatch(/<section class="card border border-base-300 bg-base-100">\s*<div class="card-body gap-2">/);
     expect(general).toMatch(/<form v-if="canEdit" novalidate/);
     expect(general).toMatch(/<dl v-else /);
-    expect(general).not.toContain('text-xs text-base-content/60">{{ t(\'common.id\') }}');
+    expect(general).not.toContain('text-xs text-base-content/70">{{ t(\'common.id\') }}');
     expect(general).toContain('<button type="submit" class="btn btn-primary btn-sm"');
     expect(general).not.toContain('AppButton');
     expect(general).toContain('project.settings_general_subtitle');
@@ -225,10 +225,10 @@ describe('signing keys page', () => {
 });
 
 describe('m2 design review contrast', () => {
-  it('dims retired key rows to /60, not /50 (SF1)', () => {
+  it('dims retired key rows to the AA muted /70, never lower (SF1)', () => {
     const list = read('./keys/SigningKeyList.vue');
-    expect(list).not.toContain('\'text-base-content/50\': row.status === \'retired\'');
-    expect(list.match(/'text-base-content\/60': row\.status === 'retired'/g)).toHaveLength(2);
+    expect(list).not.toMatch(/'text-base-content\/[1-6]0': row\.status === 'retired'/);
+    expect(list.match(/'text-base-content\/70': row\.status === 'retired'/g)).toHaveLength(2);
   });
 });
 

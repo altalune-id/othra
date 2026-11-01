@@ -71,7 +71,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
       <h1 class="text-2xl font-bold">
         {{ t('project.settings_general') }}
       </h1>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ t('project.settings_general_subtitle') }}
       </p>
     </div>

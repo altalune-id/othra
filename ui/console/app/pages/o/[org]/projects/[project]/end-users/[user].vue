@@ -49,7 +49,7 @@ if (notFound.value) {
       <h1 class="mt-1 text-2xl font-bold break-all">
         {{ user?.email }}
       </h1>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ canRevoke ? t('endusers.detail_subtitle_revoke') : t('endusers.detail_subtitle_read') }}
       </p>
     </div>
@@ -93,7 +93,7 @@ if (notFound.value) {
           <h2 class="card-title text-base">
             {{ t('endusers.methods') }}
           </h2>
-          <p class="text-xs text-base-content/60">
+          <p class="text-xs text-base-content/70">
             {{ t('endusers.methods_help') }}
           </p>
           <ul class="list" data-testid="end-user-methods">
@@ -107,7 +107,7 @@ if (notFound.value) {
           <h2 class="card-title text-base">
             {{ t('endusers.sessions') }}
           </h2>
-          <p v-if="sessions.length === 0" class="text-sm text-base-content/60">
+          <p v-if="sessions.length === 0" class="text-sm text-base-content/70">
             {{ t('endusers.sessions_empty') }}
           </p>
           <ul v-else class="list" data-testid="end-user-sessions">
@@ -125,7 +125,7 @@ if (notFound.value) {
           <h2 class="card-title text-base">
             {{ t('endusers.apps') }}
           </h2>
-          <p v-if="apps.length === 0" class="text-sm text-base-content/60">
+          <p v-if="apps.length === 0" class="text-sm text-base-content/70">
             {{ t('endusers.apps_empty') }}
           </p>
           <ul v-else class="list" data-testid="end-user-apps">
@@ -145,7 +145,7 @@ if (notFound.value) {
           <h2 class="card-title text-base">
             {{ t('endusers.tokens') }}
           </h2>
-          <p v-if="tokens.length === 0" class="text-sm text-base-content/60">
+          <p v-if="tokens.length === 0" class="text-sm text-base-content/70">
             {{ t('endusers.tokens_empty') }}
           </p>
           <ul v-else class="list" data-testid="end-user-tokens">

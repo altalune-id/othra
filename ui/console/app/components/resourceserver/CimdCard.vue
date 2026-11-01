@@ -157,18 +157,18 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
         </div>
       </form>
       <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-        <dt class="text-base-content/60">
+        <dt class="text-base-content/70">
           {{ labels.accept }}
         </dt>
         <dd>{{ accept ? labels.on : labels.off }}</dd>
         <template v-if="accept">
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ labels.hosts }}
           </dt>
           <dd class="font-mono text-xs break-all">
             {{ hosts.trim() ? hosts.split('\n').join(', ') : '—' }}
           </dd>
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ labels.scopes }}
           </dt>
           <dd>{{ allScopes ? labels.scopesAll : picked.join(', ') }}</dd>

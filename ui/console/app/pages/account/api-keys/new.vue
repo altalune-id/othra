@@ -33,7 +33,7 @@ useHead({ title: () => `${t('apikeys.personal_new')} · ${t('apikeys.personal_ti
 <template>
   <div class="max-w-2xl space-y-6">
     <div>
-      <NuxtLink to="/account/api-keys" class="inline-flex items-center gap-1 text-xs text-base-content/60 transition-colors hover:text-base-content">
+      <NuxtLink to="/account/api-keys" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
         <Icon name="lucide:chevron-left" size="14" />
         {{ t('apikeys.personal_title') }}
       </NuxtLink>

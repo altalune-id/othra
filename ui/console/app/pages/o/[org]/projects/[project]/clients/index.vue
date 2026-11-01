@@ -59,7 +59,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
         <h1 class="text-2xl font-bold" tabindex="-1">
           {{ t('clients.title') }}
         </h1>
-        <p class="text-sm text-base-content/60">
+        <p class="text-sm text-base-content/70">
           {{ t('clients.subtitle') }}
         </p>
       </div>
@@ -82,7 +82,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
           </div>
         </template>
         <div v-else-if="!loading && rows.length === 0" class="flex flex-col items-center gap-2 py-6 text-center">
-          <Icon name="lucide:app-window" size="28" class="text-base-content/60" />
+          <Icon name="lucide:app-window" size="28" class="text-base-content/70" />
           <p class="font-medium">
             {{ t('clients.empty_title') }}
           </p>

@@ -73,7 +73,7 @@ defineExpose({
             <span class="status" :class="row.old ? 'status-warning' : 'status-success'" aria-hidden="true" />
             {{ row.old ? labels.old.replace('{date}', row.expires) : labels.current }}
           </span>
-          <span v-if="!row.old && row.created" class="text-base-content/60">{{ labels.created.replace('{date}', row.created) }}</span>
+          <span v-if="!row.old && row.created" class="text-base-content/70">{{ labels.created.replace('{date}', row.created) }}</span>
           <button v-if="canEdit && row.old" type="button" class="btn btn-ghost btn-xs ml-auto" :disabled="busy" @click="emit('revoke', row)">
             <Icon name="lucide:ban" size="14" class="text-error" />
             {{ labels.revoke }}
@@ -89,7 +89,7 @@ defineExpose({
           </button>
         </div>
         <ErrorText :error="error" />
-        <p class="text-xs text-base-content/60">
+        <p class="text-xs text-base-content/70">
           {{ labels.personOnly }}
         </p>
       </template>

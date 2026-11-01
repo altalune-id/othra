@@ -166,7 +166,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
   <div class="max-w-2xl space-y-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink :to="base" class="inline-flex items-center gap-1 text-xs text-base-content/60 transition-colors hover:text-base-content">
+        <NuxtLink :to="base" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
           <Icon name="lucide:chevron-left" size="14" />
           {{ t('rs.title') }}
         </NuxtLink>
@@ -211,7 +211,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
           <SavedNote v-if="saved === 'name'" :label="t('common.saved')" />
         </form>
         <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 text-sm">
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('common.name') }}
           </dt>
           <dd>{{ server.name }}</dd>

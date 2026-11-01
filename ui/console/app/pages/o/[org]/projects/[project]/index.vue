@@ -52,10 +52,10 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
           {{ project.name }}
           <SystemBadge v-if="project.system" :label="t('common.system')" />
         </h1>
-        <p class="text-sm text-base-content/60">
+        <p class="text-sm text-base-content/70">
           {{ t('nav.overview') }}
         </p>
-        <div class="mt-1 flex items-center gap-1 text-xs text-base-content/60">
+        <div class="mt-1 flex items-center gap-1 text-xs text-base-content/70">
           <span class="font-mono">{{ project.id }}</span>
           <CopyButton :value="project.id" :label="t('common.copy')" />
         </div>
@@ -77,7 +77,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
         </div>
         <UrlField :label="t('issuer.url')" :value="full.issuerUrl" size="sm" :copy-label="copyLabel" testid="overview-issuer-url" />
         <UrlField v-if="discovery" :label="t('overview.discovery')" :value="discovery.oidc" size="sm" :copy-label="copyLabel" testid="overview-discovery-url" />
-        <p v-if="full.signinEmailLink" class="text-sm text-base-content/60">
+        <p v-if="full.signinEmailLink" class="text-sm text-base-content/70">
           {{ t('overview.sign_in_line') }}
         </p>
       </div>
@@ -95,7 +95,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
             <Icon :name="section.icon" size="18" />
             {{ section.title }}
           </h2>
-          <p class="text-sm text-base-content/60">
+          <p class="text-sm text-base-content/70">
             {{ section.hint }}
           </p>
         </div>

@@ -256,7 +256,7 @@ func brandFooter(b *Brand) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if b.TermsURL != "" || b.PrivacyURL != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<nav class=\"flex gap-3 text-xs text-base-content/60\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<nav class=\"flex gap-3 text-xs text-base-content/70\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

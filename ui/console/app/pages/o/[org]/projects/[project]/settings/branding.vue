@@ -62,7 +62,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
       <h1 class="text-2xl font-bold">
         {{ t('branding.title') }}
       </h1>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ t('branding.subtitle') }}
       </p>
     </div>
@@ -161,7 +161,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
             </dt>
             <dd>
               <img v-if="preview.logoUrl" :src="preview.logoUrl" alt="" class="size-14 rounded-box border border-base-300 object-contain">
-              <span v-else class="text-base-content/50">—</span>
+              <span v-else class="text-base-content/70">—</span>
             </dd>
           </div>
           <div>
@@ -173,7 +173,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
                 <span class="inline-block size-4 rounded border border-base-300" :style="{ backgroundColor: preview.primary }" />
                 {{ preview.primary }}
               </template>
-              <span v-else class="text-base-content/50">—</span>
+              <span v-else class="text-base-content/70">—</span>
             </dd>
           </div>
           <div>
@@ -184,7 +184,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
               <template v-if="preview.supportEmail">
                 {{ preview.supportEmail }}
               </template>
-              <span v-else class="text-base-content/50">—</span>
+              <span v-else class="text-base-content/70">—</span>
             </dd>
           </div>
         </div>

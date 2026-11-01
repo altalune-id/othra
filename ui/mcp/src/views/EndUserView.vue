@@ -40,7 +40,7 @@ async function refresh(section: number) {
 
 <template>
   <ViewShell :title="String(user?.email || t('mcp.end_user'))">
-    <p v-if="!user" class="text-sm text-base-content/60">
+    <p v-if="!user" class="text-sm text-base-content/70">
       {{ t('mcp.nothing') }}
     </p>
     <template v-else>
@@ -49,7 +49,7 @@ async function refresh(section: number) {
         <h2 ref="headings" tabindex="-1" class="text-sm font-semibold focus:outline-none">
           {{ s.title }}
         </h2>
-        <p v-if="s.help" class="text-xs text-base-content/60">
+        <p v-if="s.help" class="text-xs text-base-content/70">
           {{ s.help }}
         </p>
         <RowTable :rows="rowsAt(state, s.rows)" :columns="s.columns" :row-id="s.key" :actions="s.actions" :empty="s.empty" @done="refresh(i)" />

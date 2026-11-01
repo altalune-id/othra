@@ -25,7 +25,7 @@ function onSelect(key: string) {
 <template>
   <SidebarNav :label="t('account.title')" :items="items" :version="appVersion" @select="onSelect">
     <template #back>
-      <NuxtLink :to="back.to" class="inline-flex items-center gap-1 text-xs text-base-content/60 transition-colors hover:text-base-content">
+      <NuxtLink :to="back.to" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
         <Icon name="lucide:arrow-left" size="14" />
         {{ back.org ? t('account.back_to_org', { org: back.org }) : t('account.back_to_orgs') }}
       </NuxtLink>

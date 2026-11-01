@@ -169,7 +169,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
   <div class="max-w-2xl space-y-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
-        <NuxtLink :to="`${base}/clients`" class="inline-flex items-center gap-1 text-xs text-base-content/60 transition-colors hover:text-base-content">
+        <NuxtLink :to="`${base}/clients`" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
           <Icon name="lucide:chevron-left" size="14" />
           {{ t('clients.title') }}
         </NuxtLink>
@@ -205,16 +205,16 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
         <UrlField v-else :label="t('clients.client_id')" :value="client.id" :help="t('clients.client_id_help')" size="sm" testid="client-id" v-bind="urlLabels" />
         <UrlField v-if="issuerUrl" :label="t('clients.issuer')" :value="issuerUrl" size="sm" v-bind="urlLabels" />
         <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('clients.kind') }}
           </dt>
           <dd>{{ t(kind.labelKey) }}</dd>
           <template v-if="kind.secret">
-            <dt class="text-base-content/60">
+            <dt class="text-base-content/70">
               {{ t('clients.auth_method') }}
             </dt>
             <dd><code class="font-mono text-xs" data-testid="client-auth-method">{{ client.tokenEndpointAuthMethod }}</code></dd>
-            <dt class="text-base-content/60">
+            <dt class="text-base-content/70">
               {{ t('clients.pkce') }}
             </dt>
             <dd v-if="client.pkceRequired">
@@ -225,13 +225,13 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
               {{ t('clients.pkce_off') }}
             </dd>
           </template>
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('clients.scopes') }}
           </dt>
           <dd class="flex flex-wrap gap-1">
             <span v-for="scope in client.allowedScopes" :key="scope" class="badge badge-ghost badge-sm font-mono">{{ scope }}</span>
           </dd>
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('clients.col_created') }}
           </dt>
           <dd>{{ created }}</dd>
@@ -262,11 +262,11 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
           <SavedNote v-if="done" :label="t('common.saved')" />
         </template>
         <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm" data-testid="client-settings-readonly">
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('common.name') }}
           </dt>
           <dd>{{ client.name }}</dd>
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('clients.redirect_uris') }}
           </dt>
           <dd>
@@ -277,7 +277,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
             </ul>
           </dd>
           <template v-if="client.postLogoutRedirectUris.length > 0">
-            <dt class="text-base-content/60">
+            <dt class="text-base-content/70">
               {{ t('clients.post_logout_uris') }}
             </dt>
             <dd>
@@ -288,11 +288,11 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
               </ul>
             </dd>
           </template>
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('clients.refresh') }}
           </dt>
           <dd>{{ client.refreshTokens ? t('clients.refresh_on') : t('clients.refresh_off') }}</dd>
-          <dt class="text-base-content/60">
+          <dt class="text-base-content/70">
             {{ t('clients.consent') }}
           </dt>
           <dd>{{ consentLabel }}</dd>

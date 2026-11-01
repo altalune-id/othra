@@ -19,7 +19,7 @@ const emit = defineEmits<{ create: [] }>();
       <h2 class="card-title text-base">
         {{ labels.title }}
       </h2>
-      <p class="text-sm text-base-content/60">
+      <p class="text-sm text-base-content/70">
         {{ labels.body }}
       </p>
       <div class="card-actions mt-2 justify-center">
