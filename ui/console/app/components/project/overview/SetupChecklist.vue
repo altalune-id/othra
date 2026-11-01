@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SetupItem } from './setup';
+import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
 import Section from '#base/components/ui/Section.vue';
 
 const { items, loading = false } = defineProps<{ items: SetupItem[], loading?: boolean }>();
@@ -11,9 +12,9 @@ const progress = computed(() => t('overview.setup_progress', { done: done.value,
 
 <template>
   <Section :title="t('overview.setup_title')" :description="loading ? '' : progress" data-testid="setup-checklist">
-    <div v-if="loading" class="space-y-3" aria-busy="true">
-      <span class="sr-only">{{ t('common.loading') }}</span>
-      <div v-for="n in 5" :key="n" class="skeleton h-5 w-full" />
+    <div v-if="loading" class="space-y-3" data-testid="setup-loading">
+      <LoadingStatus :label="t('common.loading')" />
+      <div v-for="n in 5" :key="n" class="skeleton h-5 w-full" aria-hidden="true" />
     </div>
     <progress v-if="!loading" class="progress progress-primary w-full" :value="done" :max="items.length" :aria-label="t('overview.setup_title')" :aria-valuetext="progress" />
     <ul v-if="!loading" class="divide-y divide-base-300">

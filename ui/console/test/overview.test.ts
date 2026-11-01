@@ -65,11 +65,11 @@ describe('project overview', () => {
     setClient('$clientClient', { listClients: vi.fn().mockReturnValue(pending.promise) });
     const w = await mountPage(Overview);
     const checklist = w.get('[data-testid="setup-checklist"]');
-    expect(checklist.find('[aria-busy="true"]').exists()).toBe(true);
+    expect(checklist.find('[data-testid="setup-loading"]').exists()).toBe(true);
     expect(checklist.find('progress').exists()).toBe(false);
     pending.resolve({ clients: [{}] });
     await flushPromises();
-    expect(checklist.find('[aria-busy="true"]').exists()).toBe(false);
+    expect(checklist.find('[data-testid="setup-loading"]').exists()).toBe(false);
     expect(checklist.text()).toContain('overview.setup_progress|{"done":2,"total":5}');
   });
 
