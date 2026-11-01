@@ -481,11 +481,14 @@ func TestSetPassword_UnknownEmailIsNotFound(t *testing.T) {
 
 type fakeProfiles struct{ users *fakeUsers }
 
-type fakeSystemSessions struct{ ended []string }
+type fakeSystemSessions struct {
+	ended []string
+	err   error
+}
 
 func (f *fakeSystemSessions) EndAll(_ context.Context, subject string) error {
 	f.ended = append(f.ended, subject)
-	return nil
+	return f.err
 }
 
 func (f fakeProfiles) ByID(ctx context.Context, id uuid.UUID) (*user.User, error) {

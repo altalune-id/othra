@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/subtle"
+	"errors"
 	"slices"
 	"strings"
 	"time"
@@ -189,16 +190,20 @@ func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, keepSID,
 	})
 }
 
-// SignOutEverywhere ends every session of the person, their /p/system sessions too.
+// SignOutEverywhere ends every session of the person, their /p/system sessions too; the console sessions end even when the rest fails.
 func (s *Service) SignOutEverywhere(ctx context.Context, userID uuid.UUID) error {
+	return errors.Join(s.deps.Sessions.DeleteByUser(ctx, userID), s.endSystemSessions(ctx, userID))
+}
+
+func (s *Service) endSystemSessions(ctx context.Context, userID uuid.UUID) error {
+	if s.deps.SystemSessions == nil {
+		return nil
+	}
 	u, err := s.deps.Profiles.ByID(ctx, userID)
 	if err != nil {
 		return err
 	}
-	if err := s.deps.Sessions.DeleteByUser(ctx, userID); err != nil {
-		return err
-	}
-	if s.deps.SystemSessions == nil || u.IDPIssuer != ConsoleIssuer || u.IDPSubject == "" {
+	if u.IDPIssuer != ConsoleIssuer || u.IDPSubject == "" {
 		return nil
 	}
 	return s.deps.SystemSessions.EndAll(ctx, u.IDPSubject)
