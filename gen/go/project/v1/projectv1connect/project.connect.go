@@ -57,6 +57,9 @@ const (
 	// ProjectServiceUpdateProjectSignInProcedure is the fully-qualified name of the ProjectService's
 	// UpdateProjectSignIn RPC.
 	ProjectServiceUpdateProjectSignInProcedure = "/project.v1.ProjectService/UpdateProjectSignIn"
+	// ProjectServiceUpdateProjectEnvironmentProcedure is the fully-qualified name of the
+	// ProjectService's UpdateProjectEnvironment RPC.
+	ProjectServiceUpdateProjectEnvironmentProcedure = "/project.v1.ProjectService/UpdateProjectEnvironment"
 	// ProjectServiceBumpTermsVersionProcedure is the fully-qualified name of the ProjectService's
 	// BumpTermsVersion RPC.
 	ProjectServiceBumpTermsVersionProcedure = "/project.v1.ProjectService/BumpTermsVersion"
@@ -84,6 +87,7 @@ type ProjectServiceClient interface {
 	UpdateProjectBranding(context.Context, *connect.Request[v1.UpdateProjectBrandingRequest]) (*connect.Response[v1.UpdateProjectBrandingResponse], error)
 	UpdateProjectTerms(context.Context, *connect.Request[v1.UpdateProjectTermsRequest]) (*connect.Response[v1.UpdateProjectTermsResponse], error)
 	UpdateProjectSignIn(context.Context, *connect.Request[v1.UpdateProjectSignInRequest]) (*connect.Response[v1.UpdateProjectSignInResponse], error)
+	UpdateProjectEnvironment(context.Context, *connect.Request[v1.UpdateProjectEnvironmentRequest]) (*connect.Response[v1.UpdateProjectEnvironmentResponse], error)
 	BumpTermsVersion(context.Context, *connect.Request[v1.BumpTermsVersionRequest]) (*connect.Response[v1.BumpTermsVersionResponse], error)
 	CheckIssuerHandle(context.Context, *connect.Request[v1.CheckIssuerHandleRequest]) (*connect.Response[v1.CheckIssuerHandleResponse], error)
 	CreateProjectLogoUpload(context.Context, *connect.Request[v1.CreateProjectLogoUploadRequest]) (*connect.Response[v1.CreateProjectLogoUploadResponse], error)
@@ -150,6 +154,12 @@ func NewProjectServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(projectServiceMethods.ByName("UpdateProjectSignIn")),
 			connect.WithClientOptions(opts...),
 		),
+		updateProjectEnvironment: connect.NewClient[v1.UpdateProjectEnvironmentRequest, v1.UpdateProjectEnvironmentResponse](
+			httpClient,
+			baseURL+ProjectServiceUpdateProjectEnvironmentProcedure,
+			connect.WithSchema(projectServiceMethods.ByName("UpdateProjectEnvironment")),
+			connect.WithClientOptions(opts...),
+		),
 		bumpTermsVersion: connect.NewClient[v1.BumpTermsVersionRequest, v1.BumpTermsVersionResponse](
 			httpClient,
 			baseURL+ProjectServiceBumpTermsVersionProcedure,
@@ -193,6 +203,7 @@ type projectServiceClient struct {
 	updateProjectBranding     *connect.Client[v1.UpdateProjectBrandingRequest, v1.UpdateProjectBrandingResponse]
 	updateProjectTerms        *connect.Client[v1.UpdateProjectTermsRequest, v1.UpdateProjectTermsResponse]
 	updateProjectSignIn       *connect.Client[v1.UpdateProjectSignInRequest, v1.UpdateProjectSignInResponse]
+	updateProjectEnvironment  *connect.Client[v1.UpdateProjectEnvironmentRequest, v1.UpdateProjectEnvironmentResponse]
 	bumpTermsVersion          *connect.Client[v1.BumpTermsVersionRequest, v1.BumpTermsVersionResponse]
 	checkIssuerHandle         *connect.Client[v1.CheckIssuerHandleRequest, v1.CheckIssuerHandleResponse]
 	createProjectLogoUpload   *connect.Client[v1.CreateProjectLogoUploadRequest, v1.CreateProjectLogoUploadResponse]
@@ -240,6 +251,11 @@ func (c *projectServiceClient) UpdateProjectSignIn(ctx context.Context, req *con
 	return c.updateProjectSignIn.CallUnary(ctx, req)
 }
 
+// UpdateProjectEnvironment calls project.v1.ProjectService.UpdateProjectEnvironment.
+func (c *projectServiceClient) UpdateProjectEnvironment(ctx context.Context, req *connect.Request[v1.UpdateProjectEnvironmentRequest]) (*connect.Response[v1.UpdateProjectEnvironmentResponse], error) {
+	return c.updateProjectEnvironment.CallUnary(ctx, req)
+}
+
 // BumpTermsVersion calls project.v1.ProjectService.BumpTermsVersion.
 func (c *projectServiceClient) BumpTermsVersion(ctx context.Context, req *connect.Request[v1.BumpTermsVersionRequest]) (*connect.Response[v1.BumpTermsVersionResponse], error) {
 	return c.bumpTermsVersion.CallUnary(ctx, req)
@@ -275,6 +291,7 @@ type ProjectServiceHandler interface {
 	UpdateProjectBranding(context.Context, *connect.Request[v1.UpdateProjectBrandingRequest]) (*connect.Response[v1.UpdateProjectBrandingResponse], error)
 	UpdateProjectTerms(context.Context, *connect.Request[v1.UpdateProjectTermsRequest]) (*connect.Response[v1.UpdateProjectTermsResponse], error)
 	UpdateProjectSignIn(context.Context, *connect.Request[v1.UpdateProjectSignInRequest]) (*connect.Response[v1.UpdateProjectSignInResponse], error)
+	UpdateProjectEnvironment(context.Context, *connect.Request[v1.UpdateProjectEnvironmentRequest]) (*connect.Response[v1.UpdateProjectEnvironmentResponse], error)
 	BumpTermsVersion(context.Context, *connect.Request[v1.BumpTermsVersionRequest]) (*connect.Response[v1.BumpTermsVersionResponse], error)
 	CheckIssuerHandle(context.Context, *connect.Request[v1.CheckIssuerHandleRequest]) (*connect.Response[v1.CheckIssuerHandleResponse], error)
 	CreateProjectLogoUpload(context.Context, *connect.Request[v1.CreateProjectLogoUploadRequest]) (*connect.Response[v1.CreateProjectLogoUploadResponse], error)
@@ -337,6 +354,12 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 		connect.WithSchema(projectServiceMethods.ByName("UpdateProjectSignIn")),
 		connect.WithHandlerOptions(opts...),
 	)
+	projectServiceUpdateProjectEnvironmentHandler := connect.NewUnaryHandler(
+		ProjectServiceUpdateProjectEnvironmentProcedure,
+		svc.UpdateProjectEnvironment,
+		connect.WithSchema(projectServiceMethods.ByName("UpdateProjectEnvironment")),
+		connect.WithHandlerOptions(opts...),
+	)
 	projectServiceBumpTermsVersionHandler := connect.NewUnaryHandler(
 		ProjectServiceBumpTermsVersionProcedure,
 		svc.BumpTermsVersion,
@@ -385,6 +408,8 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 			projectServiceUpdateProjectTermsHandler.ServeHTTP(w, r)
 		case ProjectServiceUpdateProjectSignInProcedure:
 			projectServiceUpdateProjectSignInHandler.ServeHTTP(w, r)
+		case ProjectServiceUpdateProjectEnvironmentProcedure:
+			projectServiceUpdateProjectEnvironmentHandler.ServeHTTP(w, r)
 		case ProjectServiceBumpTermsVersionProcedure:
 			projectServiceBumpTermsVersionHandler.ServeHTTP(w, r)
 		case ProjectServiceCheckIssuerHandleProcedure:
@@ -434,6 +459,10 @@ func (UnimplementedProjectServiceHandler) UpdateProjectTerms(context.Context, *c
 
 func (UnimplementedProjectServiceHandler) UpdateProjectSignIn(context.Context, *connect.Request[v1.UpdateProjectSignInRequest]) (*connect.Response[v1.UpdateProjectSignInResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.UpdateProjectSignIn is not implemented"))
+}
+
+func (UnimplementedProjectServiceHandler) UpdateProjectEnvironment(context.Context, *connect.Request[v1.UpdateProjectEnvironmentRequest]) (*connect.Response[v1.UpdateProjectEnvironmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("project.v1.ProjectService.UpdateProjectEnvironment is not implemented"))
 }
 
 func (UnimplementedProjectServiceHandler) BumpTermsVersion(context.Context, *connect.Request[v1.BumpTermsVersionRequest]) (*connect.Response[v1.BumpTermsVersionResponse], error) {
