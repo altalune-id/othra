@@ -158,7 +158,14 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	inProcess := http.NewServeMux()
 	consoleRP := buildConsoleRP(cfg, svcs, inProcess)
 	issuerPublic, hostedPages := buildIssuerRoutes(cfg, svcs, inProcess, log, k.Reporter.Unexpected)
+	if svcs.MCPTokens, err = buildMCPTokens(cfg, svcs, inProcess); err != nil {
+		return nil, err
+	}
 	mcpServer := buildMCPServer(cfg.MCP, svcs, log, mcpPublicHost(cfg.HTTP)...)
+	mcpResource, mcpDocs, err := buildMCPResource(cfg, svcs, log)
+	if err != nil {
+		return nil, err
+	}
 
 	sup := worker.New(log)
 	sup.Register(httpserver.New(
@@ -171,7 +178,8 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 			api:        apiHandler,
 			console:    consoleHandler,
 			portal:     portalAssets,
-			mcp:        buildMCPHandler(mcpServer, svcs, log),
+			mcp:        buildMCPHandler(mcpServer, svcs, mcpResource, log),
+			mcpDocs:    mcpDocs,
 			routes:     buildRoutes(cfg, svcs, consoleRP, log, k.Reporter.Unexpected),
 			public:     issuerPublic,
 			hosted:     hostedPages,

@@ -442,7 +442,7 @@
   "rs.scopes_help": "Permissions apps can ask for, for example devices:read.",
   "rs.scopes_required": "Add at least one scope.",
   "rs.subtitle": "APIs and MCP endpoints that accept this project's tokens.",
-  "rs.system_empty": "Resource servers aren't used in the console project.",
+  "rs.system_empty": "Othra manages this project's resource server from its mcp settings.",
   "rs.trust": "Trust without verification",
   "rs.trust_body": "Othra will issue tokens for it without checking that it belongs to you. Only do this for a server you run yourself.",
   "rs.trust_create": "Trust this server without verification",

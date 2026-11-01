@@ -45,7 +45,7 @@ export function usePersonalKeyCreate() {
     if (!org) {
       return [];
     }
-    const allowed = org.role ? mintableForMe(scopes, org.permissions ?? []) : scopes.filter(s => !s.personOnly);
+    const allowed = org.role ? mintableForMe(scopes, org.permissions ?? []) : scopes.filter(s => !s.holder);
     return allowed.map(s => ({ name: s.name, label: scopeLabel(s.name) }));
   });
 

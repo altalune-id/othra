@@ -20,7 +20,8 @@ describe('mintableForMe', () => {
     { name: 'org:write', level: 'org', labelKey: 'scope.org_write' },
     { name: 'webhook:read', level: 'project', labelKey: 'scope.webhook_read' },
     { name: 'webhook:write', level: 'project', labelKey: 'scope.webhook_write' },
-    { name: 'apikey:write', level: 'org', labelKey: 'scope.apikey_write', personOnly: true },
+    { name: 'member:write', level: 'org', labelKey: 'scope.member_write', holder: 'person' },
+    { name: 'apikey:write', level: 'org', labelKey: 'scope.apikey_write', holder: 'console' },
   ];
 
   it('drops person-only and above-role scopes', () => {

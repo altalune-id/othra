@@ -146,6 +146,122 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*ResourceServe
 	return r, nil
 }
 
+// SystemResource is the resource server Othra keeps for itself in the console project; every field comes from config.
+type SystemResource struct {
+	Name        string
+	Identifier  string
+	Scopes      []string
+	ClientHosts []string
+}
+
+func (w SystemResource) admission() Admission {
+	return Admission{Accept: len(w.ClientHosts) > 0, Hosts: slices.Clone(w.ClientHosts)}
+}
+
+func (w SystemResource) matches(r *ResourceServer) bool {
+	a := w.admission()
+	return r.Trusted && r.State == StateVerified && r.Identifier == w.Identifier && slices.Equal(r.Scopes, w.Scopes) &&
+		r.Admission.Accept == a.Accept && slices.Equal(r.Admission.Hosts, a.Hosts) && r.Admission.Scopes == nil
+}
+
+// ReconcileSystem makes the console project's one server match want; NOTE: Othra serves its document itself, so no fetch verifies it.
+func (s *Service) ReconcileSystem(ctx context.Context, orgID, projectID uuid.UUID, want SystemResource) (bool, error) {
+	ctx = scope(ctx, orgID, projectID)
+	if err := ValidateIdentifier(want.Identifier); err != nil {
+		return false, err
+	}
+	if err := ValidateScopes(want.Scopes); err != nil {
+		return false, err
+	}
+	if err := ValidateClientHosts(want.ClientHosts); err != nil {
+		return false, err
+	}
+	changed := false
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		var err error
+		changed, err = s.reconcileSystem(ctx, orgID, projectID, want)
+		return err
+	})
+	if err != nil {
+		return false, s.errOrReport(ctx, "resourceserver: reconcile system", err)
+	}
+	if changed {
+		s.admissionChanged(projectID)
+	}
+	return changed, nil
+}
+
+func (s *Service) reconcileSystem(ctx context.Context, orgID, projectID uuid.UUID, want SystemResource) (bool, error) {
+	list, err := s.store.List(ctx, projectID)
+	if err != nil {
+		return false, err
+	}
+	now := s.now().UTC()
+	if len(list) == 0 {
+		publicID, err := nanoid.New(publicIDLen)
+		if err != nil {
+			return false, err
+		}
+		r := &ResourceServer{
+			ID: uuid.New(), PublicID: publicID, OrgID: orgID, ProjectID: projectID, Name: want.Name, Identifier: want.Identifier,
+			Scopes: want.Scopes, Admission: want.admission(), CreatedAt: now, UpdatedAt: now,
+		}
+		r.Trust(uuid.Nil, now)
+		r.Pass(now)
+		return true, s.store.Insert(ctx, r)
+	}
+	r, err := s.store.Lock(ctx, projectID, list[0].PublicID)
+	if err != nil || want.matches(r) {
+		return false, err
+	}
+	r.Name, r.Identifier, r.Scopes, r.Admission, r.UpdatedAt = want.Name, want.Identifier, want.Scopes, want.admission(), now
+	r.Trust(uuid.Nil, now)
+	r.Pass(now)
+	if err := s.store.Update(ctx, r); err != nil {
+		return false, err
+	}
+	return true, s.repinMetadataClients(ctx, r)
+}
+
+// CloseSystem stops the console project's server admitting metadata document clients and reports whether it changed.
+func (s *Service) CloseSystem(ctx context.Context, orgID, projectID uuid.UUID) (bool, error) {
+	ctx = scope(ctx, orgID, projectID)
+	changed := false
+	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
+		list, err := s.store.List(ctx, projectID)
+		if err != nil || len(list) == 0 {
+			return err
+		}
+		r, err := s.store.Lock(ctx, projectID, list[0].PublicID)
+		if err != nil || !r.Admission.Accept {
+			return err
+		}
+		r.Admission, r.UpdatedAt = Admission{}, s.now().UTC()
+		changed = true
+		return s.store.Update(ctx, r)
+	})
+	if err != nil {
+		return false, s.errOrReport(ctx, "resourceserver: close system", err)
+	}
+	if changed {
+		s.admissionChanged(projectID)
+	}
+	return changed, nil
+}
+
+// RefuseSystem returns *SystemProjectError for the console project, whose resource server only boot writes.
+func (s *Service) RefuseSystem(ctx context.Context, orgID, projectID uuid.UUID) error {
+	ctx = scope(ctx, orgID, projectID)
+	system, err := s.issuers.IsSystem(ctx, projectID)
+	switch {
+	case err != nil:
+		return s.errOrReport(ctx, "resourceserver: system check", err)
+	case system:
+		return &SystemProjectError{}
+	}
+	return nil
+}
+
 // List returns the project's resource servers.
 func (s *Service) List(ctx context.Context, orgID, projectID uuid.UUID) ([]*ResourceServer, error) {
 	ctx = scope(ctx, orgID, projectID)

@@ -83,6 +83,9 @@ func firstBoot(ctx context.Context, cfg config.Config, s *Services, log *slog.Lo
 	if err := reconcileConsole(ctx, cfg.HTTP, s, log); err != nil {
 		return err
 	}
+	if err := reconcileMCPResource(ctx, cfg, s, log); err != nil {
+		return err
+	}
 	return logUpstreamDrift(ctx, cfg.Upstreams, s, log)
 }
 

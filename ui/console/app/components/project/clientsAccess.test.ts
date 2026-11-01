@@ -32,6 +32,10 @@ describe('clients and resource server pages', () => {
     expect(source).toMatch(/if \(!canEdit\.value\) \{\s+await navigateTo\(base\.value, \{ replace: true \}\);/);
   });
 
+  it('a resource server of the console project stays read-only', () => {
+    expect(details[1]?.source).toContain('const canEdit = computed(() => guard.value.canConfigure);');
+  });
+
   it('holds the page while a new secret is shown and drops it once saved', () => {
     for (const { source } of [creates[0]!, details[0]!]) {
       expect(source).toContain('onBeforeRouteLeave(() => !revealed.value);');

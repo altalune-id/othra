@@ -8,7 +8,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/altalune-id/oidcrp/oidcrptest"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,11 +28,17 @@ import (
 	webhookv1mcp "github.com/altalune-id/othra/gen/go/webhook/v1/webhookv1mcp"
 	"github.com/altalune-id/othra/internal/apikey"
 	"github.com/altalune-id/othra/internal/auth"
+	"github.com/altalune-id/othra/internal/client"
 	"github.com/altalune-id/othra/internal/controlplane"
+	"github.com/altalune-id/othra/internal/enduser"
+	"github.com/altalune-id/othra/internal/grant"
 	"github.com/altalune-id/othra/internal/kernel/authz"
 	"github.com/altalune-id/othra/internal/kernel/capabilities"
 	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tokens"
+	"github.com/altalune-id/othra/internal/keys"
 	mcpinternal "github.com/altalune-id/othra/internal/mcp"
+	"github.com/altalune-id/othra/internal/oauth/oidc"
 	"github.com/altalune-id/othra/internal/org"
 	"github.com/altalune-id/othra/internal/permission"
 	"github.com/altalune-id/othra/internal/testutil/fakes"
@@ -57,11 +65,171 @@ func TestMCPChain(t *testing.T) {
 	assert.IsType(t, auth.BasicAuthenticator{}, chain[1])
 }
 
+func TestMCPChain_TokensWhenMCPOAuthIsOn(t *testing.T) {
+	svcs := &Services{KeyAuthn: &apikey.Authenticator{}, Auth: &auth.Service{}, MCPTokens: fakeTokens{}}
+	chain := mcpChain(svcs)
+	require.Len(t, chain, 2)
+	assert.Equal(t, auth.TokenAuthenticator{Verifier: fakeTokens{}, Auth: svcs.Auth}, chain[1])
+}
+
+type fakeTokens struct{}
+
+func (fakeTokens) Verify(context.Context, string) (session.Principal, error) {
+	return session.Principal{}, &tokens.InvalidTokenError{}
+}
+
+func mcpOAuthConfig() config.Config {
+	cfg := devLocalConfig()
+	cfg.HTTP.BaseURL = "https://othra.example.com"
+	cfg.MCP.Enabled = true
+	return cfg
+}
+
+func TestMCPAudience(t *testing.T) {
+	cfg := mcpOAuthConfig()
+	assert.Equal(t, "https://othra.example.com/mcp", mcpAudience(cfg))
+	cfg.HTTP.BasePath = "/othra"
+	assert.Equal(t, "https://othra.example.com/othra/mcp", mcpAudience(cfg))
+	cfg.MCP.Audience = "https://proxy.example.com/mcp"
+	assert.Equal(t, "https://proxy.example.com/mcp", mcpAudience(cfg))
+}
+
+func TestBuildMCPTokens_OnlyWithMCPOAuth(t *testing.T) {
+	off := mcpOAuthConfig()
+	off.MCP.Enabled = false
+	v, err := buildMCPTokens(off, &Services{}, nil)
+	require.NoError(t, err)
+	assert.Nil(t, v)
+
+	v, err = buildMCPTokens(mcpOAuthConfig(), &Services{}, nil)
+	require.NoError(t, err)
+	assert.Nil(t, v, "no issuer signs tokens")
+}
+
+func TestMCPOAuth_OffInBasicMode(t *testing.T) {
+	svcs := &Services{
+		IssuerResolver: &oidc.Resolver{}, Grants: &grant.Service{}, Clients: &client.Service{}, EndUsers: &enduser.Service{}, Keys: &keys.Service{},
+	}
+	require.True(t, mcpOAuth(mcpOAuthConfig(), svcs))
+	svcs.Caps.BasicAuth = true
+	assert.False(t, mcpOAuth(mcpOAuthConfig(), svcs))
+}
+
+func TestNewMCPVerifier_TakesTheClockSkew(t *testing.T) {
+	idp := oidcrptest.New(t)
+	now := time.Now()
+	late := idp.AccessToken(map[string]any{
+		"aud": "https://othra.example.com/mcp", "iat": now.Add(-time.Hour).Unix(), "exp": now.Add(-45 * time.Second).Unix(),
+	})
+	for skew, ok := range map[time.Duration]bool{time.Minute: true, 10 * time.Second: false} {
+		cfg := mcpOAuthConfig()
+		cfg.MCP.ClockSkew = skew
+		v, err := newMCPVerifier(cfg, idp.Issuer(), idp.Client())
+		require.NoError(t, err)
+		_, err = v.Verify(t.Context(), late)
+		assert.Equal(t, ok, err == nil, "skew %s: %v", skew, err)
+	}
+}
+
+// SECURITY: RFC 8707: the verifier takes only tokens minted for this MCP endpoint.
+func TestNewMCPVerifier_PinsTheAudience(t *testing.T) {
+	idp := oidcrptest.New(t)
+	v, err := newMCPVerifier(mcpOAuthConfig(), idp.Issuer(), idp.Client())
+	require.NoError(t, err)
+
+	p, err := v.Verify(t.Context(), idp.AccessToken(map[string]any{"aud": "https://othra.example.com/mcp"}))
+	require.NoError(t, err)
+	assert.Equal(t, session.SourceToken, p.Source)
+
+	_, err = v.Verify(t.Context(), idp.AccessToken(map[string]any{"aud": "https://othra.example.com/api"}))
+	assert.ErrorAs(t, err, new(*tokens.InvalidTokenError))
+}
+
+// SECURITY: the RFC 9728 document offers only catalog scopes a token may hold.
+func TestMCPScopes_OfferOnlyTokenScopes(t *testing.T) {
+	assert.Contains(t, mcpScopes(), scope.MemberWrite)
+	assert.Contains(t, mcpScopes(), scope.WebhookRead)
+	assert.NotContains(t, mcpScopes(), scope.ApikeyWrite)
+	noop := func(context.Context, json.RawMessage) (json.RawMessage, error) { return nil, nil }
+	reg := rootmcp.NewRegistry()
+	reg.Register(rootmcp.ToolSpec{Name: "member_invite", Scopes: []string{scope.MemberWrite}, Handler: noop}, nil)
+	assert.Equal(t, []string{scope.MemberWrite}, toolScopes(reg)("member_invite"))
+	assert.Nil(t, toolScopes(reg)("nope"))
+}
+
+func TestMCPSystemResource(t *testing.T) {
+	cfg := mcpOAuthConfig()
+	cfg.MCP.ClientHosts = []string{"claude.ai"}
+	r, err := mcpSystemResource(cfg)
+	require.NoError(t, err)
+	assert.Equal(t, "https://othra.example.com/mcp", r.Identifier)
+	assert.Equal(t, mcpScopes(), r.Scopes)
+	assert.Equal(t, []string{"claude.ai"}, r.ClientHosts)
+
+	cfg.MCP.ClientHosts = []string{"Claude.AI"}
+	_, err = mcpSystemResource(cfg)
+	var bad *config.InvalidSettingError
+	require.ErrorAs(t, err, &bad)
+	assert.Equal(t, "mcp.clientHosts", bad.Key)
+
+	cfg = mcpOAuthConfig()
+	cfg.MCP.Audience, cfg.MCP.AudienceOverride = "http://proxy.example.com/mcp", true
+	_, err = mcpSystemResource(cfg)
+	require.ErrorAs(t, err, &bad)
+	assert.Equal(t, "mcp.audience", bad.Key)
+
+	cfg = mcpOAuthConfig()
+	cfg.HTTP.BaseURL = "http://localhost:5150"
+	_, err = mcpSystemResource(cfg)
+	require.NoError(t, err, "plain http on localhost stays valid")
+}
+
+func TestBuildMCPResource_OffWithoutMCPOAuth(t *testing.T) {
+	log, buf := bufferLogger()
+	r, docs, err := buildMCPResource(mcpOAuthConfig(), &Services{}, log)
+	require.NoError(t, err)
+	assert.Equal(t, tokens.Resource{}, r)
+	assert.Nil(t, docs)
+	assert.Empty(t, buf.String())
+}
+
+func TestNewMCPResource(t *testing.T) {
+	log, buf := bufferLogger()
+	cfg := mcpOAuthConfig()
+	cfg.HTTP.BasePath = "/othra"
+	const issuer = "https://othra.example.com/othra/p/system"
+	r, docs, err := newMCPResource(cfg, issuer, log)
+	require.NoError(t, err)
+	assert.Equal(t, "https://othra.example.com/othra/mcp", r.Identifier)
+	assert.Contains(t, buf.String(), `msg="boot: mcp oauth on" audience=https://othra.example.com/othra/mcp`)
+	assert.Contains(t, buf.String(), "metadata=/.well-known/oauth-protected-resource/othra/mcp")
+	assert.Contains(t, buf.String(), "issuer="+issuer)
+	require.Contains(t, docs, "/.well-known/oauth-protected-resource/othra/mcp")
+
+	rec := httptest.NewRecorder()
+	docs[r.MetadataPath].ServeHTTP(rec, httptest.NewRequest(http.MethodGet, r.MetadataPath, nil))
+	require.Equal(t, http.StatusOK, rec.Code)
+	var doc struct {
+		Resource             string   `json:"resource"`
+		AuthorizationServers []string `json:"authorization_servers"`
+		ScopesSupported      []string `json:"scopes_supported"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &doc))
+	assert.Equal(t, r.Identifier, doc.Resource)
+	assert.Equal(t, []string{issuer}, doc.AuthorizationServers)
+	assert.Contains(t, doc.ScopesSupported, scope.MemberWrite)
+	assert.NotContains(t, doc.ScopesSupported, scope.ApikeyWrite)
+
+	cfg.MCP.Audience = "urn:othra:mcp"
+	_, _, err = newMCPResource(cfg, issuer, log)
+	assert.ErrorAs(t, err, new(*tokens.ResourceInvalidError))
+}
+
 func TestBuildMCPHandler(t *testing.T) {
 	svcs := &Services{Orgs: org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, nil), KeyScheme: apikey.NewScheme(""), KeyAuthn: &apikey.Authenticator{}}
-	assert.Nil(t, buildMCPHandler(nil, svcs, nil))
+	assert.Nil(t, buildMCPHandler(nil, svcs, tokens.Resource{}, nil))
 
-	h := buildMCPHandler(buildMCPServer(config.MCPConfig{Enabled: true}, svcs, nil), svcs, nil)
+	h := buildMCPHandler(buildMCPServer(config.MCPConfig{Enabled: true}, svcs, nil), svcs, tokens.Resource{}, nil)
 	require.NotNil(t, h)
 
 	req := httptest.NewRequest(http.MethodPost, "/mcp", nil)

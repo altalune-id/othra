@@ -70,7 +70,7 @@ func (s *ResourceServerService) GetResourceServer(
 func (s *ResourceServerService) CreateResourceServer(
 	ctx context.Context, req *connect.Request[resourceserverv1.CreateResourceServerRequest],
 ) (*connect.Response[resourceserverv1.CreateResourceServerResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (s *ResourceServerService) CreateResourceServer(
 func (s *ResourceServerService) UpdateResourceServer(
 	ctx context.Context, req *connect.Request[resourceserverv1.UpdateResourceServerRequest],
 ) (*connect.Response[resourceserverv1.UpdateResourceServerResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (s *ResourceServerService) UpdateResourceServer(
 func (s *ResourceServerService) DeleteResourceServer(
 	ctx context.Context, req *connect.Request[resourceserverv1.DeleteResourceServerRequest],
 ) (*connect.Response[resourceserverv1.DeleteResourceServerResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (s *ResourceServerService) DeleteResourceServer(
 func (s *ResourceServerService) VerifyResourceServer(
 	ctx context.Context, req *connect.Request[resourceserverv1.VerifyResourceServerRequest],
 ) (*connect.Response[resourceserverv1.VerifyResourceServerResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (s *ResourceServerService) SetResourceServerTrust(
 func (s *ResourceServerService) SetResourceServerAdmission(
 	ctx context.Context, req *connect.Request[resourceserverv1.SetResourceServerAdmissionRequest],
 ) (*connect.Response[resourceserverv1.SetResourceServerAdmissionResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func (s *ResourceServerService) ListLinks(
 func (s *ResourceServerService) LinkClient(
 	ctx context.Context, req *connect.Request[resourceserverv1.LinkClientRequest],
 ) (*connect.Response[resourceserverv1.LinkClientResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func (s *ResourceServerService) LinkClient(
 func (s *ResourceServerService) UpdateLink(
 	ctx context.Context, req *connect.Request[resourceserverv1.UpdateLinkRequest],
 ) (*connect.Response[resourceserverv1.UpdateLinkResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +293,7 @@ func (s *ResourceServerService) UpdateLink(
 func (s *ResourceServerService) UnlinkClient(
 	ctx context.Context, req *connect.Request[resourceserverv1.UnlinkClientRequest],
 ) (*connect.Response[resourceserverv1.UnlinkClientResponse], error) {
-	orgID, projectID, err := s.project(ctx, req.Msg.GetProjectId(), authz.ReachWholeProject)
+	orgID, projectID, err := s.writable(ctx, req.Msg.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -322,12 +322,25 @@ func (s *ResourceServerService) personProject(ctx context.Context, publicID stri
 	if p = person(ctx); p == uuid.Nil {
 		return uuid.Nil, uuid.Nil, uuid.Nil, &authz.ForbiddenError{Permission: authz.PersonOnly}
 	}
-	orgID, projectID, err = s.project(ctx, publicID, authz.ReachWholeProject)
+	orgID, projectID, err = s.writable(ctx, publicID)
 	return orgID, projectID, p, err
 }
 
+// SECURITY: the console project's resource server is Othra's own; it is readable, and no RPC changes it.
+func (s *ResourceServerService) writable(ctx context.Context, publicID string) (orgID, projectID uuid.UUID, err error) {
+	orgID, projectID, err = s.project(ctx, publicID, authz.ReachWholeProject)
+	if err != nil {
+		return uuid.Nil, uuid.Nil, err
+	}
+	if err := s.svc.RefuseSystem(ctx, orgID, projectID); err != nil {
+		return uuid.Nil, uuid.Nil, err
+	}
+	return orgID, projectID, nil
+}
+
+// SECURITY: an access token is refused here; trust and introspection secrets take a person on the web, not an MCP client acting for one.
 func person(ctx context.Context) uuid.UUID {
-	if p := session.PrincipalFrom(ctx); p.IsPerson() {
+	if p := session.PrincipalFrom(ctx); p.IsPerson() && p.Source != session.SourceToken {
 		return p.UserID
 	}
 	return uuid.Nil

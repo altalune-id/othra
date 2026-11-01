@@ -60,6 +60,7 @@ func (s *postgresStore) Update(ctx context.Context, r *ResourceServer) error {
 	t := s.servers
 	stmt := t.UPDATE().SET(
 		t.Name.SET(postgres.String(r.Name)),
+		t.Identifier.SET(postgres.String(r.Identifier)),
 		t.Scopes.SET(db.TextArray(r.Scopes)),
 		t.VerificationState.SET(postgres.String(string(r.State))),
 		t.VerifiedAt.SET(postgres.TimestampzExp(timeExpr(r.VerifiedAt))),

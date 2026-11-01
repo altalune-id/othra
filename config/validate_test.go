@@ -43,6 +43,22 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"http.baseURL not a url", func(c *Config) { c.HTTP.BaseURL = "not a url" }, invalidSetting("http.baseURL")},
 		{"http.baseURL empty with smtp", func(c *Config) { c.HTTP.BaseURL = "" }, missingSetting("http.baseURL")},
 		{"http.baseURL empty with console", func(c *Config) { devConsole(c); c.HTTP.BaseURL = "" }, valid},
+		{"mcp oauth on", mcpOAuthOn, valid},
+		{"mcp.audience matching the mounted url", func(c *Config) { mcpOAuthOn(c); c.MCP.Audience = MountedMCP(c.HTTP) }, valid},
+		{"mcp.audience typo", func(c *Config) { mcpOAuthOn(c); c.MCP.Audience = "https://othra.exmple.com/mcp" }, invalidSetting("mcp.audience")},
+		{"mcp.audience another url with the override", func(c *Config) {
+			mcpOAuthOn(c)
+			c.MCP.Audience, c.MCP.AudienceOverride = "https://proxy.example.com/mcp", true
+		}, valid},
+		{"mcp.audience relative", func(c *Config) { mcpOAuthOn(c); c.MCP.Audience, c.MCP.AudienceOverride = "/mcp", true }, invalidSetting("mcp.audience")},
+		{"mcp.audience not http", func(c *Config) { mcpOAuthOn(c); c.MCP.Audience, c.MCP.AudienceOverride = "urn:othra:mcp", true }, invalidSetting("mcp.audience")},
+		{"mcp.audience with a fragment", func(c *Config) {
+			mcpOAuthOn(c)
+			c.MCP.Audience, c.MCP.AudienceOverride = "https://proxy.example.com/mcp#x", true
+		}, invalidSetting("mcp.audience")},
+		{"mcp.clockSkew zero", func(c *Config) { c.MCP.ClockSkew = 0 }, valid},
+		{"mcp.clockSkew negative", func(c *Config) { c.MCP.ClockSkew = -time.Second }, invalidSetting("mcp.clockSkew")},
+		{"mcp off ignores mcp.audience", func(c *Config) { c.MCP.Audience = "nope" }, valid},
 		{"http.trustedProxyHops 2", func(c *Config) { c.HTTP.TrustedProxyHops = 2 }, valid},
 		{"http.trustedProxyHops negative", func(c *Config) { c.HTTP.TrustedProxyHops = -1 }, invalidSetting("http.trustedProxyHops")},
 		{"http.stateSecret short", func(c *Config) { c.HTTP.StateSecret = "short" }, invalidSetting("http.stateSecret")},
