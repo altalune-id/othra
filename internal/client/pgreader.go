@@ -21,7 +21,7 @@ func (s *postgresStore) clientColumns() postgres.ProjectionList {
 		db.ArrayAsJSON(t.RedirectURIs, "oauth_clients.redirect_uris"),
 		db.ArrayAsJSON(t.PostLogoutRedirectURIs, "oauth_clients.post_logout_redirect_uris"),
 		t.ConsentPolicy, t.PKCERequired, t.CreatedAt, t.UpdatedAt, t.MetadataURL, t.ClientURI, t.MetadataFetchedAt, t.MetadataExpiresAt,
-		t.RegistrationKind,
+		t.RegistrationKind, t.LastUsedAt,
 	}
 }
 

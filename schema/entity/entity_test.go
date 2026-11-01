@@ -49,7 +49,7 @@ func TestBindings(t *testing.T) {
 				"id", "public_id", "org_id", "project_id", "name", "client_type", "application_type",
 				"token_endpoint_auth_method", "grant_types", "allowed_scopes", "redirect_uris",
 				"post_logout_redirect_uris", "consent_policy", "pkce_required", "registration_kind", "metadata_url",
-				"metadata_fetched_at", "metadata_expires_at", "client_uri", "created_at", "updated_at",
+				"metadata_fetched_at", "metadata_expires_at", "client_uri", "created_at", "updated_at", "last_used_at",
 			},
 		},
 		{

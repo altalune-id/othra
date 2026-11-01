@@ -211,6 +211,9 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	if svcs.TokenUsage != nil {
 		sup.Register(svcs.TokenUsage)
 	}
+	if svcs.ClientUsage != nil {
+		sup.Register(svcs.ClientUsage)
+	}
 	if lims.janitor != nil {
 		sup.Register(lims.janitor)
 	}
