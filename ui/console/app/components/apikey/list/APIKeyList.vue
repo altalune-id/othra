@@ -4,6 +4,7 @@ import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import { useScopeLabel } from '#base/composables/useScopeLabel';
+import { expiryState, keyStatus } from '#base/lib/tokens/keyStatus';
 import { useAPIKeysStore } from '~/stores/apiKeys';
 
 const { orgId, canManage = false } = defineProps<{ orgId: string, canManage?: boolean }>();
@@ -15,6 +16,12 @@ const keys = useAPIKeysStore();
 const { $apiKeyClient: client } = useNuxtApp();
 
 await keys.ensureLoaded(orgId);
+
+const statusBadge = { active: 'badge-success', expired: 'badge-error', revoked: 'badge-ghost' } as const;
+const rows = computed(() => {
+  const now = new Date();
+  return keys.shared.map(k => ({ ...k, status: keyStatus(!!k.revokedAt, expiryState(k.expiresAt, now)) }));
+});
 
 function kindLabel(kind: string): string {
   return kind === 'org' ? t('apikeys.kind_org') : t('apikeys.kind_project');
@@ -63,7 +70,7 @@ async function confirmRevoke() {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="k in keys.shared" :key="k.rowKey" class="hover:bg-base-200">
+        <tr v-for="k in rows" :key="k.rowKey" class="hover:bg-base-200">
           <td>{{ k.name }}</td>
           <td>{{ kindLabel(k.kind) }}</td>
           <td class="text-base-content/60">
@@ -73,12 +80,12 @@ async function confirmRevoke() {
             …{{ k.secretHint }}
           </td>
           <td>
-            <span class="badge badge-sm" :class="k.revokedAt ? 'badge-error' : 'badge-success'">
-              {{ k.revokedAt ? t('tokens.status_revoked') : t('tokens.status_active') }}
+            <span class="badge badge-sm" :class="statusBadge[k.status]">
+              {{ t(`tokens.status_${k.status}`) }}
             </span>
           </td>
           <td class="whitespace-nowrap text-right">
-            <button v-if="canManage && !k.revokedAt" type="button" class="btn btn-ghost btn-xs" @click="askRevoke(k)">
+            <button v-if="canManage && k.status === 'active'" type="button" class="btn btn-ghost btn-xs" @click="askRevoke(k)">
               <Icon name="lucide:ban" size="14" class="text-error" />
               {{ t('common.revoke') }}
             </button>
