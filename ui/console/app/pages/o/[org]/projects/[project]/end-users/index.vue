@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import AppButton from '#base/components/ui/AppButton.vue';
+import EmptyState from '#base/components/ui/EmptyState.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import { useDates } from '#base/composables/useDates';
 import { useEndUserList } from '~/components/enduser/useEndUsers';
 import { useOrgsStore } from '~/stores/orgs';
@@ -26,19 +28,12 @@ const searchId = useId();
 
 useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('endusers.title')} · Othra` });
 
-await list.load();
+void list.load();
 </script>
 
 <template>
   <div class="max-w-4xl space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold">
-        {{ t('endusers.title') }}
-      </h1>
-      <p class="text-sm text-base-content/70">
-        {{ t('endusers.subtitle') }}
-      </p>
-    </div>
+    <PageHeader :title="t('endusers.title')" :description="t('endusers.subtitle')" />
     <form role="search" class="flex gap-2" @submit.prevent="list.load()">
       <label :for="searchId" class="sr-only">{{ t('endusers.search') }}</label>
       <input :id="searchId" v-model="query" type="search" class="input w-full max-w-sm" :placeholder="t('endusers.search')" autocomplete="off">
@@ -47,10 +42,8 @@ await list.load();
       </AppButton>
     </form>
     <LoadError :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
-    <p v-if="!loading && users.length === 0 && !loadError" class="text-sm text-base-content/70">
-      {{ shown ? t('endusers.none_found') : t('endusers.empty') }}
-    </p>
-    <div v-else-if="!loadError" class="overflow-x-auto rounded-box border border-base-300">
+    <EmptyState v-if="!loading && users.length === 0 && !loadError" :icon="shown ? 'lucide:search-x' : 'lucide:users'" :title="shown ? t('endusers.none_found') : t('endusers.empty')" />
+    <div v-else-if="!loadError && users.length" class="overflow-x-auto rounded-box border border-base-300">
       <table class="table" data-testid="end-users">
         <thead>
           <tr>

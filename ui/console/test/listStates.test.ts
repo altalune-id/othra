@@ -6,8 +6,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
 import { mountPage } from '#test/mount-page';
-import { setClient, setRoute } from '#test/nuxt-globals';
+import { deferred, setClient, setRoute } from '#test/nuxt-globals';
 import WebhookList from '~/components/webhook/list/WebhookList.vue';
+import EndUsers from '~/pages/o/[org]/projects/[project]/end-users/index.vue';
 import ResourceServers from '~/pages/o/[org]/projects/[project]/resource-servers/index.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -48,5 +49,20 @@ describe('webhooks list', () => {
     await flushPromises();
     expect(listWebhooks).toHaveBeenCalledTimes(2);
     expect(w.get('h2').text()).toBe('webhooks.empty');
+  });
+});
+
+describe('end users page', () => {
+  it('shows the page and a loading status before the list arrives, then the empty state, not an empty table', async () => {
+    setRoute({ path: '/o/acme/projects/web/end-users', params: { org: 'acme', project: 'web' } });
+    const pending = deferred<{ endUsers: unknown[], next: string }>();
+    setClient('$endUserClient', { listEndUsers: vi.fn().mockReturnValue(pending.promise) });
+    const w = await mountPage(EndUsers);
+    expect(w.get('h1').text()).toBe('endusers.title');
+    expect(w.find('[role="status"]').text()).toContain('common.loading');
+    expect(w.find('table').exists()).toBe(false);
+    pending.resolve({ endUsers: [], next: '' });
+    await flushPromises();
+    expect(w.get('h2').text()).toBe('endusers.empty');
   });
 });
