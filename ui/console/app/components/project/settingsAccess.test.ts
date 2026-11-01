@@ -152,7 +152,6 @@ describe('m1.5 design re-check', () => {
   it('lets issuer URLs wrap after /p/ and calls the Overview link "Edit issuer"', () => {
     const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
     expect(overview).toContain('issuer.edit');
-    expect(overview).toContain('<UrlField');
     expect(pages.find(p => p.name === 'issuer')!.source).toContain('<UrlField');
   });
 });
@@ -166,11 +165,10 @@ describe('m2 discovery and signing keys (no RPC)', () => {
     expect(fields).toEqual(['oidc', 'oauth', 'jwks']);
   });
 
-  it('shows the issuer and discovery URLs on the Overview, without JWKS or Open', () => {
-    const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
-    expect(overview).toContain('overview.discovery');
-    expect(overview).not.toContain('discovery.jwks');
-    expect(overview).not.toMatch(/<UrlField[^>]*\sopen[\s>]/);
+  it('checks discovery on the Overview, taking the JWKS URL from the discovery document', () => {
+    const status = read('./overview/IssuerStatus.vue');
+    expect(status).toContain('overview.discovery');
+    expect(read('./overview/useDiscoveryCheck.ts')).toContain('found.jwks_uri');
   });
 
   it('gives Signing keys its own page', () => {
