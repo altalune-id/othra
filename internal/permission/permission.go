@@ -37,6 +37,7 @@ func Table() map[string][]string {
 		projectv1connect.ProjectServiceUpdateProjectBrandingProcedure:     {scope.ProjectWrite},
 		projectv1connect.ProjectServiceUpdateProjectTermsProcedure:        {scope.ProjectWrite},
 		projectv1connect.ProjectServiceUpdateProjectSignInProcedure:       {scope.ProjectWrite},
+		projectv1connect.ProjectServiceUpdateProjectEnvironmentProcedure:  {scope.ProjectWrite},
 		projectv1connect.ProjectServiceBumpTermsVersionProcedure:          {scope.ProjectWrite},
 		projectv1connect.ProjectServiceCreateProjectLogoUploadProcedure:   {scope.ProjectWrite},
 		projectv1connect.ProjectServiceCompleteProjectLogoUploadProcedure: {scope.ProjectWrite},

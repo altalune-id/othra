@@ -72,6 +72,8 @@ func TestService_SystemProjectGuards(t *testing.T) {
 	_, err = svc.SetSignInEmailLink(ctx, p.ID, false)
 	assert.Equal(t, apperror.CodeProjectSystemManaged, codeOf(err))
 	assert.True(t, project.IsSystemManagedError(err))
+	_, err = svc.UpdateEnvironment(ctx, p.ID, project.EnvironmentProduction)
+	assert.Equal(t, apperror.CodeProjectSystemManaged, codeOf(err))
 
 	on, err := svc.SetSignInEmailLink(ctx, p.ID, true)
 	require.NoError(t, err, "turning the email link on stays allowed")

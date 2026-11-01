@@ -226,7 +226,7 @@ func TestBindings(t *testing.T) {
 		{
 			"projects",
 			func(s, p string) binding { b := entity.NewProjects(s, p); return binding{b, b.AllColumns} },
-			[]string{"id", "public_id", "org_id", "slug", "name", "created_by", "created_at", "updated_at", "issuer_handle", "issuer_handle_locked_at", "display_name", "primary_color", "support_email", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link", "logo_file_id"},
+			[]string{"id", "public_id", "org_id", "slug", "name", "created_by", "created_at", "updated_at", "issuer_handle", "issuer_handle_locked_at", "display_name", "primary_color", "support_email", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link", "logo_file_id", "environment"},
 		},
 		{
 			"password_resets",

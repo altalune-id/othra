@@ -365,6 +365,16 @@ func (s *Service) UpdateBranding(ctx context.Context, id uuid.UUID, displayName,
 	}))
 }
 
+// UpdateEnvironment tags a project with env, or clears the tag with EnvironmentNone; the console project takes no tag.
+func (s *Service) UpdateEnvironment(ctx context.Context, id uuid.UUID, env string) (*Project, error) {
+	return s.change(ctx, "project: update environment", id, func(p *Project) error {
+		if p.IsSystem() {
+			return &SystemManagedError{}
+		}
+		return p.SetEnvironment(env)
+	})
+}
+
 // UpdateTerms sets a project's terms and privacy links; a first terms link publishes version 1.
 func (s *Service) UpdateTerms(ctx context.Context, id uuid.UUID, termsURL, privacyURL string) (*Project, error) {
 	return s.issuerChanged(s.change(ctx, "project: update terms", id, func(p *Project) error {

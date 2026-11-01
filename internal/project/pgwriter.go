@@ -22,6 +22,7 @@ func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 			p.ID, p.PublicID, p.OrgID, p.Slug, p.Name, createdByExpr(p), p.CreatedAt.UTC(), now,
 			p.IssuerHandle, timeExpr(p.IssuerHandleLockedAt), p.DisplayName, p.PrimaryColor, p.SupportEmail,
 			p.TermsURL, p.PrivacyURL, p.TermsVersion, timeExpr(p.TermsPublishedAt), p.SignInEmailLink, logoFileExpr(p.LogoFileID),
+			p.Environment,
 		).
 		ON_CONFLICT(t.ID).
 		DO_UPDATE(postgres.SET(
@@ -35,6 +36,7 @@ func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 			t.TermsVersion.SET(postgres.Int32(p.TermsVersion)),
 			t.TermsPublishedAt.SET(timeExpr(p.TermsPublishedAt)),
 			t.SignInEmailLink.SET(postgres.Bool(p.SignInEmailLink)),
+			t.Environment.SET(postgres.String(p.Environment)),
 			t.UpdatedAt.SET(postgres.TimestampzT(now)),
 		))
 	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {

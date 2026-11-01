@@ -67,3 +67,15 @@ func TestProjectToProto_System(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, projectToProto(app, "o1", "https://id.example/p/app", "").GetSystem())
 }
+
+func TestProject_SetEnvironment(t *testing.T) {
+	p, err := NewProject(uuid.New(), "acme", "Acme Inc", uuid.New())
+	require.NoError(t, err)
+	assert.Equal(t, EnvironmentNone, p.Environment, "a new project has no tag")
+	for _, env := range []string{EnvironmentProduction, EnvironmentStaging, EnvironmentDevelopment, EnvironmentLabs, EnvironmentNone} {
+		require.NoError(t, p.SetEnvironment(env))
+		assert.Equal(t, env, p.Environment)
+	}
+	assert.Error(t, p.SetEnvironment("qa"))
+	assert.Equal(t, EnvironmentNone, p.Environment, "a refused tag changes nothing")
+}
