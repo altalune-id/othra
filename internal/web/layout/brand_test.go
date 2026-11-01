@@ -79,7 +79,7 @@ func TestLayout_WithoutBrandLooksAsToday(t *testing.T) {
 	assert.NotContains(t, html, "<style")
 	assert.NotContains(t, html, "data-brand")
 	assert.NotContains(t, html, "brand-header")
-	assert.Contains(t, html, `<h1 class="card-title text-2xl break-words max-sm:text-xl">Sign in</h1><p>body</p>`)
+	assert.Contains(t, html, `<h1 class="text-2xl font-semibold break-words max-sm:text-xl">Sign in</h1><p>body</p>`)
 }
 
 func TestLayout_WithBrand(t *testing.T) {
@@ -192,7 +192,7 @@ func TestCardWith_PutsTheLeadInTheTitleRow(t *testing.T) {
 		return err
 	})
 	html := render(t, t.Context(), CardWith("Allow it?", lead))
-	assert.Contains(t, html, `<div class="flex items-center gap-3"><span class="mark">C</span><h1 class="card-title text-2xl break-words max-sm:text-xl">Allow it?</h1></div>`)
+	assert.Contains(t, html, `<div class="flex items-center gap-3"><span class="mark">C</span><h1 class="text-2xl font-semibold break-words max-sm:text-xl">Allow it?</h1></div>`)
 	assert.Equal(t, render(t, t.Context(), Card("Plain")), render(t, t.Context(), CardWith("Plain", nil)), "Card is CardWith without a lead")
 }
 
