@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { connectError, deferred, setClient, setKnownKeys } from '#test/nuxt-globals';
+import { connectError, deferred, navigateTo, setClient, setKnownKeys } from '#test/nuxt-globals';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 import { useProjectCreate } from './useProjectCreate';
@@ -25,7 +25,7 @@ describe('useProjectCreate', () => {
     vi.useRealTimers();
   });
 
-  it('creates a project, adds it and closes', async () => {
+  it('creates a project, adds it, closes and opens it', async () => {
     const form = useProjectCreate('V3StGXR8Z5jdHj6BmyT2a');
     form.show();
     expect(form.open.value).toBe(true);
@@ -37,6 +37,7 @@ describe('useProjectCreate', () => {
     expect(useProjectsStore().items).toEqual([project]);
     expect(form.open.value).toBe(false);
     expect([form.name.value, form.slug.value]).toEqual(['', '']);
+    expect(navigateTo).toHaveBeenCalledWith('/o/acme/projects/web');
   });
 
   it('stays open when the response has no project', async () => {

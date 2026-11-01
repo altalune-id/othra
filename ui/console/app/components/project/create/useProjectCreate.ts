@@ -71,6 +71,10 @@ export function useProjectCreate(orgId: string) {
         name.value = '';
         slug.value = '';
         handle.reset('');
+        const org = orgs.items.find(o => o.id === project.orgId);
+        if (org) {
+          await navigateTo(`/o/${org.slug}/projects/${project.slug}`);
+        }
       }
     } catch (e) {
       error.value = validation.fromServer(e, 'error.create_project');
