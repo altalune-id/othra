@@ -4,7 +4,7 @@ import KeyValue from '#base/components/ui/KeyValue.vue';
 import Section from '#base/components/ui/Section.vue';
 import { useDiscoveryCheck } from './useDiscoveryCheck';
 
-const { issuer, methods } = defineProps<{ issuer: string, methods: string[] | null }>();
+const { issuer, methods, methodsFailed = false } = defineProps<{ issuer: string, methods: string[] | null, methodsFailed?: boolean }>();
 
 const { t } = useI18n();
 const { state, doc, keys, check } = useDiscoveryCheck(() => issuer);
@@ -12,7 +12,7 @@ const showJSON = ref(false);
 const items = computed(() => [
   { label: t('overview.discovery') },
   { label: t('overview.keys'), value: keys.value === null ? '' : t('overview.keys_published', { n: keys.value }) },
-  { label: t('overview.methods'), value: methods === null ? t('common.loading') : methods.length ? methods.join(', ') : t('overview.methods_none') },
+  { label: t('overview.methods'), value: methodsFailed ? t('overview.methods_failed') : methods === null ? t('common.loading') : methods.length ? methods.join(', ') : t('overview.methods_none') },
 ]);
 
 onMounted(check);

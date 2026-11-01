@@ -73,6 +73,23 @@ describe('project overview', () => {
     expect(checklist.text()).toContain('overview.setup_progress|{"done":2,"total":5}');
   });
 
+  it('never counts a failed read as zero: Setup shows Retry, Methods says it could not load', async () => {
+    setup({ issuerHandle: 'web', signinEmailLink: true });
+    const listClients = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ clients: [{}] });
+    setClient('$clientClient', { listClients });
+    const w = await mountPage(Overview);
+    await flushPromises();
+    const checklist = w.get('[data-testid="setup-checklist"]');
+    expect(checklist.text()).not.toContain('overview.setup_progress');
+    expect(checklist.text()).not.toContain('overview.setup_client');
+    expect(w.get('[data-testid="issuer-status"]').text()).toContain('overview.methods_failed');
+    await checklist.findAll('button').find(b => b.text().includes('common.retry'))!.trigger('click');
+    await flushPromises();
+    expect(listClients).toHaveBeenCalledTimes(2);
+    expect(checklist.text()).toContain('overview.setup_progress|{"done":3,"total":5}');
+    expect(w.get('[data-testid="issuer-status"]').text()).toContain('overview.method_email');
+  });
+
   it('counts the setup steps from real data', async () => {
     setup({ issuerHandle: 'web', signinEmailLink: true, termsUrl: 'https://t', privacyUrl: 'https://p' }, 2);
     const w = await mountPage(Overview);

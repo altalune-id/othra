@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { ShownError } from '#base/lib/apperror/message';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
+import { useErrorMessage } from '#base/composables/useErrorMessage';
 import IssuerStatus from '~/components/project/overview/IssuerStatus.vue';
 import { setupItems } from '~/components/project/overview/setup';
 import SetupChecklist from '~/components/project/overview/SetupChecklist.vue';
@@ -33,24 +35,23 @@ const projectId = project.value.id;
 const base = computed(() => `/o/${route.params.org}/projects/${route.params.project}`);
 const detail = useProjectDetailStore();
 
-async function count<T>(load: () => Promise<T[]>): Promise<number> {
+const counts = ref<{ clients: number, upstreams: number } | null>(null);
+const countsError = ref<ShownError | null>(null);
+const errorMessage = useErrorMessage();
+await Promise.all([detail.ensureLoaded(projectId), useAuthStore().load()]);
+
+async function loadCounts() {
+  counts.value = null;
+  countsError.value = null;
   try {
-    return (await load()).length;
-  } catch {
-    return 0;
+    const [c, u] = await Promise.all([clientApi.listClients({ projectId }), upstreamApi.listUpstreams({ projectId })]);
+    counts.value = { clients: c.clients.length, upstreams: u.upstreams.length };
+  } catch (e) {
+    countsError.value = errorMessage(e, 'overview.counts_failed');
   }
 }
 
-const counts = ref<{ clients: number, upstreams: number } | null>(null);
-await Promise.all([detail.ensureLoaded(projectId), useAuthStore().load()]);
-
-onMounted(async () => {
-  const [clients, upstreams] = await Promise.all([
-    count(async () => (await clientApi.listClients({ projectId })).clients),
-    count(async () => (await upstreamApi.listUpstreams({ projectId })).upstreams),
-  ]);
-  counts.value = { clients, upstreams };
-});
+onMounted(loadCounts);
 
 const full = computed(() => detail.get(projectId));
 const methods = computed(() => (counts.value
@@ -99,7 +100,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
     <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('project.system_note')" />
     <ProjectReadOnlyNote v-else-if="guard.system" />
 
-    <IssuerStatus v-if="full?.issuerUrl" :issuer="full.issuerUrl" :methods="methods" />
-    <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts" />
+    <IssuerStatus v-if="full?.issuerUrl" :issuer="full.issuerUrl" :methods="methods" :methods-failed="!!countsError" />
+    <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts && !countsError" :error="countsError" @retry="loadCounts" />
   </div>
 </template>

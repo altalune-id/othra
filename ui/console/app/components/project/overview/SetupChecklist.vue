@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import type { ShownError } from '#base/lib/apperror/message';
 import type { SetupItem } from './setup';
+import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
 import Section from '#base/components/ui/Section.vue';
 
-const { items, loading = false } = defineProps<{ items: SetupItem[], loading?: boolean }>();
+const { items, loading = false, error = null } = defineProps<{ items: SetupItem[], loading?: boolean, error?: ShownError | null }>();
+const emit = defineEmits<{ retry: [] }>();
+const ready = computed(() => !loading && !error);
 
 const { t } = useI18n();
 const done = computed(() => items.filter(i => i.done).length);
@@ -11,13 +15,14 @@ const progress = computed(() => t('overview.setup_progress', { done: done.value,
 </script>
 
 <template>
-  <Section :title="t('overview.setup_title')" :description="loading ? '' : progress" data-testid="setup-checklist">
-    <div v-if="loading" class="space-y-3" data-testid="setup-loading">
+  <Section :title="t('overview.setup_title')" :description="ready ? progress : ''" data-testid="setup-checklist">
+    <LoadError v-if="error" :error="error" :retry-label="t('common.retry')" @retry="emit('retry')" />
+    <div v-else-if="loading" class="space-y-3" data-testid="setup-loading">
       <LoadingStatus :label="t('common.loading')" />
       <div v-for="n in 5" :key="n" class="skeleton h-5 w-full" aria-hidden="true" />
     </div>
-    <progress v-if="!loading" class="progress progress-primary w-full" :value="done" :max="items.length" :aria-label="t('overview.setup_title')" :aria-valuetext="progress" />
-    <ul v-if="!loading" class="divide-y divide-base-300">
+    <progress v-if="ready" class="progress progress-primary w-full" :value="done" :max="items.length" :aria-label="t('overview.setup_title')" :aria-valuetext="progress" />
+    <ul v-if="ready" class="divide-y divide-base-300">
       <li v-for="item in items" :key="item.key" class="flex items-center justify-between gap-3 py-2 text-sm">
         <span class="flex items-center gap-2">
           <Icon :name="item.done ? 'lucide:circle-check' : 'lucide:circle'" size="18" :class="item.done ? 'text-success' : 'text-base-content/40'" />
