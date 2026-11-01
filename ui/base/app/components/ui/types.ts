@@ -34,3 +34,15 @@ export interface ConfirmHandle {
   cancel: () => void;
   confirm: () => Promise<boolean>;
 }
+
+export interface Crumb {
+  label: string;
+  to?: string;
+}
+
+export interface KeyValueItem {
+  label: string;
+  value?: string;
+  mono?: boolean;
+  copy?: boolean;
+}
