@@ -2,7 +2,7 @@
 import type { SetupItem } from './setup';
 import Section from '#base/components/ui/Section.vue';
 
-const { items } = defineProps<{ items: SetupItem[] }>();
+const { items, loading = false } = defineProps<{ items: SetupItem[], loading?: boolean }>();
 
 const { t } = useI18n();
 const done = computed(() => items.filter(i => i.done).length);
@@ -10,9 +10,13 @@ const progress = computed(() => t('overview.setup_progress', { done: done.value,
 </script>
 
 <template>
-  <Section :title="t('overview.setup_title')" :description="progress" data-testid="setup-checklist">
-    <progress class="progress progress-primary w-full" :value="done" :max="items.length" :aria-label="t('overview.setup_title')" :aria-valuetext="progress" />
-    <ul class="divide-y divide-base-300">
+  <Section :title="t('overview.setup_title')" :description="loading ? '' : progress" data-testid="setup-checklist">
+    <div v-if="loading" class="space-y-3" aria-busy="true">
+      <span class="sr-only">{{ t('common.loading') }}</span>
+      <div v-for="n in 5" :key="n" class="skeleton h-5 w-full" />
+    </div>
+    <progress v-if="!loading" class="progress progress-primary w-full" :value="done" :max="items.length" :aria-label="t('overview.setup_title')" :aria-valuetext="progress" />
+    <ul v-if="!loading" class="divide-y divide-base-300">
       <li v-for="item in items" :key="item.key" class="flex items-center justify-between gap-3 py-2 text-sm">
         <span class="flex items-center gap-2">
           <Icon :name="item.done ? 'lucide:circle-check' : 'lucide:circle'" size="18" :class="item.done ? 'text-success' : 'text-base-content/40'" />

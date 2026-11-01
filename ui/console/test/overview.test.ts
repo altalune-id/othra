@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
 import { ProjectSchema } from '#gen/project/v1/project_pb';
 import { mountPage } from '#test/mount-page';
-import { setClient, setRoute } from '#test/nuxt-globals';
+import { deferred, setClient, setRoute } from '#test/nuxt-globals';
 import Overview from '~/pages/o/[org]/projects/[project]/index.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -57,6 +57,20 @@ describe('project overview', () => {
     expect(status.text()).toContain('overview.discovery_unreachable');
     expect(status.findAll('button').some(b => b.text().includes('common.retry'))).toBe(true);
     expect(w.find('[data-testid="setup-checklist"]').exists()).toBe(true);
+  });
+
+  it('shows the page before the counts arrive, with skeletons in Setup', async () => {
+    setup({ issuerHandle: 'web' });
+    const pending = deferred<{ clients: unknown[] }>();
+    setClient('$clientClient', { listClients: vi.fn().mockReturnValue(pending.promise) });
+    const w = await mountPage(Overview);
+    const checklist = w.get('[data-testid="setup-checklist"]');
+    expect(checklist.find('[aria-busy="true"]').exists()).toBe(true);
+    expect(checklist.find('progress').exists()).toBe(false);
+    pending.resolve({ clients: [{}] });
+    await flushPromises();
+    expect(checklist.find('[aria-busy="true"]').exists()).toBe(false);
+    expect(checklist.text()).toContain('overview.setup_progress|{"done":2,"total":5}');
   });
 
   it('counts the setup steps from real data', async () => {

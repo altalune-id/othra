@@ -41,23 +41,29 @@ async function count<T>(load: () => Promise<T[]>): Promise<number> {
   }
 }
 
-const [clients, upstreams] = await Promise.all([
-  count(async () => (await clientApi.listClients({ projectId })).clients),
-  count(async () => (await upstreamApi.listUpstreams({ projectId })).upstreams),
-  detail.ensureLoaded(projectId),
-  useAuthStore().load(),
-]);
+const counts = ref<{ clients: number, upstreams: number } | null>(null);
+await Promise.all([detail.ensureLoaded(projectId), useAuthStore().load()]);
+
+onMounted(async () => {
+  const [clients, upstreams] = await Promise.all([
+    count(async () => (await clientApi.listClients({ projectId })).clients),
+    count(async () => (await upstreamApi.listUpstreams({ projectId })).upstreams),
+  ]);
+  counts.value = { clients, upstreams };
+});
 
 const full = computed(() => detail.get(projectId));
-const methods = computed(() => [
-  ...(full.value?.signinEmailLink ? [t('overview.method_email')] : []),
-  ...(upstreams ? [t('overview.method_google')] : []),
-]);
+const methods = computed(() => (counts.value
+  ? [
+      ...(full.value?.signinEmailLink ? [t('overview.method_email')] : []),
+      ...(counts.value.upstreams ? [t('overview.method_google')] : []),
+    ]
+  : null));
 const setup = computed(() => setupItems({
   issuerHandle: full.value?.issuerHandle ?? '',
   signinEmailLink: !!full.value?.signinEmailLink,
-  upstreams,
-  clients,
+  upstreams: counts.value?.upstreams ?? 0,
+  clients: counts.value?.clients ?? 0,
   logoUrl: full.value?.logoUrl ?? '',
   primaryColor: full.value?.primaryColor ?? '',
   termsUrl: full.value?.termsUrl ?? '',
@@ -94,6 +100,6 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
     <ProjectReadOnlyNote v-else-if="guard.system" />
 
     <IssuerStatus v-if="full?.issuerUrl" :issuer="full.issuerUrl" :methods="methods" />
-    <SetupChecklist v-if="!project.system" :items="setup" />
+    <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts" />
   </div>
 </template>
