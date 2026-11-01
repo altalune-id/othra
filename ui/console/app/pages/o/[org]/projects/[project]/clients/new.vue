@@ -38,6 +38,13 @@ const labels = computed(() => clientFormLabels(t, 'create'));
 const kinds = computed(() => kindOptions(t));
 
 const stored = ref(false);
+const secretLabels = computed(() => ({
+  once: t('secret.body'),
+  copy: t('secret.copy_secret'),
+  copyEnv: t('clients.copy_env'),
+  confirm: t('secret.confirm'),
+  missing: secretError.value?.message ?? t('error.generate_secret'),
+}));
 const secretDone = ref(false);
 const withSecret = computed(() => kind.value.secret);
 const step = computed(() => {
@@ -126,14 +133,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
           {{ t('secret.title') }}
         </h2>
         <SecretReveal
+          v-model:confirmed="stored"
           :value="revealed?.secret ?? ''"
-          :label="t('secret.copy_secret')"
-          :warning="t('secret.body')"
-          :confirm-label="t('secret.confirm')"
-          env-name="OTHRA_CLIENT_SECRET"
-          :env-label="t('clients.copy_env')"
-          :error="revealed ? null : secretError"
-          @confirmed="stored = $event"
+          :labels="secretLabels"
+          :env="revealed ? { OTHRA_CLIENT_SECRET: revealed.secret } : {}"
         >
           <template #retry>
             <button type="button" class="btn btn-sm" :disabled="busy" @click="form.retrySecret()">

@@ -173,11 +173,7 @@ describe('m2 discovery and signing keys (no RPC)', () => {
     expect(overview).not.toMatch(/<UrlField[^>]*\sopen[\s>]/);
   });
 
-  it('lists Signing keys after Issuer in the settings sidebar, with its own page', () => {
-    const sidebar = read('./ProjectSettingsSidebar.vue');
-    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'keys\''));
-    expect(sidebar.indexOf('\'keys\'')).toBeLessThan(sidebar.indexOf('\'branding\''));
-    expect(sidebar).toContain('lucide:key-square');
+  it('gives Signing keys its own page', () => {
     const keys = read('../../pages/o/[org]/projects/[project]/settings/keys.vue');
     expect(keys).toContain('keys.title');
     expect(keys).toContain('keys.subtitle');
@@ -235,12 +231,6 @@ describe('m2 design review contrast', () => {
 describe('sign-in methods page', () => {
   const page = () => read('../../pages/o/[org]/projects/[project]/settings/sign-in.vue');
   const card = () => read('./signin/GoogleUpstreamCard.vue');
-
-  it('has its own sidebar item after Issuer', () => {
-    const sidebar = read('./ProjectSettingsSidebar.vue');
-    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'sign-in\''));
-    expect(sidebar).toContain('signin.title');
-  });
 
   it('gives editing controls to editors only and tells others why', () => {
     expect(page()).toMatch(/<ProjectReadOnlyNote v-(?:else-)?if="!canEdit"/);

@@ -62,7 +62,7 @@ describe('project sidebar', () => {
   it('shows End users only to people who may read them', async () => {
     const labels = async () => {
       const w = await mountPage(ProjectSidebar);
-      const shown = w.findAll('nav button').map(b => b.text());
+      const shown = w.findAll('nav a').map(b => b.text());
       w.unmount();
       return shown;
     };

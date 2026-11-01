@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import type { NavItem } from '#base/components/ui/types';
+import type { NavGroup, NavItem } from '#base/components/ui/types';
 import SidebarNav from '#base/components/ui/SidebarNav.vue';
+import OrgRoleBadge from '~/components/org/OrgRoleBadge.vue';
+import OrgSelector from '~/components/org/OrgSelector.vue';
+import ProjectSelector from '~/components/project/ProjectSelector.vue';
 import { useCan } from '~/composables/useCan';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -12,41 +15,58 @@ const orgs = useOrgsStore();
 const projects = useProjectsStore();
 
 const org = computed(() => orgs.bySlug(route.params.org as string));
-const projectSlug = computed(() => route.params.project as string);
-const project = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === projectSlug.value));
-const base = computed(() => `/o/${route.params.org}/projects/${projectSlug.value}`);
+const project = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
+const base = computed(() => `/o/${route.params.org}/projects/${route.params.project}`);
 const canSeeEndUsers = useCan('end_user:read');
 
-const items = computed<NavItem[]>(() => [
-  { key: 'overview', label: t('nav.overview'), icon: 'lucide:layout-dashboard', active: route.path === base.value },
-  { key: 'clients', label: t('nav.clients'), icon: 'lucide:app-window', active: route.path.startsWith(`${base.value}/clients`) },
-  { key: 'resource-servers', label: t('nav.resource_servers'), icon: 'lucide:server', active: route.path.startsWith(`${base.value}/resource-servers`) },
-  ...(canSeeEndUsers.value ? [{ key: 'end-users', label: t('nav.end_users'), icon: 'lucide:users', active: route.path.startsWith(`${base.value}/end-users`) }] : []),
-  { key: 'webhooks', label: t('webhooks.title'), icon: 'lucide:webhook', active: route.path.startsWith(`${base.value}/webhooks`) },
-  { key: 'settings', label: t('nav.settings'), icon: 'lucide:settings', active: route.path.startsWith(`${base.value}/settings`) },
-]);
-
-const targets: Record<string, string> = {
-  'overview': '',
-  'clients': '/clients',
-  'resource-servers': '/resource-servers',
-  'end-users': '/end-users',
-  'webhooks': '/webhooks',
-  'settings': '/settings',
-};
-
-function onSelect(key: string) {
-  return navigateTo(`${base.value}${targets[key] ?? ''}`);
+function item(key: string, label: string, path: string, icon: string, exact = false): NavItem {
+  const to = `${base.value}${path}`;
+  return { key, label, to, icon, active: exact ? route.path === to : route.path.startsWith(to) };
 }
+
+const groups = computed<NavGroup[]>(() => [
+  { items: [item('overview', t('nav.overview'), '', 'lucide:layout-dashboard', true)] },
+  {
+    label: t('nav.group_applications'),
+    items: [
+      item('clients', t('nav.clients'), '/clients', 'lucide:app-window'),
+      item('resource-servers', t('nav.resource_servers'), '/resource-servers', 'lucide:server'),
+    ],
+  },
+  ...(canSeeEndUsers.value ? [{ label: t('nav.group_people'), items: [item('end-users', t('nav.end_users'), '/end-users', 'lucide:users')] }] : []),
+  {
+    label: t('nav.group_signin'),
+    items: [
+      item('sign-in', t('nav.methods'), '/settings/sign-in', 'lucide:log-in'),
+      item('branding', t('branding.title'), '/settings/branding', 'lucide:palette'),
+      item('legal', t('legal.title'), '/settings/legal', 'lucide:scale'),
+    ],
+  },
+  {
+    label: t('nav.group_security'),
+    items: [
+      item('keys', t('keys.title'), '/settings/keys', 'lucide:key-square'),
+      item('issuer', t('issuer.title'), '/settings/issuer', 'lucide:fingerprint'),
+    ],
+  },
+  { label: t('nav.group_developers'), items: [item('webhooks', t('webhooks.title'), '/webhooks', 'lucide:webhook')] },
+  { items: [item('settings', t('nav.project_settings'), '/settings', 'lucide:settings', true)] },
+]);
 </script>
 
 <template>
-  <SidebarNav :label="project?.name ?? ''" :items="items" :version="appVersion" @select="onSelect">
-    <template #back>
-      <NuxtLink :to="`/o/${route.params.org}/projects`" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
-        <Icon name="lucide:chevron-left" size="14" />
-        {{ t('project.all') }}
-      </NuxtLink>
+  <SidebarNav :label="project?.name ?? ''" :groups="groups">
+    <template #top>
+      <div class="flex flex-col items-start gap-1">
+        <div class="flex flex-wrap items-center gap-1">
+          <OrgSelector />
+          <OrgRoleBadge />
+        </div>
+        <ProjectSelector />
+      </div>
+    </template>
+    <template v-if="appVersion" #footer>
+      Othra v{{ appVersion }}
     </template>
   </SidebarNav>
 </template>

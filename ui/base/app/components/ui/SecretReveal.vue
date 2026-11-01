@@ -1,64 +1,43 @@
 <script setup lang="ts">
-import type { ShownError } from '../../lib/apperror/message';
-import { computed, ref, useId } from 'vue';
+import type { SecretRevealLabels } from './types';
+import { computed } from 'vue';
 import CopyButton from './CopyButton.vue';
-import ErrorText from './ErrorText.vue';
 import SecretField from './SecretField.vue';
 
-const {
-  value = '',
-  label = 'Copy',
-  warning,
-  confirmLabel,
-  envName = '',
-  env,
-  envLabel = 'Copy as .env',
-  error = null,
-} = defineProps<{
-  value?: string,
-  label?: string,
-  warning: string,
-  confirmLabel: string,
-  envName?: string,
+const { value, labels, env = {} } = defineProps<{
+  value: string,
+  labels: SecretRevealLabels,
   env?: Record<string, string>,
-  envLabel?: string,
-  error?: ShownError | null,
 }>();
 
-const emit = defineEmits<{ confirmed: [value: boolean] }>();
+const confirmed = defineModel<boolean>('confirmed', { default: false });
 
-const checked = ref(false);
-const checkId = useId();
-
-const envText = computed(() => {
-  const vars = env ?? (envName ? { [envName]: value } : {});
-  return Object.entries(vars).map(([k, v]) => `${k}=${v}`).join('\n');
-});
-
-function toggle(e: Event) {
-  checked.value = (e.target as HTMLInputElement).checked;
-  emit('confirmed', checked.value);
-}
+const dotenv = computed(() => Object.entries(env).map(([k, v]) => `${k}=${v}`).join('\n'));
 </script>
 
 <template>
-  <div v-if="error" role="alert" class="alert alert-error alert-soft flex flex-wrap items-start justify-between gap-3">
-    <ErrorText :error="error" />
-    <slot name="retry" />
-  </div>
-  <div v-else class="space-y-3">
-    <p class="alert alert-warning alert-soft items-start text-sm">
-      <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0" />
-      <span>{{ warning }}</span>
-    </p>
-    <SecretField :value="value" :label="label" />
-    <div v-if="envText" class="flex items-center gap-2 text-sm">
-      <span>{{ envLabel }}</span>
-      <CopyButton :value="envText" :label="envLabel" />
+  <div class="flex flex-col gap-3">
+    <div v-if="!value" role="alert" class="alert alert-error alert-soft items-start">
+      <Icon name="lucide:circle-alert" size="18" class="mt-0.5 shrink-0" />
+      <div class="flex flex-col gap-2">
+        <span>{{ labels.missing }}</span>
+        <slot name="retry" />
+      </div>
     </div>
-    <label :for="checkId" class="flex items-center gap-2 text-sm">
-      <input :id="checkId" type="checkbox" class="checkbox checkbox-sm rounded-sm" :checked="checked" @change="toggle">
-      {{ confirmLabel }}
-    </label>
+    <template v-else>
+      <div role="note" class="alert alert-warning alert-soft items-start">
+        <Icon name="lucide:triangle-alert" size="18" class="mt-0.5 shrink-0" />
+        <span>{{ labels.once }}</span>
+      </div>
+      <SecretField :value="value" :label="labels.copy" />
+      <div v-if="dotenv" class="flex items-center gap-2 text-sm">
+        <CopyButton :value="dotenv" :label="labels.copyEnv" />
+        <span aria-hidden="true">{{ labels.copyEnv }}</span>
+      </div>
+      <label class="label cursor-pointer gap-2 text-sm text-base-content">
+        <input v-model="confirmed" type="checkbox" class="checkbox checkbox-sm rounded-sm">
+        {{ labels.confirm }}
+      </label>
+    </template>
   </div>
 </template>

@@ -4,12 +4,16 @@ import PageHeader from './PageHeader.vue';
 const meta = {
   title: 'UI/PageHeader',
   component: PageHeader,
-  args: { title: 'Clients', description: 'Apps that sign people in through this issuer', crumbs: [{ label: 'Acme', to: '/o/acme' }, { label: 'Clients' }] },
+  args: { title: 'Refund Triage', description: 'Triages refund requests for Acme support', preview: 'Preview', crumbs: [{ label: 'Agents', to: '#agents' }, { label: 'Refund Triage' }] },
 } satisfies Meta<typeof PageHeader>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
-export const Issuer: Story = { args: { title: 'https://id.acme.test/p/apps', mono: true, crumbs: [] } };
-export const Preview: Story = { args: { preview: true } };
+export const Default: Story = {
+  render: args => ({
+    components: { PageHeader },
+    setup: () => ({ args }),
+    template: `<PageHeader v-bind="args"><template #actions><button type="button" class="btn btn-primary btn-sm">Publish</button></template></PageHeader>`,
+  }),
+};

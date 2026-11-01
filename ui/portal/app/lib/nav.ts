@@ -15,12 +15,8 @@ export function navItems(path: string, t: Translate): NavItem[] {
   return screens.map(s => ({
     key: s.key,
     label: t(`nav.${s.key}`),
+    to: s.path,
     icon: s.icon,
     active: s.path === '/' ? path === '/' : path === s.path || path.startsWith(`${s.path}/`),
   }));
-}
-
-// screenPath is the route path of a nav key.
-export function screenPath(key: string): string {
-  return screens.find(s => s.key === key)?.path ?? '/';
 }
