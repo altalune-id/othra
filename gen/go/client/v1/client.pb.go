@@ -389,7 +389,9 @@ type Client struct {
 	// metadata_fetched_at is when Othra last read a CIMD client's metadata document.
 	MetadataFetchedAt *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=metadata_fetched_at,json=metadataFetchedAt,proto3" json:"metadata_fetched_at,omitempty"`
 	// console_url is the client's page in the console, where a signed-in person manages its secrets.
-	ConsoleUrl    string `protobuf:"bytes,19,opt,name=console_url,json=consoleUrl,proto3" json:"console_url,omitempty"`
+	ConsoleUrl string `protobuf:"bytes,19,opt,name=console_url,json=consoleUrl,proto3" json:"console_url,omitempty"`
+	// last_used_at is when the client last got tokens, recorded within about ten minutes; unset when it never has.
+	LastUsedAt    *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -555,6 +557,13 @@ func (x *Client) GetConsoleUrl() string {
 		return x.ConsoleUrl
 	}
 	return ""
+}
+
+func (x *Client) GetLastUsedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastUsedAt
+	}
+	return nil
 }
 
 type ListClientsRequest struct {
@@ -1466,7 +1475,7 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xf7\x06\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xb5\a\n" +
 	"\x06Client\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12)\n" +
@@ -1491,7 +1500,9 @@ const file_client_v1_client_proto_rawDesc = "" +
 	"\fmetadata_url\x18\x11 \x01(\tR\vmetadataUrl\x12J\n" +
 	"\x13metadata_fetched_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\x11metadataFetchedAt\x12\x1f\n" +
 	"\vconsole_url\x18\x13 \x01(\tR\n" +
-	"consoleUrl\"A\n" +
+	"consoleUrl\x12<\n" +
+	"\flast_used_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"lastUsedAt\"A\n" +
 	"\x12ListClientsRequest\x12+\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\tprojectId\"B\n" +
@@ -1662,40 +1673,41 @@ var file_client_v1_client_proto_depIdxs = []int32{
 	23, // 6: client.v1.Client.updated_at:type_name -> google.protobuf.Timestamp
 	3,  // 7: client.v1.Client.registration:type_name -> client.v1.ClientRegistration
 	23, // 8: client.v1.Client.metadata_fetched_at:type_name -> google.protobuf.Timestamp
-	6,  // 9: client.v1.ListClientsResponse.clients:type_name -> client.v1.Client
-	6,  // 10: client.v1.GetClientResponse.client:type_name -> client.v1.Client
-	0,  // 11: client.v1.CreateClientRequest.kind:type_name -> client.v1.ClientKind
-	1,  // 12: client.v1.CreateClientRequest.consent_policy:type_name -> client.v1.ConsentPolicy
-	2,  // 13: client.v1.CreateClientRequest.auth_method:type_name -> client.v1.AuthMethod
-	6,  // 14: client.v1.CreateClientResponse.client:type_name -> client.v1.Client
-	1,  // 15: client.v1.UpdateClientRequest.consent_policy:type_name -> client.v1.ConsentPolicy
-	2,  // 16: client.v1.UpdateClientRequest.auth_method:type_name -> client.v1.AuthMethod
-	6,  // 17: client.v1.UpdateClientResponse.client:type_name -> client.v1.Client
-	6,  // 18: client.v1.GenerateClientSecretResponse.client:type_name -> client.v1.Client
-	4,  // 19: client.v1.RotateClientSecretRequest.grace:type_name -> client.v1.SecretGrace
-	6,  // 20: client.v1.RotateClientSecretResponse.client:type_name -> client.v1.Client
-	6,  // 21: client.v1.RevokeClientSecretResponse.client:type_name -> client.v1.Client
-	7,  // 22: client.v1.ClientService.ListClients:input_type -> client.v1.ListClientsRequest
-	9,  // 23: client.v1.ClientService.GetClient:input_type -> client.v1.GetClientRequest
-	11, // 24: client.v1.ClientService.CreateClient:input_type -> client.v1.CreateClientRequest
-	13, // 25: client.v1.ClientService.UpdateClient:input_type -> client.v1.UpdateClientRequest
-	15, // 26: client.v1.ClientService.DeleteClient:input_type -> client.v1.DeleteClientRequest
-	17, // 27: client.v1.ClientService.GenerateClientSecret:input_type -> client.v1.GenerateClientSecretRequest
-	19, // 28: client.v1.ClientService.RotateClientSecret:input_type -> client.v1.RotateClientSecretRequest
-	21, // 29: client.v1.ClientService.RevokeClientSecret:input_type -> client.v1.RevokeClientSecretRequest
-	8,  // 30: client.v1.ClientService.ListClients:output_type -> client.v1.ListClientsResponse
-	10, // 31: client.v1.ClientService.GetClient:output_type -> client.v1.GetClientResponse
-	12, // 32: client.v1.ClientService.CreateClient:output_type -> client.v1.CreateClientResponse
-	14, // 33: client.v1.ClientService.UpdateClient:output_type -> client.v1.UpdateClientResponse
-	16, // 34: client.v1.ClientService.DeleteClient:output_type -> client.v1.DeleteClientResponse
-	18, // 35: client.v1.ClientService.GenerateClientSecret:output_type -> client.v1.GenerateClientSecretResponse
-	20, // 36: client.v1.ClientService.RotateClientSecret:output_type -> client.v1.RotateClientSecretResponse
-	22, // 37: client.v1.ClientService.RevokeClientSecret:output_type -> client.v1.RevokeClientSecretResponse
-	30, // [30:38] is the sub-list for method output_type
-	22, // [22:30] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	23, // 9: client.v1.Client.last_used_at:type_name -> google.protobuf.Timestamp
+	6,  // 10: client.v1.ListClientsResponse.clients:type_name -> client.v1.Client
+	6,  // 11: client.v1.GetClientResponse.client:type_name -> client.v1.Client
+	0,  // 12: client.v1.CreateClientRequest.kind:type_name -> client.v1.ClientKind
+	1,  // 13: client.v1.CreateClientRequest.consent_policy:type_name -> client.v1.ConsentPolicy
+	2,  // 14: client.v1.CreateClientRequest.auth_method:type_name -> client.v1.AuthMethod
+	6,  // 15: client.v1.CreateClientResponse.client:type_name -> client.v1.Client
+	1,  // 16: client.v1.UpdateClientRequest.consent_policy:type_name -> client.v1.ConsentPolicy
+	2,  // 17: client.v1.UpdateClientRequest.auth_method:type_name -> client.v1.AuthMethod
+	6,  // 18: client.v1.UpdateClientResponse.client:type_name -> client.v1.Client
+	6,  // 19: client.v1.GenerateClientSecretResponse.client:type_name -> client.v1.Client
+	4,  // 20: client.v1.RotateClientSecretRequest.grace:type_name -> client.v1.SecretGrace
+	6,  // 21: client.v1.RotateClientSecretResponse.client:type_name -> client.v1.Client
+	6,  // 22: client.v1.RevokeClientSecretResponse.client:type_name -> client.v1.Client
+	7,  // 23: client.v1.ClientService.ListClients:input_type -> client.v1.ListClientsRequest
+	9,  // 24: client.v1.ClientService.GetClient:input_type -> client.v1.GetClientRequest
+	11, // 25: client.v1.ClientService.CreateClient:input_type -> client.v1.CreateClientRequest
+	13, // 26: client.v1.ClientService.UpdateClient:input_type -> client.v1.UpdateClientRequest
+	15, // 27: client.v1.ClientService.DeleteClient:input_type -> client.v1.DeleteClientRequest
+	17, // 28: client.v1.ClientService.GenerateClientSecret:input_type -> client.v1.GenerateClientSecretRequest
+	19, // 29: client.v1.ClientService.RotateClientSecret:input_type -> client.v1.RotateClientSecretRequest
+	21, // 30: client.v1.ClientService.RevokeClientSecret:input_type -> client.v1.RevokeClientSecretRequest
+	8,  // 31: client.v1.ClientService.ListClients:output_type -> client.v1.ListClientsResponse
+	10, // 32: client.v1.ClientService.GetClient:output_type -> client.v1.GetClientResponse
+	12, // 33: client.v1.ClientService.CreateClient:output_type -> client.v1.CreateClientResponse
+	14, // 34: client.v1.ClientService.UpdateClient:output_type -> client.v1.UpdateClientResponse
+	16, // 35: client.v1.ClientService.DeleteClient:output_type -> client.v1.DeleteClientResponse
+	18, // 36: client.v1.ClientService.GenerateClientSecret:output_type -> client.v1.GenerateClientSecretResponse
+	20, // 37: client.v1.ClientService.RotateClientSecret:output_type -> client.v1.RotateClientSecretResponse
+	22, // 38: client.v1.ClientService.RevokeClientSecret:output_type -> client.v1.RevokeClientSecretResponse
+	31, // [31:39] is the sub-list for method output_type
+	23, // [23:31] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_client_v1_client_proto_init() }
