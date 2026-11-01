@@ -353,11 +353,11 @@ func IsExpectedError(err error) bool {
 		IsIntrospectionSecretExistsError(err) || IsIntrospectionSecretNotFoundError(err)
 }
 
-// SystemProjectError signals a new resource server in the console project, which takes none.
+// SystemProjectError signals a change to the console project's resource servers, which only Othra manages.
 type SystemProjectError struct{}
 
 func (*SystemProjectError) Error() string {
-	return "resourceserver: the console project takes no resource server"
+	return "resourceserver: only Othra manages the console project's resource server"
 }
 
 // IsSystemProjectError reports whether err's tree contains a *SystemProjectError.

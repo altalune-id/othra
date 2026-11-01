@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/altalune-id/othra/config"
 	"github.com/altalune-id/othra/internal/install"
 	"github.com/altalune-id/othra/internal/kernel/db"
@@ -60,8 +62,18 @@ func buildInstall(cfg config.Config, s *Services, uow db.Transactor) *install.Se
 	return install.NewService(install.Deps{
 		Transactor: uow, Users: s.Users, Orgs: s.Orgs, Members: s.Members, Projects: s.Projects, Clients: s.Clients,
 		Invites: s.Invites, Terms: s.Legal, Console: consoleURIs(cfg.HTTP), Passwords: cfg.PasswordsOn(),
-		Seed: seedUpstreams(cfg.Upstreams, s.Upstreams),
+		Seed: seedConsoleProject(cfg, s),
 	})
+}
+
+func seedConsoleProject(cfg config.Config, s *Services) func(ctx context.Context, orgID, projectID uuid.UUID) error {
+	upstreams, resource := seedUpstreams(cfg.Upstreams, s.Upstreams), seedMCPResource(cfg, s)
+	return func(ctx context.Context, orgID, projectID uuid.UUID) error {
+		if err := upstreams(ctx, orgID, projectID); err != nil {
+			return err
+		}
+		return resource(ctx, orgID, projectID)
+	}
 }
 
 func consoleProject(ctx context.Context, s *Services) (*org.Org, *project.Project, error) {

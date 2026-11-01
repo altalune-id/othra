@@ -17,6 +17,7 @@ import (
 	"github.com/altalune-id/othra/internal/install"
 	"github.com/altalune-id/othra/internal/kernel/authn"
 	"github.com/altalune-id/othra/internal/kernel/session"
+	"github.com/altalune-id/othra/internal/kernel/tokens"
 	"github.com/altalune-id/othra/internal/keys"
 	"github.com/altalune-id/othra/internal/legal"
 	mcpinternal "github.com/altalune-id/othra/internal/mcp"
@@ -110,22 +111,27 @@ func apiChain(svcs *Services) authn.Chain {
 	return chain
 }
 
-func buildMCPHandler(srv *rootmcp.Server, svcs *Services, log *slog.Logger) http.Handler {
+func buildMCPHandler(srv *rootmcp.Server, svcs *Services, resource tokens.Resource, log *slog.Logger) http.Handler {
 	h := mcpHTTPHandler(srv)
 	if h == nil {
 		return nil
 	}
 	return mcpinternal.Authenticate(mcpinternal.AuthOptions{
-		Chain:     mcpChain(svcs),
-		KeyPrefix: svcs.KeyScheme.Prefix(),
-		Required:  requireCredentials,
-		Logger:    log,
+		Chain:      mcpChain(svcs),
+		KeyPrefix:  svcs.KeyScheme.Prefix(),
+		Required:   requireCredentials,
+		Resource:   resource,
+		ToolScopes: toolScopes(srv.Registry()),
+		Logger:     log,
 	})(h)
 }
 
 // SECURITY: no session authenticator — /mcp has no CSRF guard, so a browser cookie must never act on it.
 func mcpChain(svcs *Services) authn.Chain {
 	chain := authn.Chain{svcs.KeyAuthn}
+	if svcs.MCPTokens != nil {
+		chain = append(chain, auth.TokenAuthenticator{Verifier: svcs.MCPTokens, Auth: svcs.Auth})
+	}
 	if svcs.Caps.BasicAuth {
 		chain = append(chain, auth.BasicAuthenticator{Auth: svcs.Auth})
 	}
@@ -326,6 +332,7 @@ type httpSurfaces struct {
 	console    http.Handler
 	portal     http.Handler
 	mcp        http.Handler
+	mcpDocs    map[string]http.Handler
 	routes     []web.Registrar
 	public     []web.Registrar
 	hosted     []web.Registrar
@@ -342,8 +349,11 @@ type httpSurfaces struct {
 
 func buildHTTPHandler(s httpSurfaces) http.Handler {
 	return web.NewServer(web.ServerOpts{
-		APIHandler:   s.api,
-		MCPHandler:   s.mcp,
+		APIHandler: s.api,
+		MCPHandler: s.mcp,
+
+		ResourceMetadata: s.mcpDocs,
+
 		Console:      s.console,
 		PortalAssets: s.portal,
 		Routes:       s.routes,

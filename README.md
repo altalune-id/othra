@@ -190,6 +190,31 @@ Locked out? Both commands need database access, like `othra serve`:
 Use one public URL (`http.baseURL`) per deployment. Every `othra serve` boot points the console's sign-in back at it, so
 instances with different URLs would keep undoing each other. Operator commands never change it.
 
+### Sign in to MCP with OAuth
+
+With `mcp.enabled: true`, an MCP client given only `<http.baseURL>/mcp` signs a person in at Othra's console issuer, `/p/system`, and calls the admin tools as that person. API keys keep working on `/mcp`; `othra mcp` (stdio) is unchanged. Basic auth mode has no console issuer, so MCP OAuth is off there.
+
+```sh
+OTHRA_MCP_ENABLED=true
+OTHRA_MCP_CLIENT_HOSTS=claude.ai                     # hosts whose metadata document clients may sign in; empty keeps them out
+OTHRA_MCP_AUDIENCE=https://othra.example.com/mcp     # optional; default <http.baseURL><http.basePath>/mcp
+OTHRA_MCP_AUDIENCE_OVERRIDE=true                     # only when a proxy serves /mcp at another public URL
+```
+
+Othra registers its own `/mcp` resource server in the console project, at install and at every boot, from these keys; the console shows it read-only. The console project takes no registered clients, so an MCP client signs in through a Client ID Metadata Document (CIMD). Claude Code publishes one on `claude.ai`.
+
+The client finds everything else itself: `/mcp` answers 401 with `WWW-Authenticate: Bearer resource_metadata="…"`, and `/.well-known/oauth-protected-resource<http.basePath>/mcp` names the issuer and the scopes.
+
+What a token can do:
+
+- it acts as the console account linked to that `/p/system` identity, so the person must have signed in to the console with **Continue with Othra** at least once; anyone else gets 401;
+- it acts in the person's only organization and its first project; someone in several organizations reaches nothing;
+- it holds the scopes the person granted, limited by their role there, and is never an operator;
+- it can draft an invite (`member_invite`) and discard a draft, but never send one: a person sends it from the console;
+- a tool whose scope the token was never granted answers 403 with `error="insufficient_scope"`, so the client asks for it; an outage answers 503 with `GEN009` and no challenge, so the client keeps its token.
+
+Turning `mcp.enabled` off closes this sign-in at the next boot. An access token lives up to `oauth.accessTokenTTL`, so revoking a grant takes effect on `/mcp` when the current token expires. At startup Othra logs `boot: mcp oauth on` with the audience and the document's path.
+
 ## Everyday commands
 
 | Command                      | What it does                                                         |

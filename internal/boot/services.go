@@ -26,6 +26,7 @@ import (
 	"github.com/altalune-id/othra/internal/kernel/ratelimit"
 	"github.com/altalune-id/othra/internal/kernel/session"
 	"github.com/altalune-id/othra/internal/kernel/storage"
+	"github.com/altalune-id/othra/internal/kernel/tokens"
 	"github.com/altalune-id/othra/internal/kernel/usage"
 	"github.com/altalune-id/othra/internal/keys"
 	"github.com/altalune-id/othra/internal/legal"
@@ -47,27 +48,29 @@ const keyUsageInterval = 30 * time.Second
 
 // Services is every store and service the composition root wires.
 type Services struct {
-	OrgStore        org.Store
-	Orgs            *org.Service
-	ProjectStore    project.Store
-	Projects        *project.Service
-	APIKeyStore     apikey.Store
-	APIKeys         *apikey.Service
-	KeyScheme       apikey.Scheme
-	KeyAuthn        *apikey.Authenticator
-	KeyUsage        *usage.Worker
-	Outbox          outbox.Store
-	WebhookStore    webhook.Store
-	Webhooks        *webhook.Service
-	Sealer          sealer.Sealer
-	Mailer          mailer.Mailer
-	MailQueue       mailqueue.Store
-	Users           *user.Service
-	Members         *member.Service
-	Invites         *invite.Service
-	Sessions        session.Store
-	Auth            *auth.Service
-	Resets          *auth.Resets
+	OrgStore     org.Store
+	Orgs         *org.Service
+	ProjectStore project.Store
+	Projects     *project.Service
+	APIKeyStore  apikey.Store
+	APIKeys      *apikey.Service
+	KeyScheme    apikey.Scheme
+	KeyAuthn     *apikey.Authenticator
+	KeyUsage     *usage.Worker
+	Outbox       outbox.Store
+	WebhookStore webhook.Store
+	Webhooks     *webhook.Service
+	Sealer       sealer.Sealer
+	Mailer       mailer.Mailer
+	MailQueue    mailqueue.Store
+	Users        *user.Service
+	Members      *member.Service
+	Invites      *invite.Service
+	Sessions     session.Store
+	Auth         *auth.Service
+	Resets       *auth.Resets
+	// MCPTokens verifies /p/system access tokens on /mcp, or is nil without MCP OAuth.
+	MCPTokens       tokens.Verifier
 	Install         *install.Service
 	Legal           *legal.Service
 	InstallToken    install.Token

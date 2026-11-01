@@ -16,7 +16,7 @@ import LinkDialog from '~/components/link/LinkDialog.vue';
 import LinkList from '~/components/link/LinkList.vue';
 import { useLinks } from '~/components/link/useLinks';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
-import { useCanEditProject } from '~/components/project/useProjectAccess';
+import { useProjectGuard } from '~/components/project/useProjectAccess';
 import CimdCard from '~/components/resourceserver/CimdCard.vue';
 import { cimdCardLabels, introspectionSecretLabels, scopeTableLabels, verificationCardLabels, verificationText } from '~/components/resourceserver/labels';
 import PersonalTokenCard from '~/components/resourceserver/PersonalTokenCard.vue';
@@ -39,11 +39,12 @@ const { date, moment } = useDates();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const detail = useProjectDetailStore();
-const canEdit = useCanEditProject();
 await useAuthStore().load();
 
 const org = computed(() => orgs.bySlug(route.params.org as string));
 const listed = computed(() => projects.items.find(p => p.orgId === org.value?.id && p.slug === route.params.project));
+const guard = useProjectGuard(() => listed.value);
+const canEdit = computed(() => guard.value.canConfigure);
 if (!listed.value) {
   throw createError({ statusCode: 404, statusMessage: t('error.project_not_found'), fatal: true });
 }

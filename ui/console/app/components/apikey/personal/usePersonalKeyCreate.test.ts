@@ -84,7 +84,7 @@ describe('usePersonalKeyCreate', () => {
     const form = usePersonalKeyCreate();
     await form.load();
     await form.selectOrg(initech.id);
-    expect(form.mintable.value.map(s => s.name)).toEqual(scopes.filter(s => !s.personOnly).map(s => s.name));
+    expect(form.mintable.value.map(s => s.name)).toEqual(scopes.filter(s => !s.holder).map(s => s.name));
   });
 
   it('resets projects and scopes when the org changes, and fetches each org\'s projects once', async () => {

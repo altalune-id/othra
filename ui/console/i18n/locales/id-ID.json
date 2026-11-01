@@ -442,7 +442,7 @@
   "rs.scopes_help": "Izin yang dapat diminta aplikasi, misalnya devices:read.",
   "rs.scopes_required": "Tambahkan minimal satu scope.",
   "rs.subtitle": "API dan endpoint MCP yang menerima token proyek ini.",
-  "rs.system_empty": "Resource server tidak dipakai di proyek konsol.",
+  "rs.system_empty": "Othra mengelola resource server proyek ini dari pengaturan mcp-nya.",
   "rs.trust": "Percayai tanpa verifikasi",
   "rs.trust_body": "Othra akan menerbitkan token untuknya tanpa memeriksa bahwa server itu milik Anda. Lakukan ini hanya untuk server yang Anda jalankan sendiri.",
   "rs.trust_create": "Percayai server ini tanpa verifikasi",

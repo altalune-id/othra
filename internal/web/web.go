@@ -19,8 +19,11 @@ type Registrar interface {
 
 // ServerOpts configures the web server handler.
 type ServerOpts struct {
-	APIHandler   http.Handler // optional Connect-RPC surface mounted at BasePath+"/api"
-	MCPHandler   http.Handler // optional MCP surface mounted at BasePath+"/mcp"
+	APIHandler http.Handler // optional Connect-RPC surface mounted at BasePath+"/api"
+	MCPHandler http.Handler // optional MCP surface mounted at BasePath+"/mcp"
+
+	ResourceMetadata map[string]http.Handler // optional RFC 9728 documents by path, mounted like Probes
+
 	Console      http.Handler // optional console SPA mounted at BasePath+"/console"
 	PortalAssets http.Handler // optional end-user portal build files mounted at BasePath+"/portal/"
 	Routes       []Registrar  // optional server-rendered routes; their mux also answers every unknown path
@@ -51,6 +54,9 @@ func NewServer(opts ServerOpts) http.Handler {
 	outer := http.NewServeMux()
 	if opts.Probes != nil {
 		opts.Probes.Register(outer)
+	}
+	for path, h := range opts.ResourceMetadata {
+		outer.Handle("GET "+path, h)
 	}
 	for _, r := range opts.PublicRoutes {
 		r.Register(outer)

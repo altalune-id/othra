@@ -413,3 +413,81 @@ func TestControlPlane_IntrospectionSecretsArePersonOnly(t *testing.T) {
 	}))
 	require.NoError(t, err)
 }
+
+// SECURITY: boot owns the console project's server: every changing RPC answers PRJ011, and reads still work.
+func TestResourceServerService_ConsoleProjectIsReadOnly(t *testing.T) {
+	f := newCPFixture(t, true)
+	rs := f.create(t, f.owner, "https://api.example.com/mcp").GetId()
+	f.h.issuers.system = true
+	p, cp, ctx := f.projectPub, f.cp, f.owner
+
+	for name, call := range map[string]func() error{
+		"update": func() error {
+			_, err := cp.UpdateResourceServer(ctx, connect.NewRequest(&resourceserverv1.UpdateResourceServerRequest{ProjectId: p, ResourceServerId: rs, Name: "x", Scopes: []string{"read"}}))
+			return err
+		},
+		"delete": func() error {
+			_, err := cp.DeleteResourceServer(ctx, connect.NewRequest(&resourceserverv1.DeleteResourceServerRequest{ProjectId: p, ResourceServerId: rs}))
+			return err
+		},
+		"verify": func() error {
+			_, err := cp.VerifyResourceServer(ctx, connect.NewRequest(&resourceserverv1.VerifyResourceServerRequest{ProjectId: p, ResourceServerId: rs}))
+			return err
+		},
+		"trust": func() error {
+			_, err := cp.SetResourceServerTrust(ctx, connect.NewRequest(&resourceserverv1.SetResourceServerTrustRequest{ProjectId: p, ResourceServerId: rs, Trusted: true}))
+			return err
+		},
+		"admission": func() error {
+			_, err := cp.SetResourceServerAdmission(ctx, connect.NewRequest(&resourceserverv1.SetResourceServerAdmissionRequest{ProjectId: p, ResourceServerId: rs, Accept: true}))
+			return err
+		},
+		"personal tokens": func() error {
+			_, err := cp.SetPersonalTokenAccess(ctx, connect.NewRequest(&resourceserverv1.SetPersonalTokenAccessRequest{ProjectId: p, ResourceServerId: rs}))
+			return err
+		},
+		"introspection secret": func() error {
+			_, err := cp.GenerateIntrospectionSecret(ctx, connect.NewRequest(&resourceserverv1.GenerateIntrospectionSecretRequest{ProjectId: p, ResourceServerId: rs}))
+			return err
+		},
+		"link": func() error {
+			_, err := cp.LinkClient(ctx, connect.NewRequest(&resourceserverv1.LinkClientRequest{ProjectId: p, ResourceServerId: rs, ClientId: "c"}))
+			return err
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert.True(t, IsSystemProjectError(call()))
+		})
+	}
+
+	got, err := cp.GetResourceServer(ctx, connect.NewRequest(&resourceserverv1.GetResourceServerRequest{ProjectId: p, ResourceServerId: rs}))
+	require.NoError(t, err)
+	assert.Equal(t, rs, got.Msg.GetResourceServer().GetId())
+}
+
+// SECURITY: trust skips the RFC 9728 proof, so only a person on the web grants it; an MCP token gets no unproven audience.
+func TestResourceServerService_TokenNeverActsAsAPerson(t *testing.T) {
+	f := newCPFixture(t, true)
+	token := session.PrincipalInto(context.Background(), session.Principal{
+		Source: session.SourceToken, UserID: f.h.person, ActiveOrgID: f.h.org, Scopes: []string{"*"},
+	})
+	create := func(identifier string, trusted bool) error {
+		_, err := f.cp.CreateResourceServer(token, connect.NewRequest(&resourceserverv1.CreateResourceServerRequest{
+			ProjectId: f.projectPub, Name: "API", Identifier: identifier, Scopes: []string{"read"}, Trusted: trusted,
+		}))
+		return err
+	}
+	var forbidden *authz.ForbiddenError
+	require.ErrorAs(t, create("https://trusted.example.com/mcp", true), &forbidden)
+	require.ErrorAs(t, create("http://localhost:9000/mcp", true), &forbidden)
+	list, err := f.h.svc.List(context.Background(), f.h.org, f.h.project)
+	require.NoError(t, err)
+	assert.Empty(t, list, "a refused create leaves nothing")
+
+	require.NoError(t, create("https://api.example.com/mcp", false), "an unproven server stays pending")
+	rs := f.create(t, f.owner, "https://other.example.com/mcp").GetId()
+	_, err = f.cp.SetResourceServerTrust(token, connect.NewRequest(&resourceserverv1.SetResourceServerTrustRequest{
+		ProjectId: f.projectPub, ResourceServerId: rs, Trusted: true,
+	}))
+	require.ErrorAs(t, err, &forbidden)
+}
