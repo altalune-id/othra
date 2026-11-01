@@ -26,6 +26,12 @@ describe('account page', () => {
     expect(w.text()).not.toContain('profile.password_title');
   });
 
+  it('says on sign out everywhere that apps with offline access keep working', async () => {
+    signedIn(false);
+    const w = await mountPage(Account);
+    expect(w.html()).toContain('profile.sign_out_confirm_body profile.sign_out_confirm_apps');
+  });
+
   it('shows it when whoami says passwords is true', async () => {
     signedIn(true);
     const w = await mountPage(Account);

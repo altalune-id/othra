@@ -381,6 +381,7 @@
   "profile.password_title": "Kata sandi",
   "profile.sessions_body": "Keluar dari Othra di semua browser dan perangkat, termasuk yang ini.",
   "profile.sessions_title": "Sesi",
+  "profile.sign_out_confirm_apps": "Aplikasi dengan akses offline, seperti CLI, tetap berjalan sampai Anda memutuskannya.",
   "profile.sign_out_confirm_body": "Anda perlu masuk lagi di setiap perangkat, termasuk yang ini.",
   "profile.sign_out_confirm_title": "Keluar di semua perangkat?",
   "profile.sign_out_everywhere": "Keluar di semua perangkat",
