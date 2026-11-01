@@ -25,6 +25,62 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// ProjectEnvironment is an optional tag for what a project is used for; UNSPECIFIED is no tag.
+type ProjectEnvironment int32
+
+const (
+	ProjectEnvironment_PROJECT_ENVIRONMENT_UNSPECIFIED ProjectEnvironment = 0
+	ProjectEnvironment_PROJECT_ENVIRONMENT_PRODUCTION  ProjectEnvironment = 1
+	ProjectEnvironment_PROJECT_ENVIRONMENT_STAGING     ProjectEnvironment = 2
+	ProjectEnvironment_PROJECT_ENVIRONMENT_DEVELOPMENT ProjectEnvironment = 3
+	ProjectEnvironment_PROJECT_ENVIRONMENT_LABS        ProjectEnvironment = 4
+)
+
+// Enum value maps for ProjectEnvironment.
+var (
+	ProjectEnvironment_name = map[int32]string{
+		0: "PROJECT_ENVIRONMENT_UNSPECIFIED",
+		1: "PROJECT_ENVIRONMENT_PRODUCTION",
+		2: "PROJECT_ENVIRONMENT_STAGING",
+		3: "PROJECT_ENVIRONMENT_DEVELOPMENT",
+		4: "PROJECT_ENVIRONMENT_LABS",
+	}
+	ProjectEnvironment_value = map[string]int32{
+		"PROJECT_ENVIRONMENT_UNSPECIFIED": 0,
+		"PROJECT_ENVIRONMENT_PRODUCTION":  1,
+		"PROJECT_ENVIRONMENT_STAGING":     2,
+		"PROJECT_ENVIRONMENT_DEVELOPMENT": 3,
+		"PROJECT_ENVIRONMENT_LABS":        4,
+	}
+)
+
+func (x ProjectEnvironment) Enum() *ProjectEnvironment {
+	p := new(ProjectEnvironment)
+	*p = x
+	return p
+}
+
+func (x ProjectEnvironment) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ProjectEnvironment) Descriptor() protoreflect.EnumDescriptor {
+	return file_project_v1_project_proto_enumTypes[0].Descriptor()
+}
+
+func (ProjectEnvironment) Type() protoreflect.EnumType {
+	return &file_project_v1_project_proto_enumTypes[0]
+}
+
+func (x ProjectEnvironment) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ProjectEnvironment.Descriptor instead.
+func (ProjectEnvironment) EnumDescriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{0}
+}
+
 type Project struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	Id           string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -49,7 +105,8 @@ type Project struct {
 	// logo_url is the public URL of the project's logo, empty when it has none.
 	LogoUrl string `protobuf:"bytes,22,opt,name=logo_url,json=logoUrl,proto3" json:"logo_url,omitempty"`
 	// system is true for the console project Othra seeds at install; only its branding, terms and upstream IdPs can change.
-	System        bool `protobuf:"varint,23,opt,name=system,proto3" json:"system,omitempty"`
+	System        bool               `protobuf:"varint,23,opt,name=system,proto3" json:"system,omitempty"`
+	Environment   ProjectEnvironment `protobuf:"varint,24,opt,name=environment,proto3,enum=project.v1.ProjectEnvironment" json:"environment,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -222,6 +279,13 @@ func (x *Project) GetSystem() bool {
 		return x.System
 	}
 	return false
+}
+
+func (x *Project) GetEnvironment() ProjectEnvironment {
+	if x != nil {
+		return x.Environment
+	}
+	return ProjectEnvironment_PROJECT_ENVIRONMENT_UNSPECIFIED
 }
 
 type CreateProjectRequest struct {
@@ -1024,6 +1088,103 @@ func (x *UpdateProjectSignInResponse) GetProject() *Project {
 	return nil
 }
 
+type UpdateProjectEnvironmentRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// UNSPECIFIED clears the tag.
+	Environment   ProjectEnvironment `protobuf:"varint,2,opt,name=environment,proto3,enum=project.v1.ProjectEnvironment" json:"environment,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectEnvironmentRequest) Reset() {
+	*x = UpdateProjectEnvironmentRequest{}
+	mi := &file_project_v1_project_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectEnvironmentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectEnvironmentRequest) ProtoMessage() {}
+
+func (x *UpdateProjectEnvironmentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectEnvironmentRequest.ProtoReflect.Descriptor instead.
+func (*UpdateProjectEnvironmentRequest) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UpdateProjectEnvironmentRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateProjectEnvironmentRequest) GetEnvironment() ProjectEnvironment {
+	if x != nil {
+		return x.Environment
+	}
+	return ProjectEnvironment_PROJECT_ENVIRONMENT_UNSPECIFIED
+}
+
+type UpdateProjectEnvironmentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Project       *Project               `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectEnvironmentResponse) Reset() {
+	*x = UpdateProjectEnvironmentResponse{}
+	mi := &file_project_v1_project_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectEnvironmentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectEnvironmentResponse) ProtoMessage() {}
+
+func (x *UpdateProjectEnvironmentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_v1_project_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectEnvironmentResponse.ProtoReflect.Descriptor instead.
+func (*UpdateProjectEnvironmentResponse) Descriptor() ([]byte, []int) {
+	return file_project_v1_project_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *UpdateProjectEnvironmentResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
 type BumpTermsVersionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1033,7 +1194,7 @@ type BumpTermsVersionRequest struct {
 
 func (x *BumpTermsVersionRequest) Reset() {
 	*x = BumpTermsVersionRequest{}
-	mi := &file_project_v1_project_proto_msgTypes[17]
+	mi := &file_project_v1_project_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1045,7 +1206,7 @@ func (x *BumpTermsVersionRequest) String() string {
 func (*BumpTermsVersionRequest) ProtoMessage() {}
 
 func (x *BumpTermsVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[17]
+	mi := &file_project_v1_project_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1058,7 +1219,7 @@ func (x *BumpTermsVersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BumpTermsVersionRequest.ProtoReflect.Descriptor instead.
 func (*BumpTermsVersionRequest) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{17}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *BumpTermsVersionRequest) GetId() string {
@@ -1078,7 +1239,7 @@ type BumpTermsVersionResponse struct {
 
 func (x *BumpTermsVersionResponse) Reset() {
 	*x = BumpTermsVersionResponse{}
-	mi := &file_project_v1_project_proto_msgTypes[18]
+	mi := &file_project_v1_project_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1090,7 +1251,7 @@ func (x *BumpTermsVersionResponse) String() string {
 func (*BumpTermsVersionResponse) ProtoMessage() {}
 
 func (x *BumpTermsVersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[18]
+	mi := &file_project_v1_project_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1103,7 +1264,7 @@ func (x *BumpTermsVersionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BumpTermsVersionResponse.ProtoReflect.Descriptor instead.
 func (*BumpTermsVersionResponse) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{18}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *BumpTermsVersionResponse) GetVersion() int32 {
@@ -1132,7 +1293,7 @@ type CheckIssuerHandleRequest struct {
 
 func (x *CheckIssuerHandleRequest) Reset() {
 	*x = CheckIssuerHandleRequest{}
-	mi := &file_project_v1_project_proto_msgTypes[19]
+	mi := &file_project_v1_project_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1144,7 +1305,7 @@ func (x *CheckIssuerHandleRequest) String() string {
 func (*CheckIssuerHandleRequest) ProtoMessage() {}
 
 func (x *CheckIssuerHandleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[19]
+	mi := &file_project_v1_project_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1157,7 +1318,7 @@ func (x *CheckIssuerHandleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckIssuerHandleRequest.ProtoReflect.Descriptor instead.
 func (*CheckIssuerHandleRequest) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{19}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *CheckIssuerHandleRequest) GetOrgId() string {
@@ -1192,7 +1353,7 @@ type CheckIssuerHandleResponse struct {
 
 func (x *CheckIssuerHandleResponse) Reset() {
 	*x = CheckIssuerHandleResponse{}
-	mi := &file_project_v1_project_proto_msgTypes[20]
+	mi := &file_project_v1_project_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1204,7 +1365,7 @@ func (x *CheckIssuerHandleResponse) String() string {
 func (*CheckIssuerHandleResponse) ProtoMessage() {}
 
 func (x *CheckIssuerHandleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[20]
+	mi := &file_project_v1_project_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1217,7 +1378,7 @@ func (x *CheckIssuerHandleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckIssuerHandleResponse.ProtoReflect.Descriptor instead.
 func (*CheckIssuerHandleResponse) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{20}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CheckIssuerHandleResponse) GetAvailable() bool {
@@ -1245,7 +1406,7 @@ type CreateProjectLogoUploadRequest struct {
 
 func (x *CreateProjectLogoUploadRequest) Reset() {
 	*x = CreateProjectLogoUploadRequest{}
-	mi := &file_project_v1_project_proto_msgTypes[21]
+	mi := &file_project_v1_project_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1257,7 +1418,7 @@ func (x *CreateProjectLogoUploadRequest) String() string {
 func (*CreateProjectLogoUploadRequest) ProtoMessage() {}
 
 func (x *CreateProjectLogoUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[21]
+	mi := &file_project_v1_project_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1270,7 +1431,7 @@ func (x *CreateProjectLogoUploadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProjectLogoUploadRequest.ProtoReflect.Descriptor instead.
 func (*CreateProjectLogoUploadRequest) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{21}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreateProjectLogoUploadRequest) GetId() string {
@@ -1308,7 +1469,7 @@ type CreateProjectLogoUploadResponse struct {
 
 func (x *CreateProjectLogoUploadResponse) Reset() {
 	*x = CreateProjectLogoUploadResponse{}
-	mi := &file_project_v1_project_proto_msgTypes[22]
+	mi := &file_project_v1_project_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1320,7 +1481,7 @@ func (x *CreateProjectLogoUploadResponse) String() string {
 func (*CreateProjectLogoUploadResponse) ProtoMessage() {}
 
 func (x *CreateProjectLogoUploadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[22]
+	mi := &file_project_v1_project_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1333,7 +1494,7 @@ func (x *CreateProjectLogoUploadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProjectLogoUploadResponse.ProtoReflect.Descriptor instead.
 func (*CreateProjectLogoUploadResponse) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{22}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CreateProjectLogoUploadResponse) GetUploadId() string {
@@ -1381,7 +1542,7 @@ type CompleteProjectLogoUploadRequest struct {
 
 func (x *CompleteProjectLogoUploadRequest) Reset() {
 	*x = CompleteProjectLogoUploadRequest{}
-	mi := &file_project_v1_project_proto_msgTypes[23]
+	mi := &file_project_v1_project_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1393,7 +1554,7 @@ func (x *CompleteProjectLogoUploadRequest) String() string {
 func (*CompleteProjectLogoUploadRequest) ProtoMessage() {}
 
 func (x *CompleteProjectLogoUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[23]
+	mi := &file_project_v1_project_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1406,7 +1567,7 @@ func (x *CompleteProjectLogoUploadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteProjectLogoUploadRequest.ProtoReflect.Descriptor instead.
 func (*CompleteProjectLogoUploadRequest) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{23}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *CompleteProjectLogoUploadRequest) GetId() string {
@@ -1432,7 +1593,7 @@ type CompleteProjectLogoUploadResponse struct {
 
 func (x *CompleteProjectLogoUploadResponse) Reset() {
 	*x = CompleteProjectLogoUploadResponse{}
-	mi := &file_project_v1_project_proto_msgTypes[24]
+	mi := &file_project_v1_project_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1444,7 +1605,7 @@ func (x *CompleteProjectLogoUploadResponse) String() string {
 func (*CompleteProjectLogoUploadResponse) ProtoMessage() {}
 
 func (x *CompleteProjectLogoUploadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[24]
+	mi := &file_project_v1_project_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1457,7 +1618,7 @@ func (x *CompleteProjectLogoUploadResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use CompleteProjectLogoUploadResponse.ProtoReflect.Descriptor instead.
 func (*CompleteProjectLogoUploadResponse) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{24}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *CompleteProjectLogoUploadResponse) GetProject() *Project {
@@ -1476,7 +1637,7 @@ type DeleteProjectLogoRequest struct {
 
 func (x *DeleteProjectLogoRequest) Reset() {
 	*x = DeleteProjectLogoRequest{}
-	mi := &file_project_v1_project_proto_msgTypes[25]
+	mi := &file_project_v1_project_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1488,7 +1649,7 @@ func (x *DeleteProjectLogoRequest) String() string {
 func (*DeleteProjectLogoRequest) ProtoMessage() {}
 
 func (x *DeleteProjectLogoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[25]
+	mi := &file_project_v1_project_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1501,7 +1662,7 @@ func (x *DeleteProjectLogoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProjectLogoRequest.ProtoReflect.Descriptor instead.
 func (*DeleteProjectLogoRequest) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{25}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *DeleteProjectLogoRequest) GetId() string {
@@ -1520,7 +1681,7 @@ type DeleteProjectLogoResponse struct {
 
 func (x *DeleteProjectLogoResponse) Reset() {
 	*x = DeleteProjectLogoResponse{}
-	mi := &file_project_v1_project_proto_msgTypes[26]
+	mi := &file_project_v1_project_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1532,7 +1693,7 @@ func (x *DeleteProjectLogoResponse) String() string {
 func (*DeleteProjectLogoResponse) ProtoMessage() {}
 
 func (x *DeleteProjectLogoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_v1_project_proto_msgTypes[26]
+	mi := &file_project_v1_project_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1545,7 +1706,7 @@ func (x *DeleteProjectLogoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProjectLogoResponse.ProtoReflect.Descriptor instead.
 func (*DeleteProjectLogoResponse) Descriptor() ([]byte, []int) {
-	return file_project_v1_project_proto_rawDescGZIP(), []int{26}
+	return file_project_v1_project_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *DeleteProjectLogoResponse) GetProject() *Project {
@@ -1560,7 +1721,7 @@ var File_project_v1_project_proto protoreflect.FileDescriptor
 const file_project_v1_project_proto_rawDesc = "" +
 	"\n" +
 	"\x18project/v1/project.proto\x12\n" +
-	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\xc8\x06\n" +
+	"project.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18mcp/v1/annotations.proto\x1a\x14othra/v1/rules.proto\"\x8a\a\n" +
 	"\aProject\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
 	"\x06org_id\x18\x03 \x01(\tR\x05orgId\x12\x12\n" +
@@ -1586,7 +1747,8 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\x12terms_published_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\x10termsPublishedAt\x12*\n" +
 	"\x11signin_email_link\x18\x15 \x01(\bR\x0fsigninEmailLink\x12\x19\n" +
 	"\blogo_url\x18\x16 \x01(\tR\alogoUrl\x12\x16\n" +
-	"\x06system\x18\x17 \x01(\bR\x06systemJ\x04\b\x02\x10\x03J\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11R\tpublic_idR\bhas_logoR\x0flogo_updated_at\"\xb1\x04\n" +
+	"\x06system\x18\x17 \x01(\bR\x06system\x12@\n" +
+	"\venvironment\x18\x18 \x01(\x0e2\x1e.project.v1.ProjectEnvironmentR\venvironmentJ\x04\b\x02\x10\x03J\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11R\tpublic_idR\bhas_logoR\x0flogo_updated_at\"\xb1\x04\n" +
 	"\x14CreateProjectRequest\x12#\n" +
 	"\x06org_id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x05orgId\x12\x1d\n" +
 	"\x04slug\x18\x02 \x01(\tB\t\xbaH\x06r\x04\xa0\xe42\x01R\x04slug\x12 \n" +
@@ -1644,6 +1806,11 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\n" +
 	"email_link\x18\x02 \x01(\bR\temailLink\"L\n" +
 	"\x1bUpdateProjectSignInResponse\x12-\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"\x8b\x01\n" +
+	"\x1fUpdateProjectEnvironmentRequest\x12\x1c\n" +
+	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\x12J\n" +
+	"\venvironment\x18\x02 \x01(\x0e2\x1e.project.v1.ProjectEnvironmentB\b\xbaH\x05\x82\x01\x02\x10\x01R\venvironment\"Q\n" +
+	" UpdateProjectEnvironmentResponse\x12-\n" +
 	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject\"7\n" +
 	"\x17BumpTermsVersionRequest\x12\x1c\n" +
 	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\"s\n" +
@@ -1683,7 +1850,13 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\x18DeleteProjectLogoRequest\x12\x1c\n" +
 	"\x02id\x18\x01 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x88\xe42\x01R\x02id\"J\n" +
 	"\x19DeleteProjectLogoResponse\x12-\n" +
-	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject2\xf8\v\n" +
+	"\aproject\x18\x01 \x01(\v2\x13.project.v1.ProjectR\aproject*\xc1\x01\n" +
+	"\x12ProjectEnvironment\x12#\n" +
+	"\x1fPROJECT_ENVIRONMENT_UNSPECIFIED\x10\x00\x12\"\n" +
+	"\x1ePROJECT_ENVIRONMENT_PRODUCTION\x10\x01\x12\x1f\n" +
+	"\x1bPROJECT_ENVIRONMENT_STAGING\x10\x02\x12#\n" +
+	"\x1fPROJECT_ENVIRONMENT_DEVELOPMENT\x10\x03\x12\x1c\n" +
+	"\x18PROJECT_ENVIRONMENT_LABS\x10\x042\xef\f\n" +
 	"\x0eProjectService\x12\xc4\x01\n" +
 	"\rCreateProject\x12 .project.v1.CreateProjectRequest\x1a!.project.v1.CreateProjectResponse\"n\xca\xf3\x18j\n" +
 	"\x0eproject_create\x12QCreate a project within an organization, minting a slug when one is not supplied. \x01*\x03app\x12}\n" +
@@ -1696,7 +1869,8 @@ const file_project_v1_project_proto_rawDesc = "" +
 	"\x13UpdateProjectIssuer\x12&.project.v1.UpdateProjectIssuerRequest\x1a'.project.v1.UpdateProjectIssuerResponse\x12l\n" +
 	"\x15UpdateProjectBranding\x12(.project.v1.UpdateProjectBrandingRequest\x1a).project.v1.UpdateProjectBrandingResponse\x12c\n" +
 	"\x12UpdateProjectTerms\x12%.project.v1.UpdateProjectTermsRequest\x1a&.project.v1.UpdateProjectTermsResponse\x12f\n" +
-	"\x13UpdateProjectSignIn\x12&.project.v1.UpdateProjectSignInRequest\x1a'.project.v1.UpdateProjectSignInResponse\x12]\n" +
+	"\x13UpdateProjectSignIn\x12&.project.v1.UpdateProjectSignInRequest\x1a'.project.v1.UpdateProjectSignInResponse\x12u\n" +
+	"\x18UpdateProjectEnvironment\x12+.project.v1.UpdateProjectEnvironmentRequest\x1a,.project.v1.UpdateProjectEnvironmentResponse\x12]\n" +
 	"\x10BumpTermsVersion\x12#.project.v1.BumpTermsVersionRequest\x1a$.project.v1.BumpTermsVersionResponse\x12`\n" +
 	"\x11CheckIssuerHandle\x12$.project.v1.CheckIssuerHandleRequest\x1a%.project.v1.CheckIssuerHandleResponse\x12r\n" +
 	"\x17CreateProjectLogoUpload\x12*.project.v1.CreateProjectLogoUploadRequest\x1a+.project.v1.CreateProjectLogoUploadResponse\x12x\n" +
@@ -1718,87 +1892,96 @@ func file_project_v1_project_proto_rawDescGZIP() []byte {
 	return file_project_v1_project_proto_rawDescData
 }
 
-var file_project_v1_project_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_project_v1_project_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_project_v1_project_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_project_v1_project_proto_goTypes = []any{
-	(*Project)(nil),                           // 0: project.v1.Project
-	(*CreateProjectRequest)(nil),              // 1: project.v1.CreateProjectRequest
-	(*CreateProjectResponse)(nil),             // 2: project.v1.CreateProjectResponse
-	(*GetProjectRequest)(nil),                 // 3: project.v1.GetProjectRequest
-	(*GetProjectResponse)(nil),                // 4: project.v1.GetProjectResponse
-	(*ListProjectsRequest)(nil),               // 5: project.v1.ListProjectsRequest
-	(*ListProjectsResponse)(nil),              // 6: project.v1.ListProjectsResponse
-	(*UpdateProjectRequest)(nil),              // 7: project.v1.UpdateProjectRequest
-	(*UpdateProjectResponse)(nil),             // 8: project.v1.UpdateProjectResponse
-	(*UpdateProjectIssuerRequest)(nil),        // 9: project.v1.UpdateProjectIssuerRequest
-	(*UpdateProjectIssuerResponse)(nil),       // 10: project.v1.UpdateProjectIssuerResponse
-	(*UpdateProjectBrandingRequest)(nil),      // 11: project.v1.UpdateProjectBrandingRequest
-	(*UpdateProjectBrandingResponse)(nil),     // 12: project.v1.UpdateProjectBrandingResponse
-	(*UpdateProjectTermsRequest)(nil),         // 13: project.v1.UpdateProjectTermsRequest
-	(*UpdateProjectTermsResponse)(nil),        // 14: project.v1.UpdateProjectTermsResponse
-	(*UpdateProjectSignInRequest)(nil),        // 15: project.v1.UpdateProjectSignInRequest
-	(*UpdateProjectSignInResponse)(nil),       // 16: project.v1.UpdateProjectSignInResponse
-	(*BumpTermsVersionRequest)(nil),           // 17: project.v1.BumpTermsVersionRequest
-	(*BumpTermsVersionResponse)(nil),          // 18: project.v1.BumpTermsVersionResponse
-	(*CheckIssuerHandleRequest)(nil),          // 19: project.v1.CheckIssuerHandleRequest
-	(*CheckIssuerHandleResponse)(nil),         // 20: project.v1.CheckIssuerHandleResponse
-	(*CreateProjectLogoUploadRequest)(nil),    // 21: project.v1.CreateProjectLogoUploadRequest
-	(*CreateProjectLogoUploadResponse)(nil),   // 22: project.v1.CreateProjectLogoUploadResponse
-	(*CompleteProjectLogoUploadRequest)(nil),  // 23: project.v1.CompleteProjectLogoUploadRequest
-	(*CompleteProjectLogoUploadResponse)(nil), // 24: project.v1.CompleteProjectLogoUploadResponse
-	(*DeleteProjectLogoRequest)(nil),          // 25: project.v1.DeleteProjectLogoRequest
-	(*DeleteProjectLogoResponse)(nil),         // 26: project.v1.DeleteProjectLogoResponse
-	nil,                                       // 27: project.v1.CreateProjectLogoUploadResponse.HeadersEntry
-	(*timestamppb.Timestamp)(nil),             // 28: google.protobuf.Timestamp
+	(ProjectEnvironment)(0),                   // 0: project.v1.ProjectEnvironment
+	(*Project)(nil),                           // 1: project.v1.Project
+	(*CreateProjectRequest)(nil),              // 2: project.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),             // 3: project.v1.CreateProjectResponse
+	(*GetProjectRequest)(nil),                 // 4: project.v1.GetProjectRequest
+	(*GetProjectResponse)(nil),                // 5: project.v1.GetProjectResponse
+	(*ListProjectsRequest)(nil),               // 6: project.v1.ListProjectsRequest
+	(*ListProjectsResponse)(nil),              // 7: project.v1.ListProjectsResponse
+	(*UpdateProjectRequest)(nil),              // 8: project.v1.UpdateProjectRequest
+	(*UpdateProjectResponse)(nil),             // 9: project.v1.UpdateProjectResponse
+	(*UpdateProjectIssuerRequest)(nil),        // 10: project.v1.UpdateProjectIssuerRequest
+	(*UpdateProjectIssuerResponse)(nil),       // 11: project.v1.UpdateProjectIssuerResponse
+	(*UpdateProjectBrandingRequest)(nil),      // 12: project.v1.UpdateProjectBrandingRequest
+	(*UpdateProjectBrandingResponse)(nil),     // 13: project.v1.UpdateProjectBrandingResponse
+	(*UpdateProjectTermsRequest)(nil),         // 14: project.v1.UpdateProjectTermsRequest
+	(*UpdateProjectTermsResponse)(nil),        // 15: project.v1.UpdateProjectTermsResponse
+	(*UpdateProjectSignInRequest)(nil),        // 16: project.v1.UpdateProjectSignInRequest
+	(*UpdateProjectSignInResponse)(nil),       // 17: project.v1.UpdateProjectSignInResponse
+	(*UpdateProjectEnvironmentRequest)(nil),   // 18: project.v1.UpdateProjectEnvironmentRequest
+	(*UpdateProjectEnvironmentResponse)(nil),  // 19: project.v1.UpdateProjectEnvironmentResponse
+	(*BumpTermsVersionRequest)(nil),           // 20: project.v1.BumpTermsVersionRequest
+	(*BumpTermsVersionResponse)(nil),          // 21: project.v1.BumpTermsVersionResponse
+	(*CheckIssuerHandleRequest)(nil),          // 22: project.v1.CheckIssuerHandleRequest
+	(*CheckIssuerHandleResponse)(nil),         // 23: project.v1.CheckIssuerHandleResponse
+	(*CreateProjectLogoUploadRequest)(nil),    // 24: project.v1.CreateProjectLogoUploadRequest
+	(*CreateProjectLogoUploadResponse)(nil),   // 25: project.v1.CreateProjectLogoUploadResponse
+	(*CompleteProjectLogoUploadRequest)(nil),  // 26: project.v1.CompleteProjectLogoUploadRequest
+	(*CompleteProjectLogoUploadResponse)(nil), // 27: project.v1.CompleteProjectLogoUploadResponse
+	(*DeleteProjectLogoRequest)(nil),          // 28: project.v1.DeleteProjectLogoRequest
+	(*DeleteProjectLogoResponse)(nil),         // 29: project.v1.DeleteProjectLogoResponse
+	nil,                                       // 30: project.v1.CreateProjectLogoUploadResponse.HeadersEntry
+	(*timestamppb.Timestamp)(nil),             // 31: google.protobuf.Timestamp
 }
 var file_project_v1_project_proto_depIdxs = []int32{
-	28, // 0: project.v1.Project.created_at:type_name -> google.protobuf.Timestamp
-	28, // 1: project.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
-	28, // 2: project.v1.Project.issuer_handle_locked_at:type_name -> google.protobuf.Timestamp
-	28, // 3: project.v1.Project.terms_published_at:type_name -> google.protobuf.Timestamp
-	0,  // 4: project.v1.CreateProjectResponse.project:type_name -> project.v1.Project
-	0,  // 5: project.v1.GetProjectResponse.project:type_name -> project.v1.Project
-	0,  // 6: project.v1.ListProjectsResponse.projects:type_name -> project.v1.Project
-	0,  // 7: project.v1.UpdateProjectResponse.project:type_name -> project.v1.Project
-	0,  // 8: project.v1.UpdateProjectIssuerResponse.project:type_name -> project.v1.Project
-	0,  // 9: project.v1.UpdateProjectBrandingResponse.project:type_name -> project.v1.Project
-	0,  // 10: project.v1.UpdateProjectTermsResponse.project:type_name -> project.v1.Project
-	0,  // 11: project.v1.UpdateProjectSignInResponse.project:type_name -> project.v1.Project
-	28, // 12: project.v1.BumpTermsVersionResponse.published_at:type_name -> google.protobuf.Timestamp
-	27, // 13: project.v1.CreateProjectLogoUploadResponse.headers:type_name -> project.v1.CreateProjectLogoUploadResponse.HeadersEntry
-	28, // 14: project.v1.CreateProjectLogoUploadResponse.expires_at:type_name -> google.protobuf.Timestamp
-	0,  // 15: project.v1.CompleteProjectLogoUploadResponse.project:type_name -> project.v1.Project
-	0,  // 16: project.v1.DeleteProjectLogoResponse.project:type_name -> project.v1.Project
-	1,  // 17: project.v1.ProjectService.CreateProject:input_type -> project.v1.CreateProjectRequest
-	3,  // 18: project.v1.ProjectService.GetProject:input_type -> project.v1.GetProjectRequest
-	5,  // 19: project.v1.ProjectService.ListProjects:input_type -> project.v1.ListProjectsRequest
-	7,  // 20: project.v1.ProjectService.UpdateProject:input_type -> project.v1.UpdateProjectRequest
-	9,  // 21: project.v1.ProjectService.UpdateProjectIssuer:input_type -> project.v1.UpdateProjectIssuerRequest
-	11, // 22: project.v1.ProjectService.UpdateProjectBranding:input_type -> project.v1.UpdateProjectBrandingRequest
-	13, // 23: project.v1.ProjectService.UpdateProjectTerms:input_type -> project.v1.UpdateProjectTermsRequest
-	15, // 24: project.v1.ProjectService.UpdateProjectSignIn:input_type -> project.v1.UpdateProjectSignInRequest
-	17, // 25: project.v1.ProjectService.BumpTermsVersion:input_type -> project.v1.BumpTermsVersionRequest
-	19, // 26: project.v1.ProjectService.CheckIssuerHandle:input_type -> project.v1.CheckIssuerHandleRequest
-	21, // 27: project.v1.ProjectService.CreateProjectLogoUpload:input_type -> project.v1.CreateProjectLogoUploadRequest
-	23, // 28: project.v1.ProjectService.CompleteProjectLogoUpload:input_type -> project.v1.CompleteProjectLogoUploadRequest
-	25, // 29: project.v1.ProjectService.DeleteProjectLogo:input_type -> project.v1.DeleteProjectLogoRequest
-	2,  // 30: project.v1.ProjectService.CreateProject:output_type -> project.v1.CreateProjectResponse
-	4,  // 31: project.v1.ProjectService.GetProject:output_type -> project.v1.GetProjectResponse
-	6,  // 32: project.v1.ProjectService.ListProjects:output_type -> project.v1.ListProjectsResponse
-	8,  // 33: project.v1.ProjectService.UpdateProject:output_type -> project.v1.UpdateProjectResponse
-	10, // 34: project.v1.ProjectService.UpdateProjectIssuer:output_type -> project.v1.UpdateProjectIssuerResponse
-	12, // 35: project.v1.ProjectService.UpdateProjectBranding:output_type -> project.v1.UpdateProjectBrandingResponse
-	14, // 36: project.v1.ProjectService.UpdateProjectTerms:output_type -> project.v1.UpdateProjectTermsResponse
-	16, // 37: project.v1.ProjectService.UpdateProjectSignIn:output_type -> project.v1.UpdateProjectSignInResponse
-	18, // 38: project.v1.ProjectService.BumpTermsVersion:output_type -> project.v1.BumpTermsVersionResponse
-	20, // 39: project.v1.ProjectService.CheckIssuerHandle:output_type -> project.v1.CheckIssuerHandleResponse
-	22, // 40: project.v1.ProjectService.CreateProjectLogoUpload:output_type -> project.v1.CreateProjectLogoUploadResponse
-	24, // 41: project.v1.ProjectService.CompleteProjectLogoUpload:output_type -> project.v1.CompleteProjectLogoUploadResponse
-	26, // 42: project.v1.ProjectService.DeleteProjectLogo:output_type -> project.v1.DeleteProjectLogoResponse
-	30, // [30:43] is the sub-list for method output_type
-	17, // [17:30] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	31, // 0: project.v1.Project.created_at:type_name -> google.protobuf.Timestamp
+	31, // 1: project.v1.Project.updated_at:type_name -> google.protobuf.Timestamp
+	31, // 2: project.v1.Project.issuer_handle_locked_at:type_name -> google.protobuf.Timestamp
+	31, // 3: project.v1.Project.terms_published_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: project.v1.Project.environment:type_name -> project.v1.ProjectEnvironment
+	1,  // 5: project.v1.CreateProjectResponse.project:type_name -> project.v1.Project
+	1,  // 6: project.v1.GetProjectResponse.project:type_name -> project.v1.Project
+	1,  // 7: project.v1.ListProjectsResponse.projects:type_name -> project.v1.Project
+	1,  // 8: project.v1.UpdateProjectResponse.project:type_name -> project.v1.Project
+	1,  // 9: project.v1.UpdateProjectIssuerResponse.project:type_name -> project.v1.Project
+	1,  // 10: project.v1.UpdateProjectBrandingResponse.project:type_name -> project.v1.Project
+	1,  // 11: project.v1.UpdateProjectTermsResponse.project:type_name -> project.v1.Project
+	1,  // 12: project.v1.UpdateProjectSignInResponse.project:type_name -> project.v1.Project
+	0,  // 13: project.v1.UpdateProjectEnvironmentRequest.environment:type_name -> project.v1.ProjectEnvironment
+	1,  // 14: project.v1.UpdateProjectEnvironmentResponse.project:type_name -> project.v1.Project
+	31, // 15: project.v1.BumpTermsVersionResponse.published_at:type_name -> google.protobuf.Timestamp
+	30, // 16: project.v1.CreateProjectLogoUploadResponse.headers:type_name -> project.v1.CreateProjectLogoUploadResponse.HeadersEntry
+	31, // 17: project.v1.CreateProjectLogoUploadResponse.expires_at:type_name -> google.protobuf.Timestamp
+	1,  // 18: project.v1.CompleteProjectLogoUploadResponse.project:type_name -> project.v1.Project
+	1,  // 19: project.v1.DeleteProjectLogoResponse.project:type_name -> project.v1.Project
+	2,  // 20: project.v1.ProjectService.CreateProject:input_type -> project.v1.CreateProjectRequest
+	4,  // 21: project.v1.ProjectService.GetProject:input_type -> project.v1.GetProjectRequest
+	6,  // 22: project.v1.ProjectService.ListProjects:input_type -> project.v1.ListProjectsRequest
+	8,  // 23: project.v1.ProjectService.UpdateProject:input_type -> project.v1.UpdateProjectRequest
+	10, // 24: project.v1.ProjectService.UpdateProjectIssuer:input_type -> project.v1.UpdateProjectIssuerRequest
+	12, // 25: project.v1.ProjectService.UpdateProjectBranding:input_type -> project.v1.UpdateProjectBrandingRequest
+	14, // 26: project.v1.ProjectService.UpdateProjectTerms:input_type -> project.v1.UpdateProjectTermsRequest
+	16, // 27: project.v1.ProjectService.UpdateProjectSignIn:input_type -> project.v1.UpdateProjectSignInRequest
+	18, // 28: project.v1.ProjectService.UpdateProjectEnvironment:input_type -> project.v1.UpdateProjectEnvironmentRequest
+	20, // 29: project.v1.ProjectService.BumpTermsVersion:input_type -> project.v1.BumpTermsVersionRequest
+	22, // 30: project.v1.ProjectService.CheckIssuerHandle:input_type -> project.v1.CheckIssuerHandleRequest
+	24, // 31: project.v1.ProjectService.CreateProjectLogoUpload:input_type -> project.v1.CreateProjectLogoUploadRequest
+	26, // 32: project.v1.ProjectService.CompleteProjectLogoUpload:input_type -> project.v1.CompleteProjectLogoUploadRequest
+	28, // 33: project.v1.ProjectService.DeleteProjectLogo:input_type -> project.v1.DeleteProjectLogoRequest
+	3,  // 34: project.v1.ProjectService.CreateProject:output_type -> project.v1.CreateProjectResponse
+	5,  // 35: project.v1.ProjectService.GetProject:output_type -> project.v1.GetProjectResponse
+	7,  // 36: project.v1.ProjectService.ListProjects:output_type -> project.v1.ListProjectsResponse
+	9,  // 37: project.v1.ProjectService.UpdateProject:output_type -> project.v1.UpdateProjectResponse
+	11, // 38: project.v1.ProjectService.UpdateProjectIssuer:output_type -> project.v1.UpdateProjectIssuerResponse
+	13, // 39: project.v1.ProjectService.UpdateProjectBranding:output_type -> project.v1.UpdateProjectBrandingResponse
+	15, // 40: project.v1.ProjectService.UpdateProjectTerms:output_type -> project.v1.UpdateProjectTermsResponse
+	17, // 41: project.v1.ProjectService.UpdateProjectSignIn:output_type -> project.v1.UpdateProjectSignInResponse
+	19, // 42: project.v1.ProjectService.UpdateProjectEnvironment:output_type -> project.v1.UpdateProjectEnvironmentResponse
+	21, // 43: project.v1.ProjectService.BumpTermsVersion:output_type -> project.v1.BumpTermsVersionResponse
+	23, // 44: project.v1.ProjectService.CheckIssuerHandle:output_type -> project.v1.CheckIssuerHandleResponse
+	25, // 45: project.v1.ProjectService.CreateProjectLogoUpload:output_type -> project.v1.CreateProjectLogoUploadResponse
+	27, // 46: project.v1.ProjectService.CompleteProjectLogoUpload:output_type -> project.v1.CompleteProjectLogoUploadResponse
+	29, // 47: project.v1.ProjectService.DeleteProjectLogo:output_type -> project.v1.DeleteProjectLogoResponse
+	34, // [34:48] is the sub-list for method output_type
+	20, // [20:34] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_project_v1_project_proto_init() }
@@ -1811,13 +1994,14 @@ func file_project_v1_project_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_project_v1_project_proto_rawDesc), len(file_project_v1_project_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   28,
+			NumEnums:      1,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_project_v1_project_proto_goTypes,
 		DependencyIndexes: file_project_v1_project_proto_depIdxs,
+		EnumInfos:         file_project_v1_project_proto_enumTypes,
 		MessageInfos:      file_project_v1_project_proto_msgTypes,
 	}.Build()
 	File_project_v1_project_proto = out.File
