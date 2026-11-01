@@ -30,6 +30,11 @@ describe('guard: markup in every app', () => {
     expect(offenders(/\b(?:input|select|textarea|file-input)-(?:bordered|sm|xs)\b/)).toEqual([]);
   });
 
+  it('gives a two-column grid a base column that can shrink, so it never scrolls sideways on a phone', () => {
+    const bad = files.flatMap(f => (f.text.match(/class="[^"]*\b(?:sm|md|lg|xl):grid-cols-\[[^"]*"/g) ?? []).filter(c => !/(?:^|[\s"])grid-cols-/.test(c)).map(c => `${f.path}: ${c}`));
+    expect(bad).toEqual([]);
+  });
+
   it('uses the daisyUI 5 row-hover, not the removed table hover class', () => {
     expect(offenders(/<tr\s(?:[^>]*\s)?class="(?:[^"]*\s)?hover(?:\s[^"]*)?"/)).toEqual([]);
   });

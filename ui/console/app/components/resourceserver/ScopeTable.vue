@@ -49,7 +49,7 @@ function setDescription(index: number, value: string) {
     <legend class="fieldset-legend">
       {{ labels.legend }}
     </legend>
-    <div class="hidden gap-2 text-xs font-medium text-base-content/70 sm:grid sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_2rem]" aria-hidden="true" data-testid="scope-columns">
+    <div class="hidden grid-cols-[minmax(0,1fr)] gap-2 text-xs font-medium text-base-content/70 sm:grid sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_2rem]" aria-hidden="true" data-testid="scope-columns">
       <span>{{ labels.scope }}</span>
       <span>{{ labels.description }}</span>
     </div>

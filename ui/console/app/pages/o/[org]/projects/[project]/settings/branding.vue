@@ -68,7 +68,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
     </div>
     <ProjectReadOnlyNote v-if="!canEdit" />
 
-    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <form v-if="canEdit" novalidate class="card self-start border border-base-300 bg-base-100" @submit.prevent="branding.save()">
         <div class="card-body gap-2">
           <div class="fieldset">
