@@ -414,19 +414,23 @@ func TestConsent_FirstTime(t *testing.T) {
 	assert.Contains(t, out, "Unverified app")
 	assert.Contains(t, out, "Acme Store hasn&#39;t reviewed this app. Its details come from claude.ai.")
 
-	assert.Contains(t, out, `<span class="block text-sm font-medium">Read your messages</span><span class="block font-mono text-xs text-base-content/70">messages:read</span>`)
-	assert.Contains(t, out, `<span class="block text-sm font-medium">Stay connected when you&#39;re away</span>`, "offline_access is its own line")
-	assert.Contains(t, out, `<span class="block text-sm font-medium">devices:write</span>`, "no description: the raw scope")
+	assert.Contains(t, out, `<span class="min-w-0 text-sm font-medium">Read your messages</span>`)
+	assert.Contains(t, out, `<span class="min-w-0 text-sm font-medium">Stay connected when you&#39;re away</span>`, "offline_access is its own line")
+	assert.Contains(t, out, `<span class="min-w-0 text-sm font-medium">devices:write</span>`, "no description: the raw scope")
+	details := out[strings.Index(out, `<details class="collapse collapse-arrow`):]
+	assert.Contains(t, details, `>Technical details</summary>`, "raw scope ids sit behind Technical details")
+	assert.Contains(t, details, "<li>messages:read</li><li>offline_access</li><li>devices:write</li><li>openid</li>")
 	assert.Contains(t, out, `<span class="badge badge-ghost badge-sm">Allowed before</span>`)
-	order := []int{strings.Index(out, "messages:read"), strings.Index(out, ">offline_access<"), strings.Index(out, "devices:write"), strings.Index(out, ">openid<")}
+	order := []int{strings.Index(out, "Read your messages"), strings.Index(out, ">Stay connected"), strings.Index(out, ">devices:write<"), strings.Index(out, ">Know who you are<")}
 	assert.IsIncreasing(t, order, "new scopes first, in request order; allowed-before last")
 
-	assert.Contains(t, out, "After you allow, you&#39;ll go back to <span class=\"font-medium\">localhost</span>.")
+	assert.Contains(t, out, "After you allow, you&#39;ll go back to <span class=\"font-mono font-medium text-base-content\">localhost</span>.")
+	assert.Less(t, strings.Index(out, "go back to"), strings.Index(out, "Signing in as"), "the redirect host sits above the account and the scopes")
 	assert.Contains(t, out, `<p class="font-medium">That&#39;s a program on this device. Continue only if you started this sign-in.</p>`)
 
 	form := out[strings.Index(out, `<form method="post" action="/id/p/acme/consent"`):]
 	assert.Contains(t, form, `<input type="hidden" name="csrf" value="tok-consent"><input type="hidden" name="user_session" value="us1"><input type="hidden" name="return_to" value="/id/p/acme/oauth2/authorize?client_id=x">`)
-	assert.Contains(t, form, `<button class="btn btn-primary btn-block" type="submit">Allow</button><button class="btn btn-ghost btn-block" type="submit" name="deny" value="1" formnovalidate>Deny</button>`)
+	assert.Contains(t, form, `<button class="btn btn-primary btn-block" type="submit">Allow access</button><button class="btn btn-ghost btn-block" type="submit" name="deny" value="1" formnovalidate>Cancel</button>`)
 	assert.Contains(t, out, `href="/id/p/acme/login?add=1&amp;return_to=%2Fid%2Fp%2Facme%2Foauth2%2Fauthorize%3Fclient_id%3Dx">Use another account</a>`)
 	assert.Contains(t, out, `<span class="block truncate font-medium" title="ana@acme.test">ana@acme.test</span>`)
 }
@@ -438,7 +442,8 @@ func TestConsent_RegisteredAccountTitleNoLoopback(t *testing.T) {
 	assert.Contains(t, out, "Izinkan Claude Code mengakses akun Acme Store Anda?")
 	assert.NotContains(t, out, "alert-warning", "no CIMD note for a registered client")
 	assert.NotContains(t, out, "perangkat ini", "no loopback warning")
-	assert.Contains(t, out, `Setelah Anda mengizinkan, Anda akan kembali ke <span class="font-medium">app.example</span>.`)
+	assert.Contains(t, out, `Setelah Anda mengizinkan, Anda akan kembali ke <span class="font-mono font-medium text-base-content">app.example</span>.`)
+	assert.Contains(t, out, ">Detail teknis</summary>")
 	assert.Contains(t, out, "Mengetahui siapa Anda")
 	assert.Contains(t, out, ">Izinkan</button>")
 }
@@ -452,10 +457,11 @@ func TestConsent_Remembered(t *testing.T) {
 	assert.Contains(t, out, `<p class="text-xs text-base-content/70">From claude.ai · unverified app</p>`)
 	assert.NotContains(t, out, "alert-warning", "the remembered page has one muted line, not the box")
 	assert.NotContains(t, out, "messages:read", "no scope list")
-	assert.Contains(t, out, "You&#39;ll go back to <span class=\"font-medium\">localhost</span>.")
+	assert.Contains(t, out, "You&#39;ll go back to <span class=\"font-mono font-medium text-base-content\">localhost</span>.")
+	assert.NotContains(t, out, "Technical details", "the one-click page has no scope list to explain")
 	assert.Contains(t, out, "That&#39;s a program on this device.")
 	assert.Contains(t, out, `<button class="btn btn-primary btn-block" type="submit">Continue to Claude Code</button>`)
-	assert.Contains(t, out, `name="deny" value="1" formnovalidate>Deny</button>`)
+	assert.Contains(t, out, `name="deny" value="1" formnovalidate>Cancel</button>`)
 	assert.Contains(t, out, `name="csrf" value="tok-consent"`, "a real POST, never a link")
 
 	v.ClientHost = ""

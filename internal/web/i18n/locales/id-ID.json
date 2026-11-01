@@ -37,6 +37,7 @@
   "consent.remembered_body": "Anda sudah pernah mengizinkan {client} mengakses {rs}.",
   "consent.remembered_return": "Anda akan kembali ke {host}.",
   "consent.remembered_title": "Lanjutkan ke {client}?",
+  "consent.technical": "Detail teknis",
   "consent.title_account": "Izinkan {client} mengakses akun {project} Anda?",
   "consent.title_rs": "Izinkan {client} mengakses {rs}?",
   "consent.unverified_body": "{project} belum meninjau aplikasi ini. Informasinya berasal dari {host}.",

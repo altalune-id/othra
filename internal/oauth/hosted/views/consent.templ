@@ -118,6 +118,17 @@ templ Consent(d layout.LayoutData, v ConsentData) {
 					<p class="text-xs text-base-content/70">{ i18n.T(ctx, "consent.from_host", "host", v.ClientHost) }</p>
 				}
 			}
+			<div class="flex items-start gap-1.5 text-sm text-base-content/70">
+				@iconReturn()
+				<div class="min-w-0 break-words">
+					<p>
+						@highlight(i18n.T(ctx, v.returnKey()), "{host}", v.RedirectHost, "font-mono font-medium text-base-content")
+					</p>
+					if v.Loopback {
+						<p class="font-medium">{ i18n.T(ctx, "consent.loopback_warning") }</p>
+					}
+				</div>
+			</div>
 			@accountTile(d, v.Site, v.Email, v.ReturnTo)
 			if !v.Remembered {
 				if v.ClientHost != "" {
@@ -132,30 +143,24 @@ templ Consent(d layout.LayoutData, v ConsentData) {
 				<ul class="divide-y divide-base-content/10 rounded-box bg-base-200">
 					for _, s := range v.ordered() {
 						<li class="flex flex-wrap items-start justify-between gap-2 px-4 py-3">
-							<span class="min-w-0">
-								<span class="block text-sm font-medium">{ s.label(ctx) }</span>
-								if s.label(ctx) != s.Scope {
-									<span class="block font-mono text-xs text-base-content/70">{ s.Scope }</span>
-								}
-							</span>
+							<span class="min-w-0 text-sm font-medium">{ s.label(ctx) }</span>
 							if s.AllowedBefore {
 								<span class="badge badge-ghost badge-sm">{ i18n.T(ctx, "consent.allowed_before") }</span>
 							}
 						</li>
 					}
 				</ul>
+				<details class="collapse collapse-arrow rounded-box border border-base-300">
+					<summary class="collapse-title min-h-0 py-3 text-sm font-medium">{ i18n.T(ctx, "consent.technical") }</summary>
+					<div class="collapse-content">
+						<ul class="space-y-1 font-mono text-xs break-all text-base-content/70">
+							for _, s := range v.ordered() {
+								<li>{ s.Scope }</li>
+							}
+						</ul>
+					</div>
+				</details>
 			}
-			<div class="flex items-start gap-1.5 text-sm text-base-content/70">
-				@iconReturn()
-				<div class="min-w-0 break-words">
-					<p>
-						@highlight(i18n.T(ctx, v.returnKey()), "{host}", v.RedirectHost, "font-medium")
-					</p>
-					if v.Loopback {
-						<p class="font-medium">{ i18n.T(ctx, "consent.loopback_warning") }</p>
-					}
-				</div>
-			</div>
 			<form method="post" action={ v.href(d, "/consent") } class="flex flex-col gap-2">
 				@layout.CSRFInput(v.ConsentToken)
 				<input type="hidden" name="user_session" value={ v.UserSession }/>
