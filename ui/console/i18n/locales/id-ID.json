@@ -126,6 +126,7 @@
   "clients.refresh_off": "Nonaktif",
   "clients.refresh_on": "Aktif",
   "clients.scopes": "Scope login",
+  "clients.secret_not_generated": "Klien sudah dibuat, tetapi rahasianya gagal dibuat. Buat rahasia sekarang.",
   "clients.settings_title": "Pengaturan login",
   "clients.subtitle": "Aplikasi yang memakai proyek ini untuk login pengguna.",
   "clients.system_client_note": "Othra mengelola aplikasi ini. URI pengalihannya mengikuti URL publik dan diperbarui setiap kali Othra dimulai.",

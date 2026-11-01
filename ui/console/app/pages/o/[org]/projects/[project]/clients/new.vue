@@ -43,7 +43,9 @@ async function submit() {
   if (detail.get(projectId)) {
     void detail.load(projectId);
   }
-  if (!revealed.value) {
+  if (form.secretError.value) {
+    await navigateTo({ path: `${base.value}/${client.id}`, query: { focus: 'secrets', secret: 'failed' } });
+  } else if (!revealed.value) {
     await navigateTo(`${base.value}/${client.id}`);
   }
 }

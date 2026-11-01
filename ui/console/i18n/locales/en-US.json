@@ -126,6 +126,7 @@
   "clients.refresh_off": "Off",
   "clients.refresh_on": "On",
   "clients.scopes": "Sign-in scopes",
+  "clients.secret_not_generated": "The client was created, but its secret was not generated. Generate one now.",
   "clients.settings_title": "Sign-in settings",
   "clients.subtitle": "Apps that sign end users in with this project.",
   "clients.system_client_note": "Othra manages this app. Its redirect URI follows the public URL and is updated on every start.",
