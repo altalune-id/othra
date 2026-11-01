@@ -13,6 +13,33 @@ export const expiryOptions = [
   { value: TokenExpiry.TOKEN_EXPIRY_90_DAYS, days: 90 },
 ];
 
+const draftKey = 'othra.portal.token-draft';
+
+interface Draft {
+  name: string;
+  serverId: string;
+  scopes: string[];
+  expiry: TokenExpiry;
+}
+
+function readDraft(): Draft | null {
+  try {
+    const raw = sessionStorage.getItem(draftKey);
+    sessionStorage.removeItem(draftKey);
+    return raw ? JSON.parse(raw) as Draft : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(draft: Draft) {
+  try {
+    sessionStorage.setItem(draftKey, JSON.stringify(draft));
+  } catch {
+    // NOTE: without session storage the form comes back empty after the fresh sign-in.
+  }
+}
+
 // useTokenCreate creates a personal token for one server and holds its secret until the person leaves the reveal.
 export function useTokenCreate() {
   const { $accountClient: client } = useNuxtApp();
@@ -44,6 +71,13 @@ export function useTokenCreate() {
       if (servers.value.length === 1) {
         serverId.value = servers.value[0]!.id;
       }
+      const draft = readDraft();
+      if (draft && servers.value.some(s => s.id === draft.serverId)) {
+        name.value = draft.name;
+        serverId.value = draft.serverId;
+        scopes.value = draft.scopes;
+        expiry.value = draft.expiry;
+      }
     } catch (e) {
       loadError.value = errorMessage(e, 'error.load_servers');
     } finally {
@@ -69,6 +103,9 @@ export function useTokenCreate() {
       return true;
     } catch (e) {
       reauth.value = errorCode(e) === 'ACC009';
+      if (reauth.value) {
+        writeDraft(req);
+      }
       error.value = validation.fromServer(e, 'error.create_token');
       return false;
     } finally {
