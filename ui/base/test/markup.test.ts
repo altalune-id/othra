@@ -75,9 +75,21 @@ describe('guard: forms that show field errors', () => {
 });
 
 describe('guard: theme contrast', () => {
-  it('darkens the othra-dark primary for button text contrast', () => {
-    const theme = readFileSync(join(ui, 'theme.css'), 'utf8');
-    const dark = theme.slice(theme.indexOf('name: \'othra-dark\''));
-    expect(dark.slice(0, dark.indexOf('}'))).toContain('--color-primary: oklch(55% 0.233 277.117);');
+  const theme = readFileSync(join(ui, 'theme.css'), 'utf8');
+  const block = (name: string) => {
+    const from = theme.slice(theme.indexOf(`name: '${name}'`));
+    return from.slice(0, from.indexOf('}'));
+  };
+
+  it.each([
+    ['othra-light', 'oklch(42% 0.09 195)', 'oklch(98% 0.01 195)'],
+    ['othra-dark', 'oklch(73% 0.09 195)', 'oklch(19% 0.03 200)'],
+  ])('keeps the AA-checked deep teal primary pair in %s', (name, primary, content) => {
+    expect(block(name)).toContain(`--color-primary: ${primary};`);
+    expect(block(name)).toContain(`--color-primary-content: ${content};`);
+  });
+
+  it('drops the old shared indigo', () => {
+    expect(theme).not.toContain('277.117');
   });
 });
