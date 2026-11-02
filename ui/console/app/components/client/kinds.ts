@@ -13,6 +13,7 @@ export interface ClientKindSpec {
   value: ClientKind;
   icon: string;
   labelKey: string;
+  typeKey: string;
   helpKey: string;
   redirectHelpKey: string;
   placeholder: string;
@@ -27,6 +28,7 @@ export const clientKinds: Record<ClientKindName, ClientKindSpec> = {
     value: ClientKind.WEB,
     icon: 'lucide:app-window',
     labelKey: 'clients.kind_web',
+    typeKey: 'clients.type_web',
     helpKey: 'clients.kind_web_help',
     redirectHelpKey: 'clients.redirect_help_web',
     placeholder: 'https://app.example.com/oauth/callback',
@@ -38,6 +40,7 @@ export const clientKinds: Record<ClientKindName, ClientKindSpec> = {
     value: ClientKind.CLI,
     icon: 'lucide:monitor-smartphone',
     labelKey: 'clients.kind_native',
+    typeKey: 'clients.type_native',
     helpKey: 'clients.kind_native_help',
     redirectHelpKey: 'clients.redirect_help_native',
     placeholder: 'http://127.0.0.1/callback',

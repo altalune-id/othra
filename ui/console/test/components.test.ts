@@ -58,8 +58,9 @@ describe('org fields', () => {
 
 describe('client list', () => {
   it('marks the console client with the system badge', () => {
-    const row = { name: 'App', kind: 'Web app', created: 'Oct 20, 2026', lastUsed: 'Never', to: '#' };
-    const w = mount(ClientList, { props: { rows: [{ ...row, id: 'Lq3vT8nWx2KpZr6YbM9cD', system: true }, { ...row, id: 'dPm7fmQRJKPVw8PxrgdrN' }] } });
+    const row = { name: 'App', type: 'Web', icon: 'lucide:app-window', host: 'app.example', lastUsed: 'Never', to: '#' };
+    const labels = { caption: 'Clients', name: 'Name', type: 'Type', clientId: 'Client ID', host: 'Redirect host', lastUsed: 'Last used', actions: 'Actions', moreFor: 'More actions for {name}', open: 'Open', copyId: 'Copy client ID', copied: 'Copied', system: 'System' };
+    const w = mount(ClientList, { props: { labels, rows: [{ ...row, id: 'Lq3vT8nWx2KpZr6YbM9cD', system: true }, { ...row, id: 'dPm7fmQRJKPVw8PxrgdrN' }] } });
     const cells = w.findAll('tbody tr').map(r => r.find('td').text());
     expect(cells).toEqual(['App System', 'App']);
   });

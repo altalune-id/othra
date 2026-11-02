@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { ClientRow } from '~/components/client/ClientList.vue';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
+import AppButton from '#base/components/ui/AppButton.vue';
 import EmptyState from '#base/components/ui/EmptyState.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
-import { useDates } from '#base/composables/useDates';
 import { relativeTime } from '#base/lib/tokens/keyStatus';
 import ClientList from '~/components/client/ClientList.vue';
-import { clientKinds, isSystemClient, kindName } from '~/components/client/kinds';
+import { clientKinds, isCimdClient, isSystemClient, kindName } from '~/components/client/kinds';
+import { redirectHost } from '~/components/client/redirectUris';
 import { useClientList } from '~/components/client/useClients';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useProjectGuard } from '~/components/project/useProjectAccess';
@@ -17,7 +18,6 @@ import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
 const { t, locale } = useI18n();
-const { date } = useDates();
 const now = new Date();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
@@ -37,20 +37,26 @@ const rows = computed<ClientRow[]>(() => {
   return list.clients.value.map(c => ({
     id: c.id,
     name: c.name,
-    kind: t(clientKinds[kindName(c.kind)].labelKey),
-    created: date(c.createdAt),
+    type: isCimdClient(c) ? t('clients.type_mcp') : t(clientKinds[kindName(c.kind)].typeKey),
+    icon: isCimdClient(c) ? 'lucide:plug' : clientKinds[kindName(c.kind)].icon,
+    host: redirectHost(c.redirectUris) || t('clients.no_redirect'),
     lastUsed: c.lastUsedAt ? relativeTime(timestampDate(c.lastUsedAt), now, locale.value) : t('clients.never_used'),
     to: `${base.value}/${c.id}`,
     system: isSystemClient(c),
   }));
 });
 const labels = computed(() => ({
+  caption: t('clients.title'),
   name: t('common.name'),
+  type: t('clients.col_type'),
   clientId: t('clients.client_id'),
-  kind: t('clients.kind'),
-  created: t('clients.col_created'),
+  host: t('clients.col_redirect_host'),
   lastUsed: t('clients.col_last_used'),
-  copyFor: t('clients.copy_id_for', { name: '{name}' }),
+  actions: t('clients.col_actions'),
+  moreFor: t('clients.more_for', { name: '{name}' }),
+  open: t('common.open'),
+  copyId: t('clients.copy_client_id'),
+  copied: t('common.copied'),
   system: t('common.system'),
 }));
 
@@ -60,31 +66,27 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
 </script>
 
 <template>
-  <div class="max-w-4xl space-y-6">
+  <div class="flex flex-col gap-4">
     <PageHeader :title="t('clients.title')" :description="t('clients.subtitle')">
       <template v-if="canEdit" #actions>
-        <NuxtLink :to="`${base}/new`" class="btn btn-primary btn-sm max-sm:btn-block">
-          <Icon name="lucide:plus" size="16" />
+        <AppButton size="sm" :to="`${base}/new`">
+          <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
           {{ t('clients.new') }}
-        </NuxtLink>
+        </AppButton>
       </template>
     </PageHeader>
     <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('clients.system_note')" />
     <ProjectReadOnlyNote v-else-if="!canEdit" />
 
-    <section class="card border border-base-300 bg-base-100" data-testid="clients-card">
-      <div class="card-body gap-2">
-        <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
-        <EmptyState v-else-if="!loading && rows.length === 0" icon="lucide:app-window" :title="t('clients.empty_title')" :body="t('clients.empty_body')">
-          <template v-if="canEdit" #actions>
-            <NuxtLink :to="`${base}/new`" class="btn btn-primary btn-sm">
-              <Icon name="lucide:plus" size="16" />
-              {{ t('clients.new') }}
-            </NuxtLink>
-          </template>
-        </EmptyState>
-        <ClientList v-else :rows="rows" :loading="loading" :labels="labels" />
-      </div>
-    </section>
+    <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
+    <EmptyState v-else-if="!loading && rows.length === 0" icon="lucide:app-window" :title="t('clients.empty_title')" :body="t('clients.empty_body')">
+      <template v-if="canEdit" #actions>
+        <AppButton size="sm" :to="`${base}/new`">
+          <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('clients.new') }}
+        </AppButton>
+      </template>
+    </EmptyState>
+    <ClientList v-else :rows="rows" :loading="loading" :labels="labels" data-testid="clients-card" />
   </div>
 </template>

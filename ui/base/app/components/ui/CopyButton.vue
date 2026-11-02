@@ -1,26 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useToast } from './toast';
+import { useCopy } from './copy';
 
 const { value, label = 'Copy', text = '', copiedLabel = '' } = defineProps<{ value: string, label?: string, text?: string, copiedLabel?: string }>();
-const toast = useToast();
-
-const copied = ref(false);
-
-async function copy() {
-  try {
-    await navigator.clipboard.writeText(value);
-    copied.value = true;
-    if (copiedLabel) {
-      toast.push('success', copiedLabel);
-    }
-    setTimeout(() => {
-      copied.value = false;
-    }, 1200);
-  } catch {
-    // clipboard unavailable
-  }
-}
+const { copied, copy: write } = useCopy();
+const copy = () => write(value, copiedLabel);
 </script>
 
 <template>
