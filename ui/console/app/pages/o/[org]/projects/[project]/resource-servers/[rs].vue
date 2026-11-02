@@ -188,7 +188,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
         </h2>
         <UrlField :label="t('rs.uri')" :value="server.identifier" size="sm" testid="rs-identifier" v-bind="urlLabels" />
         <form v-if="canEdit" novalidate class="fieldset" @submit.prevent="page.save('name')">
-          <label :for="ids.name" class="fieldset-legend text-ui">{{ t('common.name') }}</label>
+          <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
           <div class="flex flex-wrap items-center gap-2">
             <input
               :id="ids.name"

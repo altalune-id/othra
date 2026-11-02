@@ -122,7 +122,7 @@ function onToggle(event: Event) {
 
         <form v-if="canEdit" novalidate class="space-y-3" @submit.prevent="emit('save')">
           <div class="fieldset">
-            <label :for="ids.clientId" class="fieldset-legend text-ui">{{ labels.clientId }}</label>
+            <label :for="ids.clientId" class="label text-ui text-base-content">{{ labels.clientId }}</label>
             <input
               :id="ids.clientId"
               v-model="clientId"
@@ -140,7 +140,7 @@ function onToggle(event: Event) {
             </p>
           </div>
           <div class="fieldset">
-            <label :for="ids.secret" class="fieldset-legend text-ui">{{ labels.clientSecret }}</label>
+            <label :for="ids.secret" class="label text-ui text-base-content">{{ labels.clientSecret }}</label>
             <div v-if="google?.secretSet && !replacingSecret" class="flex items-center gap-3 text-sm">
               <span class="flex items-center gap-1" data-testid="secret-set">
                 <Icon name="lucide:lock" size="14" class="shrink-0" />
@@ -181,13 +181,13 @@ function onToggle(event: Event) {
           </div>
         </form>
         <dl v-else-if="google" class="space-y-1 text-sm" data-testid="google-readonly">
-          <dt class="fieldset-legend text-ui">
+          <dt class="label text-ui text-base-content">
             {{ labels.clientId }}
           </dt>
           <dd class="font-mono break-all">
             {{ google.clientId }}
           </dd>
-          <dt class="fieldset-legend text-ui">
+          <dt class="label text-ui text-base-content">
             {{ labels.enabled }}
           </dt>
           <dd>{{ google.enabled ? labels.on : labels.off }}</dd>

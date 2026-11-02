@@ -83,11 +83,11 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
 
     <form v-if="canSave" novalidate class="space-y-2" @submit.prevent="save()">
       <div class="fieldset">
-        <label :for="ids.name" class="fieldset-legend text-ui">{{ t('common.name') }}</label>
+        <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
         <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">
       </div>
       <div class="fieldset">
-        <label :for="ids.slug" class="fieldset-legend text-ui">{{ t('common.slug') }}</label>
+        <label :for="ids.slug" class="label text-ui text-base-content">{{ t('common.slug') }}</label>
         <input :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :disabled="busy">
       </div>
       <ErrorText :error="error" />
@@ -101,13 +101,13 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
     </form>
     <dl v-else class="space-y-2" data-testid="org-settings-readonly">
       <div class="fieldset">
-        <dt class="fieldset-legend text-ui">
+        <dt class="label text-ui text-base-content">
           {{ t('common.name') }}
         </dt>
         <dd>{{ org.name }}</dd>
       </div>
       <div class="fieldset">
-        <dt class="fieldset-legend text-ui">
+        <dt class="label text-ui text-base-content">
           {{ t('common.slug') }}
         </dt>
         <dd class="font-mono text-sm">

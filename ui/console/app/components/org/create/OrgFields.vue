@@ -10,7 +10,7 @@ const ids = { name: useId(), nameLegend: useId(), nameErr: useId(), slug: useId(
 
 <template>
   <fieldset class="fieldset">
-    <legend :id="ids.nameLegend" class="fieldset-legend text-ui">
+    <legend :id="ids.nameLegend" class="label text-ui font-semibold text-base-content">
       {{ t('common.name') }}
     </legend>
     <input
@@ -21,7 +21,7 @@ const ids = { name: useId(), nameLegend: useId(), nameErr: useId(), slug: useId(
     <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
   </fieldset>
   <fieldset class="fieldset">
-    <legend :id="ids.slugLegend" class="fieldset-legend text-ui">
+    <legend :id="ids.slugLegend" class="label text-ui font-semibold text-base-content">
       {{ t('common.slug') }}
     </legend>
     <input

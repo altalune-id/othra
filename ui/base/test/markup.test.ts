@@ -190,8 +190,8 @@ describe('guard: theme contrast', () => {
     expect(theme).not.toContain(':where(thead');
   });
 
-  it('sizes every field label at text-ui and every field hint at text-xs /70', () => {
-    const legends = files.flatMap(f => (f.text.match(/class="fieldset-legend[^"]*"/g) ?? []).filter(c => !c.includes(' text-ui')).map(c => `${f.path}: ${c}`));
+  it('labels fields with the design label class, never fieldset-legend, and mutes every hint at text-xs /70', () => {
+    const legends = files.filter(f => f.text.includes('fieldset-legend')).map(f => f.path);
     const hints = files.flatMap(f => (f.text.match(/class="label whitespace-normal[^"]*"/g) ?? []).filter(c => !c.includes('text-xs text-base-content/70')).map(c => `${f.path}: ${c}`));
     expect([...legends, ...hints]).toEqual([]);
   });

@@ -89,7 +89,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('sign
           <ErrorText :error="emailError" />
         </template>
         <dl v-else class="space-y-1 text-sm">
-          <dt class="fieldset-legend text-ui">
+          <dt class="label text-ui text-base-content">
             {{ t('signin.email_link') }}
           </dt>
           <dd>{{ emailLink ? t('signin.on') : t('signin.off') }}</dd>

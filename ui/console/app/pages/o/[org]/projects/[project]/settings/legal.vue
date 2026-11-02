@@ -49,7 +49,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
     <form v-if="canEdit" novalidate class="card border border-base-300 bg-base-100" @submit.prevent="legal.save()">
       <div class="card-body gap-2">
         <div class="fieldset">
-          <label :for="ids.terms" class="fieldset-legend text-ui">{{ t('legal.terms_url') }}</label>
+          <label :for="ids.terms" class="label text-ui text-base-content">{{ t('legal.terms_url') }}</label>
           <input :id="ids.terms" v-model="termsUrl" type="url" class="input w-full" placeholder="https://example.com/terms" :aria-describedby="urlChangedHint ? `${ids.termsHint} ${ids.termsErr}` : ids.termsErr" :disabled="busy">
           <FieldError :id="ids.termsErr" :message="fieldErrors.terms_url" />
           <p v-if="urlChangedHint" :id="ids.termsHint" class="flex items-start gap-1 text-sm text-base-content/70">
@@ -58,7 +58,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
           </p>
         </div>
         <div class="fieldset">
-          <label :for="ids.privacy" class="fieldset-legend text-ui">{{ t('legal.privacy_url') }}</label>
+          <label :for="ids.privacy" class="label text-ui text-base-content">{{ t('legal.privacy_url') }}</label>
           <input :id="ids.privacy" v-model="privacyUrl" type="url" class="input w-full" placeholder="https://example.com/privacy" :aria-describedby="`${ids.privacyHelp} ${ids.privacyErr}`" :disabled="busy">
           <FieldError :id="ids.privacyErr" :message="fieldErrors.privacy_url" />
           <p :id="ids.privacyHelp" class="label whitespace-normal text-xs text-base-content/70">
@@ -77,7 +77,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
     <dl v-else class="card border border-base-300 bg-base-100" data-testid="legal-readonly">
       <div class="card-body gap-4">
         <div>
-          <dt class="fieldset-legend text-ui">
+          <dt class="label text-ui text-base-content">
             {{ t('legal.terms_url') }}
           </dt>
           <dd class="break-all text-sm">
@@ -88,7 +88,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
           </dd>
         </div>
         <div>
-          <dt class="fieldset-legend text-ui">
+          <dt class="label text-ui text-base-content">
             {{ t('legal.privacy_url') }}
           </dt>
           <dd class="break-all text-sm">

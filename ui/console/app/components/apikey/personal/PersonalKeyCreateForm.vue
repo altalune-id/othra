@@ -86,19 +86,19 @@ function onOrgChange(event: Event) {
 <template>
   <form class="space-y-2" @submit.prevent="emit('submit')">
     <div class="fieldset">
-      <label :for="ids.name" class="fieldset-legend text-ui">{{ labels.name }}</label>
+      <label :for="ids.name" class="label text-ui text-base-content">{{ labels.name }}</label>
       <input :id="ids.name" v-model="name" type="text" class="input w-full" placeholder="laptop" maxlength="100" autocomplete="off" :disabled="busy">
     </div>
 
     <div class="fieldset">
       <template v-if="oneOrg">
-        <span class="fieldset-legend text-ui">{{ labels.org }}</span>
+        <span class="label text-ui text-base-content">{{ labels.org }}</span>
         <p class="py-2 font-medium">
           {{ orgName }}
         </p>
       </template>
       <template v-else>
-        <label :for="ids.org" class="fieldset-legend text-ui">{{ labels.org }}</label>
+        <label :for="ids.org" class="label text-ui text-base-content">{{ labels.org }}</label>
         <select :id="ids.org" class="select w-full" :value="orgId" :aria-describedby="ids.orgHelp" :disabled="busy" @change="onOrgChange">
           <option value="" disabled>
             {{ labels.selectOrg }}
@@ -114,7 +114,7 @@ function onOrgChange(event: Event) {
     </div>
 
     <div class="fieldset">
-      <label :for="ids.expires" class="fieldset-legend text-ui">{{ labels.expires }}</label>
+      <label :for="ids.expires" class="label text-ui text-base-content">{{ labels.expires }}</label>
       <select :id="ids.expires" v-model.number="expiresInDays" class="select w-full" :aria-describedby="ids.expiresHelp" :disabled="busy">
         <option v-for="o in expiryOptions" :key="o.days" :value="o.days">
           {{ o.label }}
@@ -126,7 +126,7 @@ function onOrgChange(event: Event) {
     </div>
 
     <fieldset class="fieldset">
-      <legend class="fieldset-legend text-ui">
+      <legend class="label text-ui font-semibold text-base-content">
         {{ labels.projects }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
@@ -146,7 +146,7 @@ function onOrgChange(event: Event) {
     </fieldset>
 
     <fieldset class="fieldset" :aria-describedby="orgId ? ids.scopesHelp : undefined">
-      <legend class="fieldset-legend text-ui">
+      <legend class="label text-ui font-semibold text-base-content">
         {{ labels.scopes }}
       </legend>
       <p v-if="!orgId" class="text-sm text-base-content/70">

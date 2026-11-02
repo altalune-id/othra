@@ -32,7 +32,7 @@ useHead({ title: () => t('nav.profile') });
     <form novalidate class="card border border-base-300 bg-base-100" @submit.prevent="form.save()">
       <div class="card-body gap-2">
         <div class="fieldset">
-          <label :for="ids.name" class="fieldset-legend text-ui">{{ t('profile.name') }}</label>
+          <label :for="ids.name" class="label text-ui text-base-content">{{ t('profile.name') }}</label>
           <input
             :id="ids.name"
             v-model="name"
@@ -60,7 +60,7 @@ useHead({ title: () => t('nav.profile') });
 
     <section class="card border border-base-300 bg-base-100" :aria-labelledby="ids.email">
       <div class="card-body gap-1">
-        <h2 :id="ids.email" class="fieldset-legend text-ui">
+        <h2 :id="ids.email" class="label text-ui font-semibold text-base-content">
           {{ t('profile.email') }}
         </h2>
         <p class="font-medium break-all">

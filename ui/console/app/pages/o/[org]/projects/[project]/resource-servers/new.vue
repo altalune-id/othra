@@ -69,7 +69,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
       <div class="card-body">
         <form novalidate class="space-y-2" @submit.prevent="submit">
           <div class="fieldset">
-            <label :for="ids.uri" class="fieldset-legend text-ui">{{ t('rs.uri') }}</label>
+            <label :for="ids.uri" class="label text-ui text-base-content">{{ t('rs.uri') }}</label>
             <input
               :id="ids.uri"
               v-model="identifier"
@@ -91,7 +91,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
             </p>
           </div>
           <div class="fieldset">
-            <label :for="ids.name" class="fieldset-legend text-ui">{{ t('common.name') }}</label>
+            <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
             <input
               :id="ids.name"
               v-model="name"
@@ -109,7 +109,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
             </p>
           </div>
           <fieldset v-if="trustAvailable" class="fieldset" data-testid="trust-on-create">
-            <legend class="fieldset-legend text-ui">
+            <legend class="label text-ui font-semibold text-base-content">
               {{ t('rs.trust') }}
             </legend>
             <label class="flex items-center gap-2 text-sm">

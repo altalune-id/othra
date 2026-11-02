@@ -104,7 +104,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
         </div>
         <template v-if="accept">
           <div class="fieldset">
-            <label :for="ids.hosts" class="fieldset-legend text-ui">{{ labels.hosts }}</label>
+            <label :for="ids.hosts" class="label text-ui text-base-content">{{ labels.hosts }}</label>
             <textarea
               :id="ids.hosts"
               v-model="hosts"
@@ -128,7 +128,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
             </p>
           </div>
           <fieldset class="fieldset">
-            <legend class="fieldset-legend text-ui">
+            <legend class="label text-ui font-semibold text-base-content">
               {{ labels.scopes }}
             </legend>
             <label class="flex items-center gap-2 text-sm">

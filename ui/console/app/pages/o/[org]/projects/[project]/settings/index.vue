@@ -82,7 +82,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
     <section class="card border border-base-300 bg-base-100">
       <div class="card-body gap-2">
         <div class="fieldset">
-          <h2 class="fieldset-legend text-ui">
+          <h2 class="label text-ui font-semibold text-base-content">
             {{ t('common.id') }}
           </h2>
           <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
@@ -93,11 +93,11 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
 
         <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="save()">
           <div class="fieldset">
-            <label :for="ids.name" class="fieldset-legend text-ui">{{ t('common.name') }}</label>
+            <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
             <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">
           </div>
           <div class="fieldset">
-            <label :for="ids.slug" class="fieldset-legend text-ui">{{ t('project.console_slug') }}</label>
+            <label :for="ids.slug" class="label text-ui text-base-content">{{ t('project.console_slug') }}</label>
             <input :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :aria-describedby="ids.slugHelp" :disabled="busy">
             <p :id="ids.slugHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('project.console_slug_help') }}
@@ -113,13 +113,13 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
         </form>
         <dl v-else class="space-y-2" data-testid="general-readonly">
           <div class="fieldset">
-            <dt class="fieldset-legend text-ui">
+            <dt class="label text-ui text-base-content">
               {{ t('common.name') }}
             </dt>
             <dd>{{ project.name }}</dd>
           </div>
           <div class="fieldset">
-            <dt class="fieldset-legend text-ui">
+            <dt class="label text-ui text-base-content">
               {{ t('project.console_slug') }}
             </dt>
             <dd class="font-mono text-sm">

@@ -124,7 +124,7 @@ function patch(next: Partial<ClientFields>) {
     />
 
     <div class="fieldset">
-      <label :for="ids.name" class="fieldset-legend text-ui">{{ labels.name }}</label>
+      <label :for="ids.name" class="label text-ui text-base-content">{{ labels.name }}</label>
       <input
         :id="ids.name"
         :value="fields.name"
@@ -173,7 +173,7 @@ function patch(next: Partial<ClientFields>) {
     />
 
     <fieldset class="fieldset">
-      <legend class="fieldset-legend text-ui">
+      <legend class="label text-ui font-semibold text-base-content">
         {{ labels.refresh }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
@@ -190,7 +190,7 @@ function patch(next: Partial<ClientFields>) {
 
     <template v-if="kind?.secret">
       <fieldset class="fieldset" :aria-describedby="ids.authHelp">
-        <legend class="fieldset-legend text-ui">
+        <legend class="label text-ui font-semibold text-base-content">
           {{ labels.authMethod }}
         </legend>
         <label class="flex items-center gap-2 text-sm">
@@ -207,7 +207,7 @@ function patch(next: Partial<ClientFields>) {
       </fieldset>
 
       <fieldset class="fieldset">
-        <legend class="fieldset-legend text-ui">
+        <legend class="label text-ui font-semibold text-base-content">
           {{ labels.pkce }}
         </legend>
         <label class="flex items-center gap-2 text-sm">
@@ -229,7 +229,7 @@ function patch(next: Partial<ClientFields>) {
     </template>
 
     <fieldset class="fieldset">
-      <legend class="fieldset-legend text-ui">
+      <legend class="label text-ui font-semibold text-base-content">
         {{ labels.consent }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
