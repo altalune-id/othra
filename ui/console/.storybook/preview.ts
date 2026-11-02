@@ -15,6 +15,19 @@ setup((app: App) => {
 });
 
 const preview: Preview = {
+  globalTypes: {
+    theme: {
+      description: 'Theme',
+      toolbar: { title: 'Theme', icon: 'mirror', items: ['othra-light', 'othra-dark'], dynamicTitle: true },
+    },
+  },
+  initialGlobals: { theme: 'othra-light' },
+  decorators: [
+    (story, context) => {
+      document.documentElement.dataset.theme = context.globals.theme as string;
+      return story();
+    },
+  ],
   parameters: {
     controls: {
       matchers: {
