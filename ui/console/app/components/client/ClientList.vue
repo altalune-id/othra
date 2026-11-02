@@ -81,16 +81,5 @@ const columns = computed<Column[]>(() => [
         </ul>
       </AppDropdown>
     </template>
-    <template #row-sm="{ row }">
-      <div class="flex min-w-0 flex-col gap-1 text-ui">
-        <span class="flex flex-wrap items-center gap-2">
-          <NuxtLink :to="row.to" class="link link-hover font-medium">{{ row.name }}</NuxtLink>
-          <AppBadge :label="row.type" :icon="row.icon" />
-          <SystemBadge v-if="row.system" :label="labels.system" />
-        </span>
-        <span class="truncate font-mono text-xs" :title="row.id">{{ row.id }}</span>
-        <span class="text-xs text-base-content/70"><span class="font-mono">{{ row.host }}</span> · {{ labels.lastUsed }} {{ row.lastUsed }}</span>
-      </div>
-    </template>
   </DataTable>
 </template>

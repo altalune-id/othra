@@ -181,24 +181,6 @@ function when(d?: Date): string {
             </ul>
           </AppDropdown>
         </template>
-        <template #row-sm="{ row }">
-          <div class="flex min-w-0 flex-col gap-1 text-ui">
-            <span class="truncate font-medium">{{ row.email }}</span>
-            <span class="flex flex-wrap items-center gap-2">
-              <AppBadge :label="roleLabel(row.role)" />
-              <StatusLabel :tone="statusTone(row.status)" :label="statusLabel(row.status)" />
-            </span>
-            <span class="text-xs text-base-content/70">{{ row.invitedByName }} · {{ labels.expires }} {{ when(row.expiresAt) }}</span>
-          </div>
-          <span v-if="canManage" class="flex gap-1">
-            <AppButton variant="ghost" size="xs" :disabled="busy" @click="emit('resend', row.id)">
-              {{ labels.resend }}
-            </AppButton>
-            <AppButton variant="ghost" size="xs" :disabled="busy" @click="emit('revoke', row.id)">
-              {{ labels.revoke }}
-            </AppButton>
-          </span>
-        </template>
       </DataTable>
       <div v-if="rowLink && linkFor" class="flex flex-col gap-2 rounded-box border border-base-300 bg-base-100 p-4">
         <p class="text-xs text-base-content/70">

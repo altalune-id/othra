@@ -190,23 +190,6 @@ function onRole(m: MemberListRow, event: Event) {
           </ul>
         </AppDropdown>
       </template>
-      <template #row-sm="{ row }">
-        <Avatar :id="row.userId" :name="row.name" :email="row.email" size="sm" />
-        <div class="flex min-w-0 flex-col gap-1 text-ui">
-          <span class="flex items-center gap-2">
-            <span class="truncate font-medium">{{ displayName(row) }}</span>
-            <AppBadge v-if="row.self" :label="labels.you" size="xs" outline />
-          </span>
-          <span v-if="row.name.trim()" class="truncate text-xs text-base-content/70">{{ row.email }}</span>
-          <span><AppBadge :label="roleLabel(row.role)" /></span>
-        </div>
-        <AppButton v-if="row.removable" variant="ghost" size="xs" :disabled="busy" @click="emit('remove', row.userId)">
-          {{ labels.remove }}
-        </AppButton>
-        <AppButton v-else-if="row.self && canLeave" variant="ghost" size="xs" :disabled="busy" @click="emit('leave')">
-          {{ labels.leave }}
-        </AppButton>
-      </template>
     </DataTable>
 
     <AppModal :open="confirming !== null" :title="confirmTitle" @close="emit('cancel')">

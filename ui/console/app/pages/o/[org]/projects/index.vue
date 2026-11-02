@@ -7,7 +7,7 @@ import AppDropdown from '#base/components/ui/AppDropdown.vue';
 import { useCopy } from '#base/components/ui/copy';
 import DataTable from '#base/components/ui/DataTable.vue';
 import EmptyState from '#base/components/ui/EmptyState.vue';
-import ErrorText from '#base/components/ui/ErrorText.vue';
+import LoadError from '#base/components/ui/LoadError.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import ProjectEditModal from '~/components/project/edit/ProjectEditModal.vue';
@@ -58,8 +58,15 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
       </template>
     </PageHeader>
 
-    <ErrorText v-if="projects.error" :error="projects.error" />
-    <EmptyState v-else-if="!items.length" icon="lucide:folders" :title="t('project.empty')" />
+    <LoadError v-if="projects.error" :error="projects.error" :busy="projects.loading" :retry-label="t('common.retry')" @retry="org && projects.load(org.id)" />
+    <EmptyState v-else-if="!items.length" icon="lucide:folders" :title="t('project.empty')">
+      <template v-if="org && canEdit" #actions>
+        <AppButton size="sm" @click="ui.openProjectCreate()">
+          <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('project.new') }}
+        </AppButton>
+      </template>
+    </EmptyState>
     <DataTable v-else :caption="t('project.title')" row-key="id" :columns="columns" :rows="items" data-testid="projects-table">
       <template #cell-name="{ row }">
         <span class="inline-flex flex-wrap items-center gap-2">
