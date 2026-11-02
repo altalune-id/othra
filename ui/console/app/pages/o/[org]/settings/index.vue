@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
 import AppButton from '#base/components/ui/AppButton.vue';
-import CopyButton from '#base/components/ui/CopyButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import KeyValue from '#base/components/ui/KeyValue.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
@@ -13,7 +14,6 @@ import { useOrgsStore } from '~/stores/orgs';
 
 const route = useRoute();
 const { t } = useI18n();
-const ids = { name: useId(), slug: useId() };
 const errorMessage = useErrorMessage();
 const orgs = useOrgsStore();
 const { $orgClient: client } = useNuxtApp();
@@ -35,6 +35,14 @@ const error = ref<ShownError | null>(null);
 const saved = ref(false);
 watch([name, slug], () => {
   saved.value = false;
+});
+
+const facts = computed(() => {
+  const id = { label: t('common.id'), value: org.value?.id ?? '', mono: true, copy: true };
+  if (canSave.value) {
+    return [id];
+  }
+  return [id, { label: t('common.name'), value: org.value?.name ?? '' }, { label: t('common.slug'), value: org.value?.slug ?? '', mono: true }];
 });
 
 async function save() {
@@ -65,55 +73,36 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
 </script>
 
 <template>
-  <div v-if="org" class="max-w-lg space-y-6">
-    <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold">
-      {{ t('settings.title') }}
-      <SystemBadge v-if="system" :label="t('common.system')" class="font-normal" />
-    </h1>
+  <div v-if="org" class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="t('settings.title')">
+      <template v-if="system" #meta>
+        <SystemBadge :label="t('common.system')" />
+      </template>
+    </PageHeader>
     <ProjectReadOnlyNote v-if="system" icon="lucide:shield" :text="t('org.system_note')" />
     <ProjectReadOnlyNote v-else-if="!canEdit" :text="t('settings.read_only')" />
 
-    <div class="space-y-1">
-      <span class="block text-xs text-base-content/70">{{ t('common.id') }}</span>
-      <div class="flex items-center gap-1">
-        <code class="rounded bg-base-200 px-2 py-1 font-mono text-xs">{{ org.id }}</code>
-        <CopyButton :value="org.id" :label="t('common.copy')" />
-      </div>
+    <div class="rounded-box border border-base-300 bg-base-100" :data-testid="canSave ? undefined : 'org-settings-readonly'">
+      <KeyValue :items="facts" :copy-label="t('common.copy_label', { label: '{label}' })" />
     </div>
 
-    <form v-if="canSave" novalidate class="space-y-2" @submit.prevent="save()">
-      <div class="fieldset">
-        <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
-        <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">
-      </div>
-      <div class="fieldset">
-        <label :for="ids.slug" class="label text-ui text-base-content">{{ t('common.slug') }}</label>
-        <input :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :disabled="busy">
-      </div>
+    <form v-if="canSave" novalidate class="flex flex-col gap-4" @submit.prevent="save()">
+      <label class="flex flex-col gap-1">
+        <span class="label text-ui text-base-content">{{ t('common.name') }}</span>
+        <input v-model="name" type="text" class="input input-sm w-full text-ui" :disabled="busy">
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="label text-ui text-base-content">{{ t('common.slug') }}</span>
+        <input v-model="slug" type="text" class="input input-sm w-full font-mono text-ui" :disabled="busy">
+      </label>
       <ErrorText :error="error" />
-      <div class="flex items-center gap-3 pt-2">
+      <div class="flex items-center gap-3">
         <AppButton type="submit" size="sm" :disabled="busy || !name.trim()">
-          <Icon name="lucide:check" size="16" />
+          <Icon name="lucide:check" size="16" class="shrink-0" aria-hidden="true" />
           {{ busy ? t('common.saving') : t('common.save') }}
         </AppButton>
         <SavedNote v-if="saved" :label="t('common.saved')" />
       </div>
     </form>
-    <dl v-else class="space-y-2" data-testid="org-settings-readonly">
-      <div class="fieldset">
-        <dt class="label text-ui text-base-content">
-          {{ t('common.name') }}
-        </dt>
-        <dd>{{ org.name }}</dd>
-      </div>
-      <div class="fieldset">
-        <dt class="label text-ui text-base-content">
-          {{ t('common.slug') }}
-        </dt>
-        <dd class="font-mono text-sm">
-          {{ org.slug }}
-        </dd>
-      </div>
-    </dl>
   </div>
 </template>

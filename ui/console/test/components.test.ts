@@ -130,7 +130,8 @@ describe('member-visible write actions', () => {
     setClient('$authClient', { whoami: vi.fn().mockResolvedValue(create(WhoamiResponseSchema, { permissions: ['org:read'] })) });
     const w = await mountPage(OrgSettings);
     expect(w.find('form').exists()).toBe(false);
-    expect(w.find('dl').exists()).toBe(true);
+    expect(w.get('[data-testid="org-settings-readonly"] dl').text()).toContain('Acme');
+    expect(w.get('[data-testid="org-settings-readonly"] dl').text()).toContain('acme');
     expect(w.text()).toContain('settings.read_only');
   });
 
