@@ -86,7 +86,7 @@ describe('end users list', () => {
     expect(w.text()).not.toContain('endusers.empty');
   });
 
-  it('keeps the empty message on the shown search while the box changes, with daisyUI 5 row hover', async () => {
+  it('keeps the empty message on the shown search while the box changes, then lists the match as a link', async () => {
     endUsers.listEndUsers!.mockResolvedValueOnce({ endUsers: [], next: '' });
     const w = await mountPage(EndUserList);
     expect(w.text()).toContain('endusers.empty');
@@ -95,7 +95,7 @@ describe('end users list', () => {
     endUsers.listEndUsers!.mockResolvedValueOnce({ endUsers: [ana], next: '' });
     await w.get('form').trigger('submit');
     await new Promise(r => setTimeout(r));
-    expect(w.get('[data-testid="end-users"] tbody tr').classes()).toContain('row-hover');
+    expect(w.get('[data-testid="end-users"] tbody td a').text()).toBe(ana.email);
   });
 });
 
