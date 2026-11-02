@@ -23,7 +23,7 @@ const preview: Preview = {
   },
   initialGlobals: { theme: 'othra-light' },
   loaders: [async () => {
-    await document.fonts.ready;
+    await Promise.all([document.fonts.load('400 1em "IBM Plex Sans"'), document.fonts.load('400 1em "IBM Plex Mono"')]);
     return {};
   }],
   decorators: [
