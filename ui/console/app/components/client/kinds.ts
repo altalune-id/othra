@@ -36,7 +36,7 @@ export const clientKinds: Record<ClientKindName, ClientKindSpec> = {
   },
   cli: {
     value: ClientKind.CLI,
-    icon: 'lucide:smartphone',
+    icon: 'lucide:monitor-smartphone',
     labelKey: 'clients.kind_native',
     helpKey: 'clients.kind_native_help',
     redirectHelpKey: 'clients.redirect_help_native',
