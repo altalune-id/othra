@@ -4,6 +4,7 @@ import EmptyState from '#base/components/ui/EmptyState.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
+import SearchInput from '#base/components/ui/SearchInput.vue';
 import { useDates } from '#base/composables/useDates';
 import { useEndUserList } from '~/components/enduser/useEndUsers';
 import { useOrgsStore } from '~/stores/orgs';
@@ -24,7 +25,6 @@ const list = useEndUserList(listed.value.id);
 const { users, query, shown, next, loading, loadError } = list;
 const base = computed(() => `/o/${route.params.org}/projects/${route.params.project}/end-users`);
 const { date } = useDates('—');
-const searchId = useId();
 
 useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('endusers.title')} · Othra` });
 
@@ -35,8 +35,7 @@ void list.load();
   <div class="max-w-4xl space-y-6">
     <PageHeader :title="t('endusers.title')" :description="t('endusers.subtitle')" />
     <form role="search" class="flex gap-2" @submit.prevent="list.load()">
-      <label :for="searchId" class="sr-only">{{ t('endusers.search') }}</label>
-      <input :id="searchId" v-model="query" type="search" class="input w-full max-w-sm" :placeholder="t('endusers.search')" autocomplete="off">
+      <SearchInput v-model="query" :label="t('endusers.search')" />
       <AppButton type="submit" variant="plain" size="sm" class="self-center">
         {{ t('endusers.search_action') }}
       </AppButton>

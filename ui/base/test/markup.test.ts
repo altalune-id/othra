@@ -26,8 +26,8 @@ describe('guard: markup in every app', () => {
     }
   });
 
-  it('uses no daisyUI 4 bordered or small form controls', () => {
-    expect(offenders(/\b(?:input|select|textarea|file-input)-(?:bordered|sm|xs)\b/)).toEqual([]);
+  it('uses no daisyUI 4 bordered form controls', () => {
+    expect(offenders(/\b(?:input|select|textarea|file-input)-bordered\b/)).toEqual([]);
   });
 
   it('gives a two-column grid a base column that can shrink, so it never scrolls sideways on a phone', () => {

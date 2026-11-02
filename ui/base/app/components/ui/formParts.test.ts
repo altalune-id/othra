@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { h } from 'vue';
 import AppDataTable from './DataTable.vue';
 import FormField from './FormField.vue';
+import SearchInput from './SearchInput.vue';
 import SecretReveal from './SecretReveal.vue';
 import { toastLifetimeMs, useToast } from './toast';
 import ToastHost from './ToastHost.vue';
@@ -57,9 +58,29 @@ describe('formField', () => {
     expect(input.attributes('aria-invalid')).toBe('true');
   });
 
+  it('puts the artifact label above the control and a muted hint below it', () => {
+    const w = mount(FormField, { props: { label: 'Name', hint: 'Shown on runs' }, slots: { default: '<input>' } });
+    expect(w.classes()).toEqual(['flex', 'min-w-0', 'flex-col', 'gap-1']);
+    expect(w.get('label').classes()).toEqual(['label', 'text-ui', 'text-base-content']);
+    expect(w.get('p').classes()).toEqual(['label', 'whitespace-normal', 'text-xs', 'text-base-content/70']);
+  });
+
   it('describes nothing without hint or error', () => {
     const w = mount(FormField, { props: { label: 'Name' }, slots: { default: ({ describedBy }: { describedBy?: string }) => h('input', { 'aria-describedby': describedBy }) } });
     expect(w.get('input').attributes('aria-describedby')).toBeUndefined();
+  });
+});
+
+describe('searchInput', () => {
+  it('wraps a named search field and its hidden icon in the small input, and binds the query', async () => {
+    const w = mount(SearchInput, { props: { 'label': 'Filter agents', 'modelValue': '', 'onUpdate:modelValue': (v: string) => w.setProps({ modelValue: v }) } });
+    expect(w.classes()).toEqual(['input', 'input-sm', 'text-ui', 'w-full', 'sm:w-64']);
+    expect(w.get('.sr-only').text()).toBe('Filter agents');
+    expect(w.get('[data-icon="lucide:search"]').attributes('aria-hidden')).toBe('true');
+    const input = w.get('input[type="search"]');
+    expect(input.attributes('placeholder')).toBe('Filter agents');
+    await input.setValue('refund');
+    expect(w.props('modelValue')).toBe('refund');
   });
 });
 
