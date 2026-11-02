@@ -33,7 +33,7 @@ const emit = defineEmits<{ ask: [], confirm: [], cancel: [] }>();
       </p>
       <ErrorText :error="error" />
       <div class="card-actions justify-end">
-        <AppButton variant="outline" size="sm" class="btn-error" :disabled="busy" @click="emit('ask')">
+        <AppButton variant="error" size="sm" soft :disabled="busy" @click="emit('ask')">
           <Icon name="lucide:log-out" size="16" class="shrink-0" aria-hidden="true" />
           {{ labels.signOut }}
         </AppButton>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResourceServerRow } from '~/components/resourceserver/ResourceServerList.vue';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
+import AppButton from '#base/components/ui/AppButton.vue';
 import EmptyState from '#base/components/ui/EmptyState.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
@@ -56,31 +57,27 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.t
 </script>
 
 <template>
-  <div class="max-w-4xl space-y-6">
+  <div class="flex flex-col gap-4">
     <PageHeader :title="t('rs.title')" :description="t('rs.subtitle')">
       <template v-if="canEdit" #actions>
-        <NuxtLink :to="`${base}/new`" class="btn btn-primary btn-sm max-sm:btn-block">
-          <Icon name="lucide:plus" size="16" />
+        <AppButton size="sm" :to="`${base}/new`">
+          <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
           {{ t('rs.new') }}
-        </NuxtLink>
+        </AppButton>
       </template>
     </PageHeader>
     <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('rs.system_empty')" />
     <ProjectReadOnlyNote v-else-if="!canEdit" />
 
-    <section class="card border border-base-300 bg-base-100" data-testid="resource-servers-card">
-      <div class="card-body gap-2">
-        <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
-        <EmptyState v-else-if="!loading && rows.length === 0" icon="lucide:server" :title="t('rs.empty_title')" :body="t('rs.empty_body')">
-          <template v-if="canEdit" #actions>
-            <NuxtLink :to="`${base}/new`" class="btn btn-primary btn-sm">
-              <Icon name="lucide:plus" size="16" />
-              {{ t('rs.new') }}
-            </NuxtLink>
-          </template>
-        </EmptyState>
-        <ResourceServerList v-else :rows="rows" :loading="loading" :labels="labels" />
-      </div>
-    </section>
+    <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
+    <EmptyState v-else-if="!loading && rows.length === 0" icon="lucide:server" :title="t('rs.empty_title')" :body="t('rs.empty_body')">
+      <template v-if="canEdit" #actions>
+        <AppButton size="sm" :to="`${base}/new`">
+          <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('rs.new') }}
+        </AppButton>
+      </template>
+    </EmptyState>
+    <ResourceServerList v-else :rows="rows" :loading="loading" :labels="labels" data-testid="resource-servers-card" />
   </div>
 </template>

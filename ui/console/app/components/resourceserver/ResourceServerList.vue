@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import type { Column } from '#base/components/ui/types';
 import type { VerificationName } from './verification';
+import AppDropdown from '#base/components/ui/AppDropdown.vue';
+import { useCopy } from '#base/components/ui/copy';
+import DataTable from '#base/components/ui/DataTable.vue';
 import VerificationStatus from './VerificationStatus.vue';
 
 export interface ResourceServerRow {
@@ -14,82 +18,75 @@ export interface ResourceServerRow {
 }
 
 export interface ResourceServerListLabels {
+  caption: string;
   name: string;
   identifier: string;
   status: string;
   checked: string;
+  actions: string;
+  moreFor: string;
+  open: string;
+  copyUri: string;
+  copied: string;
 }
 
 const { rows, loading = false, labels = {
+  caption: 'Resource servers',
   name: 'Name',
   identifier: 'Identifier',
   status: 'Verification',
   checked: 'Checked',
+  actions: 'Actions',
+  moreFor: 'More actions for {name}',
+  open: 'Open',
+  copyUri: 'Copy identifier',
+  copied: 'Copied',
 } } = defineProps<{ rows: ResourceServerRow[], loading?: boolean, labels?: ResourceServerListLabels }>();
+const { copy } = useCopy();
+
+const columns = computed<Column[]>(() => [
+  { key: 'name', label: labels.name },
+  { key: 'identifier', label: labels.identifier, mono: true },
+  { key: 'status', label: labels.status },
+  { key: 'checked', label: labels.checked },
+  { key: 'menu', label: labels.actions, hideLabel: true, align: 'end' },
+]);
 </script>
 
 <template>
-  <div>
-    <div class="overflow-x-auto max-sm:hidden">
-      <table class="table table-sm">
-        <thead class="text-base-content/70">
-          <tr>
-            <th>{{ labels.name }}</th>
-            <th>{{ labels.identifier }}</th>
-            <th>{{ labels.status }}</th>
-            <th>{{ labels.checked }}</th>
-          </tr>
-        </thead>
-        <tbody v-if="loading">
-          <tr v-for="n in 3" :key="n">
-            <td v-for="c in 4" :key="c">
-              <div class="skeleton h-4 w-24" />
-            </td>
-          </tr>
-        </tbody>
-        <tbody v-else>
-          <tr v-for="row in rows" :key="row.id">
-            <td>
-              <NuxtLink :to="row.to" class="link link-hover font-medium">
-                {{ row.name }}
-              </NuxtLink>
-            </td>
-            <td class="font-mono text-xs break-all">
-              {{ row.identifier }}
-            </td>
-            <td>
-              <VerificationStatus :name="row.status" :label="row.statusLabel" />
-            </td>
-            <td class="whitespace-nowrap" :title="row.checkedTitle || undefined">
-              <span v-if="row.checked">{{ row.checked }}</span>
-              <span v-else class="text-base-content/70">—</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <ul class="divide-y divide-base-300 sm:hidden">
-      <template v-if="loading">
-        <li v-for="n in 3" :key="n" class="py-3">
-          <div class="skeleton h-4 w-32" />
-        </li>
-      </template>
-      <template v-else>
-        <li v-for="row in rows" :key="row.id" class="space-y-1 py-3">
-          <div class="flex items-center justify-between gap-2">
-            <NuxtLink :to="row.to" class="link link-hover font-medium">
-              {{ row.name }}
+  <DataTable :caption="labels.caption" row-key="id" :columns="columns" :rows="rows" :loading="loading">
+    <template #cell-name="{ row }">
+      <NuxtLink :to="row.to" class="link link-hover font-medium">
+        {{ row.name }}
+      </NuxtLink>
+    </template>
+    <template #cell-identifier="{ row }">
+      <span class="block max-w-72 truncate" :title="row.identifier">{{ row.identifier }}</span>
+    </template>
+    <template #cell-status="{ row }">
+      <VerificationStatus :name="row.status" :label="row.statusLabel" />
+    </template>
+    <template #cell-checked="{ row }">
+      <span class="whitespace-nowrap tabular-nums text-base-content/70" :title="row.checkedTitle || undefined">{{ row.checked || '—' }}</span>
+    </template>
+    <template #cell-menu="{ row }">
+      <AppDropdown placement="end" size="xs" trigger-class="btn-square" content-class="w-48" :label="labels.moreFor.replace('{name}', row.name)">
+        <template #trigger>
+          <Icon name="lucide:ellipsis" size="14" class="shrink-0" aria-hidden="true" />
+        </template>
+        <ul class="menu menu-sm w-full p-0 text-ui">
+          <li>
+            <NuxtLink :to="row.to">
+              {{ labels.open }}
             </NuxtLink>
-            <VerificationStatus :name="row.status" :label="row.statusLabel" />
-          </div>
-          <p class="font-mono text-xs break-all">
-            {{ row.identifier }}
-          </p>
-          <p v-if="row.checked" class="text-xs text-base-content/70" :title="row.checkedTitle || undefined">
-            {{ labels.checked }} {{ row.checked }}
-          </p>
-        </li>
-      </template>
-    </ul>
-  </div>
+          </li>
+          <li>
+            <button type="button" @click="copy(row.identifier, labels.copied)">
+              {{ labels.copyUri }}
+            </button>
+          </li>
+        </ul>
+      </AppDropdown>
+    </template>
+  </DataTable>
 </template>

@@ -104,20 +104,22 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
         </div>
         <template v-if="accept">
           <div class="fieldset">
-            <label :for="ids.hosts" class="label text-ui text-base-content">{{ labels.hosts }}</label>
-            <textarea
-              :id="ids.hosts"
-              v-model="hosts"
-              class="textarea w-full font-mono text-sm"
-              :class="{ 'textarea-error': hostsError }"
-              rows="3"
-              placeholder="claude.ai"
-              autocomplete="off"
-              spellcheck="false"
-              :disabled="busy"
-              :aria-invalid="!!hostsError"
-              :aria-describedby="`${ids.hostsHelp} ${ids.hostsErr}`"
-            />
+            <label class="flex flex-col gap-1">
+              <span class="label text-ui text-base-content">{{ labels.hosts }}</span>
+              <textarea
+                :id="ids.hosts"
+                v-model="hosts"
+                class="textarea w-full font-mono text-ui leading-relaxed"
+                :class="{ 'textarea-error': hostsError }"
+                rows="3"
+                placeholder="claude.ai"
+                autocomplete="off"
+                spellcheck="false"
+                :disabled="busy"
+                :aria-invalid="!!hostsError"
+                :aria-describedby="`${ids.hostsHelp} ${ids.hostsErr}`"
+              />
+            </label>
             <FieldError :id="ids.hostsErr" :message="hostsError" />
             <p v-if="hosts.trim() === ''" class="mt-1 flex items-start gap-1 text-xs text-base-content">
               <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />

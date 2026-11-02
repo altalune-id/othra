@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 const render: Story['render'] = args => ({
   components: { ResourceServerList },
   setup: () => ({ args }),
-  template: '<div class="max-w-4xl p-8"><div class="card border border-base-300 bg-base-100"><div class="card-body"><ResourceServerList v-bind="args" /></div></div></div>',
+  template: '<div class="max-w-4xl p-8"><ResourceServerList v-bind="args" /></div>',
 });
 
 export const AllStates: Story = { render };

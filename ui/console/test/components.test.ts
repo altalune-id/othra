@@ -15,6 +15,7 @@ import MemberList from '~/components/member/MemberList.vue';
 import OrgCreateModal from '~/components/org/create/OrgCreateModal.vue';
 import OrgFields from '~/components/org/create/OrgFields.vue';
 import ProjectSelector from '~/components/project/ProjectSelector.vue';
+import ResourceServerList from '~/components/resourceserver/ResourceServerList.vue';
 import WebhookList from '~/components/webhook/list/WebhookList.vue';
 import OrgSettings from '~/pages/o/[org]/settings/index.vue';
 import { useAuthStore } from '~/stores/auth';
@@ -63,6 +64,16 @@ describe('client list', () => {
     const w = mount(ClientList, { props: { labels, rows: [{ ...row, id: 'Lq3vT8nWx2KpZr6YbM9cD', system: true }, { ...row, id: 'dPm7fmQRJKPVw8PxrgdrN' }] } });
     const cells = w.findAll('tbody tr').map(r => r.find('td').text());
     expect(cells).toEqual(['App System', 'App']);
+  });
+});
+
+describe('resource server list', () => {
+  it('names each row menu for its server and offers Open and Copy identifier', () => {
+    const row = { id: 'R7kLm2XwQ8kRt3VnZ7bYc', name: 'Orders API', identifier: 'https://api.acme.test/orders', status: 'verified' as const, statusLabel: 'Verified', checked: '', checkedTitle: '', to: '/rs/1' };
+    const w = mount(ResourceServerList, { props: { rows: [row] } });
+    expect(w.get('table button[popovertarget] .sr-only').text()).toBe('More actions for Orders API');
+    expect(w.findAll('[popover] li').map(li => li.text())).toEqual(['Open', 'Copy identifier']);
+    expect(w.get('tbody td:nth-child(2) span').attributes('title')).toBe('https://api.acme.test/orders');
   });
 });
 

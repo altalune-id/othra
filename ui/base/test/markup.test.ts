@@ -205,6 +205,11 @@ describe('guard: theme contrast', () => {
     expect(full).toEqual([]);
   });
 
+  it('sets every textarea in the dense text-ui size', () => {
+    const loose = files.flatMap(f => (f.text.match(/class="textarea(?: [^"]*)?"/g) ?? []).filter(c => !c.split(/[ "]/).includes('text-ui')).map(c => `${f.path}: ${c}`));
+    expect(loose).toEqual([]);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });
