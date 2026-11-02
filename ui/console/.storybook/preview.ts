@@ -2,13 +2,12 @@ import type { Preview } from '@storybook/vue3-vite';
 import type { App } from 'vue';
 import circleFlags from '@iconify-json/circle-flags/icons.json';
 import lucide from '@iconify-json/lucide/icons.json';
-import { addCollection } from '@iconify/vue/offline';
 import { setup } from '@storybook/vue3';
-import { installStandalone } from '#base/components/ui/standalone';
+import { addIcons, installStandalone } from '#base/components/ui/standalone';
 import '#base/assets/css/main.css';
 
-addCollection(lucide);
-addCollection(circleFlags);
+addIcons(lucide);
+addIcons(circleFlags);
 
 setup((app: App) => {
   installStandalone(app);

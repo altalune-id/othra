@@ -5,7 +5,7 @@ import StatusLabel from './StatusLabel.vue';
 const meta = {
   title: 'UI/Badges',
   component: AppBadge,
-  args: { label: 'Web', icon: 'lucide:globe' },
+  args: { label: 'Web', icon: 'lucide:app-window' },
 } satisfies Meta<typeof AppBadge>;
 
 export default meta;
@@ -19,12 +19,12 @@ export const ClientTypes: Story = {
     components: { AppBadge },
     template: `
       <div class="flex flex-wrap gap-2">
-        <AppBadge label="Web" icon="lucide:globe" />
-        <AppBadge label="SPA" icon="lucide:app-window" />
-        <AppBadge label="Native" icon="lucide:terminal" />
-        <AppBadge label="Machine" icon="lucide:server" />
+        <AppBadge label="Web" icon="lucide:app-window" />
+        <AppBadge label="SPA" icon="lucide:panels-top-left" />
+        <AppBadge label="Native" icon="lucide:smartphone" />
+        <AppBadge label="Machine" icon="lucide:cpu" />
         <AppBadge label="MCP" icon="lucide:plug" />
-        <AppBadge label="Unverified" icon="lucide:shield-alert" outline />
+        <AppBadge label="Unverified" icon="lucide:circle-question-mark" outline />
       </div>`,
   }),
 };

@@ -16,8 +16,8 @@ describe('client labels', () => {
 
   it('offers every kind from the kind map with its copy', () => {
     expect(kindOptions(t)).toEqual([
-      { value: 'web', icon: 'lucide:globe', label: 'clients.kind_web', help: 'clients.kind_web_help', redirectHelp: 'clients.redirect_help_web', placeholder: 'https://app.example.com/oauth/callback', postLogout: true, secret: true },
-      { value: 'cli', icon: 'lucide:terminal', label: 'clients.kind_native', help: 'clients.kind_native_help', redirectHelp: 'clients.redirect_help_native', placeholder: 'http://127.0.0.1/callback', postLogout: false, secret: false },
+      { value: 'web', icon: 'lucide:app-window', label: 'clients.kind_web', help: 'clients.kind_web_help', redirectHelp: 'clients.redirect_help_web', placeholder: 'https://app.example.com/oauth/callback', postLogout: true, secret: true },
+      { value: 'cli', icon: 'lucide:smartphone', label: 'clients.kind_native', help: 'clients.kind_native_help', redirectHelp: 'clients.redirect_help_native', placeholder: 'http://127.0.0.1/callback', postLogout: false, secret: false },
     ]);
   });
 

@@ -25,7 +25,7 @@ export interface ClientKindSpec {
 export const clientKinds: Record<ClientKindName, ClientKindSpec> = {
   web: {
     value: ClientKind.WEB,
-    icon: 'lucide:globe',
+    icon: 'lucide:app-window',
     labelKey: 'clients.kind_web',
     helpKey: 'clients.kind_web_help',
     redirectHelpKey: 'clients.redirect_help_web',
@@ -36,7 +36,7 @@ export const clientKinds: Record<ClientKindName, ClientKindSpec> = {
   },
   cli: {
     value: ClientKind.CLI,
-    icon: 'lucide:terminal',
+    icon: 'lucide:smartphone',
     labelKey: 'clients.kind_native',
     helpKey: 'clients.kind_native_help',
     redirectHelpKey: 'clients.redirect_help_native',

@@ -6,10 +6,10 @@ import StatusLabel from './StatusLabel.vue';
 
 describe('appBadge', () => {
   it('is a small badge with an optional hidden icon, xs and outline on request', () => {
-    const w = mount(AppBadge, { props: { label: 'Web', icon: 'lucide:globe' } });
+    const w = mount(AppBadge, { props: { label: 'Web', icon: 'lucide:app-window' } });
     expect(w.classes()).toEqual(['badge', 'badge-sm']);
     expect(w.text()).toBe('Web');
-    expect(w.get('[data-icon="lucide:globe"]').attributes('aria-hidden')).toBe('true');
+    expect(w.get('[data-icon="lucide:app-window"]').attributes('aria-hidden')).toBe('true');
     expect(mount(AppBadge, { props: { label: 'Labs', size: 'xs', outline: true } }).classes()).toEqual(['badge', 'badge-xs', 'badge-outline']);
   });
 });
