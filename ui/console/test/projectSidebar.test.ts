@@ -65,5 +65,8 @@ describe('org sidebar', () => {
     expect(sections(w)).toEqual([]);
     expect(w.get('[aria-current="page"]').text()).toBe('members.title');
     expect(w.get('[data-testid="org-role"]').exists()).toBe(true);
+    const row = w.get('[data-testid="org-role"]').element.parentElement!;
+    expect(row.className).toBe('flex items-center gap-1');
+    expect(row.firstElementChild!.className).toBe('min-w-0 flex-1');
   });
 });
