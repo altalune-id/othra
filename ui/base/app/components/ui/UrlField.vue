@@ -38,7 +38,7 @@ const parts = computed(() => urlBreaks(value));
         <Icon name="lucide:external-link" size="14" />
       </a>
     </div>
-    <p v-if="help" :id="ids.help" class="label whitespace-normal">
+    <p v-if="help" :id="ids.help" class="label whitespace-normal text-xs text-base-content/70">
       {{ help }}
     </p>
   </div>

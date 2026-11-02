@@ -76,7 +76,7 @@ describe('project settings markup', () => {
     const modal = read('./edit/ProjectEditModal.vue');
     expect(modal).not.toMatch(/input-(?:sm|bordered)/);
     expect(modal.match(/class="fieldset"/g)).toHaveLength(2);
-    expect(modal.match(/<label :for="ids\.\w+" class="fieldset-legend">/g)).toHaveLength(2);
+    expect(modal.match(/<label :for="ids\.\w+" class="fieldset-legend text-ui">/g)).toHaveLength(2);
   });
 
   it('puts the branding form in a card on a width-capped page, like its sibling pages', () => {

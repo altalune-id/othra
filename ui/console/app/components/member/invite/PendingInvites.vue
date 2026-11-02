@@ -168,13 +168,13 @@ function when(d?: Date): string {
             <ul class="menu menu-sm w-full p-0 text-ui">
               <li>
                 <button type="button" @click="emit('resend', row.id)">
-                  <Icon name="lucide:send" size="14" class="shrink-0" aria-hidden="true" />
+                  <Icon name="lucide:send" size="16" class="shrink-0" aria-hidden="true" />
                   {{ labels.resend }}
                 </button>
               </li>
               <li>
                 <button type="button" @click="emit('revoke', row.id)">
-                  <Icon name="lucide:x" size="14" class="shrink-0 text-error" aria-hidden="true" />
+                  <Icon name="lucide:x" size="16" class="shrink-0 text-error" aria-hidden="true" />
                   {{ labels.revoke }}
                 </button>
               </li>

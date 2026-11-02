@@ -86,19 +86,19 @@ function onOrgChange(event: Event) {
 <template>
   <form class="space-y-2" @submit.prevent="emit('submit')">
     <div class="fieldset">
-      <label :for="ids.name" class="fieldset-legend">{{ labels.name }}</label>
+      <label :for="ids.name" class="fieldset-legend text-ui">{{ labels.name }}</label>
       <input :id="ids.name" v-model="name" type="text" class="input w-full" placeholder="laptop" maxlength="100" autocomplete="off" :disabled="busy">
     </div>
 
     <div class="fieldset">
       <template v-if="oneOrg">
-        <span class="fieldset-legend">{{ labels.org }}</span>
+        <span class="fieldset-legend text-ui">{{ labels.org }}</span>
         <p class="py-2 font-medium">
           {{ orgName }}
         </p>
       </template>
       <template v-else>
-        <label :for="ids.org" class="fieldset-legend">{{ labels.org }}</label>
+        <label :for="ids.org" class="fieldset-legend text-ui">{{ labels.org }}</label>
         <select :id="ids.org" class="select w-full" :value="orgId" :aria-describedby="ids.orgHelp" :disabled="busy" @change="onOrgChange">
           <option value="" disabled>
             {{ labels.selectOrg }}
@@ -108,25 +108,25 @@ function onOrgChange(event: Event) {
           </option>
         </select>
       </template>
-      <p :id="ids.orgHelp" class="label whitespace-normal">
+      <p :id="ids.orgHelp" class="label whitespace-normal text-xs text-base-content/70">
         {{ labels.orgHelp }}
       </p>
     </div>
 
     <div class="fieldset">
-      <label :for="ids.expires" class="fieldset-legend">{{ labels.expires }}</label>
+      <label :for="ids.expires" class="fieldset-legend text-ui">{{ labels.expires }}</label>
       <select :id="ids.expires" v-model.number="expiresInDays" class="select w-full" :aria-describedby="ids.expiresHelp" :disabled="busy">
         <option v-for="o in expiryOptions" :key="o.days" :value="o.days">
           {{ o.label }}
         </option>
       </select>
-      <p :id="ids.expiresHelp" class="label whitespace-normal">
+      <p :id="ids.expiresHelp" class="label whitespace-normal text-xs text-base-content/70">
         {{ labels.expiresHelp }}
       </p>
     </div>
 
     <fieldset class="fieldset">
-      <legend class="fieldset-legend">
+      <legend class="fieldset-legend text-ui">
         {{ labels.projects }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
@@ -146,7 +146,7 @@ function onOrgChange(event: Event) {
     </fieldset>
 
     <fieldset class="fieldset" :aria-describedby="orgId ? ids.scopesHelp : undefined">
-      <legend class="fieldset-legend">
+      <legend class="fieldset-legend text-ui">
         {{ labels.scopes }}
       </legend>
       <p v-if="!orgId" class="text-sm text-base-content/70">
@@ -159,7 +159,7 @@ function onOrgChange(event: Event) {
             {{ s.label }}
           </label>
         </div>
-        <p :id="ids.scopesHelp" class="label whitespace-normal">
+        <p :id="ids.scopesHelp" class="label whitespace-normal text-xs text-base-content/70">
           {{ labels.scopesHelp }}
         </p>
       </template>

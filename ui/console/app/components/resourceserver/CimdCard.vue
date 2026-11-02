@@ -94,7 +94,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
             >
             {{ labels.accept }}
           </label>
-          <p :id="ids.help" class="label whitespace-normal">
+          <p :id="ids.help" class="label whitespace-normal text-xs text-base-content/70">
             {{ labels.acceptHelp }}
           </p>
           <p v-if="locked && !accept" class="flex items-start gap-1 text-xs text-base-content">
@@ -104,7 +104,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
         </div>
         <template v-if="accept">
           <div class="fieldset">
-            <label :for="ids.hosts" class="fieldset-legend">{{ labels.hosts }}</label>
+            <label :for="ids.hosts" class="fieldset-legend text-ui">{{ labels.hosts }}</label>
             <textarea
               :id="ids.hosts"
               v-model="hosts"
@@ -123,12 +123,12 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
               <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
               {{ labels.hostsAny }}
             </p>
-            <p :id="ids.hostsHelp" class="label whitespace-normal">
+            <p :id="ids.hostsHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ labels.hostsHelp }}
             </p>
           </div>
           <fieldset class="fieldset">
-            <legend class="fieldset-legend">
+            <legend class="fieldset-legend text-ui">
               {{ labels.scopes }}
             </legend>
             <label class="flex items-center gap-2 text-sm">

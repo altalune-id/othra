@@ -112,7 +112,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('members.tit
     <PageHeader :title="t('members.title')" :description="t('members.subtitle')">
       <template v-if="canInvite" #actions>
         <AppButton size="sm" @click="invite.open">
-          <Icon name="lucide:user-plus" size="14" class="shrink-0" aria-hidden="true" />
+          <Icon name="lucide:user-plus" size="16" class="shrink-0" aria-hidden="true" />
           {{ t('invites.invite') }}
         </AppButton>
       </template>

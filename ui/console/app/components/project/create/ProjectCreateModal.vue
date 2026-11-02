@@ -31,7 +31,7 @@ const handleLabels = computed(() => ({
   <AppModal :open="open" :title="t('project.new')" @close="hide()">
     <form novalidate class="space-y-1" @submit.prevent="submit()">
       <div class="fieldset">
-        <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
+        <label :for="ids.name" class="fieldset-legend text-ui">{{ t('common.name') }}</label>
         <input
           :id="ids.name" v-model="name" type="text" class="input w-full" :class="{ 'input-error': fieldErrors.name }"
           :placeholder="t('project.name_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr"
@@ -39,14 +39,14 @@ const handleLabels = computed(() => ({
         <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
       </div>
       <div class="fieldset">
-        <label :for="ids.slug" class="fieldset-legend">{{ t('project.console_slug') }}</label>
+        <label :for="ids.slug" class="fieldset-legend text-ui">{{ t('project.console_slug') }}</label>
         <input
           :id="ids.slug" :value="slug" type="text" class="input w-full font-mono" :class="{ 'input-error': fieldErrors.slug }"
           :placeholder="t('project.slug_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.slug" :aria-describedby="`${ids.slugHelp} ${ids.slugErr}`"
           @input="create.setSlug(($event.target as HTMLInputElement).value)"
         >
         <FieldError :id="ids.slugErr" :message="fieldErrors.slug" />
-        <p :id="ids.slugHelp" class="label whitespace-normal">
+        <p :id="ids.slugHelp" class="label whitespace-normal text-xs text-base-content/70">
           {{ t('project.slug_random_help') }}
         </p>
       </div>

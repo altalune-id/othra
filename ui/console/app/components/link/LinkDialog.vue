@@ -56,7 +56,7 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
       </p>
       <template v-else>
         <div class="fieldset">
-          <label :for="ids.target" class="fieldset-legend">{{ labels.target }}</label>
+          <label :for="ids.target" class="fieldset-legend text-ui">{{ labels.target }}</label>
           <p v-if="mode === 'edit'" :id="ids.target" class="text-sm font-medium">
             {{ fixedName }}
           </p>
@@ -78,7 +78,7 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
           {{ labels.unverified }}
         </p>
         <fieldset class="fieldset" :aria-describedby="`${ids.scopes} ${ids.err}`">
-          <legend class="fieldset-legend">
+          <legend class="fieldset-legend text-ui">
             {{ labels.scopes }}
           </legend>
           <p v-if="scopeOptions.length === 0" class="text-sm text-base-content/70">
@@ -91,7 +91,7 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
             </label>
           </div>
           <FieldError :id="ids.err" :message="pickError ? labels.pickScope : ''" />
-          <p :id="ids.scopes" class="label whitespace-normal">
+          <p :id="ids.scopes" class="label whitespace-normal text-xs text-base-content/70">
             {{ labels.scopesHelp }}
           </p>
         </fieldset>

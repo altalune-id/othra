@@ -15,7 +15,7 @@ const emit = defineEmits<{ 'update:modelValue': [kind: ClientKindName] }>();
 
 <template>
   <fieldset class="fieldset">
-    <legend class="fieldset-legend">
+    <legend class="fieldset-legend text-ui">
       {{ legend }}
     </legend>
     <div class="grid gap-3 sm:grid-cols-2">
@@ -43,7 +43,7 @@ const emit = defineEmits<{ 'update:modelValue': [kind: ClientKindName] }>();
         </span>
       </label>
     </div>
-    <p class="label whitespace-normal">
+    <p class="label whitespace-normal text-xs text-base-content/70">
       {{ note }}
     </p>
   </fieldset>

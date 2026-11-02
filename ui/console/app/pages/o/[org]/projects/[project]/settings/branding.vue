@@ -72,16 +72,16 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
       <form v-if="canEdit" novalidate class="card self-start border border-base-300 bg-base-100" @submit.prevent="branding.save()">
         <div class="card-body gap-2">
           <div class="fieldset">
-            <label :for="ids.name" class="fieldset-legend">{{ t('branding.display_name') }}</label>
+            <label :for="ids.name" class="fieldset-legend text-ui">{{ t('branding.display_name') }}</label>
             <input :id="ids.name" v-model="displayName" type="text" class="input w-full" maxlength="60" :placeholder="listed?.name" :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`" :disabled="busy">
             <FieldError :id="ids.nameErr" :message="fieldErrors.display_name" />
-            <p :id="ids.nameHelp" class="label whitespace-normal">
+            <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('branding.display_name_help') }}
             </p>
           </div>
 
           <div class="fieldset">
-            <span class="fieldset-legend">{{ t('branding.logo') }}</span>
+            <span class="fieldset-legend text-ui">{{ t('branding.logo') }}</span>
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex size-16 items-center justify-center rounded-box border border-base-300 bg-base-200">
                 <img v-if="preview.logoUrl" :src="preview.logoUrl" alt="" class="size-14 object-contain">
@@ -104,13 +104,13 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
             </div>
             <FieldError :id="ids.logoErr" :message="logoError" />
             <SavedNote v-if="logoSaved" :label="t('branding.logo_updated')" />
-            <p v-if="!storageOff" :id="ids.logoHelp" class="label whitespace-normal">
+            <p v-if="!storageOff" :id="ids.logoHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('branding.logo_help') }} {{ t('branding.logo_instant') }}
             </p>
           </div>
 
           <div class="fieldset">
-            <label :for="ids.colorHex" class="fieldset-legend">{{ t('branding.primary') }}</label>
+            <label :for="ids.colorHex" class="fieldset-legend text-ui">{{ t('branding.primary') }}</label>
             <div class="flex flex-wrap items-center gap-2">
               <div class="join">
                 <input :id="ids.color" type="color" class="join-item h-10 w-12 cursor-pointer border border-base-300 bg-base-100 p-1" :value="colorValue" :aria-label="t('branding.pick_primary')" :aria-describedby="preview.primary ? undefined : ids.colorDefault" :disabled="busy" @input="primaryColor = ($event.target as HTMLInputElement).value">
@@ -127,10 +127,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
           </div>
 
           <div class="fieldset">
-            <label :for="ids.email" class="fieldset-legend">{{ t('branding.support_email') }}</label>
+            <label :for="ids.email" class="fieldset-legend text-ui">{{ t('branding.support_email') }}</label>
             <input :id="ids.email" v-model="supportEmail" type="email" class="input w-full" placeholder="help@example.com" :aria-describedby="`${ids.emailHelp} ${ids.emailErr}`" :disabled="busy">
             <FieldError :id="ids.emailErr" :message="fieldErrors.support_email" />
-            <p :id="ids.emailHelp" class="label whitespace-normal">
+            <p :id="ids.emailHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('branding.support_email_help') }}
             </p>
           </div>
@@ -150,13 +150,13 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
       <dl v-else class="card self-start border border-base-300 bg-base-100" data-testid="branding-readonly">
         <div class="card-body gap-4">
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('branding.display_name') }}
             </dt>
             <dd>{{ preview.name }}</dd>
           </div>
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('branding.logo') }}
             </dt>
             <dd>
@@ -165,7 +165,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
             </dd>
           </div>
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('branding.primary') }}
             </dt>
             <dd class="flex items-center gap-2 font-mono text-sm">
@@ -177,7 +177,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
             </dd>
           </div>
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('branding.support_email') }}
             </dt>
             <dd>

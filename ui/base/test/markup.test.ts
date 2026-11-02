@@ -190,6 +190,12 @@ describe('guard: theme contrast', () => {
     expect(theme).not.toContain(':where(thead');
   });
 
+  it('sizes every field label at text-ui and every field hint at text-xs /70', () => {
+    const legends = files.flatMap(f => (f.text.match(/class="fieldset-legend[^"]*"/g) ?? []).filter(c => !c.includes(' text-ui')).map(c => `${f.path}: ${c}`));
+    const hints = files.flatMap(f => (f.text.match(/class="label whitespace-normal[^"]*"/g) ?? []).filter(c => !c.includes('text-xs text-base-content/70')).map(c => `${f.path}: ${c}`));
+    expect([...legends, ...hints]).toEqual([]);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });

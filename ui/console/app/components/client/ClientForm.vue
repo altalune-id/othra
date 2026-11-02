@@ -124,7 +124,7 @@ function patch(next: Partial<ClientFields>) {
     />
 
     <div class="fieldset">
-      <label :for="ids.name" class="fieldset-legend">{{ labels.name }}</label>
+      <label :for="ids.name" class="fieldset-legend text-ui">{{ labels.name }}</label>
       <input
         :id="ids.name"
         :value="fields.name"
@@ -138,7 +138,7 @@ function patch(next: Partial<ClientFields>) {
         @input="patch({ name: ($event.target as HTMLInputElement).value })"
       >
       <FieldError :id="ids.nameErr" :message="nameError" />
-      <p :id="ids.nameHelp" class="label whitespace-normal">
+      <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
         {{ labels.nameHelp }}
       </p>
     </div>
@@ -173,7 +173,7 @@ function patch(next: Partial<ClientFields>) {
     />
 
     <fieldset class="fieldset">
-      <legend class="fieldset-legend">
+      <legend class="fieldset-legend text-ui">
         {{ labels.refresh }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
@@ -190,7 +190,7 @@ function patch(next: Partial<ClientFields>) {
 
     <template v-if="kind?.secret">
       <fieldset class="fieldset" :aria-describedby="ids.authHelp">
-        <legend class="fieldset-legend">
+        <legend class="fieldset-legend text-ui">
           {{ labels.authMethod }}
         </legend>
         <label class="flex items-center gap-2 text-sm">
@@ -201,13 +201,13 @@ function patch(next: Partial<ClientFields>) {
           <input type="radio" name="client-auth-method" class="radio radio-sm" :checked="fields.authMethod === 'post'" :disabled="busy" @change="patch({ authMethod: 'post' })">
           {{ labels.authMethodPost }}
         </label>
-        <p :id="ids.authHelp" class="label whitespace-normal">
+        <p :id="ids.authHelp" class="label whitespace-normal text-xs text-base-content/70">
           {{ labels.authMethodHelp }}
         </p>
       </fieldset>
 
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">
+        <legend class="fieldset-legend text-ui">
           {{ labels.pkce }}
         </legend>
         <label class="flex items-center gap-2 text-sm">
@@ -229,7 +229,7 @@ function patch(next: Partial<ClientFields>) {
     </template>
 
     <fieldset class="fieldset">
-      <legend class="fieldset-legend">
+      <legend class="fieldset-legend text-ui">
         {{ labels.consent }}
       </legend>
       <label class="flex items-center gap-2 text-sm">

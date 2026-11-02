@@ -32,7 +32,7 @@ useHead({ title: () => t('nav.profile') });
     <form novalidate class="card border border-base-300 bg-base-100" @submit.prevent="form.save()">
       <div class="card-body gap-2">
         <div class="fieldset">
-          <label :for="ids.name" class="fieldset-legend">{{ t('profile.name') }}</label>
+          <label :for="ids.name" class="fieldset-legend text-ui">{{ t('profile.name') }}</label>
           <input
             :id="ids.name"
             v-model="name"
@@ -44,7 +44,7 @@ useHead({ title: () => t('nav.profile') });
             :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`"
           >
           <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
-          <p :id="ids.nameHelp" class="label whitespace-normal">
+          <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
             {{ t('profile.name_help') }}
           </p>
         </div>
@@ -60,7 +60,7 @@ useHead({ title: () => t('nav.profile') });
 
     <section class="card border border-base-300 bg-base-100" :aria-labelledby="ids.email">
       <div class="card-body gap-1">
-        <h2 :id="ids.email" class="fieldset-legend">
+        <h2 :id="ids.email" class="fieldset-legend text-ui">
           {{ t('profile.email') }}
         </h2>
         <p class="font-medium break-all">

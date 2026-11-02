@@ -159,7 +159,7 @@ const trusted = () => props.status === 'trusted';
             >
             {{ labels.trust }}
           </label>
-          <p :id="`${trustId}-help`" class="label whitespace-normal">
+          <p :id="`${trustId}-help`" class="label whitespace-normal text-xs text-base-content/70">
             {{ http && trusted() ? labels.httpLocked : trusted() ? labels.untrustHelp : labels.trustHelp }}
           </p>
           <ErrorText :error="trustError" />

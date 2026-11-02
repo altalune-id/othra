@@ -59,13 +59,13 @@ if (notFound.value) {
       <section class="card border border-base-300 bg-base-100">
         <dl class="card-body grid gap-3 sm:grid-cols-2">
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('common.name') }}
             </dt>
             <dd>{{ user.name || '—' }}</dd>
           </div>
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('endusers.sub') }}
             </dt>
             <dd class="flex items-center gap-1 font-mono text-sm break-all">
@@ -74,13 +74,13 @@ if (notFound.value) {
             </dd>
           </div>
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('endusers.created') }}
             </dt>
             <dd>{{ date(user.createdAt) }}</dd>
           </div>
           <div>
-            <dt class="fieldset-legend">
+            <dt class="fieldset-legend text-ui">
               {{ t('endusers.last_sign_in') }}
             </dt>
             <dd>{{ date(user.lastSignInAt) }}</dd>

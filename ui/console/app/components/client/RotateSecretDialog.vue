@@ -44,7 +44,7 @@ const id = useId();
         {{ labels.body }}
       </p>
       <div class="fieldset">
-        <label :for="id" class="fieldset-legend">{{ labels.grace }}</label>
+        <label :for="id" class="fieldset-legend text-ui">{{ labels.grace }}</label>
         <select :id="id" v-model.number="grace" class="select w-full border-base-300 sm:w-56" :disabled="busy">
           <option v-for="o in options" :key="o.value" :value="o.value">
             {{ o.label }}

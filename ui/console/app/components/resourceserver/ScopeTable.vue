@@ -46,7 +46,7 @@ function setDescription(index: number, value: string) {
 
 <template>
   <fieldset v-if="editable" class="fieldset">
-    <legend class="fieldset-legend">
+    <legend class="fieldset-legend text-ui">
       {{ labels.legend }}
     </legend>
     <div class="hidden grid-cols-[minmax(0,1fr)] gap-2 text-xs font-medium text-base-content/70 sm:grid sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_2rem]" aria-hidden="true" data-testid="scope-columns">
@@ -108,7 +108,7 @@ function setDescription(index: number, value: string) {
         {{ labels.add }}
       </button>
     </div>
-    <p class="label whitespace-normal">
+    <p class="label whitespace-normal text-xs text-base-content/70">
       {{ labels.help }}
     </p>
   </fieldset>

@@ -69,7 +69,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
       <div class="card-body">
         <form novalidate class="space-y-2" @submit.prevent="submit">
           <div class="fieldset">
-            <label :for="ids.uri" class="fieldset-legend">{{ t('rs.uri') }}</label>
+            <label :for="ids.uri" class="fieldset-legend text-ui">{{ t('rs.uri') }}</label>
             <input
               :id="ids.uri"
               v-model="identifier"
@@ -86,12 +86,12 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
               @input="form.clearIdentifier()"
             >
             <FieldError :id="ids.uriErr" :message="errors.identifier" />
-            <p :id="ids.uriHelp" class="label whitespace-normal">
+            <p :id="ids.uriHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('rs.uri_help') }}
             </p>
           </div>
           <div class="fieldset">
-            <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
+            <label :for="ids.name" class="fieldset-legend text-ui">{{ t('common.name') }}</label>
             <input
               :id="ids.name"
               v-model="name"
@@ -104,12 +104,12 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
               :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`"
             >
             <FieldError :id="ids.nameErr" :message="errors.name" />
-            <p :id="ids.nameHelp" class="label whitespace-normal">
+            <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('rs.name_help') }}
             </p>
           </div>
           <fieldset v-if="trustAvailable" class="fieldset" data-testid="trust-on-create">
-            <legend class="fieldset-legend">
+            <legend class="fieldset-legend text-ui">
               {{ t('rs.trust') }}
             </legend>
             <label class="flex items-center gap-2 text-sm">
@@ -127,7 +127,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
               <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
               {{ trustRequired ? t('rs.trust_required') : t('rs.trust_body') }}
             </p>
-            <p v-else :id="ids.trust" class="label whitespace-normal">
+            <p v-else :id="ids.trust" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('rs.trust_help') }}
             </p>
           </fieldset>

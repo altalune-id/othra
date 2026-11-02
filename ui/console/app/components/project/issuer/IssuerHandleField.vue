@@ -74,7 +74,7 @@ function onInput(event: Event) {
 
 <template>
   <div class="fieldset">
-    <label :for="ids.input" class="fieldset-legend">{{ labels.handle }}</label>
+    <label :for="ids.input" class="fieldset-legend text-ui">{{ labels.handle }}</label>
     <div class="join w-full">
       <span v-if="prefix" class="join-item flex items-center border border-base-300 bg-base-200 px-3 font-mono text-sm text-base-content/70">{{ prefix }}</span>
       <input
@@ -107,7 +107,7 @@ function onInput(event: Event) {
       <Icon name="lucide:circle-alert" size="14" class="mt-0.5 shrink-0 text-error" />
       {{ fieldError }}
     </p>
-    <p :id="ids.help" class="label whitespace-normal">
+    <p :id="ids.help" class="label whitespace-normal text-xs text-base-content/70">
       {{ labels.help }}
     </p>
   </div>

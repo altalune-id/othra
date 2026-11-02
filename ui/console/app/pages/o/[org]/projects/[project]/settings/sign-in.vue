@@ -79,7 +79,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('sign
             >
             {{ t('signin.email_link') }}
           </label>
-          <p :id="ids.emailHelp" class="label whitespace-normal">
+          <p :id="ids.emailHelp" class="label whitespace-normal text-xs text-base-content/70">
             {{ t('signin.email_link_help') }}
           </p>
           <p v-if="emailLockedOn" :id="ids.emailLocked" class="flex items-start gap-1 text-xs text-base-content">
@@ -89,7 +89,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('sign
           <ErrorText :error="emailError" />
         </template>
         <dl v-else class="space-y-1 text-sm">
-          <dt class="fieldset-legend">
+          <dt class="fieldset-legend text-ui">
             {{ t('signin.email_link') }}
           </dt>
           <dd>{{ emailLink ? t('signin.on') : t('signin.off') }}</dd>

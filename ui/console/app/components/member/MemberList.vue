@@ -159,7 +159,7 @@ function onRole(m: MemberListRow, event: Event) {
         </span>
       </template>
       <template #cell-role="{ row }">
-        <label v-if="row.roles.length > 0" class="select select-xs w-32 text-ui">
+        <label v-if="row.roles.length > 0" class="select select-xs w-32 text-xs">
           <span class="sr-only">{{ labels.role }}: {{ displayName(row) }}</span>
           <select :value="row.role" :disabled="busy" @change="onRole(row, $event)">
             <option v-for="r in row.roles" :key="r" :value="r">
@@ -177,13 +177,13 @@ function onRole(m: MemberListRow, event: Event) {
           <ul class="menu menu-sm w-full p-0 text-ui">
             <li v-if="row.removable">
               <button type="button" @click="emit('remove', row.userId)">
-                <Icon name="lucide:user-minus" size="14" class="shrink-0 text-error" aria-hidden="true" />
+                <Icon name="lucide:user-minus" size="16" class="shrink-0 text-error" aria-hidden="true" />
                 {{ labels.remove }}
               </button>
             </li>
             <li v-else>
               <button type="button" @click="emit('leave')">
-                <Icon name="lucide:log-out" size="14" class="shrink-0" aria-hidden="true" />
+                <Icon name="lucide:log-out" size="16" class="shrink-0" aria-hidden="true" />
                 {{ labels.leave }}
               </button>
             </li>

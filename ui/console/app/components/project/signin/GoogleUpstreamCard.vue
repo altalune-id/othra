@@ -122,7 +122,7 @@ function onToggle(event: Event) {
 
         <form v-if="canEdit" novalidate class="space-y-3" @submit.prevent="emit('save')">
           <div class="fieldset">
-            <label :for="ids.clientId" class="fieldset-legend">{{ labels.clientId }}</label>
+            <label :for="ids.clientId" class="fieldset-legend text-ui">{{ labels.clientId }}</label>
             <input
               :id="ids.clientId"
               v-model="clientId"
@@ -135,12 +135,12 @@ function onToggle(event: Event) {
               :aria-describedby="`${ids.clientIdHelp} ${ids.clientIdErr}`"
             >
             <FieldError :id="ids.clientIdErr" :message="fieldErrors.client_id" />
-            <p :id="ids.clientIdHelp" class="label whitespace-normal">
+            <p :id="ids.clientIdHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ labels.clientIdHelp }}
             </p>
           </div>
           <div class="fieldset">
-            <label :for="ids.secret" class="fieldset-legend">{{ labels.clientSecret }}</label>
+            <label :for="ids.secret" class="fieldset-legend text-ui">{{ labels.clientSecret }}</label>
             <div v-if="google?.secretSet && !replacingSecret" class="flex items-center gap-3 text-sm">
               <span class="flex items-center gap-1" data-testid="secret-set">
                 <Icon name="lucide:lock" size="14" class="shrink-0" />
@@ -165,7 +165,7 @@ function onToggle(event: Event) {
               >
               <FieldError :id="ids.secretErr" :message="fieldErrors.client_secret" />
             </template>
-            <p :id="ids.secretHelp" class="label whitespace-normal">
+            <p :id="ids.secretHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ labels.secretHelp }}
             </p>
           </div>
@@ -181,13 +181,13 @@ function onToggle(event: Event) {
           </div>
         </form>
         <dl v-else-if="google" class="space-y-1 text-sm" data-testid="google-readonly">
-          <dt class="fieldset-legend">
+          <dt class="fieldset-legend text-ui">
             {{ labels.clientId }}
           </dt>
           <dd class="font-mono break-all">
             {{ google.clientId }}
           </dd>
-          <dt class="fieldset-legend">
+          <dt class="fieldset-legend text-ui">
             {{ labels.enabled }}
           </dt>
           <dd>{{ google.enabled ? labels.on : labels.off }}</dd>
@@ -210,7 +210,7 @@ function onToggle(event: Event) {
               >
               {{ labels.enabled }}
             </label>
-            <p :id="ids.enabledHelp" class="label whitespace-normal">
+            <p :id="ids.enabledHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ labels.enabledHelp }}
             </p>
             <p v-if="locked" :id="ids.locked" class="flex items-start gap-1 text-xs text-base-content">

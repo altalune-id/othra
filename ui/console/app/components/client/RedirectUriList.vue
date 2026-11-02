@@ -42,7 +42,7 @@ function add() {
 
 <template>
   <fieldset class="fieldset">
-    <legend class="fieldset-legend">
+    <legend class="fieldset-legend text-ui">
       {{ label }}
     </legend>
     <div v-for="(row, i) in rows" :key="i">
@@ -85,7 +85,7 @@ function add() {
         {{ labels.add }}
       </button>
     </div>
-    <p v-if="help" class="label whitespace-normal">
+    <p v-if="help" class="label whitespace-normal text-xs text-base-content/70">
       {{ help }}
     </p>
   </fieldset>

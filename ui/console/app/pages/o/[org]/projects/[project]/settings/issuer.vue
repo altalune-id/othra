@@ -111,7 +111,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
           </template>
         </form>
         <div v-else class="space-y-2" data-testid="issuer-readonly">
-          <h2 class="fieldset-legend">
+          <h2 class="fieldset-legend text-ui">
             {{ t('issuer.handle') }}
           </h2>
           <p class="flex items-center gap-2 font-mono text-sm">
