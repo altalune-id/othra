@@ -42,7 +42,7 @@ describe('org create modal copy', () => {
 describe('org fields', () => {
   it('names each input by its fieldset legend and shows its error', () => {
     const w = mount(OrgFields, { props: { name: '', slug: '', fieldErrors: { slug: 'taken' } } });
-    const legends = w.findAll('fieldset > legend.label');
+    const legends = w.findAll('fieldset > legend.fieldset-legend');
     expect(legends.map(l => l.text())).toEqual(['common.name', 'common.slug']);
     const [name, slug] = w.findAll('input');
     expect(name!.attributes('aria-labelledby')).toBe(legends[0]!.attributes('id'));

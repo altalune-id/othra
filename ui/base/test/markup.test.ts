@@ -190,8 +190,8 @@ describe('guard: theme contrast', () => {
     expect(theme).not.toContain(':where(thead');
   });
 
-  it('labels fields with the design label class, never fieldset-legend, and mutes every hint at text-xs /70', () => {
-    const legends = files.filter(f => f.text.includes('fieldset-legend')).map(f => f.path);
+  it('keeps fieldset-legend for group legends only and mutes every hint at text-xs /70', () => {
+    const legends = files.flatMap(f => (f.text.match(/<[a-z][a-z0-9]*\s[^<>]*fieldset-legend[^<>]*>/g) ?? []).filter(t => !/^<legend\s[^<>]*class="fieldset-legend text-ui"/.test(t)).map(t => `${f.path}: ${t}`));
     const hints = files.flatMap(f => (f.text.match(/class="label whitespace-normal[^"]*"/g) ?? []).filter(c => !c.includes('text-xs text-base-content/70')).map(c => `${f.path}: ${c}`));
     expect([...legends, ...hints]).toEqual([]);
   });

@@ -78,7 +78,7 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
           {{ labels.unverified }}
         </p>
         <fieldset class="fieldset" :aria-describedby="`${ids.scopes} ${ids.err}`">
-          <legend class="label text-ui font-semibold text-base-content">
+          <legend class="fieldset-legend text-ui">
             {{ labels.scopes }}
           </legend>
           <p v-if="scopeOptions.length === 0" class="text-sm text-base-content/70">

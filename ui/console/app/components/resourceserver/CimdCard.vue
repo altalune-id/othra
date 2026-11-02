@@ -128,7 +128,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
             </p>
           </div>
           <fieldset class="fieldset">
-            <legend class="label text-ui font-semibold text-base-content">
+            <legend class="fieldset-legend text-ui">
               {{ labels.scopes }}
             </legend>
             <label class="flex items-center gap-2 text-sm">

@@ -109,7 +109,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
             </p>
           </div>
           <fieldset v-if="trustAvailable" class="fieldset" data-testid="trust-on-create">
-            <legend class="label text-ui font-semibold text-base-content">
+            <legend class="fieldset-legend text-ui">
               {{ t('rs.trust') }}
             </legend>
             <label class="flex items-center gap-2 text-sm">

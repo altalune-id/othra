@@ -55,7 +55,7 @@ const { open, url, description, eventTypes, busy, error, fieldErrors, secret, pi
         <FieldError :id="ids.descriptionErr" :message="fieldErrors.description" />
       </div>
       <fieldset class="fieldset" :aria-describedby="ids.eventsErr">
-        <legend class="label text-ui font-semibold text-base-content">
+        <legend class="fieldset-legend text-ui">
           {{ t('webhooks.events') }}
         </legend>
         <div class="space-y-1">

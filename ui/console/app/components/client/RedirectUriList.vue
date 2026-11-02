@@ -42,7 +42,7 @@ function add() {
 
 <template>
   <fieldset class="fieldset">
-    <legend class="label text-ui font-semibold text-base-content">
+    <legend class="fieldset-legend text-ui">
       {{ label }}
     </legend>
     <div v-for="(row, i) in rows" :key="i">

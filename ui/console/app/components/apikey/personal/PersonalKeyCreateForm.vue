@@ -126,7 +126,7 @@ function onOrgChange(event: Event) {
     </div>
 
     <fieldset class="fieldset">
-      <legend class="label text-ui font-semibold text-base-content">
+      <legend class="fieldset-legend text-ui">
         {{ labels.projects }}
       </legend>
       <label class="flex items-center gap-2 text-sm">
@@ -146,7 +146,7 @@ function onOrgChange(event: Event) {
     </fieldset>
 
     <fieldset class="fieldset" :aria-describedby="orgId ? ids.scopesHelp : undefined">
-      <legend class="label text-ui font-semibold text-base-content">
+      <legend class="fieldset-legend text-ui">
         {{ labels.scopes }}
       </legend>
       <p v-if="!orgId" class="text-sm text-base-content/70">

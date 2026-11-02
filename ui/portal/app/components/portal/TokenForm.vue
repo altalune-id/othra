@@ -49,7 +49,7 @@ const ids = { name: useId(), nameErr: useId(), server: useId(), serverHelp: useI
         </p>
       </div>
       <fieldset v-if="server" class="fieldset" :aria-describedby="`${ids.scopesHelp} ${ids.scopesErr}`">
-        <legend class="label text-ui font-semibold text-base-content">
+        <legend class="fieldset-legend text-ui">
           {{ t('tokens.access') }}
         </legend>
         <label v-for="s in server.scopes" :key="s" class="flex items-start gap-2 text-sm">
