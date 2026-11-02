@@ -44,7 +44,7 @@ void list.load();
     <EmptyState v-if="!loading && users.length === 0 && !loadError" :icon="shown ? 'lucide:search-x' : 'lucide:users'" :title="shown ? t('endusers.none_found') : t('endusers.empty')" />
     <div v-else-if="!loadError && users.length" class="overflow-x-auto rounded-box border border-base-300">
       <table class="table" data-testid="end-users">
-        <thead>
+        <thead class="text-base-content/70">
           <tr>
             <th>{{ t('endusers.email') }}</th>
             <th>{{ t('common.name') }}</th>

@@ -184,8 +184,10 @@ describe('guard: theme contrast', () => {
     expect(failures).toEqual([]);
   });
 
-  it('lifts daisyUI table headers from base-content/60 to the AA muted /70', () => {
-    expect(theme).toMatch(/\.table :where\(thead, tfoot\) \{\s+color: color-mix\(in oklab, var\(--color-base-content\) 70%, transparent\);/);
+  it('lifts every table header from daisyUI base-content/60 to the AA muted /70', () => {
+    const bare = files.flatMap(f => (f.text.match(/<thead\b[^>]*>/g) ?? []).filter(t => !t.includes('text-base-content/70')).map(t => `${f.path}: ${t}`));
+    expect(bare).toEqual([]);
+    expect(theme).not.toContain(':where(thead');
   });
 
   it('drops the old shared indigo', () => {

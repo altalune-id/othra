@@ -201,7 +201,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
     </p>
     <div v-else class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
       <table class="table table-sm">
-        <thead>
+        <thead class="text-base-content/70">
           <tr>
             <th>{{ t('webhooks.col_event') }}</th>
             <th>{{ t('webhooks.col_status') }}</th>

@@ -23,15 +23,15 @@ function cell(row: T, key: string): unknown {
       <slot name="empty" />
     </div>
     <template v-else>
-      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100" :class="{ 'max-sm:hidden': slots['row-sm'] }">
-        <table class="table table-sm" :aria-busy="loading || undefined">
+      <div class="max-w-full overflow-x-auto rounded-box border border-base-300 bg-base-100" :class="{ 'max-sm:hidden': slots['row-sm'] }">
+        <table class="table table-sm text-ui" :aria-busy="loading || undefined">
           <caption class="sr-only">
             {{ caption }}
           </caption>
-          <thead>
+          <thead class="text-base-content/70">
             <tr>
-              <th v-for="col in columns" :key="col.key" scope="col" :class="{ 'text-right': col.align === 'end' }">
-                {{ col.label }}
+              <th v-for="col in columns" :key="col.key" scope="col" class="bg-base-200 text-xs font-medium" :class="{ 'text-end': col.align === 'end' }">
+                <span :class="{ 'sr-only': col.hideLabel }">{{ col.label }}</span>
               </th>
             </tr>
           </thead>
@@ -43,8 +43,8 @@ function cell(row: T, key: string): unknown {
             </tr>
           </tbody>
           <tbody v-else>
-            <tr v-for="row in rows" :key="String(cell(row, rowKey))" class="row-hover">
-              <td v-for="col in columns" :key="col.key" :class="{ 'text-right tabular-nums': col.align === 'end' }">
+            <tr v-for="row in rows" :key="String(cell(row, rowKey))">
+              <td v-for="col in columns" :key="col.key" :class="{ 'text-end tabular-nums': col.align === 'end', 'font-mono text-xs': col.mono }">
                 <slot :name="`cell-${col.key}`" :row="row">
                   {{ cell(row, col.key) }}
                 </slot>

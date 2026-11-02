@@ -45,7 +45,7 @@ function dot(status: KeyStatus): string {
 <template>
   <div class="space-y-2">
     <table class="table table-sm max-sm:hidden">
-      <thead>
+      <thead class="text-base-content/70">
         <tr>
           <th>{{ labels.kid }}</th>
           <th>{{ labels.alg }}</th>

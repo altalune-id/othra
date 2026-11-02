@@ -19,6 +19,8 @@ export interface Column {
   key: string;
   label: string;
   align?: 'start' | 'end';
+  mono?: boolean;
+  hideLabel?: boolean;
 }
 
 export interface KeyValueItem {

@@ -23,8 +23,19 @@ describe('dataTable', () => {
     expect(w.get('caption').text()).toBe('Agents');
     expect(w.findAll('th').map(t => [t.text(), t.attributes('scope')])).toEqual([['Agent', 'col'], ['Runs', 'col']]);
     expect(w.findAll('tbody b').map(b => b.text())).toEqual(['Refund Triage', 'Order Status']);
-    expect(w.findAll('tbody td')[1]!.classes()).toContain('tabular-nums');
+    expect(w.findAll('tbody td')[1]!.classes()).toEqual(['text-end', 'tabular-nums']);
     expect(w.find('ul.list').exists()).toBe(false);
+  });
+
+  it('draws the design table: dense text, muted shaded headers, mono cells and a hidden label for the menu column', () => {
+    const cols = [{ key: 'id', label: 'Client ID', mono: true }, { key: 'menu', label: 'Actions', hideLabel: true }];
+    const w = mount(DataTable, { props: { columns: cols, rows, rowKey: 'id', caption: 'Clients' } });
+    expect(w.get('table').classes()).toEqual(['table', 'table-sm', 'text-ui']);
+    expect(w.get('thead').classes()).toEqual(['text-base-content/70']);
+    expect(w.get('th').classes()).toEqual(['bg-base-200', 'text-xs', 'font-medium']);
+    expect(w.findAll('th span').map(s => s.classes())).toEqual([[], ['sr-only']]);
+    expect(w.get('tbody td').classes()).toEqual(['font-mono', 'text-xs']);
+    expect(w.get('tbody tr').classes()).toEqual([]);
   });
 
   it('shows skeleton rows while loading, busy for assistive tech', () => {

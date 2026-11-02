@@ -32,7 +32,7 @@ const { rows, loading = false, labels = {
   <div>
     <div class="overflow-x-auto max-sm:hidden">
       <table class="table table-sm">
-        <thead>
+        <thead class="text-base-content/70">
           <tr>
             <th>{{ labels.name }}</th>
             <th>{{ labels.identifier }}</th>

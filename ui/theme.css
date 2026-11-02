@@ -511,7 +511,3 @@
   --depth: 1;
   --noise: 0;
 }
-
-.table :where(thead, tfoot) {
-  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
-}

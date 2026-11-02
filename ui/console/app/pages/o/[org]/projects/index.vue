@@ -44,7 +44,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
     <ErrorText v-if="projects.error" :error="projects.error" />
     <div v-else-if="items.length" class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
       <table class="table table-sm">
-        <thead>
+        <thead class="text-base-content/70">
           <tr>
             <th>{{ t('common.name') }}</th>
             <th>{{ t('common.id') }}</th>
