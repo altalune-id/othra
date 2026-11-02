@@ -84,7 +84,7 @@ const expiryOptions = computed(() => [
         <legend class="fieldset-legend text-ui">
           {{ t('apikeys.projects') }}
         </legend>
-        <label class="flex items-center gap-2 text-ui"><input v-model="allProjects" type="checkbox" class="checkbox checkbox-sm rounded-sm" :disabled="busy">{{ t('apikeys.all_projects') }}</label>
+        <label class="flex items-center gap-2 text-ui"><input v-model="allProjects" type="checkbox" class="checkbox checkbox-xs rounded-sm" :disabled="busy">{{ t('apikeys.all_projects') }}</label>
         <div v-if="!allProjects" class="max-h-32 space-y-1 overflow-auto rounded-box border border-base-300 p-2">
           <label v-for="p in orgProjects" :key="p.id" class="flex items-center gap-2 text-ui">
             <input v-model="projectIds" type="checkbox" :value="p.id" class="checkbox checkbox-xs rounded-sm" :disabled="busy">{{ p.name }}
