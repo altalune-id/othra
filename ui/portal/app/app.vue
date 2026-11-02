@@ -7,6 +7,7 @@ const { project } = useRuntimeConfig().public;
 
 useHead({
   htmlAttrs: { lang: locale },
+  bodyAttrs: { class: 'text-sm leading-[normal]' },
   titleTemplate: title => (title ? `${title} · ${project}` : t('portal.title', { project })),
 });
 
