@@ -47,6 +47,17 @@ describe('nav crumbs', () => {
     expect(palette.value.every(p => p.group === 'Acme' && !p.mono)).toBe(true);
   });
 
+  it('offers no org links where there is no org', () => {
+    const { crumbs, palette } = crumbsAt('/orgs', {});
+    expect(crumbs.value).toEqual([]);
+    expect(palette.value).toEqual([]);
+  });
+
+  it('never links to an undefined org from the account pages', () => {
+    const { palette } = crumbsAt('/account', {});
+    expect(palette.value.some(p => p.to.includes('undefined'))).toBe(false);
+  });
+
   it('trails Account and its page on the account pages', () => {
     const { crumbs, palette } = crumbsAt('/account/api-keys', {});
     expect(crumbs.value).toEqual([{ label: 'account.title', to: '/account' }, { label: 'apikeys.personal_title' }]);

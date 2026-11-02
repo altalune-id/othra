@@ -41,7 +41,11 @@ export function useNavCrumbs() {
     if (inAccount.value) {
       return accountNav.value.items.map(i => ({ key: `account-${i.key}`, group: t('account.title'), label: i.label, to: i.to }));
     }
-    const items: PaletteItem[] = orgNav.value.items.map(i => ({ key: `org-${i.key}`, group: org.value?.name ?? '', label: i.label, to: i.to }));
+    const name = org.value?.name;
+    if (!name) {
+      return [];
+    }
+    const items: PaletteItem[] = orgNav.value.items.map(i => ({ key: `org-${i.key}`, group: name, label: i.label, to: i.to }));
     if (project.value) {
       items.push(...projectNav.value.flatMap(g => g.items).map(i => ({ key: `project-${i.key}`, group: project.value!, mono: true, label: i.label, to: i.to })));
     }
