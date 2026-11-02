@@ -4,16 +4,20 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 
+import { ProjectEnvironment } from '#gen/project/v1/project_pb';
 import { setRoute } from '#test/nuxt-globals';
 import ConsoleTopBar from '~/components/layout/ConsoleTopBar.vue';
 import { useNavCrumbs } from '~/components/layout/useNavCrumbs';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
+import { useProjectsStore } from '~/stores/projects';
+import { useUIStore } from '~/stores/ui';
 
 beforeEach(() => {
   setActivePinia(createPinia());
   useAuthStore().me = { permissions: ['end_user:read'] } as never;
   useOrgsStore().items = [{ id: 'B6rTn1YkM8wQz3XpL5vGd', slug: 'acme', name: 'Acme', role: 'admin', permissions: [] }];
+  useProjectsStore().items = [{ id: 'P1', orgId: 'B6rTn1YkM8wQz3XpL5vGd', slug: 'acme-prod', name: 'Acme', environment: ProjectEnvironment.LABS }] as never;
 });
 
 function crumbsAt(path: string, params: Record<string, string>) {
@@ -37,6 +41,7 @@ describe('nav crumbs', () => {
       { label: 'acme-prod', to: '/o/acme/projects/acme-prod', mono: true },
       { label: 'nav.clients' },
     ]);
+    expect(crumbsAt('/o/acme/projects/acme-prod', { org: 'acme', project: 'acme-prod' }).place.value).toEqual({ label: 'acme-prod', mono: true, badge: 'environment.labs' });
     expect(palette.value).toContainEqual({ key: 'org-members', group: 'Acme', label: 'members.title', to: '/o/acme/settings/members' });
     expect(palette.value).toContainEqual({ key: 'project-clients', group: 'acme-prod', mono: true, label: 'nav.clients', to: '/o/acme/projects/acme-prod/clients' });
   });
@@ -44,6 +49,7 @@ describe('nav crumbs', () => {
   it('trails only the org and its page outside a project', () => {
     const { crumbs, palette } = crumbsAt('/o/acme/settings/members', { org: 'acme' });
     expect(crumbs.value).toEqual([{ label: 'Acme', to: '/o/acme' }, { label: 'members.title' }]);
+    expect(crumbsAt('/o/acme', { org: 'acme' }).place.value).toEqual({ label: 'Acme' });
     expect(palette.value.every(p => p.group === 'Acme' && !p.mono)).toBe(true);
   });
 
@@ -61,6 +67,7 @@ describe('nav crumbs', () => {
   it('trails Account and its page on the account pages', () => {
     const { crumbs, palette } = crumbsAt('/account/api-keys', {});
     expect(crumbs.value).toEqual([{ label: 'account.title', to: '/account' }, { label: 'apikeys.personal_title' }]);
+    expect(crumbsAt('/account', {}).place.value).toEqual({ label: 'account.title' });
     expect(palette.value.map(p => p.to)).toEqual(['/account', '/account/api-keys']);
   });
 });
@@ -78,6 +85,12 @@ describe('console top bar', () => {
     await w.vm.$nextTick();
     await w.vm.$nextTick();
     expect(dialog().open).toBe(false);
+    useUIStore().navOpen = true;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
+    await w.vm.$nextTick();
+    await w.vm.$nextTick();
+    expect(useUIStore().navOpen).toBe(false);
+    expect(dialog().open).toBe(true);
     w.unmount();
   });
 });

@@ -17,3 +17,8 @@ export function mcpURL(apiUrl: string, origin: string): string {
 export function staticURL(apiUrl: string, file: string): string {
   return siblingURL(apiUrl, `/static/${file}`);
 }
+
+// logoURL is Othra's brand mark, shown in the navbar and the org switcher.
+export function logoURL(apiUrl: string): string {
+  return staticURL(apiUrl, 'altalune-logo.png');
+}

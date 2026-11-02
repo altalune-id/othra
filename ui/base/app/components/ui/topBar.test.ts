@@ -9,14 +9,14 @@ const crumbs = [{ label: 'Acme', to: '/o/acme' }, { label: 'acme-prod', to: '/o/
 describe('topBar', () => {
   it('is the design navbar: menu button on phones, the trail, both search buttons and the quiet controls', async () => {
     const w = mount(TopBar, { props: { crumbs }, slots: { controls: '<select aria-label="Theme family"></select>' } });
-    expect(w.get('.navbar').classes()).toEqual(['navbar', 'min-h-12', 'gap-2', 'border-b', 'border-base-300', 'bg-base-100', 'px-4']);
+    expect(w.get('.navbar').classes()).toEqual(['navbar', 'min-h-12', 'gap-2', 'border-b', 'border-base-300', 'bg-base-100', 'px-3', 'md:px-4']);
     const buttons = w.findAll('button');
     expect(buttons.map(b => b.attributes('aria-label'))).toEqual(['Toggle navigation', 'Search and jump', 'Search and jump, Command K']);
     expect(buttons[0]!.classes()).toContain('lg:hidden');
     expect(buttons[0]!.attributes('aria-controls')).toBe('app-sidebar');
     expect(buttons[0]!.attributes('aria-expanded')).toBe('false');
     expect(buttons[2]!.get('kbd').classes()).toEqual(['kbd', 'kbd-xs']);
-    expect(w.get('nav').classes()).toContain('flex-1');
+    expect(w.get('nav').classes()).toEqual(expect.arrayContaining(['flex-1', 'max-md:hidden']));
     expect(w.get('[aria-current="page"]').text()).toBe('Overview');
     expect(w.find('.hidden.md\\:block select').exists()).toBe(true);
     await buttons[0]!.trigger('click');
@@ -24,6 +24,17 @@ describe('topBar', () => {
     await buttons[2]!.trigger('click');
     expect(w.emitted('menu')).toHaveLength(1);
     expect(w.emitted('search')).toHaveLength(2);
+  });
+});
+
+describe('topBar on a phone', () => {
+  it('names the place in mono with its environment badge instead of the trail', () => {
+    const w = mount(TopBar, { props: { crumbs, place: { label: 'acme-prod', mono: true, badge: 'Production' } } });
+    const name = w.get('.md\\:hidden .truncate');
+    expect(name.text()).toBe('acme-prod');
+    expect(name.classes()).toEqual(['truncate', 'font-medium', 'font-mono', 'text-xs']);
+    expect(w.get('.badge.badge-sm.md\\:hidden').text()).toBe('Production');
+    expect(mount(TopBar, { props: { crumbs, place: { label: 'Acme' } } }).find('.badge').exists()).toBe(false);
   });
 });
 

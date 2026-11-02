@@ -82,7 +82,7 @@ describe('project environment tag', () => {
     expect([...content].map(c => c.tagName.toLowerCase())).toEqual([...(shown ? ['div'] : []), 'console-top-bar-stub', 'main']);
     if (shown) {
       const banner = w.get('[data-testid="environment-banner"]');
-      expect(banner.attributes('role')).toBe('status');
+      expect(banner.attributes('role')).toBe('note');
       expect(banner.classes()).toEqual(expect.arrayContaining(['bg-warning', 'text-warning-content', 'text-ui', 'px-4', 'py-1']));
     }
   });

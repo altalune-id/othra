@@ -22,7 +22,7 @@ export interface UserMenuLabels {
   basic: string;
   profile: string;
   apiKeys: string;
-  language?: string;
+  language: string;
 }
 
 const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys', placement = 'end', version = '', locale = '', locales = [], labels = {
@@ -33,6 +33,7 @@ const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys'
   basic: 'Basic auth',
   profile: 'Profile',
   apiKeys: 'My API keys',
+  language: 'Language',
 } } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, apiKeysUrl?: string, placement?: 'end' | 'top', version?: string, locale?: string, locales?: { code: string, name: string }[], labels?: UserMenuLabels }>();
 
 const emit = defineEmits<{ locale: [code: string] }>();
@@ -64,7 +65,7 @@ const sourceBadge = computed(() => {
       </li>
       <li v-if="locales.length" class="menu-title">
         <label class="font-normal">
-          <span class="sr-only">{{ labels.language ?? 'Language' }}</span>
+          <span class="sr-only">{{ labels.language }}</span>
           <select class="select select-xs w-28" :value="locale" @change="emit('locale', ($event.target as HTMLSelectElement).value)">
             <option v-for="l in locales" :key="l.code" :value="l.code">{{ l.name }}</option>
           </select>

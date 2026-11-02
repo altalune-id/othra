@@ -1,14 +1,17 @@
-import type { Crumb, NavGroup, PaletteItem } from '#base/components/ui/types';
+import type { Crumb, NavGroup, PaletteItem, TopBarPlace } from '#base/components/ui/types';
 import { useAccountNav } from '~/components/account/useAccountNav';
 import { useOrgNav } from '~/components/layout/useOrgNav';
+import { environmentLabelKey } from '~/components/project/environment';
 import { useProjectNav } from '~/components/project/useProjectNav';
 import { useOrgsStore } from '~/stores/orgs';
+import { useProjectsStore } from '~/stores/projects';
 
 // useNavCrumbs derives the top bar trail and the palette entries from the sidebar nav, so a page needs no crumbs of its own.
 export function useNavCrumbs() {
   const route = useRoute();
   const { t } = useI18n();
   const orgs = useOrgsStore();
+  const projects = useProjectsStore();
   const orgNav = useOrgNav();
   const projectNav = useProjectNav();
   const accountNav = useAccountNav();
@@ -52,5 +55,20 @@ export function useNavCrumbs() {
     return items;
   });
 
-  return { crumbs, palette };
+  const place = computed<TopBarPlace | undefined>(() => {
+    if (inAccount.value) {
+      return { label: t('account.title') };
+    }
+    if (!org.value) {
+      return undefined;
+    }
+    if (!project.value) {
+      return { label: org.value.name };
+    }
+    const env = projects.items.find(p => p.orgId === org.value!.id && p.slug === project.value)?.environment;
+    const key = environmentLabelKey(env);
+    return { label: project.value, mono: true, badge: key === 'environment.none' ? undefined : t(key) };
+  });
+
+  return { crumbs, place, palette };
 }

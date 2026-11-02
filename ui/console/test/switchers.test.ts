@@ -38,6 +38,9 @@ describe('org switcher', () => {
     useRecentStore().visit('acme');
     const w = mount(OrgSelector);
     expect(w.get('button[popovertarget]').text()).toContain('Othra/Acme');
+    const logo = w.get('button[popovertarget] img');
+    expect(logo.attributes('src')).toMatch(/\/static\/altalune-logo\.png$/);
+    expect(logo.attributes('alt')).toBe('');
     expect(w.get('.menu-title').text()).toBe('nav.last_opened');
     expect(w.get('button[popovertarget]').classes()).toEqual(expect.arrayContaining(['btn', 'btn-ghost', 'btn-sm', 'w-full', 'justify-between', 'text-ui']));
     expect(w.get('[popover]').classes()).toEqual(expect.arrayContaining(['dropdown', 'card', 'card-sm', 'z-1', 'w-64', 'border', 'border-base-300', 'bg-base-100', 'shadow-sm']));

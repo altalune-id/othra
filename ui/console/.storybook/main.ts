@@ -7,6 +7,7 @@ import { baseAliases } from '../../base/aliases.ts';
 const config: StorybookConfig = {
   stories: ['../app/**/*.stories.@(ts|js)', '../../base/app/**/*.stories.@(ts|js)'],
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
+  staticDirs: [{ from: '../../../internal/web/static', to: '/static' }],
   framework: { name: '@storybook/vue3-vite', options: {} },
   async viteFinal(viteConfig) {
     return {

@@ -4,7 +4,7 @@ import NavbarShell from '#base/components/ui/NavbarShell.vue';
 import ThemeFamilySwitcher from '~/components/layout/ThemeFamilySwitcher.vue';
 import UserMenu from '~/components/layout/UserMenu.vue';
 import { useUserMenu } from '~/components/layout/useUserMenu';
-import { staticURL } from '~/lib/auth/urls';
+import { logoURL } from '~/lib/auth/urls';
 import { useAuthStore } from '~/stores/auth';
 
 const route = useRoute();
@@ -14,7 +14,7 @@ const hasNav = computed(() => !!route.params.org || inAccount.value);
 
 const auth = useAuthStore();
 const { apiUrl } = useRuntimeConfig().public;
-const logoUrl = staticURL(apiUrl, 'altalune-logo.png');
+const logoUrl = logoURL(apiUrl);
 const { me, logoutUrl, labels, locale, languages, setLocale } = useUserMenu();
 onMounted(() => auth.load());
 </script>
