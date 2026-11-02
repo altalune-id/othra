@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
+import { focusWhenShown } from './focusWhenShown';
 import { shellHoldKey } from './shellHold';
 
 const { title, closeLabel = 'Close' } = defineProps<{ title: string, closeLabel?: string }>();
@@ -9,6 +10,7 @@ const open = defineModel<boolean>('open', { default: false });
 const toggleId = `panel-${useId()}`;
 const titleId = `${toggleId}-title`;
 const close = ref<HTMLButtonElement>();
+const side = ref<HTMLElement>();
 let returnTo: HTMLElement | null = null;
 const shell = inject(shellHoldKey, null);
 let holding = false;
@@ -36,7 +38,7 @@ async function sync(now: boolean) {
   if (now) {
     returnTo = document.activeElement as HTMLElement | null;
     document.addEventListener('keydown', onKey);
-    close.value?.focus();
+    focusWhenShown(() => side.value, () => close.value, () => open.value);
     return;
   }
   document.removeEventListener('keydown', onKey);
@@ -62,7 +64,7 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <div class="drawer drawer-end">
       <input :id="toggleId" v-model="open" type="checkbox" class="drawer-toggle" tabindex="-1" aria-hidden="true">
-      <div class="drawer-side z-50">
+      <div ref="side" class="drawer-side z-50">
         <label :for="toggleId" :aria-label="closeLabel" class="drawer-overlay" />
         <aside role="dialog" aria-modal="true" :aria-labelledby="titleId" class="flex min-h-full w-96 max-w-[calc(100vw-2.5rem)] flex-col gap-3 border-s border-base-300 bg-base-100 p-4">
           <div class="flex items-center justify-between gap-2">

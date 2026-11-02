@@ -59,6 +59,20 @@ describe('sidePanel', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it('moves focus to Close only once the drawer side is visible, as the drawer fades in', async () => {
+    const open = ref(false);
+    mount(defineComponent({ setup: () => () => h(SidePanel, { 'title': 'Discovery document', 'closeLabel': 'Close Discovery document', 'open': open.value, 'onUpdate:open': (v: boolean) => (open.value = v) }) }), { attachTo: document.body });
+    const side = panel().querySelector('.drawer-side') as HTMLElement;
+    side.style.visibility = 'hidden';
+    open.value = true;
+    await nextTick();
+    await nextTick();
+    expect(document.activeElement?.getAttribute('aria-label')).not.toBe('Close Discovery document');
+    side.style.visibility = 'visible';
+    await new Promise(resolve => setTimeout(resolve, 60));
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Close Discovery document');
+  });
+
   it('releases the shell when the panel unmounts while open, as on a route change', async () => {
     const open = ref(true);
     const shown = ref(true);
