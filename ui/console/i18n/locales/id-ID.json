@@ -592,6 +592,7 @@
   "secrets.status_current": "Saat ini",
   "secrets.status_old": "Lama, berlaku sampai {date}",
   "settings.read_only": "Hanya pemilik organisasi yang dapat mengubah pengaturan ini.",
+  "settings.subtitle": "Nama dan URL organisasi.",
   "settings.title": "Pengaturan",
   "signin.client_id": "Client ID",
   "signin.client_id_help": "Dari Google Cloud Console → APIs & Services → Credentials.",

@@ -592,6 +592,7 @@
   "secrets.status_current": "Current",
   "secrets.status_old": "Old, works until {date}",
   "settings.read_only": "Only org owners can change these settings.",
+  "settings.subtitle": "The organization's name and URL.",
   "settings.title": "Settings",
   "signin.client_id": "Client ID",
   "signin.client_id_help": "From Google Cloud Console → APIs & Services → Credentials.",

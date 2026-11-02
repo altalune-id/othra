@@ -74,7 +74,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
 
 <template>
   <div v-if="org" class="flex max-w-2xl flex-col gap-5">
-    <PageHeader :title="t('settings.title')">
+    <PageHeader :title="t('settings.title')" :description="t('settings.subtitle')">
       <template v-if="system" #meta>
         <SystemBadge :label="t('common.system')" />
       </template>
