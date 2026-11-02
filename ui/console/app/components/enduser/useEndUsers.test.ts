@@ -48,6 +48,19 @@ describe('useEndUserList', () => {
     expect(l.loading.value).toBe(false);
   });
 
+  it('keeps loaded rows when the next page fails, and retries that page', async () => {
+    setKnownKeys('apperror.GEN900');
+    listEndUsers.mockReset().mockResolvedValueOnce({ endUsers: [ana], next: 'c1' }).mockRejectedValueOnce(connectError('GEN900')).mockResolvedValueOnce({ endUsers: [budi], next: '' });
+    const l = useEndUserList(projectId);
+    await l.load();
+    await l.more();
+    expect(l.users.value.map(u => u.email)).toEqual(['ana@acme.test']);
+    expect(l.loadError.value?.message).toBe('apperror.GEN900');
+    await l.retry();
+    expect(listEndUsers).toHaveBeenLastCalledWith({ projectId, query: '', limit: 50, after: 'c1' });
+    expect(l.users.value.map(u => u.email)).toEqual(['ana@acme.test', 'budi@acme.test']);
+  });
+
   it('drops an older answer that lands after a newer search', async () => {
     const slow = deferred<object>();
     listEndUsers.mockReset().mockReturnValueOnce(slow.promise).mockResolvedValueOnce({ endUsers: [budi], next: '' });

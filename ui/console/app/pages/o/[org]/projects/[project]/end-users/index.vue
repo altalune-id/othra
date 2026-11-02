@@ -40,7 +40,7 @@ void list.load();
 </script>
 
 <template>
-  <div class="flex max-w-4xl flex-col gap-4">
+  <div class="flex flex-col gap-4">
     <PageHeader :title="t('endusers.title')" :description="t('endusers.subtitle')" />
     <form role="search" class="flex items-center gap-2" @submit.prevent="list.load()">
       <SearchInput v-model="query" :label="t('endusers.search')" class="w-full sm:w-64" />
@@ -48,9 +48,8 @@ void list.load();
         {{ t('endusers.search_action') }}
       </AppButton>
     </form>
-    <LoadError :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
     <EmptyState v-if="!loading && users.length === 0 && !loadError" :icon="shown ? 'lucide:search-x' : 'lucide:users'" :title="shown ? t('endusers.none_found') : t('endusers.empty')" />
-    <DataTable v-else-if="!loadError && users.length" :caption="t('endusers.title')" row-key="id" :columns="columns" :rows="users" data-testid="end-users">
+    <DataTable v-else-if="users.length" :caption="t('endusers.title')" row-key="id" :columns="columns" :rows="users" data-testid="end-users">
       <template #cell-email="{ row }">
         <NuxtLink :to="`${base}/${row.id}`" class="link link-hover font-medium break-all">
           {{ row.email }}
@@ -66,8 +65,9 @@ void list.load();
         <span class="whitespace-nowrap tabular-nums text-base-content/70">{{ date(row.createdAt) }}</span>
       </template>
     </DataTable>
+    <LoadError :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.retry()" />
     <LoadingStatus v-if="loading" :label="t('common.loading')" />
-    <AppButton v-else-if="next" variant="plain" size="sm" class="self-start" @click="list.more()">
+    <AppButton v-else-if="next && !loadError" variant="plain" size="sm" class="self-start" @click="list.more()">
       {{ t('endusers.more') }}
     </AppButton>
   </div>

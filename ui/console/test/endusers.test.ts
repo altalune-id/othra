@@ -99,6 +99,19 @@ describe('end users list', () => {
   });
 });
 
+describe('end users load more', () => {
+  it('keeps the loaded rows when the next page fails, with Retry under them', async () => {
+    setKnownKeys('apperror.GEN900');
+    endUsers.listEndUsers!.mockResolvedValueOnce({ endUsers: [ana], next: 'c1' }).mockRejectedValueOnce(connectError('GEN900'));
+    const w = await mountPage(EndUserList);
+    await w.findAll('button').find(b => b.text().includes('endusers.more'))!.trigger('click');
+    await new Promise(r => setTimeout(r));
+    expect(w.findAll('[data-testid="end-users"] tbody tr')).toHaveLength(1);
+    expect(w.get('[role="alert"]').text()).toContain('apperror.GEN900');
+    expect(w.findAll('button').some(b => b.text().includes('endusers.more'))).toBe(false);
+  });
+});
+
 describe('end user detail', () => {
   it('shows every section through the shared rows, with the admin\'s sign-in line and copy', async () => {
     const w = await mountPage(EndUserDetail);

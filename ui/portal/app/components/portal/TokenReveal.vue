@@ -12,8 +12,8 @@ const { t } = useI18n();
 <template>
   <section class="card border border-base-300 bg-base-100" data-testid="reveal">
     <div class="card-body gap-3">
-      <p class="flex items-start gap-1 text-sm">
-        <Icon name="lucide:triangle-alert" size="14" class="mt-0.5 shrink-0 text-warning" />
+      <p class="flex items-start gap-2 text-ui">
+        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
         {{ t('tokens.reveal_warning') }}
       </p>
       <SecretField :value="secret" :label="t('common.copy')" />

@@ -10,7 +10,7 @@ const { when } = useDates();
 </script>
 
 <template>
-  <li class="list-row items-center">
+  <li class="list-row items-center text-ui">
     <Icon name="lucide:monitor-smartphone" size="20" />
     <div class="min-w-0">
       <p class="flex flex-wrap items-center gap-2 font-medium" :title="session.userAgent">

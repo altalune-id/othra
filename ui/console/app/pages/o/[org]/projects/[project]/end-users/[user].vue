@@ -49,7 +49,7 @@ if (notFound.value) {
 
 <template>
   <div class="flex max-w-4xl flex-col gap-5">
-    <PageHeader :title="user?.email ?? ''" mono :description="canRevoke ? t('endusers.detail_subtitle_revoke') : t('endusers.detail_subtitle_read')" />
+    <PageHeader :title="user?.email ?? ''" :description="canRevoke ? t('endusers.detail_subtitle_revoke') : t('endusers.detail_subtitle_read')" />
     <LoadError :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="detail.load()" />
 
     <template v-if="ready && user">
@@ -70,6 +70,7 @@ if (notFound.value) {
         <ul v-else class="list" data-testid="end-user-sessions">
           <SessionRow v-for="s in sessions" :key="s.id" :session="s">
             <AppButton v-if="canRevoke" variant="ghost" size="sm" @click="endSession.ask(s)">
+              <Icon name="lucide:log-out" size="16" class="shrink-0 text-error" aria-hidden="true" />
               {{ t('endusers.sign_out') }}
             </AppButton>
           </SessionRow>
@@ -84,6 +85,7 @@ if (notFound.value) {
           <li v-for="app in apps" :key="app.clientId" class="list-row">
             <AppAccess :app="app" :signs-in="t('endusers.signs_in')" class="list-col-grow">
               <AppButton v-if="canRevoke" variant="ghost" size="sm" class="shrink-0" @click="disconnect.ask(app)">
+                <Icon name="lucide:unplug" size="16" class="shrink-0 text-error" aria-hidden="true" />
                 {{ t('apps.disconnect') }}
               </AppButton>
             </AppAccess>
@@ -98,6 +100,7 @@ if (notFound.value) {
         <ul v-else class="list" data-testid="end-user-tokens">
           <TokenRow v-for="tok in tokens" :key="tok.id" :token="tok">
             <AppButton v-if="canRevoke && tok.status === 'active'" variant="ghost" size="sm" @click="revokeToken.ask(tok)">
+              <Icon name="lucide:ban" size="16" class="shrink-0 text-error" aria-hidden="true" />
               {{ t('common.revoke') }}
             </AppButton>
           </TokenRow>

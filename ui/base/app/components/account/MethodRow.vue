@@ -13,14 +13,14 @@ const email = computed(() => (row.linked ? methodEmail(row, accountEmail) : ''))
 </script>
 
 <template>
-  <li class="list-row items-center">
+  <li class="list-row items-center text-ui">
     <GoogleLogo v-if="row.key === 'google'" />
     <Icon v-else name="lucide:mail" size="20" />
     <div class="min-w-0">
       <p class="font-medium">
         {{ t(row.labelKey) }}
       </p>
-      <p v-if="email" class="text-sm break-all text-base-content/70">
+      <p v-if="email" class="text-xs break-all text-base-content/70">
         {{ email }}
       </p>
       <p v-if="row.key === 'google'" class="text-xs text-base-content/70">

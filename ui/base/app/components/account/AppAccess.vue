@@ -9,7 +9,7 @@ const { date, when } = useDates();
 </script>
 
 <template>
-  <div class="min-w-0 space-y-3">
+  <div class="min-w-0 space-y-3 text-ui">
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
         <p class="font-semibold break-words">
@@ -25,13 +25,13 @@ const { date, when } = useDates();
       <p class="text-xs font-medium text-base-content/70">
         {{ t('apps.access') }}
       </p>
-      <ul class="mt-1 space-y-2 text-sm">
+      <ul class="mt-1 space-y-2">
         <li v-if="app.signsIn">
           {{ signsIn }}
         </li>
         <li v-for="line in app.access" :key="line.server">
           <span class="font-medium">{{ line.server }}</span>
-          <ul class="ml-4 list-disc">
+          <ul class="ml-4 [list-style-type:disc]">
             <li v-for="item in line.items" :key="item">
               {{ item }}
             </li>
