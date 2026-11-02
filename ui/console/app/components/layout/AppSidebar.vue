@@ -16,14 +16,14 @@ const label = computed(() => orgs.bySlug(route.params.org as string)?.name ?? ''
 const groups = computed<NavGroup[]>(() => [
   {
     items: [
-      { key: 'overview', label: t('nav.overview'), to: base.value, icon: 'lucide:layout-dashboard', active: route.path === base.value },
-      { key: 'projects', label: t('nav.projects'), to: `${base.value}/projects`, icon: 'lucide:folder', active: route.path.startsWith(`${base.value}/projects`) },
+      { key: 'overview', label: t('nav.overview'), to: base.value, icon: 'lucide:building-complex', active: route.path === base.value },
+      { key: 'projects', label: t('nav.projects'), to: `${base.value}/projects`, icon: 'lucide:folders', active: route.path.startsWith(`${base.value}/projects`) },
     ],
   },
   {
     label: t('settings.title'),
     items: [
-      { key: 'general', label: t('nav.general'), to: settings.value, icon: 'lucide:sliders-horizontal', active: route.path === settings.value },
+      { key: 'general', label: t('nav.general'), to: settings.value, icon: 'lucide:settings', active: route.path === settings.value },
       { key: 'members', label: t('members.title'), to: `${settings.value}/members`, icon: 'lucide:users', active: route.path.startsWith(`${settings.value}/members`) },
       { key: 'api-keys', label: t('apikeys.title'), to: `${settings.value}/api-keys`, icon: 'lucide:key-round', active: route.path.startsWith(`${settings.value}/api-keys`) },
     ],
@@ -40,7 +40,7 @@ const groups = computed<NavGroup[]>(() => [
       </div>
     </template>
     <template v-if="appVersion" #footer>
-      Othra v{{ appVersion }}
+      <span class="px-2 text-xs text-base-content/70">Othra v{{ appVersion }}</span>
     </template>
   </SidebarNav>
 </template>

@@ -25,7 +25,7 @@ function item(key: string, label: string, path: string, icon: string, exact = fa
 }
 
 const groups = computed<NavGroup[]>(() => [
-  { items: [item('overview', t('nav.overview'), '', 'lucide:layout-dashboard', true)] },
+  { items: [item('overview', t('nav.overview'), '', 'lucide:activity', true)] },
   {
     label: t('nav.group_applications'),
     items: [
@@ -33,7 +33,7 @@ const groups = computed<NavGroup[]>(() => [
       item('resource-servers', t('nav.resource_servers'), '/resource-servers', 'lucide:server'),
     ],
   },
-  ...(canSeeEndUsers.value ? [{ label: t('nav.group_people'), items: [item('end-users', t('nav.end_users'), '/end-users', 'lucide:users')] }] : []),
+  ...(canSeeEndUsers.value ? [{ label: t('nav.group_people'), items: [item('end-users', t('nav.end_users'), '/end-users', 'lucide:user-round')] }] : []),
   {
     label: t('nav.group_signin'),
     items: [
@@ -46,7 +46,7 @@ const groups = computed<NavGroup[]>(() => [
     label: t('nav.group_security'),
     items: [
       item('keys', t('keys.title'), '/settings/keys', 'lucide:key-square'),
-      item('issuer', t('issuer.title'), '/settings/issuer', 'lucide:fingerprint'),
+      item('issuer', t('issuer.title'), '/settings/issuer', 'lucide:badge-check'),
     ],
   },
   { label: t('nav.group_developers'), items: [item('webhooks', t('webhooks.title'), '/webhooks', 'lucide:webhook')] },
@@ -66,7 +66,7 @@ const groups = computed<NavGroup[]>(() => [
       </div>
     </template>
     <template v-if="appVersion" #footer>
-      Othra v{{ appVersion }}
+      <span class="px-2 text-xs text-base-content/70">Othra v{{ appVersion }}</span>
     </template>
   </SidebarNav>
 </template>
