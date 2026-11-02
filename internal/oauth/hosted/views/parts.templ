@@ -47,6 +47,47 @@ templ iconMail(class string) {
 	}
 }
 
+// iconTile is the square tile above a hosted page's title when the page shows an icon instead of the project's brand.
+templ iconTile(icon templ.Component) {
+	<span class="grid size-10 place-items-center rounded-field bg-base-200" aria-hidden="true">
+		@icon
+	</span>
+}
+
+templ iconDevice() {
+	@svgIcon("mt-0.5 size-4") {
+		<rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
+		<path d="M12 18h.01"></path>
+	}
+}
+
+templ iconClock() {
+	@svgIcon("mt-0.5 size-4") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<polyline points="12 6 12 12 16 14"></polyline>
+	}
+}
+
+templ iconInbox() {
+	@svgIcon("mt-0.5 size-4") {
+		<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+		<path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+	}
+}
+
+templ iconArrowRight() {
+	@svgIcon("size-4 text-base-content/70") {
+		<path d="M5 12h14"></path>
+		<path d="m12 5 7 7-7 7"></path>
+	}
+}
+
+templ iconCheckSmall() {
+	@svgIcon("mt-0.5 size-4 text-success") {
+		<path d="M20 6 9 17l-5-5"></path>
+	}
+}
+
 templ iconCircle() {
 	<div class="flex size-12 items-center justify-center self-center rounded-full bg-base-200">
 		{ children... }

@@ -78,8 +78,8 @@ func TestLayout_WithoutBrandLooksAsToday(t *testing.T) {
 	assert.Contains(t, html, "<title>Sign in · Othra</title>")
 	assert.NotContains(t, html, "<style")
 	assert.NotContains(t, html, "data-brand")
-	assert.NotContains(t, html, "brand-header")
-	assert.Contains(t, html, `<h1 class="text-2xl font-semibold break-words max-sm:text-xl">Sign in</h1><p>body</p>`)
+	assert.NotContains(t, html, "brand-tile")
+	assert.Contains(t, html, `<h1 class="text-2xl font-semibold text-balance break-words">Sign in</h1></div><p>body</p>`)
 }
 
 func TestLayout_WithBrand(t *testing.T) {
@@ -91,8 +91,8 @@ func TestLayout_WithBrand(t *testing.T) {
 	assert.Contains(t, html, `<html lang="id-ID" data-theme="othra-light" data-brand>`)
 	assert.Contains(t, html, "<title>Sign in · Acme &lt;Store&gt;</title>")
 	assert.Contains(t, html, `<style nonce="n0nce">:root{--color-primary:#1e3a8a;--color-primary-content:#ffffff}</style></head>`)
-	assert.Contains(t, html, `data-testid="brand-header"`)
-	assert.Less(t, strings.Index(html, "brand-header"), strings.Index(html, "<h1"), "the brand header tops the card")
+	assert.Contains(t, html, `data-testid="brand-tile"`)
+	assert.Less(t, strings.Index(html, "brand-tile"), strings.Index(html, "<h1"), "the brand tile sits above the title")
 	assert.Contains(t, html, `<a class="link" href="https://acme.test/terms" target="_blank" rel="noopener noreferrer">Terms of Service<span class="sr-only"> (opens in a new tab)</span></a>`)
 	assert.NotContains(t, html, "Privacy Policy")
 	assert.NotContains(t, html, "style=")
@@ -105,16 +105,25 @@ func TestLayout_BrandWithoutColourOrLinks(t *testing.T) {
 	assert.NotContains(t, html, "<nav")
 }
 
-func TestBrandHeader(t *testing.T) {
-	logo := render(t, t.Context(), BrandHeader(&Brand{Name: "Acme Store", LogoURL: "/p/acme/logo.png"}))
-	assert.Contains(t, logo, `<img src="/p/acme/logo.png" alt="" class="h-10 w-auto max-w-40 object-contain" width="160" height="40">`)
-	assert.Contains(t, logo, `<span class="truncate text-sm font-semibold" title="Acme Store">Acme Store</span>`)
+func TestBrandTile(t *testing.T) {
+	logo := render(t, t.Context(), BrandTile(&Brand{Name: "Acme Store", LogoURL: "/p/acme/logo.png"}))
+	assert.Contains(t, logo, `<img src="/p/acme/logo.png" alt="Acme Store" class="size-10 rounded-field border border-base-300 bg-base-100 object-contain p-1" width="40" height="40" data-testid="brand-tile">`)
 
-	letter := render(t, t.Context(), BrandHeader(&Brand{Name: "émile"}))
+	letter := render(t, t.Context(), BrandTile(&Brand{Name: "émile"}))
 	assert.NotContains(t, letter, "<img")
-	assert.Contains(t, letter, `aria-hidden="true">É</span>`)
+	assert.Contains(t, letter, `role="img" aria-label="émile" data-testid="brand-tile">É</span>`)
 
-	assert.NotContains(t, render(t, t.Context(), BrandHeader(&Brand{})), "aria-hidden=\"true\">?")
+	assert.Empty(t, render(t, t.Context(), BrandTile(&Brand{})))
+}
+
+func TestBrandFooter_IssuerHost(t *testing.T) {
+	b := &Brand{Name: "Acme", Issuer: "https://id.example/p/acme"}
+	assert.Equal(t, "id.example/p/acme", b.IssuerHost())
+	assert.Equal(t, "plain", (&Brand{Issuer: "plain"}).IssuerHost())
+	out := render(t, t.Context(), brandFooter(b))
+	assert.Contains(t, out, `<span class="font-mono break-all">id.example/p/acme</span>`)
+	assert.NotContains(t, out, "<nav", "no legal links, no nav")
+	assert.Equal(t, `<div aria-hidden="true"></div>`, render(t, t.Context(), brandFooter(&Brand{})))
 }
 
 func TestCSRFInput(t *testing.T) {
@@ -147,8 +156,8 @@ func TestBrandComponentsReturnWriteErrors(t *testing.T) {
 		ctx context.Context
 	}{
 		"branded layout": {Layout(LayoutData{Title: "T", Brand: b}), templ.WithChildren(ctx, card)},
-		"logo header":    {BrandHeader(b), ctx},
-		"letter header":  {BrandHeader(&Brand{Name: "Acme"}), ctx},
+		"logo tile":      {BrandTile(b), ctx},
+		"letter tile":    {BrandTile(&Brand{Name: "Acme"}), ctx},
 		"footer":         {brandFooter(b), ctx},
 		"consent":        {Consent(LayoutData{}, ConsentData{Required: true}), ctx},
 		"consent note":   {Consent(LayoutData{}, ConsentData{}), ctx},
@@ -186,13 +195,13 @@ func TestLayout_Refresh(t *testing.T) {
 	assert.NotContains(t, page(t, t.Context(), LayoutData{Title: "T"}), "http-equiv", "no refresh unless asked")
 }
 
-func TestCardWith_PutsTheLeadInTheTitleRow(t *testing.T) {
+func TestCardWith_PutsTheLeadAboveTheTitle(t *testing.T) {
 	lead := templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
 		_, err := io.WriteString(w, `<span class="mark">C</span>`)
 		return err
 	})
 	html := render(t, t.Context(), CardWith("Allow it?", lead))
-	assert.Contains(t, html, `<div class="flex items-center gap-3"><span class="mark">C</span><h1 class="text-2xl font-semibold break-words max-sm:text-xl">Allow it?</h1></div>`)
+	assert.Contains(t, html, `<div class="flex flex-col gap-3"><span class="mark">C</span><h1 class="text-2xl font-semibold text-balance break-words">Allow it?</h1></div>`)
 	assert.Equal(t, render(t, t.Context(), Card("Plain")), render(t, t.Context(), CardWith("Plain", nil)), "Card is CardWith without a lead")
 }
 

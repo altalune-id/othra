@@ -110,7 +110,7 @@ func TestCardTemplate(t *testing.T) {
 	require.NoError(t, Card("Welcome & hi").Render(ctx, &buf))
 	out := buf.String()
 
-	assert.Contains(t, out, `<h1 class="text-2xl font-semibold break-words max-sm:text-xl">Welcome &amp; hi</h1>`)
+	assert.Contains(t, out, `<h1 class="text-2xl font-semibold text-balance break-words">Welcome &amp; hi</h1>`)
 	assert.Contains(t, out, "<p>body</p>")
 }
 
@@ -118,7 +118,7 @@ func TestErrorTemplate(t *testing.T) {
 	out := renderString(t, Error(Kit{BasePath: "/app"}.Layout("Oops"), "Try <again>"))
 
 	assert.Contains(t, out, "<title>Oops · Othra</title>")
-	assert.Contains(t, out, `<h1 class="text-2xl font-semibold break-words max-sm:text-xl">Oops</h1>`)
+	assert.Contains(t, out, `<h1 class="text-2xl font-semibold text-balance break-words">Oops</h1>`)
 	assert.Contains(t, out, "<p>Try &lt;again&gt;</p>")
 	assert.Contains(t, out, `href="/app/console/"`)
 }

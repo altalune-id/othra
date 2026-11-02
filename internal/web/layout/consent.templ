@@ -30,11 +30,12 @@ templ sentence(parts []sentencePart) {
 		if p.URL == "" {
 			{ p.Text }
 		} else {
-			@newTabLink(p.URL, p.Text)
+			@NewTabLink(p.URL, p.Text)
 		}
 	}
 }
 
-templ newTabLink(href, label string) {
+// NewTabLink is a link that opens in a new tab and says so to screen readers.
+templ NewTabLink(href, label string) {
 	<a class="link" href={ templ.SafeURL(href) } target="_blank" rel="noopener noreferrer">{ label }<span class="sr-only">{ " " + i18n.T(ctx, "common.opens_new_tab") }</span></a>
 }

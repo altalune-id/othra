@@ -79,7 +79,7 @@ func TestConsent_RememberedConfidential(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
 	page := f.toConsent(f.client, reqURL())
-	assert.NotContains(t, page.body, "127.0.0.1")
+	assert.NotContains(t, page.body, `font-medium break-all">127.0.0.1`, "no loopback host for a registered web client")
 	f.follow(f.client, f.submit(f.client, page, "/consent", nil))
 	p := f.get(f.client, reqURL())
 	assert.Equal(t, http.StatusFound, p.status)

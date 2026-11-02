@@ -181,7 +181,7 @@ func (h *Web) layout(r *http.Request, s *site) layout.LayoutData {
 		logo = h.cfg.LogoURL(s.issuer.LogoKey)
 	}
 	d.Brand = layout.NewBrand(s.name, logo, s.issuer.PrimaryColor)
-	d.Brand.TermsURL, d.Brand.PrivacyURL = s.issuer.TermsURL, s.issuer.PrivacyURL
+	d.Brand.TermsURL, d.Brand.PrivacyURL, d.Brand.Issuer = s.issuer.TermsURL, s.issuer.PrivacyURL, s.issuerURL
 	return d
 }
 

@@ -2,17 +2,13 @@ package layout
 
 import "github.com/altalune-id/othra/internal/web/i18n"
 
-// BrandHeader is the project's logo, or a letter avatar, and name at the top of a hosted card.
-templ BrandHeader(b *Brand) {
-	<div class="flex min-w-0 items-center gap-3" data-testid="brand-header">
-		if b.LogoURL != "" {
-			<img src={ b.LogoURL } alt="" class="h-10 w-auto max-w-40 object-contain" width="160" height="40"/>
-		} else {
-			<span class="flex size-10 shrink-0 items-center justify-center rounded-box bg-base-200 text-lg font-semibold" aria-hidden="true">{ b.initial() }</span>
-		}
-		<span class="truncate text-sm font-semibold" title={ b.Name }>{ b.Name }</span>
-	</div>
-	<div class="divider my-0"></div>
+// BrandTile is the project's logo, or its initial on the brand colour, in a square tile above a hosted page's title.
+templ BrandTile(b *Brand) {
+	if b.LogoURL != "" {
+		<img src={ b.LogoURL } alt={ b.Name } class="size-10 rounded-field border border-base-300 bg-base-100 object-contain p-1" width="40" height="40" data-testid="brand-tile"/>
+	} else if b.initial() != "" {
+		<span class="grid size-10 place-items-center rounded-field bg-primary text-lg font-semibold text-primary-content" role="img" aria-label={ b.Name } data-testid="brand-tile">{ b.initial() }</span>
+	}
 }
 
 // CSRFInput is the hidden field that carries a hosted form's CSRF token; it renders nothing without a token.
@@ -28,14 +24,25 @@ templ MailButton(href, label, primary string) {
 }
 
 templ brandFooter(b *Brand) {
-	if b.TermsURL != "" || b.PrivacyURL != "" {
-		<nav class="flex gap-3 text-xs text-base-content/70">
-			if b.TermsURL != "" {
-				@newTabLink(b.TermsURL, i18n.T(ctx, "terms.terms_link"))
+	if b.TermsURL != "" || b.PrivacyURL != "" || b.IssuerHost() != "" {
+		<footer class="flex w-full max-w-100 flex-wrap items-center justify-between gap-3 text-xs text-base-content/70">
+			if b.TermsURL != "" || b.PrivacyURL != "" {
+				<nav class="flex gap-3">
+					if b.TermsURL != "" {
+						@NewTabLink(b.TermsURL, i18n.T(ctx, "terms.terms_link"))
+					}
+					if b.PrivacyURL != "" {
+						@NewTabLink(b.PrivacyURL, i18n.T(ctx, "terms.privacy_link"))
+					}
+				</nav>
+			} else {
+				<span></span>
 			}
-			if b.PrivacyURL != "" {
-				@newTabLink(b.PrivacyURL, i18n.T(ctx, "terms.privacy_link"))
+			if b.IssuerHost() != "" {
+				<span class="font-mono break-all">{ b.IssuerHost() }</span>
 			}
-		</nav>
+		</footer>
+	} else {
+		<div aria-hidden="true"></div>
 	}
 }
