@@ -90,7 +90,7 @@ func TestLayoutTemplate(t *testing.T) {
 	out := buf.String()
 
 	assert.Contains(t, out, "<!doctype html>")
-	assert.Contains(t, out, `<html lang="id" data-theme="othra-light">`)
+	assert.Contains(t, out, `<html lang="id">`)
 	assert.Contains(t, out, "<title>Home &lt;x&gt; · Othra</title>")
 	assert.Contains(t, out, `href="/app/static/favicon.ico"`)
 	assert.Contains(t, out, `href="/app/static/favicon-32x32.png"`)
@@ -110,7 +110,7 @@ func TestCardTemplate(t *testing.T) {
 	require.NoError(t, Card("Welcome & hi").Render(ctx, &buf))
 	out := buf.String()
 
-	assert.Contains(t, out, `<h1 class="text-2xl font-semibold break-words max-sm:text-xl">Welcome &amp; hi</h1>`)
+	assert.Contains(t, out, `<h1 class="text-2xl font-semibold text-balance break-words">Welcome &amp; hi</h1>`)
 	assert.Contains(t, out, "<p>body</p>")
 }
 
@@ -118,7 +118,7 @@ func TestErrorTemplate(t *testing.T) {
 	out := renderString(t, Error(Kit{BasePath: "/app"}.Layout("Oops"), "Try <again>"))
 
 	assert.Contains(t, out, "<title>Oops · Othra</title>")
-	assert.Contains(t, out, `<h1 class="text-2xl font-semibold break-words max-sm:text-xl">Oops</h1>`)
+	assert.Contains(t, out, `<h1 class="text-2xl font-semibold text-balance break-words">Oops</h1>`)
 	assert.Contains(t, out, "<p>Try &lt;again&gt;</p>")
 	assert.Contains(t, out, `href="/app/console/"`)
 }
@@ -288,4 +288,18 @@ func TestTemplatesReturnChildErrors(t *testing.T) {
 		var buf bytes.Buffer
 		assert.ErrorIs(t, c.Render(ctx, &buf), errWriteLimit)
 	}
+}
+
+func TestLayoutData_StaticVersion(t *testing.T) {
+	plain := LayoutData{BasePath: "/x"}
+	assert.Equal(t, "/x/static/app.css", plain.Static("/app.css"), "no Version: today's URL")
+	versioned := LayoutData{BasePath: "/x", Version: func(name string) string {
+		if name == "app.css" {
+			return "abc123"
+		}
+		return ""
+	}}
+	assert.Equal(t, "/x/static/app.css?v=abc123", versioned.Static("/app.css"))
+	assert.Equal(t, "/x/static/missing.js", versioned.Static("/missing.js"), "an unknown file stays plain")
+	assert.Equal(t, "/x/static/app.css?v=abc123", Kit{BasePath: "/x", Version: versioned.Version}.Layout("T").Static("/app.css"), "Kit.Layout carries Version")
 }

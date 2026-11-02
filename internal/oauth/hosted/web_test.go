@@ -212,7 +212,7 @@ func TestWeb_FirstSignIn(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, "/p/acme/login")
 	assert.Equal(t, http.StatusOK, login.status)
-	assert.Contains(t, login.body, "Sign in to continue to Acme.")
+	assert.Contains(t, login.body, ">Sign in to Acme</h1>")
 	assert.Equal(t, "no-store", login.header.Get("Cache-Control"))
 	assert.Equal(t, "no-referrer", login.header.Get("Referrer-Policy"))
 
@@ -494,7 +494,7 @@ func TestWeb_Indonesian(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, "/p/acme/login", "Accept-Language", "id-ID,id;q=0.9")
 	assert.Contains(t, login.body, `lang="id-ID"`)
-	assert.Contains(t, login.body, "Masuk untuk melanjutkan ke Acme.")
+	assert.Contains(t, login.body, ">Masuk ke Acme</h1>")
 	assert.Contains(t, login.body, "Lanjutkan dengan email")
 }
 
@@ -894,4 +894,10 @@ func TestWeb_Portal(t *testing.T) {
 	none.web.portalPage = nil
 	none.signIn(none.client, "acme", "ana@example.com")
 	assert.Equal(t, http.StatusNotFound, none.get(none.client, "/p/acme/account/").status, "without a portal build there is no account page")
+}
+
+func TestLayout_VersionsStaticAssets(t *testing.T) {
+	h := &Web{kit: layout.Kit{Version: func(name string) string { return "v-" + name }}}
+	d := h.layout(httptest.NewRequest(http.MethodGet, "/p/acme/login", nil), nil)
+	assert.Equal(t, "/static/app.css?v=v-app.css", d.Static("/app.css"), "hosted pages build LayoutData by hand, so they copy the kit's Version")
 }

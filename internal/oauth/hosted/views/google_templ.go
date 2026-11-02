@@ -103,7 +103,7 @@ func googleStart(d layout.LayoutData, s Site, token, returnTo string) templ.Comp
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<button class=\"btn-google\" type=\"submit\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<button class=\"btn w-full gap-2.5 font-['Google_Sans_Flex',Roboto,Arial,sans-serif] text-sm/5 font-medium [--btn-color:#f2f2f2] [--btn-fg:#1f1f1f]\" type=\"submit\" data-google>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

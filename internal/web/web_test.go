@@ -89,18 +89,23 @@ func TestRoutes_UnknownPathIs404(t *testing.T) {
 func TestStaticAssets(t *testing.T) {
 	builtAsset(t, "app.css")
 	builtAsset(t, "password.js")
+	builtAsset(t, "lang.js")
 	for _, base := range []string{"", "/app"} {
 		srv := NewServer(ServerOpts{BasePath: base})
 
 		rec := get(t, srv, base+"/static/app.css")
 		assert.Equal(t, http.StatusOK, rec.Code, base)
 		assert.Equal(t, "text/css; charset=utf-8", rec.Header().Get("Content-Type"))
-		assert.Equal(t, "public, max-age=3600", rec.Header().Get("Cache-Control"))
+		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
 		assert.NotEmpty(t, rec.Body.String())
 
 		rec = get(t, srv, base+"/static/favicon.ico")
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, []string{"image/x-icon", "image/vnd.microsoft.icon"}, rec.Header().Get("Content-Type"))
+
+		rec = get(t, srv, base+"/static/fonts/ibm-plex-sans-latin-400-normal.woff2")
+		assert.Equal(t, http.StatusOK, rec.Code, "hosted pages load IBM Plex from the binary, not a CDN")
+		assert.Equal(t, "font/woff2", rec.Header().Get("Content-Type"))
 
 		rec = get(t, srv, base+"/static/altalune-logo.png")
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -110,9 +115,11 @@ func TestStaticAssets(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "image/svg+xml", rec.Header().Get("Content-Type"))
 
-		rec = get(t, srv, base+"/static/password.js")
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, "text/javascript; charset=utf-8", rec.Header().Get("Content-Type"))
+		for _, js := range []string{"/static/password.js", "/static/lang.js"} {
+			rec = get(t, srv, base+js)
+			assert.Equal(t, http.StatusOK, rec.Code, js)
+			assert.Equal(t, "text/javascript; charset=utf-8", rec.Header().Get("Content-Type"))
+		}
 
 		assert.Equal(t, http.StatusNotFound, get(t, srv, base+"/static/missing.css").Code)
 	}

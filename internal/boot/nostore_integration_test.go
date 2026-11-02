@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/altalune-id/othra/internal/web"
 )
 
 // SECURITY: a browser that caches a pre-sign-in page replays its verdict (a 410 for a later valid invite) without asking the server.
@@ -33,7 +35,7 @@ func TestPreSignInRoutesAreNeverCached(t *testing.T) {
 		assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"), "%s %s answered %d", tc.method, tc.path, rec.Code)
 	}
 
-	rec := l.do(http.MethodGet, "/static/favicon.ico", nil, "")
+	rec := l.do(http.MethodGet, "/static/favicon.ico?v="+web.StaticVersion("favicon.ico"), nil, "")
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, "public, max-age=3600", rec.Header().Get("Cache-Control"), "static assets keep their cache")
+	assert.Equal(t, "public, max-age=31536000, immutable", rec.Header().Get("Cache-Control"), "versioned static assets keep their cache")
 }

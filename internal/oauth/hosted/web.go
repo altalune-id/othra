@@ -172,7 +172,7 @@ func (h *Web) site(i *project.Issuer) *site {
 }
 
 func (h *Web) layout(r *http.Request, s *site) layout.LayoutData {
-	d := layout.LayoutData{BasePath: h.cfg.BasePath, Lang: i18n.Locale(r.Context())}
+	d := layout.LayoutData{BasePath: h.cfg.BasePath, Lang: i18n.Locale(r.Context()), Version: h.kit.Version}
 	if s == nil {
 		return d
 	}
@@ -181,7 +181,7 @@ func (h *Web) layout(r *http.Request, s *site) layout.LayoutData {
 		logo = h.cfg.LogoURL(s.issuer.LogoKey)
 	}
 	d.Brand = layout.NewBrand(s.name, logo, s.issuer.PrimaryColor)
-	d.Brand.TermsURL, d.Brand.PrivacyURL = s.issuer.TermsURL, s.issuer.PrivacyURL
+	d.Brand.TermsURL, d.Brand.PrivacyURL, d.Brand.Issuer = s.issuer.TermsURL, s.issuer.PrivacyURL, s.issuerURL
 	return d
 }
 
@@ -346,10 +346,11 @@ func (h *Web) sendLink(
 		}
 		return true, nil
 	}
+	client := h.pending(r, s, returnTo).registeredName()
 	l, _, err := h.users.IssueLink(r.Context(), IssueRequest{
 		Project: s.project(), Email: email, ReturnTo: returnTo, IP: layout.ClientIP(r, h.limits.TrustedProxyHops),
 		Compose: func(l Link) (mailer.Message, error) {
-			return h.compose(r, s, l, h.pending(r, s, returnTo).registeredName(), pending)
+			return h.compose(r, s, l, client, pending)
 		},
 		Allow: allow, Pending: raw,
 	})
@@ -746,25 +747,29 @@ func (h *Web) toPage(w http.ResponseWriter, r *http.Request, s *site, p page, qu
 	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: a fixed page under this issuer's path.
 }
 
-// SECURITY: RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked.
 func (h *Web) toReturnTo(w http.ResponseWriter, r *http.Request, s *site, raw string) {
+	h.toReturnToAs(w, r, s, raw, views.OutcomeNone)
+}
+
+// SECURITY: RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked; outcome is what the caller just did.
+func (h *Web) toReturnToAs(w http.ResponseWriter, r *http.Request, s *site, raw string, outcome views.Outcome) {
 	if h.consoleHandOff(s, raw) {
 		http.Redirect(w, r, h.consoleSignIn(), http.StatusSeeOther)
 		return
 	}
 	target := ReturnTo(s.issuerURL, raw)
 	if r.Method == http.MethodPost && strings.HasPrefix(target, s.path+authorizePath+"?") {
-		h.forward(w, r, s, h.pending(r, s, target).client, target)
+		h.forward(w, r, s, h.pending(r, s, target).client, target, outcome)
 		return
 	}
 	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: target is validated by ReturnTo.
 }
 
 // SECURITY: after a POST the next hop is a GET, so form-action never blocks the 302; target is ReturnTo's or registered.
-func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string) {
+func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string, outcome views.Outcome) {
 	d := h.layout(r, s)
-	d.Refresh = target
-	h.kit.Render(w, r, http.StatusOK, views.Continue(d, views.ContinueData{Site: s.views(), Client: client, Target: target}))
+	v := views.ContinueData{Site: s.views(), Client: client, Target: target, Outcome: outcome}
+	h.kit.Render(w, r, http.StatusOK, views.Continue(d, v))
 }
 
 func seenVersion(r *http.Request) int32 {

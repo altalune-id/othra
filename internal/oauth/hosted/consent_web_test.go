@@ -49,6 +49,7 @@ func TestConsent_FirstTimeThenRemembered(t *testing.T) {
 	}
 	allowed := f.submit(f.client, page, "/consent", nil)
 	require.Equal(t, http.StatusOK, allowed.status, "the continue page: %s", allowed.body)
+	assert.Contains(t, allowed.body, ">Access allowed</h1>", "Allow says what happened while the browser goes back")
 	q := redirectParams(t, f.follow(f.client, allowed))
 	require.NotEmpty(t, q.Get("code"), q)
 	last := f.grants.codes[len(f.grants.codes)-1]
@@ -79,7 +80,7 @@ func TestConsent_RememberedConfidential(t *testing.T) {
 	f := newWebFixture(t)
 	f.signIn(f.client, "acme", "ana@example.com")
 	page := f.toConsent(f.client, reqURL())
-	assert.NotContains(t, page.body, "127.0.0.1")
+	assert.NotContains(t, page.body, `font-medium break-all">127.0.0.1`, "no loopback host for a registered web client")
 	f.follow(f.client, f.submit(f.client, page, "/consent", nil))
 	p := f.get(f.client, reqURL())
 	assert.Equal(t, http.StatusFound, p.status)
@@ -112,6 +113,7 @@ func TestConsent_DenyAndPromptNone(t *testing.T) {
 	page := f.toConsent(f.client, reqURL())
 	denied := f.submit(f.client, page, "/consent", url.Values{"deny": {"1"}})
 	require.Equal(t, http.StatusOK, denied.status, "the continue page")
+	assert.Contains(t, denied.body, ">Nothing was shared</h1>", "Cancel says nothing was shared")
 	m := refreshRE.FindStringSubmatch(denied.body)
 	require.NotEmpty(t, m, denied.body)
 	u, err := url.Parse(plain(m[1]))
@@ -206,4 +208,22 @@ func TestConsent_PageEdges(t *testing.T) {
 	page := f.toConsent(f.client, reqURL())
 	f.consents.failOn = "grant"
 	assert.Equal(t, http.StatusInternalServerError, f.submit(f.client, page, "/consent", nil).status)
+}
+
+// Allow whose authorize request fails on the way back reports no outcome: nothing was granted.
+func TestConsent_AllowThenAuthorizeErrorSaysNothingAllowed(t *testing.T) {
+	f := newWebFixture(t)
+	f.signIn(f.client, "acme", "ana@example.com")
+	page := f.toConsent(f.client, reqURL())
+	done := f.submit(f.client, page, "/consent", url.Values{"return_to": {reqURL("scope", "openid not:a-scope")}})
+	require.Equal(t, http.StatusOK, done.status, done.body)
+	m := refreshRE.FindStringSubmatch(done.body)
+	require.NotEmpty(t, m, done.body)
+	u, err := url.Parse(plain(m[1]))
+	require.NoError(t, err)
+	assert.Equal(t, "invalid_scope", u.Query().Get("error"), "the client hears the authorize error")
+	assert.NotContains(t, done.body, "Access allowed", "no grant ran, so the page never says access was allowed")
+	assert.NotContains(t, done.body, "Nothing was shared")
+	assert.Contains(t, done.body, "Continuing to")
+	assert.Empty(t, f.consents.grants)
 }

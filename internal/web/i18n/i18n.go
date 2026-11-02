@@ -45,6 +45,20 @@ var catalogs = sync.OnceValue(func() map[string]map[string]string {
 // Locales returns the supported locales, the default first.
 func Locales() []string { return []string{English, Indonesian} }
 
+// Cookie holds a person's chosen locale, shared with the console's i18n; it wins over Accept-Language.
+const Cookie = "othra_lang"
+
+// Name returns a supported locale's name in its own language, never translated.
+func Name(locale string) string {
+	switch locale {
+	case English:
+		return "English"
+	case Indonesian:
+		return "Bahasa Indonesia"
+	}
+	return locale
+}
+
 type ctxKey struct{}
 
 // WithLocale returns ctx carrying locale, or the default when locale is not supported.
@@ -70,11 +84,16 @@ func Error(ctx context.Context, code apperror.Code, args ...string) string {
 
 const errorKeyPrefix = "apperror."
 
-// Middleware puts the locale picked from Accept-Language on the request context.
+// Middleware puts the request's locale on its context: an exact othra_lang cookie, else the Accept-Language pick.
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Accept-Language")
-		next.ServeHTTP(w, r.WithContext(WithLocale(r.Context(), Pick(r.Header.Get("Accept-Language")))))
+		w.Header().Add("Vary", "Cookie")
+		locale := Pick(r.Header.Get("Accept-Language"))
+		if c, err := r.Cookie(Cookie); err == nil && slices.Contains(Locales(), c.Value) {
+			locale = c.Value
+		}
+		next.ServeHTTP(w, r.WithContext(WithLocale(r.Context(), locale)))
 	})
 }
 

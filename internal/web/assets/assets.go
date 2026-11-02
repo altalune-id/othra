@@ -17,6 +17,9 @@ import (
 
 const minCompressSize = 1024
 
+// Immutable is the Cache-Control for a request whose ?v= names the file's current Version.
+const Immutable = "public, max-age=31536000, immutable"
+
 // Files maps a slash-separated path to its asset; compressed siblings are variants, never entries.
 type Files map[string]*Asset
 
@@ -123,7 +126,18 @@ func (f Files) Sibling(name string) bool {
 	return ok
 }
 
-// Handler serves f by URL path with cacheControl, answering 404 for anything that is not a file in f.
+// Version returns the hash of name's plain bytes for a cache-busting ?v= query, or "" when name is not in f.
+func (f Files) Version(name string) string {
+	a, ok := f[name]
+	if !ok {
+		return ""
+	}
+	return a.version()
+}
+
+func (a *Asset) version() string { return strings.Trim(a.plain.etag, `"`) }
+
+// Handler serves f by URL path with cacheControl, or Immutable when ?v= matches the Version; 404 for anything else.
 func (f Files) Handler(cacheControl string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		a, ok := f[strings.TrimPrefix(path.Clean("/"+r.URL.Path), "/")]
@@ -131,7 +145,11 @@ func (f Files) Handler(cacheControl string) http.Handler {
 			http.NotFound(w, r)
 			return
 		}
-		a.Serve(w, r, cacheControl)
+		cc := cacheControl
+		if v := r.URL.Query().Get("v"); v != "" && v == a.version() {
+			cc = Immutable
+		}
+		a.Serve(w, r, cc)
 	})
 }
 

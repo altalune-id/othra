@@ -130,7 +130,7 @@ func TestAuthorize_SentAndVerifyNameTheClient(t *testing.T) {
 	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
 	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
 	inbox := f.get(f.client, sent.location())
-	assert.Contains(t, inbox.body, "to continue to Openwa Web")
+	assert.Contains(t, inbox.body, "It opens Openwa Web.")
 	assert.Equal(t, "Finish signing up to Openwa Web", f.users.mails[len(f.users.mails)-1].Subject)
 	link := linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody)
 	verify := f.get(f.client, f.get(f.client, strings.TrimPrefix(link, f.srv.URL)).location())
@@ -191,12 +191,13 @@ func TestAuthorize_SignInThenCode(t *testing.T) {
 	first := f.get(f.client, authorizeURL("nonce", "n-1", "login_hint", "ana@example.com"))
 	require.Equal(t, http.StatusSeeOther, first.status)
 	login := f.get(f.client, first.location())
-	assert.Contains(t, login.body, "Sign in to continue to Openwa Web.")
+	assert.Contains(t, login.body, "Continue to Openwa Web<")
 	assert.Contains(t, login.body, `value="ana@example.com"`, "login_hint pre-fills the email")
 
 	done := f.signInVia(f.client, login, "ana@example.com")
 	require.Equal(t, http.StatusOK, done.status, "a POST whose next stop is /authorize answers with the continue page")
 	assert.Contains(t, done.body, "Continuing to Openwa Web")
+	assert.NotContains(t, done.body, "Access allowed", "only a consent answer reports an outcome")
 	final := f.follow(f.client, done)
 	assert.Equal(t, http.StatusFound, final.status, "the last hop to the client is a GET 302")
 	q := redirectParams(t, final)
@@ -535,4 +536,26 @@ func TestAuthorize_KeepsUILocales(t *testing.T) {
 func TestMarkerExpiryIsConfigured(t *testing.T) {
 	m := NewMarker([]byte("k"), time.Minute)
 	assert.Equal(t, time.Minute, m.maxAge)
+}
+
+type txGuardClients struct {
+	Clients
+	t     *testing.T
+	users *fakeUsers
+}
+
+func (g txGuardClients) Client(ctx context.Context, p Project, id string) (Client, bool, error) {
+	if g.users.composing {
+		g.t.Error("a client lookup ran inside the magic-link transaction: it takes a second pool connection")
+	}
+	return g.Clients.Client(ctx, p, id)
+}
+
+// the mail names the app, read before IssueLink opens its transaction, never from inside Compose.
+func TestAuthorize_MailClientIsReadBeforeTheLinkTransaction(t *testing.T) {
+	f := newWebFixture(t)
+	f.web.oauth.Clients = txGuardClients{Clients: f.web.oauth.Clients, t: t, users: f.users}
+	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
+	f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
+	assert.Equal(t, "Finish signing up to Openwa Web", f.users.mails[len(f.users.mails)-1].Subject, "the subject still names the app")
 }

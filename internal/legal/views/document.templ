@@ -6,11 +6,13 @@ import (
 	"github.com/altalune-id/othra/internal/web/layout"
 )
 
-// DocumentData is a rendered legal document. SECURITY: HTML is written as-is, so it must come from markdown rendered without raw HTML.
+// DocumentData is a rendered legal document with the operator's company and contact email, each shown only when set. SECURITY: HTML is written as-is, so it must come from markdown rendered without raw HTML.
 type DocumentData struct {
-	Title     string
-	HTML      string
-	UpdatedAt time.Time
+	Title        string
+	HTML         string
+	UpdatedAt    time.Time
+	Company      string
+	ContactEmail string
 }
 
 templ Document(d layout.LayoutData, doc DocumentData) {
@@ -24,6 +26,18 @@ templ Document(d layout.LayoutData, doc DocumentData) {
 				<div class="mt-2 leading-relaxed [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_p]:mt-2 [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-6">
 					@templ.Raw(doc.HTML)
 				</div>
+				if doc.Company != "" || doc.ContactEmail != "" {
+					<dl class="mt-6 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 border-t border-base-300 pt-4 text-sm">
+						if doc.Company != "" {
+							<dt class="text-base-content/70">Operated by</dt>
+							<dd class="break-words">{ doc.Company }</dd>
+						}
+						if doc.ContactEmail != "" {
+							<dt class="text-base-content/70">Contact</dt>
+							<dd><a class="link break-all" href={ templ.SafeURL("mailto:" + doc.ContactEmail) }>{ doc.ContactEmail }</a></dd>
+						}
+					</dl>
+				}
 			</div>
 		</article>
 	}

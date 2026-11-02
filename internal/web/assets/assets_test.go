@@ -261,3 +261,34 @@ func TestFilesSibling(t *testing.T) {
 type brokenFS struct{}
 
 func (brokenFS) Open(string) (fs.File, error) { return nil, errors.New("broken") }
+
+func TestFilesVersion(t *testing.T) {
+	t.Parallel()
+	files := load(t, testFS())
+	v := files.Version("_nuxt/app.js")
+	assert.Regexp(t, `^[0-9a-f]{32}$`, v, "the plain bytes' hash, without the ETag quotes")
+	assert.Empty(t, files.Version("missing.js"))
+	assert.Empty(t, files.Version("_nuxt/app.js.br"), "never a compressed sibling")
+
+	h := files.Handler("no-cache")
+	for name, tc := range map[string]struct{ query, accept, want string }{
+		"current version":         {query: "?v=" + v, want: Immutable},
+		"current version, brotli": {query: "?v=" + v, accept: "br", want: Immutable},
+		"stale version":           {query: "?v=0123", want: "no-cache"},
+		"empty version":           {query: "?v=", want: "no-cache"},
+		"no version":              {want: "no-cache"},
+		"another file's version":  {query: "?v=" + files.Version("logo.svg"), want: "no-cache"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			req := httptest.NewRequest(http.MethodGet, "/_nuxt/app.js"+tc.query, nil)
+			if tc.accept != "" {
+				req.Header.Set("Accept-Encoding", tc.accept)
+			}
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, req)
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, tc.want, rec.Header().Get("Cache-Control"))
+		})
+	}
+}

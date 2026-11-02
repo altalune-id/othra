@@ -47,7 +47,34 @@ func TestMiddleware(t *testing.T) {
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
 	assert.Equal(t, Indonesian, got)
-	assert.Equal(t, "Accept-Language", rec.Header().Get("Vary"))
+	assert.Equal(t, []string{"Accept-Language", "Cookie"}, rec.Header().Values("Vary"), "caches key on both sources")
+}
+
+func TestMiddleware_Cookie(t *testing.T) {
+	for name, tc := range map[string]struct{ cookie, header, want string }{
+		"the cookie beats the header":         {cookie: "id-ID", header: "en-US", want: Indonesian},
+		"the cookie works without a header":   {cookie: "en-US", header: "id-ID", want: English},
+		"an unsupported cookie is ignored":    {cookie: "fr-FR", header: "id-ID", want: Indonesian},
+		"only an exact locale counts":         {cookie: "id", header: "en-US", want: English},
+		"a wildcard cookie is ignored":        {cookie: "*", header: "id-ID", want: Indonesian},
+		"an empty cookie falls to the header": {cookie: "", header: "id-ID", want: Indonesian},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var got string
+			h := Middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) { got = Locale(r.Context()) }))
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.Header.Set("Accept-Language", tc.header)
+			req.AddCookie(&http.Cookie{Name: Cookie, Value: tc.cookie})
+			h.ServeHTTP(httptest.NewRecorder(), req)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestName(t *testing.T) {
+	assert.Equal(t, "English", Name(English))
+	assert.Equal(t, "Bahasa Indonesia", Name(Indonesian))
+	assert.Equal(t, "fr-FR", Name("fr-FR"))
 }
 
 func TestLocale(t *testing.T) {
@@ -60,8 +87,7 @@ func TestT(t *testing.T) {
 	en, id := WithLocale(context.Background(), English), WithLocale(context.Background(), Indonesian)
 	assert.Equal(t, "Sign in to Openwa", T(en, "verify.title", "project", "Openwa"))
 	assert.Equal(t, "Masuk ke Openwa", T(id, "verify.title", "project", "Openwa"))
-	assert.Equal(t, "We sent a sign-in link to a@example.com. It works once, for 15 minutes.",
-		T(en, "sent.body", "email", "a@example.com", "minutes", "15"))
+	assert.Equal(t, "The link works once, for 15 minutes.", T(en, "sent.lifetime", "email", "a@example.com", "minutes", "15"))
 	assert.Equal(t, "Masuk ke {project}", T(id, "verify.title"), "no args leaves the placeholder")
 	assert.Equal(t, "Masuk ke {email}", T(id, "verify.title", "project", "{email}", "email", "x"), "a value is never expanded again")
 	assert.Equal(t, "nope.missing", T(en, "nope.missing"))
