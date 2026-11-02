@@ -11,7 +11,7 @@ import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
 
 const orgId = 'B6rTn1YkM8wQz3XpL5vGd';
-const stubs = { OrgSelector: true, ProjectSelector: true };
+const stubs = { OrgSelector: true, ProjectSelector: true, SidebarUser: true };
 
 beforeEach(() => {
   setActivePinia(createPinia());
@@ -30,13 +30,18 @@ describe('project sidebar', () => {
     expect(sections(w)).toEqual(['nav.group_applications', 'nav.group_people', 'nav.group_signin', 'nav.group_security', 'nav.group_developers']);
     const base = '/o/acme/projects/web';
     expect(links(w)).toEqual([
+      ['nav.org_overview', '/o/acme'],
+      ['nav.projects', '/o/acme/projects'],
+      ['members.title', '/o/acme/settings/members'],
+      ['apikeys.title', '/o/acme/settings/api-keys'],
+      ['nav.org_settings', '/o/acme/settings'],
       ['nav.overview', base],
       ['nav.clients', `${base}/clients`],
       ['nav.resource_servers', `${base}/resource-servers`],
       ['nav.end_users', `${base}/end-users`],
       ['nav.methods', `${base}/settings/sign-in`],
       ['branding.title', `${base}/settings/branding`],
-      ['legal.title', `${base}/settings/legal`],
+      ['nav.legal', `${base}/settings/legal`],
       ['keys.title', `${base}/settings/keys`],
       ['issuer.title', `${base}/settings/issuer`],
       ['webhooks.title', `${base}/webhooks`],
@@ -54,10 +59,11 @@ describe('project sidebar', () => {
 });
 
 describe('org sidebar', () => {
-  it('shows the org pages and its settings as one group, with the role', () => {
+  it('shows the org pages as one flat group in the design order, with the role', () => {
     setRoute({ path: '/o/acme/settings/members', params: { org: 'acme' } });
     const w = mount(AppSidebar, { global: { stubs } });
-    expect(links(w).map(([, href]) => href)).toEqual(['/o/acme', '/o/acme/projects', '/o/acme/settings', '/o/acme/settings/members', '/o/acme/settings/api-keys']);
+    expect(links(w).map(([, href]) => href)).toEqual(['/o/acme', '/o/acme/projects', '/o/acme/settings/members', '/o/acme/settings/api-keys', '/o/acme/settings']);
+    expect(sections(w)).toEqual([]);
     expect(w.get('[aria-current="page"]').text()).toBe('members.title');
     expect(w.get('[data-testid="org-role"]').exists()).toBe(true);
   });
