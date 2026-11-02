@@ -89,6 +89,7 @@ func TestRoutes_UnknownPathIs404(t *testing.T) {
 func TestStaticAssets(t *testing.T) {
 	builtAsset(t, "app.css")
 	builtAsset(t, "password.js")
+	builtAsset(t, "lang.js")
 	for _, base := range []string{"", "/app"} {
 		srv := NewServer(ServerOpts{BasePath: base})
 
@@ -110,9 +111,11 @@ func TestStaticAssets(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "image/png", rec.Header().Get("Content-Type"))
 
-		rec = get(t, srv, base+"/static/password.js")
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, "text/javascript; charset=utf-8", rec.Header().Get("Content-Type"))
+		for _, js := range []string{"/static/password.js", "/static/lang.js"} {
+			rec = get(t, srv, base+js)
+			assert.Equal(t, http.StatusOK, rec.Code, js)
+			assert.Equal(t, "text/javascript; charset=utf-8", rec.Header().Get("Content-Type"))
+		}
 
 		assert.Equal(t, http.StatusNotFound, get(t, srv, base+"/static/missing.css").Code)
 	}

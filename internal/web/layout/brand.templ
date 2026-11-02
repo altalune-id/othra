@@ -23,26 +23,34 @@ templ MailButton(href, label, primary string) {
 	<a href={ templ.SafeURL(href) } style={ mailButtonStyle(primary) }>{ label }</a>
 }
 
-templ brandFooter(b *Brand, wide bool) {
-	if b.TermsURL != "" || b.PrivacyURL != "" || b.IssuerHost() != "" {
-		<footer class={ "flex w-full flex-wrap items-center justify-between gap-3 text-xs text-base-content/70", templ.KV("max-w-100", !wide), templ.KV("max-w-112", wide) }>
-			if b.TermsURL != "" || b.PrivacyURL != "" {
-				<nav class="flex gap-3">
-					if b.TermsURL != "" {
-						@NewTabLink(b.TermsURL, i18n.T(ctx, "terms.terms_link"))
+// brandFooter holds the language select (hidden until lang.js shows it, and absent on a page that redirects), the project's legal links and the issuer host.
+templ brandFooter(d LayoutData) {
+	<footer class={ "flex w-full flex-wrap items-center justify-between gap-3 text-xs text-base-content/70", templ.KV("max-w-100", !d.Wide), templ.KV("max-w-112", d.Wide) }>
+		<div class="flex flex-wrap items-center gap-3">
+			if d.Refresh == "" {
+				<label class="sr-only" for="lang">{ i18n.T(ctx, "common.language") }</label>
+				<select id="lang" class="select select-xs w-28" data-lang-select data-path={ d.cookiePath() } hidden>
+					for _, l := range i18n.Locales() {
+						<option value={ l } selected?={ l == i18n.Locale(ctx) }>{ i18n.Name(l) }</option>
 					}
-					if b.PrivacyURL != "" {
-						@NewTabLink(b.PrivacyURL, i18n.T(ctx, "terms.privacy_link"))
+				</select>
+			}
+			if d.Brand.TermsURL != "" || d.Brand.PrivacyURL != "" {
+				<nav class="flex gap-3">
+					if d.Brand.TermsURL != "" {
+						@NewTabLink(d.Brand.TermsURL, i18n.T(ctx, "terms.terms_link"))
+					}
+					if d.Brand.PrivacyURL != "" {
+						@NewTabLink(d.Brand.PrivacyURL, i18n.T(ctx, "terms.privacy_link"))
 					}
 				</nav>
-			} else {
-				<span></span>
 			}
-			if b.IssuerHost() != "" {
-				<span class="font-mono break-all">{ b.IssuerHost() }</span>
-			}
-		</footer>
-	} else {
-		<div aria-hidden="true"></div>
+		</div>
+		if d.Brand.IssuerHost() != "" {
+			<span class="font-mono break-all">{ d.Brand.IssuerHost() }</span>
+		}
+	</footer>
+	if d.Refresh == "" {
+		<script type="module" src={ d.Static("/lang.js") }></script>
 	}
 }

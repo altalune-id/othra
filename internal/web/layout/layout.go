@@ -31,6 +31,13 @@ func (d LayoutData) Href(sub string) string {
 	return strings.TrimRight(d.BasePath, "/") + sub
 }
 
+func (d LayoutData) cookiePath() string {
+	if p := strings.TrimRight(d.BasePath, "/"); p != "" {
+		return p
+	}
+	return "/"
+}
+
 // Static returns the URL of an embedded static asset.
 func (d LayoutData) Static(sub string) string {
 	return d.Href("/static" + sub)

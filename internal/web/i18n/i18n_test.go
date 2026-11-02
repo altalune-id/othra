@@ -47,7 +47,34 @@ func TestMiddleware(t *testing.T) {
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
 	assert.Equal(t, Indonesian, got)
-	assert.Equal(t, "Accept-Language", rec.Header().Get("Vary"))
+	assert.Equal(t, []string{"Accept-Language", "Cookie"}, rec.Header().Values("Vary"), "caches key on both sources")
+}
+
+func TestMiddleware_Cookie(t *testing.T) {
+	for name, tc := range map[string]struct{ cookie, header, want string }{
+		"the cookie beats the header":         {cookie: "id-ID", header: "en-US", want: Indonesian},
+		"the cookie works without a header":   {cookie: "en-US", header: "id-ID", want: English},
+		"an unsupported cookie is ignored":    {cookie: "fr-FR", header: "id-ID", want: Indonesian},
+		"only an exact locale counts":         {cookie: "id", header: "en-US", want: English},
+		"a wildcard cookie is ignored":        {cookie: "*", header: "id-ID", want: Indonesian},
+		"an empty cookie falls to the header": {cookie: "", header: "id-ID", want: Indonesian},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var got string
+			h := Middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) { got = Locale(r.Context()) }))
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.Header.Set("Accept-Language", tc.header)
+			req.AddCookie(&http.Cookie{Name: Cookie, Value: tc.cookie})
+			h.ServeHTTP(httptest.NewRecorder(), req)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestName(t *testing.T) {
+	assert.Equal(t, "English", Name(English))
+	assert.Equal(t, "Bahasa Indonesia", Name(Indonesian))
+	assert.Equal(t, "fr-FR", Name("fr-FR"))
 }
 
 func TestLocale(t *testing.T) {

@@ -69,7 +69,7 @@ web-css: ## compile internal/web/static/app.css
 	pnpm --filter @othra/web build
 
 .PHONY: web-js
-web-js: ## build internal/web/static/password.js
+web-js: ## build internal/web/static/password.js and lang.js
 	pnpm --filter @othra/web build:js
 
 .PHONY: web

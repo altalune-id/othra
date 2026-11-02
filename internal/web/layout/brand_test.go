@@ -11,6 +11,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/altalune-id/othra/internal/web/i18n"
 )
 
 func render(t *testing.T, ctx context.Context, c templ.Component) string {
@@ -120,10 +122,34 @@ func TestBrandFooter_IssuerHost(t *testing.T) {
 	b := &Brand{Name: "Acme", Issuer: "https://id.example/p/acme"}
 	assert.Equal(t, "id.example/p/acme", b.IssuerHost())
 	assert.Equal(t, "plain", (&Brand{Issuer: "plain"}).IssuerHost())
-	out := render(t, t.Context(), brandFooter(b, false))
+	out := render(t, t.Context(), brandFooter(LayoutData{Brand: b}))
 	assert.Contains(t, out, `<span class="font-mono break-all">id.example/p/acme</span>`)
 	assert.NotContains(t, out, "<nav", "no legal links, no nav")
-	assert.Equal(t, `<div aria-hidden="true"></div>`, render(t, t.Context(), brandFooter(&Brand{}, false)))
+	assert.NotContains(t, render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}})), "font-mono", "no issuer, no host")
+}
+
+func TestBrandFooter_LanguageSelect(t *testing.T) {
+	id := i18n.WithLocale(t.Context(), i18n.Indonesian)
+	out := render(t, id, brandFooter(LayoutData{BasePath: "/id/", Brand: &Brand{}}))
+	assert.Contains(t, out, `<label class="sr-only" for="lang">Bahasa</label>`)
+	assert.Contains(t, out, `<select id="lang" class="select select-xs w-28" data-lang-select data-path="/id" hidden>`, "hidden until lang.js shows it; the cookie path is the base path")
+	assert.Contains(t, out, `<option value="en-US">English</option><option value="id-ID" selected>Bahasa Indonesia</option></select>`, "endonyms, the current locale selected")
+	assert.Contains(t, out, `<script type="module" src="/id/static/lang.js"></script>`)
+
+	en := render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}}))
+	assert.Contains(t, en, `<label class="sr-only" for="lang">Language</label>`)
+	assert.Contains(t, en, `data-path="/" hidden>`)
+	assert.Contains(t, en, `<option value="en-US" selected>English</option>`)
+
+	redirect := render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}, Refresh: "https://app.test/cb"}))
+	assert.NotContains(t, redirect, "data-lang-select", "a page that redirects at once has nothing to switch")
+	assert.NotContains(t, redirect, "<script")
+}
+
+func TestLayout_UnbrandedPagesHaveNoLanguageSelect(t *testing.T) {
+	html := page(t, t.Context(), LayoutData{Title: "Sign in"})
+	assert.NotContains(t, html, "data-lang-select", "admin pages are English-only")
+	assert.NotContains(t, html, "lang.js")
 }
 
 func TestCSRFInput(t *testing.T) {
@@ -158,7 +184,7 @@ func TestBrandComponentsReturnWriteErrors(t *testing.T) {
 		"branded layout": {Layout(LayoutData{Title: "T", Brand: b}), templ.WithChildren(ctx, card)},
 		"logo tile":      {BrandTile(b), ctx},
 		"letter tile":    {BrandTile(&Brand{Name: "Acme"}), ctx},
-		"footer":         {brandFooter(b, false), ctx},
+		"footer":         {brandFooter(LayoutData{Brand: b}), ctx},
 		"consent":        {Consent(LayoutData{}, ConsentData{Required: true}), ctx},
 		"consent note":   {Consent(LayoutData{}, ConsentData{}), ctx},
 		"mail":           {Mail("en-US", "Hi"), templ.WithChildren(ctx, body)},
