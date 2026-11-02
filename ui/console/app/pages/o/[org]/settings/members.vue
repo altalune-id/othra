@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '#base/components/ui/AppButton.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
@@ -40,6 +41,7 @@ const {
 } = invite;
 
 const labels = computed(() => ({
+  caption: t('members.title'),
   member: t('members.col_member'),
   role: t('members.col_role'),
   you: t('members.you'),
@@ -48,6 +50,7 @@ const labels = computed(() => ({
   memberRole: t('members.role_member'),
   remove: t('members.remove'),
   actions: t('members.actions_for', { name: '{name}' }),
+  actionsColumn: t('members.col_actions'),
   leave: t('members.leave'),
   cancel: t('common.cancel'),
   removeTitle: t('members.remove_title'),
@@ -71,6 +74,8 @@ const modalLabels = computed(() => ({
 }));
 const inviteLabels = computed(() => ({
   title: t('invites.title'),
+  actionsColumn: t('invites.col_actions'),
+  actionsFor: t('members.actions_for', { name: '{name}' }),
   draftsTitle: t('invites.drafts_title'),
   draftsHint: t('invites.drafts_hint'),
   email: t('invites.col_email'),
@@ -103,13 +108,13 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('members.tit
 </script>
 
 <template>
-  <div v-if="org" class="space-y-6">
+  <div v-if="org" class="flex flex-col gap-5">
     <PageHeader :title="t('members.title')" :description="t('members.subtitle')">
       <template v-if="canInvite" #actions>
-        <button type="button" class="btn btn-primary btn-sm" @click="invite.open">
-          <Icon name="lucide:user-plus" size="16" />
+        <AppButton size="sm" @click="invite.open">
+          <Icon name="lucide:user-plus" size="14" class="shrink-0" aria-hidden="true" />
           {{ t('invites.invite') }}
-        </button>
+        </AppButton>
       </template>
     </PageHeader>
     <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="load" />
