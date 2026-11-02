@@ -386,6 +386,7 @@
   "org.none_body": "Anda bukan anggota organisasi mana pun. Minta admin untuk mengundang Anda.",
   "org.none_create": "Buat organisasi",
   "org.none_title": "Anda belum menjadi anggota organisasi mana pun",
+  "org.overview_subtitle": "Proyek, anggota, dan kunci API di organisasi ini.",
   "org.search": "Cari organisasi",
   "org.select": "Pilih organisasi",
   "org.slug_placeholder": "acme",

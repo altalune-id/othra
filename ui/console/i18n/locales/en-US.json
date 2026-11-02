@@ -386,6 +386,7 @@
   "org.none_body": "You're not a member of any organization. Ask an admin to invite you.",
   "org.none_create": "Create organization",
   "org.none_title": "You're not in any organization yet",
+  "org.overview_subtitle": "Projects, members and API keys in this organization.",
   "org.search": "Search organizations",
   "org.select": "Select organization",
   "org.slug_placeholder": "acme",
