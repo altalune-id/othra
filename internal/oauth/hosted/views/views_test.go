@@ -433,8 +433,8 @@ func TestConsent_FirstTime(t *testing.T) {
 	assert.NotContains(t, out, `<span class="font-medium">Openwa MCP</span>`, "the resource sits in the title and Technical details only")
 	assert.NotContains(t, out, "<img")
 
-	assert.Regexp(t, `<span class="badge badge-sm"><svg[^>]*>.*?</svg> MCP client</span><span class="badge badge-sm badge-outline"><svg[^>]*>.*?</svg> Unverified app</span>`, out, "a metadata-document client is labelled MCP and unverified")
-	assert.Regexp(t, `<div role="note" class="alert items-start text-ui"><svg[^>]*>.*?</svg><span class="min-w-0">That&#39;s a program on this device. Continue only if you started this sign-in. Acme Store hasn&#39;t reviewed this app. Its details come from <span class="font-mono wrap-anywhere">claude.ai</span>.</span></div>`, out, "a loopback MCP client gets one calm note naming its metadata host")
+	assert.Regexp(t, `<span class="badge badge-sm"><svg[^>]*>.*?</svg> MCP client</span><span class="badge badge-sm badge-soft badge-warning"><svg[^>]*>.*?</svg> Unverified app</span>`, out, "a metadata-document client is labelled MCP and unverified")
+	assert.Regexp(t, `<div role="note" class="alert items-start text-ui"><svg[^>]*>.*?</svg><span class="min-w-0">That&#39;s a program on this device. Continue only if you started this sign-in. Acme Store hasn&#39;t reviewed this app. Its details come from <span class="font-mono font-medium text-warning wrap-anywhere">claude.ai</span>.</span></div>`, out, "a loopback MCP client gets one calm note naming its metadata host")
 
 	assert.Contains(t, out, `<span class="min-w-0 flex-1">Read your messages</span>`)
 	assert.Contains(t, out, `<span class="min-w-0 flex-1">Stay connected when you&#39;re away</span>`, "offline_access is its own line")
@@ -480,7 +480,7 @@ func TestConsent_Remembered(t *testing.T) {
 	out := html(t, ctxIn(t, i18n.English), Consent(page(), v))
 	assert.Contains(t, out, "<title>Continue to Claude Code? · Acme Store</title>")
 	assert.Contains(t, out, "You allowed Claude Code to access Openwa MCP before.")
-	assert.Contains(t, out, `<span class="badge badge-sm badge-outline">`, "the remembered page still marks an unverified app")
+	assert.Contains(t, out, `<span class="badge badge-sm badge-soft badge-warning">`, "the remembered page still marks an unverified app")
 	assert.NotContains(t, out, "alert-warning", "the remembered page has one muted line, not the box")
 	assert.NotContains(t, out, "messages:read", "no scope list")
 	assert.Contains(t, out, "You&#39;ll go back to <span class=\"font-medium text-base-content\">localhost</span>.")

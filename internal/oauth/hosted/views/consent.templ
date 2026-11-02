@@ -138,7 +138,7 @@ templ consentHeader(d layout.LayoutData, v ConsentData) {
 					@iconPlug("size-3")
 					{ i18n.T(ctx, "consent.mcp_client") }
 				</span>
-				<span class="badge badge-sm badge-outline">
+				<span class="badge badge-sm badge-soft badge-warning">
 					@iconCircleHelp()
 					{ i18n.T(ctx, "consent.unverified_title") }
 				</span>
@@ -164,7 +164,7 @@ templ consentHeader(d layout.LayoutData, v ConsentData) {
 }
 
 templ unverifiedBody(v ConsentData) {
-	@highlight(i18n.T(ctx, "consent.unverified_body", "project", v.Project), "{host}", v.ClientHost, "font-mono wrap-anywhere")
+	@highlight(i18n.T(ctx, "consent.unverified_body", "project", v.Project), "{host}", v.ClientHost, "font-mono font-medium text-warning wrap-anywhere")
 }
 
 // Consent asks the signed-in account to allow an app the requested scopes, or, when it allowed them before, to continue in one click.
