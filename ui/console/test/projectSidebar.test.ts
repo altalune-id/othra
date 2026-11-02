@@ -45,7 +45,6 @@ describe('project sidebar', () => {
       ['keys.title', `${base}/settings/keys`],
       ['issuer.title', `${base}/settings/issuer`],
       ['webhooks.title', `${base}/webhooks`],
-      ['nav.project_settings', `${base}/settings`],
     ]);
     expect(w.get('[aria-current="page"]').text()).toBe('keys.title');
     expect(w.get('[data-testid="org-role"]').text()).toBe('members.role_admin');

@@ -32,7 +32,8 @@ describe('userMenu', () => {
     expect(w.get('button[popovertarget]').classes()).toEqual(expect.arrayContaining(['w-full', 'justify-start', 'text-ui']));
     expect(w.get('ul').classes()).toEqual(['menu', 'menu-sm', 'w-full', 'p-0', 'text-ui']);
     expect(w.get('.menu-title').text()).toContain('rina@acme.test');
-    expect(w.get('.menu-title').text()).toContain('Othra v1.2.3');
+    expect(w.get('ul + p').text()).toBe('Othra v1.2.3');
+    expect(w.get('ul + p').classes()).toEqual(expect.arrayContaining(['text-xs', 'text-base-content/70']));
     const out = w.get('button[type="submit"]');
     expect(w.get(`form#${out.attributes('form')}`).attributes('action')).toBe('/logout');
   });

@@ -5,6 +5,7 @@ import { environmentLabelKey, showsBanner } from '~/components/project/environme
 import ProjectSidebar from '~/components/project/ProjectSidebar.vue';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
+import { useRecentStore } from '~/stores/recent';
 import { useUIStore } from '~/stores/ui';
 
 definePageMeta({ middleware: ['active-org'] });
@@ -32,6 +33,9 @@ const project = computed(() => (projectSlug.value ? projects.forOrg(org.value!.i
 watch(() => route.fullPath, () => {
   ui.navOpen = false;
 });
+
+const recent = useRecentStore();
+watch([() => route.params.org as string, projectSlug], ([o, p]) => recent.visit(o, p), { immediate: true });
 
 await projects.ensureLoaded(org.value.id);
 </script>

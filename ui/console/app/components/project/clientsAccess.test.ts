@@ -59,7 +59,7 @@ describe('clients and resource server pages', () => {
 
   it('lists Clients and Resource servers in the project sidebar above Webhooks', () => {
     const sidebar = read('./ProjectSidebar.vue');
-    const order = ['nav.overview', 'nav.clients', 'nav.resource_servers', 'webhooks.title', 'nav.project_settings'].map(k => sidebar.indexOf(`t('${k}')`));
+    const order = ['nav.overview', 'nav.clients', 'nav.resource_servers', 'webhooks.title'].map(k => sidebar.indexOf(`t('${k}')`));
     expect(order.every(i => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });

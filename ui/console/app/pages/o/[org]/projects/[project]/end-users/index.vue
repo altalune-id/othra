@@ -35,7 +35,7 @@ void list.load();
   <div class="max-w-4xl space-y-6">
     <PageHeader :title="t('endusers.title')" :description="t('endusers.subtitle')" />
     <form role="search" class="flex gap-2" @submit.prevent="list.load()">
-      <SearchInput v-model="query" :label="t('endusers.search')" />
+      <SearchInput v-model="query" :label="t('endusers.search')" class="sm:w-64" />
       <AppButton type="submit" variant="plain" size="sm" class="self-center">
         {{ t('endusers.search_action') }}
       </AppButton>

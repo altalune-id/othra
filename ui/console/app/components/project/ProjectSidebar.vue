@@ -52,7 +52,6 @@ const groups = computed<NavGroup[]>(() => [
     ],
   },
   { label: t('nav.group_developers'), items: [item('webhooks', t('webhooks.title'), '/webhooks', 'lucide:webhook')] },
-  { items: [item('settings', t('nav.project_settings'), '/settings', 'lucide:settings', true)] },
 ]);
 </script>
 

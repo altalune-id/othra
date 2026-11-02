@@ -58,7 +58,6 @@ const sourceBadge = computed(() => {
     <ul class="menu menu-sm w-full p-0 text-ui">
       <li class="menu-title text-base-content/70">
         <span class="truncate">{{ me.email || display }}</span>
-        <span v-if="version" class="font-normal">Othra v{{ version }}</span>
       </li>
       <li v-if="sourceBadge || me.operator" class="menu-title">
         <span class="flex flex-wrap gap-1">
@@ -87,6 +86,9 @@ const sourceBadge = computed(() => {
         </li>
       </template>
     </ul>
+    <p v-if="version" class="px-2 pt-1 text-xs text-base-content/70">
+      Othra v{{ version }}
+    </p>
     <form v-if="person" :id="logoutForm" method="post" :action="logoutUrl" hidden />
   </AppDropdown>
 </template>
