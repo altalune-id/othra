@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import type { Column } from '#base/components/ui/types';
 import type { Project } from '~/stores/projects';
+import AppBadge from '#base/components/ui/AppBadge.vue';
 import AppButton from '#base/components/ui/AppButton.vue';
-import CopyButton from '#base/components/ui/CopyButton.vue';
+import AppDropdown from '#base/components/ui/AppDropdown.vue';
+import { useCopy } from '#base/components/ui/copy';
+import DataTable from '#base/components/ui/DataTable.vue';
+import EmptyState from '#base/components/ui/EmptyState.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import ProjectEditModal from '~/components/project/edit/ProjectEditModal.vue';
+import { environmentLabelKey } from '~/components/project/environment';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
@@ -19,7 +26,18 @@ const ui = useUIStore();
 const canEdit = useCanEditProject();
 await useAuthStore().load();
 const org = computed(() => orgs.bySlug(route.params.org as string));
-const items = computed(() => (org.value ? projects.forOrg(org.value.id) : []));
+const items = computed(() => (org.value ? projects.forOrg(org.value.id) : []).map((p) => {
+  const env = environmentLabelKey(p.environment);
+  return { ...p, tag: env === 'environment.none' ? '' : t(env), to: `/o/${org.value?.slug}/projects/${p.slug}` };
+}));
+const { copy } = useCopy();
+const columns = computed<Column[]>(() => [
+  { key: 'name', label: t('common.name') },
+  { key: 'slug', label: t('project.console_slug'), mono: true },
+  { key: 'tag', label: t('environment.title') },
+  { key: 'id', label: t('common.id'), mono: true },
+  { key: 'menu', label: t('project.col_actions'), hideLabel: true, align: 'end' },
+]);
 
 const editModal = ref<InstanceType<typeof ProjectEditModal>>();
 function edit(project: Project) {
@@ -30,64 +48,56 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('project.tit
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex items-start justify-between gap-4">
-      <h1 class="text-2xl font-bold">
-        {{ t('project.title') }}
-      </h1>
-      <AppButton v-if="org && canEdit" size="sm" @click="ui.openProjectCreate()">
-        <Icon name="lucide:plus" size="16" />
-        {{ t('project.new') }}
-      </AppButton>
-    </div>
+  <div class="flex flex-col gap-4">
+    <PageHeader :title="t('project.title')" :description="t('project.list_subtitle')">
+      <template #actions>
+        <AppButton v-if="org && canEdit" size="sm" @click="ui.openProjectCreate()">
+          <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('project.new') }}
+        </AppButton>
+      </template>
+    </PageHeader>
 
     <ErrorText v-if="projects.error" :error="projects.error" />
-    <div v-else-if="items.length" class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-      <table class="table table-sm">
-        <thead class="text-base-content/70">
-          <tr>
-            <th>{{ t('common.name') }}</th>
-            <th>{{ t('common.id') }}</th>
-            <th>{{ t('project.console_slug') }}</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="project in items" :key="project.id" class="hover:bg-base-200">
-            <td>
-              <span class="flex flex-wrap items-center gap-2">
-                <NuxtLink :to="`/o/${org?.slug}/projects/${project.slug}`" class="link">
-                  {{ project.name }}
-                </NuxtLink>
-                <SystemBadge v-if="project.system" :label="t('common.system')" />
-              </span>
-            </td>
-            <td>
-              <span class="inline-flex items-center gap-1">
-                <span class="font-mono text-xs text-base-content/70">{{ project.id }}</span>
-                <CopyButton :value="project.id" :label="t('common.copy')" />
-              </span>
-            </td>
-            <td class="text-base-content/70">
-              {{ project.slug }}
-            </td>
-            <td class="whitespace-nowrap text-right">
-              <NuxtLink :to="`/o/${org?.slug}/projects/${project.slug}`" class="btn btn-ghost btn-xs">
-                <Icon name="lucide:external-link" size="14" />
+    <EmptyState v-else-if="!items.length" icon="lucide:folders" :title="t('project.empty')" />
+    <DataTable v-else :caption="t('project.title')" row-key="id" :columns="columns" :rows="items" data-testid="projects-table">
+      <template #cell-name="{ row }">
+        <span class="inline-flex flex-wrap items-center gap-2">
+          <NuxtLink :to="row.to" class="link link-hover font-medium">{{ row.name }}</NuxtLink>
+          <SystemBadge v-if="row.system" :label="t('common.system')" />
+        </span>
+      </template>
+      <template #cell-tag="{ row }">
+        <AppBadge v-if="row.tag" :label="row.tag" />
+      </template>
+      <template #cell-id="{ row }">
+        <span class="block max-w-44 truncate" :title="row.id">{{ row.id }}</span>
+      </template>
+      <template #cell-menu="{ row }">
+        <AppDropdown placement="end" size="xs" trigger-class="btn-square" content-class="w-48" :label="t('project.more_for', { name: row.name })">
+          <template #trigger>
+            <Icon name="lucide:ellipsis" size="14" class="shrink-0" aria-hidden="true" />
+          </template>
+          <ul class="menu menu-sm w-full p-0 text-ui">
+            <li>
+              <NuxtLink :to="row.to">
                 {{ t('common.open') }}
               </NuxtLink>
-              <button v-if="canEdit && !project.system" type="button" class="btn btn-ghost btn-xs" @click="edit(project)">
-                <Icon name="lucide:pencil" size="14" />
+            </li>
+            <li v-if="canEdit && !row.system">
+              <button type="button" @click="edit(row as Project)">
                 {{ t('common.edit') }}
               </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p v-else class="text-sm text-base-content/70">
-      {{ t('project.empty') }}
-    </p>
+            </li>
+            <li>
+              <button type="button" @click="copy(row.id, t('common.copied'))">
+                {{ t('project.copy_id') }}
+              </button>
+            </li>
+          </ul>
+        </AppDropdown>
+      </template>
+    </DataTable>
 
     <ProjectEditModal v-if="canEdit" ref="editModal" />
   </div>

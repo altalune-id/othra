@@ -101,7 +101,7 @@ describe('m1.5 design re-check', () => {
     const list = read('../../pages/o/[org]/projects/index.vue');
     expect(list).toContain('useCanEditProject');
     expect(list).toMatch(/<AppButton v-if="org && canEdit"[^>]*@click="ui\.openProjectCreate\(\)"/);
-    expect(list).toMatch(/<button v-if="canEdit && !project\.system"[^>]*@click="edit\(project\)"/);
+    expect(list).toMatch(/<li v-if="canEdit && !row\.system">\s*<button[^>]*@click="edit\(row as Project\)"/);
   });
 
   it('puts the logo file input before its label as a peer, so keyboard focus shows on the label', () => {
