@@ -238,6 +238,7 @@
   "apperror.UPS004": "End users have linked Google, so it can't be removed. Turn it off instead.",
   "common.cancel": "Cancel",
   "common.close": "Close",
+  "common.copied": "Copied",
   "common.copy": "Copy",
   "common.copy_label": "Copy {label}",
   "common.create": "Create",

@@ -2,9 +2,9 @@
 import type { ShownError } from '#base/lib/apperror/message';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
 import AppButton from '#base/components/ui/AppButton.vue';
-import AppModal from '#base/components/ui/AppModal.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
+import SidePanel from '#base/components/ui/SidePanel.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import { SigningKeyStatus } from '#gen/keys/v1/keys_pb';
@@ -113,11 +113,11 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
       <template #status>
         <p class="flex items-center gap-1 text-xs text-base-content/70">
           <span class="font-mono">{{ project.id }}</span>
-          <CopyButton :value="project.id" :label="t('common.copy_label', { label: t('common.id') })" />
+          <CopyButton :value="project.id" :label="t('common.copy_label', { label: t('common.id') })" :copied-label="t('common.copied')" />
         </p>
       </template>
       <template v-if="full?.issuerUrl" #actions>
-        <CopyButton :value="full.issuerUrl" :label="t('overview.copy_issuer')" :text="t('overview.copy_issuer')" />
+        <CopyButton :value="full.issuerUrl" :label="t('overview.copy_issuer')" :text="t('overview.copy_issuer')" :copied-label="t('common.copied')" />
         <AppButton variant="plain" size="sm" :disabled="!discovery.doc.value" @click="showJSON = true">
           <Icon name="lucide:braces" size="16" class="shrink-0" aria-hidden="true" />
           {{ t('overview.view_json') }}
@@ -152,13 +152,11 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
       <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts && !countsError" :error="countsError" @retry="loadCounts" />
     </div>
 
-    <AppModal :open="showJSON" :title="t('overview.discovery')" @close="showJSON = false">
-      <pre class="max-h-96 overflow-auto rounded-box bg-base-200 p-3 font-mono text-xs" data-testid="discovery-json">{{ JSON.stringify(discovery.doc.value, null, 2) }}</pre>
-      <template #footer>
-        <AppButton variant="plain" size="sm" @click="showJSON = false">
-          {{ t('common.close') }}
-        </AppButton>
-      </template>
-    </AppModal>
+    <SidePanel v-model:open="showJSON" :title="t('overview.discovery_doc')" :close-label="t('overview.discovery_doc_close')">
+      <p class="text-ui text-base-content/70">
+        {{ t('overview.discovery_doc_caption') }}
+      </p>
+      <pre class="overflow-x-auto rounded-box bg-base-200 p-3 font-mono text-xs" data-testid="discovery-json">{{ JSON.stringify(discovery.doc.value, null, 2) }}</pre>
+    </SidePanel>
   </div>
 </template>

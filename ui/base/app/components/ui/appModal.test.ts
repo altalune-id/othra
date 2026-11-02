@@ -16,7 +16,9 @@ describe('appModal', () => {
     expect(dialog.element.open).toBe(true);
     expect(dialog.classes()).not.toContain('modal-open');
     expect(document.getElementById(dialog.attributes('aria-labelledby')!)!.textContent!.trim()).toBe('New organization');
-    expect(document.getElementById(dialog.attributes('aria-labelledby')!)!.className).toBe('text-base font-semibold');
+    const heading = document.getElementById(dialog.attributes('aria-labelledby')!)!;
+    expect(heading.className).toBe('text-base font-semibold');
+    expect(heading.tagName).toBe('H2');
     await w.setProps({ open: false });
     expect(dialog.element.open).toBe(false);
   });

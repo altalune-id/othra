@@ -238,6 +238,7 @@
   "apperror.UPS004": "Pengguna sudah menautkan Google, jadi tidak bisa dihapus. Nonaktifkan saja.",
   "common.cancel": "Batal",
   "common.close": "Tutup",
+  "common.copied": "Disalin",
   "common.copy": "Salin",
   "common.copy_label": "Salin {label}",
   "common.create": "Buat",
