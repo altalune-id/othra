@@ -5,11 +5,22 @@ import (
 	"github.com/altalune-id/othra/internal/web/layout"
 )
 
-// ContinueData is the forwarding page after a hosted POST: Target is the validated authorize URL or client URI, Client the app's name.
+// Outcome is what a consent answer did, shown while the browser goes back to the app.
+type Outcome int
+
+// The consent outcomes; OutcomeNone is any other forward.
+const (
+	OutcomeNone Outcome = iota
+	OutcomeAllowed
+	OutcomeDenied
+)
+
+// ContinueData is the forwarding page after a hosted POST: Target is the validated authorize URL or client URI, Client the app's name, Outcome the consent answer that led here.
 type ContinueData struct {
 	Site
-	Client string
-	Target string
+	Client  string
+	Target  string
+	Outcome Outcome
 }
 
 func (v ContinueData) name() string {
@@ -24,13 +35,41 @@ func forwarding(d layout.LayoutData, target string) layout.LayoutData {
 	return d
 }
 
-// Continue forwards the browser to Target from a GET, with a meta refresh and a visible link, so a POST never redirects off-site.
+templ continueAction(v ContinueData) {
+	<p role="status" class="text-ui text-base-content/70">{ i18n.T(ctx, "continue.body") }</p>
+	<div>
+		<a class="btn" href={ templ.SafeURL(v.Target) }>{ i18n.T(ctx, "continue.action", "client", v.name()) }</a>
+	</div>
+}
+
+// Continue forwards the browser to Target from a GET, with a meta refresh and a visible link, so a POST never redirects off-site; after a consent answer it says what was shared.
 templ Continue(d layout.LayoutData, v ContinueData) {
-	@layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.title", "client", v.name()))) {
-		@layout.Card(i18n.T(ctx, "continue.title", "client", v.name())) {
-			<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
-			<p role="status" class="text-sm text-base-content/70">{ i18n.T(ctx, "continue.body") }</p>
-			<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.Target) }>{ i18n.T(ctx, "continue.action", "client", v.name()) }</a>
-		}
+	switch v.Outcome {
+		case OutcomeAllowed:
+			@layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.allowed_title"))) {
+				<div class="flex w-full max-w-100 flex-col gap-3">
+					@iconCircleCheck()
+					<h1 class="text-2xl font-semibold">{ i18n.T(ctx, "continue.allowed_title") }</h1>
+					<p>{ i18n.T(ctx, "continue.allowed_body", "client", v.name(), "project", v.Project) }</p>
+					@continueAction(v)
+				</div>
+			}
+		case OutcomeDenied:
+			@layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.denied_title"))) {
+				<div class="flex w-full max-w-100 flex-col gap-3">
+					@iconCircleX()
+					<h1 class="text-2xl font-semibold">{ i18n.T(ctx, "continue.denied_title") }</h1>
+					<p>{ i18n.T(ctx, "continue.denied_body", "client", v.name()) }</p>
+					@continueAction(v)
+				</div>
+			}
+		default:
+			@layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.title", "client", v.name()))) {
+				@layout.Card(i18n.T(ctx, "continue.title", "client", v.name())) {
+					<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+					<p role="status" class="text-sm text-base-content/70">{ i18n.T(ctx, "continue.body") }</p>
+					<a class="btn btn-primary btn-block" href={ templ.SafeURL(v.Target) }>{ i18n.T(ctx, "continue.action", "client", v.name()) }</a>
+				}
+			}
 	}
 }

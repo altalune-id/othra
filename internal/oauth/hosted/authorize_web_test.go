@@ -197,6 +197,7 @@ func TestAuthorize_SignInThenCode(t *testing.T) {
 	done := f.signInVia(f.client, login, "ana@example.com")
 	require.Equal(t, http.StatusOK, done.status, "a POST whose next stop is /authorize answers with the continue page")
 	assert.Contains(t, done.body, "Continuing to Openwa Web")
+	assert.NotContains(t, done.body, "Access allowed", "only a consent answer reports an outcome")
 	final := f.follow(f.client, done)
 	assert.Equal(t, http.StatusFound, final.status, "the last hop to the client is a GET 302")
 	q := redirectParams(t, final)

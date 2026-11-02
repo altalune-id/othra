@@ -764,7 +764,19 @@ func (h *Web) toReturnTo(w http.ResponseWriter, r *http.Request, s *site, raw st
 func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string) {
 	d := h.layout(r, s)
 	d.Refresh = target
-	h.kit.Render(w, r, http.StatusOK, views.Continue(d, views.ContinueData{Site: s.views(), Client: client, Target: target}))
+	v := views.ContinueData{Site: s.views(), Client: client, Target: target, Outcome: consentOutcome(r, s)}
+	h.kit.Render(w, r, http.StatusOK, views.Continue(d, v))
+}
+
+func consentOutcome(r *http.Request, s *site) views.Outcome {
+	switch {
+	case r.URL.Path != s.path+string(pageConsent):
+		return views.OutcomeNone
+	case r.PostFormValue("deny") == "1":
+		return views.OutcomeDenied
+	default:
+		return views.OutcomeAllowed
+	}
 }
 
 func seenVersion(r *http.Request) int32 {

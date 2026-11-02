@@ -440,7 +440,8 @@ func TestConsent_FirstTime(t *testing.T) {
 
 	assert.Contains(t, out, `<span class="font-mono text-base font-medium break-all">localhost</span>`, "the return host sits under the title, in mono")
 	assert.Less(t, strings.Index(out, "break-all\">localhost<"), strings.Index(out, "Signed in as"), "the redirect host sits above the account and the scopes")
-	assert.Contains(t, out, `<p class="text-ui break-words text-base-content/70">After you allow, you&#39;ll go back to <span class="font-medium text-base-content">localhost</span>.</p>`)
+	assert.Contains(t, out, `<p class="text-ui break-words text-base-content/70">Lasts until you revoke it in your Acme Store account.</p>`, "the lifetime sits above the buttons")
+	assert.NotContains(t, out, "you&#39;ll go back to", "the return host is already under the title")
 
 	form := out[strings.Index(out, `<form method="post" action="/id/p/acme/consent"`):]
 	assert.Contains(t, form, `<input type="hidden" name="csrf" value="tok-consent"><input type="hidden" name="user_session" value="us1"><input type="hidden" name="return_to" value="/id/p/acme/oauth2/authorize?client_id=x">`)
@@ -456,7 +457,7 @@ func TestConsent_RegisteredAccountTitleNoLoopback(t *testing.T) {
 	assert.Contains(t, out, "Izinkan Claude Code mengakses akun Acme Store Anda?")
 	assert.NotContains(t, out, "alert-warning", "no CIMD note for a registered client")
 	assert.NotContains(t, out, "perangkat ini", "no loopback warning")
-	assert.Contains(t, out, `Setelah Anda mengizinkan, Anda akan kembali ke <span class="font-medium text-base-content">app.example</span>.`)
+	assert.Contains(t, out, "Berlaku sampai Anda mencabutnya di akun Acme Store Anda.")
 	assert.Contains(t, out, ">Detail teknis</summary>")
 	assert.Contains(t, out, "Mengetahui siapa Anda")
 	assert.Contains(t, out, ">Izinkan</button>")
@@ -573,7 +574,7 @@ func TestLogin_Google(t *testing.T) {
 
 	plain := html(t, ctxIn(t, i18n.English), Login(page(), LoginData{Site: site, EmailOff: true}))
 	assert.Contains(t, plain, `name="email"`, "no Google, so the email form stays")
-	assert.NotContains(t, plain, "btn-google")
+	assert.NotContains(t, plain, "data-google")
 }
 
 func TestCollision(t *testing.T) {
@@ -721,4 +722,20 @@ func TestVerify_GoogleSignUp(t *testing.T) {
 	assert.NotContains(t, out, "Sign in to Acme Store")
 	assert.NotContains(t, out, `name="skip"`)
 	assert.Contains(t, html(t, ctxIn(t, i18n.Indonesian), Verify(page(), v)), "Selesaikan pendaftaran di Acme Store dengan Google")
+}
+
+func TestContinue_ConsentOutcomes(t *testing.T) {
+	target := "https://app.example/cb?code=abc"
+	allowed := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Continue(page(), ContinueData{Site: site, Client: "Openwa Web", Target: target, Outcome: OutcomeAllowed})), "> <", "><")
+	assert.Contains(t, allowed, "<title>Access allowed · Acme Store</title>")
+	assert.Contains(t, allowed, `<meta http-equiv="refresh" content="0;url=https://app.example/cb?code=abc">`)
+	assert.Regexp(t, `<div class="flex w-full max-w-100 flex-col gap-3"><svg[^>]*class="shrink-0 size-6"[^>]*><circle cx="12" cy="12" r="10"></circle><path d="m16 9-5.5 5.5L8 12"></path></svg><h1 class="text-2xl font-semibold">Access allowed</h1>`, allowed)
+	assert.Contains(t, allowed, "<p>Returning you to Openwa Web. Revoke access at any time under Connected apps in your Acme Store account.</p>")
+	assert.Contains(t, allowed, `<a class="btn" href="https://app.example/cb?code=abc">Continue to Openwa Web</a>`, "a visible way on when the refresh is blocked")
+	assert.NotContains(t, allowed, "<script", "a forwarding page runs no script")
+
+	denied := html(t, ctxIn(t, i18n.Indonesian), Continue(page(), ContinueData{Site: site, Client: "Openwa Web", Target: target, Outcome: OutcomeDenied}))
+	assert.Contains(t, denied, `<h1 class="text-2xl font-semibold">Tidak ada yang dibagikan</h1>`)
+	assert.Contains(t, denied, "Openwa Web tidak mendapat akses.")
+	assert.Contains(t, denied, `<path d="m15 9-6 6"></path>`, "the circle-x icon")
 }

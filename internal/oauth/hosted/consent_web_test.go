@@ -49,6 +49,7 @@ func TestConsent_FirstTimeThenRemembered(t *testing.T) {
 	}
 	allowed := f.submit(f.client, page, "/consent", nil)
 	require.Equal(t, http.StatusOK, allowed.status, "the continue page: %s", allowed.body)
+	assert.Contains(t, allowed.body, ">Access allowed</h1>", "Allow says what happened while the browser goes back")
 	q := redirectParams(t, f.follow(f.client, allowed))
 	require.NotEmpty(t, q.Get("code"), q)
 	last := f.grants.codes[len(f.grants.codes)-1]
@@ -112,6 +113,7 @@ func TestConsent_DenyAndPromptNone(t *testing.T) {
 	page := f.toConsent(f.client, reqURL())
 	denied := f.submit(f.client, page, "/consent", url.Values{"deny": {"1"}})
 	require.Equal(t, http.StatusOK, denied.status, "the continue page")
+	assert.Contains(t, denied.body, ">Nothing was shared</h1>", "Cancel says nothing was shared")
 	m := refreshRE.FindStringSubmatch(denied.body)
 	require.NotEmpty(t, m, denied.body)
 	u, err := url.Parse(plain(m[1]))
