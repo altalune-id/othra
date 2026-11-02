@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { scopeTableLabels } from '~/components/resourceserver/labels';
 import ScopeTable from '~/components/resourceserver/ScopeTable.vue';
@@ -55,105 +57,96 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <div>
-      <NuxtLink :to="base" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
-        <Icon name="lucide:chevron-left" size="14" />
-        {{ t('rs.title') }}
-      </NuxtLink>
-      <h1 class="mt-1 text-2xl font-bold">
-        {{ t('rs.new') }}
-      </h1>
-    </div>
-    <section class="card border border-base-300 bg-base-100">
-      <div class="card-body">
-        <form novalidate class="space-y-2" @submit.prevent="submit">
-          <div class="fieldset">
-            <label :for="ids.uri" class="label text-ui text-base-content">{{ t('rs.uri') }}</label>
-            <input
-              :id="ids.uri"
-              v-model="identifier"
-              type="url"
-              class="input input-sm w-full font-mono text-ui"
-              :class="{ 'input-error': errors.identifier }"
-              placeholder="https://api.example.com"
-              maxlength="512"
-              autocomplete="off"
-              spellcheck="false"
-              :disabled="busy"
-              :aria-invalid="!!errors.identifier"
-              :aria-describedby="`${ids.uriHelp} ${ids.uriErr}`"
-              @input="form.clearIdentifier()"
-            >
-            <FieldError :id="ids.uriErr" :message="errors.identifier" />
-            <p :id="ids.uriHelp" class="label whitespace-normal text-xs text-base-content/70">
-              {{ t('rs.uri_help') }}
-            </p>
-          </div>
-          <div class="fieldset">
-            <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
-            <input
-              :id="ids.name"
-              v-model="name"
-              type="text"
-              class="input input-sm w-full text-ui"
-              :class="{ 'input-error': errors.name }"
-              maxlength="100"
-              :disabled="busy"
-              :aria-invalid="!!errors.name"
-              :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`"
-            >
-            <FieldError :id="ids.nameErr" :message="errors.name" />
-            <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
-              {{ t('rs.name_help') }}
-            </p>
-          </div>
-          <fieldset v-if="trustAvailable" class="fieldset" data-testid="trust-on-create">
-            <legend class="fieldset-legend text-ui">
-              {{ t('rs.trust') }}
-            </legend>
-            <label class="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                class="checkbox checkbox-sm rounded-sm"
-                :checked="trusted"
-                :disabled="busy || trustRequired"
-                :aria-describedby="ids.trust"
-                @change="trustPicked = ($event.target as HTMLInputElement).checked"
-              >
-              {{ t('rs.trust_create') }}
-            </label>
-            <p v-if="trusted" :id="ids.trust" class="mt-1 flex items-start gap-1 text-xs text-base-content">
-              <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
-              {{ trustRequired ? t('rs.trust_required') : t('rs.trust_body') }}
-            </p>
-            <p v-else :id="ids.trust" class="label whitespace-normal text-xs text-base-content/70">
-              {{ t('rs.trust_help') }}
-            </p>
-          </fieldset>
-          <ScopeTable
-            v-model:rows="scopeRows"
-            v-model:descriptions="scopeDescriptions"
-            :errors="scopeErrors"
+  <div class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="t('rs.new')" :description="t('rs.subtitle')" />
+    <form novalidate class="flex flex-col gap-4" @submit.prevent="submit">
+      <div class="fieldset">
+        <label class="flex flex-col gap-1">
+          <span class="label text-ui text-base-content">{{ t('rs.uri') }}</span>
+          <input
+            :id="ids.uri"
+            v-model="identifier"
+            type="url"
+            class="input input-sm w-full font-mono text-ui"
+            :class="{ 'input-error': errors.identifier }"
+            placeholder="https://api.example.com"
+            maxlength="512"
+            autocomplete="off"
+            spellcheck="false"
             :disabled="busy"
-            :full="scopes.full.value"
-            :labels="scopeLabels"
-            @add="scopes.add()"
-            @remove="scopes.remove"
-            @edit="scopes.clearRow"
-          />
-          <ErrorText :error="error" />
-          <div class="flex justify-end gap-2 pt-2 max-sm:flex-col-reverse">
-            <NuxtLink :to="base" class="btn btn-ghost btn-sm text-ui">
-              {{ t('common.cancel') }}
-            </NuxtLink>
-            <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
-              <span v-if="busy" class="loading loading-spinner loading-xs" />
-              {{ busy ? t('common.creating') : t('rs.create') }}
-            </button>
-          </div>
-        </form>
+            :aria-invalid="!!errors.identifier"
+            :aria-describedby="`${ids.uriHelp} ${ids.uriErr}`"
+            @input="form.clearIdentifier()"
+          >
+        </label>
+        <FieldError :id="ids.uriErr" :message="errors.identifier" />
+        <p :id="ids.uriHelp" class="label whitespace-normal text-xs text-base-content/70">
+          {{ t('rs.uri_help') }}
+        </p>
       </div>
-    </section>
+      <div class="fieldset">
+        <label class="flex flex-col gap-1">
+          <span class="label text-ui text-base-content">{{ t('common.name') }}</span>
+          <input
+            :id="ids.name"
+            v-model="name"
+            type="text"
+            class="input input-sm w-full text-ui"
+            :class="{ 'input-error': errors.name }"
+            maxlength="100"
+            :disabled="busy"
+            :aria-invalid="!!errors.name"
+            :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`"
+          >
+        </label>
+        <FieldError :id="ids.nameErr" :message="errors.name" />
+        <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
+          {{ t('rs.name_help') }}
+        </p>
+      </div>
+      <fieldset v-if="trustAvailable" class="fieldset" data-testid="trust-on-create">
+        <legend class="fieldset-legend text-ui">
+          {{ t('rs.trust') }}
+        </legend>
+        <label class="flex items-center gap-2 text-ui">
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm rounded-sm"
+            :checked="trusted"
+            :disabled="busy || trustRequired"
+            :aria-describedby="ids.trust"
+            @change="trustPicked = ($event.target as HTMLInputElement).checked"
+          >
+          {{ t('rs.trust_create') }}
+        </label>
+        <p v-if="trusted" :id="ids.trust" class="mt-1 flex items-start gap-1 text-xs text-base-content">
+          <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" aria-hidden="true" />
+          {{ trustRequired ? t('rs.trust_required') : t('rs.trust_body') }}
+        </p>
+        <p v-else :id="ids.trust" class="label whitespace-normal text-xs text-base-content/70">
+          {{ t('rs.trust_help') }}
+        </p>
+      </fieldset>
+      <ScopeTable
+        v-model:rows="scopeRows"
+        v-model:descriptions="scopeDescriptions"
+        :errors="scopeErrors"
+        :disabled="busy"
+        :full="scopes.full.value"
+        :labels="scopeLabels"
+        @add="scopes.add()"
+        @remove="scopes.remove"
+        @edit="scopes.clearRow"
+      />
+      <ErrorText :error="error" />
+      <div class="flex justify-end gap-2 pt-2 max-sm:flex-col-reverse">
+        <AppButton variant="ghost" size="sm" :to="base">
+          {{ t('common.cancel') }}
+        </AppButton>
+        <AppButton type="submit" size="sm" :busy="busy">
+          {{ busy ? t('common.creating') : t('rs.create') }}
+        </AppButton>
+      </div>
+    </form>
   </div>
 </template>
