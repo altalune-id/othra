@@ -61,9 +61,13 @@ describe('project overview', () => {
     expect(w.get('[data-testid="cache-note"]').classes()).toEqual(expect.arrayContaining(['text-ui', 'text-base-content/70']));
     await w.findAll('header button').find(b => b.text() === 'overview.view_json')!.trigger('click');
     await flushPromises();
-    expect((w.get('.drawer-end input.drawer-toggle').element as HTMLInputElement).checked).toBe(true);
-    expect(w.get('.drawer-end h2').text()).toBe('overview.discovery_doc');
-    expect(w.get('[data-testid="discovery-json"]').text()).toContain(issuer);
+    const drawer = document.body.querySelector('body > .drawer-end')!;
+    expect((drawer.querySelector('input.drawer-toggle') as HTMLInputElement).checked).toBe(true);
+    expect(drawer.querySelector('h2')!.textContent!.trim()).toBe('overview.discovery_doc');
+    const json = drawer.querySelector('[data-testid="discovery-json"]') as HTMLElement;
+    expect(json.textContent).toContain(issuer);
+    expect(json.tabIndex).toBe(0);
+    expect(json.getAttribute('aria-label')).toBe('overview.discovery_doc');
     const rotation = w.get('[data-testid="key-rotation"]');
     expect(rotation.findAll('.timeline-box').map(b => b.text())).toEqual(['2026-02-', '2026-08-']);
     expect(rotation.get('.timeline-middle.text-primary').exists()).toBe(true);

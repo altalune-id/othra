@@ -156,7 +156,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
       <p class="text-ui text-base-content/70">
         {{ t('overview.discovery_doc_caption') }}
       </p>
-      <pre class="overflow-x-auto rounded-box bg-base-200 p-3 font-mono text-xs" data-testid="discovery-json">{{ JSON.stringify(discovery.doc.value, null, 2) }}</pre>
+      <pre tabindex="0" :aria-label="t('overview.discovery_doc')" class="overflow-x-auto rounded-box bg-base-200 p-3 font-mono text-xs" data-testid="discovery-json">{{ JSON.stringify(discovery.doc.value, null, 2) }}</pre>
     </SidePanel>
   </div>
 </template>
