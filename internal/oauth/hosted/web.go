@@ -346,10 +346,11 @@ func (h *Web) sendLink(
 		}
 		return true, nil
 	}
+	client := h.pending(r, s, returnTo).registeredName()
 	l, _, err := h.users.IssueLink(r.Context(), IssueRequest{
 		Project: s.project(), Email: email, ReturnTo: returnTo, IP: layout.ClientIP(r, h.limits.TrustedProxyHops),
 		Compose: func(l Link) (mailer.Message, error) {
-			return h.compose(r, s, l, h.pending(r, s, returnTo).registeredName(), pending)
+			return h.compose(r, s, l, client, pending)
 		},
 		Allow: allow, Pending: raw,
 	})
@@ -767,7 +768,6 @@ func (h *Web) toReturnToAs(w http.ResponseWriter, r *http.Request, s *site, raw 
 // SECURITY: after a POST the next hop is a GET, so form-action never blocks the 302; target is ReturnTo's or registered.
 func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string, outcome views.Outcome) {
 	d := h.layout(r, s)
-	d.Refresh = target
 	v := views.ContinueData{Site: s.views(), Client: client, Target: target, Outcome: outcome}
 	h.kit.Render(w, r, http.StatusOK, views.Continue(d, v))
 }

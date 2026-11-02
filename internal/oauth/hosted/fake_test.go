@@ -48,6 +48,8 @@ type fakeUsers struct {
 	failOn   string
 	seq      int
 	names    map[uuid.UUID]string
+	// composing is true while Compose runs, where the real store holds the link transaction open.
+	composing bool
 }
 
 const fakeCooldown = time.Minute
@@ -120,7 +122,9 @@ func (f *fakeUsers) IssueLink(ctx context.Context, req IssueRequest) (Link, bool
 	l := Link{ID: "id-" + token, Email: req.Email, URL: req.Project.IssuerURL + "/login/verify?t=" + token, SignUp: !known}
 	f.links[token] = &fakeLink{project: req.Project, email: req.Email, returnTo: req.ReturnTo, pending: req.Pending}
 	if req.Compose != nil {
+		f.composing = true
 		m, err := req.Compose(l)
+		f.composing = false
 		if err != nil {
 			return Link{}, false, err
 		}

@@ -537,3 +537,25 @@ func TestMarkerExpiryIsConfigured(t *testing.T) {
 	m := NewMarker([]byte("k"), time.Minute)
 	assert.Equal(t, time.Minute, m.maxAge)
 }
+
+type txGuardClients struct {
+	Clients
+	t     *testing.T
+	users *fakeUsers
+}
+
+func (g txGuardClients) Client(ctx context.Context, p Project, id string) (Client, bool, error) {
+	if g.users.composing {
+		g.t.Error("a client lookup ran inside the magic-link transaction: it takes a second pool connection")
+	}
+	return g.Clients.Client(ctx, p, id)
+}
+
+// the mail names the app, read before IssueLink opens its transaction, never from inside Compose.
+func TestAuthorize_MailClientIsReadBeforeTheLinkTransaction(t *testing.T) {
+	f := newWebFixture(t)
+	f.web.oauth.Clients = txGuardClients{Clients: f.web.oauth.Clients, t: t, users: f.users}
+	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
+	f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
+	assert.Equal(t, "Finish signing up to Openwa Web", f.users.mails[len(f.users.mails)-1].Subject, "the subject still names the app")
+}
