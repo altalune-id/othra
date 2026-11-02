@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
+import { timestampDate } from '@bufbuild/protobuf/wkt';
+import AppButton from '#base/components/ui/AppButton.vue';
+import AppModal from '#base/components/ui/AppModal.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { SigningKeyStatus } from '#gen/keys/v1/keys_pb';
+import { useSigningKeys } from '~/components/project/keys/useSigningKeys';
 import IssuerStatus from '~/components/project/overview/IssuerStatus.vue';
+import KeyRotation from '~/components/project/overview/KeyRotation.vue';
 import { setupItems } from '~/components/project/overview/setup';
 import SetupChecklist from '~/components/project/overview/SetupChecklist.vue';
+import { useDiscoveryCheck } from '~/components/project/overview/useDiscoveryCheck';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
@@ -51,7 +58,26 @@ async function loadCounts() {
   }
 }
 
-onMounted(loadCounts);
+const signingKeys = useSigningKeys(projectId);
+const issuer = computed(() => detail.get(projectId)?.issuerUrl ?? '');
+const discovery = useDiscoveryCheck(issuer);
+const showJSON = ref(false);
+const hostedUrl = computed(() => (issuer.value ? `${issuer.value.replace(/\/$/, '')}/account/` : ''));
+
+onMounted(() => {
+  void loadCounts();
+  void signingKeys.load();
+  if (issuer.value) {
+    void discovery.check();
+  }
+});
+onBeforeUnmount(signingKeys.dispose);
+
+const activeKey = computed(() => {
+  const k = signingKeys.keys.value.find(key => key.status === SigningKeyStatus.ACTIVE);
+  const since = k?.activatedAt ?? k?.createdAt;
+  return k ? { kid: k.kid.slice(0, 8), alg: k.alg, days: since ? Math.max(0, Math.floor((Date.now() - timestampDate(since).getTime()) / 86_400_000)) : 0 } : null;
+});
 
 const full = computed(() => detail.get(projectId));
 const methods = computed(() => (counts.value
@@ -75,32 +101,64 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
 </script>
 
 <template>
-  <div v-if="project" class="max-w-4xl space-y-6">
+  <div v-if="project" class="flex flex-col gap-5">
     <PageHeader
       :title="full?.issuerUrl || project.name"
       :mono="!!full?.issuerUrl"
       :description="t('overview.issuer_for', { project: project.name })"
     >
-      <template #meta>
-        <div class="flex flex-wrap items-center gap-2 text-xs text-base-content/70">
-          <img v-if="full?.logoUrl" :src="full.logoUrl" alt="" class="size-10 shrink-0 rounded-box border border-base-300 bg-base-100 object-contain p-1 max-sm:size-8">
-          <SystemBadge v-if="project.system" :label="t('common.system')" />
+      <template v-if="project.system" #meta>
+        <SystemBadge :label="t('common.system')" />
+      </template>
+      <template #status>
+        <p class="flex items-center gap-1 text-xs text-base-content/70">
           <span class="font-mono">{{ project.id }}</span>
           <CopyButton :value="project.id" :label="t('common.copy_label', { label: t('common.id') })" />
-        </div>
+        </p>
       </template>
       <template v-if="full?.issuerUrl" #actions>
-        <CopyButton :value="full.issuerUrl" :label="t('common.copy_label', { label: t('issuer.url') })" />
-        <NuxtLink :to="`${base}/settings/issuer`" class="btn btn-ghost btn-sm">
-          {{ t('issuer.edit') }}
-        </NuxtLink>
+        <CopyButton :value="full.issuerUrl" :label="t('overview.copy_issuer')" :text="t('overview.copy_issuer')" />
+        <AppButton variant="plain" size="sm" :disabled="!discovery.doc.value" @click="showJSON = true">
+          <Icon name="lucide:braces" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('overview.view_json') }}
+        </AppButton>
+        <AppButton size="sm" :href="hostedUrl" target="_blank" rel="noopener">
+          <Icon name="lucide:play" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('overview.try_signin') }}
+        </AppButton>
       </template>
     </PageHeader>
 
     <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('project.system_note')" />
     <ProjectReadOnlyNote v-else-if="guard.system" />
 
-    <IssuerStatus v-if="full?.issuerUrl" :issuer="full.issuerUrl" :methods="methods" :methods-failed="!!countsError" />
-    <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts && !countsError" :error="countsError" @retry="loadCounts" />
+    <div class="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]">
+      <div class="flex min-w-0 flex-col gap-5">
+        <IssuerStatus
+          v-if="full?.issuerUrl"
+          :state="discovery.state.value"
+          :keys="discovery.keys.value"
+          :active-key="activeKey"
+          :methods="methods"
+          :methods-failed="!!countsError"
+          :hosted-url="hostedUrl"
+          @retry="discovery.check()"
+        />
+        <p v-if="full?.issuerUrl" class="-mt-3 text-ui text-base-content/70" data-testid="cache-note">
+          {{ t('overview.cache_note') }}
+        </p>
+        <KeyRotation :keys="signingKeys.keys.value" />
+      </div>
+      <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts && !countsError" :error="countsError" @retry="loadCounts" />
+    </div>
+
+    <AppModal :open="showJSON" :title="t('overview.discovery')" @close="showJSON = false">
+      <pre class="max-h-96 overflow-auto rounded-box bg-base-200 p-3 font-mono text-xs" data-testid="discovery-json">{{ JSON.stringify(discovery.doc.value, null, 2) }}</pre>
+      <template #footer>
+        <AppButton variant="plain" size="sm" @click="showJSON = false">
+          {{ t('common.close') }}
+        </AppButton>
+      </template>
+    </AppModal>
   </div>
 </template>

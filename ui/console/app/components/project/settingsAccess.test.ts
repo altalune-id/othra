@@ -90,10 +90,9 @@ describe('project settings markup', () => {
     expect(read('./edit/ProjectEditModal.vue')).not.toContain('common.slug');
   });
 
-  it('puts the project logo in the Overview header, not the Issuer card title', () => {
+  it('keeps the Overview header to the issuer title, as the design does: no logo on it', () => {
     const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
-    expect(overview).toMatch(/<img v-if="full\?\.logoUrl"[^>]*class="size-10 [^"]*max-sm:size-8/);
-    expect(overview).not.toContain('size-6');
+    expect(overview).not.toContain('full?.logoUrl');
   });
 });
 
@@ -149,9 +148,11 @@ describe('m1.5 design re-check', () => {
     }
   });
 
-  it('lets issuer URLs wrap after /p/ and calls the Overview link "Edit issuer"', () => {
+  it('gives the Overview header the design actions: Copy issuer, View as JSON and Try sign-in', () => {
     const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
-    expect(overview).toContain('issuer.edit');
+    expect(overview).toContain('overview.copy_issuer');
+    expect(overview).toContain('overview.view_json');
+    expect(overview).toContain('overview.try_signin');
     expect(pages.find(p => p.name === 'issuer')!.source).toContain('<UrlField');
   });
 });

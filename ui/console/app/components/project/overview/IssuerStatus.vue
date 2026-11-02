@@ -1,51 +1,67 @@
 <script setup lang="ts">
-import AppModal from '#base/components/ui/AppModal.vue';
+import type { DiscoveryState } from './useDiscoveryCheck';
 import KeyValue from '#base/components/ui/KeyValue.vue';
 import Section from '#base/components/ui/Section.vue';
-import { useDiscoveryCheck } from './useDiscoveryCheck';
+import StatusLabel from '#base/components/ui/StatusLabel.vue';
 
-const { issuer, methods, methodsFailed = false } = defineProps<{ issuer: string, methods: string[] | null, methodsFailed?: boolean }>();
+export interface ActiveKey {
+  kid: string;
+  alg: string;
+  days: number;
+}
 
+const { state, keys, activeKey, methods, methodsFailed = false, hostedUrl } = defineProps<{
+  state: DiscoveryState,
+  keys: number | null,
+  activeKey: ActiveKey | null,
+  methods: string[] | null,
+  methodsFailed?: boolean,
+  hostedUrl: string,
+}>();
+
+const emit = defineEmits<{ retry: [] }>();
 const { t } = useI18n();
-const { state, doc, keys, check } = useDiscoveryCheck(() => issuer);
-const showJSON = ref(false);
-const items = computed(() => [
+const rows = computed(() => [
   { label: t('overview.discovery') },
-  { label: t('overview.keys'), value: keys.value === null ? '' : t('overview.keys_published', { n: keys.value }) },
-  { label: t('overview.methods'), value: methodsFailed ? t('overview.methods_failed') : methods === null ? t('common.loading') : methods.length ? methods.join(', ') : t('overview.methods_none') },
+  { label: t('overview.keys') },
+  ...(activeKey ? [{ label: t('overview.active_key') }] : []),
+  { label: t('overview.methods') },
 ]);
-
-onMounted(check);
+const methodsSlot = computed(() => `value-${rows.value.length - 1}`);
+const methodsText = computed(() => (methodsFailed ? t('overview.methods_failed') : methods === null ? t('common.loading') : methods.length ? methods.join(', ') : t('overview.methods_none')));
 </script>
 
 <template>
-  <Section :title="t('overview.status_title')" :description="t('overview.cache_note')" flush data-testid="issuer-status">
-    <template #actions>
-      <button type="button" class="btn btn-sm" :disabled="!doc" @click="showJSON = true">
-        <Icon name="lucide:braces" size="16" />
-        {{ t('overview.view_json') }}
-      </button>
-    </template>
-    <KeyValue :items="items">
+  <Section :title="t('overview.status_title')" flush data-testid="issuer-status">
+    <KeyValue :items="rows">
       <template #value-0>
-        <span class="flex flex-wrap items-center gap-2" role="status">
-          <span v-if="state === 'checking'" class="loading loading-spinner loading-xs" aria-hidden="true" />
-          <span v-else class="status" :class="state === 'serving' ? 'status-success' : 'status-error'" aria-hidden="true" />
-          {{ t(`overview.discovery_${state}`) }}
-          <button v-if="state === 'unreachable'" type="button" class="btn btn-ghost btn-xs" @click="check">
-            <Icon name="lucide:rotate-ccw" size="14" />
+        <span v-if="state === 'checking'" role="status" class="inline-flex items-center gap-2">
+          <span class="loading loading-spinner loading-xs" aria-hidden="true" />
+          {{ t('overview.discovery_checking') }}
+        </span>
+        <StatusLabel v-else-if="state === 'serving'" tone="success" :label="t('overview.discovery_serving')">
+          <span class="font-mono text-xs">/.well-known/openid-configuration</span> {{ t('overview.discovery_checked') }}
+        </StatusLabel>
+        <span v-else role="status" class="inline-flex flex-wrap items-center gap-2">
+          <StatusLabel tone="error" :label="t('overview.discovery_unreachable')" />
+          <button type="button" class="btn btn-ghost btn-xs text-ui" @click="emit('retry')">
+            <Icon name="lucide:rotate-ccw" size="14" class="shrink-0" aria-hidden="true" />
             {{ t('common.retry') }}
           </button>
         </span>
       </template>
-    </KeyValue>
-    <AppModal :open="showJSON" :title="t('overview.discovery')" @close="showJSON = false">
-      <pre class="max-h-96 overflow-auto rounded-box bg-base-200 p-3 font-mono text-xs" data-testid="discovery-json">{{ JSON.stringify(doc, null, 2) }}</pre>
-      <template #footer>
-        <button type="button" class="btn btn-sm" @click="showJSON = false">
-          {{ t('common.close') }}
-        </button>
+      <template #value-1>
+        <StatusLabel v-if="keys !== null" :tone="keys > 0 ? 'success' : 'warning'" :label="t('overview.keys_published', { n: keys })" :detail="keys > 0 ? t('overview.keys_reachable') : ''" />
+        <span v-else class="text-base-content/70">{{ t('common.loading') }}</span>
       </template>
-    </AppModal>
+      <template v-if="activeKey" #value-2>
+        <StatusLabel tone="success" mono :label="activeKey.kid" :detail="t('overview.active_key_detail', { alg: activeKey.alg, n: activeKey.days }, activeKey.days)" />
+      </template>
+      <template #[methodsSlot]>
+        <StatusLabel :tone="methodsFailed ? 'error' : methods?.length ? 'success' : 'warning'" :label="methodsText">
+          <a class="link" :href="hostedUrl" target="_blank" rel="noopener">{{ t('overview.hosted_page') }}</a>
+        </StatusLabel>
+      </template>
+    </KeyValue>
   </Section>
 </template>

@@ -2,7 +2,7 @@
 import type { StatusTone } from './types';
 import { computed } from 'vue';
 
-const { tone, label, detail = '' } = defineProps<{ tone: StatusTone, label: string, detail?: string }>();
+const { tone, label, detail = '', mono = false } = defineProps<{ tone: StatusTone, label: string, detail?: string, mono?: boolean }>();
 
 const tones: Record<StatusTone, string> = {
   success: 'status-success',
@@ -17,7 +17,7 @@ const dot = computed(() => ['status', tones[tone]]);
 <template>
   <span class="inline-flex min-w-0 flex-wrap items-center gap-x-2 text-ui">
     <span aria-hidden="true" :class="dot" />
-    <span class="font-medium">{{ label }}</span>
+    <span class="font-medium" :class="{ 'font-mono text-xs': mono }">{{ label }}</span>
     <span v-if="detail || $slots.default" class="text-base-content/70"><slot>{{ detail }}</slot></span>
   </span>
 </template>

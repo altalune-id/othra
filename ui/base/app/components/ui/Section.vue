@@ -16,13 +16,14 @@ const head = computed(() => flush ? 'border-b border-base-300 px-4 py-2' : 'px-4
 <template>
   <section class="min-w-0 rounded-box border bg-base-100" :class="tone === 'danger' ? 'border-error' : 'border-base-300'" :aria-labelledby="titleId">
     <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1" :class="head">
-      <div class="min-w-0">
+      <div class="min-w-0 flex-1">
         <h2 :id="titleId" class="text-ui font-semibold">
           {{ title }}
         </h2>
         <p v-if="description" class="text-xs text-base-content/70">
           {{ description }}
         </p>
+        <slot name="header" />
       </div>
       <div v-if="slots.actions" class="flex flex-wrap items-center gap-2">
         <slot name="actions" />

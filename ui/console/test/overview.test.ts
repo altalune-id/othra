@@ -1,10 +1,12 @@
 // @vitest-environment happy-dom
 import { create } from '@bufbuild/protobuf';
+import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
+import { SigningKeySchema, SigningKeyStatus } from '#gen/keys/v1/keys_pb';
 import { ProjectSchema } from '#gen/project/v1/project_pb';
 import { mountPage } from '#test/mount-page';
 import { deferred, setClient, setRoute } from '#test/nuxt-globals';
@@ -37,6 +39,35 @@ beforeEach(() => {
 });
 
 describe('project overview', () => {
+  it('draws the design overview: header actions, two columns, the mono active key, the rotation timeline and the setup rows', async () => {
+    setup({ issuerHandle: 'web', signinEmailLink: true });
+    const day = 86_400_000;
+    const at = (ago: number) => timestampFromDate(new Date(Date.now() - ago * day));
+    setClient('$signingKeyClient', { listSigningKeys: vi.fn().mockResolvedValue({ keys: [
+      create(SigningKeySchema, { publicId: 'k1', kid: '2026-08-aXYZ', alg: 'ES256', status: SigningKeyStatus.ACTIVE, createdAt: at(80), activatedAt: at(78) }),
+      create(SigningKeySchema, { publicId: 'k0', kid: '2026-02-bXYZ', alg: 'ES256', status: SigningKeyStatus.RETIRED, createdAt: at(200), retireAfter: at(70) }),
+      create(SigningKeySchema, { publicId: 'k2', kid: '2026-11-aXYZ', alg: 'ES256', status: SigningKeyStatus.NEXT, createdAt: at(1) }),
+    ] }) });
+    const w = await mountPage(Overview, { attachTo: document.body });
+    await flushPromises();
+    const actions = w.get('header').findAll('a, button').map(b => b.text());
+    expect(actions).toEqual(expect.arrayContaining(['overview.copy_issuer', 'overview.view_json', 'overview.try_signin']));
+    expect(w.get('header a.btn-primary').attributes('href')).toBe(`${issuer}/account/`);
+    expect(w.get('.grid').classes()).toEqual(expect.arrayContaining(['grid-cols-1', 'xl:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]']));
+    const status = w.get('[data-testid="issuer-status"]');
+    expect(status.text()).toContain('overview.active_key');
+    expect(status.get('.font-mono.text-xs.font-medium').text()).toBe('2026-08-');
+    expect(status.text()).toContain('overview.active_key_detail|{"alg":"ES256","n":78}');
+    expect(w.get('[data-testid="cache-note"]').classes()).toEqual(expect.arrayContaining(['text-ui', 'text-base-content/70']));
+    const rotation = w.get('[data-testid="key-rotation"]');
+    expect(rotation.findAll('.timeline-box').map(b => b.text())).toEqual(['2026-02-', '2026-08-']);
+    expect(rotation.get('.timeline-middle.text-primary').exists()).toBe(true);
+    const row = w.get('[data-testid="setup-checklist"] li');
+    expect(row.classes()).toEqual(['flex', 'items-start', 'gap-2', 'px-4', 'py-2', 'text-ui']);
+    expect(w.get('[data-testid="setup-checklist"] progress').classes()).toEqual(['progress', 'mt-1', 'h-1']);
+    w.unmount();
+  });
+
   it('titles the page with the issuer and shows live discovery and the published keys', async () => {
     const fetcher = setup({ issuerHandle: 'web', signinEmailLink: true });
     const w = await mountPage(Overview, { attachTo: document.body });

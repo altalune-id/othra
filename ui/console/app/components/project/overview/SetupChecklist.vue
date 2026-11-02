@@ -15,21 +15,23 @@ const progress = computed(() => t('overview.setup_progress', { done: done.value,
 </script>
 
 <template>
-  <Section :title="t('overview.setup_title')" :description="ready ? progress : ''" data-testid="setup-checklist">
-    <LoadError v-if="error" :error="error" :retry-label="t('common.retry')" @retry="emit('retry')" />
-    <div v-else-if="loading" class="space-y-3" data-testid="setup-loading">
+  <Section :title="t('overview.setup_title')" :description="ready ? progress : ''" flush class="self-start" data-testid="setup-checklist">
+    <template v-if="ready" #header>
+      <progress class="progress mt-1 h-1" :value="done" :max="items.length" :aria-label="t('overview.setup_title')" :aria-valuetext="progress" />
+    </template>
+    <div v-if="error" class="p-4">
+      <LoadError :error="error" :retry-label="t('common.retry')" @retry="emit('retry')" />
+    </div>
+    <div v-else-if="loading" class="space-y-3 p-4" data-testid="setup-loading">
       <LoadingStatus :label="t('common.loading')" />
       <div v-for="n in 5" :key="n" class="skeleton h-5 w-full" aria-hidden="true" />
     </div>
-    <progress v-if="ready" class="progress progress-primary w-full" :value="done" :max="items.length" :aria-label="t('overview.setup_title')" :aria-valuetext="progress" />
-    <ul v-if="ready" class="divide-y divide-base-300">
-      <li v-for="item in items" :key="item.key" class="flex items-center justify-between gap-3 py-2 text-sm">
-        <span class="flex items-center gap-2">
-          <Icon :name="item.done ? 'lucide:circle-check' : 'lucide:circle'" size="18" :class="item.done ? 'text-success' : 'text-base-content/40'" />
-          {{ t(`overview.setup_${item.key}`) }}
-          <span class="sr-only">{{ item.done ? t('overview.setup_done') : t('overview.setup_todo') }}</span>
-        </span>
-        <NuxtLink v-if="!item.done" :to="item.to" class="btn btn-sm">
+    <ul v-else class="divide-y divide-base-300">
+      <li v-for="item in items" :key="item.key" class="flex items-start gap-2 px-4 py-2 text-ui">
+        <Icon :name="item.done ? 'lucide:circle-check' : 'lucide:circle-dashed'" size="16" class="mt-0.5 shrink-0" aria-hidden="true" />
+        <span v-if="item.done" class="min-w-0 flex-1 text-base-content/70"><span class="sr-only">{{ t('overview.setup_done') }}: </span>{{ t(`overview.setup_${item.key}`) }}</span>
+        <span v-else class="min-w-0 flex-1 font-medium">{{ t(`overview.setup_${item.key}`) }}</span>
+        <NuxtLink v-if="!item.done" :to="item.to" class="link text-ui">
           {{ t('overview.setup_go') }}
         </NuxtLink>
       </li>
