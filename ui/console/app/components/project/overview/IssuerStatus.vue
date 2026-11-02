@@ -19,7 +19,7 @@ onMounted(check);
 </script>
 
 <template>
-  <Section :title="t('overview.status_title')" :description="t('overview.cache_note')" data-testid="issuer-status">
+  <Section :title="t('overview.status_title')" :description="t('overview.cache_note')" flush data-testid="issuer-status">
     <template #actions>
       <button type="button" class="btn btn-sm" :disabled="!doc" @click="showJSON = true">
         <Icon name="lucide:braces" size="16" />

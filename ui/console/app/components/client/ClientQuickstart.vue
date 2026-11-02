@@ -21,9 +21,9 @@ async function trySignIn() {
 </script>
 
 <template>
-  <Section :title="t('clients.quickstart_title', { name })" :description="t('clients.quickstart_body')">
+  <Section :title="t('clients.quickstart_title', { name })" :description="t('clients.quickstart_body')" flush>
     <KeyValue :items="items" :copy-label="t('common.copy_label', { label: '{label}' })" />
-    <div class="space-y-2">
+    <div class="space-y-2 border-t border-base-300 p-4">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-medium">
           .env
