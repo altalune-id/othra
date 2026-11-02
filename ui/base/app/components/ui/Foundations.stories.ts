@@ -78,7 +78,7 @@ export const RadiiAndDensity: Story = {
           <button type="button" class="btn btn-sm text-ui btn-primary">New client</button>
           <button type="button" class="btn btn-sm text-ui">Copy issuer</button>
           <button type="button" class="btn btn-sm text-ui btn-ghost">Cancel</button>
-          <input class="input text-ui w-56" placeholder="Search clients" aria-label="Search clients">
+          <input class="input input-sm text-ui w-56" placeholder="Search clients" aria-label="Search clients">
         </div>
         <div class="navbar min-h-12 border border-base-300 bg-base-100 px-4">Top bar · min-h-12</div>
       </div>`,

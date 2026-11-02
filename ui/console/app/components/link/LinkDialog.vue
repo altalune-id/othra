@@ -64,7 +64,7 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
             v-else
             :id="ids.target"
             :value="targetId"
-            class="select w-full border-base-300"
+            class="select select-sm w-full border-base-300 text-ui"
             :disabled="busy"
             @change="emit('target', ($event.target as HTMLSelectElement).value)"
           >

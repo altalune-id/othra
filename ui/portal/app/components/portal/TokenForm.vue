@@ -30,12 +30,12 @@ const ids = { name: useId(), nameErr: useId(), server: useId(), serverHelp: useI
     <div class="card-body gap-2">
       <div class="fieldset">
         <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
-        <input :id="ids.name" v-model="name" class="input w-full" :class="{ 'input-error': fieldErrors.name }" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr">
+        <input :id="ids.name" v-model="name" class="input input-sm w-full text-ui" :class="{ 'input-error': fieldErrors.name }" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr">
         <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
       </div>
       <div class="fieldset">
         <label :for="ids.server" class="label text-ui text-base-content">{{ t('tokens.server') }}</label>
-        <select :id="ids.server" v-model="serverId" class="select w-full" :class="{ 'select-error': fieldErrors.server_id }" :disabled="busy" :aria-describedby="`${ids.serverHelp} ${ids.serverErr}`">
+        <select :id="ids.server" v-model="serverId" class="select select-sm w-full text-ui" :class="{ 'select-error': fieldErrors.server_id }" :disabled="busy" :aria-describedby="`${ids.serverHelp} ${ids.serverErr}`">
           <option value="" disabled>
             {{ t('tokens.pick_server') }}
           </option>
@@ -66,7 +66,7 @@ const ids = { name: useId(), nameErr: useId(), server: useId(), serverHelp: useI
       </fieldset>
       <div class="fieldset">
         <label :for="ids.expires" class="label text-ui text-base-content">{{ t('tokens.expires') }}</label>
-        <select :id="ids.expires" v-model.number="expiry" class="select w-full" :disabled="busy">
+        <select :id="ids.expires" v-model.number="expiry" class="select select-sm w-full text-ui" :disabled="busy">
           <option v-for="o in expiryOptions" :key="o.value" :value="o.value">
             {{ t('tokens.days', { days: o.days }) }}
           </option>

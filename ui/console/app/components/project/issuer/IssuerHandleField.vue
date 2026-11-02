@@ -81,7 +81,7 @@ function onInput(event: Event) {
         :id="ids.input"
         :value="modelValue"
         type="text"
-        class="input join-item w-full font-mono"
+        class="input input-sm join-item w-full font-mono text-ui"
         :class="{ 'input-error': bad || !!fieldError }"
         :readonly="locked"
         :disabled="disabled"

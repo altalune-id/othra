@@ -36,7 +36,7 @@ useHead({ title: () => t('nav.profile') });
           <input
             :id="ids.name"
             v-model="name"
-            class="input w-full"
+            class="input input-sm w-full text-ui"
             :class="{ 'input-error': fieldErrors.name }"
             autocomplete="name"
             :disabled="busy"

@@ -50,7 +50,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
       <div class="card-body gap-2">
         <div class="fieldset">
           <label :for="ids.terms" class="label text-ui text-base-content">{{ t('legal.terms_url') }}</label>
-          <input :id="ids.terms" v-model="termsUrl" type="url" class="input w-full" placeholder="https://example.com/terms" :aria-describedby="urlChangedHint ? `${ids.termsHint} ${ids.termsErr}` : ids.termsErr" :disabled="busy">
+          <input :id="ids.terms" v-model="termsUrl" type="url" class="input input-sm w-full text-ui" placeholder="https://example.com/terms" :aria-describedby="urlChangedHint ? `${ids.termsHint} ${ids.termsErr}` : ids.termsErr" :disabled="busy">
           <FieldError :id="ids.termsErr" :message="fieldErrors.terms_url" />
           <p v-if="urlChangedHint" :id="ids.termsHint" class="flex items-start gap-1 text-sm text-base-content/70">
             <Icon name="lucide:info" size="14" class="mt-0.5 shrink-0 text-warning" />
@@ -59,7 +59,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
         </div>
         <div class="fieldset">
           <label :for="ids.privacy" class="label text-ui text-base-content">{{ t('legal.privacy_url') }}</label>
-          <input :id="ids.privacy" v-model="privacyUrl" type="url" class="input w-full" placeholder="https://example.com/privacy" :aria-describedby="`${ids.privacyHelp} ${ids.privacyErr}`" :disabled="busy">
+          <input :id="ids.privacy" v-model="privacyUrl" type="url" class="input input-sm w-full text-ui" placeholder="https://example.com/privacy" :aria-describedby="`${ids.privacyHelp} ${ids.privacyErr}`" :disabled="busy">
           <FieldError :id="ids.privacyErr" :message="fieldErrors.privacy_url" />
           <p :id="ids.privacyHelp" class="label whitespace-normal text-xs text-base-content/70">
             {{ t('legal.privacy_help') }}

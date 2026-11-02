@@ -126,7 +126,7 @@ function onToggle(event: Event) {
             <input
               :id="ids.clientId"
               v-model="clientId"
-              class="input w-full font-mono text-sm"
+              class="input input-sm w-full font-mono text-ui"
               :class="{ 'input-error': fieldErrors.client_id }"
               autocomplete="off"
               spellcheck="false"
@@ -155,7 +155,7 @@ function onToggle(event: Event) {
                 :id="ids.secret"
                 v-model="secret"
                 type="password"
-                class="input w-full font-mono text-sm"
+                class="input input-sm w-full font-mono text-ui"
                 :class="{ 'input-error': fieldErrors.client_secret }"
                 autocomplete="off"
                 spellcheck="false"

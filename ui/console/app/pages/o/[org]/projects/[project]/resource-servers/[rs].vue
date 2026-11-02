@@ -194,7 +194,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
               :id="ids.name"
               v-model="name"
               type="text"
-              class="input min-w-0 flex-1"
+              class="input input-sm min-w-0 flex-1 text-ui"
               :class="{ 'input-error': nameError }"
               maxlength="100"
               :disabled="saving === 'name'"

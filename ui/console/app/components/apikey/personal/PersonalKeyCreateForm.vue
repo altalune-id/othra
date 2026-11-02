@@ -87,7 +87,7 @@ function onOrgChange(event: Event) {
   <form class="space-y-2" @submit.prevent="emit('submit')">
     <div class="fieldset">
       <label :for="ids.name" class="label text-ui text-base-content">{{ labels.name }}</label>
-      <input :id="ids.name" v-model="name" type="text" class="input w-full" placeholder="laptop" maxlength="100" autocomplete="off" :disabled="busy">
+      <input :id="ids.name" v-model="name" type="text" class="input input-sm w-full text-ui" placeholder="laptop" maxlength="100" autocomplete="off" :disabled="busy">
     </div>
 
     <div class="fieldset">
@@ -99,7 +99,7 @@ function onOrgChange(event: Event) {
       </template>
       <template v-else>
         <label :for="ids.org" class="label text-ui text-base-content">{{ labels.org }}</label>
-        <select :id="ids.org" class="select w-full" :value="orgId" :aria-describedby="ids.orgHelp" :disabled="busy" @change="onOrgChange">
+        <select :id="ids.org" class="select select-sm w-full text-ui" :value="orgId" :aria-describedby="ids.orgHelp" :disabled="busy" @change="onOrgChange">
           <option value="" disabled>
             {{ labels.selectOrg }}
           </option>
@@ -115,7 +115,7 @@ function onOrgChange(event: Event) {
 
     <div class="fieldset">
       <label :for="ids.expires" class="label text-ui text-base-content">{{ labels.expires }}</label>
-      <select :id="ids.expires" v-model.number="expiresInDays" class="select w-full" :aria-describedby="ids.expiresHelp" :disabled="busy">
+      <select :id="ids.expires" v-model.number="expiresInDays" class="select select-sm w-full text-ui" :aria-describedby="ids.expiresHelp" :disabled="busy">
         <option v-for="o in expiryOptions" :key="o.days" :value="o.days">
           {{ o.label }}
         </option>

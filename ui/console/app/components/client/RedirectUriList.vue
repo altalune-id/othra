@@ -50,7 +50,7 @@ function add() {
         <input
           :value="row"
           type="url"
-          class="input w-full font-mono text-sm"
+          class="input input-sm w-full font-mono text-ui"
           :class="{ 'input-error': errors[i] }"
           :placeholder="i === 0 ? placeholder : ''"
           :disabled="disabled"

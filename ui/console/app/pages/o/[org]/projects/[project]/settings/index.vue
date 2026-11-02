@@ -94,11 +94,11 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
         <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="save()">
           <div class="fieldset">
             <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
-            <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">
+            <input :id="ids.name" v-model="name" type="text" class="input input-sm w-full text-ui" :disabled="busy">
           </div>
           <div class="fieldset">
             <label :for="ids.slug" class="label text-ui text-base-content">{{ t('project.console_slug') }}</label>
-            <input :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :aria-describedby="ids.slugHelp" :disabled="busy">
+            <input :id="ids.slug" v-model="slug" type="text" class="input input-sm w-full font-mono text-ui" :aria-describedby="ids.slugHelp" :disabled="busy">
             <p :id="ids.slugHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('project.console_slug_help') }}
             </p>

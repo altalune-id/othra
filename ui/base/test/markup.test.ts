@@ -200,6 +200,11 @@ describe('guard: theme contrast', () => {
     expect(files.filter(f => f.text.includes('floating-label')).map(f => f.path)).toEqual([]);
   });
 
+  it('sizes console and portal inputs and selects compactly, except the hosted sign-in preview', () => {
+    const full = files.filter(f => !f.path.endsWith('BrandingPreview.vue')).flatMap(f => [...f.text.matchAll(/class="((input|select)(?: [^"]*)?)"/g)].filter(m => !m[1]!.split(' ').some(c => /^(?:input|select)-(?:xs|sm)$/.test(c))).map(m => `${f.path}: ${m[0]}`));
+    expect(full).toEqual([]);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });

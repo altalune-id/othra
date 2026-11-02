@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 
@@ -27,28 +28,28 @@ const emit = defineEmits<{ ask: [], confirm: [], cancel: [] }>();
       <h2 class="card-title text-base">
         {{ labels.title }}
       </h2>
-      <p class="text-sm text-base-content/70">
+      <p class="text-ui text-base-content/70">
         {{ labels.body }}
       </p>
       <ErrorText :error="error" />
       <div class="card-actions justify-end">
-        <button type="button" class="btn btn-outline btn-error btn-sm" :disabled="busy" @click="emit('ask')">
-          <Icon name="lucide:log-out" size="16" />
+        <AppButton variant="outline" size="sm" class="btn-error" :disabled="busy" @click="emit('ask')">
+          <Icon name="lucide:log-out" size="16" class="shrink-0" aria-hidden="true" />
           {{ labels.signOut }}
-        </button>
+        </AppButton>
       </div>
     </div>
     <AppModal :open="confirming" :title="labels.confirmTitle" @close="emit('cancel')">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ labels.confirmBody }}
       </p>
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" @click="emit('cancel')">
+        <AppButton variant="ghost" size="sm" @click="emit('cancel')">
           {{ labels.cancel }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="busy" @click="emit('confirm')">
+        </AppButton>
+        <AppButton variant="error" size="sm" :disabled="busy" @click="emit('confirm')">
           {{ labels.signOut }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
   </section>

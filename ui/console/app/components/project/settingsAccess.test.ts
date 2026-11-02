@@ -74,7 +74,8 @@ describe('project settings markup', () => {
 
   it('builds the edit project modal from daisyUI 5 fieldsets', () => {
     const modal = read('./edit/ProjectEditModal.vue');
-    expect(modal).not.toMatch(/input-(?:sm|bordered)/);
+    expect(modal).not.toContain('input-bordered');
+    expect(modal.match(/class="input input-sm [^"]*text-ui"/g)).toHaveLength(2);
     expect(modal.match(/class="fieldset"/g)).toHaveLength(2);
     expect(modal.match(/<label :for="ids\.\w+" class="label text-ui text-base-content">/g)).toHaveLength(2);
   });

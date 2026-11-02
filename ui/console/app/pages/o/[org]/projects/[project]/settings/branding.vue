@@ -73,7 +73,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
         <div class="card-body gap-2">
           <div class="fieldset">
             <label :for="ids.name" class="label text-ui text-base-content">{{ t('branding.display_name') }}</label>
-            <input :id="ids.name" v-model="displayName" type="text" class="input w-full" maxlength="60" :placeholder="listed?.name" :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`" :disabled="busy">
+            <input :id="ids.name" v-model="displayName" type="text" class="input input-sm w-full text-ui" maxlength="60" :placeholder="listed?.name" :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`" :disabled="busy">
             <FieldError :id="ids.nameErr" :message="fieldErrors.display_name" />
             <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('branding.display_name_help') }}
@@ -114,7 +114,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
             <div class="flex flex-wrap items-center gap-2">
               <div class="join">
                 <input :id="ids.color" type="color" class="join-item h-10 w-12 cursor-pointer border border-base-300 bg-base-100 p-1" :value="colorValue" :aria-label="t('branding.pick_primary')" :aria-describedby="preview.primary ? undefined : ids.colorDefault" :disabled="busy" @input="primaryColor = ($event.target as HTMLInputElement).value">
-                <input :id="ids.colorHex" v-model="primaryColor" type="text" class="input join-item w-36 font-mono" placeholder="#4f46e5" maxlength="7" :aria-describedby="`${ids.contrast} ${ids.colorErr}`" :disabled="busy">
+                <input :id="ids.colorHex" v-model="primaryColor" type="text" class="input input-sm join-item w-36 font-mono text-ui" placeholder="#4f46e5" maxlength="7" :aria-describedby="`${ids.contrast} ${ids.colorErr}`" :disabled="busy">
               </div>
               <span v-if="!preview.primary" :id="ids.colorDefault" class="text-sm text-base-content/70">{{ t('branding.default_colour') }}</span>
             </div>
@@ -128,7 +128,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
 
           <div class="fieldset">
             <label :for="ids.email" class="label text-ui text-base-content">{{ t('branding.support_email') }}</label>
-            <input :id="ids.email" v-model="supportEmail" type="email" class="input w-full" placeholder="help@example.com" :aria-describedby="`${ids.emailHelp} ${ids.emailErr}`" :disabled="busy">
+            <input :id="ids.email" v-model="supportEmail" type="email" class="input input-sm w-full text-ui" placeholder="help@example.com" :aria-describedby="`${ids.emailHelp} ${ids.emailErr}`" :disabled="busy">
             <FieldError :id="ids.emailErr" :message="fieldErrors.support_email" />
             <p :id="ids.emailHelp" class="label whitespace-normal text-xs text-base-content/70">
               {{ t('branding.support_email_help') }}

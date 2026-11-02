@@ -129,7 +129,7 @@ function patch(next: Partial<ClientFields>) {
         :id="ids.name"
         :value="fields.name"
         type="text"
-        class="input w-full"
+        class="input input-sm w-full text-ui"
         :class="{ 'input-error': nameError }"
         maxlength="100"
         :disabled="busy"
