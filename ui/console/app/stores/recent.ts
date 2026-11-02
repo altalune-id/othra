@@ -2,13 +2,19 @@ const STORAGE_KEY = 'othra_recent';
 const LEGACY_KEY = 'othra_pinned';
 const KEEP = 20;
 
-interface Saved {
-  orgs?: string[];
-  projects?: Record<string, string[]>;
-}
-
 function front(list: string[], slug: string): string[] {
   return [slug, ...list.filter(s => s !== slug)].slice(0, KEEP);
+}
+
+function slugs(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((s): s is string => typeof s === 'string') : [];
+}
+
+function lists(value: unknown): Record<string, string[]> {
+  if (!value || typeof value !== 'object') {
+    return {};
+  }
+  return Object.fromEntries(Object.entries(value).filter(([, v]) => Array.isArray(v)).map(([org, v]) => [org, slugs(v)]));
 }
 
 // useRecentStore remembers the orgs and, per org, the projects a person opened last, newest first, in this browser.
@@ -20,15 +26,24 @@ export const useRecentStore = defineStore('recent', () => {
     if (!import.meta.client) {
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ orgs: orgs.value, projects: projects.value }));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ orgs: orgs.value, projects: projects.value }));
+    } catch {
+    }
   }
 
   function migrate() {
-    const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) ?? '{}') as { org?: string, projects?: Record<string, string> };
-    orgs.value = legacy.org ? [legacy.org] : [];
-    projects.value = Object.fromEntries(Object.entries(legacy.projects ?? {}).map(([org, slug]) => [org, [slug]]));
+    try {
+      const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) ?? '{}') as { org?: unknown, projects?: Record<string, unknown> };
+      orgs.value = typeof legacy.org === 'string' ? [legacy.org] : [];
+      projects.value = Object.fromEntries(Object.entries(legacy.projects ?? {}).filter(([, slug]) => typeof slug === 'string').map(([org, slug]) => [org, [slug as string]]));
+    } catch {
+    }
     persist();
-    localStorage.removeItem(LEGACY_KEY);
+    try {
+      localStorage.removeItem(LEGACY_KEY);
+    } catch {
+    }
   }
 
   function read() {
@@ -41,18 +56,20 @@ export const useRecentStore = defineStore('recent', () => {
         migrate();
         return;
       }
-      const saved = JSON.parse(raw) as Saved;
-      orgs.value = Array.isArray(saved.orgs) ? saved.orgs : [];
-      projects.value = saved.projects ?? {};
+      const saved = JSON.parse(raw) as { orgs?: unknown, projects?: unknown };
+      orgs.value = slugs(saved.orgs);
+      projects.value = lists(saved.projects);
     } catch {
     }
   }
 
   function visit(org: string, project?: string) {
     orgs.value = front(orgs.value, org);
+    const kept = Object.fromEntries(Object.entries(projects.value).filter(([o]) => orgs.value.includes(o)));
     if (project) {
-      projects.value = { ...projects.value, [org]: front(projects.value[org] ?? [], project) };
+      kept[org] = front(kept[org] ?? [], project);
     }
+    projects.value = kept;
     persist();
   }
 

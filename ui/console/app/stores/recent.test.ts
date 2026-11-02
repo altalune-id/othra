@@ -56,6 +56,44 @@ describe('useRecentStore', () => {
     expect(saved().projects.acme).toEqual(['web', 'api']);
   });
 
+  it('keeps working in memory when the browser refuses to store', () => {
+    storage.setItem.mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    const recent = useRecentStore();
+    expect(() => recent.visit('acme', 'web')).not.toThrow();
+    recent.visit('beta');
+    expect(recent.orgs).toEqual(['beta', 'acme']);
+    expect(recent.lastProject('acme')).toBe('web');
+  });
+
+  it('keeps only lists of slugs from a saved value of the wrong shape', () => {
+    storage.data.set('othra_recent', JSON.stringify({ orgs: ['acme', 3], projects: { acme: 'web', beta: ['api', null] } }));
+    const recent = useRecentStore();
+    expect(recent.orgs).toEqual(['acme']);
+    expect(recent.lastProject('acme')).toBe('');
+    expect(() => recent.visit('acme', 'web')).not.toThrow();
+    expect(recent.lastProject('acme')).toBe('web');
+  });
+
+  it('drops a corrupt old pin once instead of retrying it on every load', () => {
+    storage.data.set('othra_pinned', '{not json');
+    expect(useRecentStore().lastOrg()).toBe('');
+    expect(storage.data.has('othra_pinned')).toBe(false);
+    expect(saved()).toEqual({ orgs: [], projects: {} });
+  });
+
+  it('forgets the projects of an org that falls off the kept list', () => {
+    const recent = useRecentStore();
+    recent.visit('org-0', 'p');
+    for (let i = 1; i <= 20; i++) {
+      recent.visit(`org-${i}`);
+    }
+    expect(recent.orgs).toHaveLength(20);
+    expect(recent.orgs).not.toContain('org-0');
+    expect(recent.projects).not.toHaveProperty('org-0');
+  });
+
   it('orders a list by recency and keeps unopened items in their own order after it', () => {
     const recent = useRecentStore();
     recent.visit('c');
