@@ -48,6 +48,10 @@ templ Sent(d layout.LayoutData, v SentData) {
 					@iconInbox()
 					<span>{ i18n.T(ctx, "sent.spam_hint") }</span>
 				</li>
+				<li class="flex gap-2">
+					@iconDevice()
+					<span>{ i18n.T(ctx, "sent.device_hint") }</span>
+				</li>
 			</ul>
 			<div class="flex flex-wrap gap-2">
 				if v.Email != "" {

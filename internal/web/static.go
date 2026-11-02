@@ -33,7 +33,7 @@ func StaticVersion(name string) string {
 	return files.Version(name)
 }
 
-// SECURITY: unversioned URLs revalidate by ETag, so a deploy never serves stale CSS or JS from a browser cache.
+// NOTE: unversioned URLs revalidate by ETag, so a deploy never serves stale CSS or JS from a browser cache.
 func staticHandler(prefix string, load func() (assets.Files, error)) http.Handler {
 	files, err := load()
 	if err != nil {
