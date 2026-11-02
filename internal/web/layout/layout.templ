@@ -2,7 +2,13 @@ package layout
 
 templ Layout(d LayoutData) {
 	<!DOCTYPE html>
-	<html lang={ d.lang() } data-theme="othra-light" data-brand?={ d.Brand != nil }>
+	<html
+		lang={ d.lang() }
+		if d.Brand.CSS() != "" {
+			data-theme="othra-light"
+		}
+		data-brand?={ d.Brand != nil }
+	>
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>

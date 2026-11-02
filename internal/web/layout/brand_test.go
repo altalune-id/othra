@@ -76,12 +76,19 @@ func TestBrandStyle_WritesOnlyCheckedHexUnderTheNonce(t *testing.T) {
 
 func TestLayout_WithoutBrandLooksAsToday(t *testing.T) {
 	html := page(t, t.Context(), LayoutData{BasePath: "/x", Title: "Sign in"})
-	assert.Contains(t, html, `<html lang="en" data-theme="othra-light">`)
+	assert.Contains(t, html, `<html lang="en">`, "no data-theme: the page follows the system light or dark mode")
 	assert.Contains(t, html, "<title>Sign in · Othra</title>")
 	assert.NotContains(t, html, "<style")
 	assert.NotContains(t, html, "data-brand")
 	assert.NotContains(t, html, "brand-tile")
 	assert.Contains(t, html, `<h1 class="text-2xl font-semibold text-balance break-words">Sign in</h1></div><p>body</p>`)
+}
+
+func TestLayout_OnlyBrandColoursPinTheLightTheme(t *testing.T) {
+	plain := page(t, t.Context(), LayoutData{Title: "Sign in", Brand: NewBrand("Acme", "", "")})
+	assert.Contains(t, plain, `<html lang="en" data-brand>`, "Othra's default look follows the system light or dark mode")
+	coloured := page(t, templ.WithNonce(t.Context(), "n"), LayoutData{Title: "Sign in", Brand: NewBrand("Acme", "", "#1e3a8a")})
+	assert.Contains(t, coloured, `<html lang="en" data-theme="othra-light" data-brand>`, "brand colours are light-only")
 }
 
 func TestLayout_WithBrand(t *testing.T) {

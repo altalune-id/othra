@@ -90,7 +90,7 @@ func TestLayoutTemplate(t *testing.T) {
 	out := buf.String()
 
 	assert.Contains(t, out, "<!doctype html>")
-	assert.Contains(t, out, `<html lang="id" data-theme="othra-light">`)
+	assert.Contains(t, out, `<html lang="id">`)
 	assert.Contains(t, out, "<title>Home &lt;x&gt; · Othra</title>")
 	assert.Contains(t, out, `href="/app/static/favicon.ico"`)
 	assert.Contains(t, out, `href="/app/static/favicon-32x32.png"`)
