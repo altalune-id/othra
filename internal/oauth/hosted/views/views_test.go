@@ -93,26 +93,30 @@ func TestPicker(t *testing.T) {
 }
 
 func TestSent(t *testing.T) {
-	out := html(t, ctxIn(t, i18n.English), Sent(page(), SentData{Site: site, Email: "ana@acme.test", Minutes: 15, ResendToken: "tok-resend", Resent: true}))
-	assert.Contains(t, out, `We sent a sign-in link to <span class="font-medium break-all">ana@acme.test</span>. It works once, for 15 minutes.`)
+	out := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Sent(page(), SentData{Site: site, Email: "ana@acme.test", Minutes: 15, ResendToken: "tok-resend", Resent: true})), "> <", "><")
+	assert.Contains(t, out, `<h1 class="text-2xl font-semibold text-balance break-words">Check your inbox</h1><p>We sent a sign-in link to <span class="font-medium break-all">ana@acme.test</span>.</p></div>`, "the address sits in the header, under the title")
+	assert.Regexp(t, `<li class="flex gap-2"><svg[^>]*><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6h4"></path></svg><span>The link works once, for 15 minutes.</span></li>`, out, "the expiry, from the server's link lifetime")
+	assert.Contains(t, out, "<span>Not there after a minute? Check your spam folder.</span>")
+	assert.Equal(t, 2, strings.Count(out, `<li class="flex gap-2">`), "two hints, as in the design")
 	assert.Contains(t, out, `<form method="post" action="/id/p/acme/login/resend">`)
 	assert.Contains(t, out, `<input type="hidden" name="csrf" value="tok-resend"><input type="hidden" name="email" value="ana@acme.test">`)
+	assert.Contains(t, out, `<button class="btn btn-primary" type="submit">Send the link again</button>`, "no countdown: the server exposes no resend wait")
 	assert.Contains(t, out, `role="status"`)
 	assert.Contains(t, out, `href="/id/p/acme/login?add=1">Wrong email?</a>`)
-	assert.Equal(t, 2, strings.Count(out, `<li class="flex gap-2">`), "two hints, as in the design")
+	assert.NotContains(t, out, "It opens", "no app, no app sentence")
 
 	noCookie := html(t, ctxIn(t, i18n.Indonesian), Sent(page(), SentData{Site: site, Minutes: 15}))
-	assert.Contains(t, noCookie, "Kami sudah mengirim tautan masuk. Tautan hanya bisa dipakai sekali, selama 15 menit.")
+	assert.Contains(t, noCookie, "<p>Kami sudah mengirim tautan masuk.</p>")
+	assert.Contains(t, noCookie, "Tautan hanya bisa dipakai sekali, selama 15 menit.")
 	assert.Contains(t, noCookie, ">Salah email?</a>")
 	assert.NotContains(t, noCookie, "/login/resend")
 	assert.NotContains(t, noCookie, `role="status"`)
-	assert.NotContains(t, out, "It opens", "no app, no app sentence")
 
 	app := html(t, ctxIn(t, i18n.English), Sent(page(), SentData{Site: site, Email: "ana@acme.test", Minutes: 15, Client: "OAgent"}))
-	assert.Contains(t, app, `ana@acme.test</span>. It works once, for 15 minutes. It opens OAgent.</p>`, "the body names the app the link returns to")
+	assert.Contains(t, app, `ana@acme.test</span>. It opens OAgent.</p>`, "the body names the app the link returns to")
 	assert.NotContains(t, app, "Continue to OAgent", "no subtitle")
 	id := html(t, ctxIn(t, i18n.Indonesian), Sent(page(), SentData{Site: site, Minutes: 15, Client: "OAgent"}))
-	assert.Contains(t, id, "selama 15 menit. Tautan ini membuka OAgent.</p>")
+	assert.Contains(t, id, "Kami sudah mengirim tautan masuk. Tautan ini membuka OAgent.</p>")
 }
 
 func TestVerifyAndLinkUnusable(t *testing.T) {
@@ -733,10 +737,11 @@ func TestContinue_ConsentOutcomes(t *testing.T) {
 	allowed := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Continue(page(), ContinueData{Site: site, Client: "Openwa Web", Target: target, Outcome: OutcomeAllowed})), "> <", "><")
 	assert.Contains(t, allowed, "<title>Access allowed · Acme Store</title>")
 	assert.Contains(t, allowed, `<meta http-equiv="refresh" content="0;url=https://app.example/cb?code=abc">`)
-	assert.Regexp(t, `<div class="flex w-full max-w-100 flex-col gap-3"><svg[^>]*class="shrink-0 size-6"[^>]*><circle cx="12" cy="12" r="10"></circle><path d="m16 9-5.5 5.5L8 12"></path></svg><h1 class="text-2xl font-semibold">Access allowed</h1>`, allowed)
+	assert.Regexp(t, `<div class="flex w-full max-w-112 flex-col gap-3"><svg[^>]*class="shrink-0 size-6"[^>]*><circle cx="12" cy="12" r="10"></circle><path d="m16 9-5.5 5.5L8 12"></path></svg><h1 class="text-2xl font-semibold">Access allowed</h1>`, allowed)
 	assert.Contains(t, allowed, "<p>Returning you to Openwa Web. Revoke access at any time under Connected apps in your Acme Store account.</p>")
 	assert.Contains(t, allowed, `<a class="btn" href="https://app.example/cb?code=abc">Continue to Openwa Web</a>`, "a visible way on when the refresh is blocked")
 	assert.NotContains(t, allowed, "<script", "a forwarding page runs no script")
+	assert.Contains(t, allowed, `<footer class="flex w-full flex-col gap-2 text-xs text-base-content/70 max-w-112">`, "the consent column's width, footer included")
 
 	denied := html(t, ctxIn(t, i18n.Indonesian), Continue(page(), ContinueData{Site: site, Client: "Openwa Web", Target: target, Outcome: OutcomeDenied}))
 	assert.Contains(t, denied, `<h1 class="text-2xl font-semibold">Tidak ada yang dibagikan</h1>`)

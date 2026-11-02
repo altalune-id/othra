@@ -46,8 +46,8 @@ templ continueAction(v ContinueData) {
 templ Continue(d layout.LayoutData, v ContinueData) {
 	switch v.Outcome {
 		case OutcomeAllowed:
-			@layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.allowed_title"))) {
-				<div class="flex w-full max-w-100 flex-col gap-3">
+			@layout.Layout(wide(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.allowed_title")))) {
+				<div class="flex w-full max-w-112 flex-col gap-3">
 					@iconCircleCheck()
 					<h1 class="text-2xl font-semibold">{ i18n.T(ctx, "continue.allowed_title") }</h1>
 					<p>{ i18n.T(ctx, "continue.allowed_body", "client", v.name(), "project", v.Project) }</p>
@@ -55,8 +55,8 @@ templ Continue(d layout.LayoutData, v ContinueData) {
 				</div>
 			}
 		case OutcomeDenied:
-			@layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.denied_title"))) {
-				<div class="flex w-full max-w-100 flex-col gap-3">
+			@layout.Layout(wide(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.denied_title")))) {
+				<div class="flex w-full max-w-112 flex-col gap-3">
 					@iconCircleX()
 					<h1 class="text-2xl font-semibold">{ i18n.T(ctx, "continue.denied_title") }</h1>
 					<p>{ i18n.T(ctx, "continue.denied_body", "client", v.name()) }</p>

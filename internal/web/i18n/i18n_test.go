@@ -87,8 +87,7 @@ func TestT(t *testing.T) {
 	en, id := WithLocale(context.Background(), English), WithLocale(context.Background(), Indonesian)
 	assert.Equal(t, "Sign in to Openwa", T(en, "verify.title", "project", "Openwa"))
 	assert.Equal(t, "Masuk ke Openwa", T(id, "verify.title", "project", "Openwa"))
-	assert.Equal(t, "We sent a sign-in link to a@example.com. It works once, for 15 minutes.",
-		T(en, "sent.body", "email", "a@example.com", "minutes", "15"))
+	assert.Equal(t, "The link works once, for 15 minutes.", T(en, "sent.lifetime", "email", "a@example.com", "minutes", "15"))
 	assert.Equal(t, "Masuk ke {project}", T(id, "verify.title"), "no args leaves the placeholder")
 	assert.Equal(t, "Masuk ke {email}", T(id, "verify.title", "project", "{email}", "email", "x"), "a value is never expanded again")
 	assert.Equal(t, "nope.missing", T(en, "nope.missing"))

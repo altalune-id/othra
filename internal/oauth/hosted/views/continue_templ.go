@@ -147,7 +147,7 @@ func Continue(d layout.LayoutData, v ContinueData) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex w-full max-w-100 flex-col gap-3\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex w-full max-w-112 flex-col gap-3\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -195,7 +195,7 @@ func Continue(d layout.LayoutData, v ContinueData) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.allowed_title"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = layout.Layout(wide(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.allowed_title")))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -212,7 +212,7 @@ func Continue(d layout.LayoutData, v ContinueData) templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"flex w-full max-w-100 flex-col gap-3\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"flex w-full max-w-112 flex-col gap-3\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -260,7 +260,7 @@ func Continue(d layout.LayoutData, v ContinueData) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = layout.Layout(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.denied_title"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = layout.Layout(wide(titled(forwarding(d, v.Target), i18n.T(ctx, "continue.denied_title")))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
