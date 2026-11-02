@@ -15,7 +15,7 @@ export const Default: Story = {
   render: args => ({
     components: { FormField },
     setup: () => ({ args }),
-    template: `<FormField v-bind="args" v-slot="{ id, describedBy, invalid }"><input :id="id" class="input input-sm text-ui w-full" value="Acme Orders" :aria-describedby="describedBy" :aria-invalid="invalid"></FormField>`,
+    template: `<FormField v-bind="args" v-slot="{ id, describedBy, invalid }"><input :id="id" class="input input-sm text-ui w-full" :class="{ 'input-error': invalid }" value="Acme Orders" :aria-describedby="describedBy" :aria-invalid="invalid"></FormField>`,
   }),
 };
 
@@ -28,7 +28,7 @@ export const Fields: Story = {
         <FormField label="Client name" v-slot="{ id, describedBy }"><input :id="id" class="input input-sm text-ui w-full" value="Acme Orders" :aria-describedby="describedBy"></FormField>
         <FormField label="Redirect URI" v-slot="{ id, describedBy }"><input :id="id" type="url" class="input input-sm text-ui w-full font-mono" value="https://orders.acme.example/callback" :aria-describedby="describedBy"></FormField>
         <FormField label="Signing algorithm" hint="Apps verify tokens with the published keys" v-slot="{ id, describedBy }"><select :id="id" class="select select-sm text-ui w-full font-mono" :aria-describedby="describedBy"><option>RS256</option><option>ES256</option></select></FormField>
-        <FormField label="Name" error="Enter a name that people will recognise on the consent screen" v-slot="{ id, describedBy, invalid }"><input :id="id" class="input input-sm text-ui w-full" :aria-describedby="describedBy" :aria-invalid="invalid"></FormField>
+        <FormField label="Name" error="Enter a name that people will recognise on the consent screen" v-slot="{ id, describedBy, invalid }"><input :id="id" class="input input-sm text-ui w-full" :class="{ 'input-error': invalid }" :aria-describedby="describedBy" :aria-invalid="invalid"></FormField>
         <FormField label="Budget per run" v-slot="{ id, describedBy }"><label class="input input-sm text-ui w-full">$<input :id="id" type="number" step="0.01" value="0.25" :aria-describedby="describedBy"></label></FormField>
         <FormField label="Temperature" hint="Lower is more consistent" v-slot="{ id, describedBy }"><input :id="id" type="range" min="0" max="10" value="2" class="range range-xs w-full" :aria-describedby="describedBy"></FormField>
       </div>`,

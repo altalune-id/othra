@@ -76,6 +76,11 @@ describe('formField', () => {
     expect(w.get('p').classes()).toEqual(['label', 'whitespace-normal', 'text-xs', 'text-base-content/70']);
   });
 
+  it('draws the error message in the design error text, 12px with normal line height, 8px below the control', () => {
+    const w = mount(FormField, { props: { label: 'Name', error: 'Enter a name' }, slots: { default: '<input>' } });
+    expect(w.get(`#${w.get('label').attributes('for')}-error`).classes()).toEqual(['mt-2', 'flex', 'items-start', 'gap-1', 'text-xs', 'leading-[normal]', 'text-error']);
+  });
+
   it('describes nothing without hint or error', () => {
     const w = mount(FormField, { props: { label: 'Name' }, slots: { default: ({ describedBy }: { describedBy?: string }) => h('input', { 'aria-describedby': describedBy }) } });
     expect(w.get('input').attributes('aria-describedby')).toBeUndefined();

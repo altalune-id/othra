@@ -39,8 +39,8 @@ describe('guard: markup in every app', () => {
     expect(offenders(/<tr\s(?:[^>]*\s)?class="(?:[^"]*\s)?hover(?:\s[^"]*)?"/)).toEqual([]);
   });
 
-  it('keeps text neutral: error, warning, success and info colours go on icons only', () => {
-    expect(offenders(/<(?:p|span|div|dd|li|label)\s[^>]*\bclass="[^"]*\btext-(?:error|warning|success|info)\b/)).toEqual([]);
+  it('keeps text neutral: error, warning, success and info colours go on icons only, except the field error message', () => {
+    expect(offenders(/<(?:p|span|div|dd|li|label)\s[^>]*\bclass="[^"]*\btext-(?:error|warning|success|info)\b/).filter(p => !p.endsWith('/FieldError.vue'))).toEqual([]);
     expect(offenders(/<(?:p|span|div|dd|li|label)\s[^>]*:class="[^"]*'text-(?:error|warning|success|info)'/)).toEqual([]);
   });
 
