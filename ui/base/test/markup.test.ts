@@ -196,6 +196,10 @@ describe('guard: theme contrast', () => {
     expect([...legends, ...hints]).toEqual([]);
   });
 
+  it('puts field labels above their control, never daisyUI floating labels', () => {
+    expect(files.filter(f => f.text.includes('floating-label')).map(f => f.path)).toEqual([]);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });
