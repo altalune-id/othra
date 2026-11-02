@@ -132,7 +132,7 @@ func TestBrandFooter_LanguageSelect(t *testing.T) {
 	id := i18n.WithLocale(t.Context(), i18n.Indonesian)
 	out := render(t, id, brandFooter(LayoutData{BasePath: "/id/", Brand: &Brand{}}))
 	assert.Contains(t, out, `<label class="sr-only" for="lang">Bahasa</label>`)
-	assert.Contains(t, out, `<select id="lang" class="select select-xs w-28" data-lang-select hidden>`, "hidden until lang.js shows it")
+	assert.Contains(t, out, `<select id="lang" class="select select-xs w-28" data-lang-select data-cookie="othra_lang" hidden>`, "hidden until lang.js shows it")
 	assert.Contains(t, out, `<option value="en-US">English</option><option value="id-ID" selected>Bahasa Indonesia</option></select>`, "endonyms, the current locale selected")
 	assert.Contains(t, out, `<script type="module" src="/id/static/lang.js"></script>`)
 

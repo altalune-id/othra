@@ -29,7 +29,7 @@ templ brandFooter(d LayoutData) {
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			if d.Refresh == "" {
 				<label class="sr-only" for="lang">{ i18n.T(ctx, "common.language") }</label>
-				<select id="lang" class="select select-xs w-28" data-lang-select hidden>
+				<select id="lang" class="select select-xs w-28" data-lang-select data-cookie={ i18n.Cookie } hidden>
 					for _, l := range i18n.Locales() {
 						<option value={ l } selected?={ l == i18n.Locale(ctx) }>{ i18n.Name(l) }</option>
 					}
