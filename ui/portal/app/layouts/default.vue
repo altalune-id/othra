@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { provide } from 'vue';
 import LanguageSwitcher from '#base/components/layout/LanguageSwitcher.vue';
 import ThemeSwitcher from '#base/components/layout/ThemeSwitcher.vue';
 import AppButton from '#base/components/ui/AppButton.vue';
 import AppDropdown from '#base/components/ui/AppDropdown.vue';
 import AppShell from '#base/components/ui/AppShell.vue';
+import { copiedLabelKey } from '#base/components/ui/copy';
 import NavbarShell from '#base/components/ui/NavbarShell.vue';
 import SidebarNav from '#base/components/ui/SidebarNav.vue';
+import ToastHost from '#base/components/ui/ToastHost.vue';
 import { switchAccountURL } from '~/lib/hosted';
 import { navItems } from '~/lib/nav';
 import { useAccountStore } from '~/stores/account';
@@ -16,6 +19,7 @@ const { t } = useI18n();
 const config = useRuntimeConfig().public;
 const account = useAccountStore();
 const navOpen = ref(false);
+provide(copiedLabelKey, () => t('common.copied'));
 
 const groups = computed(() => [{ items: navItems(route.path, t) }]);
 const initial = computed(() => [...config.project][0]?.toUpperCase() ?? '');
@@ -87,5 +91,6 @@ await account.ensureLoaded();
         </footer>
       </main>
     </AppShell>
+    <ToastHost :close-label="t('common.close')" />
   </div>
 </template>

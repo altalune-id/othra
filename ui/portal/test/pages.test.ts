@@ -4,6 +4,7 @@ import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import ToastHost from '#base/components/ui/ToastHost.vue';
 import { AppResourceSchema, ConnectedAppSchema, ProfileSchema, SessionSchema, SignInMethodKind, SignInMethodLock, SignInMethodSchema, TokenServerSchema } from '#gen/account/v1/account_pb';
 import { mountPage } from '#test/mount-page';
 import { connectError, router, runtimeConfig, setClient, setKnownKeys, setRoute, useHead } from '#test/nuxt-globals';
@@ -67,6 +68,11 @@ describe('portal shell', () => {
     const form = menu.querySelector('form')!;
     expect(form.getAttribute('action')).toBe('/p/acme/login/signout');
     expect((form.querySelector('input[name="user_session"]') as HTMLInputElement).value).toBe(here.id);
+  });
+
+  it('mounts the toast host so copy buttons announce Copied', async () => {
+    const w = await mountPage(Layout);
+    expect(w.findComponent(ToastHost).exists()).toBe(true);
   });
 });
 

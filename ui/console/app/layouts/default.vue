@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { provide } from 'vue';
 import { copiedLabelKey } from '#base/components/ui/copy';
 import ToastHost from '#base/components/ui/ToastHost.vue';
 import AppNavbar from '~/components/layout/AppNavbar.vue';

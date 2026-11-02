@@ -17,6 +17,7 @@ function sources(dir: string, ext: RegExp): string[] {
 }
 
 const files = apps.flatMap(app => sources(join(ui, app, 'app'), /\.(?:vue|ts)$/).map(path => ({ app, path: path.slice(ui.length), text: readFileSync(path, 'utf8') })));
+const mcpFiles = sources(join(ui, 'mcp', 'src'), /\.vue$/).map(path => ({ app: 'mcp', path: path.slice(ui.length), text: readFileSync(path, 'utf8') }));
 const offenders = (re: RegExp) => files.filter(f => re.test(f.text)).map(f => f.path);
 
 describe('guard: markup in every app', () => {
@@ -210,8 +211,8 @@ describe('guard: theme contrast', () => {
     expect(loose).toEqual([]);
   });
 
-  it('sets every small button in the dense text-ui size', () => {
-    const loose = files.flatMap(f => [...f.text.matchAll(/(?<![:\w-])class="([^"]*)"/g)].filter(m => m[1]!.split(' ').includes('btn-sm') && !m[1]!.split(' ').includes('text-ui')).map(m => `${f.path}: ${m[0]}`));
+  it('sets every small button in the dense text-ui size, MCP App views included', () => {
+    const loose = [...files, ...mcpFiles].flatMap(f => [...f.text.matchAll(/(?<![:\w-])class="([^"]*)"/g)].filter(m => m[1]!.split(' ').includes('btn-sm') && !m[1]!.split(' ').includes('text-ui')).map(m => `${f.path}: ${m[0]}`));
     expect(loose).toEqual([]);
   });
 
