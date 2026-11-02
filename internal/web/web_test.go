@@ -102,6 +102,10 @@ func TestStaticAssets(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, []string{"image/x-icon", "image/vnd.microsoft.icon"}, rec.Header().Get("Content-Type"))
 
+		rec = get(t, srv, base+"/static/fonts/ibm-plex-sans-latin-400-normal.woff2")
+		assert.Equal(t, http.StatusOK, rec.Code, "hosted pages load IBM Plex from the binary, not a CDN")
+		assert.Equal(t, "font/woff2", rec.Header().Get("Content-Type"))
+
 		rec = get(t, srv, base+"/static/altalune-logo.png")
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "image/png", rec.Header().Get("Content-Type"))
