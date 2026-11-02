@@ -110,6 +110,24 @@ function contrast(fg: RGB, bg: RGB, alpha = 1): number {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
+describe('guard: foundations', () => {
+  const css = readFileSync(join(ui, 'base/app/assets/css/main.css'), 'utf8');
+
+  it('self-hosts IBM Plex Sans and Mono from @fontsource and never loads fonts from a CDN', () => {
+    for (const face of ['ibm-plex-sans/latin-400', 'ibm-plex-sans/latin-500', 'ibm-plex-sans/latin-600', 'ibm-plex-mono/latin-400', 'ibm-plex-mono/latin-500']) {
+      expect(css).toContain(`@import '@fontsource/${face}.css';`);
+    }
+    expect(css).toMatch(/--font-sans: 'IBM Plex Sans'/);
+    expect(css).toMatch(/--font-mono: 'IBM Plex Mono'/);
+    expect(offenders(/fonts\.(?:googleapis|gstatic)\.com/)).toEqual([]);
+  });
+
+  it('defines the dense text-ui size the artifact uses', () => {
+    expect(css).toContain('--text-ui: 0.8125rem;');
+    expect(css).toContain('--text-ui--line-height: 1.25rem;');
+  });
+});
+
 describe('guard: theme contrast', () => {
   it('keeps muted text at /70 or darker: /60, /50 and /40 fail AA in some themes (decorative icons excepted)', () => {
     const lines = files.flatMap(f => f.text.split('\n').filter(l => /text-base-content\/[1-6]\d\b/.test(l) && !/<Icon\b/.test(l)).map(l => `${f.path}: ${l.trim()}`));
