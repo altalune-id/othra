@@ -746,37 +746,30 @@ func (h *Web) toPage(w http.ResponseWriter, r *http.Request, s *site, p page, qu
 	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: a fixed page under this issuer's path.
 }
 
-// SECURITY: RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked.
 func (h *Web) toReturnTo(w http.ResponseWriter, r *http.Request, s *site, raw string) {
+	h.toReturnToAs(w, r, s, raw, views.OutcomeNone)
+}
+
+// SECURITY: RFC 9700 §4.11: every return_to redirect runs ReturnTo here, whatever the caller checked; outcome is what the caller just did.
+func (h *Web) toReturnToAs(w http.ResponseWriter, r *http.Request, s *site, raw string, outcome views.Outcome) {
 	if h.consoleHandOff(s, raw) {
 		http.Redirect(w, r, h.consoleSignIn(), http.StatusSeeOther)
 		return
 	}
 	target := ReturnTo(s.issuerURL, raw)
 	if r.Method == http.MethodPost && strings.HasPrefix(target, s.path+authorizePath+"?") {
-		h.forward(w, r, s, h.pending(r, s, target).client, target)
+		h.forward(w, r, s, h.pending(r, s, target).client, target, outcome)
 		return
 	}
 	http.Redirect(w, r, target, http.StatusSeeOther) //nolint:gosec // G710: target is validated by ReturnTo.
 }
 
 // SECURITY: after a POST the next hop is a GET, so form-action never blocks the 302; target is ReturnTo's or registered.
-func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string) {
+func (h *Web) forward(w http.ResponseWriter, r *http.Request, s *site, client, target string, outcome views.Outcome) {
 	d := h.layout(r, s)
 	d.Refresh = target
-	v := views.ContinueData{Site: s.views(), Client: client, Target: target, Outcome: consentOutcome(r, s)}
+	v := views.ContinueData{Site: s.views(), Client: client, Target: target, Outcome: outcome}
 	h.kit.Render(w, r, http.StatusOK, views.Continue(d, v))
-}
-
-func consentOutcome(r *http.Request, s *site) views.Outcome {
-	switch {
-	case r.URL.Path != s.path+string(pageConsent):
-		return views.OutcomeNone
-	case r.PostFormValue("deny") == "1":
-		return views.OutcomeDenied
-	default:
-		return views.OutcomeAllowed
-	}
 }
 
 func seenVersion(r *http.Request) int32 {

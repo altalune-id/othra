@@ -188,7 +188,7 @@ func (h *Web) afterLogout(w http.ResponseWriter, r *http.Request, s *site, es *e
 		u.RawQuery = q.Encode()
 	}
 	if r.Method == http.MethodPost {
-		h.forward(w, r, s, es.client.Name, u.String())
+		h.forward(w, r, s, es.client.Name, u.String(), views.OutcomeNone)
 		return
 	}
 	http.Redirect(w, r, u.String(), http.StatusFound) //nolint:gosec // G710: a post-logout URI registered for this client.

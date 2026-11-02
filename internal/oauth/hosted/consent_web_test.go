@@ -209,3 +209,21 @@ func TestConsent_PageEdges(t *testing.T) {
 	f.consents.failOn = "grant"
 	assert.Equal(t, http.StatusInternalServerError, f.submit(f.client, page, "/consent", nil).status)
 }
+
+// Allow whose authorize request fails on the way back reports no outcome: nothing was granted.
+func TestConsent_AllowThenAuthorizeErrorSaysNothingAllowed(t *testing.T) {
+	f := newWebFixture(t)
+	f.signIn(f.client, "acme", "ana@example.com")
+	page := f.toConsent(f.client, reqURL())
+	done := f.submit(f.client, page, "/consent", url.Values{"return_to": {reqURL("scope", "openid not:a-scope")}})
+	require.Equal(t, http.StatusOK, done.status, done.body)
+	m := refreshRE.FindStringSubmatch(done.body)
+	require.NotEmpty(t, m, done.body)
+	u, err := url.Parse(plain(m[1]))
+	require.NoError(t, err)
+	assert.Equal(t, "invalid_scope", u.Query().Get("error"), "the client hears the authorize error")
+	assert.NotContains(t, done.body, "Access allowed", "no grant ran, so the page never says access was allowed")
+	assert.NotContains(t, done.body, "Nothing was shared")
+	assert.Contains(t, done.body, "Continuing to")
+	assert.Empty(t, f.consents.grants)
+}
