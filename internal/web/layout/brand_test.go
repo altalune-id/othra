@@ -120,10 +120,10 @@ func TestBrandFooter_IssuerHost(t *testing.T) {
 	b := &Brand{Name: "Acme", Issuer: "https://id.example/p/acme"}
 	assert.Equal(t, "id.example/p/acme", b.IssuerHost())
 	assert.Equal(t, "plain", (&Brand{Issuer: "plain"}).IssuerHost())
-	out := render(t, t.Context(), brandFooter(b))
+	out := render(t, t.Context(), brandFooter(b, false))
 	assert.Contains(t, out, `<span class="font-mono break-all">id.example/p/acme</span>`)
 	assert.NotContains(t, out, "<nav", "no legal links, no nav")
-	assert.Equal(t, `<div aria-hidden="true"></div>`, render(t, t.Context(), brandFooter(&Brand{})))
+	assert.Equal(t, `<div aria-hidden="true"></div>`, render(t, t.Context(), brandFooter(&Brand{}, false)))
 }
 
 func TestCSRFInput(t *testing.T) {
@@ -158,7 +158,7 @@ func TestBrandComponentsReturnWriteErrors(t *testing.T) {
 		"branded layout": {Layout(LayoutData{Title: "T", Brand: b}), templ.WithChildren(ctx, card)},
 		"logo tile":      {BrandTile(b), ctx},
 		"letter tile":    {BrandTile(&Brand{Name: "Acme"}), ctx},
-		"footer":         {brandFooter(b), ctx},
+		"footer":         {brandFooter(b, false), ctx},
 		"consent":        {Consent(LayoutData{}, ConsentData{Required: true}), ctx},
 		"consent note":   {Consent(LayoutData{}, ConsentData{}), ctx},
 		"mail":           {Mail("en-US", "Hi"), templ.WithChildren(ctx, body)},

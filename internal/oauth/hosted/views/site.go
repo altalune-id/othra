@@ -52,6 +52,11 @@ func loginTitle(ctx context.Context, v LoginData) string {
 	return i18n.T(ctx, "verify.title", "project", v.Project)
 }
 
+func wide(d layout.LayoutData) layout.LayoutData {
+	d.Wide = true
+	return d
+}
+
 func titled(d layout.LayoutData, title string) layout.LayoutData {
 	d.Title = title
 	return d

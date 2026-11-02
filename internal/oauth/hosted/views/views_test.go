@@ -93,7 +93,7 @@ func TestPicker(t *testing.T) {
 
 func TestSent(t *testing.T) {
 	out := html(t, ctxIn(t, i18n.English), Sent(page(), SentData{Site: site, Email: "ana@acme.test", Minutes: 15, ResendToken: "tok-resend", Resent: true}))
-	assert.Contains(t, out, `We sent a sign-in link to <span class="break-all">ana@acme.test</span>. It works once, for 15 minutes.`)
+	assert.Contains(t, out, `We sent a sign-in link to <span class="font-medium break-all">ana@acme.test</span>. It works once, for 15 minutes.`)
 	assert.Contains(t, out, `<form method="post" action="/id/p/acme/login/resend">`)
 	assert.Contains(t, out, `<input type="hidden" name="csrf" value="tok-resend"><input type="hidden" name="email" value="ana@acme.test">`)
 	assert.Contains(t, out, `role="status"`)
@@ -419,35 +419,34 @@ func consentData() ConsentData {
 func TestConsent_FirstTime(t *testing.T) {
 	out := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Consent(page(), consentData())), "> <", "><")
 	assert.Contains(t, out, "<title>Allow Claude Code to access Openwa MCP? · Acme Store</title>")
-	assert.Contains(t, out, `<span class="font-medium">Openwa MCP</span>`)
-	assert.Contains(t, out, `https://openwa.example.com/mcp</span>`)
-	assert.Contains(t, out, `aria-hidden="true">C</span>`, "a letter avatar, never a hot-linked logo")
+	assert.NotContains(t, out, `<span class="font-medium">Openwa MCP</span>`, "the resource sits in the title and Technical details only")
 	assert.NotContains(t, out, "<img")
 
-	assert.Contains(t, out, `<span class="badge badge-sm badge-outline">`)
-	assert.Contains(t, out, "Unverified app")
-	assert.Contains(t, out, "Acme Store hasn&#39;t reviewed this app. Its details come from claude.ai.")
+	assert.Regexp(t, `<span class="badge badge-sm"><svg[^>]*>.*?</svg> MCP client</span><span class="badge badge-sm badge-outline"><svg[^>]*>.*?</svg> Unverified app</span>`, out, "a metadata-document client is labelled MCP and unverified")
+	assert.Regexp(t, `<div role="note" class="alert items-start text-ui"><svg[^>]*>.*?</svg><span class="min-w-0">That&#39;s a program on this device. Continue only if you started this sign-in. Acme Store hasn&#39;t reviewed this app. Its details come from <span class="font-mono wrap-anywhere">claude.ai</span>.</span></div>`, out, "a loopback MCP client gets one calm note naming its metadata host")
 
 	assert.Contains(t, out, `<span class="min-w-0 flex-1">Read your messages</span>`)
 	assert.Contains(t, out, `<span class="min-w-0 flex-1">Stay connected when you&#39;re away</span>`, "offline_access is its own line")
 	assert.Contains(t, out, `<span class="min-w-0 flex-1">devices:write</span>`, "no description: the raw scope")
+	assert.Regexp(t, `<li class="flex items-start gap-2"><svg[^>]*><circle cx="12" cy="8" r="5"></circle>.*?Know who you are`, out, "identity scopes carry the person icon")
+	assert.Regexp(t, `<li class="flex items-start gap-2"><svg[^>]*><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>.*?Stay connected`, out, "offline_access carries the refresh icon")
 	details := out[strings.Index(out, `<details class="text-xs text-base-content/70">`):]
 	assert.Contains(t, details, `>Technical details</summary>`, "raw scope ids sit behind Technical details")
 	assert.Contains(t, details, `<dt>scope</dt><dd class="break-all">messages:read offline_access devices:write openid</dd><dt>resource</dt><dd class="break-all">https://openwa.example.com/mcp</dd>`)
+	assert.NotContains(t, details, "<dt>issuer</dt>", "no issuer row when the brand has none")
 	assert.Contains(t, out, `<span class="badge badge-ghost badge-sm">Allowed before</span>`)
 	order := []int{strings.Index(out, "Read your messages"), strings.Index(out, ">Stay connected"), strings.Index(out, ">devices:write<"), strings.Index(out, ">Know who you are<")}
 	assert.IsIncreasing(t, order, "new scopes first, in request order; allowed-before last")
 
 	assert.Contains(t, out, `<span class="font-mono text-base font-medium break-all">localhost</span>`, "the return host sits under the title, in mono")
-	assert.Less(t, strings.Index(out, "break-all\">localhost<"), strings.Index(out, "Signing in as"), "the redirect host sits above the account and the scopes")
-	assert.Contains(t, out, "After you allow, you&#39;ll go back to <span class=\"font-medium text-base-content\">localhost</span>.")
-	assert.Contains(t, out, `<p class="text-ui font-medium">That&#39;s a program on this device. Continue only if you started this sign-in.</p>`)
+	assert.Less(t, strings.Index(out, "break-all\">localhost<"), strings.Index(out, "Signed in as"), "the redirect host sits above the account and the scopes")
+	assert.Contains(t, out, `<p class="text-ui break-words text-base-content/70">After you allow, you&#39;ll go back to <span class="font-medium text-base-content">localhost</span>.</p>`)
 
 	form := out[strings.Index(out, `<form method="post" action="/id/p/acme/consent"`):]
 	assert.Contains(t, form, `<input type="hidden" name="csrf" value="tok-consent"><input type="hidden" name="user_session" value="us1"><input type="hidden" name="return_to" value="/id/p/acme/oauth2/authorize?client_id=x">`)
 	assert.Contains(t, form, `<button class="btn flex-1" type="submit" name="deny" value="1" formnovalidate>Cancel</button><button class="btn btn-primary flex-1" type="submit">Allow access</button>`)
-	assert.Contains(t, out, `href="/id/p/acme/login?add=1&amp;return_to=%2Fid%2Fp%2Facme%2Foauth2%2Fauthorize%3Fclient_id%3Dx">Use another account</a>`)
-	assert.Contains(t, out, `<span class="font-medium break-all" title="ana@acme.test">ana@acme.test</span>`)
+	assert.Contains(t, out, `href="/id/p/acme/login?add=1&amp;return_to=%2Fid%2Fp%2Facme%2Foauth2%2Fauthorize%3Fclient_id%3Dx">Switch</a>`)
+	assert.Contains(t, out, `Signed in as <span class="font-medium break-all" title="ana@acme.test">ana@acme.test</span>`)
 }
 
 func TestConsent_RegisteredAccountTitleNoLoopback(t *testing.T) {
@@ -541,10 +540,22 @@ func TestConsent_AppMarkPointsAtTheProject(t *testing.T) {
 		"account":    func() ConsentData { v := consentData(); v.RS, v.RSIdentifier = "", ""; return v }(),
 	} {
 		out := strings.ReplaceAll(html(t, en, Consent(page(), v)), "> <", "><")
-		assert.Regexp(t, `<div class="flex items-center gap-2"><span class="[^"]*rounded-field[^"]*" aria-hidden="true">C</span><svg[^>]*>.*?</svg><span class="[^"]*" role="img" aria-label="Acme Store" data-testid="brand-tile">A</span></div>`, out, "%s: the app mark points at the project tile", name)
+		assert.Regexp(t, `<div class="flex items-center gap-2"><span class="[^"]*rounded-field[^"]*" aria-hidden="true"><svg[^>]*><path d="M12 22v-5"></path>.*?</svg></span><svg[^>]*>.*?</svg><span class="[^"]*" role="img" aria-label="Acme Store" data-testid="brand-tile">A</span></div>`, out, "%s: the MCP client's plug points at the project tile", name)
 	}
-	first := strings.ReplaceAll(html(t, en, Consent(page(), consentData())), "> <", "><")
-	assert.Contains(t, first, `<p class="text-sm"><span class="font-medium">Openwa MCP</span><span class="block font-mono text-xs break-all text-base-content/70">https://openwa.example.com/mcp</span></p>`, "the resource line is text only, under the title")
+	registered := consentData()
+	registered.ClientHost, registered.Loopback = "", false
+	out := strings.ReplaceAll(html(t, en, Consent(page(), registered)), "> <", "><")
+	assert.Regexp(t, `aria-hidden="true"><svg[^>]*><rect x="2" y="4" width="20" height="16" rx="2"></rect>`, out, "a registered app gets the window icon")
+	assert.NotContains(t, out, "MCP client")
+	assert.NotContains(t, out, `role="note"`)
+}
+
+func TestConsent_TechnicalDetailsNameTheIssuer(t *testing.T) {
+	d := page()
+	d.Brand.Issuer = "https://othra.example/p/acme"
+	out := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Consent(d, consentData())), "> <", "><")
+	assert.Contains(t, out, `<dt>issuer</dt><dd class="break-all">https://othra.example/p/acme</dd></dl>`)
+	assert.Contains(t, out, `<footer class="flex w-full flex-wrap items-center justify-between gap-3 text-xs text-base-content/70 max-w-112">`, "the footer lines up with the wider consent column")
 }
 
 func TestLogin_Google(t *testing.T) {
@@ -552,7 +563,7 @@ func TestLogin_Google(t *testing.T) {
 	assert.Contains(t, both, `<form method="post" action="/id/p/acme/federation/google/start"><input type="hidden" name="csrf" value="tok-google"><input type="hidden" name="return_to" value="/id/p/acme/account/">`)
 	assert.Contains(t, both, `<button class="btn-google" type="submit"><svg`)
 	assert.Contains(t, both, `<span>Continue with Google</span></button>`)
-	assert.Contains(t, both, `<div class="divider my-0 text-xs text-base-content/70">or</div>`)
+	assert.Contains(t, both, `<div class="divider my-0 text-xs">or</div>`)
 	assert.Less(t, strings.Index(both, `name="email"`), strings.Index(both, "btn-google"), "the email form first, then Google under an or divider")
 
 	only := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Google: true, EmailOff: true}))
@@ -654,7 +665,7 @@ func TestVerify_LinkModeIndonesian(t *testing.T) {
 	assert.Contains(t, out, "Tambahkan Google dan lanjutkan")
 	assert.Contains(t, out, "Lanjutkan tanpa Google")
 	login := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Google: true}))
-	assert.Contains(t, login, `text-base-content/70">atau</div>`)
+	assert.Contains(t, login, `<div class="divider my-0 text-xs">atau</div>`)
 }
 
 // a failed Connect Google is titled as a connect and leads back to the account, never to sign in.

@@ -23,9 +23,9 @@ templ MailButton(href, label, primary string) {
 	<a href={ templ.SafeURL(href) } style={ mailButtonStyle(primary) }>{ label }</a>
 }
 
-templ brandFooter(b *Brand) {
+templ brandFooter(b *Brand, wide bool) {
 	if b.TermsURL != "" || b.PrivacyURL != "" || b.IssuerHost() != "" {
-		<footer class="flex w-full max-w-100 flex-wrap items-center justify-between gap-3 text-xs text-base-content/70">
+		<footer class={ "flex w-full flex-wrap items-center justify-between gap-3 text-xs text-base-content/70", templ.KV("max-w-100", !wide), templ.KV("max-w-112", wide) }>
 			if b.TermsURL != "" || b.PrivacyURL != "" {
 				<nav class="flex gap-3">
 					if b.TermsURL != "" {

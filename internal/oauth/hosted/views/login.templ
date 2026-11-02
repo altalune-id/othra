@@ -83,7 +83,7 @@ templ Login(d layout.LayoutData, v LoginData) {
 			}
 			if v.Google {
 				if !v.EmailOff {
-					<div class="divider my-0 text-xs text-base-content/70">{ i18n.T(ctx, "common.or") }</div>
+					<div class="divider my-0 text-xs">{ i18n.T(ctx, "common.or") }</div>
 				}
 				@googleStart(d, v.Site, v.GoogleToken, v.ReturnTo)
 			}

@@ -22,6 +22,8 @@ type LayoutData struct {
 	Home     string
 	CSRF     string
 	Refresh  string
+	// Wide gives the hosted footer the consent page's wider column.
+	Wide bool
 }
 
 // Href returns sub (which starts with "/") under the base path.

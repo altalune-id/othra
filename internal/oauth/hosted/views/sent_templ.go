@@ -133,7 +133,7 @@ func Sent(d layout.LayoutData, v SentData) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = withEmail(i18n.T(ctx, "sent.body", "minutes", strconv.Itoa(v.Minutes)), v.Email).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = highlight(i18n.T(ctx, "sent.body", "minutes", strconv.Itoa(v.Minutes)), "{email}", v.Email, "font-medium break-all").Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -335,7 +335,7 @@ func Sent(d layout.LayoutData, v SentData) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = layout.CardWith(i18n.T(ctx, "sent.title"), iconTile(iconMail("size-5"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = layout.CardWith(i18n.T(ctx, "sent.title"), iconTile(iconMailCheck())).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

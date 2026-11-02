@@ -21,7 +21,7 @@ type SentData struct {
 // Sent tells the person to open the link from their inbox, with the same answer for every email.
 templ Sent(d layout.LayoutData, v SentData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "sent.title"))) {
-		@layout.CardWith(i18n.T(ctx, "sent.title"), iconTile(iconMail("size-5"))) {
+		@layout.CardWith(i18n.T(ctx, "sent.title"), iconTile(iconMailCheck())) {
 			if v.Client != "" {
 				<p class="-mt-2 text-base-content/70">{ i18n.T(ctx, "login.continue_to", "client", v.Client) }</p>
 			}
@@ -32,7 +32,7 @@ templ Sent(d layout.LayoutData, v SentData) {
 			}
 			if v.Email != "" {
 				<p>
-					@withEmail(i18n.T(ctx, "sent.body", "minutes", strconv.Itoa(v.Minutes)), v.Email)
+					@highlight(i18n.T(ctx, "sent.body", "minutes", strconv.Itoa(v.Minutes)), "{email}", v.Email, "font-medium break-all")
 				</p>
 			} else {
 				<p>{ i18n.T(ctx, "sent.body_no_email", "minutes", strconv.Itoa(v.Minutes)) }</p>
