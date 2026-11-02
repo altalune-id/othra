@@ -20,6 +20,16 @@ describe('breadcrumbs', () => {
 });
 
 describe('pageHeader', () => {
+  it('lets actions wrap under the title on a phone and draws the design title sizes', () => {
+    const w = mount(PageHeader, { props: { title: 'Agents', description: 'In Support Copilot' }, slots: { actions: '<button>New</button>' } });
+    const row = w.get('h1').element.closest('.justify-between')!;
+    expect(row.className).toBe('flex flex-wrap justify-between gap-3 items-center');
+    expect(row.firstElementChild!.className).toBe('min-w-0');
+    expect(w.get('h1').classes()).toEqual(['text-xl', 'font-semibold', 'break-words']);
+    expect(w.get('p').classes()).toEqual(['text-ui', 'text-base-content/70']);
+    expect(mount(PageHeader, { props: { title: 'https://othra.example/p/acme', mono: true } }).get('h1').classes()).toEqual(['font-mono', 'text-lg', 'font-medium', 'break-all', 'sm:text-xl']);
+  });
+
   it('has one h1, a description and an actions area', () => {
     const w = mount(PageHeader, { props: { title: 'Agents', description: 'Agents in Support Copilot' }, slots: { actions: '<button>New agent</button>' } });
     expect(w.findAll('h1').map(h => h.text())).toEqual(['Agents']);
@@ -74,6 +84,13 @@ describe('emptyState', () => {
     expect(w.get('h3').text()).toBe('No agents yet');
     expect(w.text()).toContain('Create one');
     expect(w.text()).toContain('New agent');
+  });
+
+  it('is the design empty state: left aligned, 24px icon, xl title, muted body, actions in a row', () => {
+    const w = mount(EmptyState, { props: { icon: 'lucide:bot', title: 'No agents yet', body: 'Create one' }, slots: { actions: '<button>New agent</button>' } });
+    expect(w.classes()).toEqual(['flex', 'max-w-md', 'flex-col', 'items-start', 'gap-3', 'py-16']);
+    expect(w.get('h2').classes()).toEqual(['text-xl', 'font-semibold']);
+    expect(w.get('p').classes()).toEqual(['text-base-content/70']);
   });
 
   it('defaults to h2 with no body', () => {
