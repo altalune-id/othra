@@ -49,22 +49,27 @@ const expiryOptions = computed(() => [
         <label class="flex flex-col gap-1">
           <span class="label text-ui text-base-content">{{ t('common.name') }}</span>
           <input
-            :id="ids.name" v-model="name" type="text" class="input w-full" :class="{ 'input-error': fieldErrors.name }"
+            :id="ids.name" v-model="name" type="text" class="input input-sm w-full text-ui" :class="{ 'input-error': fieldErrors.name }"
             placeholder="deploy" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr"
           >
         </label>
         <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
       </div>
 
-      <div class="flex gap-4">
-        <label class="flex items-center gap-2 text-ui"><input v-model="kind" type="radio" value="org" class="radio radio-sm" :disabled="busy">{{ t('apikeys.kind_org') }}</label>
-        <label class="flex items-center gap-2 text-ui"><input v-model="kind" type="radio" value="project" class="radio radio-sm" :disabled="busy">{{ t('apikeys.kind_project') }}</label>
-      </div>
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend text-ui">
+          {{ t('apikeys.kind') }}
+        </legend>
+        <div class="flex gap-4">
+          <label class="flex items-center gap-2 text-ui"><input v-model="kind" type="radio" value="org" class="radio radio-sm" :disabled="busy">{{ t('apikeys.kind_org') }}</label>
+          <label class="flex items-center gap-2 text-ui"><input v-model="kind" type="radio" value="project" class="radio radio-sm" :disabled="busy">{{ t('apikeys.kind_project') }}</label>
+        </div>
+      </fieldset>
 
       <div v-if="kind === 'project'" class="fieldset">
         <label class="flex flex-col gap-1">
           <span class="label text-ui text-base-content">{{ t('apikeys.project') }}</span>
-          <select :id="ids.project" v-model="projectId" class="select w-full" :disabled="busy">
+          <select :id="ids.project" v-model="projectId" class="select select-sm w-full text-ui" :disabled="busy">
             <option value="" disabled>
               {{ t('apikeys.select_project') }}
             </option>
@@ -75,28 +80,33 @@ const expiryOptions = computed(() => [
         </label>
       </div>
 
-      <div v-else class="space-y-2">
+      <fieldset v-else class="fieldset">
+        <legend class="fieldset-legend text-ui">
+          {{ t('apikeys.projects') }}
+        </legend>
         <label class="flex items-center gap-2 text-ui"><input v-model="allProjects" type="checkbox" class="checkbox checkbox-sm rounded-sm" :disabled="busy">{{ t('apikeys.all_projects') }}</label>
         <div v-if="!allProjects" class="max-h-32 space-y-1 overflow-auto rounded-box border border-base-300 p-2">
           <label v-for="p in orgProjects" :key="p.id" class="flex items-center gap-2 text-ui">
             <input v-model="projectIds" type="checkbox" :value="p.id" class="checkbox checkbox-xs rounded-sm" :disabled="busy">{{ p.name }}
           </label>
         </div>
-      </div>
+      </fieldset>
 
-      <div>
-        <span class="label mb-1 text-ui text-base-content">{{ t('apikeys.scopes') }}</span>
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend text-ui">
+          {{ t('apikeys.scopes') }}
+        </legend>
         <div class="grid grid-cols-2 gap-1">
           <label v-for="s in availableScopes" :key="s.name" class="flex items-center gap-2 text-ui">
             <input v-model="selectedScopes" type="checkbox" :value="s.name" class="checkbox checkbox-xs rounded-sm" :disabled="busy">{{ scopeLabel(s.name) }}
           </label>
         </div>
-      </div>
+      </fieldset>
 
       <div class="fieldset">
         <label class="flex flex-col gap-1">
           <span class="label text-ui text-base-content">{{ t('apikeys.expires') }}</span>
-          <select :id="ids.expires" v-model.number="expiresInHours" class="select w-full" :disabled="busy">
+          <select :id="ids.expires" v-model.number="expiresInHours" class="select select-sm w-full text-ui" :disabled="busy">
             <option v-for="e in expiryOptions" :key="e.value" :value="e.value">
               {{ e.label }}
             </option>
