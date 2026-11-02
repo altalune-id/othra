@@ -47,6 +47,10 @@ cli:
   sessionFile: ~/.othra/session.json
 
 compliance:
+  # env: OTHRA_COMPLIANCE_COMPANY
+  company: ""
+  # env: OTHRA_COMPLIANCE_CONTACT_EMAIL
+  contactEmail: ""
   # env: OTHRA_COMPLIANCE_PRIVACY_URL
   privacyURL: ""
   # env: OTHRA_COMPLIANCE_REQUIRE_ACCEPTANCE

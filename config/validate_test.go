@@ -84,6 +84,8 @@ func TestValidate_EveryRule(t *testing.T) {
 		{"compliance.termsURL", func(c *Config) { c.Compliance.TermsURL = "https://example.com/terms" }, valid},
 		{"compliance.termsURL not a url", func(c *Config) { c.Compliance.TermsURL = "terms" }, invalidSetting("compliance.termsURL")},
 		{"compliance.privacyURL not a url", func(c *Config) { c.Compliance.PrivacyURL = "privacy" }, invalidSetting("compliance.privacyURL")},
+		{"compliance.contactEmail", func(c *Config) { c.Compliance.ContactEmail = "legal@example.com" }, valid},
+		{"compliance.contactEmail not an email", func(c *Config) { c.Compliance.ContactEmail = "legal" }, invalidSetting("compliance.contactEmail")},
 		{"compliance.termsUpdatedAt past", func(c *Config) { c.Compliance.TermsUpdatedAt = "2020-01-01" }, valid},
 		{"compliance.termsUpdatedAt not a date", func(c *Config) { c.Compliance.TermsUpdatedAt = "2020-13-01" }, invalidSetting("compliance.termsUpdatedAt")},
 		{"compliance.termsUpdatedAt future", func(c *Config) { c.Compliance.TermsUpdatedAt = "2999-01-01" }, invalidSetting("compliance.termsUpdatedAt")},

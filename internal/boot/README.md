@@ -304,7 +304,9 @@ documents: each `updated` value is a version, stored once with its text in `lega
 `users.terms_accepted_at`. The `WelcomeGate` asks again when a person accepted before the current
 versions were first published. With `compliance.termsURL` or `compliance.privacyURL` set, nothing
 is snapshotted and no history is kept (a known limit); the gate then uses
-`compliance.termsUpdatedAt`, which may not be in the future.
+`compliance.termsUpdatedAt`, which may not be in the future. `compliance.company` and
+`compliance.contactEmail`, when set, appear under the built-in `/terms` and `/privacy` documents; the
+hosted `/p/<handle>` pages use each project's own legal settings instead.
 
 ## Postgres
 

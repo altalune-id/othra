@@ -255,7 +255,10 @@ func buildRoutes(
 	cfg config.Config, svcs *Services, rp auth.ConsoleRP, log *slog.Logger, unexpected apperror.UnexpectedFunc,
 ) []web.Registrar {
 	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
-	legalOpts := legal.WebOpts{Kit: kit, TermsURL: cfg.Compliance.TermsURL, PrivacyURL: cfg.Compliance.PrivacyURL}
+	legalOpts := legal.WebOpts{
+		Kit: kit, TermsURL: cfg.Compliance.TermsURL, PrivacyURL: cfg.Compliance.PrivacyURL,
+		Company: cfg.Compliance.Company, ContactEmail: cfg.Compliance.ContactEmail,
+	}
 	if svcs == nil || !svcs.Caps.LocalLogin {
 		return []web.Registrar{legal.NewWeb(legalOpts)}
 	}
