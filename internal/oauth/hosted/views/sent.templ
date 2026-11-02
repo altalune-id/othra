@@ -22,9 +22,6 @@ type SentData struct {
 templ Sent(d layout.LayoutData, v SentData) {
 	@layout.Layout(titled(d, i18n.T(ctx, "sent.title"))) {
 		@layout.CardWith(i18n.T(ctx, "sent.title"), iconTile(iconMailCheck())) {
-			if v.Client != "" {
-				<p class="-mt-2 text-base-content/70">{ i18n.T(ctx, "login.continue_to", "client", v.Client) }</p>
-			}
 			if v.Resent {
 				@alertSuccess() {
 					{ i18n.T(ctx, "sent.resent") }
@@ -33,18 +30,18 @@ templ Sent(d layout.LayoutData, v SentData) {
 			if v.Email != "" {
 				<p>
 					@highlight(i18n.T(ctx, "sent.body", "minutes", strconv.Itoa(v.Minutes)), "{email}", v.Email, "font-medium break-all")
+					@opensClient(v.Client)
 				</p>
 			} else {
-				<p>{ i18n.T(ctx, "sent.body_no_email", "minutes", strconv.Itoa(v.Minutes)) }</p>
+				<p>
+					{ i18n.T(ctx, "sent.body_no_email", "minutes", strconv.Itoa(v.Minutes)) }
+					@opensClient(v.Client)
+				</p>
 			}
 			<ul class="flex flex-col gap-2 text-ui text-base-content/70">
 				<li class="flex gap-2">
 					@iconDevice()
 					<span>{ i18n.T(ctx, "sent.device_hint") }</span>
-				</li>
-				<li class="flex gap-2">
-					@iconClock()
-					<span>{ i18n.T(ctx, "sent.newest_only") }</span>
 				</li>
 				<li class="flex gap-2">
 					@iconInbox()
@@ -65,5 +62,11 @@ templ Sent(d layout.LayoutData, v SentData) {
 				<a class="btn" href={ templ.SafeURL(v.addAccount(d, v.ReturnTo)) }>{ i18n.T(ctx, "sent.change_email") }</a>
 			</div>
 		}
+	}
+}
+
+templ opensClient(client string) {
+	if client != "" {
+		{ " " + i18n.T(ctx, "sent.opens", "client", client) }
 	}
 }

@@ -130,7 +130,7 @@ func TestAuthorize_SentAndVerifyNameTheClient(t *testing.T) {
 	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
 	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
 	inbox := f.get(f.client, sent.location())
-	assert.Contains(t, inbox.body, "Continue to Openwa Web")
+	assert.Contains(t, inbox.body, "It opens Openwa Web.")
 	assert.Equal(t, "Finish signing up to Openwa Web", f.users.mails[len(f.users.mails)-1].Subject)
 	link := linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody)
 	verify := f.get(f.client, f.get(f.client, strings.TrimPrefix(link, f.srv.URL)).location())

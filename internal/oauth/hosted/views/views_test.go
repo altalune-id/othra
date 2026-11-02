@@ -42,6 +42,7 @@ func TestLogin(t *testing.T) {
 	assert.Contains(t, out, `<input type="hidden" name="return_to" value="/id/p/acme/account/">`)
 	assert.Contains(t, out, `type="email" name="email" value="" placeholder="you@example.com" autocomplete="email" inputmode="email" spellcheck="false" required autofocus>`)
 	assert.Contains(t, out, ">Sign in to Acme Store</h1>")
+	assert.Contains(t, out, `class="input validator w-full" type="email"`, "the browser marks a malformed email as the person types")
 	assert.Contains(t, out, `<button class="btn btn-primary w-full" type="submit">Continue with email</button>`)
 	assert.NotContains(t, out, "aria-invalid")
 	assert.NotContains(t, out, "Back to accounts")
@@ -97,18 +98,21 @@ func TestSent(t *testing.T) {
 	assert.Contains(t, out, `<form method="post" action="/id/p/acme/login/resend">`)
 	assert.Contains(t, out, `<input type="hidden" name="csrf" value="tok-resend"><input type="hidden" name="email" value="ana@acme.test">`)
 	assert.Contains(t, out, `role="status"`)
-	assert.Contains(t, out, `href="/id/p/acme/login?add=1">Use a different email</a>`)
-	assert.Contains(t, out, "<span>Only the newest link works. If you asked more than once, use the latest email.</span>", "only the newest link works")
+	assert.Contains(t, out, `href="/id/p/acme/login?add=1">Wrong email?</a>`)
+	assert.Equal(t, 2, strings.Count(out, `<li class="flex gap-2">`), "two hints, as in the design")
 
 	noCookie := html(t, ctxIn(t, i18n.Indonesian), Sent(page(), SentData{Site: site, Minutes: 15}))
 	assert.Contains(t, noCookie, "Kami sudah mengirim tautan masuk. Tautan hanya bisa dipakai sekali, selama 15 menit.")
-	assert.Contains(t, noCookie, "<span>Hanya tautan terbaru yang berlaku. Jika Anda meminta lebih dari sekali, pakai email yang terakhir.</span>", "only the newest link works, in id-ID")
+	assert.Contains(t, noCookie, ">Salah email?</a>")
 	assert.NotContains(t, noCookie, "/login/resend")
 	assert.NotContains(t, noCookie, `role="status"`)
-	assert.NotContains(t, out, "to continue to", "no app, no app line")
+	assert.NotContains(t, out, "It opens", "no app, no app sentence")
 
-	app := html(t, ctxIn(t, i18n.English), Sent(page(), SentData{Site: site, Minutes: 15, Client: "OAgent"}))
-	assert.Contains(t, app, `<p class="-mt-2 text-base-content/70">Continue to OAgent</p>`, "the app the person returns to")
+	app := html(t, ctxIn(t, i18n.English), Sent(page(), SentData{Site: site, Email: "ana@acme.test", Minutes: 15, Client: "OAgent"}))
+	assert.Contains(t, app, `ana@acme.test</span>. It works once, for 15 minutes. It opens OAgent.</p>`, "the body names the app the link returns to")
+	assert.NotContains(t, app, "Continue to OAgent", "no subtitle")
+	id := html(t, ctxIn(t, i18n.Indonesian), Sent(page(), SentData{Site: site, Minutes: 15, Client: "OAgent"}))
+	assert.Contains(t, id, "selama 15 menit. Tautan ini membuka OAgent.</p>")
 }
 
 func TestVerifyAndLinkUnusable(t *testing.T) {
@@ -418,7 +422,7 @@ func consentData() ConsentData {
 
 func TestConsent_FirstTime(t *testing.T) {
 	out := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Consent(page(), consentData())), "> <", "><")
-	assert.Contains(t, out, "<title>Allow Claude Code to access Openwa MCP? · Acme Store</title>")
+	assert.Contains(t, out, "<title>Claude Code wants to access Openwa MCP · Acme Store</title>")
 	assert.NotContains(t, out, `<span class="font-medium">Openwa MCP</span>`, "the resource sits in the title and Technical details only")
 	assert.NotContains(t, out, "<img")
 
@@ -454,7 +458,7 @@ func TestConsent_RegisteredAccountTitleNoLoopback(t *testing.T) {
 	v := consentData()
 	v.ClientHost, v.RS, v.RSIdentifier, v.Loopback, v.RedirectHost = "", "", "", false, "app.example"
 	out := html(t, ctxIn(t, i18n.Indonesian), Consent(page(), v))
-	assert.Contains(t, out, "Izinkan Claude Code mengakses akun Acme Store Anda?")
+	assert.Contains(t, out, "Claude Code ingin mengakses akun Acme Store Anda")
 	assert.NotContains(t, out, "alert-warning", "no CIMD note for a registered client")
 	assert.NotContains(t, out, "perangkat ini", "no loopback warning")
 	assert.Contains(t, out, "Berlaku sampai Anda mencabutnya di akun Acme Store Anda.")
