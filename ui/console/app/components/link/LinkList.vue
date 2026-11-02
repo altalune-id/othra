@@ -47,7 +47,7 @@ const emit = defineEmits<{ link: [], edit: [row: LinkRow], unlink: [row: LinkRow
         <h2 class="card-title text-base">
           {{ labels.title }}
         </h2>
-        <button v-if="canEdit && canLink && !loading" type="button" class="btn btn-sm max-sm:btn-block" data-testid="link-button" @click="emit('link')">
+        <button v-if="canEdit && canLink && !loading" type="button" class="btn btn-sm max-sm:btn-block text-ui" data-testid="link-button" @click="emit('link')">
           <Icon name="lucide:link" size="16" />
           {{ labels.link }}
         </button>

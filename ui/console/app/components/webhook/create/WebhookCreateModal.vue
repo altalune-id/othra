@@ -29,7 +29,7 @@ const { open, url, description, eventTypes, busy, error, fieldErrors, secret, pi
       </p>
       <SecretField :value="secret" :label="t('common.copy')" />
       <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" :disabled="pingBusy" @click="create.ping()">
+        <button class="btn btn-outline btn-sm text-ui" type="button" :disabled="pingBusy" @click="create.ping()">
           <Icon name="lucide:send" size="16" />
           {{ pinged ? t('webhooks.tested') : t('webhooks.test') }}
         </button>
@@ -70,10 +70,10 @@ const { open, url, description, eventTypes, busy, error, fieldErrors, secret, pi
     </form>
 
     <template #footer>
-      <button class="btn btn-ghost btn-sm" type="button" :disabled="busy" @click="create.hide()">
+      <button class="btn btn-ghost btn-sm text-ui" type="button" :disabled="busy" @click="create.hide()">
         {{ secret ? t('common.done') : t('common.cancel') }}
       </button>
-      <button v-if="!secret" class="btn btn-primary btn-sm" type="button" :disabled="busy || !url.trim() || eventTypes.length === 0" @click="create.submit()">
+      <button v-if="!secret" class="btn btn-primary btn-sm text-ui" type="button" :disabled="busy || !url.trim() || eventTypes.length === 0" @click="create.submit()">
         {{ busy ? t('common.creating') : t('common.create') }}
       </button>
     </template>

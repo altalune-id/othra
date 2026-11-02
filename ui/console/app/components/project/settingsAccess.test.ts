@@ -118,7 +118,7 @@ describe('m1.5 design re-check', () => {
     expect(general).toMatch(/<form v-if="canEdit" novalidate/);
     expect(general).toMatch(/<dl v-else /);
     expect(general).not.toContain('text-xs text-base-content/70">{{ t(\'common.id\') }}');
-    expect(general).toContain('<button type="submit" class="btn btn-primary btn-sm"');
+    expect(general).toContain('<button type="submit" class="btn btn-primary btn-sm text-ui"');
     expect(general).not.toContain('AppButton');
     expect(general).toContain('project.settings_general_subtitle');
   });
@@ -207,7 +207,7 @@ describe('signing keys page', () => {
     const source = page();
     expect(source).toContain('<AppModal :open="confirming" :title="t(\'keys.rotate_title\')" @close="keys.cancelRotate()">');
     expect(source).toContain('<ErrorText :error="error" />');
-    expect(source).toMatch(/class="btn btn-primary btn-sm" :disabled="busy" @click="keys\.confirmRotate\(\)"/);
+    expect(source).toMatch(/class="btn btn-primary btn-sm text-ui" :disabled="busy" @click="keys\.confirmRotate\(\)"/);
   });
 
   it('lists keys as a table on desktop and a stacked list on mobile, with status text and decorative dots', () => {

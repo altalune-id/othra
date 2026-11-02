@@ -174,7 +174,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
           {{ server.name }}
         </h1>
       </div>
-      <button v-if="canEdit" type="button" class="btn btn-ghost btn-sm max-sm:btn-block" @click="page.askDelete()">
+      <button v-if="canEdit" type="button" class="btn btn-ghost btn-sm max-sm:btn-block text-ui" @click="page.askDelete()">
         <Icon name="lucide:trash-2" size="16" class="text-error" />
         {{ t('common.delete') }}
       </button>
@@ -201,7 +201,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
               :aria-invalid="!!nameError"
               :aria-describedby="ids.nameErr"
             >
-            <button type="submit" class="btn btn-sm" :disabled="saving === 'name'">
+            <button type="submit" class="btn btn-sm text-ui" :disabled="saving === 'name'">
               <span v-if="saving === 'name'" class="loading loading-spinner loading-xs" />
               {{ t('common.save') }}
             </button>
@@ -262,7 +262,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
           />
           <ErrorText :error="saveError?.part === 'scopes' ? saveError.error : null" />
           <div class="flex items-center gap-3">
-            <button type="submit" class="btn btn-primary btn-sm" :disabled="saving === 'scopes'">
+            <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="saving === 'scopes'">
               <span v-if="saving === 'scopes'" class="loading loading-spinner loading-xs" />
               {{ t('rs.save_scopes') }}
             </button>
@@ -332,10 +332,10 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
       </p>
       <ErrorText :error="patSecretError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="patSecretBusy" @click="patSecrets.cancelRevoke()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="patSecretBusy" @click="patSecrets.cancelRevoke()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="patSecretBusy" @click="patSecrets.confirmRevoke()">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="patSecretBusy" @click="patSecrets.confirmRevoke()">
           {{ t('secrets.revoke_old') }}
         </button>
       </template>
@@ -367,10 +367,10 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
       </p>
       <ErrorText :error="trustError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="trustBusy" autofocus @click="page.cancelTrust()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="trustBusy" autofocus @click="page.cancelTrust()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-warning btn-sm" :disabled="trustBusy" @click="page.setTrust(true)">
+        <button type="button" class="btn btn-warning btn-sm text-ui" :disabled="trustBusy" @click="page.setTrust(true)">
           <span v-if="trustBusy" class="loading loading-spinner loading-xs" />
           {{ t('rs.trust') }}
         </button>
@@ -400,10 +400,10 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
       </p>
       <ErrorText :error="linkError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="linkBusy" @click="links.confirmUnlink()">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="linkBusy" @click="links.confirmUnlink()">
           <span v-if="linkBusy" class="loading loading-spinner loading-xs" />
           {{ t('links.unlink') }}
         </button>
@@ -416,10 +416,10 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
       </p>
       <ErrorText :error="cimd.revokeError.value" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="cimdRevokeBusy" autofocus @click="cimd.cancelRevoke()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="cimdRevokeBusy" autofocus @click="cimd.cancelRevoke()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="cimdRevokeBusy" @click="cimd.confirmRevoke()">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="cimdRevokeBusy" @click="cimd.confirmRevoke()">
           <span v-if="cimdRevokeBusy" class="loading loading-spinner loading-xs" />
           {{ t('rs.cimd_revoke') }}
         </button>
@@ -432,10 +432,10 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
       </p>
       <ErrorText :error="deleteError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="deleteBusy" autofocus @click="page.cancelDelete()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="deleteBusy" autofocus @click="page.cancelDelete()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="deleteBusy" @click="remove">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="deleteBusy" @click="remove">
           <span v-if="deleteBusy" class="loading loading-spinner loading-xs" />
           {{ t('common.delete') }}
         </button>

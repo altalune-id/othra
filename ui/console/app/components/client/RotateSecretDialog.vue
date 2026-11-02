@@ -62,10 +62,10 @@ const id = useId();
       <ErrorText :error="error" />
     </div>
     <template #footer>
-      <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" autofocus @click="emit('close')">
+      <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" autofocus @click="emit('close')">
         {{ labels.cancel }}
       </button>
-      <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="emit('confirm')">
+      <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="busy" @click="emit('confirm')">
         <span v-if="busy" class="loading loading-spinner loading-xs" />
         {{ labels.confirm }}
       </button>

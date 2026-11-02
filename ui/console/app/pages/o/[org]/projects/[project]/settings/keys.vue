@@ -81,7 +81,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('keys
         <template v-if="loadError">
           <ErrorText :error="loadError" />
           <div>
-            <button type="button" class="btn btn-sm" @click="keys.load()">
+            <button type="button" class="btn btn-sm text-ui" @click="keys.load()">
               {{ t('common.retry') }}
             </button>
           </div>
@@ -99,7 +99,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('keys
           <Icon name="lucide:clock" size="16" class="shrink-0 text-info" />
           {{ waitingText }}
         </p>
-        <button v-else type="button" class="btn btn-primary btn-sm self-start max-sm:btn-block max-sm:self-stretch" @click="keys.askRotate()">
+        <button v-else type="button" class="btn btn-primary btn-sm self-start max-sm:btn-block max-sm:self-stretch text-ui" @click="keys.askRotate()">
           <Icon name="lucide:refresh-cw" size="16" />
           {{ t('keys.rotate') }}
         </button>
@@ -121,10 +121,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('keys
       </p>
       <ErrorText :error="error" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="keys.cancelRotate()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="keys.cancelRotate()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-primary btn-sm" :disabled="busy" @click="keys.confirmRotate()">
+        <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="busy" @click="keys.confirmRotate()">
           <span v-if="busy" class="loading loading-spinner loading-xs" />
           {{ t('keys.rotate_confirm') }}
         </button>

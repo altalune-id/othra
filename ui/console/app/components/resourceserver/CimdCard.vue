@@ -151,7 +151,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
         </template>
         <ErrorText :error="error" />
         <div class="flex items-center gap-3">
-          <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
+          <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
             <span v-if="busy" class="loading loading-spinner loading-xs" />
             {{ labels.save }}
           </button>

@@ -74,7 +74,7 @@ useHead({ title: () => `${t('apikeys.personal_title')} · Othra` });
           {{ t('apikeys.personal_subtitle') }}
         </p>
       </div>
-      <NuxtLink v-if="signedIn && keys.length > 0" to="/account/api-keys/new" class="btn btn-primary btn-sm shrink-0">
+      <NuxtLink v-if="signedIn && keys.length > 0" to="/account/api-keys/new" class="btn btn-primary btn-sm shrink-0 text-ui">
         <Icon name="lucide:plus" size="16" />
         {{ t('apikeys.personal_new') }}
       </NuxtLink>

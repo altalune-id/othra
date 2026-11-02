@@ -64,7 +64,7 @@ function add() {
         <button
           v-if="rows.length > 1 || !required"
           type="button"
-          class="btn btn-ghost btn-sm btn-square shrink-0"
+          class="btn btn-ghost btn-sm btn-square shrink-0 text-ui"
           :disabled="disabled"
           :aria-label="`${labels.remove} ${i + 1}`"
           :title="`${labels.remove} ${i + 1}`"
@@ -80,7 +80,7 @@ function add() {
       </p>
     </div>
     <div v-if="rows.length < max">
-      <button type="button" class="btn btn-ghost btn-sm" :disabled="disabled" @click="add">
+      <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="disabled" @click="add">
         <Icon name="lucide:plus" size="16" />
         {{ labels.add }}
       </button>

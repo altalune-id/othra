@@ -132,7 +132,7 @@ const trusted = () => props.status === 'trusted';
       </div>
       <template v-if="canEdit && !trusted()">
         <div>
-          <button ref="verifyButton" type="button" class="btn btn-sm max-sm:btn-block" :disabled="verifying" @click="emit('verify')">
+          <button ref="verifyButton" type="button" class="btn btn-sm max-sm:btn-block text-ui" :disabled="verifying" @click="emit('verify')">
             <span v-if="verifying" class="loading loading-spinner loading-xs" />
             <Icon v-else name="lucide:refresh-cw" size="16" />
             {{ verifying ? labels.verifying : labels.verifyNow }}

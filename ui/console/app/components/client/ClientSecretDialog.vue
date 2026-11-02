@@ -67,7 +67,7 @@ function done() {
     </div>
     <template #footer>
       <span v-if="!stored" class="mr-auto self-center text-xs text-base-content/70">{{ labels.closeDisabled }}</span>
-      <button type="button" class="btn btn-primary btn-sm" :disabled="!stored" @click="done">
+      <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="!stored" @click="done">
         {{ labels.done }}
       </button>
     </template>

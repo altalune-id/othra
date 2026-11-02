@@ -210,6 +210,11 @@ describe('guard: theme contrast', () => {
     expect(loose).toEqual([]);
   });
 
+  it('sets every small button in the dense text-ui size', () => {
+    const loose = files.flatMap(f => [...f.text.matchAll(/(?<![:\w-])class="([^"]*)"/g)].filter(m => m[1]!.split(' ').includes('btn-sm') && !m[1]!.split(' ').includes('text-ui')).map(m => `${f.path}: ${m[0]}`));
+    expect(loose).toEqual([]);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });

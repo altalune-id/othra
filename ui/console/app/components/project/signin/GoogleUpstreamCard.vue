@@ -111,7 +111,7 @@ function onToggle(event: Event) {
           {{ labels.intro }}
         </p>
         <div v-if="canEdit">
-          <button type="button" class="btn btn-primary btn-sm" @click="emit('setup')">
+          <button type="button" class="btn btn-primary btn-sm text-ui" @click="emit('setup')">
             {{ labels.setup }}
           </button>
         </div>
@@ -171,10 +171,10 @@ function onToggle(event: Event) {
           </div>
           <ErrorText :error="error" />
           <div class="flex flex-wrap items-center gap-3 pt-1">
-            <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
+            <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
               {{ busy ? labels.saving : labels.save }}
             </button>
-            <button v-if="!google" type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="emit('cancel')">
+            <button v-if="!google" type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="emit('cancel')">
               {{ labels.cancel }}
             </button>
             <SavedNote v-if="saved" :label="labels.saved" />
@@ -220,7 +220,7 @@ function onToggle(event: Event) {
             <ErrorText :error="toggleError" />
           </div>
           <div class="space-y-1">
-            <button type="button" class="btn btn-ghost btn-sm" :disabled="busy || locked || removeLocked" :aria-describedby="removeLocked ? ids.removeLocked : undefined" @click="emit('remove')">
+            <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy || locked || removeLocked" :aria-describedby="removeLocked ? ids.removeLocked : undefined" @click="emit('remove')">
               <Icon name="lucide:trash-2" size="16" class="text-error" />
               {{ labels.remove }}
             </button>

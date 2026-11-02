@@ -176,7 +176,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
           <SystemBadge v-if="system" :label="t('common.system')" class="font-normal" />
         </h1>
       </div>
-      <button v-if="canEdit && !system" type="button" class="btn btn-ghost btn-sm max-sm:btn-block" @click="page.askDelete()">
+      <button v-if="canEdit && !system" type="button" class="btn btn-ghost btn-sm max-sm:btn-block text-ui" @click="page.askDelete()">
         <Icon :name="cimd ? 'lucide:ban' : 'lucide:trash-2'" size="16" class="text-error" />
         {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
       </button>
@@ -340,10 +340,10 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
       </p>
       <ErrorText :error="secretError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="secretBusy" autofocus @click="secrets.cancelRevoke()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="secretBusy" autofocus @click="secrets.cancelRevoke()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="secretBusy" @click="revoke">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="secretBusy" @click="revoke">
           <span v-if="secretBusy" class="loading loading-spinner loading-xs" />
           {{ t('secrets.revoke_old') }}
         </button>
@@ -382,10 +382,10 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
       </p>
       <ErrorText :error="linkError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="linkBusy" @click="links.confirmUnlink()">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="linkBusy" @click="links.confirmUnlink()">
           <span v-if="linkBusy" class="loading loading-spinner loading-xs" />
           {{ t('links.unlink') }}
         </button>
@@ -398,10 +398,10 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
       </p>
       <ErrorText :error="page.error.value" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="page.busy.value" autofocus @click="page.cancelDelete()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="page.busy.value" autofocus @click="page.cancelDelete()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="page.busy.value" @click="remove">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="page.busy.value" @click="remove">
           <span v-if="page.busy.value" class="loading loading-spinner loading-xs" />
           {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
         </button>

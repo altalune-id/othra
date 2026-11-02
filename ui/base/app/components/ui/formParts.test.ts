@@ -3,6 +3,7 @@ import type { Component } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { h } from 'vue';
+import { copiedLabelKey } from './copy';
 import CopyButton from './CopyButton.vue';
 import AppDataTable from './DataTable.vue';
 import FormField from './FormField.vue';
@@ -165,7 +166,7 @@ describe('toast', () => {
 });
 
 describe('copyButton', () => {
-  it('shows a Copied toast after a copy when given the label, and none without it', async () => {
+  it('toasts the given label, else the app copied label, else Copied', async () => {
     vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
     const { toasts } = useToast();
     toasts.splice(0);
@@ -173,9 +174,13 @@ describe('copyButton', () => {
     await flushPromises();
     expect(toasts.map(t => [t.kind, t.text])).toEqual([['success', 'Copied']]);
     toasts.splice(0);
+    await mount(CopyButton, { props: { value: 'x' }, global: { provide: { [copiedLabelKey as symbol]: () => 'Disalin' } } }).get('button').trigger('click');
+    await flushPromises();
+    expect(toasts.map(t => t.text)).toEqual(['Disalin']);
+    toasts.splice(0);
     await mount(CopyButton, { props: { value: 'x' } }).get('button').trigger('click');
     await flushPromises();
-    expect(toasts).toEqual([]);
+    expect(toasts.map(t => t.text)).toEqual(['Copied']);
     vi.unstubAllGlobals();
   });
 });

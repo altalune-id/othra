@@ -91,7 +91,7 @@ function setDescription(index: number, value: string) {
         <button
           v-if="rows.length > 1"
           type="button"
-          class="btn btn-ghost btn-sm btn-square col-start-2 row-span-2 row-start-1 self-center sm:col-start-3 sm:row-span-1 sm:self-end"
+          class="btn btn-ghost btn-sm btn-square col-start-2 row-span-2 row-start-1 self-center sm:col-start-3 sm:row-span-1 sm:self-end text-ui"
           :disabled="disabled"
           :aria-label="`${labels.remove} ${i + 1}`"
           :title="`${labels.remove} ${i + 1}`"
@@ -103,7 +103,7 @@ function setDescription(index: number, value: string) {
       <FieldError :id="`${id}-err-${i}`" :message="errors[i]" />
     </div>
     <div v-if="!full">
-      <button type="button" class="btn btn-ghost btn-sm" :disabled="disabled" @click="emit('add')">
+      <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="disabled" @click="emit('add')">
         <Icon name="lucide:plus" size="16" />
         {{ labels.add }}
       </button>

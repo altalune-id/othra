@@ -122,7 +122,7 @@ function revoke(k: PersonalKeyView) {
         <p class="text-sm font-medium">
           {{ labels.secretWarning }}
         </p>
-        <button type="button" class="btn btn-sm shrink-0" @click="emit('dismiss')">
+        <button type="button" class="btn btn-sm shrink-0 text-ui" @click="emit('dismiss')">
           {{ labels.done }}
         </button>
       </div>
@@ -141,7 +141,7 @@ function revoke(k: PersonalKeyView) {
     <div v-for="org in failed" :key="org.id" role="alert" class="alert alert-warning alert-soft">
       <Icon name="lucide:triangle-alert" size="18" />
       <span class="text-sm">{{ labels.loadFailed(org.name) }}</span>
-      <button type="button" class="btn btn-sm" @click="emit('retry', org.id)">
+      <button type="button" class="btn btn-sm text-ui" @click="emit('retry', org.id)">
         {{ labels.retry }}
       </button>
     </div>
@@ -151,7 +151,7 @@ function revoke(k: PersonalKeyView) {
     <div v-if="keys.length === 0" class="flex flex-col items-center gap-3 rounded-box border border-base-300 bg-base-100 px-4 py-10 text-center text-sm text-base-content/70">
       <Icon name="lucide:key-round" size="28" />
       <p>{{ labels.empty }}</p>
-      <NuxtLink :to="newUrl" class="btn btn-primary btn-sm">
+      <NuxtLink :to="newUrl" class="btn btn-primary btn-sm text-ui">
         <Icon name="lucide:plus" size="16" />
         {{ labels.newKey }}
       </NuxtLink>

@@ -28,7 +28,7 @@ const emit = defineEmits<{ create: [] }>();
           {{ labels.create }}
         </AppButton>
         <form method="post" :action="logoutUrl">
-          <button type="submit" class="btn btn-sm btn-ghost gap-2">
+          <button type="submit" class="btn btn-sm btn-ghost gap-2 text-ui">
             <Icon name="lucide:log-out" size="16" />
             {{ labels.signOut }}
           </button>

@@ -128,10 +128,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
           @update:model-value="form.setKind"
         />
         <div class="flex justify-end gap-2">
-          <NuxtLink :to="base" class="btn btn-ghost btn-sm">
+          <NuxtLink :to="base" class="btn btn-ghost btn-sm text-ui">
             {{ t('common.cancel') }}
           </NuxtLink>
-          <button type="button" class="btn btn-primary btn-sm" @click="typeDone = true">
+          <button type="button" class="btn btn-primary btn-sm text-ui" @click="typeDone = true">
             {{ t('clients.continue_details') }}
           </button>
         </div>
@@ -142,7 +142,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
       <div class="card-body gap-4">
         <p class="flex flex-wrap items-center gap-2 text-sm">
           <span>{{ t('clients.type_line', { kind: kinds.find(k => k.value === fields.kind)?.label ?? '' }) }}</span>
-          <button type="button" class="btn btn-link btn-sm h-auto min-h-0 px-0" :disabled="busy" @click="typeDone = false">
+          <button type="button" class="btn btn-link btn-sm h-auto min-h-0 px-0 text-ui" :disabled="busy" @click="typeDone = false">
             {{ t('clients.change_type') }}
           </button>
         </p>
@@ -178,14 +178,14 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
           :env="revealed ? { OTHRA_CLIENT_SECRET: revealed.secret } : {}"
         >
           <template #retry>
-            <button type="button" class="btn btn-sm" :disabled="busy" @click="form.retrySecret()">
+            <button type="button" class="btn btn-sm text-ui" :disabled="busy" @click="form.retrySecret()">
               <span v-if="busy" class="loading loading-spinner loading-xs" aria-hidden="true" />
               {{ t('clients.generate_again') }}
             </button>
           </template>
         </SecretReveal>
         <div class="flex justify-end">
-          <button type="button" class="btn btn-primary btn-sm" :disabled="!revealed || !stored" @click="secretDone = true">
+          <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="!revealed || !stored" @click="secretDone = true">
             {{ t('clients.continue_quickstart') }}
           </button>
         </div>

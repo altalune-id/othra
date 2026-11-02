@@ -88,12 +88,12 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
                 <Icon v-else name="lucide:image" size="20" class="text-base-content/40" />
               </div>
               <input :id="ids.logo" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="peer sr-only" :aria-describedby="storageOff ? ids.logoErr : `${ids.logoHelp} ${ids.logoErr}`" :disabled="busy || uploading || storageOff" @change="onFile">
-              <label :for="ids.logo" class="btn btn-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-base-content" :class="{ 'btn-disabled': busy || uploading || storageOff }" :aria-disabled="busy || uploading || storageOff">
+              <label :for="ids.logo" class="btn btn-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-base-content text-ui" :class="{ 'btn-disabled': busy || uploading || storageOff }" :aria-disabled="busy || uploading || storageOff">
                 <span v-if="uploading" class="loading loading-spinner loading-xs" />
                 <Icon v-else name="lucide:upload" size="16" />
                 {{ uploading ? t('branding.logo_uploading') : t('branding.logo_upload') }}
               </label>
-              <button v-if="preview.logoUrl" type="button" class="btn btn-ghost btn-sm" :disabled="busy || uploading" @click="branding.removeLogo()">
+              <button v-if="preview.logoUrl" type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy || uploading" @click="branding.removeLogo()">
                 <Icon name="lucide:trash-2" size="16" class="text-error" />
                 {{ t('branding.logo_remove') }}
               </button>
@@ -137,10 +137,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
 
           <ErrorText :error="error" />
           <div class="flex flex-wrap items-center gap-2 pt-2">
-            <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
+            <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
               {{ busy ? t('common.saving') : t('common.save') }}
             </button>
-            <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="branding.resetDefaults()">
+            <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="branding.resetDefaults()">
               {{ t('branding.reset') }}
             </button>
             <SavedNote v-if="saved" :label="t('common.saved')" />

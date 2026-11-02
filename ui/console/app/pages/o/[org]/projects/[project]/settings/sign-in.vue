@@ -126,10 +126,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('sign
       </p>
       <ErrorText :error="removeError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="signIn.cancelRemove()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="signIn.cancelRemove()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="busy" @click="signIn.confirmRemove()">
+        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="busy" @click="signIn.confirmRemove()">
           {{ t('signin.google_remove') }}
         </button>
       </template>

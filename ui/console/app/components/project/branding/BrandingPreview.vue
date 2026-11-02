@@ -69,7 +69,7 @@ const help = computed(() => props.labels.help.replace('{email}', props.model.sup
             {{ labels.heading }}
           </p>
           <input type="email" class="input w-full" :placeholder="labels.email" tabindex="-1">
-          <button type="button" class="btn btn-primary btn-sm" tabindex="-1">
+          <button type="button" class="btn btn-primary btn-sm text-ui" tabindex="-1">
             {{ labels.cta }}
           </button>
           <p v-if="model.termsUrl || model.privacyUrl" class="text-xs text-base-content/70">

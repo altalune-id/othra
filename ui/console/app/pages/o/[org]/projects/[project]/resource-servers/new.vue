@@ -144,10 +144,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
           />
           <ErrorText :error="error" />
           <div class="flex justify-end gap-2 pt-2 max-sm:flex-col-reverse">
-            <NuxtLink :to="base" class="btn btn-ghost btn-sm">
+            <NuxtLink :to="base" class="btn btn-ghost btn-sm text-ui">
               {{ t('common.cancel') }}
             </NuxtLink>
-            <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
+            <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
               <span v-if="busy" class="loading loading-spinner loading-xs" />
               {{ busy ? t('common.creating') : t('rs.create') }}
             </button>

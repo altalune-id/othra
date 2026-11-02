@@ -167,10 +167,10 @@ function onOrgChange(event: Event) {
 
     <ErrorText :error="error" />
     <div class="flex justify-end gap-2 pt-2">
-      <NuxtLink :to="cancelUrl" class="btn btn-ghost btn-sm">
+      <NuxtLink :to="cancelUrl" class="btn btn-ghost btn-sm text-ui">
         {{ labels.cancel }}
       </NuxtLink>
-      <button type="submit" class="btn btn-primary btn-sm" :disabled="!canSubmit">
+      <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="!canSubmit">
         {{ busy ? labels.creating : labels.create }}
       </button>
     </div>

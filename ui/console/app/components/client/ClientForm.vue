@@ -248,10 +248,10 @@ function patch(next: Partial<ClientFields>) {
 
     <ErrorText :error="error" />
     <div class="flex justify-end gap-2 pt-2 max-sm:flex-col-reverse">
-      <button v-if="props.mode === 'create'" type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="emit('cancel')">
+      <button v-if="props.mode === 'create'" type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="emit('cancel')">
         {{ labels.cancel }}
       </button>
-      <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
+      <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
         <span v-if="busy" class="loading loading-spinner loading-xs" />
         {{ busy ? labels.submitting : labels.submit }}
       </button>

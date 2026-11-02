@@ -105,7 +105,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
           </div>
           <ErrorText :error="error" />
           <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="btn btn-primary btn-sm" :disabled="busy || !name.trim()">
+            <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy || !name.trim()">
               {{ busy ? t('common.saving') : t('common.save') }}
             </button>
             <SavedNote v-if="saved" :label="t('common.saved')" />

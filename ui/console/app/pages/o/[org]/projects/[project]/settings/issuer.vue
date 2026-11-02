@@ -103,7 +103,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
             </div>
             <ErrorText :error="error" />
             <div class="flex items-center gap-3">
-              <button type="submit" class="btn btn-primary btn-sm" :disabled="!canSave">
+              <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="!canSave">
                 {{ t('common.save') }}
               </button>
               <SavedNote v-if="saved" :label="t('common.saved')" />
@@ -147,10 +147,10 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
         {{ t('issuer.change_body', { old: issuerUrl, new: newUrl }) }}
       </p>
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="handle.cancel()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="handle.cancel()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-warning btn-sm" :disabled="busy" @click="handle.save()">
+        <button type="button" class="btn btn-warning btn-sm text-ui" :disabled="busy" @click="handle.save()">
           {{ t('issuer.change_confirm') }}
         </button>
       </template>

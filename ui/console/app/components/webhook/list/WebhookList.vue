@@ -164,10 +164,10 @@ function closeRotate() {
       {{ t('webhooks.delete_body', { url: deleting?.url ?? '' }) }}
     </p>
     <template #footer>
-      <button type="button" class="btn btn-ghost btn-sm" @click="deleting = null">
+      <button type="button" class="btn btn-ghost btn-sm text-ui" @click="deleting = null">
         {{ t('common.cancel') }}
       </button>
-      <button type="button" class="btn btn-error btn-sm" @click="confirmDelete()">
+      <button type="button" class="btn btn-error btn-sm text-ui" @click="confirmDelete()">
         {{ t('common.delete') }}
       </button>
     </template>
@@ -180,7 +180,7 @@ function closeRotate() {
         {{ t('webhooks.secret_warning') }}
       </p>
       <SecretField :value="rotatedSecret" :label="t('common.copy')" />
-      <button class="btn btn-ghost btn-sm" type="button" @click="closeRotate()">
+      <button class="btn btn-ghost btn-sm text-ui" type="button" @click="closeRotate()">
         {{ t('common.done') }}
       </button>
     </div>

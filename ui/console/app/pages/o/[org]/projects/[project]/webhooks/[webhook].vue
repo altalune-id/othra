@@ -181,11 +181,11 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
         </h1>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-ghost btn-sm" :disabled="retrying" @click="retryFailed">
+        <button class="btn btn-ghost btn-sm text-ui" :disabled="retrying" @click="retryFailed">
           <Icon name="lucide:rotate-cw" size="14" />
           {{ t('webhooks.retry_failed') }}
         </button>
-        <button class="btn btn-ghost btn-sm" :disabled="busy" @click="load">
+        <button class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="load">
           <Icon name="lucide:refresh-cw" size="14" />
           {{ t('common.refresh') }}
         </button>
@@ -276,13 +276,13 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
         <ErrorText :error="retryOneError" class="mr-auto" />
         <button
           v-if="selected?.status === 'failed'"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm text-ui"
           :disabled="retrying"
           @click="retryOne"
         >
           {{ t('webhooks.retry') }}
         </button>
-        <button class="btn btn-ghost btn-sm" @click="closeAttempts()">
+        <button class="btn btn-ghost btn-sm text-ui" @click="closeAttempts()">
           {{ t('common.close') }}
         </button>
       </template>

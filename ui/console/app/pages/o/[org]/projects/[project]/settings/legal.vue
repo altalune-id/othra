@@ -67,7 +67,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
         </div>
         <ErrorText v-if="!bumping" :error="error" />
         <div class="flex items-center gap-3 pt-1">
-          <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
+          <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
             {{ busy ? t('common.saving') : t('common.save') }}
           </button>
           <SavedNote v-if="saved" :label="t('common.saved')" />
@@ -115,7 +115,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
           </p>
           <SavedNote v-if="bumpedTo" :label="t('legal.bump_done', { version: bumpedTo })" />
           <div v-if="canEdit" class="flex justify-end">
-            <button type="button" class="btn btn-outline btn-sm" :disabled="busy" @click="legal.askBump()">
+            <button type="button" class="btn btn-outline btn-sm text-ui" :disabled="busy" @click="legal.askBump()">
               <Icon name="lucide:triangle-alert" size="16" class="text-warning" />
               {{ t('legal.bump') }}
             </button>
@@ -132,10 +132,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
         {{ t('legal.clear_terms_body') }}
       </p>
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" @click="legal.cancelClear()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" @click="legal.cancelClear()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-warning btn-sm" :disabled="busy" @click="legal.confirmClear()">
+        <button type="button" class="btn btn-warning btn-sm text-ui" :disabled="busy" @click="legal.confirmClear()">
           {{ t('legal.clear_terms_confirm') }}
         </button>
       </template>
@@ -151,10 +151,10 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
       </p>
       <ErrorText :error="error" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="legal.cancelBump()">
+        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="legal.cancelBump()">
           {{ t('common.cancel') }}
         </button>
-        <button type="button" class="btn btn-warning btn-sm" :disabled="busy" @click="legal.confirmBump()">
+        <button type="button" class="btn btn-warning btn-sm text-ui" :disabled="busy" @click="legal.confirmBump()">
           {{ t('legal.bump_confirm', { version: nextVersion }) }}
         </button>
       </template>

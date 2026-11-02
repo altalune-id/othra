@@ -82,7 +82,7 @@ defineExpose({
       </ul>
       <template v-if="canEdit">
         <div>
-          <button ref="action" type="button" class="btn btn-sm max-sm:btn-block" :class="{ 'btn-primary': rows.length === 0 }" :disabled="busy" @click="rows.length === 0 ? emit('generate') : emit('rotate')">
+          <button ref="action" type="button" class="btn btn-sm max-sm:btn-block text-ui" :class="{ 'btn-primary': rows.length === 0 }" :disabled="busy" @click="rows.length === 0 ? emit('generate') : emit('rotate')">
             <span v-if="busy" class="loading loading-spinner loading-xs" />
             <Icon v-else :name="rows.length === 0 ? 'lucide:key-round' : 'lucide:refresh-cw'" size="16" />
             {{ rows.length === 0 ? labels.generate : labels.rotate }}

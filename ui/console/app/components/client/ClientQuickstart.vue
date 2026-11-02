@@ -39,14 +39,14 @@ async function trySignIn() {
       </p>
     </div>
     <div class="flex flex-wrap gap-2">
-      <button v-if="values.redirectUri" type="button" class="btn btn-primary btn-sm" @click="trySignIn">
+      <button v-if="values.redirectUri" type="button" class="btn btn-primary btn-sm text-ui" @click="trySignIn">
         <Icon name="lucide:external-link" size="16" />
         {{ t('clients.try_signin') }}
       </button>
-      <NuxtLink :to="openTo" class="btn btn-sm">
+      <NuxtLink :to="openTo" class="btn btn-sm text-ui">
         {{ t('clients.open_client') }}
       </NuxtLink>
-      <NuxtLink :to="backTo" class="btn btn-ghost btn-sm">
+      <NuxtLink :to="backTo" class="btn btn-ghost btn-sm text-ui">
         {{ t('clients.back_to_clients') }}
       </NuxtLink>
     </div>
