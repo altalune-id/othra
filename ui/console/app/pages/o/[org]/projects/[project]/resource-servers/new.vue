@@ -111,7 +111,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('rs.n
         <label class="flex items-center gap-2 text-ui">
           <input
             type="checkbox"
-            class="checkbox checkbox-sm rounded-sm"
+            class="checkbox checkbox-xs rounded-sm"
             :checked="trusted"
             :disabled="busy || trustRequired"
             :aria-describedby="ids.trust"

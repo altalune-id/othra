@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppBadge from '#base/components/ui/AppBadge.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
+import LoadError from '#base/components/ui/LoadError.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import Section from '#base/components/ui/Section.vue';
 import { environmentLabelKey } from '~/components/project/environment';
@@ -31,7 +32,8 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · Othra` });
       </template>
     </PageHeader>
 
-    <Section :title="t('project.title')" flush class="max-w-2xl" data-testid="org-projects">
+    <LoadError v-if="projects.error" :error="projects.error" :busy="projects.loading" :retry-label="t('common.retry')" class="max-w-2xl" @retry="projects.load(org.id)" />
+    <Section v-else :title="t('project.title')" flush class="max-w-2xl" data-testid="org-projects">
       <ul v-if="items.length" class="divide-y divide-base-300">
         <li v-for="project in items" :key="project.id" class="flex items-center gap-2 px-4 py-2 text-ui">
           <NuxtLink :to="`/o/${org.slug}/projects/${project.slug}`" class="link link-hover min-w-0 truncate font-medium">

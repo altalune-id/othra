@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { createPinia, setActivePinia } from 'pinia';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ProjectEnvironment } from '#gen/project/v1/project_pb';
 import { mountPage } from '#test/mount-page';
@@ -27,5 +27,20 @@ describe('org overview', () => {
     expect(rows[0]!.get('.font-mono').text()).toBe('acme-prod');
     expect(rows[0]!.get('.badge').text()).toBe('environment.production');
     expect(rows[1]!.find('.badge').exists()).toBe(false);
+  });
+
+  it('shows the load error with Retry, not the empty line, when projects fail to load', async () => {
+    setActivePinia(createPinia());
+    const orgId = 'B6rTn1YkM8wQz3XpL5vGd';
+    useOrgsStore().items = [{ id: orgId, slug: 'acme', name: 'Acme', role: 'owner', permissions: [] }];
+    const projects = useProjectsStore();
+    projects.error = { message: 'Failed to load projects' };
+    projects.load = vi.fn() as never;
+    setRoute({ path: '/o/acme', params: { org: 'acme' } });
+    const w = await mountPage(OrgOverview);
+    expect(w.text()).toContain('Failed to load projects');
+    expect(w.text()).not.toContain('project.empty');
+    await w.findAll('button').find(b => b.text().includes('common.retry'))!.trigger('click');
+    expect(projects.load).toHaveBeenCalledWith(orgId);
   });
 });
