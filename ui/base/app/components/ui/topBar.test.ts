@@ -13,6 +13,8 @@ describe('topBar', () => {
     const buttons = w.findAll('button');
     expect(buttons.map(b => b.attributes('aria-label'))).toEqual(['Toggle navigation', 'Search and jump', 'Search and jump, Command K']);
     expect(buttons[0]!.classes()).toContain('lg:hidden');
+    expect(buttons[0]!.attributes('aria-controls')).toBe('app-sidebar');
+    expect(buttons[0]!.attributes('aria-expanded')).toBe('false');
     expect(buttons[2]!.get('kbd').classes()).toEqual(['kbd', 'kbd-xs']);
     expect(w.get('nav').classes()).toContain('flex-1');
     expect(w.get('[aria-current="page"]').text()).toBe('Overview');
@@ -26,13 +28,23 @@ describe('topBar', () => {
 });
 
 describe('commandPalette', () => {
-  const items = [{ key: 'a', label: 'Acme / Members', to: '/o/acme/settings/members' }, { key: 'b', label: 'acme-prod / Clients', to: '/o/acme/projects/acme-prod/clients' }];
+  const items = [{ key: 'a', group: 'Acme', label: 'Members', to: '/o/acme/settings/members' }, { key: 'b', group: 'acme-prod', mono: true, label: 'Clients', to: '/o/acme/projects/acme-prod/clients' }];
+
+  it('opens when mounted open, and draws the project handle in mono before the page', async () => {
+    const w = mount(CommandPalette, { props: { items, label: 'Search and jump', open: true }, global: { stubs: { NuxtLink: RouterLinkStub } }, attachTo: document.body });
+    await w.vm.$nextTick();
+    expect((w.get('dialog').element as HTMLDialogElement).open).toBe(true);
+    const handle = w.findAllComponents(RouterLinkStub)[1]!;
+    expect(handle.text()).toBe('acme-prod / Clients');
+    expect(handle.get('.font-mono').classes()).toEqual(['font-mono', 'text-xs']);
+    w.unmount();
+  });
 
   it('filters the pages by the search and closes when one is picked', async () => {
     const w = mount(CommandPalette, { props: { items, 'label': 'Search and jump', 'empty': 'No page matches.', 'open': false, 'onUpdate:open': (v: boolean) => w.setProps({ open: v }) }, global: { stubs: { NuxtLink: RouterLinkStub } }, attachTo: document.body });
     expect(w.get('dialog').classes()).toEqual(['modal', 'modal-top', 'sm:modal-middle']);
     expect(w.get('.modal-box').classes()).toEqual(['modal-box', 'p-0', 'sm:max-w-lg']);
-    await w.get('input[type="search"]').setValue('client');
+    await w.get('input[type="search"]').setValue('prod clients');
     expect(w.findAllComponents(RouterLinkStub).map(l => l.props('to'))).toEqual(['/o/acme/projects/acme-prod/clients']);
     await w.get('input[type="search"]').setValue('nothing');
     expect(w.get('.menu-disabled').text()).toBe('No page matches.');

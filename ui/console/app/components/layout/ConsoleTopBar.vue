@@ -30,6 +30,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
     :search-label="t('search.label')"
     :jump-label="t('search.jump')"
     :shortcut-label="t('search.shortcut')"
+    :menu-open="ui.navOpen"
     @menu="ui.navOpen = !ui.navOpen"
     @search="searching = true"
   >

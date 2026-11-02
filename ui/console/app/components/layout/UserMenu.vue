@@ -22,9 +22,10 @@ export interface UserMenuLabels {
   basic: string;
   profile: string;
   apiKeys: string;
+  language?: string;
 }
 
-const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys', placement = 'end', version = '', labels = {
+const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys', placement = 'end', version = '', locale = '', locales = [], labels = {
   signOut: 'Sign out',
   signedInAs: 'Signed in as',
   operator: 'Operator',
@@ -32,7 +33,9 @@ const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys'
   basic: 'Basic auth',
   profile: 'Profile',
   apiKeys: 'My API keys',
-} } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, apiKeysUrl?: string, placement?: 'end' | 'top', version?: string, labels?: UserMenuLabels }>();
+} } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, apiKeysUrl?: string, placement?: 'end' | 'top', version?: string, locale?: string, locales?: { code: string, name: string }[], labels?: UserMenuLabels }>();
+
+const emit = defineEmits<{ locale: [code: string] }>();
 
 const logoutForm = `logout-${useId()}`;
 
@@ -58,6 +61,14 @@ const sourceBadge = computed(() => {
     <ul class="menu menu-sm w-full p-0 text-ui">
       <li class="menu-title text-base-content/70">
         <span class="truncate">{{ me.email || display }}</span>
+      </li>
+      <li v-if="locales.length" class="menu-title">
+        <label class="font-normal">
+          <span class="sr-only">{{ labels.language ?? 'Language' }}</span>
+          <select class="select select-xs w-28" :value="locale" @change="emit('locale', ($event.target as HTMLSelectElement).value)">
+            <option v-for="l in locales" :key="l.code" :value="l.code">{{ l.name }}</option>
+          </select>
+        </label>
       </li>
       <li v-if="sourceBadge || me.operator" class="menu-title">
         <span class="flex flex-wrap gap-1">

@@ -3,7 +3,7 @@ import { useAuthStore } from '~/stores/auth';
 
 // useUserMenu gives the account menu its signed-in person, sign-out URL and translated labels, wherever the shell shows it.
 export function useUserMenu() {
-  const { t } = useI18n();
+  const { t, locale, locales, setLocale } = useI18n();
   const auth = useAuthStore();
   const { apiUrl, appVersion } = useRuntimeConfig().public;
   const labels = computed(() => ({
@@ -14,6 +14,8 @@ export function useUserMenu() {
     basic: t('auth.source_basic'),
     profile: t('profile.title'),
     apiKeys: t('apikeys.personal_title'),
+    language: t('language.label'),
   }));
-  return { me: computed(() => auth.me), logoutUrl: siblingURL(apiUrl, '/logout'), labels, version: appVersion };
+  const languages = computed(() => locales.value.map(l => (typeof l === 'string' ? { code: l, name: l } : { code: l.code, name: l.name ?? l.code })));
+  return { me: computed(() => auth.me), logoutUrl: siblingURL(apiUrl, '/logout'), labels, version: appVersion, locale, languages, setLocale: (code: string) => setLocale(code as typeof locale.value) };
 }

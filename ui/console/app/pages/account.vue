@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppShell from '#base/components/ui/AppShell.vue';
 import AccountSidebar from '~/components/account/AccountSidebar.vue';
+import ConsoleTopBar from '~/components/layout/ConsoleTopBar.vue';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 import { useUIStore } from '~/stores/ui';
@@ -19,8 +20,9 @@ await Promise.all([auth.load(), orgs.ensureLoaded()]);
 </script>
 
 <template>
-  <AppShell v-model:open="ui.navOpen" :close-label="t('nav.close_menu')">
-    <main class="min-w-0 flex-1 p-4 sm:p-6">
+  <AppShell v-model:open="ui.navOpen" :close-label="t('nav.close_menu')" full breakpoint="lg">
+    <ConsoleTopBar />
+    <main class="min-w-0 flex-1 p-4 lg:p-6">
       <NuxtPage />
     </main>
     <template #sidebar>

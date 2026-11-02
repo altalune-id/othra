@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppShell from '#base/components/ui/AppShell.vue';
 import AppSidebar from '~/components/layout/AppSidebar.vue';
+import ConsoleTopBar from '~/components/layout/ConsoleTopBar.vue';
 import { environmentLabelKey, showsBanner } from '~/components/project/environment';
 import ProjectSidebar from '~/components/project/ProjectSidebar.vue';
 import { useOrgsStore } from '~/stores/orgs';
@@ -41,12 +42,13 @@ await projects.ensureLoaded(org.value.id);
 </script>
 
 <template>
-  <AppShell v-model:open="ui.navOpen" :close-label="t('nav.close_menu')">
-    <main class="min-w-0 flex-1 p-4 sm:p-6">
-      <p v-if="showsBanner(project?.environment)" role="note" class="mb-4 alert alert-info alert-soft text-sm" data-testid="environment-banner">
-        <Icon name="lucide:flask-conical" size="16" />
-        {{ t('environment.banner', { env: t(environmentLabelKey(project?.environment)) }) }}
-      </p>
+  <AppShell v-model:open="ui.navOpen" :close-label="t('nav.close_menu')" full breakpoint="lg">
+    <div v-if="showsBanner(project?.environment)" role="status" class="flex items-center gap-2 bg-warning px-4 py-1 text-ui font-medium text-warning-content" data-testid="environment-banner">
+      <Icon name="lucide:flask-conical" size="16" class="shrink-0" aria-hidden="true" />
+      <span>{{ t('environment.banner', { env: t(environmentLabelKey(project?.environment)) }) }}</span>
+    </div>
+    <ConsoleTopBar />
+    <main class="min-w-0 flex-1 p-4 lg:p-6">
       <NuxtPage />
     </main>
     <template #sidebar>

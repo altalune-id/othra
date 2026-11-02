@@ -37,14 +37,20 @@ describe('nav crumbs', () => {
       { label: 'acme-prod', to: '/o/acme/projects/acme-prod', mono: true },
       { label: 'nav.clients' },
     ]);
-    expect(palette.value.map(p => p.label)).toContain('Acme / members.title');
-    expect(palette.value.map(p => p.label)).toContain('acme-prod / nav.clients');
+    expect(palette.value).toContainEqual({ key: 'org-members', group: 'Acme', label: 'members.title', to: '/o/acme/settings/members' });
+    expect(palette.value).toContainEqual({ key: 'project-clients', group: 'acme-prod', mono: true, label: 'nav.clients', to: '/o/acme/projects/acme-prod/clients' });
   });
 
   it('trails only the org and its page outside a project', () => {
     const { crumbs, palette } = crumbsAt('/o/acme/settings/members', { org: 'acme' });
     expect(crumbs.value).toEqual([{ label: 'Acme', to: '/o/acme' }, { label: 'members.title' }]);
-    expect(palette.value.every(p => p.label.startsWith('Acme / '))).toBe(true);
+    expect(palette.value.every(p => p.group === 'Acme' && !p.mono)).toBe(true);
+  });
+
+  it('trails Account and its page on the account pages', () => {
+    const { crumbs, palette } = crumbsAt('/account/api-keys', {});
+    expect(crumbs.value).toEqual([{ label: 'account.title', to: '/account' }, { label: 'apikeys.personal_title' }]);
+    expect(palette.value.map(p => p.to)).toEqual(['/account', '/account/api-keys']);
   });
 });
 

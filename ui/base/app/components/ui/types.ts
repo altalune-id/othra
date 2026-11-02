@@ -83,4 +83,6 @@ export interface PaletteItem {
   key: string;
   label: string;
   to: string;
+  group?: string;
+  mono?: boolean;
 }
