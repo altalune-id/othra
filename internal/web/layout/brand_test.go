@@ -89,6 +89,9 @@ func TestLayout_OnlyBrandColoursPinTheLightTheme(t *testing.T) {
 	assert.Contains(t, plain, `<html lang="en" data-brand>`, "Othra's default look follows the system light or dark mode")
 	coloured := page(t, templ.WithNonce(t.Context(), "n"), LayoutData{Title: "Sign in", Brand: NewBrand("Acme", "", "#1e3a8a")})
 	assert.Contains(t, coloured, `<html lang="en" data-theme="othra-light" data-brand>`, "brand colours are light-only")
+	logo := page(t, t.Context(), LayoutData{Title: "Sign in", Brand: NewBrand("Acme", "/p/acme/logo.png", "")})
+	assert.Contains(t, logo, `<html lang="en" data-theme="othra-light" data-brand>`, "a logo alone keeps the page light, so a dark logo never vanishes on a dark tile")
+	assert.False(t, (*Brand)(nil).Branded())
 }
 
 func TestLayout_WithBrand(t *testing.T) {

@@ -4,7 +4,7 @@ templ Layout(d LayoutData) {
 	<!DOCTYPE html>
 	<html
 		lang={ d.lang() }
-		if d.Brand.CSS() != "" {
+		if d.Brand.Branded() {
 			data-theme="othra-light"
 		}
 		data-brand?={ d.Brand != nil }

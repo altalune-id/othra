@@ -46,7 +46,7 @@ func Layout(d LayoutData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if d.Brand.CSS() != "" {
+		if d.Brand.Branded() {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " data-theme=\"othra-light\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

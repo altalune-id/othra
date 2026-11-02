@@ -69,14 +69,17 @@ func luminance(hex string) float64 {
 	return 0.2126*channel(1) + 0.7152*channel(3) + 0.0722*channel(5)
 }
 
-// NOTE: without brand CSS a page sets no data-theme and follows prefers-color-scheme; brand colours are light-only.
-
 // CSS is the brand colours as daisyUI variables, or empty without a valid primary. SECURITY: only re-checked hex reaches the CSS.
 func (b *Brand) CSS() string {
 	if b == nil || !hexColor.MatchString(b.Primary) {
 		return ""
 	}
 	return ":root{--color-primary:" + b.Primary + ";--color-primary-content:" + ReadableOn(b.Primary) + "}"
+}
+
+// Branded reports a colour or a logo; only unbranded pages follow the system dark mode, as brand assets are light-only.
+func (b *Brand) Branded() bool {
+	return b != nil && (b.CSS() != "" || b.LogoURL != "")
 }
 
 // IssuerHost is the issuer URL without its scheme, as the footer of a hosted page shows it.
