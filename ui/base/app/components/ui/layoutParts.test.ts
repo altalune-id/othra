@@ -61,7 +61,7 @@ describe('section', () => {
   it('pads the body, or draws the design header bar over a flush body for rows', () => {
     const padded = mount(Section, { props: { title: 'Key rotation' }, slots: { default: '<p>body</p>' } });
     expect(padded.get('h2').classes()).toEqual(['text-ui', 'font-semibold']);
-    expect(padded.get('p').element.parentElement!.className).toBe('px-4 pb-4');
+    expect(padded.get('p').element.parentElement!.className).toBe('flex flex-col gap-4 px-4 pb-4');
     const flush = mount(Section, { props: { title: 'Issuer status', flush: true }, slots: { default: '<p>body</p>' } });
     expect(flush.get('h2').element.parentElement!.parentElement!.classList).toContain('border-b');
     expect(flush.get('p').element.parentElement!.className).toBe('');

@@ -28,7 +28,7 @@ const head = computed(() => flush ? 'border-b border-base-300 px-4 py-2' : 'px-4
         <slot name="actions" />
       </div>
     </div>
-    <div :class="{ 'px-4 pb-4': !flush }">
+    <div :class="flush ? '' : 'flex flex-col gap-4 px-4 pb-4'">
       <slot />
     </div>
   </section>
