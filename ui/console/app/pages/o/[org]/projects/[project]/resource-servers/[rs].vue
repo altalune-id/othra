@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { ResourceServer } from '#gen/resourceserver/v1/resourceserver_pb';
 import type { LinkRow } from '~/components/link/LinkList.vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import Section from '#base/components/ui/Section.vue';
 import UrlField from '#base/components/ui/UrlField.vue';
 import { useDates } from '#base/composables/useDates';
 import { SecretGrace } from '#gen/client/v1/client_pb';
@@ -163,61 +166,50 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0">
-        <NuxtLink :to="base" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
-          <Icon name="lucide:chevron-left" size="14" />
-          {{ t('rs.title') }}
-        </NuxtLink>
-        <h1 class="mt-1 text-2xl font-bold break-words">
-          {{ server.name }}
-        </h1>
-      </div>
-      <button v-if="canEdit" type="button" class="btn btn-ghost btn-sm max-sm:btn-block text-ui" @click="page.askDelete()">
-        <Icon name="lucide:trash-2" size="16" class="text-error" />
-        {{ t('common.delete') }}
-      </button>
-    </div>
+  <div class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="server.name">
+      <template v-if="canEdit" #actions>
+        <AppButton variant="error" size="sm" soft @click="page.askDelete()">
+          <Icon name="lucide:trash-2" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('common.delete') }}
+        </AppButton>
+      </template>
+    </PageHeader>
     <ProjectReadOnlyNote v-if="!canEdit" />
 
-    <section class="card border border-base-300 bg-base-100" data-testid="rs-details">
-      <div class="card-body gap-3">
-        <h2 class="card-title text-base">
-          {{ t('rs.details') }}
-        </h2>
-        <UrlField :label="t('rs.uri')" :value="server.identifier" size="sm" testid="rs-identifier" v-bind="urlLabels" />
-        <form v-if="canEdit" novalidate class="fieldset" @submit.prevent="page.save('name')">
-          <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
-          <div class="flex flex-wrap items-center gap-2">
+    <Section :title="t('rs.details')" data-testid="rs-details">
+      <UrlField :label="t('rs.uri')" :value="server.identifier" size="sm" testid="rs-identifier" v-bind="urlLabels" />
+      <form v-if="canEdit" novalidate class="fieldset" @submit.prevent="page.save('name')">
+        <div class="flex flex-wrap items-end gap-2">
+          <label class="flex min-w-0 flex-1 flex-col gap-1">
+            <span class="label text-ui text-base-content">{{ t('common.name') }}</span>
             <input
               :id="ids.name"
               v-model="name"
               type="text"
-              class="input input-sm min-w-0 flex-1 text-ui"
+              class="input input-sm w-full text-ui"
               :class="{ 'input-error': nameError }"
               maxlength="100"
               :disabled="saving === 'name'"
               :aria-invalid="!!nameError"
               :aria-describedby="ids.nameErr"
             >
-            <button type="submit" class="btn btn-sm text-ui" :disabled="saving === 'name'">
-              <span v-if="saving === 'name'" class="loading loading-spinner loading-xs" />
-              {{ t('common.save') }}
-            </button>
-          </div>
-          <FieldError :id="ids.nameErr" :message="nameError" />
-          <ErrorText :error="saveError?.part === 'name' ? saveError.error : null" />
-          <SavedNote v-if="saved === 'name'" :label="t('common.saved')" />
-        </form>
-        <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 text-sm">
-          <dt class="text-base-content/70">
-            {{ t('common.name') }}
-          </dt>
-          <dd>{{ server.name }}</dd>
-        </dl>
-      </div>
-    </section>
+          </label>
+          <AppButton type="submit" variant="plain" size="sm" :busy="saving === 'name'">
+            {{ t('common.save') }}
+          </AppButton>
+        </div>
+        <FieldError :id="ids.nameErr" :message="nameError" />
+        <ErrorText :error="saveError?.part === 'name' ? saveError.error : null" />
+        <SavedNote v-if="saved === 'name'" :label="t('common.saved')" />
+      </form>
+      <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 text-ui">
+        <dt class="text-base-content/70">
+          {{ t('common.name') }}
+        </dt>
+        <dd>{{ server.name }}</dd>
+      </dl>
+    </Section>
 
     <VerificationCard
       ref="verifyCard"
@@ -243,35 +235,29 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
       @toggle-trust="page.toggleTrust()"
     />
 
-    <section class="card border border-base-300 bg-base-100" data-testid="rs-scopes">
-      <div class="card-body gap-3">
-        <h2 class="card-title text-base">
-          {{ t('rs.scopes') }}
-        </h2>
-        <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="page.save('scopes')">
-          <ScopeTable
-            v-model:rows="scopeRows"
-            v-model:descriptions="scopeDescriptions"
-            :errors="scopeErrors"
-            :disabled="saving === 'scopes'"
-            :full="page.scopes.full.value"
-            :labels="scopeLabels"
-            @add="page.scopes.add()"
-            @remove="page.scopes.remove"
-            @edit="page.scopes.clearRow"
-          />
-          <ErrorText :error="saveError?.part === 'scopes' ? saveError.error : null" />
-          <div class="flex items-center gap-3">
-            <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="saving === 'scopes'">
-              <span v-if="saving === 'scopes'" class="loading loading-spinner loading-xs" />
-              {{ t('rs.save_scopes') }}
-            </button>
-            <SavedNote v-if="saved === 'scopes'" :label="t('common.saved')" />
-          </div>
-        </form>
-        <ScopeTable v-else :rows="server.scopes" :descriptions="server.scopes.map(s => server.scopeDescriptions[s] ?? '')" :editable="false" />
-      </div>
-    </section>
+    <Section :title="t('rs.scopes')" data-testid="rs-scopes">
+      <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="page.save('scopes')">
+        <ScopeTable
+          v-model:rows="scopeRows"
+          v-model:descriptions="scopeDescriptions"
+          :errors="scopeErrors"
+          :disabled="saving === 'scopes'"
+          :full="page.scopes.full.value"
+          :labels="scopeLabels"
+          @add="page.scopes.add()"
+          @remove="page.scopes.remove"
+          @edit="page.scopes.clearRow"
+        />
+        <ErrorText :error="saveError?.part === 'scopes' ? saveError.error : null" />
+        <div class="flex items-center gap-3">
+          <AppButton type="submit" size="sm" :busy="saving === 'scopes'">
+            {{ t('rs.save_scopes') }}
+          </AppButton>
+          <SavedNote v-if="saved === 'scopes'" :label="t('common.saved')" />
+        </div>
+      </form>
+      <ScopeTable v-else :rows="server.scopes" :descriptions="server.scopes.map(s => server.scopeDescriptions[s] ?? '')" :editable="false" />
+    </Section>
 
     <CimdCard
       v-model:accept="cimdAccept"
@@ -327,17 +313,17 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
     />
 
     <AppModal :open="!!patRevoking" :title="patText.revokeTitle" @close="patSecrets.cancelRevoke()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ patText.revokeBody.replace('{hint}', patRevoking?.hint ?? '') }}
       </p>
       <ErrorText :error="patSecretError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="patSecretBusy" @click="patSecrets.cancelRevoke()">
+        <AppButton variant="ghost" size="sm" :disabled="patSecretBusy" @click="patSecrets.cancelRevoke()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="patSecretBusy" @click="patSecrets.confirmRevoke()">
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="patSecretBusy" @click="patSecrets.confirmRevoke()">
           {{ t('secrets.revoke_old') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
 
@@ -361,19 +347,18 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
     />
 
     <AppModal :open="trustAsking" :title="t('rs.trust_title', { uri: server.identifier })" @close="page.cancelTrust()">
-      <p class="flex items-start gap-1.5 text-sm text-base-content">
-        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" />
+      <p class="flex items-start gap-2 text-ui">
+        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
         {{ t('rs.trust_body') }}
       </p>
       <ErrorText :error="trustError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="trustBusy" autofocus @click="page.cancelTrust()">
+        <AppButton variant="ghost" size="sm" :disabled="trustBusy" autofocus @click="page.cancelTrust()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-warning btn-sm text-ui" :disabled="trustBusy" @click="page.setTrust(true)">
-          <span v-if="trustBusy" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton variant="plain" class="btn-warning" size="sm" :busy="trustBusy" @click="page.setTrust(true)">
           {{ t('rs.trust') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
 
@@ -395,50 +380,47 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
     />
 
     <AppModal :open="!!unlinking" :title="t('links.unlink_title', { name: unlinkingName })" @close="links.cancelUnlink()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ t('links.unlink_body', { client: unlinkingName, rs: server.name }) }}
       </p>
       <ErrorText :error="linkError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
+        <AppButton variant="ghost" size="sm" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="linkBusy" @click="links.confirmUnlink()">
-          <span v-if="linkBusy" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="linkBusy" @click="links.confirmUnlink()">
           {{ t('links.unlink') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
 
     <AppModal :open="!!cimdRevoking" :title="t('rs.cimd_revoke_title', { name: cimdRevoking?.clientName ?? '' })" @close="cimd.cancelRevoke()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ t('rs.cimd_revoke_body', { name: cimdRevoking?.clientName ?? '' }) }}
       </p>
       <ErrorText :error="cimd.revokeError.value" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="cimdRevokeBusy" autofocus @click="cimd.cancelRevoke()">
+        <AppButton variant="ghost" size="sm" :disabled="cimdRevokeBusy" autofocus @click="cimd.cancelRevoke()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="cimdRevokeBusy" @click="cimd.confirmRevoke()">
-          <span v-if="cimdRevokeBusy" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="cimdRevokeBusy" @click="cimd.confirmRevoke()">
           {{ t('rs.cimd_revoke') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
 
     <AppModal :open="deleting" :title="t('rs.delete_title', { name: server.name })" @close="page.cancelDelete()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ t('rs.delete_body', { uri: server.identifier }) }}
       </p>
       <ErrorText :error="deleteError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="deleteBusy" autofocus @click="page.cancelDelete()">
+        <AppButton variant="ghost" size="sm" :disabled="deleteBusy" autofocus @click="page.cancelDelete()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="deleteBusy" @click="remove">
-          <span v-if="deleteBusy" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="deleteBusy" @click="remove">
           {{ t('common.delete') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
   </div>

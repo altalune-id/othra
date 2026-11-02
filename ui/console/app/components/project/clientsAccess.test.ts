@@ -23,7 +23,7 @@ describe('clients and resource server pages', () => {
   });
 
   it.each(details)('$path gates Delete and every write form on canEdit', ({ source }) => {
-    expect(source).toMatch(/<button v-if="canEdit(?: && !system)?"[^>]*@click="page\.askDelete\(\)"/);
+    expect(source).toMatch(/<button v-if="canEdit(?: && !system)?"[^>]*@click="page\.askDelete\(\)"|<template v-if="canEdit(?: && !system)?" #actions>\s*<AppButton[^>]*@click="page\.askDelete\(\)"/);
     for (const form of source.match(/<form\s[^>]*>/g) ?? []) {
       expect(form).toContain('v-if="canEdit"');
     }
