@@ -22,13 +22,18 @@ const preview: Preview = {
     },
   },
   initialGlobals: { theme: 'othra-light' },
+  loaders: [async () => {
+    await document.fonts.ready;
+    return {};
+  }],
   decorators: [
     (story, context) => {
       document.documentElement.dataset.theme = context.globals.theme as string;
-      return story();
+      return { components: { story }, template: '<div class="bg-base-100 p-4 text-base-content"><story /></div>' };
     },
   ],
   parameters: {
+    backgrounds: { disable: true },
     controls: {
       matchers: {
         color: /(background|color)$/i,

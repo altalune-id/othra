@@ -112,19 +112,21 @@ function contrast(fg: RGB, bg: RGB, alpha = 1): number {
 
 describe('guard: foundations', () => {
   const css = readFileSync(join(ui, 'base/app/assets/css/main.css'), 'utf8');
+  const tokens = readFileSync(join(ui, 'theme.css'), 'utf8');
 
   it('self-hosts IBM Plex Sans and Mono from @fontsource and never loads fonts from a CDN', () => {
-    for (const face of ['ibm-plex-sans/latin-400', 'ibm-plex-sans/latin-500', 'ibm-plex-sans/latin-600', 'ibm-plex-mono/latin-400', 'ibm-plex-mono/latin-500']) {
+    for (const face of ['ibm-plex-sans/400', 'ibm-plex-sans/500', 'ibm-plex-sans/600', 'ibm-plex-mono/400', 'ibm-plex-mono/500']) {
       expect(css).toContain(`@import '@fontsource/${face}.css';`);
     }
-    expect(css).toMatch(/--font-sans: 'IBM Plex Sans'/);
-    expect(css).toMatch(/--font-mono: 'IBM Plex Mono'/);
+    expect(css).not.toMatch(/@fontsource\/[\w-]+\/latin/);
+    expect(tokens).toMatch(/--font-sans: 'IBM Plex Sans'/);
+    expect(tokens).toMatch(/--font-mono: 'IBM Plex Mono'/);
     expect(offenders(/fonts\.(?:googleapis|gstatic)\.com/)).toEqual([]);
   });
 
-  it('defines the dense text-ui size the artifact uses', () => {
-    expect(css).toContain('--text-ui: 0.8125rem;');
-    expect(css).toContain('--text-ui--line-height: 1.25rem;');
+  it('defines the dense text-ui size in the shared theme, so the MCP view and sign-in pages get it too', () => {
+    expect(tokens).toContain('--text-ui: 0.8125rem;');
+    expect(tokens).toContain('--text-ui--line-height: 1.25rem;');
   });
 });
 

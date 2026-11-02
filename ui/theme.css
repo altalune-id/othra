@@ -1,6 +1,13 @@
 /* Shared daisyUI themes for the console and the server pages; registry: ui/base/app/components/layout/useTheme.ts. */
 @custom-variant dark (&:where([data-theme="othra-dark"], [data-theme="othra-dark"] *, [data-theme="bumblebee-dark"], [data-theme="bumblebee-dark"] *, [data-theme="retro-dark"], [data-theme="retro-dark"] *, [data-theme="pastel-dark"], [data-theme="pastel-dark"] *, [data-theme="caramellatte-dark"], [data-theme="caramellatte-dark"] *, [data-theme="coffee-dark"], [data-theme="coffee-dark"] *, [data-theme="luxury-dark"], [data-theme="luxury-dark"] *, [data-theme="night-dark"], [data-theme="night-dark"] *, [data-theme="halloween-dark"], [data-theme="halloween-dark"] *));
 
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --text-ui: 0.8125rem;
+  --text-ui--line-height: 1.25rem;
+}
+
 @plugin "daisyui/theme" {
   name: 'othra-light';
   default: true;
