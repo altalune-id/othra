@@ -47,7 +47,7 @@ describe('project sidebar', () => {
       ['webhooks.title', `${base}/webhooks`],
     ]);
     expect(w.get('[aria-current="page"]').text()).toBe('keys.title');
-    expect(w.get('[data-testid="org-role"]').text()).toBe('members.role_admin');
+    expect(w.find('[data-testid="org-role"]').exists()).toBe(false);
   });
 
   it('leaves People out for someone who cannot read end users', () => {
@@ -58,15 +58,15 @@ describe('project sidebar', () => {
 });
 
 describe('org sidebar', () => {
-  it('shows the org pages as one flat group in the design order, with the role', () => {
+  it('shows the org pages as one flat group in the design order under a full-width switcher', () => {
     setRoute({ path: '/o/acme/settings/members', params: { org: 'acme' } });
     const w = mount(AppSidebar, { global: { stubs } });
     expect(links(w).map(([, href]) => href)).toEqual(['/o/acme', '/o/acme/projects', '/o/acme/settings/members', '/o/acme/settings/api-keys', '/o/acme/settings']);
     expect(sections(w)).toEqual([]);
     expect(w.get('[aria-current="page"]').text()).toBe('members.title');
-    expect(w.get('[data-testid="org-role"]').exists()).toBe(true);
-    const row = w.get('[data-testid="org-role"]').element.parentElement!;
-    expect(row.className).toBe('flex items-center gap-1');
-    expect(row.firstElementChild!.className).toBe('min-w-0 flex-1');
+    expect(w.find('[data-testid="org-role"]').exists()).toBe(false);
+    const top = w.get('org-selector-stub').element.parentElement!;
+    expect(top.className).toBe('p-2');
+    expect(top.children).toHaveLength(1);
   });
 });
