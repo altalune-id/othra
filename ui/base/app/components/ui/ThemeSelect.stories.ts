@@ -6,8 +6,7 @@ const meta = {
   component: ThemeSelect,
   args: {
     modelValue: 'othra',
-    label: 'Theme',
-    open: true,
+    label: 'Theme family',
     families: [
       { id: 'othra', label: 'Othra', theme: 'othra-light' },
       { id: 'bumblebee', label: 'Bumblebee', theme: 'bumblebee-light' },

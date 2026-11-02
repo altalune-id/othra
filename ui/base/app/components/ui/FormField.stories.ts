@@ -39,7 +39,7 @@ export const Search: Story = {
   name: 'Search with icon (artifact)',
   render: () => ({
     components: { SearchInput },
-    template: `<SearchInput label="Filter agents" />`,
+    template: `<SearchInput label="Filter agents" class="w-full sm:w-64" />`,
   }),
 };
 
