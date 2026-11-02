@@ -90,7 +90,8 @@ describe('member-visible write actions', () => {
     readOnly.unmount();
     setActivePinia(createPinia());
     const w = await mountPage(APIKeyList, { pageProps: { orgId, canManage: true }, attachTo: document.body });
-    await w.get('tbody button').trigger('click');
+    expect(w.get('tbody button[popovertarget] .sr-only').text()).toContain('deploy-bot');
+    await w.get('tbody [popover] button').trigger('click');
     expect(openDialog()!.textContent).toContain('apikeys.revoke_confirm');
     expect(openDialog()!.textContent).toContain('apikeys.revoke_body');
   });
