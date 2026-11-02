@@ -172,7 +172,7 @@ func (h *Web) site(i *project.Issuer) *site {
 }
 
 func (h *Web) layout(r *http.Request, s *site) layout.LayoutData {
-	d := layout.LayoutData{BasePath: h.cfg.BasePath, Lang: i18n.Locale(r.Context())}
+	d := layout.LayoutData{BasePath: h.cfg.BasePath, Lang: i18n.Locale(r.Context()), Version: h.kit.Version}
 	if s == nil {
 		return d
 	}

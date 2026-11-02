@@ -895,3 +895,9 @@ func TestWeb_Portal(t *testing.T) {
 	none.signIn(none.client, "acme", "ana@example.com")
 	assert.Equal(t, http.StatusNotFound, none.get(none.client, "/p/acme/account/").status, "without a portal build there is no account page")
 }
+
+func TestLayout_VersionsStaticAssets(t *testing.T) {
+	h := &Web{kit: layout.Kit{Version: func(name string) string { return "v-" + name }}}
+	d := h.layout(httptest.NewRequest(http.MethodGet, "/p/acme/login", nil), nil)
+	assert.Equal(t, "/static/app.css?v=v-app.css", d.Static("/app.css"), "hosted pages build LayoutData by hand, so they copy the kit's Version")
+}

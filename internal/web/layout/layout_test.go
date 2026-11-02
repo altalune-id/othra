@@ -289,3 +289,17 @@ func TestTemplatesReturnChildErrors(t *testing.T) {
 		assert.ErrorIs(t, c.Render(ctx, &buf), errWriteLimit)
 	}
 }
+
+func TestLayoutData_StaticVersion(t *testing.T) {
+	plain := LayoutData{BasePath: "/x"}
+	assert.Equal(t, "/x/static/app.css", plain.Static("/app.css"), "no Version: today's URL")
+	versioned := LayoutData{BasePath: "/x", Version: func(name string) string {
+		if name == "app.css" {
+			return "abc123"
+		}
+		return ""
+	}}
+	assert.Equal(t, "/x/static/app.css?v=abc123", versioned.Static("/app.css"))
+	assert.Equal(t, "/x/static/missing.js", versioned.Static("/missing.js"), "an unknown file stays plain")
+	assert.Equal(t, "/x/static/app.css?v=abc123", Kit{BasePath: "/x", Version: versioned.Version}.Layout("T").Static("/app.css"), "Kit.Layout carries Version")
+}

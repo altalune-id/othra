@@ -24,6 +24,8 @@ type LayoutData struct {
 	Refresh  string
 	// Wide gives the hosted footer the consent page's wider column.
 	Wide bool
+	// Version returns a static file's content hash for a cache-busting ?v=; nil leaves asset URLs plain.
+	Version func(name string) string
 }
 
 // Href returns sub (which starts with "/") under the base path.
@@ -31,9 +33,16 @@ func (d LayoutData) Href(sub string) string {
 	return strings.TrimRight(d.BasePath, "/") + sub
 }
 
-// Static returns the URL of an embedded static asset.
+// Static returns the URL of an embedded static asset, with ?v=<content hash> when Version knows the file.
 func (d LayoutData) Static(sub string) string {
-	return d.Href("/static" + sub)
+	u := d.Href("/static" + sub)
+	if d.Version == nil {
+		return u
+	}
+	if v := d.Version(strings.TrimPrefix(sub, "/")); v != "" {
+		return u + "?v=" + v
+	}
+	return u
 }
 
 func (d LayoutData) siteName() string {
@@ -55,6 +64,7 @@ type Kit struct {
 	BasePath   string
 	Log        *slog.Logger
 	Unexpected apperror.UnexpectedFunc
+	Version    func(name string) string
 }
 
 // Path returns sub under the kit's base path.
@@ -62,7 +72,7 @@ func (k Kit) Path(sub string) string { return Path(k.BasePath, sub) }
 
 // Layout returns the LayoutData for an admin page titled title, whose error page links to the console.
 func (k Kit) Layout(title string) LayoutData {
-	return LayoutData{BasePath: k.BasePath, Title: title, Home: k.Path("/console") + "/"}
+	return LayoutData{BasePath: k.BasePath, Title: title, Home: k.Path("/console") + "/", Version: k.Version}
 }
 
 // Render writes c as an HTML response with status.

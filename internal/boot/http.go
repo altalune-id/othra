@@ -175,13 +175,17 @@ func warnSampleLegal(cfg config.Config, log *slog.Logger, serving bool) {
 		slog.String("missing", strings.Join(missing, " ")))
 }
 
+func pageKit(cfg config.Config, log *slog.Logger, unexpected apperror.UnexpectedFunc) layout.Kit {
+	return layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected, Version: web.StaticVersion}
+}
+
 func buildIssuerRoutes(
 	cfg config.Config, svcs *Services, inProcess *http.ServeMux, log *slog.Logger, unexpected apperror.UnexpectedFunc,
 ) (public, hosted []web.Registrar) {
 	if svcs == nil || svcs.IssuerResolver == nil {
 		return nil, nil
 	}
-	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
+	kit := pageKit(cfg, log, unexpected)
 	resolver := svcs.IssuerResolver.WithLimiter(svcs.AuthLimiter, cfg.HTTP.TrustedProxyHops)
 	issuers := oidc.NewWeb(resolver, kit, oidc.Config{
 		PublicBase: publicBase(cfg.HTTP),
@@ -254,7 +258,7 @@ func consoleWeb(
 func buildRoutes(
 	cfg config.Config, svcs *Services, rp auth.ConsoleRP, log *slog.Logger, unexpected apperror.UnexpectedFunc,
 ) []web.Registrar {
-	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
+	kit := pageKit(cfg, log, unexpected)
 	legalOpts := legal.WebOpts{
 		Kit: kit, TermsURL: cfg.Compliance.TermsURL, PrivacyURL: cfg.Compliance.PrivacyURL,
 		Company: cfg.Compliance.Company, ContactEmail: cfg.Compliance.ContactEmail,
