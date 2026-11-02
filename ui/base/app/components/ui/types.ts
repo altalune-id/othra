@@ -89,6 +89,5 @@ export interface PaletteItem {
 
 export interface TopBarPlace {
   label: string;
-  mono?: boolean;
   badge?: string;
 }

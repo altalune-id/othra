@@ -67,7 +67,7 @@ export function useNavCrumbs() {
     }
     const env = projects.items.find(p => p.orgId === org.value!.id && p.slug === project.value)?.environment;
     const key = environmentLabelKey(env);
-    return { label: project.value, mono: true, badge: key === 'environment.none' ? undefined : t(key) };
+    return { label: project.value, badge: key === 'environment.none' ? undefined : t(key) };
   });
 
   return { crumbs, place, palette };
