@@ -18,7 +18,7 @@ const preview: Preview = {
   globalTypes: {
     theme: {
       description: 'Theme',
-      toolbar: { title: 'Theme', icon: 'mirror', items: ['othra-light', 'othra-dark'], dynamicTitle: true },
+      toolbar: { title: 'Theme', icon: 'mirror', items: ['othra-light', 'othra-dark', 'bumblebee-light', 'bumblebee-dark', 'retro-light', 'retro-dark', 'pastel-light', 'pastel-dark', 'caramellatte-light', 'caramellatte-dark', 'coffee-dark', 'luxury-dark', 'night-dark', 'halloween-dark'], dynamicTitle: true },
     },
   },
   initialGlobals: { theme: 'othra-light' },

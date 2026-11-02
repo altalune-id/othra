@@ -32,7 +32,7 @@ export const ConsoleSet: Story = {
         <AppButton size="sm"><Icon name="lucide:plus" size="16" />New client</AppButton>
         <AppButton variant="plain" size="sm"><Icon name="lucide:copy" size="16" />Copy issuer</AppButton>
         <AppButton variant="plain" size="sm"><Icon name="lucide:braces" size="16" />View as JSON</AppButton>
-        <AppButton variant="ghost" size="sm" class="text-base-content/70"><Icon name="lucide:search" size="16" />Search</AppButton>
+        <AppButton variant="ghost" size="sm" class="text-base-content/70"><Icon name="lucide:search" size="16" />Search<kbd class="kbd kbd-xs">⌘K</kbd></AppButton>
         <AppButton variant="ghost" size="xs" square aria-label="Actions for Storefront web"><Icon name="lucide:ellipsis" size="16" /></AppButton>
         <AppButton variant="ghost" size="sm" square aria-label="Toggle navigation"><Icon name="lucide:menu" size="18" /></AppButton>
       </div>`,
