@@ -19,6 +19,7 @@ describe('appModal', () => {
     const heading = document.getElementById(dialog.attributes('aria-labelledby')!)!;
     expect(heading.className).toBe('text-base font-semibold');
     expect(heading.tagName).toBe('H2');
+    expect(w.find('.modal-action').classes()).toContain('[&_.btn]:text-ui');
     await w.setProps({ open: false });
     expect(dialog.element.open).toBe(false);
   });

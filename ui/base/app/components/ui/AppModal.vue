@@ -43,7 +43,7 @@ onMounted(sync);
       <div class="py-4">
         <slot />
       </div>
-      <div class="modal-action">
+      <div class="modal-action [&_.btn]:text-ui">
         <slot name="footer" />
       </div>
     </div>

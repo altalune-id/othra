@@ -16,6 +16,7 @@ describe('sidebarNav', () => {
     const links = w.findAll('nav a');
     expect(links.map(a => a.attributes('aria-current'))).toEqual(['page', undefined]);
     expect(links[0]!.classes()).toContain('menu-active');
+    expect(links.every(a => ['focus-visible:outline-2', 'focus-visible:outline-solid!', 'focus-visible:-outline-offset-2'].every(c => a.classes().includes(c)))).toBe(true);
   });
 
   it('draws the design menu: dense small menu, muted group titles, a bordered footer', () => {

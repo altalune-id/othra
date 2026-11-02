@@ -30,7 +30,7 @@ const slots = useSlots();
               {{ group.label }}
             </li>
             <li v-for="item in group.items" :key="item.key">
-              <NuxtLink :to="item.to" :class="{ 'menu-active': item.active }" :aria-current="item.active ? 'page' : undefined">
+              <NuxtLink :to="item.to" class="focus-visible:outline-2 focus-visible:outline-solid! focus-visible:-outline-offset-2" :class="{ 'menu-active': item.active }" :aria-current="item.active ? 'page' : undefined">
                 <Icon v-if="item.icon" :name="item.icon" size="16" class="shrink-0" />
                 <span class="flex-1">{{ item.label }}</span>
                 <span v-if="item.badge" class="badge badge-sm">{{ item.badge }}</span>
