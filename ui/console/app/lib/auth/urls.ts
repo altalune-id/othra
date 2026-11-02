@@ -20,5 +20,5 @@ export function staticURL(apiUrl: string, file: string): string {
 
 // logoURL is Othra's brand mark, shown in the navbar and the org switcher.
 export function logoURL(apiUrl: string): string {
-  return staticURL(apiUrl, 'altalune-logo.png');
+  return staticURL(apiUrl, 'othra-mark.svg');
 }

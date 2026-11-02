@@ -39,7 +39,7 @@ describe('org switcher', () => {
     const w = mount(OrgSelector);
     expect(w.get('button[popovertarget]').text()).toContain('Othra/Acme');
     const logo = w.get('button[popovertarget] img');
-    expect(logo.attributes('src')).toMatch(/\/static\/altalune-logo\.png$/);
+    expect(logo.attributes('src')).toMatch(/\/static\/othra-mark\.svg$/);
     expect(logo.attributes('alt')).toBe('');
     expect(w.get('.menu-title').text()).toBe('nav.last_opened');
     expect(w.get('button[popovertarget]').classes()).toEqual(expect.arrayContaining(['btn', 'btn-ghost', 'btn-sm', 'w-full', 'justify-between', 'text-ui']));

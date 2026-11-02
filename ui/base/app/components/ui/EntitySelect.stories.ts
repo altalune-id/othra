@@ -28,7 +28,7 @@ export const Organization: Story = {
       <div class="h-80 w-60 bg-base-200 p-2">
         <EntitySelect v-bind="args">
           <template #trigger>
-            <span class="inline-flex min-w-0 items-center gap-2"><img src="/static/altalune-logo.png" alt="" width="16" height="16" class="size-4 shrink-0 object-contain"><span class="font-semibold">Othra</span><span class="text-base-content/70">/</span><span class="truncate">Acme</span></span>
+            <span class="inline-flex min-w-0 items-center gap-2"><img src="/static/othra-mark.svg" alt="" width="16" height="16" class="size-4 shrink-0 object-contain"><span class="font-semibold">Othra</span><span class="text-base-content/70">/</span><span class="truncate">Acme</span></span>
           </template>
           <template #actions>
             <li><button type="button"><Icon name="lucide:plus" size="16" class="shrink-0" />New organization</button></li>
