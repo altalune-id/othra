@@ -123,7 +123,7 @@ func TestBrandFooter_IssuerHost(t *testing.T) {
 	assert.Equal(t, "id.example/p/acme", b.IssuerHost())
 	assert.Equal(t, "plain", (&Brand{Issuer: "plain"}).IssuerHost())
 	out := render(t, t.Context(), brandFooter(LayoutData{Brand: b}))
-	assert.Contains(t, out, `<span class="font-mono break-all">id.example/p/acme</span>`)
+	assert.Contains(t, out, `<span class="ms-auto font-mono break-all">id.example/p/acme</span>`)
 	assert.NotContains(t, out, "<nav", "no legal links, no nav")
 	assert.NotContains(t, render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}})), "font-mono", "no issuer, no host")
 }
@@ -132,14 +132,17 @@ func TestBrandFooter_LanguageSelect(t *testing.T) {
 	id := i18n.WithLocale(t.Context(), i18n.Indonesian)
 	out := render(t, id, brandFooter(LayoutData{BasePath: "/id/", Brand: &Brand{}}))
 	assert.Contains(t, out, `<label class="sr-only" for="lang">Bahasa</label>`)
-	assert.Contains(t, out, `<select id="lang" class="select select-xs w-28" data-lang-select data-path="/id" hidden>`, "hidden until lang.js shows it; the cookie path is the base path")
+	assert.Contains(t, out, `<select id="lang" class="select select-xs w-28" data-lang-select hidden>`, "hidden until lang.js shows it")
 	assert.Contains(t, out, `<option value="en-US">English</option><option value="id-ID" selected>Bahasa Indonesia</option></select>`, "endonyms, the current locale selected")
 	assert.Contains(t, out, `<script type="module" src="/id/static/lang.js"></script>`)
 
 	en := render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}}))
 	assert.Contains(t, en, `<label class="sr-only" for="lang">Language</label>`)
-	assert.Contains(t, en, `data-path="/" hidden>`)
 	assert.Contains(t, en, `<option value="en-US" selected>English</option>`)
+
+	full := render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{TermsURL: "https://a.test/t", PrivacyURL: "https://a.test/p", Issuer: "https://id.test/p/a"}}))
+	order := []int{strings.Index(full, "data-lang-select"), strings.Index(full, "id.test/p/a</span>"), strings.Index(full, "<nav")}
+	assert.IsIncreasing(t, order, "the select and host share the first row; the legal links sit under it")
 
 	redirect := render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}, Refresh: "https://app.test/cb"}))
 	assert.NotContains(t, redirect, "data-lang-select", "a page that redirects at once has nothing to switch")

@@ -555,16 +555,16 @@ func TestConsent_TechnicalDetailsNameTheIssuer(t *testing.T) {
 	d.Brand.Issuer = "https://othra.example/p/acme"
 	out := strings.ReplaceAll(html(t, ctxIn(t, i18n.English), Consent(d, consentData())), "> <", "><")
 	assert.Contains(t, out, `<dt>issuer</dt><dd class="break-all">https://othra.example/p/acme</dd></dl>`)
-	assert.Contains(t, out, `<footer class="flex w-full flex-wrap items-center justify-between gap-3 text-xs text-base-content/70 max-w-112">`, "the footer lines up with the wider consent column")
+	assert.Contains(t, out, `<footer class="flex w-full flex-col gap-2 text-xs text-base-content/70 max-w-112">`, "the footer lines up with the wider consent column")
 }
 
 func TestLogin_Google(t *testing.T) {
 	both := html(t, ctxIn(t, i18n.English), Login(page(), LoginData{Site: site, ReturnTo: "/id/p/acme/account/", LoginToken: "tok-login", Google: true, GoogleToken: "tok-google"}))
 	assert.Contains(t, both, `<form method="post" action="/id/p/acme/federation/google/start"><input type="hidden" name="csrf" value="tok-google"><input type="hidden" name="return_to" value="/id/p/acme/account/">`)
-	assert.Contains(t, both, `<button class="btn-google" type="submit"><svg`)
+	assert.Contains(t, both, `<button class="btn w-full gap-2.5 font-['Google_Sans_Flex',Roboto,Arial,sans-serif] text-sm/5 font-medium [--btn-color:#f2f2f2] [--btn-fg:#1f1f1f]" type="submit" data-google><svg`, "Google's neutral button: its own fill, text colour and font")
 	assert.Contains(t, both, `<span>Continue with Google</span></button>`)
 	assert.Contains(t, both, `<div class="divider my-0 text-xs">or</div>`)
-	assert.Less(t, strings.Index(both, `name="email"`), strings.Index(both, "btn-google"), "the email form first, then Google under an or divider")
+	assert.Less(t, strings.Index(both, `name="email"`), strings.Index(both, "data-google"), "the email form first, then Google under an or divider")
 
 	only := html(t, ctxIn(t, i18n.Indonesian), Login(page(), LoginData{Site: site, Google: true, EmailOff: true}))
 	assert.Contains(t, only, "Lanjutkan dengan Google", "Google's own Indonesian wording")

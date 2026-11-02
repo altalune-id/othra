@@ -45,8 +45,8 @@ var catalogs = sync.OnceValue(func() map[string]map[string]string {
 // Locales returns the supported locales, the default first.
 func Locales() []string { return []string{English, Indonesian} }
 
-// Cookie is the cookie that holds a person's chosen locale; it wins over Accept-Language.
-const Cookie = "lang"
+// Cookie holds a person's chosen locale, shared with the console's i18n; it wins over Accept-Language.
+const Cookie = "othra_lang"
 
 // Name returns a supported locale's name in its own language, never translated.
 func Name(locale string) string {
@@ -84,7 +84,7 @@ func Error(ctx context.Context, code apperror.Code, args ...string) string {
 
 const errorKeyPrefix = "apperror."
 
-// Middleware puts the request's locale on its context: the lang cookie when it names a supported locale exactly, else the pick from Accept-Language.
+// Middleware puts the request's locale on its context: an exact othra_lang cookie, else the Accept-Language pick.
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Accept-Language")

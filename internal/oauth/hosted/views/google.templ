@@ -20,7 +20,7 @@ templ googleStart(d layout.LayoutData, s Site, token, returnTo string) {
 		if returnTo != "" {
 			<input type="hidden" name="return_to" value={ returnTo }/>
 		}
-		<button class="btn-google" type="submit">
+		<button class="btn w-full gap-2.5 font-['Google_Sans_Flex',Roboto,Arial,sans-serif] text-sm/5 font-medium [--btn-color:#f2f2f2] [--btn-fg:#1f1f1f]" type="submit" data-google>
 			@googleLogo()
 			<span>{ i18n.T(ctx, "login.continue_google") }</span>
 		</button>

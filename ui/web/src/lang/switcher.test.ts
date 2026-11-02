@@ -4,17 +4,17 @@ import { enhance, langCookie } from './switcher';
 const select = () => document.querySelector<HTMLSelectElement>('[data-lang-select]')!;
 
 describe('langCookie', () => {
-  it('scopes the cookie to the base path for a year and adds Secure on https', () => {
-    expect(langCookie('id-ID', '/id', true)).toBe('lang=id-ID; Path=/id; Max-Age=31536000; SameSite=Lax; Secure');
-    expect(langCookie('en-US', '', false)).toBe('lang=en-US; Path=/; Max-Age=31536000; SameSite=Lax');
+  it('shares the console cookie on Path=/ for a year and adds Secure on https', () => {
+    expect(langCookie('id-ID', true)).toBe('othra_lang=id-ID; Path=/; Max-Age=31536000; SameSite=Lax; Secure');
+    expect(langCookie('en-US', false)).toBe('othra_lang=en-US; Path=/; Max-Age=31536000; SameSite=Lax');
   });
 });
 
 describe('enhance', () => {
   beforeEach(() => {
-    document.cookie = 'lang=; Max-Age=0; Path=/';
+    document.cookie = 'othra_lang=; Max-Age=0; Path=/';
     document.body.innerHTML = `
-      <select data-lang-select data-path="/" hidden>
+      <select data-lang-select hidden>
         <option value="en-US" selected>English</option>
         <option value="id-ID">Bahasa Indonesia</option>
       </select>`;
@@ -27,7 +27,7 @@ describe('enhance', () => {
 
     select().value = 'id-ID';
     select().dispatchEvent(new Event('change'));
-    expect(document.cookie).toContain('lang=id-ID');
+    expect(document.cookie).toContain('othra_lang=id-ID');
     expect(reload).toHaveBeenCalledOnce();
   });
 
