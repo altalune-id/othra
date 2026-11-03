@@ -57,8 +57,11 @@ const base = `/o/${route.params.org}/projects/${route.params.project}/resource-s
 
 const page = useResourceServer(projectId, rsId);
 await Promise.all([page.load(), detail.ensureLoaded(projectId)]);
-if (page.notFound.value || !page.server.value) {
+if (page.notFound.value) {
   throw createError({ statusCode: 404, statusMessage: t('apperror.RSV001'), fatal: true });
+}
+if (!page.server.value) {
+  throw createError({ statusCode: 502, statusMessage: t('error.load_rs'), fatal: true });
 }
 const server = computed(() => page.server.value as ResourceServer);
 const { name, nameError, saving, saved, saveError, verifying, verified, verifyError, trustAsking, trustBusy, trustError, deleting, deleteBusy, deleteError } = page;

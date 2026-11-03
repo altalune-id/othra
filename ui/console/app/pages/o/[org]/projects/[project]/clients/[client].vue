@@ -53,8 +53,11 @@ const base = `/o/${route.params.org}/projects/${route.params.project}`;
 
 const page = useClient(projectId, clientId);
 await Promise.all([page.load(), detail.ensureLoaded(projectId)]);
-if (page.notFound.value || !page.client.value) {
+if (page.notFound.value) {
   throw createError({ statusCode: 404, statusMessage: t('apperror.CLT001'), fatal: true });
+}
+if (!page.client.value) {
+  throw createError({ statusCode: 502, statusMessage: t('error.load_clients'), fatal: true });
 }
 const client = computed(() => page.client.value as Client);
 const kind = computed(() => clientKinds[kindName(client.value.kind)]);
