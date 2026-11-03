@@ -179,5 +179,6 @@
   "verify.request_new": "Minta tautan baru",
   "verify.tab": "Konfirmasi masuk",
   "verify.title": "Masuk ke {project}",
-  "verify.warning": "Lanjutkan hanya jika Anda yang meminta tautan ini."
+  "verify.warning": "Lanjutkan hanya jika Anda yang meminta tautan ini.",
+  "consent.returns_to": "Kembali ke"
 }

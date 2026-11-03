@@ -220,6 +220,9 @@ func TestRedeem_SignsInOnceAndRotatesTheBrowserSecret(t *testing.T) {
 
 	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err), "single use from another browser")
+	reused, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Equal(t, "/p/acme/account/", reused.ReturnTo, "a spent link posted again still says where it was going")
 	_, err = h.svc.LinkByToken(context.Background(), h.project, tokenOf(t, l.URL))
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err))
 	spent, ok := errors.AsType[*LinkNotUsableError](err)
@@ -254,6 +257,13 @@ func TestRedeem_ExpiredAndUnknownLinks(t *testing.T) {
 	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err))
 	assert.Empty(t, h.store.users, "a refused redeem creates no end user")
+	expired, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Equal(t, "/p/acme/account/", expired.ReturnTo, "an expired link posted still says where it was going")
+	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: "nope"})
+	unknown, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Empty(t, unknown.ReturnTo, "an unknown token goes nowhere in particular")
 
 	for _, token := range []string{"", "nope"} {
 		_, err = h.svc.LinkByToken(context.Background(), h.project, token)

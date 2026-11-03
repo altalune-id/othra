@@ -124,14 +124,14 @@ func (f *webFixture) signInVia(c *http.Client, login hostedPage, email string) h
 	return f.submit(c, verify, "/login/verify", nil)
 }
 
-// check-inbox and confirm keep the app's name, so the person knows where the link returns them.
+// check-inbox and confirm keep the app's name, so the person knows where the link returns them; the sign-up subject names the project.
 func TestAuthorize_SentAndVerifyNameTheClient(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
 	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
 	inbox := f.get(f.client, sent.location())
 	assert.Contains(t, inbox.body, "It opens Openwa Web.")
-	assert.Equal(t, "Finish signing up to Openwa Web", f.users.mails[len(f.users.mails)-1].Subject)
+	assert.Equal(t, "Finish signing up to Acme", f.users.mails[len(f.users.mails)-1].Subject, "a sign-up subject names the project the account lives in")
 	link := linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody)
 	verify := f.get(f.client, f.get(f.client, strings.TrimPrefix(link, f.srv.URL)).location())
 	assert.Contains(t, verify.body, ">Sign in to Openwa Web</h1>")
@@ -557,5 +557,5 @@ func TestAuthorize_MailClientIsReadBeforeTheLinkTransaction(t *testing.T) {
 	f.web.oauth.Clients = txGuardClients{Clients: f.web.oauth.Clients, t: t, users: f.users}
 	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
 	f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
-	assert.Equal(t, "Finish signing up to Openwa Web", f.users.mails[len(f.users.mails)-1].Subject, "the subject still names the app")
+	assert.Equal(t, "Finish signing up to Acme", f.users.mails[len(f.users.mails)-1].Subject, "the subject names the project, read before the transaction")
 }

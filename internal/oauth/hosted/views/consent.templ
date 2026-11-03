@@ -132,20 +132,21 @@ templ consentHeader(d layout.LayoutData, v ConsentData) {
 	<div class="flex flex-col gap-2">
 		<h1 class="text-2xl font-semibold text-balance break-words">{ v.title(ctx) }</h1>
 		<div class="flex flex-wrap items-center gap-2">
+			<span class="text-ui text-base-content/70">{ i18n.T(ctx, "consent.returns_to") }</span>
 			<span class="font-mono text-base font-medium break-all">{ v.RedirectHost }</span>
 			if v.ClientHost != "" {
 				<span class="badge badge-sm">
 					@iconPlug("size-3")
 					{ i18n.T(ctx, "consent.mcp_client") }
 				</span>
-				<span class="badge badge-sm badge-soft badge-warning">
+				<span class="badge badge-sm badge-outline">
 					@iconCircleHelp()
 					{ i18n.T(ctx, "consent.unverified_title") }
 				</span>
 			}
 		</div>
 		if v.Loopback {
-			<div role="note" class="alert items-start text-ui">
+			<div role="note" class="alert items-start border-base-300 text-ui">
 				@iconLaptop()
 				<span class="min-w-0">
 					{ i18n.T(ctx, "consent.loopback_warning") }

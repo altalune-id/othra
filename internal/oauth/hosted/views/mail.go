@@ -39,7 +39,11 @@ func (m MailData) key(base string) string {
 
 // MailSubject is the magic-link email's subject in ctx's locale.
 func MailSubject(ctx context.Context, m MailData) string {
-	return i18n.T(ctx, m.key("mail.subject"), "project", cmp.Or(m.Client, m.Project))
+	key, name := m.key("mail.subject"), m.Project
+	if key == "mail.subject_sign_in" {
+		name = cmp.Or(m.Client, m.Project)
+	}
+	return i18n.T(ctx, key, "project", name)
 }
 
 func (m MailData) intro(ctx context.Context) string {

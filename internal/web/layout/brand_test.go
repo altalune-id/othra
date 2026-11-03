@@ -52,6 +52,7 @@ func TestReadableOn_EveryColourReachesAA(t *testing.T) {
 
 func TestReadableOn_PicksWhiteOnDarkAndBlackOnLight(t *testing.T) {
 	assert.Equal(t, "#ffffff", ReadableOn("#1e3a8a"))
+	assert.Equal(t, "#005b5c", OthraPrimary, "email uses the othra-light primary, oklch(42% .09 195)")
 	assert.Equal(t, "#ffffff", ReadableOn(OthraPrimary))
 	assert.Equal(t, "#000000", ReadableOn("#facc15"))
 	assert.Equal(t, "#000000", ReadableOn("#FFFFFF"))

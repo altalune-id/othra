@@ -179,5 +179,6 @@
   "verify.request_new": "Request a new link",
   "verify.tab": "Confirm sign-in",
   "verify.title": "Sign in to {project}",
-  "verify.warning": "Only continue if you asked for this link."
+  "verify.warning": "Only continue if you asked for this link.",
+  "consent.returns_to": "Returns to"
 }

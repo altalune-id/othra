@@ -36,11 +36,35 @@ func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 			t.TermsVersion.SET(postgres.Int32(p.TermsVersion)),
 			t.TermsPublishedAt.SET(timeExpr(p.TermsPublishedAt)),
 			t.SignInEmailLink.SET(postgres.Bool(p.SignInEmailLink)),
-			t.Environment.SET(postgres.String(p.Environment)),
 			t.UpdatedAt.SET(postgres.TimestampzT(now)),
 		))
 	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
 		return s.saveError("Save", p, err)
+	}
+	return nil
+}
+
+// SetEnvironment writes only the environment tag of the project id, so a concurrent save of other settings keeps it.
+func (s *postgresStore) SetEnvironment(ctx context.Context, id uuid.UUID, env string) error {
+	t := s.projects
+	stmt := t.UPDATE(t.Environment, t.UpdatedAt).
+		SET(postgres.String(env), postgres.TimestampzT(time.Now().UTC())).
+		WHERE(t.ID.EQ(postgres.UUID(id)))
+	var n int64
+	err := db.Write(ctx, s.pool, func(q qrm.DB) error {
+		res, err := stmt.ExecContext(ctx, q)
+		if err != nil {
+			return err
+		}
+		n, err = res.RowsAffected()
+		return err
+	})
+	if err != nil {
+		return s.saveError("SetEnvironment", &Project{Environment: env}, err)
+	}
+	if n == 0 {
+		_, err := s.ByID(ctx, id)
+		return err
 	}
 	return nil
 }

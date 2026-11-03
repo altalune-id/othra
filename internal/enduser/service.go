@@ -208,6 +208,12 @@ func (s *Service) Redeem(ctx context.Context, p Project, req RedeemRequest) (*Re
 			return err
 		}
 		l, err := s.store.UseLink(ctx, p.ID, hash, b.ID, now)
+		if IsLinkNotUsableError(err) {
+			if known, kerr := s.store.LinkByTokenHash(ctx, p.ID, hash); kerr == nil {
+				return &LinkNotUsableError{ReturnTo: known.ReturnTo}
+			}
+			return err
+		}
 		if err != nil {
 			return err
 		}

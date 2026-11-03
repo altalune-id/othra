@@ -100,6 +100,14 @@ func (f *ProjectStore) ResolveIssuer(_ context.Context, handle string) (*project
 	return f.Issuer, nil
 }
 
+// SetEnvironment implements project.Store; it sets Project's tag or returns Err.
+func (f *ProjectStore) SetEnvironment(_ context.Context, _ uuid.UUID, env string) error {
+	if f.Project != nil && f.Err == nil {
+		f.Project.Environment = env
+	}
+	return f.Err
+}
+
 // SetIssuerHandle implements project.Store; it sets Project's handle or returns HandleSetErr.
 func (f *ProjectStore) SetIssuerHandle(_ context.Context, _ uuid.UUID, handle string) error {
 	if f.HandleSetErr != nil {

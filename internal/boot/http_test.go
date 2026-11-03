@@ -46,6 +46,25 @@ func TestBuildHTTPHandler_ServesPages(t *testing.T) {
 	assert.Equal(t, http.StatusFound, rec.Code)
 }
 
+func TestBuildHTTPHandler_UnknownPathsAreBrandedAndTheRootFaviconWorks(t *testing.T) {
+	for _, base := range []string{"", "/app"} {
+		cfg := config.Config{HTTP: config.HTTPConfig{BasePath: base}}
+		h := buildHTTPHandler(httpSurfaces{basePath: base, routes: buildRoutes(cfg, nil, nil, nil, nil)})
+
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, base+"/nope", nil))
+		assert.Equal(t, http.StatusNotFound, rec.Code, base)
+		assert.Equal(t, "text/html; charset=utf-8", rec.Header().Get("Content-Type"))
+		assert.Contains(t, rec.Body.String(), "Page not found")
+		assert.Contains(t, rec.Body.String(), "Go to the console", "an unknown page offers a way back")
+
+		rec = httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, base+"/favicon.ico", nil))
+		assert.Equal(t, http.StatusMovedPermanently, rec.Code, base)
+		assert.Equal(t, base+"/static/favicon.ico", rec.Header().Get("Location"))
+	}
+}
+
 func serveRoutes(cfg config.Config, svcs *Services, method, path string) *httptest.ResponseRecorder {
 	h := buildHTTPHandler(httpSurfaces{basePath: cfg.HTTP.BasePath, routes: buildRoutes(cfg, svcs, nil, nil, nil)})
 	rec := httptest.NewRecorder()

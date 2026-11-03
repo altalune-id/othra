@@ -13,7 +13,7 @@ import (
 )
 
 // OthraPrimary is Othra's primary colour as hex, for places that cannot read the theme, such as email.
-const OthraPrimary = "#432dd7"
+const OthraPrimary = "#005b5c"
 
 // CSRFField is the form field that carries the hosted pages' CSRF token.
 const CSRFField = "csrf"
