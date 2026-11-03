@@ -356,7 +356,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
         <AppButton variant="ghost" size="sm" :disabled="trustBusy" autofocus @click="page.cancelTrust()">
           {{ t('common.cancel') }}
         </AppButton>
-        <AppButton variant="plain" class="btn-warning" size="sm" :busy="trustBusy" @click="page.setTrust(true)">
+        <AppButton variant="warning" size="sm" :busy="trustBusy" @click="page.setTrust(true)">
           {{ t('rs.trust') }}
         </AppButton>
       </template>

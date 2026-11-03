@@ -70,7 +70,7 @@ const help = computed(() => props.labels.help.replace('{email}', props.model.sup
         <div class="flex flex-col gap-3">
           <img v-if="model.logoUrl" :src="model.logoUrl" alt="" class="size-10 rounded-field border border-base-300 bg-base-100 object-contain p-1">
           <span v-else-if="initial" class="grid size-10 place-items-center rounded-field bg-primary text-lg font-semibold text-primary-content">{{ initial }}</span>
-          <p class="text-xl font-semibold text-balance break-words">
+          <p class="text-2xl font-semibold text-balance break-words">
             {{ title }}
           </p>
           <p class="-mt-2 text-base-content/70">

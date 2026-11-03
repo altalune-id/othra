@@ -18,7 +18,7 @@ describe('project settings pages', () => {
 
   it('hides the publish button from people who cannot edit', () => {
     const legal = pages.find(p => p.name === 'legal')!.source;
-    expect(legal).toMatch(/<div v-if="canEdit"[^>]*>\s*<button[^>]*@click="legal\.askBump\(\)"/);
+    expect(legal).toMatch(/<div v-if="canEdit"[^>]*>\s*<(?:button|AppButton)[^>]*@click="legal\.askBump\(\)"/);
   });
 
   it('shows the locked issuer note as a note, not an alert', () => {

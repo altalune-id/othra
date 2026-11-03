@@ -15,6 +15,7 @@ describe('appButton', () => {
     const b = mount(AppButton, { props: { variant: 'error', size: 'sm', soft: true, square: true } }).get('button');
     expect(b.classes()).toEqual(expect.arrayContaining(['btn-error', 'btn-sm', 'btn-soft', 'btn-square']));
     expect(mount(AppButton, { props: { variant: 'plain' } }).get('button').classes()).toEqual(['btn']);
+    expect(mount(AppButton, { props: { variant: 'warning' } }).get('button').classes()).toEqual(['btn', 'btn-warning']);
   });
 
   it('sets small buttons in the dense text-ui size, as the artifact does', () => {

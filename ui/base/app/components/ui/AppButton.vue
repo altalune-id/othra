@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-type Variant = 'primary' | 'neutral' | 'ghost' | 'outline' | 'error' | 'plain';
+type Variant = 'primary' | 'neutral' | 'ghost' | 'outline' | 'warning' | 'error' | 'plain';
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 
 const props = withDefaults(defineProps<{
