@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ErrorKind } from './errorPage';
+import AppButton from './AppButton.vue';
 
 const { kind, title, body, homeLabel, retryLabel } = defineProps<{
   kind: ErrorKind,
@@ -16,21 +17,21 @@ const icons: Record<ErrorKind, string> = { not_found: 'lucide:compass', forbidde
 
 <template>
   <main class="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-4 px-4 py-16 text-center">
-    <Icon :name="icons[kind]" size="40" class="text-base-content/70" />
-    <h1 class="text-2xl font-semibold">
+    <Icon :name="icons[kind]" size="32" class="shrink-0 text-base-content/70" aria-hidden="true" />
+    <h1 class="text-xl font-semibold">
       {{ title }}
     </h1>
-    <p class="text-base-content/70">
+    <p class="text-ui text-base-content/70">
       {{ body }}
     </p>
     <div class="flex flex-wrap justify-center gap-2">
-      <button v-if="kind === 'failed'" type="button" class="btn btn-primary btn-sm text-ui" @click="emit('retry')">
-        <Icon name="lucide:rotate-ccw" size="16" />
+      <AppButton v-if="kind === 'failed'" size="sm" @click="emit('retry')">
+        <Icon name="lucide:rotate-ccw" size="16" class="shrink-0" aria-hidden="true" />
         {{ retryLabel }}
-      </button>
-      <button type="button" class="btn btn-sm text-ui" :class="kind === 'failed' ? 'btn-ghost' : 'btn-primary'" @click="emit('home')">
+      </AppButton>
+      <AppButton :variant="kind === 'failed' ? 'ghost' : 'primary'" size="sm" @click="emit('home')">
         {{ homeLabel }}
-      </button>
+      </AppButton>
     </div>
   </main>
 </template>

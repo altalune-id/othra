@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
 import { useId } from 'vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 
 export interface PersonalKeyCreateLabels {
@@ -84,29 +85,33 @@ function onOrgChange(event: Event) {
 </script>
 
 <template>
-  <form class="space-y-2" @submit.prevent="emit('submit')">
+  <form class="flex flex-col gap-4" @submit.prevent="emit('submit')">
     <div class="fieldset">
-      <label :for="ids.name" class="label text-ui text-base-content">{{ labels.name }}</label>
-      <input :id="ids.name" v-model="name" type="text" class="input input-sm w-full text-ui" placeholder="laptop" maxlength="100" autocomplete="off" :disabled="busy">
+      <label class="flex flex-col gap-1">
+        <span class="label text-ui text-base-content">{{ labels.name }}</span>
+        <input :id="ids.name" v-model="name" type="text" class="input input-sm w-full text-ui" placeholder="laptop" maxlength="100" autocomplete="off" :disabled="busy">
+      </label>
     </div>
 
     <div class="fieldset">
       <template v-if="oneOrg">
         <span class="label text-ui text-base-content">{{ labels.org }}</span>
-        <p class="py-2 font-medium">
+        <p class="py-2 text-ui font-medium">
           {{ orgName }}
         </p>
       </template>
       <template v-else>
-        <label :for="ids.org" class="label text-ui text-base-content">{{ labels.org }}</label>
-        <select :id="ids.org" class="select select-sm w-full text-ui" :value="orgId" :aria-describedby="ids.orgHelp" :disabled="busy" @change="onOrgChange">
-          <option value="" disabled>
-            {{ labels.selectOrg }}
-          </option>
-          <option v-for="o in orgOptions" :key="o.value" :value="o.value">
-            {{ o.label }}
-          </option>
-        </select>
+        <label class="flex flex-col gap-1">
+          <span class="label text-ui text-base-content">{{ labels.org }}</span>
+          <select :id="ids.org" class="select select-sm w-full text-ui" :value="orgId" :aria-describedby="ids.orgHelp" :disabled="busy" @change="onOrgChange">
+            <option value="" disabled>
+              {{ labels.selectOrg }}
+            </option>
+            <option v-for="o in orgOptions" :key="o.value" :value="o.value">
+              {{ o.label }}
+            </option>
+          </select>
+        </label>
       </template>
       <p :id="ids.orgHelp" class="label whitespace-normal text-xs text-base-content/70">
         {{ labels.orgHelp }}
@@ -114,12 +119,14 @@ function onOrgChange(event: Event) {
     </div>
 
     <div class="fieldset">
-      <label :for="ids.expires" class="label text-ui text-base-content">{{ labels.expires }}</label>
-      <select :id="ids.expires" v-model.number="expiresInDays" class="select select-sm w-full text-ui" :aria-describedby="ids.expiresHelp" :disabled="busy">
-        <option v-for="o in expiryOptions" :key="o.days" :value="o.days">
-          {{ o.label }}
-        </option>
-      </select>
+      <label class="flex flex-col gap-1">
+        <span class="label text-ui text-base-content">{{ labels.expires }}</span>
+        <select :id="ids.expires" v-model.number="expiresInDays" class="select select-sm w-full text-ui" :aria-describedby="ids.expiresHelp" :disabled="busy">
+          <option v-for="o in expiryOptions" :key="o.days" :value="o.days">
+            {{ o.label }}
+          </option>
+        </select>
+      </label>
       <p :id="ids.expiresHelp" class="label whitespace-normal text-xs text-base-content/70">
         {{ labels.expiresHelp }}
       </p>
@@ -139,7 +146,7 @@ function onOrgChange(event: Event) {
       </label>
       <div v-if="!allProjects" class="max-h-40 space-y-1 overflow-auto rounded-box border border-base-300 p-2">
         <label v-for="p in projects" :key="p.id" class="flex items-center gap-2 text-ui">
-          <input v-model="projectIds" type="checkbox" :value="p.id" class="checkbox checkbox-sm rounded-sm" :disabled="busy">
+          <input v-model="projectIds" type="checkbox" :value="p.id" class="checkbox checkbox-xs rounded-sm" :disabled="busy">
           {{ p.name }}
         </label>
       </div>
@@ -149,13 +156,13 @@ function onOrgChange(event: Event) {
       <legend class="fieldset-legend text-ui">
         {{ labels.scopes }}
       </legend>
-      <p v-if="!orgId" class="text-sm text-base-content/70">
+      <p v-if="!orgId" class="text-ui text-base-content/70">
         {{ labels.scopesPickOrg }}
       </p>
       <template v-else>
         <div class="grid gap-1 sm:grid-cols-2">
           <label v-for="s in scopeOptions" :key="s.name" class="flex items-center gap-2 text-ui">
-            <input v-model="scopes" type="checkbox" :value="s.name" class="checkbox checkbox-sm rounded-sm" :disabled="busy">
+            <input v-model="scopes" type="checkbox" :value="s.name" class="checkbox checkbox-xs rounded-sm" :disabled="busy">
             {{ s.label }}
           </label>
         </div>
@@ -166,13 +173,13 @@ function onOrgChange(event: Event) {
     </fieldset>
 
     <ErrorText :error="error" />
-    <div class="flex justify-end gap-2 pt-2">
-      <NuxtLink :to="cancelUrl" class="btn btn-ghost btn-sm text-ui">
+    <div class="flex justify-end gap-2 max-sm:flex-col-reverse">
+      <AppButton variant="ghost" size="sm" :to="cancelUrl">
         {{ labels.cancel }}
-      </NuxtLink>
-      <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="!canSubmit">
+      </AppButton>
+      <AppButton type="submit" size="sm" :disabled="!canSubmit">
         {{ busy ? labels.creating : labels.create }}
-      </button>
+      </AppButton>
     </div>
   </form>
 </template>

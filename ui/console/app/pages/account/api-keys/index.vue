@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { PersonalKeyView } from '~/components/apikey/personal/PersonalKeys.vue';
+import AppButton from '#base/components/ui/AppButton.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import { useDates } from '#base/composables/useDates';
 import { expiryState, relativeTime } from '#base/lib/tokens/keyStatus';
 import PersonalKeys from '~/components/apikey/personal/PersonalKeys.vue';
@@ -42,6 +44,10 @@ const labels = computed(() => ({
   revoked: t('tokens.status_revoked'),
   revoke: t('common.revoke'),
   revokeConfirm: t('apikeys.revoke_confirm'),
+  revokeBody: (name: string, hint: string) => t('apikeys.revoke_body', { name, hint }),
+  actions: t('apikeys.col_actions'),
+  actionsFor: (name: string) => t('apikeys.actions_for', { name }),
+  caption: t('apikeys.personal_title'),
   cancel: t('common.cancel'),
   empty: t('apikeys.personal_empty'),
   newKey: t('apikeys.personal_new'),
@@ -64,21 +70,15 @@ useHead({ title: () => `${t('apikeys.personal_title')} · Othra` });
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold">
-          {{ t('apikeys.personal_title') }}
-        </h1>
-        <p class="text-sm text-base-content/70">
-          {{ t('apikeys.personal_subtitle') }}
-        </p>
-      </div>
-      <NuxtLink v-if="signedIn && keys.length > 0" to="/account/api-keys/new" class="btn btn-primary btn-sm shrink-0 text-ui">
-        <Icon name="lucide:plus" size="16" />
-        {{ t('apikeys.personal_new') }}
-      </NuxtLink>
-    </div>
+  <div class="flex flex-col gap-4">
+    <PageHeader :title="t('apikeys.personal_title')" :description="t('apikeys.personal_subtitle')">
+      <template v-if="signedIn && keys.length > 0" #actions>
+        <AppButton size="sm" to="/account/api-keys/new">
+          <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
+          {{ t('apikeys.personal_new') }}
+        </AppButton>
+      </template>
+    </PageHeader>
     <PersonalKeys
       :keys="keys"
       :one-org="oneOrg"
