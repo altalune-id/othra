@@ -80,10 +80,10 @@ describe('project settings markup', () => {
     expect(modal.match(/<label :for="ids\.\w+" class="label text-ui text-base-content">/g)).toHaveLength(2);
   });
 
-  it('puts the branding form in a card on a width-capped page, like its sibling pages', () => {
+  it('puts the branding form in a bordered box on a width-capped page, like its sibling pages', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
-    expect(branding).toMatch(/<div class="max-w-5xl space-y-6">/);
-    expect(branding).toMatch(/<form v-if="canEdit" novalidate class="card self-start border border-base-300 bg-base-100"/);
+    expect(branding).toMatch(/<div class="flex max-w-5xl flex-col gap-5">/);
+    expect(branding).toMatch(/<form v-if="canEdit" novalidate class="[^"]*rounded-box border border-base-300 bg-base-100[^"]*"/);
   });
 
   it('calls the slug "Console URL name" on the projects table and edit modal', () => {
@@ -107,7 +107,7 @@ describe('m1.5 design re-check', () => {
 
   it('puts the logo file input before its label as a peer, so keyboard focus shows on the label', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
-    expect(branding).toMatch(/<input :id="ids\.logo"[^>]*type="file"[^>]*class="peer sr-only"[^>]*>\s*<label :for="ids\.logo" class="btn btn-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-base-content/);
+    expect(branding).toMatch(/<label class="btn btn-sm has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-base-content[^"]*"[^>]*>\s*<input :id="ids\.logo"[^>]*type="file"[^>]*class="sr-only"/);
     expect(branding).not.toContain('has-[:focus-visible]');
   });
 

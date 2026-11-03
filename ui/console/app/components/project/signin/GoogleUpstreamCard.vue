@@ -138,7 +138,7 @@ function onToggle(event: Event) {
             <span class="label text-ui text-base-content">{{ labels.clientSecret }}</span>
             <div class="flex items-center gap-3 text-ui">
               <span class="flex items-center gap-1" data-testid="secret-set">
-                <Icon name="lucide:lock" size="14" class="shrink-0" aria-hidden="true" />
+                <Icon name="lucide:lock" size="16" class="shrink-0" aria-hidden="true" />
                 {{ labels.secretSet }}
               </span>
               <AppButton variant="ghost" size="xs" :disabled="busy" @click="replacingSecret = true">
