@@ -10,15 +10,20 @@ const { keys } = defineProps<{ keys: SigningKey[] }>();
 const { t, locale } = useI18n();
 
 const day = (ts?: SigningKey['createdAt']) => (ts ? formatDate(timestampDate(ts), locale.value) : '');
+const shown = [SigningKeyStatus.RETIRED, SigningKeyStatus.RETIRING, SigningKeyStatus.ACTIVE, SigningKeyStatus.NEXT];
+const at = (k: SigningKey) => (k.createdAt ? timestampDate(k.createdAt).getTime() : 0);
 const steps = computed(() => keys
-  .filter(k => k.status === SigningKeyStatus.RETIRED || k.status === SigningKeyStatus.RETIRING || k.status === SigningKeyStatus.ACTIVE)
-  .sort((a, b) => (a.createdAt ? timestampDate(a.createdAt).getTime() : 0) - (b.createdAt ? timestampDate(b.createdAt).getTime() : 0))
+  .filter(k => shown.includes(k.status))
+  .sort((a, b) => Number(a.status === SigningKeyStatus.NEXT) - Number(b.status === SigningKeyStatus.NEXT) || at(a) - at(b))
   .map(k => ({
     kid: shortKid(k.kid),
     active: k.status === SigningKeyStatus.ACTIVE,
+    next: k.status === SigningKeyStatus.NEXT,
     when: k.status === SigningKeyStatus.ACTIVE
       ? t('overview.rotation_active', { date: day(k.activatedAt ?? k.createdAt) })
-      : t(k.status === SigningKeyStatus.RETIRED ? 'overview.rotation_retired' : 'overview.rotation_retiring', { date: day(k.retireAfter) }),
+      : k.status === SigningKeyStatus.NEXT
+        ? t('overview.rotation_next', { date: day(k.activatesAt) })
+        : t(k.status === SigningKeyStatus.RETIRED ? 'overview.rotation_retired' : 'overview.rotation_retiring', { date: day(k.retireAfter) }),
   })));
 </script>
 
@@ -32,7 +37,7 @@ const steps = computed(() => keys
             {{ step.when }}
           </div>
           <div class="timeline-middle" :class="{ 'text-primary': step.active }">
-            <Icon :name="step.active ? 'lucide:circle-dot' : 'lucide:circle'" :size="step.active ? 16 : 14" class="shrink-0" aria-hidden="true" />
+            <Icon :name="step.active ? 'lucide:circle-dot' : step.next ? 'lucide:circle-dashed' : 'lucide:circle'" :size="step.active ? 16 : 14" class="shrink-0" aria-hidden="true" />
           </div>
           <div class="timeline-end timeline-box font-mono text-xs">
             {{ step.kid }}

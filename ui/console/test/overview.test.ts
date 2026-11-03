@@ -46,7 +46,7 @@ describe('project overview', () => {
     setClient('$signingKeyClient', { listSigningKeys: vi.fn().mockResolvedValue({ keys: [
       create(SigningKeySchema, { publicId: 'k1', kid: '2026-08-aXYZ', alg: 'ES256', status: SigningKeyStatus.ACTIVE, createdAt: at(80), activatedAt: at(78) }),
       create(SigningKeySchema, { publicId: 'k0', kid: '2026-02-bXYZ', alg: 'ES256', status: SigningKeyStatus.RETIRED, createdAt: at(200), retireAfter: at(70) }),
-      create(SigningKeySchema, { publicId: 'k2', kid: '2026-11-aXYZ', alg: 'ES256', status: SigningKeyStatus.NEXT, createdAt: at(1) }),
+      create(SigningKeySchema, { publicId: 'k2', kid: '2026-11-aXYZ', alg: 'ES256', status: SigningKeyStatus.NEXT, createdAt: at(1), activatesAt: at(-7) }),
     ] }) });
     const w = await mountPage(Overview, { attachTo: document.body });
     await flushPromises();
@@ -69,12 +69,26 @@ describe('project overview', () => {
     expect(json.tabIndex).toBe(0);
     expect(json.getAttribute('aria-label')).toBe('overview.discovery_doc');
     const rotation = w.get('[data-testid="key-rotation"]');
-    expect(rotation.findAll('.timeline-box').map(b => b.text())).toEqual(['2026-02-', '2026-08-']);
+    expect(rotation.findAll('.timeline-box').map(b => b.text())).toEqual(['2026-02-', '2026-08-', '2026-11-']);
+    expect(rotation.findAll('.timeline-start').at(-1)!.text()).toMatch(/^overview\.rotation_next\|\{"date":"[^"]+"\}$/);
+    expect(rotation.findAll('.timeline-middle').at(-1)!.get('[data-icon]').attributes('data-icon')).toBe('lucide:circle-dashed');
+    expect(status.text()).toContain('overview.next_rotation');
+    expect(status.text()).not.toContain('overview.next_rotation_none');
     expect(rotation.get('.timeline-middle.text-primary').exists()).toBe(true);
     const row = w.get('[data-testid="setup-checklist"] li');
     expect(row.classes()).toEqual(['flex', 'items-start', 'gap-2', 'px-4', 'py-2', 'text-ui']);
     expect(w.get('[data-testid="setup-checklist"] progress').classes()).toEqual(['progress', 'mt-1', 'h-1']);
     w.unmount();
+  });
+
+  it('says Not scheduled for the next rotation when there is no NEXT key', async () => {
+    setup({ issuerHandle: 'web' });
+    setClient('$signingKeyClient', { listSigningKeys: vi.fn().mockResolvedValue({ keys: [
+      create(SigningKeySchema, { publicId: 'k1', kid: '2026-08-aXYZ', alg: 'ES256', status: SigningKeyStatus.ACTIVE, createdAt: timestampFromDate(new Date()) }),
+    ] }) });
+    const w = await mountPage(Overview);
+    await flushPromises();
+    expect(w.get('[data-testid="issuer-status"]').text()).toContain('overview.next_rotation_none');
   });
 
   it('titles the page with the issuer and shows live discovery and the published keys', async () => {
@@ -128,6 +142,30 @@ describe('project overview', () => {
     expect(listClients).toHaveBeenCalledTimes(2);
     expect(checklist.text()).toContain('overview.setup_progress|{"done":3,"total":5}');
     expect(w.get('[data-testid="issuer-status"]').text()).toContain('overview.method_email');
+  });
+
+  it('shows a failed project load in Setup with Retry, never as steps not done', async () => {
+    setup({ issuerHandle: 'web', signinEmailLink: true });
+    const getProject = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ project: create(ProjectSchema, { id: projectId, orgId, issuerUrl: issuer, issuerHandle: 'web', signinEmailLink: true }) });
+    setClient('$projectClient', { getProject });
+    const w = await mountPage(Overview);
+    await flushPromises();
+    const checklist = w.get('[data-testid="setup-checklist"]');
+    expect(checklist.text()).not.toContain('overview.setup_progress');
+    expect(checklist.text()).not.toContain('overview.setup_handle');
+    await checklist.findAll('button').find(b => b.text().includes('common.retry'))!.trigger('click');
+    await flushPromises();
+    expect(getProject).toHaveBeenCalledTimes(2);
+    expect(checklist.text()).toContain('overview.setup_progress');
+  });
+
+  it('stops saying Loading on the keys row once discovery has failed', async () => {
+    setup({}, 0, 'down');
+    const w = await mountPage(Overview);
+    await flushPromises();
+    const status = w.get('[data-testid="issuer-status"]').text();
+    expect(status).not.toContain('common.loading');
+    expect(status).toContain('—');
   });
 
   it('counts the setup steps from real data', async () => {

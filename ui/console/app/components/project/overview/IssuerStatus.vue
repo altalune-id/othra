@@ -8,6 +8,7 @@ export interface ActiveKey {
   kid: string;
   alg: string;
   days: number;
+  next: string;
 }
 
 const { state, keys, activeKey, methods, methodsFailed = false, hostedUrl } = defineProps<{
@@ -24,7 +25,7 @@ const { t } = useI18n();
 const rows = computed(() => [
   { label: t('overview.discovery') },
   { label: t('overview.keys') },
-  ...(activeKey ? [{ label: t('overview.active_key') }] : []),
+  ...(activeKey ? [{ label: t('overview.active_key') }, { label: t('overview.next_rotation') }] : []),
   { label: t('overview.methods') },
 ]);
 const methodsSlot = computed(() => `value-${rows.value.length - 1}`);
@@ -52,10 +53,14 @@ const methodsText = computed(() => (methodsFailed ? t('overview.methods_failed')
       </template>
       <template #value-1>
         <StatusLabel v-if="keys !== null" :tone="keys > 0 ? 'success' : 'warning'" :label="t('overview.keys_published', { n: keys })" :detail="keys > 0 ? t('overview.keys_reachable') : ''" />
-        <span v-else class="text-base-content/70">{{ t('common.loading') }}</span>
+        <span v-else-if="state === 'checking'" class="text-base-content/70">{{ t('common.loading') }}</span>
+        <span v-else class="text-base-content/70">—</span>
       </template>
       <template v-if="activeKey" #value-2>
         <StatusLabel tone="success" mono :label="activeKey.kid" :detail="t('overview.active_key_detail', { alg: activeKey.alg, n: activeKey.days }, activeKey.days)" />
+      </template>
+      <template v-if="activeKey" #value-3>
+        <span :class="{ 'text-base-content/70': !activeKey.next }">{{ activeKey.next || t('overview.next_rotation_none') }}</span>
       </template>
       <template #[methodsSlot]>
         <StatusLabel :tone="methodsFailed ? 'error' : methods?.length ? 'success' : 'warning'" :label="methodsText">

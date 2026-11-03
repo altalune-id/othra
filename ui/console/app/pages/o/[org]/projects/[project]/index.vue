@@ -7,6 +7,7 @@ import PageHeader from '#base/components/ui/PageHeader.vue';
 import SidePanel from '#base/components/ui/SidePanel.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
+import { formatDate } from '#base/lib/format/date';
 import { SigningKeyStatus } from '#gen/keys/v1/keys_pb';
 import { useSigningKeys } from '~/components/project/keys/useSigningKeys';
 import IssuerStatus from '~/components/project/overview/IssuerStatus.vue';
@@ -22,7 +23,7 @@ import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const { $clientClient: clientApi, $upstreamClient: upstreamApi } = useNuxtApp();
@@ -76,10 +77,21 @@ onBeforeUnmount(signingKeys.dispose);
 const activeKey = computed(() => {
   const k = signingKeys.keys.value.find(key => key.status === SigningKeyStatus.ACTIVE);
   const since = k?.activatedAt ?? k?.createdAt;
-  return k ? { kid: k.kid.slice(0, 8), alg: k.alg, days: since ? Math.max(0, Math.floor((Date.now() - timestampDate(since).getTime()) / 86_400_000)) : 0 } : null;
+  const next = signingKeys.keys.value.find(key => key.status === SigningKeyStatus.NEXT)?.activatesAt;
+  return k ? { kid: k.kid.slice(0, 8), alg: k.alg, days: since ? Math.max(0, Math.floor((Date.now() - timestampDate(since).getTime()) / 86_400_000)) : 0, next: next ? formatDate(timestampDate(next), locale.value) : '' } : null;
 });
 
 const full = computed(() => detail.get(projectId));
+const setupError = computed(() => countsError.value ?? (full.value ? null : detail.error));
+
+function retrySetup() {
+  if (!full.value) {
+    void detail.load(projectId);
+  }
+  if (countsError.value) {
+    void loadCounts();
+  }
+}
 const methods = computed(() => (counts.value
   ? [
       ...(full.value?.signinEmailLink ? [t('overview.method_email')] : []),
@@ -149,7 +161,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · Othra` }
         </p>
         <KeyRotation :keys="signingKeys.keys.value" />
       </div>
-      <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts && !countsError" :error="countsError" @retry="loadCounts" />
+      <SetupChecklist v-if="!project.system" :items="setup" :loading="!counts && !setupError" :error="setupError" @retry="retrySetup" />
     </div>
 
     <SidePanel v-model:open="showJSON" :title="t('overview.discovery_doc')" :close-label="t('overview.discovery_doc_close')">
