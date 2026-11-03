@@ -39,8 +39,9 @@ describe('nav crumbs', () => {
     expect(crumbs.value).toEqual([
       { label: 'Acme', to: '/o/acme' },
       { label: 'acme-prod', to: '/o/acme/projects/acme-prod', mono: true },
-      { label: 'nav.clients' },
+      { label: 'nav.clients', to: '/o/acme/projects/acme-prod/clients' },
     ]);
+    expect(crumbsAt('/o/acme/projects/acme-prod/clients', { org: 'acme', project: 'acme-prod' }).crumbs.value.at(-1)).toEqual({ label: 'nav.clients' });
     expect(crumbsAt('/o/acme/projects/acme-prod', { org: 'acme', project: 'acme-prod' }).place.value).toEqual({ label: 'acme-prod', badge: 'environment.labs' });
     expect(palette.value).toContainEqual({ key: 'org-members', group: 'Acme', label: 'members.title', to: '/o/acme/settings/members' });
     expect(palette.value).toContainEqual({ key: 'project-clients', group: 'acme-prod', mono: true, label: 'nav.clients', to: '/o/acme/projects/acme-prod/clients' });

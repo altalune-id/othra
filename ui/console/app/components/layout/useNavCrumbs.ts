@@ -35,7 +35,7 @@ export function useNavCrumbs() {
     }
     const active = groups.value.flatMap(g => g.items).find(i => i.active);
     if (active) {
-      trail.push({ label: active.label });
+      trail.push(route.path === active.to ? { label: active.label } : { label: active.label, to: active.to });
     }
     return trail;
   });

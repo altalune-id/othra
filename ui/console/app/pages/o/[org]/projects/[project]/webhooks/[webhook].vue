@@ -98,8 +98,6 @@ const columns = computed<Column[]>(() => [
   { key: 'open', label: t('webhooks.view_attempts'), hideLabel: true, align: 'end' },
 ]);
 
-const listPath = computed(() => `/o/${route.params.org}/projects/${route.params.project}/webhooks`);
-
 function statusLabel(status: string): string {
   const key = statusKeys[status];
   return key ? t(key) : status;
@@ -205,7 +203,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
 
 <template>
   <div class="flex flex-col gap-4">
-    <PageHeader :title="t('webhooks.deliveries')" :crumbs="[{ label: t('webhooks.title'), to: listPath }, { label: t('webhooks.deliveries') }]" :crumbs-label="t('nav.breadcrumbs')">
+    <PageHeader :title="t('webhooks.deliveries')">
       <template #actions>
         <AppButton variant="ghost" size="sm" :busy="retrying" @click="retryFailed">
           <Icon v-if="!retrying" name="lucide:rotate-cw" size="16" class="shrink-0" aria-hidden="true" />

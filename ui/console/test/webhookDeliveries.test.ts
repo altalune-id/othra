@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { create } from '@bufbuild/protobuf';
-import { flushPromises, RouterLinkStub } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -22,13 +22,12 @@ beforeEach(() => {
 });
 
 describe('webhook deliveries page', () => {
-  it('shows loading, not the empty state, while the first page loads, and links back to the webhooks list', async () => {
+  it('shows loading, not the empty state, while the first page loads', async () => {
     const pending = deferred<{ deliveries: unknown[] }>();
     setClient('$webhookClient', { listWebhookDeliveries: vi.fn().mockReturnValue(pending.promise) });
     const w = await mountPage(Deliveries);
     expect(w.find('[role="status"]').text()).toContain('common.loading');
     expect(w.text()).not.toContain('webhooks.no_deliveries');
-    expect(w.findAllComponents(RouterLinkStub).map(a => [a.text(), a.props('to')])).toContainEqual(['webhooks.title', '/o/acme/projects/web/webhooks']);
     pending.resolve({ deliveries: [] });
     await flushPromises();
     expect(w.text()).toContain('webhooks.no_deliveries');

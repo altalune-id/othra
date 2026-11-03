@@ -133,10 +133,6 @@ const accept = computed<AcceptPart[]>(() => {
           </label>
           <span v-if="issuerHost" class="ms-auto font-mono break-all">{{ issuerHost }}</span>
         </div>
-        <nav v-if="model.termsUrl || model.privacyUrl" class="flex flex-wrap gap-3">
-          <span v-if="model.termsUrl" class="link">{{ labels.terms }}</span>
-          <span v-if="model.privacyUrl" class="link">{{ labels.privacy }}</span>
-        </nav>
       </div>
     </div>
     <p class="text-xs text-base-content/70">

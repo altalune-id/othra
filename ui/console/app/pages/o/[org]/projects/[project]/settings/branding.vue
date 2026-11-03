@@ -33,11 +33,8 @@ const detail = useProjectDetailStore();
 void detail.ensureLoaded(listed.value.id);
 const issuerHost = computed(() => {
   const url = detail.get(listed.value?.id ?? '')?.issuerUrl ?? '';
-  try {
-    return url ? new URL(url).host : '';
-  } catch {
-    return '';
-  }
+  const at = url.indexOf('://');
+  return at < 0 ? url : url.slice(at + 3);
 });
 const colorValue = computed(() => preview.value.primary || '#4f46e5');
 
