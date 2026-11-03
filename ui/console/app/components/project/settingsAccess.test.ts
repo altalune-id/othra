@@ -111,16 +111,13 @@ describe('m1.5 design re-check', () => {
     expect(branding).not.toContain('has-[:focus-visible]');
   });
 
-  it('puts General in a card on a max-w-2xl page with a plain primary Save', () => {
+  it('heads General with PageHeader on a max-w-2xl page, with the id block and one primary Save', () => {
     const general = pages.find(p => p.name === 'index')!.source;
-    expect(general).toContain('<div v-if="project" class="max-w-2xl space-y-6">');
-    expect(general).toMatch(/<section class="card border border-base-300 bg-base-100">\s*<div class="card-body gap-2">/);
+    expect(general).toContain('<div v-if="project" class="flex max-w-2xl flex-col gap-5">');
+    expect(general).toContain('<PageHeader :title="t(\'project.settings_general\')" :description="t(\'project.settings_general_subtitle\')" />');
+    expect(general).toContain('<KeyValue :items="facts"');
     expect(general).toMatch(/<form v-if="canEdit" novalidate/);
-    expect(general).toMatch(/<dl v-else /);
-    expect(general).not.toContain('text-xs text-base-content/70">{{ t(\'common.id\') }}');
-    expect(general).toContain('<button type="submit" class="btn btn-primary btn-sm text-ui"');
-    expect(general).not.toContain('AppButton');
-    expect(general).toContain('project.settings_general_subtitle');
+    expect(general).toMatch(/<AppButton type="submit" size="sm"/);
   });
 
   it('styles the read-only issuer labels alike and hides the logo help when storage is off', () => {

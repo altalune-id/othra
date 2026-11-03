@@ -39,15 +39,17 @@ async function change(e: Event) {
 <template>
   <Section :title="t('environment.title')" :description="t('environment.help')" data-testid="environment-card">
     <div v-if="canEdit" class="flex flex-wrap items-center gap-3">
-      <label :for="selectId" class="sr-only">{{ t('environment.title') }}</label>
-      <select :id="selectId" class="select select-sm w-56 text-ui" :value="environment ?? 0" :disabled="busy" @change="change">
-        <option v-for="o in environmentOptions" :key="o.value" :value="o.value">
-          {{ t(o.labelKey) }}
-        </option>
-      </select>
+      <label class="select select-sm w-56 text-ui">
+        <span class="sr-only">{{ t('environment.title') }}</span>
+        <select :id="selectId" :value="environment ?? 0" :disabled="busy" @change="change">
+          <option v-for="o in environmentOptions" :key="o.value" :value="o.value">
+            {{ t(o.labelKey) }}
+          </option>
+        </select>
+      </label>
       <SavedNote v-if="saved" :label="t('common.saved')" />
     </div>
-    <p v-else class="text-sm">
+    <p v-else class="text-ui">
       {{ t(environmentLabelKey(environment)) }}
     </p>
     <ErrorText :error="error" />
