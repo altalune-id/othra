@@ -67,6 +67,9 @@ async function onFile(event: Event) {
 }
 
 await branding.load();
+if (!detail.get(listed.value.id)) {
+  throw createError({ statusCode: 502, statusMessage: t('error.load_project'), fatal: true });
+}
 
 useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('branding.title')} · Othra` });
 </script>

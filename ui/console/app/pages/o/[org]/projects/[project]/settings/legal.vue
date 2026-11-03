@@ -12,6 +12,7 @@ import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
+import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
@@ -33,6 +34,9 @@ const published = computed(() => date(publishedAt.value));
 
 const canEdit = useCanEditProject();
 await Promise.all([legal.load(), useAuthStore().load()]);
+if (!useProjectDetailStore().get(listed.value.id)) {
+  throw createError({ statusCode: 502, statusMessage: t('error.load_project'), fatal: true });
+}
 
 useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('legal.title')} · Othra` });
 </script>
