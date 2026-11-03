@@ -82,7 +82,7 @@ describe('clients and resource server pages', () => {
 
   it('ends create on the quickstart, and puts focus back on the secrets card and after Verify now', () => {
     expect(creates[0]!.source).toContain('<ClientQuickstart');
-    expect(details[0]!.source).toMatch(/route\.query\.focus !== 'secrets'[\s\S]+secretsCard\.value\?\.focusTitle\(\);/);
+    expect(details[0]!.source).toMatch(/route\.query\.focus !== 'secrets'[\s\S]+secretsCard\.value\?\.focusAction\(\);/);
     expect(details[1]!.source).toMatch(/async function verifyNow\(\) \{\s+await page\.verify\(\);\s+await nextTick\(\);\s+verifyCard\.value\?\.focusVerify\(\);/);
     expect(read('../resourceserver/VerificationCard.vue')).toContain('defineExpose({ focusVerify: () => verifyButton.value?.focus() });');
   });

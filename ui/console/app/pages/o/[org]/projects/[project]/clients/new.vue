@@ -140,7 +140,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
 
     <section v-else-if="step === 'details'" class="card border border-base-300 bg-base-100">
       <div class="card-body gap-4">
-        <p class="flex flex-wrap items-center gap-2 text-sm">
+        <p class="flex flex-wrap items-center gap-2 text-ui">
           <span>{{ t('clients.type_line', { kind: kinds.find(k => k.value === fields.kind)?.label ?? '' }) }}</span>
           <button type="button" class="btn btn-link btn-sm h-auto min-h-0 px-0 text-ui" :disabled="busy" @click="typeDone = false">
             {{ t('clients.change_type') }}

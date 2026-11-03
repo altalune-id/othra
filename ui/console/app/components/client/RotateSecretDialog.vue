@@ -55,11 +55,11 @@ const id = useId();
         </label>
       </div>
       <p v-if="grace === nowValue" class="flex items-start gap-1 text-ui text-base-content">
-        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" />
+        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
         {{ labels.nowWarning }}
       </p>
       <p v-if="oldHint" class="flex items-start gap-1 text-ui text-base-content">
-        <Icon name="lucide:info" size="16" class="mt-0.5 shrink-0 text-info" />
+        <Icon name="lucide:info" size="16" class="mt-0.5 shrink-0 text-info" aria-hidden="true" />
         {{ labels.endsOld.replace('{hint}', oldHint) }}
       </p>
       <ErrorText :error="error" />

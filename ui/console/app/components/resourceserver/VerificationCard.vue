@@ -4,6 +4,7 @@ import type { VerificationName } from './verification';
 import { ref, useId } from 'vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import Section from '#base/components/ui/Section.vue';
 import UrlField from '#base/components/ui/UrlField.vue';
 import VerificationStatus from './VerificationStatus.vue';
 
@@ -86,13 +87,10 @@ const trusted = () => props.status === 'trusted';
 </script>
 
 <template>
-  <section class="flex min-w-0 flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-4" data-testid="verification-card">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-ui font-semibold">
-        {{ labels.title }}
-      </h2>
+  <Section :title="labels.title" data-testid="verification-card">
+    <template #actions>
       <VerificationStatus :name="status" :label="statusLabel" />
-    </div>
+    </template>
     <p class="text-ui text-base-content">
       {{ body }}
     </p>
@@ -133,12 +131,12 @@ const trusted = () => props.status === 'trusted';
       <div>
         <button ref="verifyButton" type="button" class="btn btn-sm max-sm:btn-block text-ui" :disabled="verifying" @click="emit('verify')">
           <span v-if="verifying" class="loading loading-spinner loading-xs" />
-          <Icon v-else name="lucide:refresh-cw" size="16" />
+          <Icon v-else name="lucide:refresh-cw" size="16" class="shrink-0" aria-hidden="true" />
           {{ verifying ? labels.verifying : labels.verifyNow }}
         </button>
       </div>
       <p v-if="passed" role="status" class="flex items-start gap-1.5 text-ui text-base-content">
-        <Icon name="lucide:circle-check" size="16" class="mt-0.5 shrink-0 text-success" />
+        <Icon name="lucide:circle-check" size="16" class="mt-0.5 shrink-0 text-success" aria-hidden="true" />
         {{ passed }}
       </p>
       <ErrorText :error="verifyError" />
@@ -164,9 +162,9 @@ const trusted = () => props.status === 'trusted';
         <ErrorText :error="trustError" />
       </div>
       <p v-else-if="trusted()" class="flex items-center gap-1.5 text-ui text-base-content">
-        <Icon name="lucide:shield-alert" size="16" class="text-warning" />
+        <Icon name="lucide:shield-alert" size="16" class="shrink-0 text-warning" aria-hidden="true" />
         {{ labels.trust }}
       </p>
     </template>
-  </section>
+  </Section>
 </template>

@@ -47,7 +47,7 @@ function done() {
   <AppModal :open="open" :title="labels.title" :dismissible="stored" @close="done">
     <div class="space-y-3">
       <p class="flex items-start gap-1.5 text-ui text-base-content">
-        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" />
+        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
         {{ labels.body }}
       </p>
       <div class="space-y-1">

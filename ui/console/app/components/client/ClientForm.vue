@@ -176,7 +176,7 @@ function patch(next: Partial<ClientFields>) {
       <legend class="fieldset-legend text-ui">
         {{ labels.refresh }}
       </legend>
-      <label class="flex items-center gap-2 text-sm">
+      <label class="flex items-center gap-2 text-ui">
         <input
           type="checkbox"
           class="checkbox checkbox-sm rounded-sm"
@@ -193,11 +193,11 @@ function patch(next: Partial<ClientFields>) {
         <legend class="fieldset-legend text-ui">
           {{ labels.authMethod }}
         </legend>
-        <label class="flex items-center gap-2 text-sm">
+        <label class="flex items-center gap-2 text-ui">
           <input type="radio" name="client-auth-method" class="radio radio-sm" :checked="fields.authMethod === 'basic'" :disabled="busy" @change="patch({ authMethod: 'basic' })">
           {{ labels.authMethodBasic }}
         </label>
-        <label class="flex items-center gap-2 text-sm">
+        <label class="flex items-center gap-2 text-ui">
           <input type="radio" name="client-auth-method" class="radio radio-sm" :checked="fields.authMethod === 'post'" :disabled="busy" @change="patch({ authMethod: 'post' })">
           {{ labels.authMethodPost }}
         </label>
@@ -210,7 +210,7 @@ function patch(next: Partial<ClientFields>) {
         <legend class="fieldset-legend text-ui">
           {{ labels.pkce }}
         </legend>
-        <label class="flex items-center gap-2 text-sm">
+        <label class="flex items-center gap-2 text-ui">
           <input
             type="checkbox"
             class="checkbox checkbox-sm rounded-sm"
@@ -232,11 +232,11 @@ function patch(next: Partial<ClientFields>) {
       <legend class="fieldset-legend text-ui">
         {{ labels.consent }}
       </legend>
-      <label class="flex items-center gap-2 text-sm">
+      <label class="flex items-center gap-2 text-ui">
         <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'require'" :disabled="busy" @change="patch({ consent: 'require' })">
         {{ labels.consentRequire }}
       </label>
-      <label class="flex items-center gap-2 text-sm">
+      <label class="flex items-center gap-2 text-ui">
         <input type="radio" name="client-consent" class="radio radio-sm" :checked="fields.consent === 'implicit'" :disabled="busy" :aria-describedby="ids.consentWarn" @change="patch({ consent: 'implicit' })">
         {{ labels.consentImplicit }}
       </label>

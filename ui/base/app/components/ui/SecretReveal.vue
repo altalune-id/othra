@@ -34,7 +34,7 @@ const dotenv = computed(() => Object.entries(env).map(([k, v]) => `${k}=${v}`).j
         <CopyButton :value="dotenv" :label="labels.copyEnv" />
         <span aria-hidden="true">{{ labels.copyEnv }}</span>
       </div>
-      <label class="label cursor-pointer gap-2 text-sm text-base-content">
+      <label class="label cursor-pointer gap-2 text-ui text-base-content">
         <input v-model="confirmed" type="checkbox" class="checkbox checkbox-sm rounded-sm">
         {{ labels.confirm }}
       </label>

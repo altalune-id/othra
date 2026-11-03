@@ -5,6 +5,7 @@ import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import Section from '#base/components/ui/Section.vue';
 
 export interface CimdApp {
   id: string;
@@ -77,10 +78,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
 </script>
 
 <template>
-  <section class="flex min-w-0 flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-4" data-testid="cimd-card">
-    <h2 class="text-ui font-semibold">
-      {{ labels.title }}
-    </h2>
+  <Section :title="labels.title" data-testid="cimd-card">
     <form v-if="canEdit" novalidate class="space-y-3" @submit.prevent="emit('save')">
       <div class="space-y-1">
         <label :for="ids.accept" class="flex items-center gap-3 text-ui font-medium">
@@ -98,7 +96,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
           {{ labels.acceptHelp }}
         </p>
         <p v-if="locked && !accept" class="flex items-start gap-1 text-xs text-base-content">
-          <Icon name="lucide:lock" size="14" class="shrink-0 text-info" />
+          <Icon name="lucide:lock" size="14" class="shrink-0 text-info" aria-hidden="true" />
           {{ labels.locked }}
         </p>
       </div>
@@ -122,7 +120,7 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
           </label>
           <FieldError :id="ids.hostsErr" :message="hostsError" />
           <p v-if="hosts.trim() === ''" class="mt-1 flex items-start gap-1 text-xs text-base-content">
-            <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
+            <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" aria-hidden="true" />
             {{ labels.hostsAny }}
           </p>
           <p :id="ids.hostsHelp" class="label whitespace-normal text-xs text-base-content/70">
@@ -204,5 +202,5 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
         </AppButton>
       </li>
     </ul>
-  </section>
+  </Section>
 </template>

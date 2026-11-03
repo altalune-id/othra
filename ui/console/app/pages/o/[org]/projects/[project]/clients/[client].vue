@@ -98,7 +98,7 @@ const dialogText = computed(() => secretDialogLabels(t));
 async function secretSaved() {
   secrets.forget();
   await nextTick();
-  secretsCard.value?.focusTitle();
+  secretsCard.value?.focusAction();
 }
 
 async function revoke() {
@@ -158,7 +158,7 @@ onMounted(async () => {
   }
   await navigateTo({ query: {} }, { replace: true });
   await nextTick();
-  secretsCard.value?.focusTitle();
+  secretsCard.value?.focusAction();
 });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', warnLeave));
 

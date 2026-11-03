@@ -3,6 +3,7 @@ import type { ShownError } from '#base/lib/apperror/message';
 import type { VerificationName } from '../resourceserver/verification';
 import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import Section from '#base/components/ui/Section.vue';
 import VerificationStatus from '../resourceserver/VerificationStatus.vue';
 
 export interface LinkRow {
@@ -42,16 +43,13 @@ const emit = defineEmits<{ link: [], edit: [row: LinkRow], unlink: [row: LinkRow
 </script>
 
 <template>
-  <section class="flex min-w-0 flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-4" data-testid="links-card">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-ui font-semibold">
-        {{ labels.title }}
-      </h2>
-      <AppButton v-if="canEdit && canLink && !loading" variant="plain" size="sm" class="max-sm:btn-block" data-testid="link-button" @click="emit('link')">
-        <Icon name="lucide:link" size="16" />
+  <Section :title="labels.title" data-testid="links-card">
+    <template v-if="canEdit && canLink && !loading" #actions>
+      <AppButton variant="plain" size="sm" data-testid="link-button" @click="emit('link')">
+        <Icon name="lucide:link" size="16" class="shrink-0" aria-hidden="true" />
         {{ labels.link }}
       </AppButton>
-    </div>
+    </template>
     <ErrorText v-if="loadError" :error="loadError" />
     <div v-else-if="loading" class="skeleton h-4 w-48" />
     <p v-else-if="rows.length === 0" class="text-ui text-base-content/70">
@@ -85,5 +83,5 @@ const emit = defineEmits<{ link: [], edit: [row: LinkRow], unlink: [row: LinkRow
         </div>
       </li>
     </ul>
-  </section>
+  </Section>
 </template>

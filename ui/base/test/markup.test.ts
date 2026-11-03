@@ -221,6 +221,11 @@ describe('guard: theme contrast', () => {
     expect(loose).toEqual([]);
   });
 
+  it('sets every label in the dense text-ui size, never text-sm', () => {
+    const loose = files.flatMap(f => (f.text.match(/<label\s[^>]*class="[^"]*"/g) ?? []).filter(t => /\btext-sm\b/.test(t)).map(t => `${f.path}: ${t}`));
+    expect(loose).toEqual([]);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });

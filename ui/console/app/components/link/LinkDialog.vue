@@ -79,7 +79,7 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
           </label>
         </div>
         <p v-if="unverified" class="flex items-start gap-1.5 text-ui text-base-content">
-          <Icon name="lucide:info" size="16" class="mt-0.5 shrink-0 text-info" />
+          <Icon name="lucide:info" size="16" class="mt-0.5 shrink-0 text-info" aria-hidden="true" />
           {{ labels.unverified }}
         </p>
         <fieldset class="fieldset" :aria-describedby="`${ids.scopes} ${ids.err}`">

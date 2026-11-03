@@ -52,7 +52,7 @@ const ids = { name: useId(), nameErr: useId(), server: useId(), serverHelp: useI
         <legend class="fieldset-legend text-ui">
           {{ t('tokens.access') }}
         </legend>
-        <label v-for="s in server.scopes" :key="s" class="flex items-start gap-2 text-sm">
+        <label v-for="s in server.scopes" :key="s" class="flex items-start gap-2 text-ui">
           <input v-model="scopes" type="checkbox" :value="s" class="checkbox checkbox-sm mt-0.5 rounded-sm" :disabled="busy">
           <span>
             <span class="block">{{ server.scopeDescriptions[s] || s }}</span>

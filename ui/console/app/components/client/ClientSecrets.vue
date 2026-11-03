@@ -3,6 +3,8 @@ import type { ShownError } from '#base/lib/apperror/message';
 import { ref } from 'vue';
 import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import Section from '#base/components/ui/Section.vue';
+import StatusLabel from '#base/components/ui/StatusLabel.vue';
 
 export interface SecretView {
   id: string;
@@ -45,34 +47,23 @@ const { rows, canEdit = false, busy = false, error = null, labels = {
 }>();
 
 const emit = defineEmits<{ generate: [], rotate: [], revoke: [row: SecretView] }>();
-const title = ref<HTMLElement>();
 const action = ref<HTMLButtonElement>();
 
 defineExpose({
-  focusTitle: () => title.value?.focus(),
   focusAction: () => action.value?.focus(),
 });
 </script>
 
 <template>
-  <section class="flex min-w-0 flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-4" data-testid="secrets-card">
-    <h2 ref="title" tabindex="-1" class="text-ui font-semibold outline-none">
-      {{ labels.title }}
-    </h2>
-    <p class="text-ui text-base-content/70">
-      {{ labels.intro }}
-    </p>
+  <Section :title="labels.title" :description="labels.intro" data-testid="secrets-card">
     <p v-if="rows.length === 0" class="flex items-start gap-1.5 text-ui text-base-content">
-      <Icon name="lucide:key-round" size="16" class="mt-0.5 shrink-0 text-warning" />
+      <Icon name="lucide:key-round" size="16" class="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
       {{ labels.noSecret }}
     </p>
     <ul v-else class="divide-y divide-base-300 rounded-box border border-base-300">
       <li v-for="row in rows" :key="row.id" class="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-ui">
         <code class="font-mono text-xs">••••{{ row.hint }}</code>
-        <span class="inline-flex items-center gap-1.5">
-          <span class="status" :class="row.old ? 'status-warning' : 'status-success'" aria-hidden="true" />
-          {{ row.old ? labels.old.replace('{date}', row.expires) : labels.current }}
-        </span>
+        <StatusLabel :tone="row.old ? 'warning' : 'success'" :label="row.old ? labels.old.replace('{date}', row.expires) : labels.current" />
         <span v-if="!row.old && row.created" class="text-base-content/70">{{ labels.created.replace('{date}', row.created) }}</span>
         <AppButton v-if="canEdit && row.old" variant="ghost" size="xs" class="ml-auto" :disabled="busy" @click="emit('revoke', row)">
           <Icon name="lucide:ban" size="14" class="shrink-0 text-error" aria-hidden="true" />
@@ -84,7 +75,7 @@ defineExpose({
       <div>
         <button ref="action" type="button" class="btn btn-sm max-sm:btn-block text-ui" :class="{ 'btn-primary': rows.length === 0 }" :disabled="busy" @click="rows.length === 0 ? emit('generate') : emit('rotate')">
           <span v-if="busy" class="loading loading-spinner loading-xs" />
-          <Icon v-else :name="rows.length === 0 ? 'lucide:key-round' : 'lucide:refresh-cw'" size="16" />
+          <Icon v-else :name="rows.length === 0 ? 'lucide:key-round' : 'lucide:refresh-cw'" size="16" class="shrink-0" aria-hidden="true" />
           {{ rows.length === 0 ? labels.generate : labels.rotate }}
         </button>
       </div>
@@ -93,5 +84,5 @@ defineExpose({
         {{ labels.personOnly }}
       </p>
     </template>
-  </section>
+  </Section>
 </template>
