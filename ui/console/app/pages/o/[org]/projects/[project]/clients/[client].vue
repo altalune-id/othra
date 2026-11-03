@@ -169,7 +169,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
   <div class="flex max-w-2xl flex-col gap-5">
     <PageHeader :title="client.name">
       <template #meta>
-        <span v-if="cimd" class="badge badge-soft badge-warning badge-sm" data-testid="client-cimd-badge">{{ t('clients.cimd_badge') }}</span>
+        <span v-if="cimd" class="badge badge-outline badge-sm" data-testid="client-cimd-badge">{{ t('clients.cimd_badge') }}</span>
         <SystemBadge v-if="system" :label="t('common.system')" />
       </template>
       <template v-if="canEdit && !system" #actions>
