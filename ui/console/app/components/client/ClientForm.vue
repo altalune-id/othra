@@ -262,7 +262,7 @@ function patch(next: Partial<ClientFields>) {
         {{ busy ? labels.submitting : labels.submit }}
       </AppButton>
     </div>
-    <div v-else class="flex justify-end gap-2 pt-2">
+    <div v-else class="flex items-center gap-3 pt-2">
       <AppButton type="submit" size="sm" :busy="busy">
         {{ busy ? labels.submitting : labels.submit }}
       </AppButton>

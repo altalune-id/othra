@@ -3,6 +3,7 @@ import type { ShownError } from '#base/lib/apperror/message';
 import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import Section from '#base/components/ui/Section.vue';
 
 export interface ProfileSessionsLabels {
   title: string;
@@ -23,21 +24,13 @@ const emit = defineEmits<{ ask: [], confirm: [], cancel: [] }>();
 </script>
 
 <template>
-  <section class="card border border-base-300 bg-base-100">
-    <div class="card-body gap-3">
-      <h2 class="card-title text-base">
-        {{ labels.title }}
-      </h2>
-      <p class="text-ui text-base-content/70">
-        {{ labels.body }}
-      </p>
-      <ErrorText :error="error" />
-      <div class="card-actions justify-end">
-        <AppButton variant="error" size="sm" soft :disabled="busy" @click="emit('ask')">
-          <Icon name="lucide:log-out" size="16" class="shrink-0" aria-hidden="true" />
-          {{ labels.signOut }}
-        </AppButton>
-      </div>
+  <Section :title="labels.title" :description="labels.body">
+    <ErrorText :error="error" />
+    <div>
+      <AppButton variant="error" size="sm" soft :disabled="busy" @click="emit('ask')">
+        <Icon name="lucide:log-out" size="16" class="shrink-0" aria-hidden="true" />
+        {{ labels.signOut }}
+      </AppButton>
     </div>
     <AppModal :open="confirming" :title="labels.confirmTitle" @close="emit('cancel')">
       <p class="text-ui">
@@ -52,5 +45,5 @@ const emit = defineEmits<{ ask: [], confirm: [], cancel: [] }>();
         </AppButton>
       </template>
     </AppModal>
-  </section>
+  </Section>
 </template>

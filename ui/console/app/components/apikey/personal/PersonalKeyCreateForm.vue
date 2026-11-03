@@ -85,7 +85,7 @@ function onOrgChange(event: Event) {
 </script>
 
 <template>
-  <form class="flex flex-col gap-4" @submit.prevent="emit('submit')">
+  <form class="flex flex-col gap-4 rounded-box border border-base-300 bg-base-100 p-4" @submit.prevent="emit('submit')">
     <div class="fieldset">
       <label class="flex flex-col gap-1">
         <span class="label text-ui text-base-content">{{ labels.name }}</span>
@@ -173,8 +173,8 @@ function onOrgChange(event: Event) {
     </fieldset>
 
     <ErrorText :error="error" />
-    <div class="flex justify-end gap-2 max-sm:flex-col-reverse">
-      <AppButton variant="ghost" size="sm" :to="cancelUrl">
+    <div class="flex gap-2">
+      <AppButton variant="plain" size="sm" :to="cancelUrl">
         {{ labels.cancel }}
       </AppButton>
       <AppButton type="submit" size="sm" :disabled="!canSubmit">

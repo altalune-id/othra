@@ -4,6 +4,7 @@ import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import Section from '#base/components/ui/Section.vue';
 
 export interface ProfilePasswordLabels {
   title: string;
@@ -30,11 +31,8 @@ const next = defineModel<string>('next', { required: true });
 </script>
 
 <template>
-  <form novalidate class="card border border-base-300 bg-base-100" @submit.prevent="emit('submit')">
-    <div class="card-body gap-3">
-      <h2 class="card-title text-base">
-        {{ labels.title }}
-      </h2>
+  <Section :title="labels.title">
+    <form novalidate class="flex flex-col gap-3" @submit.prevent="emit('submit')">
       <label class="hidden">
         <span>{{ labels.email }}</span>
         <input type="email" name="email" :value="email" autocomplete="username" readonly>
@@ -64,14 +62,14 @@ const next = defineModel<string>('next', { required: true });
       </p>
       <ErrorText :error="error" />
       <SavedNote v-if="notice" :label="notice" />
-      <div class="card-actions items-center justify-between">
-        <p class="text-xs text-base-content/70">
-          {{ labels.hint }}
-        </p>
+      <div class="flex flex-wrap items-center gap-3">
         <AppButton type="submit" size="sm" :disabled="busy">
           {{ labels.change }}
         </AppButton>
+        <p class="text-xs text-base-content/70">
+          {{ labels.hint }}
+        </p>
       </div>
-    </div>
-  </form>
+    </form>
+  </Section>
 </template>
