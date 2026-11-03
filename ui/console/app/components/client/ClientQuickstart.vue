@@ -42,6 +42,9 @@ async function trySignIn() {
         </div>
       </template>
     </div>
+    <p v-if="values.redirectUri" class="text-xs text-base-content/70">
+      {{ t('clients.try_signin_note') }}
+    </p>
     <div class="flex flex-wrap gap-2">
       <AppButton v-if="values.redirectUri" size="sm" @click="trySignIn">
         <Icon name="lucide:external-link" size="16" class="shrink-0" aria-hidden="true" />

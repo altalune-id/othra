@@ -7,12 +7,12 @@ export interface QuickstartInput {
 
 // quickstartEnv is the .env an app needs to sign in with this client; the secret is in it only while it is known.
 export function quickstartEnv(q: QuickstartInput): Record<string, string> {
-  const env: Record<string, string> = { OTHRA_ISSUER: q.issuer, OTHRA_CLIENT_ID: q.clientId };
+  const env: Record<string, string> = { OIDC_ISSUER: q.issuer, OIDC_CLIENT_ID: q.clientId };
   if (q.redirectUri) {
-    env.OTHRA_REDIRECT_URI = q.redirectUri;
+    env.OIDC_REDIRECT_URI = q.redirectUri;
   }
   if (q.secret) {
-    env.OTHRA_CLIENT_SECRET = q.secret;
+    env.OIDC_CLIENT_SECRET = q.secret;
   }
   return env;
 }
@@ -23,6 +23,7 @@ export function authorizeLines(q: QuickstartInput): string[] {
     `${q.issuer.replace(/\/+$/, '')}/oauth2/authorize`,
     `  ?client_id=${q.clientId}`,
     '  &response_type=code&scope=openid%20profile%20email',
+    '  &state=...',
     ...(q.redirectUri ? [`  &redirect_uri=${encodeURIComponent(q.redirectUri)}`] : []),
     '  &code_challenge=...&code_challenge_method=S256',
   ];
@@ -31,10 +32,12 @@ export function authorizeLines(q: QuickstartInput): string[] {
 // goLines configures oidcrp for this client; a secret client reads its secret from the environment.
 export function goLines(q: QuickstartInput, secret: boolean): string[] {
   return [
+    'import "github.com/altalune-id/oidcrp"',
+    '',
     'rp := oidcrp.New(oidcrp.Config{',
     `\tIssuer:      "${q.issuer}",`,
     `\tClientID:    "${q.clientId}",`,
-    ...(secret ? ['\tClientSecret: os.Getenv("OTHRA_CLIENT_SECRET"),'] : []),
+    ...(secret ? ['\tClientSecret: os.Getenv("OIDC_CLIENT_SECRET"),'] : []),
     ...(q.redirectUri ? [`\tRedirectURI: "${q.redirectUri}",`] : []),
     '\tScopes:      []string{"openid", "profile", "email"},',
     '})',

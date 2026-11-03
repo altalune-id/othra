@@ -17,7 +17,7 @@ const dotenv = computed(() => Object.entries(env).map(([k, v]) => `${k}=${v}`).j
 
 <template>
   <div class="flex flex-col gap-3">
-    <div v-if="!value" role="alert" class="alert alert-error alert-soft items-start">
+    <div v-if="!value" role="alert" class="alert alert-error alert-soft items-start text-ui">
       <Icon name="lucide:circle-alert" size="16" class="mt-0.5 shrink-0" aria-hidden="true" />
       <div class="flex flex-col gap-2">
         <span>{{ labels.missing }}</span>
@@ -25,7 +25,7 @@ const dotenv = computed(() => Object.entries(env).map(([k, v]) => `${k}=${v}`).j
       </div>
     </div>
     <template v-else>
-      <div role="note" class="alert alert-warning alert-soft items-start">
+      <div role="note" class="alert alert-warning alert-soft items-start text-ui">
         <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0" aria-hidden="true" />
         <span>{{ labels.once }}</span>
       </div>

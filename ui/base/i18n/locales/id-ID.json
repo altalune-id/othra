@@ -236,6 +236,7 @@
   "apperror.UPS002_client_secret": "Masukkan client secret.",
   "apperror.UPS003": "Proyek ini sudah mengatur Google.",
   "apperror.UPS004": "Pengguna sudah menautkan Google, jadi tidak bisa dihapus. Nonaktifkan saja.",
+  "common.back": "Kembali",
   "common.cancel": "Batal",
   "common.close": "Tutup",
   "common.copied": "Disalin",

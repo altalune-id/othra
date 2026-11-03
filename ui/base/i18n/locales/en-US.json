@@ -236,6 +236,7 @@
   "apperror.UPS002_client_secret": "Enter the client secret.",
   "apperror.UPS003": "This project already has Google set up.",
   "apperror.UPS004": "End users have linked Google, so it can't be removed. Turn it off instead.",
+  "common.back": "Back",
   "common.cancel": "Cancel",
   "common.close": "Close",
   "common.copied": "Copied",

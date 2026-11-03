@@ -41,6 +41,7 @@ export function clientFormLabels(t: Translate, mode: 'create' | 'edit'): ClientF
     submit: mode === 'create' ? t('clients.create') : t('common.save'),
     submitting: mode === 'create' ? t('common.creating') : t('common.saving'),
     cancel: t('common.cancel'),
+    back: t('common.back'),
     uriList: uriList(t, 'redirect_uri'),
     postLogoutList: uriList(t, 'post_logout_uri'),
   };

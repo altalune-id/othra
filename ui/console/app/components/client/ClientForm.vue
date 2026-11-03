@@ -4,6 +4,7 @@ import type { ClientFields } from './clientForm';
 import type { ClientKindName } from './kinds';
 import type { RedirectUriListLabels } from './RedirectUriList.vue';
 import { computed, useId } from 'vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
 import ClientKindPicker from './ClientKindPicker.vue';
@@ -45,6 +46,7 @@ export interface ClientFormLabels {
   submit: string;
   submitting: string;
   cancel: string;
+  back: string;
   uriList: RedirectUriListLabels;
   postLogoutList: RedirectUriListLabels;
 }
@@ -90,6 +92,7 @@ const props = withDefaults(defineProps<{
     submit: 'Create client',
     submitting: 'Creating…',
     cancel: 'Cancel',
+    back: 'Back',
     uriList: { uri: 'Redirect URI', remove: 'Remove redirect URI', add: 'Add URI', localhostWarning: '127.0.0.1 is safer than localhost, which some systems resolve elsewhere.' },
     postLogoutList: { uri: 'Sign-out return URI', remove: 'Remove sign-out return URI', add: 'Add URI', localhostWarning: '127.0.0.1 is safer than localhost, which some systems resolve elsewhere.' },
   }),
@@ -98,6 +101,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   submit: [],
   cancel: [],
+  back: [],
   kind: [kind: ClientKindName],
   edit: [list: 'redirect' | 'postLogout', index: number],
   remove: [list: 'redirect' | 'postLogout', index: number],
@@ -125,19 +129,21 @@ function patch(next: Partial<ClientFields>) {
     />
 
     <div class="fieldset">
-      <label :for="ids.name" class="label text-ui text-base-content">{{ labels.name }}</label>
-      <input
-        :id="ids.name"
-        :value="fields.name"
-        type="text"
-        class="input input-sm w-full text-ui"
-        :class="{ 'input-error': nameError }"
-        maxlength="100"
-        :disabled="busy"
-        :aria-invalid="!!nameError"
-        :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`"
-        @input="patch({ name: ($event.target as HTMLInputElement).value })"
-      >
+      <label class="flex flex-col gap-1">
+        <span class="label text-ui text-base-content">{{ labels.name }}</span>
+        <input
+          :id="ids.name"
+          :value="fields.name"
+          type="text"
+          class="input input-sm w-full text-ui"
+          :class="{ 'input-error': nameError }"
+          maxlength="100"
+          :disabled="busy"
+          :aria-invalid="!!nameError"
+          :aria-describedby="`${ids.nameHelp} ${ids.nameErr}`"
+          @input="patch({ name: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
       <FieldError :id="ids.nameErr" :message="nameError" />
       <p :id="ids.nameHelp" class="label whitespace-normal text-xs text-base-content/70">
         {{ labels.nameHelp }}
@@ -248,14 +254,18 @@ function patch(next: Partial<ClientFields>) {
     </fieldset>
 
     <ErrorText :error="error" />
-    <div class="flex justify-end gap-2 pt-2 max-sm:flex-col-reverse">
-      <button v-if="props.mode === 'create'" type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="emit('cancel')">
-        {{ labels.cancel }}
-      </button>
-      <button type="submit" class="btn btn-primary btn-sm text-ui" :disabled="busy">
-        <span v-if="busy" class="loading loading-spinner loading-xs" />
+    <div v-if="props.mode === 'create'" class="flex gap-2 pt-2">
+      <AppButton variant="plain" size="sm" :disabled="busy" @click="emit('back')">
+        {{ labels.back }}
+      </AppButton>
+      <AppButton type="submit" size="sm" :busy="busy">
         {{ busy ? labels.submitting : labels.submit }}
-      </button>
+      </AppButton>
+    </div>
+    <div v-else class="flex justify-end gap-2 pt-2">
+      <AppButton type="submit" size="sm" :busy="busy">
+        {{ busy ? labels.submitting : labels.submit }}
+      </AppButton>
     </div>
   </form>
 </template>

@@ -172,6 +172,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
         @remove="form.removeRow"
         @submit="submit"
         @cancel="navigateTo(base)"
+        @back="typeDone = false"
       />
     </div>
 
@@ -180,7 +181,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
         v-model:confirmed="stored"
         :value="revealed?.secret ?? ''"
         :labels="secretLabels"
-        :env="revealed ? { OTHRA_CLIENT_SECRET: revealed.secret } : {}"
+        :env="revealed ? { OIDC_CLIENT_SECRET: revealed.secret } : {}"
       >
         <template #retry>
           <AppButton variant="plain" size="sm" :busy="busy" @click="form.retrySecret()">

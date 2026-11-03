@@ -5,9 +5,9 @@ const q = { issuer: 'https://id.acme.test/p/apps/', clientId: 'dPm7fmQRJKPVw8Pxr
 
 describe('quickstartEnv', () => {
   it('has the real values, and the secret only when it is known', () => {
-    expect(quickstartEnv(q)).toEqual({ OTHRA_ISSUER: q.issuer, OTHRA_CLIENT_ID: q.clientId, OTHRA_REDIRECT_URI: q.redirectUri });
-    expect(quickstartEnv({ ...q, secret: 'othra_cs_x' }).OTHRA_CLIENT_SECRET).toBe('othra_cs_x');
-    expect(quickstartEnv({ ...q, redirectUri: '' })).not.toHaveProperty('OTHRA_REDIRECT_URI');
+    expect(quickstartEnv(q)).toEqual({ OIDC_ISSUER: q.issuer, OIDC_CLIENT_ID: q.clientId, OIDC_REDIRECT_URI: q.redirectUri });
+    expect(quickstartEnv({ ...q, secret: 'othra_cs_x' }).OIDC_CLIENT_SECRET).toBe('othra_cs_x');
+    expect(quickstartEnv({ ...q, redirectUri: '' })).not.toHaveProperty('OIDC_REDIRECT_URI');
   });
 });
 
@@ -31,6 +31,7 @@ describe('quickstart snippets', () => {
       'https://auth.test/p/acme/oauth2/authorize',
       '  ?client_id=c1',
       '  &response_type=code&scope=openid%20profile%20email',
+      '  &state=...',
       '  &redirect_uri=https%3A%2F%2Fapp.test%2Fcb',
       '  &code_challenge=...&code_challenge_method=S256',
     ]);
@@ -38,8 +39,8 @@ describe('quickstart snippets', () => {
   });
 
   it('reads the secret from the environment in the Go snippet only for a secret client', () => {
-    expect(goLines(q, true)).toContain('\tClientSecret: os.Getenv("OTHRA_CLIENT_SECRET"),');
+    expect(goLines(q, true)).toContain('\tClientSecret: os.Getenv("OIDC_CLIENT_SECRET"),');
     expect(goLines(q, false).join('\n')).not.toContain('ClientSecret');
-    expect(goLines(q, false)[0]).toBe('rp := oidcrp.New(oidcrp.Config{');
+    expect(goLines(q, false).slice(0, 3)).toEqual(['import "github.com/altalune-id/oidcrp"', '', 'rp := oidcrp.New(oidcrp.Config{']);
   });
 });

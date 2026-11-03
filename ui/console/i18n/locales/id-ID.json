@@ -168,6 +168,7 @@
   "clients.tab_authorize": "URL otorisasi",
   "clients.title": "Klien",
   "clients.try_signin": "Coba masuk",
+  "clients.try_signin_note": "Pratinjau: ini membuka halaman masuk sebagai klien ini, tetapi aplikasi Anda tidak bisa menyelesaikan pertukaran ini karena code verifier tidak disimpan.",
   "clients.type_line": "Jenis: {kind}",
   "clients.type_mcp": "MCP",
   "clients.type_native": "Native",

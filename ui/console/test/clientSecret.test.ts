@@ -96,10 +96,10 @@ describe('new client: secret then quickstart', () => {
     await button(w, 'clients.continue_quickstart').trigger('click');
     await flushPromises();
     const env = w.get('[data-testid="quickstart-env"]').text();
-    expect(env).toContain(`OTHRA_ISSUER=${issuer}`);
-    expect(env).toContain(`OTHRA_CLIENT_ID=${web.id}`);
-    expect(env).toContain('OTHRA_REDIRECT_URI=https://store.example/cb');
-    expect(env).toContain('OTHRA_CLIENT_SECRET=othra_cs_x');
+    expect(env).toContain(`OIDC_ISSUER=${issuer}`);
+    expect(env).toContain(`OIDC_CLIENT_ID=${web.id}`);
+    expect(env).toContain('OIDC_REDIRECT_URI=https://store.example/cb');
+    expect(env).toContain('OIDC_CLIENT_SECRET=othra_cs_x');
     const open = vi.fn();
     vi.stubGlobal('open', open);
     await button(w, 'clients.try_signin').trigger('click');

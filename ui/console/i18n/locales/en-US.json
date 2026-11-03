@@ -168,6 +168,7 @@
   "clients.tab_authorize": "Authorize URL",
   "clients.title": "Clients",
   "clients.try_signin": "Try sign-in",
+  "clients.try_signin_note": "A preview: it opens the sign-in page as this client, but your app can't finish this exchange because the code verifier isn't kept.",
   "clients.type_line": "Type: {kind}",
   "clients.type_mcp": "MCP",
   "clients.type_native": "Native",
