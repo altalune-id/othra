@@ -22,7 +22,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
 </script>
 
 <template>
-  <div v-if="org && project" class="space-y-6">
+  <div v-if="org && project" class="flex flex-col gap-4">
     <PageHeader :title="t('webhooks.title')" :description="t('webhooks.subtitle')">
       <template #actions>
         <WebhookCreateModal :org-id="org.id" :project-id="project.id" />

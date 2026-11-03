@@ -1,10 +1,15 @@
 <script setup lang="ts">
+import type { Column } from '#base/components/ui/types';
 import type { Webhook } from '~/stores/webhooks';
+import AppButton from '#base/components/ui/AppButton.vue';
+import AppDropdown from '#base/components/ui/AppDropdown.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
+import DataTable from '#base/components/ui/DataTable.vue';
 import EmptyState from '#base/components/ui/EmptyState.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
 import SecretField from '#base/components/ui/SecretField.vue';
+import StatusLabel from '#base/components/ui/StatusLabel.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import { webhookEvents } from '~/components/webhook/events';
 import { toWebhook, useWebhooksStore } from '~/stores/webhooks';
@@ -21,6 +26,14 @@ void webhooks.ensureLoaded(orgId, projectId);
 
 const items = computed(() => webhooks.forProject(projectId));
 const labelByName = new Map(webhookEvents.map(e => [e.name, e.labelKey]));
+
+const columns = computed<Column[]>(() => [
+  { key: 'url', label: t('webhooks.col_url'), mono: true },
+  { key: 'events', label: t('webhooks.col_events') },
+  { key: 'status', label: t('webhooks.col_status') },
+  { key: 'menu', label: t('webhooks.col_actions'), hideLabel: true, align: 'end' },
+]);
+const base = computed(() => `/o/${route.params.org}/projects/${route.params.project}/webhooks`);
 
 function events(webhook: Webhook) {
   return webhook.eventTypes.map(n => t(labelByName.get(n) ?? n)).join(', ');
@@ -109,80 +122,85 @@ function closeRotate() {
   <LoadError v-if="webhooks.error" :error="webhooks.error" :busy="webhooks.loading" :retry-label="t('common.retry')" @retry="webhooks.load(orgId, projectId)" />
   <LoadingStatus v-else-if="webhooks.loading && items.length === 0" :label="t('common.loading')" />
   <EmptyState v-else-if="items.length === 0" icon="lucide:webhook" :title="t('webhooks.empty')" />
-  <div v-else class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-    <table class="table table-sm">
-      <thead class="text-base-content/70">
-        <tr>
-          <th>{{ t('webhooks.col_url') }}</th>
-          <th>{{ t('webhooks.col_events') }}</th>
-          <th>{{ t('webhooks.col_status') }}</th>
-          <th />
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="webhook in items" :key="webhook.id" class="hover:bg-base-200">
-          <td>
-            <span class="font-mono text-xs">{{ webhook.url }}</span>
-          </td>
-          <td class="text-base-content/70">
-            {{ events(webhook) }}
-          </td>
-          <td>
-            <span class="badge badge-sm" :class="webhook.active ? 'badge-success' : 'badge-ghost'">
-              {{ webhook.active ? t('webhooks.active') : t('webhooks.inactive') }}
-            </span>
-          </td>
-          <td class="whitespace-nowrap text-right">
-            <NuxtLink :to="`/o/${route.params.org}/projects/${route.params.project}/webhooks/${webhook.id}`" class="btn btn-ghost btn-xs">
-              <Icon name="lucide:scroll-text" size="14" />
+  <DataTable v-else :caption="t('webhooks.title')" row-key="id" :columns="columns" :rows="items">
+    <template #cell-url="{ row }">
+      <NuxtLink :to="`${base}/${row.id}`" class="link link-hover block max-w-80 truncate" :title="row.url">
+        {{ row.url }}
+      </NuxtLink>
+    </template>
+    <template #cell-events="{ row }">
+      <span class="text-base-content/70">{{ events(row) }}</span>
+    </template>
+    <template #cell-status="{ row }">
+      <StatusLabel :tone="row.active ? 'success' : 'neutral'" :label="row.active ? t('webhooks.active') : t('webhooks.inactive')" />
+    </template>
+    <template #cell-menu="{ row }">
+      <AppDropdown placement="end" size="xs" trigger-class="btn-square" content-class="w-48" :label="t('webhooks.more_for', { url: row.url })" :disabled="busyId === row.id">
+        <template #trigger>
+          <Icon name="lucide:ellipsis" size="14" class="shrink-0" aria-hidden="true" />
+        </template>
+        <ul class="menu menu-sm w-full p-0 text-ui">
+          <li>
+            <NuxtLink :to="`${base}/${row.id}`">
+              <Icon name="lucide:scroll-text" size="16" class="shrink-0" aria-hidden="true" />
               {{ t('webhooks.logs') }}
             </NuxtLink>
-            <button class="btn btn-ghost btn-xs" :disabled="busyId === webhook.id" @click="ping(webhook)">
-              <Icon name="lucide:send" size="14" />
+          </li>
+          <li>
+            <button type="button" @click="ping(row)">
+              <Icon name="lucide:send" size="16" class="shrink-0" aria-hidden="true" />
               {{ t('webhooks.ping') }}
             </button>
-            <button class="btn btn-ghost btn-xs" :disabled="busyId === webhook.id" @click="toggle(webhook)">
-              <Icon :name="webhook.active ? 'lucide:pause' : 'lucide:play'" size="14" />
-              {{ webhook.active ? t('webhooks.deactivate') : t('webhooks.activate') }}
+          </li>
+          <li>
+            <button type="button" @click="toggle(row)">
+              <Icon :name="row.active ? 'lucide:pause' : 'lucide:play'" size="16" class="shrink-0" aria-hidden="true" />
+              {{ row.active ? t('webhooks.deactivate') : t('webhooks.activate') }}
             </button>
-            <button class="btn btn-ghost btn-xs" :disabled="busyId === webhook.id" @click="rotate(webhook)">
-              <Icon name="lucide:key-round" size="14" />
+          </li>
+          <li>
+            <button type="button" @click="rotate(row)">
+              <Icon name="lucide:key-round" size="16" class="shrink-0" aria-hidden="true" />
               {{ t('webhooks.rotate') }}
             </button>
-            <button class="btn btn-ghost btn-xs" :disabled="busyId === webhook.id" @click="askDelete(webhook)">
-              <Icon name="lucide:trash-2" size="14" class="text-error" />
+          </li>
+          <li>
+            <button type="button" @click="askDelete(row)">
+              <Icon name="lucide:trash-2" size="16" class="shrink-0 text-error" aria-hidden="true" />
               {{ t('common.delete') }}
             </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </li>
+        </ul>
+      </AppDropdown>
+    </template>
+  </DataTable>
 
   <AppModal :open="!!deleting" :title="t('webhooks.delete_title')" @close="deleting = null">
-    <p class="text-sm break-words">
+    <p class="text-ui break-words">
       {{ t('webhooks.delete_body', { url: deleting?.url ?? '' }) }}
     </p>
     <template #footer>
-      <button type="button" class="btn btn-ghost btn-sm text-ui" @click="deleting = null">
+      <AppButton variant="ghost" size="sm" autofocus @click="deleting = null">
         {{ t('common.cancel') }}
-      </button>
-      <button type="button" class="btn btn-error btn-sm text-ui" @click="confirmDelete()">
+      </AppButton>
+      <AppButton variant="error" size="sm" @click="confirmDelete()">
         {{ t('common.delete') }}
-      </button>
+      </AppButton>
     </template>
   </AppModal>
 
   <AppModal :open="!!rotating" :title="t('webhooks.rotate')" :dismissible="!rotatedSecret" @close="closeRotate()">
-    <div class="space-y-3">
-      <p class="flex items-start gap-1 text-sm text-base-content">
-        <Icon name="lucide:triangle-alert" size="14" class="mt-0.5 shrink-0 text-warning" />
+    <div class="flex flex-col gap-3">
+      <p class="flex items-start gap-2 text-ui">
+        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
         {{ t('webhooks.secret_warning') }}
       </p>
       <SecretField :value="rotatedSecret" :label="t('common.copy')" />
-      <button class="btn btn-ghost btn-sm text-ui" type="button" @click="closeRotate()">
-        {{ t('common.done') }}
-      </button>
     </div>
+    <template #footer>
+      <AppButton size="sm" @click="closeRotate()">
+        {{ t('common.done') }}
+      </AppButton>
+    </template>
   </AppModal>
 </template>
