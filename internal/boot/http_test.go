@@ -1,6 +1,7 @@
 package boot
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -46,23 +47,29 @@ func TestBuildHTTPHandler_ServesPages(t *testing.T) {
 	assert.Equal(t, http.StatusFound, rec.Code)
 }
 
-func TestBuildHTTPHandler_UnknownPathsAreBrandedAndTheRootFaviconWorks(t *testing.T) {
-	for _, base := range []string{"", "/app"} {
-		cfg := config.Config{HTTP: config.HTTPConfig{BasePath: base}}
-		h := buildHTTPHandler(httpSurfaces{basePath: base, routes: buildRoutes(cfg, nil, nil, nil, nil)})
+func TestBuildHTTPHandler_BrandsUnknownPathsAndKeeps405(t *testing.T) {
+	users := &user.Service{}
+	local := &Services{Caps: capabilities.Capabilities{LocalLogin: true}, Auth: &auth.Service{}, Users: users, Legal: legal.NewService(users, legal.NewStore(db.Pool{}, "", ""), fakes.Transactor{})}
+	for _, svcs := range []*Services{nil, local} {
+		for _, base := range []string{"", "/app"} {
+			cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150", BasePath: base}}
+			name := fmt.Sprintf("local=%t base=%q", svcs != nil, base)
 
-		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, base+"/nope", nil))
-		assert.Equal(t, http.StatusNotFound, rec.Code, base)
-		assert.Equal(t, "text/html; charset=utf-8", rec.Header().Get("Content-Type"))
-		assert.Contains(t, rec.Body.String(), "Page not found")
-		assert.Contains(t, rec.Body.String(), "Go to the console", "an unknown page offers a way back")
+			rec := serveRoutes(cfg, svcs, http.MethodGet, base+"/nope")
+			assert.Equal(t, http.StatusNotFound, rec.Code, name)
+			assert.Equal(t, "text/html; charset=utf-8", rec.Header().Get("Content-Type"), name)
+			assert.Contains(t, rec.Body.String(), "Page not found", name)
+			assert.Contains(t, rec.Body.String(), "Go to the console", "%s: an unknown page offers a way back", name)
+			assert.NotContains(t, rec.Body.String(), "404 page not found", name)
 
-		rec = httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, base+"/favicon.ico", nil))
-		assert.Equal(t, http.StatusMovedPermanently, rec.Code, base)
-		assert.Equal(t, base+"/static/favicon.ico", rec.Header().Get("Location"))
+			rec = serveRoutes(cfg, svcs, http.MethodGet, base+"/favicon.ico")
+			assert.Equal(t, http.StatusFound, rec.Code, name)
+			assert.Equal(t, base+"/static/favicon.ico", rec.Header().Get("Location"), name)
+		}
 	}
+	rec := serveRoutes(config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}, local, http.MethodGet, "/logout")
+	assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "a wrong method on a real route keeps its 405")
+	assert.Equal(t, "POST", rec.Header().Get("Allow"))
 }
 
 func serveRoutes(cfg config.Config, svcs *Services, method, path string) *httptest.ResponseRecorder {

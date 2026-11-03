@@ -209,10 +209,14 @@ func (s *Service) Redeem(ctx context.Context, p Project, req RedeemRequest) (*Re
 		}
 		l, err := s.store.UseLink(ctx, p.ID, hash, b.ID, now)
 		if IsLinkNotUsableError(err) {
-			if known, kerr := s.store.LinkByTokenHash(ctx, p.ID, hash); kerr == nil {
+			known, kerr := s.store.LinkByTokenHash(ctx, p.ID, hash)
+			switch {
+			case kerr == nil:
 				return &LinkNotUsableError{ReturnTo: known.ReturnTo}
+			case IsLinkNotUsableError(kerr):
+				return err
 			}
-			return err
+			return kerr
 		}
 		if err != nil {
 			return err

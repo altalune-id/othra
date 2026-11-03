@@ -125,7 +125,7 @@ func (f *webFixture) signInVia(c *http.Client, login hostedPage, email string) h
 }
 
 // check-inbox and confirm keep the app's name, so the person knows where the link returns them; the sign-up subject names the project.
-func TestAuthorize_SentAndVerifyNameTheClient(t *testing.T) {
+func TestAuthorize_SentAndVerifyNameTheClientAndTheSignUpSubjectTheProject(t *testing.T) {
 	f := newWebFixture(t)
 	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
 	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})

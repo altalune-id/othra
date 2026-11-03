@@ -278,6 +278,12 @@ func TestRedeem_ExpiredAndUnknownLinks(t *testing.T) {
 	h.store.failOn = "LinkByTokenHash"
 	_, err = h.svc.LinkByToken(context.Background(), h.project, tokenOf(t, l.URL))
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+	h.store.failOn = ""
+	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
+	require.NoError(t, err)
+	h.store.failOn = "LinkByTokenHash"
+	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err), "a store fault reading a spent link is a fault, not an unusable link")
 }
 
 func TestSessions_SelectSignOutAndTheAccountCap(t *testing.T) {

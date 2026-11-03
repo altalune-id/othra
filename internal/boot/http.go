@@ -264,7 +264,7 @@ func buildRoutes(
 		Company: cfg.Compliance.Company, ContactEmail: cfg.Compliance.ContactEmail,
 	}
 	if svcs == nil || !svcs.Caps.LocalLogin {
-		return []web.Registrar{legal.NewWeb(legalOpts), notFoundPage{kit}}
+		return []web.Registrar{legal.NewWeb(legalOpts)}
 	}
 	sessions := cookieSessions(cfg, svcs)
 	limits := authLimits(cfg, svcs)
@@ -301,15 +301,12 @@ func buildRoutes(
 			CookieSecure: cfg.HTTP.CookieSecure,
 			Limits:       limits,
 		}),
-		notFoundPage{kit},
 	}
 }
 
-type notFoundPage struct{ kit layout.Kit }
-
-func (n notFoundPage) Register(mux *http.ServeMux) {
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		n.kit.Render(w, r, http.StatusNotFound, layout.Error(n.kit.Layout("Page not found"), "There is no page at this address."))
+func notFoundPage(kit layout.Kit) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		kit.Render(w, r, http.StatusNotFound, layout.Error(kit.Layout("Page not found"), "There is no page at this address."))
 	})
 }
 
@@ -381,6 +378,7 @@ func buildHTTPHandler(s httpSurfaces) http.Handler {
 		PortalAssets: s.portal,
 		Routes:       s.routes,
 		PublicRoutes: s.public,
+		NotFound:     notFoundPage(layout.Kit{BasePath: s.basePath, Log: s.log, Unexpected: s.unexpected, Version: web.StaticVersion}),
 		HostedPages:  s.hosted,
 
 		HostedImageBases: s.images,

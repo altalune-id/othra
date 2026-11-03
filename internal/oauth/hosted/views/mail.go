@@ -12,7 +12,7 @@ import (
 // MailData is the magic-link email: adding Google when GoogleEmail is set, sign-up when the email has no end user yet, else sign-in.
 type MailData struct {
 	Project string
-	// Client is the registered app the sign-in returns to; the subject names it instead of the project.
+	// Client is the registered app the sign-in returns to; only the sign-in subject names it, every other subject names the project.
 	Client      string
 	Link        string
 	Minutes     int
