@@ -12,7 +12,7 @@ const rows: KeyRow[] = [
 const meta = {
   title: 'Projects/SigningKeyList',
   component: SigningKeyList,
-  args: { rows },
+  args: { rows, caption: 'Signing keys' },
 } satisfies Meta<typeof SigningKeyList>;
 
 export default meta;

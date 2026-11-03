@@ -33,7 +33,6 @@ const keys = useSigningKeys(listed.value.id);
 const { loading, loaded, loadError, confirming, busy, error, rotated, waitingUntil, noActive } = keys;
 const rows = computed(() => keyRows(keys.keys.value, { t, locale: locale.value }));
 const listLabels = computed(() => ({
-  caption: t('keys.title'),
   kid: t('keys.col_kid'),
   alg: t('keys.col_alg'),
   status: t('keys.col_status'),
@@ -75,7 +74,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('keys
     </div>
 
     <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="keys.load()" />
-    <SigningKeyList v-else :rows="rows" :loading="loading" :labels="listLabels" data-testid="keys-card" />
+    <SigningKeyList v-else :rows="rows" :caption="t('keys.title')" :loading="loading" :labels="listLabels" data-testid="keys-card" />
 
     <Section v-if="canEdit && loaded" :title="t('keys.rotation_title')" data-testid="rotation-card">
       <p v-if="waitingUntil && !noActive" role="status" class="flex items-center gap-2 text-ui">

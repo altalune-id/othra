@@ -8,9 +8,11 @@ import DataTable from '#base/components/ui/DataTable.vue';
 import EmptyState from '#base/components/ui/EmptyState.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
+import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
 import StatusLabel from '#base/components/ui/StatusLabel.vue';
+import { useDates } from '#base/composables/useDates';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 import { useOrgsStore } from '~/stores/orgs';
 import { useProjectsStore } from '~/stores/projects';
@@ -38,6 +40,8 @@ interface Attempt {
 const route = useRoute();
 const { t } = useI18n();
 const errorMessage = useErrorMessage();
+const { moment } = useDates('—');
+const statusKeys: Record<string, string> = { pending: 'webhooks.status_pending', delivered: 'webhooks.status_delivered', failed: 'webhooks.status_failed' };
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
 const { $webhookClient: client } = useNuxtApp();
@@ -93,6 +97,17 @@ const columns = computed<Column[]>(() => [
   { key: 'createdAt', label: t('webhooks.col_created') },
   { key: 'open', label: t('webhooks.view_attempts'), hideLabel: true, align: 'end' },
 ]);
+
+const listPath = computed(() => `/o/${route.params.org}/projects/${route.params.project}/webhooks`);
+
+function statusLabel(status: string): string {
+  const key = statusKeys[status];
+  return key ? t(key) : status;
+}
+
+function codeLabel(code: number): string {
+  return code > 0 ? String(code) : t('webhooks.no_response');
+}
 
 function tone(status: string): StatusTone {
   return status === 'delivered' ? 'success' : status === 'failed' ? 'error' : 'neutral';
@@ -184,13 +199,13 @@ const prettyPayload = computed(() => {
   }
 });
 
-await load();
+void load();
 useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('webhooks.deliveries')} · Othra` });
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
-    <PageHeader :title="t('webhooks.deliveries')">
+    <PageHeader :title="t('webhooks.deliveries')" :crumbs="[{ label: t('webhooks.title'), to: listPath }, { label: t('webhooks.deliveries') }]" :crumbs-label="t('nav.breadcrumbs')">
       <template #actions>
         <AppButton variant="ghost" size="sm" :busy="retrying" @click="retryFailed">
           <Icon v-if="!retrying" name="lucide:rotate-cw" size="16" class="shrink-0" aria-hidden="true" />
@@ -207,16 +222,17 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
     <SavedNote v-if="requeued" :label="requeued" />
 
     <LoadError v-if="error" :error="error" :busy="busy" :retry-label="t('common.retry')" @retry="load" />
+    <LoadingStatus v-else-if="busy && deliveries.length === 0" :label="t('common.loading')" />
     <EmptyState v-else-if="deliveries.length === 0" icon="lucide:inbox" :title="t('webhooks.no_deliveries')" />
     <DataTable v-else :caption="t('webhooks.deliveries')" row-key="id" :columns="columns" :rows="deliveries">
       <template #cell-eventType="{ row }">
         {{ row.eventType || '—' }}
       </template>
       <template #cell-status="{ row }">
-        <StatusLabel :tone="tone(row.status)" :label="row.status" />
+        <StatusLabel :tone="tone(row.status)" :label="statusLabel(row.status)" />
       </template>
       <template #cell-createdAt="{ row }">
-        <span class="whitespace-nowrap tabular-nums text-base-content/70">{{ row.createdAt?.toLocaleString() }}</span>
+        <span class="whitespace-nowrap tabular-nums text-base-content/70">{{ moment(row.createdAt) }}</span>
       </template>
       <template #cell-open="{ row }">
         <AppButton variant="ghost" size="xs" @click="showAttempts(row)">
@@ -238,7 +254,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('web
       <div v-else class="flex flex-col gap-3">
         <div v-for="attempt in attempts" :key="attempt.attempt" class="rounded-box border border-base-300 p-3">
           <div class="flex items-center gap-3 text-ui">
-            <StatusLabel :tone="attempt.statusCode >= 200 && attempt.statusCode < 300 ? 'success' : 'error'" :label="String(attempt.statusCode)" mono />
+            <StatusLabel :tone="attempt.statusCode >= 200 && attempt.statusCode < 300 ? 'success' : 'error'" :label="codeLabel(attempt.statusCode)" :mono="attempt.statusCode > 0" />
             <span class="text-base-content/70">#{{ attempt.attempt }}</span>
             <span class="tabular-nums text-base-content/70">{{ attempt.durationMs }}ms</span>
           </div>

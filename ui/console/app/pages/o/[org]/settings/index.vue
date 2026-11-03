@@ -86,7 +86,7 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
       <KeyValue :items="facts" :copy-label="t('common.copy_label', { label: '{label}' })" />
     </div>
 
-    <form v-if="canSave" novalidate class="flex flex-col gap-4" @submit.prevent="save()">
+    <form v-if="canSave" novalidate class="flex flex-col gap-4 rounded-box border border-base-300 bg-base-100 p-4" @submit.prevent="save()">
       <label class="flex flex-col gap-1">
         <span class="label text-ui text-base-content">{{ t('common.name') }}</span>
         <input v-model="name" type="text" class="input input-sm w-full text-ui" :disabled="busy">
@@ -98,7 +98,6 @@ useHead({ title: () => `${org.value?.name ?? t('org.title')} · ${t('settings.ti
       <ErrorText :error="error" />
       <div class="flex items-center gap-3">
         <AppButton type="submit" size="sm" :disabled="busy || !name.trim()">
-          <Icon name="lucide:check" size="16" class="shrink-0" aria-hidden="true" />
           {{ busy ? t('common.saving') : t('common.save') }}
         </AppButton>
         <SavedNote v-if="saved" :label="t('common.saved')" />

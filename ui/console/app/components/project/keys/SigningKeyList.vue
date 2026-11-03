@@ -6,7 +6,6 @@ import DataTable from '#base/components/ui/DataTable.vue';
 import StatusLabel from '#base/components/ui/StatusLabel.vue';
 
 export interface SigningKeyListLabels {
-  caption: string;
   kid: string;
   alg: string;
   status: string;
@@ -21,8 +20,7 @@ export interface SigningKeyListLabels {
   retiredNote: string;
 }
 
-const { rows, loading = false, labels = {
-  caption: 'Signing keys',
+const { rows, caption, loading = false, labels = {
   kid: 'Key ID',
   alg: 'Algorithm',
   status: 'Status',
@@ -35,7 +33,7 @@ const { rows, loading = false, labels = {
   unknown: '—',
   copy: 'Copy',
   retiredNote: 'Retired keys are no longer published and are removed from this list after 30 days.',
-} } = defineProps<{ rows: KeyRow[], loading?: boolean, labels?: SigningKeyListLabels }>();
+} } = defineProps<{ rows: KeyRow[], caption: string, loading?: boolean, labels?: SigningKeyListLabels }>();
 
 const tones: Record<KeyStatus, StatusTone> = { next: 'info', active: 'success', retiring: 'warning', retired: 'neutral', unknown: 'neutral' };
 
@@ -54,7 +52,7 @@ function dim(row: KeyRow): string {
 
 <template>
   <div class="flex flex-col gap-2">
-    <DataTable :caption="labels.caption" row-key="id" :columns="columns" :rows="rows" :loading="loading" :row-class="dim">
+    <DataTable :caption="caption" row-key="id" :columns="columns" :rows="rows" :loading="loading" :row-class="dim">
       <template #cell-kid="{ row }">
         <span class="inline-flex items-center gap-1">
           <code class="font-mono text-xs" :title="row.kid">{{ row.short }}…</code>

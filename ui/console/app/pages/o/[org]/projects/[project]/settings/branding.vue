@@ -9,6 +9,7 @@ import { useBranding } from '~/components/project/branding/useBranding';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useCanEditProject } from '~/components/project/useProjectAccess';
 import { useOrgsStore } from '~/stores/orgs';
+import { useProjectDetailStore } from '~/stores/projectDetail';
 import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
@@ -28,6 +29,16 @@ const { displayName, primaryColor, supportEmail, preview, contrast, logoError, u
 const theme = ref<'othra-light' | 'othra-dark'>('othra-light');
 const fileInput = ref<HTMLInputElement>();
 const ids = { name: useId(), nameHelp: useId(), nameErr: useId(), logo: useId(), logoHelp: useId(), logoErr: useId(), color: useId(), colorHex: useId(), colorErr: useId(), colorDefault: useId(), contrast: useId(), email: useId(), emailHelp: useId(), emailErr: useId() };
+const detail = useProjectDetailStore();
+void detail.ensureLoaded(listed.value.id);
+const issuerHost = computed(() => {
+  const url = detail.get(listed.value?.id ?? '')?.issuerUrl ?? '';
+  try {
+    return url ? new URL(url).host : '';
+  } catch {
+    return '';
+  }
+});
 const colorValue = computed(() => preview.value.primary || '#4f46e5');
 
 const previewLabels = computed(() => ({
@@ -40,8 +51,11 @@ const previewLabels = computed(() => ({
   cta: t('branding.preview_cta'),
   terms: t('branding.preview_terms'),
   privacy: t('branding.preview_privacy'),
-  help: t('branding.preview_help', { email: '{email}' }),
-  secured: t('branding.preview_secured'),
+  newHere: t('branding.preview_new_here', { project: '{project}' }),
+  acceptBoth: t('branding.preview_accept_both', { project: '{project}', terms: '{terms}', privacy: '{privacy}' }),
+  acceptOne: t('branding.preview_accept_one', { project: '{project}', link: '{link}' }),
+  language: t('language.label'),
+  languageName: t('branding.preview_language'),
   light: t('theme.light'),
   dark: t('theme.dark'),
 }));
@@ -120,7 +134,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
                 <input :id="ids.colorHex" v-model="primaryColor" type="text" class="input input-sm w-36 rounded-s-none font-mono text-ui" placeholder="#4f46e5" maxlength="7" :aria-describedby="`${ids.contrast} ${ids.colorErr}`" :disabled="busy">
               </label>
             </div>
-            <span v-if="!preview.primary" :id="ids.colorDefault" class="text-xs text-base-content/70">{{ t('branding.default_colour') }}</span>
+            <span v-if="!preview.primary" :id="ids.colorDefault" class="text-xs text-base-content/70">{{ t('branding.default_color') }}</span>
           </div>
           <FieldError :id="ids.colorErr" :message="fieldErrors.primary_color" />
           <p v-if="contrast" :id="ids.contrast" class="flex items-center gap-1 text-xs text-base-content/70">
@@ -193,7 +207,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
         </div>
       </dl>
 
-      <BrandingPreview v-model:theme="theme" :model="preview" :labels="previewLabels" />
+      <BrandingPreview v-model:theme="theme" :model="preview" :labels="previewLabels" :issuer-host="issuerHost" />
     </div>
   </div>
 </template>

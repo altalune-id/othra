@@ -105,21 +105,21 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
           </div>
         </template>
       </form>
-      <div v-else class="space-y-2" data-testid="issuer-readonly">
-        <h2 class="label text-ui font-semibold text-base-content">
+      <dl v-else class="flex flex-col gap-1 text-ui" data-testid="issuer-readonly">
+        <dt class="label text-ui text-base-content">
           {{ t('issuer.handle') }}
-        </h2>
-        <p class="flex items-center gap-2 font-mono text-xs">
+        </dt>
+        <dd class="flex items-center gap-2 font-mono text-xs">
           {{ project.issuerHandle }}
-          <span v-if="locked" class="badge badge-sm badge-ghost gap-1">
+          <span v-if="locked" class="badge badge-sm badge-ghost gap-1 font-sans">
             <Icon name="lucide:lock" size="12" aria-hidden="true" />
             {{ t('issuer.locked') }}
           </span>
-        </p>
-        <p v-if="locked" role="note" class="text-ui text-base-content/70">
+        </dd>
+        <dd v-if="locked" role="note" class="text-base-content/70">
           {{ t('issuer.locked_note') }}
-        </p>
-      </div>
+        </dd>
+      </dl>
     </div>
 
     <Section v-if="discovery" :title="t('issuer.discovery_title')" :description="t('issuer.discovery_help')" data-testid="discovery-card">

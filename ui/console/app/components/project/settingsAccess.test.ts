@@ -58,7 +58,7 @@ describe('project settings markup', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
     expect(branding).not.toContain('#000000');
     expect(branding).not.toContain('opacity-0');
-    expect(branding).toContain('branding.default_colour');
+    expect(branding).toContain('branding.default_color');
   });
 
   it('prefixes the handle with /p/ only', () => {

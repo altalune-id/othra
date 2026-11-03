@@ -13,16 +13,21 @@ export interface BrandingPreviewLabels {
   cta: string;
   terms: string;
   privacy: string;
-  help: string;
-  secured: string;
+  newHere: string;
+  acceptBoth: string;
+  acceptOne: string;
+  language: string;
+  languageName: string;
   light: string;
   dark: string;
 }
 
 const props = withDefaults(defineProps<{
   model: BrandingPreviewModel,
+  issuerHost?: string,
   labels?: BrandingPreviewLabels,
 }>(), {
+  issuerHost: '',
   labels: () => ({
     preview: 'Preview',
     note: 'A close approximation of the sign-in page.',
@@ -31,10 +36,13 @@ const props = withDefaults(defineProps<{
     placeholder: 'you@example.com',
     email: 'Email',
     cta: 'Continue with email',
-    terms: 'Terms',
-    privacy: 'Privacy',
-    help: 'Need help? Contact {email}.',
-    secured: 'Secured by Othra',
+    terms: 'Terms of Service',
+    privacy: 'Privacy Policy',
+    newHere: 'New here? Signing in creates your {project} account.',
+    acceptBoth: 'By continuing you accept {project}\'s {terms} and {privacy}.',
+    acceptOne: 'By continuing you accept {project}\'s {link}.',
+    language: 'Language',
+    languageName: 'English',
     light: 'Light',
     dark: 'Dark',
   }),
@@ -47,7 +55,28 @@ const style = computed(() => (props.model.primary
   : {}));
 const title = computed(() => props.labels.title.replace('{project}', props.model.name));
 const initial = computed(() => [...props.model.name.trim()][0]?.toUpperCase() ?? '');
-const help = computed(() => props.labels.help.replace('{email}', props.model.supportEmail));
+const newHere = computed(() => props.labels.newHere.replace('{project}', props.model.name));
+
+interface AcceptPart { text: string; link: boolean; }
+
+// acceptParts splits the hosted accept sentence around its link placeholders, as the hosted page's splitAround does.
+function acceptParts(template: string, links: Record<string, string>): AcceptPart[] {
+  return template.replace('{project}', props.model.name).split(/(\{\w+\})/).filter(Boolean).map((part) => {
+    const key = part.match(/^\{(\w+)\}$/)?.[1];
+    return key && key in links ? { text: links[key]!, link: true } : { text: part, link: false };
+  });
+}
+
+const accept = computed<AcceptPart[]>(() => {
+  const { termsUrl, privacyUrl } = props.model;
+  if (termsUrl && privacyUrl) {
+    return acceptParts(props.labels.acceptBoth, { terms: props.labels.terms, privacy: props.labels.privacy });
+  }
+  if (termsUrl || privacyUrl) {
+    return acceptParts(props.labels.acceptOne, { link: termsUrl ? props.labels.terms : props.labels.privacy });
+  }
+  return [];
+});
 </script>
 
 <template>
@@ -65,7 +94,7 @@ const help = computed(() => props.labels.help.replace('{email}', props.model.sup
         </AppButton>
       </div>
     </div>
-    <div :data-theme="theme" :style="style" class="rounded-box border border-base-300 bg-base-100 px-5 py-6 text-sm leading-[normal] text-base-content" data-testid="branding-preview">
+    <div :data-theme="theme" :style="style" class="flex flex-col gap-8 rounded-box border border-base-300 bg-base-100 px-5 py-6 text-sm leading-[normal] text-base-content" data-testid="branding-preview">
       <div class="pointer-events-none flex flex-col gap-5" aria-hidden="true">
         <div class="flex flex-col gap-3">
           <img v-if="model.logoUrl" :src="model.logoUrl" alt="" class="size-10 rounded-field border border-base-300 bg-base-100 object-contain p-1">
@@ -84,17 +113,30 @@ const help = computed(() => props.labels.help.replace('{email}', props.model.sup
           </label>
           <span class="btn btn-primary w-full">{{ labels.cta }}</span>
         </div>
-        <p v-if="model.termsUrl || model.privacyUrl" class="text-ui text-base-content/70">
+        <p class="text-ui text-base-content/70" data-testid="preview-accept">
+          {{ newHere }}<template v-if="accept.length">
+            {{ ' ' }}<template v-for="(part, i) in accept" :key="i">
+              <span v-if="part.link" class="link">{{ part.text }}</span><template v-else>
+                {{ part.text }}
+              </template>
+            </template>
+          </template>
+        </p>
+      </div>
+      <div class="pointer-events-none flex flex-col gap-2 text-xs text-base-content/70" aria-hidden="true" data-testid="preview-footer">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <label>
+            <span class="sr-only">{{ labels.language }}</span>
+            <select class="select select-xs w-28" tabindex="-1">
+              <option>{{ labels.languageName }}</option>
+            </select>
+          </label>
+          <span v-if="issuerHost" class="ms-auto font-mono break-all">{{ issuerHost }}</span>
+        </div>
+        <nav v-if="model.termsUrl || model.privacyUrl" class="flex flex-wrap gap-3">
           <span v-if="model.termsUrl" class="link">{{ labels.terms }}</span>
-          <span v-if="model.termsUrl && model.privacyUrl"> · </span>
           <span v-if="model.privacyUrl" class="link">{{ labels.privacy }}</span>
-        </p>
-        <p v-if="model.supportEmail" class="text-xs text-base-content/70">
-          {{ help }}
-        </p>
-        <p class="text-center text-xs text-base-content/70">
-          {{ labels.secured }}
-        </p>
+        </nav>
       </div>
     </div>
     <p class="text-xs text-base-content/70">
