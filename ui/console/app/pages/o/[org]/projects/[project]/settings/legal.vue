@@ -137,7 +137,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
     </AppModal>
 
     <AppModal :open="bumping" :title="t('legal.bump_title')" @close="legal.cancelBump()">
-      <div role="alert" class="alert alert-warning alert-soft items-start text-ui">
+      <div role="alert" class="alert alert-warning alert-soft text-base-content items-start text-ui">
         <Icon name="lucide:triangle-alert" size="16" class="shrink-0 text-warning" aria-hidden="true" />
         <span>{{ t('legal.bump_warning', { project: listed?.name ?? '' }) }}</span>
       </div>

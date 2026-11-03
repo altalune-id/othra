@@ -21,7 +21,7 @@ const dateLine = computed(() => {
       <p class="flex flex-wrap items-center gap-2 font-medium">
         <span class="break-all">{{ token.name }}</span>
         <span class="font-mono text-xs text-base-content/70">…{{ token.hint }}</span>
-        <span v-if="token.status !== 'active'" class="badge badge-soft badge-sm">{{ t(`tokens.status_${token.status}`) }}</span>
+        <span v-if="token.status !== 'active'" class="badge badge-soft text-base-content badge-sm">{{ t(`tokens.status_${token.status}`) }}</span>
       </p>
       <p class="text-xs text-base-content/70">
         {{ token.server }}

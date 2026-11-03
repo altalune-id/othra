@@ -99,14 +99,14 @@ templ iconCheck() {
 }
 
 templ alertError(msg string) {
-	<div role="alert" class="alert alert-error alert-soft items-start">
+	<div role="alert" class="alert alert-error alert-soft text-base-content items-start">
 		@iconError()
 		<span>{ msg }</span>
 	</div>
 }
 
 templ alertSuccess() {
-	<div role="status" class="alert alert-success alert-soft items-start">
+	<div role="status" class="alert alert-success alert-soft text-base-content items-start">
 		@iconCheck()
 		<span class="min-w-0">
 			{ children... }

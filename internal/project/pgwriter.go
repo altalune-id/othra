@@ -13,7 +13,7 @@ import (
 	"github.com/altalune-id/othra/schema/entity"
 )
 
-// Save upserts a project by id, bumping updated_at; the issuer handle and its lock change only through their own methods.
+// Save upserts a project by id, bumping updated_at; the issuer handle, its lock and the environment change only through their own methods.
 func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 	now := time.Now().UTC()
 	t := s.projects
