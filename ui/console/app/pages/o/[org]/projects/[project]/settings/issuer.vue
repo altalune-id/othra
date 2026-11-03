@@ -114,7 +114,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('iss
           <h2 class="label text-ui font-semibold text-base-content">
             {{ t('issuer.handle') }}
           </h2>
-          <p class="flex items-center gap-2 font-mono text-sm">
+          <p class="flex items-center gap-2 font-mono text-xs">
             {{ project.issuerHandle }}
             <span v-if="locked" class="badge badge-sm badge-ghost gap-1">
               <Icon name="lucide:lock" size="12" />

@@ -216,6 +216,11 @@ describe('guard: theme contrast', () => {
     expect(loose).toEqual([]);
   });
 
+  it('sets mono values at text-xs, never text-sm', () => {
+    const loose = files.flatMap(f => [...f.text.matchAll(/(?<![:\w-])class="([^"]*)"/g)].filter(m => m[1]!.split(' ').includes('font-mono') && m[1]!.split(' ').includes('text-sm')).map(m => `${f.path}: ${m[0]}`));
+    expect(loose).toEqual([]);
+  });
+
   it('drops the old shared indigo', () => {
     expect(theme).not.toContain('277.117');
   });

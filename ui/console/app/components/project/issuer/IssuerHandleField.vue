@@ -76,7 +76,7 @@ function onInput(event: Event) {
   <div class="fieldset">
     <label :for="ids.input" class="label text-ui text-base-content">{{ labels.handle }}</label>
     <div class="join w-full">
-      <span v-if="prefix" class="join-item flex items-center border border-base-300 bg-base-200 px-3 font-mono text-sm text-base-content/70">{{ prefix }}</span>
+      <span v-if="prefix" class="join-item flex items-center border border-base-300 bg-base-200 px-3 font-mono text-xs text-base-content/70">{{ prefix }}</span>
       <input
         :id="ids.input"
         :value="modelValue"

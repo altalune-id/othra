@@ -86,7 +86,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
             {{ t('common.id') }}
           </h2>
           <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-            <code class="min-w-0 flex-1 font-mono text-sm break-all">{{ project.id }}</code>
+            <code class="min-w-0 flex-1 font-mono text-xs break-all">{{ project.id }}</code>
             <CopyButton :value="project.id" :label="t('common.copy')" class="shrink-0" />
           </div>
         </div>
@@ -122,7 +122,7 @@ useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('pro
             <dt class="label text-ui text-base-content">
               {{ t('project.console_slug') }}
             </dt>
-            <dd class="font-mono text-sm">
+            <dd class="font-mono text-xs">
               {{ project.slug }}
             </dd>
             <dd class="label whitespace-normal text-xs text-base-content/70">

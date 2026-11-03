@@ -109,7 +109,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('keys
           {{ t('keys.emergency') }}
         </p>
         <div class="flex items-center gap-1 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-          <code class="min-w-0 flex-1 font-mono text-sm break-all">{{ command }}</code>
+          <code class="min-w-0 flex-1 font-mono text-xs break-all">{{ command }}</code>
           <CopyButton :value="command" :label="t('common.copy')" class="shrink-0" />
         </div>
       </div>
