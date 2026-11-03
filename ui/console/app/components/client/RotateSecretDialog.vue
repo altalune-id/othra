@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
 import { useId } from 'vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 
@@ -40,35 +41,36 @@ const id = useId();
 <template>
   <AppModal :open="open" :title="labels.title" @close="emit('close')">
     <div class="space-y-3">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ labels.body }}
       </p>
       <div class="fieldset">
-        <label :for="id" class="label text-ui text-base-content">{{ labels.grace }}</label>
-        <select :id="id" v-model.number="grace" class="select select-sm w-full border-base-300 sm:w-56 text-ui" :disabled="busy">
-          <option v-for="o in options" :key="o.value" :value="o.value">
-            {{ o.label }}
-          </option>
-        </select>
+        <label class="flex flex-col gap-1">
+          <span class="label text-ui text-base-content">{{ labels.grace }}</span>
+          <select :id="id" v-model.number="grace" class="select select-sm w-full sm:w-56 text-ui" :disabled="busy">
+            <option v-for="o in options" :key="o.value" :value="o.value">
+              {{ o.label }}
+            </option>
+          </select>
+        </label>
       </div>
-      <p v-if="grace === nowValue" class="flex items-start gap-1 text-sm text-base-content">
+      <p v-if="grace === nowValue" class="flex items-start gap-1 text-ui text-base-content">
         <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" />
         {{ labels.nowWarning }}
       </p>
-      <p v-if="oldHint" class="flex items-start gap-1 text-sm text-base-content">
+      <p v-if="oldHint" class="flex items-start gap-1 text-ui text-base-content">
         <Icon name="lucide:info" size="16" class="mt-0.5 shrink-0 text-info" />
         {{ labels.endsOld.replace('{hint}', oldHint) }}
       </p>
       <ErrorText :error="error" />
     </div>
     <template #footer>
-      <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" autofocus @click="emit('close')">
+      <AppButton variant="ghost" size="sm" :disabled="busy" autofocus @click="emit('close')">
         {{ labels.cancel }}
-      </button>
-      <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="busy" @click="emit('confirm')">
-        <span v-if="busy" class="loading loading-spinner loading-xs" />
+      </AppButton>
+      <AppButton variant="primary" size="sm" :busy="busy" @click="emit('confirm')">
         {{ labels.confirm }}
-      </button>
+      </AppButton>
     </template>
   </AppModal>
 </template>

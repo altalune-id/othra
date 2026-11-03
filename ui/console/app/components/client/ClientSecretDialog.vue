@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import SecretField from '#base/components/ui/SecretField.vue';
@@ -45,31 +46,31 @@ function done() {
 <template>
   <AppModal :open="open" :title="labels.title" :dismissible="stored" @close="done">
     <div class="space-y-3">
-      <p class="flex items-start gap-1.5 text-sm text-base-content">
+      <p class="flex items-start gap-1.5 text-ui text-base-content">
         <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0 text-warning" />
         {{ labels.body }}
       </p>
       <div class="space-y-1">
-        <span class="block text-xs font-medium text-base-content/70">{{ labels.ownerId }}</span>
+        <span class="label text-ui text-base-content">{{ labels.ownerId }}</span>
         <SecretField :value="ownerId" :label="labels.copyOwnerId" />
       </div>
       <div class="space-y-1">
-        <span class="block text-xs font-medium text-base-content/70">{{ labels.secret }}</span>
+        <span class="label text-ui text-base-content">{{ labels.secret }}</span>
         <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
           <code class="min-w-0 flex-1 font-mono text-xs leading-relaxed break-all" data-testid="client-secret">{{ secret }}</code>
           <CopyButton :value="secret" :label="labels.copySecret" class="shrink-0" autofocus />
         </div>
       </div>
-      <label class="flex items-center gap-2 text-sm">
-        <input v-model="stored" type="checkbox" class="checkbox checkbox-sm rounded-sm">
+      <label class="flex items-center gap-2 text-ui">
+        <input v-model="stored" type="checkbox" class="checkbox checkbox-xs rounded-sm">
         {{ labels.confirm }}
       </label>
     </div>
     <template #footer>
       <span v-if="!stored" class="mr-auto self-center text-xs text-base-content/70">{{ labels.closeDisabled }}</span>
-      <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="!stored" @click="done">
+      <AppButton variant="primary" size="sm" :disabled="!stored" @click="done">
         {{ labels.done }}
-      </button>
+      </AppButton>
     </template>
   </AppModal>
 </template>

@@ -86,89 +86,87 @@ const trusted = () => props.status === 'trusted';
 </script>
 
 <template>
-  <section class="card border border-base-300 bg-base-100" data-testid="verification-card">
-    <div class="card-body gap-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="card-title text-base">
-          {{ labels.title }}
-        </h2>
-        <VerificationStatus :name="status" :label="statusLabel" />
-      </div>
-      <p class="text-sm text-base-content">
-        {{ body }}
-      </p>
-      <p class="text-sm text-base-content/70">
-        {{ labels.help }}
-      </p>
-      <UrlField v-if="metadataUrl" :label="labels.metadataUrl" :value="metadataUrl" size="sm" open :copy-label="labels.copyLabel" :open-label="labels.openLabel" />
-      <dl v-if="lastCheck || verifiedAt" class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-        <template v-if="lastCheck">
-          <dt class="text-base-content/70">
-            {{ labels.lastCheck }}
-          </dt>
-          <dd>{{ lastCheck }}</dd>
-        </template>
-        <template v-if="verifiedAt">
-          <dt class="text-base-content/70">
-            {{ labels.verifiedAt }}
-          </dt>
-          <dd>{{ verifiedAt }}</dd>
-        </template>
-      </dl>
-      <div v-if="recheck" role="status" class="alert alert-soft">
-        <Icon name="lucide:info" size="18" class="text-info" />
-        <span class="text-sm text-base-content">{{ recheck }}</span>
-      </div>
-      <div v-else-if="failure" role="status" class="alert alert-soft">
-        <Icon name="lucide:circle-alert" size="18" class="text-error" />
-        <span class="text-sm break-words text-base-content">{{ failure }}</span>
-      </div>
-      <div v-if="snippet && !trusted()" class="space-y-1">
-        <span class="block text-xs font-medium text-base-content/70">{{ labels.mustInclude }}</span>
-        <div class="flex items-start gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-          <pre class="min-w-0 flex-1 overflow-x-auto font-mono text-xs leading-relaxed">{{ snippet }}</pre>
-          <CopyButton :value="snippet" :label="labels.copySnippet" class="shrink-0" />
-        </div>
-      </div>
-      <template v-if="canEdit && !trusted()">
-        <div>
-          <button ref="verifyButton" type="button" class="btn btn-sm max-sm:btn-block text-ui" :disabled="verifying" @click="emit('verify')">
-            <span v-if="verifying" class="loading loading-spinner loading-xs" />
-            <Icon v-else name="lucide:refresh-cw" size="16" />
-            {{ verifying ? labels.verifying : labels.verifyNow }}
-          </button>
-        </div>
-        <p v-if="passed" role="status" class="flex items-start gap-1.5 text-sm text-base-content">
-          <Icon name="lucide:circle-check" size="16" class="mt-0.5 shrink-0 text-success" />
-          {{ passed }}
-        </p>
-        <ErrorText :error="verifyError" />
-      </template>
-      <template v-if="trustAvailable && (canEdit || trusted())">
-        <div class="divider my-0" />
-        <div v-if="canEdit" class="space-y-1">
-          <label :for="trustId" class="flex items-center gap-3 text-sm font-medium">
-            <input
-              :id="trustId"
-              type="checkbox"
-              class="toggle toggle-warning toggle-sm"
-              :checked="trusted()"
-              :disabled="trustBusy || (http && trusted())"
-              :aria-describedby="`${trustId}-help`"
-              @click.prevent="emit('toggleTrust')"
-            >
-            {{ labels.trust }}
-          </label>
-          <p :id="`${trustId}-help`" class="label whitespace-normal text-xs text-base-content/70">
-            {{ http && trusted() ? labels.httpLocked : trusted() ? labels.untrustHelp : labels.trustHelp }}
-          </p>
-          <ErrorText :error="trustError" />
-        </div>
-        <p v-else-if="trusted()" class="flex items-center gap-1.5 text-sm text-base-content">
-          <Icon name="lucide:shield-alert" size="16" class="text-warning" />
-          {{ labels.trust }}
-        </p>
-      </template>
+  <section class="flex min-w-0 flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-4" data-testid="verification-card">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-ui font-semibold">
+        {{ labels.title }}
+      </h2>
+      <VerificationStatus :name="status" :label="statusLabel" />
     </div>
+    <p class="text-ui text-base-content">
+      {{ body }}
+    </p>
+    <p class="text-ui text-base-content/70">
+      {{ labels.help }}
+    </p>
+    <UrlField v-if="metadataUrl" :label="labels.metadataUrl" :value="metadataUrl" size="sm" open :copy-label="labels.copyLabel" :open-label="labels.openLabel" />
+    <dl v-if="lastCheck || verifiedAt" class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-ui">
+      <template v-if="lastCheck">
+        <dt class="text-base-content/70">
+          {{ labels.lastCheck }}
+        </dt>
+        <dd>{{ lastCheck }}</dd>
+      </template>
+      <template v-if="verifiedAt">
+        <dt class="text-base-content/70">
+          {{ labels.verifiedAt }}
+        </dt>
+        <dd>{{ verifiedAt }}</dd>
+      </template>
+    </dl>
+    <div v-if="recheck" role="status" class="alert items-start text-ui">
+      <Icon name="lucide:info" size="16" class="shrink-0 text-info" aria-hidden="true" />
+      <span>{{ recheck }}</span>
+    </div>
+    <div v-else-if="failure" role="status" class="alert items-start text-ui">
+      <Icon name="lucide:circle-alert" size="16" class="shrink-0 text-error" aria-hidden="true" />
+      <span class="break-words">{{ failure }}</span>
+    </div>
+    <div v-if="snippet && !trusted()" class="space-y-1">
+      <span class="label text-ui text-base-content">{{ labels.mustInclude }}</span>
+      <div class="flex items-start gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
+        <pre class="min-w-0 flex-1 overflow-x-auto font-mono text-xs leading-relaxed">{{ snippet }}</pre>
+        <CopyButton :value="snippet" :label="labels.copySnippet" class="shrink-0" />
+      </div>
+    </div>
+    <template v-if="canEdit && !trusted()">
+      <div>
+        <button ref="verifyButton" type="button" class="btn btn-sm max-sm:btn-block text-ui" :disabled="verifying" @click="emit('verify')">
+          <span v-if="verifying" class="loading loading-spinner loading-xs" />
+          <Icon v-else name="lucide:refresh-cw" size="16" />
+          {{ verifying ? labels.verifying : labels.verifyNow }}
+        </button>
+      </div>
+      <p v-if="passed" role="status" class="flex items-start gap-1.5 text-ui text-base-content">
+        <Icon name="lucide:circle-check" size="16" class="mt-0.5 shrink-0 text-success" />
+        {{ passed }}
+      </p>
+      <ErrorText :error="verifyError" />
+    </template>
+    <template v-if="trustAvailable && (canEdit || trusted())">
+      <div class="divider my-0" />
+      <div v-if="canEdit" class="space-y-1">
+        <label :for="trustId" class="flex items-center gap-3 text-ui font-medium">
+          <input
+            :id="trustId"
+            type="checkbox"
+            class="toggle toggle-warning toggle-sm"
+            :checked="trusted()"
+            :disabled="trustBusy || (http && trusted())"
+            :aria-describedby="`${trustId}-help`"
+            @click.prevent="emit('toggleTrust')"
+          >
+          {{ labels.trust }}
+        </label>
+        <p :id="`${trustId}-help`" class="label whitespace-normal text-xs text-base-content/70">
+          {{ http && trusted() ? labels.httpLocked : trusted() ? labels.untrustHelp : labels.trustHelp }}
+        </p>
+        <ErrorText :error="trustError" />
+      </div>
+      <p v-else-if="trusted()" class="flex items-center gap-1.5 text-ui text-base-content">
+        <Icon name="lucide:shield-alert" size="16" class="text-warning" />
+        {{ labels.trust }}
+      </p>
+    </template>
   </section>
 </template>
