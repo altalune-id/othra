@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { quickstartEnv, tryAuthorizeUrl } from './quickstart';
+import { authorizeLines, goLines, quickstartEnv, tryAuthorizeUrl } from './quickstart';
 
 const q = { issuer: 'https://id.acme.test/p/apps/', clientId: 'dPm7fmQRJKPVw8PxrgdrN', redirectUri: 'https://store.acme.test/cb' };
 
@@ -20,5 +20,26 @@ describe('tryAuthorizeUrl', () => {
     expect(a.searchParams.get('code_challenge')).toMatch(/^[\w-]{43}$/);
     expect(a.searchParams.get('state')).not.toBe(b.searchParams.get('state'));
     expect(a.searchParams.get('nonce')).not.toBe(b.searchParams.get('nonce'));
+  });
+});
+
+describe('quickstart snippets', () => {
+  const q = { issuer: 'https://auth.test/p/acme/', clientId: 'c1', redirectUri: 'https://app.test/cb' };
+
+  it('lists the authorization request with the encoded redirect and PKCE placeholders', () => {
+    expect(authorizeLines(q)).toEqual([
+      'https://auth.test/p/acme/oauth2/authorize',
+      '  ?client_id=c1',
+      '  &response_type=code&scope=openid%20profile%20email',
+      '  &redirect_uri=https%3A%2F%2Fapp.test%2Fcb',
+      '  &code_challenge=...&code_challenge_method=S256',
+    ]);
+    expect(authorizeLines({ ...q, redirectUri: '' }).some(l => l.includes('redirect_uri'))).toBe(false);
+  });
+
+  it('reads the secret from the environment in the Go snippet only for a secret client', () => {
+    expect(goLines(q, true)).toContain('\tClientSecret: os.Getenv("OTHRA_CLIENT_SECRET"),');
+    expect(goLines(q, false).join('\n')).not.toContain('ClientSecret');
+    expect(goLines(q, false)[0]).toBe('rp := oidcrp.New(oidcrp.Config{');
   });
 });

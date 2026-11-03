@@ -14,6 +14,7 @@ export interface ClientKindOption {
   icon: string;
   label: string;
   help: string;
+  rec: string;
   redirectHelp: string;
   placeholder: string;
   postLogout: boolean;

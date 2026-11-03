@@ -50,7 +50,7 @@ export function clientFormLabels(t: Translate, mode: 'create' | 'edit'): ClientF
 export function kindOptions(t: Translate): ClientKindOption[] {
   return clientKindNames.map((value) => {
     const k = clientKinds[value];
-    return { value, icon: k.icon, label: t(k.labelKey), help: t(k.helpKey), redirectHelp: t(k.redirectHelpKey), placeholder: k.placeholder, postLogout: k.postLogout, secret: k.secret };
+    return { value, icon: k.icon, label: t(k.labelKey), help: t(k.helpKey), rec: t(k.recKey), redirectHelp: t(k.redirectHelpKey), placeholder: k.placeholder, postLogout: k.postLogout, secret: k.secret };
   });
 }
 

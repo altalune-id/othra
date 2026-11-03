@@ -17,6 +17,30 @@ export function quickstartEnv(q: QuickstartInput): Record<string, string> {
   return env;
 }
 
+// authorizeLines is the authorization request for this client, one query parameter per line, with the PKCE values left as placeholders.
+export function authorizeLines(q: QuickstartInput): string[] {
+  return [
+    `${q.issuer.replace(/\/+$/, '')}/oauth2/authorize`,
+    `  ?client_id=${q.clientId}`,
+    '  &response_type=code&scope=openid%20profile%20email',
+    ...(q.redirectUri ? [`  &redirect_uri=${encodeURIComponent(q.redirectUri)}`] : []),
+    '  &code_challenge=...&code_challenge_method=S256',
+  ];
+}
+
+// goLines configures oidcrp for this client; a secret client reads its secret from the environment.
+export function goLines(q: QuickstartInput, secret: boolean): string[] {
+  return [
+    'rp := oidcrp.New(oidcrp.Config{',
+    `\tIssuer:      "${q.issuer}",`,
+    `\tClientID:    "${q.clientId}",`,
+    ...(secret ? ['\tClientSecret: os.Getenv("OTHRA_CLIENT_SECRET"),'] : []),
+    ...(q.redirectUri ? [`\tRedirectURI: "${q.redirectUri}",`] : []),
+    '\tScopes:      []string{"openid", "profile", "email"},',
+    '})',
+  ];
+}
+
 function base64url(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }

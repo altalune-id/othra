@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '#base/components/ui/AppButton.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SecretReveal from '#base/components/ui/SecretReveal.vue';
 import { useToast } from '#base/components/ui/toast';
@@ -62,6 +63,18 @@ const steps = computed(() => [
   ...(withSecret.value ? [{ key: 'secret', label: t('clients.step_secret') }] : []),
   { key: 'quickstart', label: t('clients.step_quickstart') },
 ]);
+const heading = computed(() => {
+  switch (step.value) {
+    case 'type':
+      return { title: t('clients.type_title'), description: t('clients.type_subtitle') };
+    case 'details':
+      return { title: t('clients.details_title'), description: kinds.value.find(k => k.value === fields.value.kind)?.rec ?? '' };
+    case 'secret':
+      return { title: t('secret.title'), description: t('clients.secret_subtitle') };
+    default:
+      return { title: t('clients.quickstart_title', { name: result.value?.name ?? '' }), description: t('clients.quickstart_body') };
+  }
+});
 const stepIndex = computed(() => steps.value.findIndex(s => s.key === step.value));
 const values = computed(() => ({
   issuer: detail.get(projectId)?.issuerUrl ?? '',
@@ -101,9 +114,8 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <PageHeader :title="result?.name || t('clients.new')" :crumbs="[{ label: t('clients.title'), to: base }, { label: t('clients.new') }]" :crumbs-label="t('nav.breadcrumbs')" />
-    <ul class="steps w-full text-xs">
+  <div class="flex max-w-3xl min-w-0 flex-col gap-4">
+    <ul class="steps steps-horizontal w-full max-w-xl text-xs">
       <li
         v-for="(s, i) in steps"
         :key="s.key"
@@ -117,85 +129,76 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
     <p class="sr-only">
       {{ t('clients.step_of', { n: stepIndex + 1, total: steps.length }) }}
     </p>
+    <PageHeader :title="heading.title" :description="heading.description" />
 
-    <section v-if="step === 'type'" class="card border border-base-300 bg-base-100" data-testid="type-step">
-      <div class="card-body gap-4">
-        <ClientKindPicker
-          :kinds="kinds"
-          :model-value="fields.kind"
-          :legend="t('clients.kind')"
-          :note="t('clients.kind_fixed')"
-          @update:model-value="form.setKind"
-        />
-        <div class="flex justify-end gap-2">
-          <NuxtLink :to="base" class="btn btn-ghost btn-sm text-ui">
-            {{ t('common.cancel') }}
-          </NuxtLink>
-          <button type="button" class="btn btn-primary btn-sm text-ui" @click="typeDone = true">
-            {{ t('clients.continue_details') }}
-          </button>
-        </div>
+    <div v-if="step === 'type'" class="flex flex-col gap-4" data-testid="type-step">
+      <ClientKindPicker
+        :kinds="kinds"
+        :model-value="fields.kind"
+        :legend="t('clients.kind')"
+        :note="t('clients.kind_fixed')"
+        @update:model-value="form.setKind"
+      />
+      <div class="flex gap-2">
+        <AppButton variant="plain" size="sm" :to="base">
+          {{ t('common.cancel') }}
+        </AppButton>
+        <AppButton size="sm" @click="typeDone = true">
+          {{ t('clients.continue_details') }}
+        </AppButton>
       </div>
-    </section>
+    </div>
 
-    <section v-else-if="step === 'details'" class="card border border-base-300 bg-base-100">
-      <div class="card-body gap-4">
-        <p class="flex flex-wrap items-center gap-2 text-ui">
-          <span>{{ t('clients.type_line', { kind: kinds.find(k => k.value === fields.kind)?.label ?? '' }) }}</span>
-          <button type="button" class="btn btn-link btn-sm h-auto min-h-0 px-0 text-ui" :disabled="busy" @click="typeDone = false">
-            {{ t('clients.change_type') }}
-          </button>
-        </p>
-        <ClientForm
-          v-model:fields="fields"
-          :kind-chosen="true"
-          mode="create"
-          :kinds="kinds"
-          :uri-errors="uriErrors"
-          :warnings="warnings"
-          :name-error="nameError"
-          :busy="busy"
-          :error="error"
-          :labels="labels"
-          @kind="form.setKind"
-          @edit="form.clearRow"
-          @remove="form.removeRow"
-          @submit="submit"
-          @cancel="navigateTo(base)"
-        />
-      </div>
-    </section>
+    <div v-else-if="step === 'details'" class="flex max-w-xl flex-col gap-4">
+      <p class="flex flex-wrap items-center gap-2 text-ui">
+        <span>{{ t('clients.type_line', { kind: kinds.find(k => k.value === fields.kind)?.label ?? '' }) }}</span>
+        <button type="button" class="link text-ui" :disabled="busy" @click="typeDone = false">
+          {{ t('clients.change_type') }}
+        </button>
+      </p>
+      <ClientForm
+        v-model:fields="fields"
+        :kind-chosen="true"
+        mode="create"
+        :kinds="kinds"
+        :uri-errors="uriErrors"
+        :warnings="warnings"
+        :name-error="nameError"
+        :busy="busy"
+        :error="error"
+        :labels="labels"
+        @kind="form.setKind"
+        @edit="form.clearRow"
+        @remove="form.removeRow"
+        @submit="submit"
+        @cancel="navigateTo(base)"
+      />
+    </div>
 
-    <section v-else-if="step === 'secret'" class="card border border-base-300 bg-base-100" data-testid="secret-step">
-      <div class="card-body gap-4">
-        <h2 class="card-title text-base">
-          {{ t('secret.title') }}
-        </h2>
-        <SecretReveal
-          v-model:confirmed="stored"
-          :value="revealed?.secret ?? ''"
-          :labels="secretLabels"
-          :env="revealed ? { OTHRA_CLIENT_SECRET: revealed.secret } : {}"
-        >
-          <template #retry>
-            <button type="button" class="btn btn-sm text-ui" :disabled="busy" @click="form.retrySecret()">
-              <span v-if="busy" class="loading loading-spinner loading-xs" aria-hidden="true" />
-              {{ t('clients.generate_again') }}
-            </button>
-          </template>
-        </SecretReveal>
-        <div class="flex justify-end">
-          <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="!revealed || !stored" @click="secretDone = true">
-            {{ t('clients.continue_quickstart') }}
-          </button>
-        </div>
+    <div v-else-if="step === 'secret'" class="flex max-w-xl flex-col gap-4" data-testid="secret-step">
+      <SecretReveal
+        v-model:confirmed="stored"
+        :value="revealed?.secret ?? ''"
+        :labels="secretLabels"
+        :env="revealed ? { OTHRA_CLIENT_SECRET: revealed.secret } : {}"
+      >
+        <template #retry>
+          <AppButton variant="plain" size="sm" :busy="busy" @click="form.retrySecret()">
+            {{ t('clients.generate_again') }}
+          </AppButton>
+        </template>
+      </SecretReveal>
+      <div>
+        <AppButton size="sm" :disabled="!revealed || !stored" @click="secretDone = true">
+          {{ t('clients.continue_quickstart') }}
+        </AppButton>
       </div>
-    </section>
+    </div>
 
     <ClientQuickstart
       v-else
       :values="values"
-      :name="result?.name ?? ''"
+      :secret="withSecret"
       :open-to="`${base}/${result?.id}`"
       :back-to="base"
     />

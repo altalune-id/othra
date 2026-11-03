@@ -15,6 +15,7 @@ export interface ClientKindSpec {
   labelKey: string;
   typeKey: string;
   helpKey: string;
+  recKey: string;
   redirectHelpKey: string;
   placeholder: string;
   uris: RedirectUriRule;
@@ -30,6 +31,7 @@ export const clientKinds: Record<ClientKindName, ClientKindSpec> = {
     labelKey: 'clients.kind_web',
     typeKey: 'clients.type_web',
     helpKey: 'clients.kind_web_help',
+    recKey: 'clients.kind_web_rec',
     redirectHelpKey: 'clients.redirect_help_web',
     placeholder: 'https://app.example.com/oauth/callback',
     uris: { https: true, loopbackPort: 'required', refusal: 'https_required' },
@@ -42,6 +44,7 @@ export const clientKinds: Record<ClientKindName, ClientKindSpec> = {
     labelKey: 'clients.kind_native',
     typeKey: 'clients.type_native',
     helpKey: 'clients.kind_native_help',
+    recKey: 'clients.kind_native_rec',
     redirectHelpKey: 'clients.redirect_help_native',
     placeholder: 'http://127.0.0.1/callback',
     uris: { https: false, loopbackPort: 'forbidden', refusal: 'loopback_only' },

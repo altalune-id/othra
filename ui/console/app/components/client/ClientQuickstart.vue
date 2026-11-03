@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import type { QuickstartInput } from './quickstart';
+import AppButton from '#base/components/ui/AppButton.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
-import KeyValue from '#base/components/ui/KeyValue.vue';
-import Section from '#base/components/ui/Section.vue';
-import { quickstartEnv, tryAuthorizeUrl } from './quickstart';
+import { authorizeLines, goLines, quickstartEnv, tryAuthorizeUrl } from './quickstart';
 
-const { values, name, openTo, backTo } = defineProps<{ values: QuickstartInput, name: string, openTo: string, backTo: string }>();
+const { values, openTo, backTo, secret = false } = defineProps<{ values: QuickstartInput, openTo: string, backTo: string, secret?: boolean }>();
 
 const { t } = useI18n();
-const env = computed(() => Object.entries(quickstartEnv(values)).map(([k, v]) => `${k}=${v}`).join('\n'));
-const items = computed(() => [
-  { label: t('clients.issuer'), value: values.issuer, mono: true, copy: true },
-  { label: t('clients.client_id'), value: values.clientId, mono: true, copy: true },
-  { label: t('clients.redirect_uri'), value: values.redirectUri, mono: true, copy: true },
+const envLines = computed(() => Object.entries(quickstartEnv(values)).map(([k, v]) => `${k}=${v}`));
+const env = computed(() => envLines.value.join('\n'));
+const tabs = computed(() => [
+  { key: 'env', label: '.env', lines: envLines.value },
+  { key: 'authorize', label: t('clients.tab_authorize'), lines: authorizeLines(values) },
+  { key: 'go', label: 'Go', lines: goLines(values, secret) },
 ]);
+const group = `quickstart-${useId()}`;
 
 async function trySignIn() {
   window.open(await tryAuthorizeUrl(values), '_blank', 'noopener');
@@ -21,34 +22,37 @@ async function trySignIn() {
 </script>
 
 <template>
-  <Section :title="t('clients.quickstart_title', { name })" :description="t('clients.quickstart_body')" flush>
-    <KeyValue :items="items" :copy-label="t('common.copy_label', { label: '{label}' })" />
-    <div class="space-y-2 border-t border-base-300 p-4">
-      <div class="flex items-center justify-between gap-2">
-        <h3 class="text-sm font-medium">
-          .env
-        </h3>
-        <span class="flex items-center gap-1 text-sm">
-          {{ t('clients.copy_env') }}
-          <CopyButton :value="env" :label="t('clients.copy_env')" />
-        </span>
-      </div>
-      <pre class="overflow-x-auto rounded-box bg-base-200 p-3 font-mono text-xs" data-testid="quickstart-env">{{ env }}</pre>
-      <p v-if="values.secret" class="text-xs text-base-content/70">
-        {{ t('clients.quickstart_secret_note') }}
-      </p>
+  <div class="flex min-w-0 flex-col gap-4">
+    <div class="tabs tabs-border tabs-sm min-w-0" role="group" :aria-label="t('clients.quickstart_snippets')">
+      <template v-for="(tab, i) in tabs" :key="tab.key">
+        <label class="tab text-base-content!">
+          <input type="radio" :name="group" :checked="i === 0">
+          {{ tab.label }}
+        </label>
+        <div class="tab-content min-w-0 pt-3">
+          <div class="mockup-code w-full min-w-0 text-xs" :data-testid="`quickstart-${tab.key}`">
+            <pre v-for="(line, n) in tab.lines" :key="n" :data-prefix="n + 1"><code>{{ line }}</code></pre>
+          </div>
+          <div v-if="tab.key === 'env'" class="flex flex-col gap-2 pt-3">
+            <CopyButton :value="env" :label="t('clients.copy_env')" :text="t('clients.copy_env')" class="self-start" />
+            <p v-if="values.secret" class="text-xs text-base-content/70">
+              {{ t('clients.quickstart_secret_note') }}
+            </p>
+          </div>
+        </div>
+      </template>
     </div>
     <div class="flex flex-wrap gap-2">
-      <button v-if="values.redirectUri" type="button" class="btn btn-primary btn-sm text-ui" @click="trySignIn">
-        <Icon name="lucide:external-link" size="16" />
+      <AppButton v-if="values.redirectUri" size="sm" @click="trySignIn">
+        <Icon name="lucide:external-link" size="16" class="shrink-0" aria-hidden="true" />
         {{ t('clients.try_signin') }}
-      </button>
-      <NuxtLink :to="openTo" class="btn btn-sm text-ui">
+      </AppButton>
+      <AppButton variant="plain" size="sm" :to="openTo">
         {{ t('clients.open_client') }}
-      </NuxtLink>
-      <NuxtLink :to="backTo" class="btn btn-ghost btn-sm text-ui">
+      </AppButton>
+      <AppButton variant="ghost" size="sm" :to="backTo">
         {{ t('clients.back_to_clients') }}
-      </NuxtLink>
+      </AppButton>
     </div>
-  </Section>
+  </div>
 </template>
