@@ -23,7 +23,7 @@ templ MailButton(href, label, primary string) {
 	<a href={ templ.SafeURL(href) } style={ mailButtonStyle(primary) }>{ label }</a>
 }
 
-// brandFooter holds the language select (hidden until lang.js shows it, and absent on a page that redirects), the project's legal links and the issuer host.
+// brandFooter holds the language select (hidden until lang.js shows it, and absent on a page that redirects or answers a form post), the project's legal links and the issuer host.
 templ brandFooter(d LayoutData) {
 	<footer class={ "flex w-full flex-col gap-2 text-xs text-base-content/70", templ.KV("max-w-100", !d.Wide), templ.KV("max-w-112", d.Wide) }>
 		<div class="flex flex-wrap items-center justify-between gap-3">

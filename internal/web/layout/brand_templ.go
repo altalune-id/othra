@@ -226,7 +226,7 @@ func MailButton(href, label, primary string) templ.Component {
 	})
 }
 
-// brandFooter holds the language select (hidden until lang.js shows it, and absent on a page that redirects), the project's legal links and the issuer host.
+// brandFooter holds the language select (hidden until lang.js shows it, and absent on a page that redirects or answers a form post), the project's legal links and the issuer host.
 func brandFooter(d LayoutData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

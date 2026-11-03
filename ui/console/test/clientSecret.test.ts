@@ -101,6 +101,7 @@ describe('new client: secret then quickstart', () => {
     expect(env).toContain('OIDC_REDIRECT_URI=https://store.example/cb');
     expect(env).toContain('OIDC_CLIENT_SECRET=');
     expect(w.html()).not.toContain('othra_cs_x');
+    expect((w.findComponent(ClientNew).vm as unknown as { revealed: unknown }).revealed, 'the secret leaves memory on Continue').toBeNull();
     const open = vi.fn();
     vi.stubGlobal('open', open);
     await button(w, 'clients.try_signin').trigger('click');
