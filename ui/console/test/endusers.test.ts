@@ -9,8 +9,8 @@ import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
 import { EndUserSchema } from '#gen/enduser/v1/enduser_pb';
 import { mountPage } from '#test/mount-page';
 import { connectError, setClient, setKnownKeys, setRoute, useHead } from '#test/nuxt-globals';
-import App from '~/app.vue';
 import ProjectSidebar from '~/components/project/ProjectSidebar.vue';
+import DefaultLayout from '~/layouts/default.vue';
 import EndUserDetail from '~/pages/o/[org]/projects/[project]/end-users/[user].vue';
 import EndUserList from '~/pages/o/[org]/projects/[project]/end-users/index.vue';
 import { useOrgsStore } from '~/stores/orgs';
@@ -52,7 +52,7 @@ beforeEach(() => {
 
 describe('console shell', () => {
   it('sets <html lang> from the locale', async () => {
-    await mountPage(App, { global: { stubs: { NuxtLayout: { template: '<slot />' }, NuxtPage: true } } });
+    await mountPage(DefaultLayout, { global: { stubs: { AppNavbar: true, ToastHost: true, OrgCreateModal: true, ProjectCreateModal: true } } });
     const head = useHead.mock.calls[0]![0] as { htmlAttrs: { lang: { value: string } } };
     expect(head.htmlAttrs.lang.value).toBe('en-US');
   });

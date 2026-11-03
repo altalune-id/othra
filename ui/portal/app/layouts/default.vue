@@ -2,6 +2,7 @@
 import { provide } from 'vue';
 import LanguageSwitcher from '#base/components/layout/LanguageSwitcher.vue';
 import ThemeSwitcher from '#base/components/layout/ThemeSwitcher.vue';
+import { useTheme } from '#base/components/layout/useTheme';
 import AppButton from '#base/components/ui/AppButton.vue';
 import AppDropdown from '#base/components/ui/AppDropdown.vue';
 import AppShell from '#base/components/ui/AppShell.vue';
@@ -15,11 +16,18 @@ import { useAccountStore } from '~/stores/account';
 
 const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const config = useRuntimeConfig().public;
 const account = useAccountStore();
 const navOpen = ref(false);
 provide(copiedLabelKey, () => t('common.copied'));
+onMounted(useTheme().init);
+
+useHead({
+  htmlAttrs: { lang: locale },
+  bodyAttrs: { class: 'text-sm leading-[normal]' },
+  titleTemplate: title => (title ? `${title} · ${config.project}` : t('portal.title', { project: config.project })),
+});
 
 const groups = computed(() => [{ items: navItems(route.path, t) }]);
 const initial = computed(() => [...config.project][0]?.toUpperCase() ?? '');

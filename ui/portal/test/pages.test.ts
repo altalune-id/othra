@@ -9,7 +9,6 @@ import { AppResourceSchema, ConnectedAppSchema, ProfileSchema, SessionSchema, Si
 import { mountPage } from '#test/mount-page';
 import { connectError, router, runtimeConfig, setClient, setKnownKeys, setRoute, useHead } from '#test/nuxt-globals';
 import appConfig from '~/app.config';
-import App from '~/app.vue';
 import Layout from '~/layouts/default.vue';
 import Apps from '~/pages/apps.vue';
 import Sessions from '~/pages/sessions.vue';
@@ -51,7 +50,7 @@ beforeEach(() => {
 
 describe('portal shell', () => {
   it('sets <html lang> from the locale and keeps the portal\'s own theme key', async () => {
-    await mountPage(App, { global: { stubs: { NuxtLayout: { template: '<slot />' }, NuxtPage: true } } });
+    await mountPage(Layout);
     const head = useHead.mock.calls[0]![0] as { htmlAttrs: { lang: { value: string } } };
     expect(head.htmlAttrs.lang.value).toBe('en-US');
     expect(appConfig.theme).toEqual({ storageKey: 'othra_portal_theme', followSystem: true });
