@@ -31,7 +31,7 @@ describe('quickstart snippets', () => {
       'https://auth.test/p/acme/oauth2/authorize',
       '  ?client_id=c1',
       '  &response_type=code&scope=openid%20profile%20email',
-      '  &state=...',
+      '  &state=...&nonce=...',
       '  &redirect_uri=https%3A%2F%2Fapp.test%2Fcb',
       '  &code_challenge=...&code_challenge_method=S256',
     ]);
@@ -40,6 +40,7 @@ describe('quickstart snippets', () => {
 
   it('reads the secret from the environment in the Go snippet only for a secret client', () => {
     expect(goLines(q, true)).toContain('\tClientSecret: os.Getenv("OIDC_CLIENT_SECRET"),');
+    expect(goLines(q, true).slice(0, 2)).toEqual(['import "os"', 'import "github.com/altalune-id/oidcrp"']);
     expect(goLines(q, false).join('\n')).not.toContain('ClientSecret');
     expect(goLines(q, false).slice(0, 3)).toEqual(['import "github.com/altalune-id/oidcrp"', '', 'rp := oidcrp.New(oidcrp.Config{']);
   });

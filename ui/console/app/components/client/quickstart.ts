@@ -23,7 +23,7 @@ export function authorizeLines(q: QuickstartInput): string[] {
     `${q.issuer.replace(/\/+$/, '')}/oauth2/authorize`,
     `  ?client_id=${q.clientId}`,
     '  &response_type=code&scope=openid%20profile%20email',
-    '  &state=...',
+    '  &state=...&nonce=...',
     ...(q.redirectUri ? [`  &redirect_uri=${encodeURIComponent(q.redirectUri)}`] : []),
     '  &code_challenge=...&code_challenge_method=S256',
   ];
@@ -32,6 +32,7 @@ export function authorizeLines(q: QuickstartInput): string[] {
 // goLines configures oidcrp for this client; a secret client reads its secret from the environment.
 export function goLines(q: QuickstartInput, secret: boolean): string[] {
   return [
+    ...(secret ? ['import "os"'] : []),
     'import "github.com/altalune-id/oidcrp"',
     '',
     'rp := oidcrp.New(oidcrp.Config{',
