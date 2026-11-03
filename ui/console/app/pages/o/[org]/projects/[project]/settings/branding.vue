@@ -36,7 +36,7 @@ const issuerHost = computed(() => {
   const at = url.indexOf('://');
   return at < 0 ? url : url.slice(at + 3);
 });
-const colorValue = computed(() => preview.value.primary || '#4f46e5');
+const colorValue = computed(() => preview.value.primary || '#005b5c');
 
 const previewLabels = computed(() => ({
   preview: t('branding.preview'),
@@ -131,7 +131,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('bran
               </label>
               <label class="join-item">
                 <span class="sr-only">{{ t('branding.primary') }}</span>
-                <input :id="ids.colorHex" v-model="primaryColor" type="text" class="input input-sm w-36 rounded-s-none font-mono text-ui" placeholder="#4f46e5" maxlength="7" :aria-describedby="`${ids.contrast} ${ids.colorErr}`" :disabled="busy">
+                <input :id="ids.colorHex" v-model="primaryColor" type="text" class="input input-sm w-36 rounded-s-none font-mono text-ui" placeholder="#005b5c" maxlength="7" :aria-describedby="`${ids.contrast} ${ids.colorErr}`" :disabled="busy">
               </label>
             </div>
             <span v-if="!preview.primary" :id="ids.colorDefault" class="text-xs text-base-content/70">{{ t('branding.default_color') }}</span>
