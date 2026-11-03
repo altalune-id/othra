@@ -18,7 +18,7 @@ const dotenv = computed(() => Object.entries(env).map(([k, v]) => `${k}=${v}`).j
 <template>
   <div class="flex flex-col gap-3">
     <div v-if="!value" role="alert" class="alert alert-error alert-soft items-start">
-      <Icon name="lucide:circle-alert" size="18" class="mt-0.5 shrink-0" />
+      <Icon name="lucide:circle-alert" size="16" class="mt-0.5 shrink-0" aria-hidden="true" />
       <div class="flex flex-col gap-2">
         <span>{{ labels.missing }}</span>
         <slot name="retry" />
@@ -26,11 +26,11 @@ const dotenv = computed(() => Object.entries(env).map(([k, v]) => `${k}=${v}`).j
     </div>
     <template v-else>
       <div role="note" class="alert alert-warning alert-soft items-start">
-        <Icon name="lucide:triangle-alert" size="18" class="mt-0.5 shrink-0" />
+        <Icon name="lucide:triangle-alert" size="16" class="mt-0.5 shrink-0" aria-hidden="true" />
         <span>{{ labels.once }}</span>
       </div>
       <SecretField :value="value" :label="labels.copy" />
-      <div v-if="dotenv" class="flex items-center gap-2 text-sm">
+      <div v-if="dotenv" class="flex items-center gap-2 text-ui">
         <CopyButton :value="dotenv" :label="labels.copyEnv" />
         <span aria-hidden="true">{{ labels.copyEnv }}</span>
       </div>

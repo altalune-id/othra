@@ -70,18 +70,18 @@ function add() {
           :title="`${labels.remove} ${i + 1}`"
           @click="emit('remove', i)"
         >
-          <Icon name="lucide:x" size="16" />
+          <Icon name="lucide:x" size="16" class="shrink-0" aria-hidden="true" />
         </button>
       </div>
       <FieldError :id="`${id}-err-${i}`" :message="errors[i]" />
       <p v-if="warnings[i] && !errors[i]" class="mt-1 flex items-start gap-1 text-xs text-base-content">
-        <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
+        <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" aria-hidden="true" />
         {{ labels.localhostWarning }}
       </p>
     </div>
     <div v-if="rows.length < max">
       <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="disabled" @click="add">
-        <Icon name="lucide:plus" size="16" />
+        <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
         {{ labels.add }}
       </button>
     </div>

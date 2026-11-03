@@ -223,7 +223,7 @@ function patch(next: Partial<ClientFields>) {
           {{ labels.pkceRequired }}
         </label>
         <p v-if="!fields.pkceRequired" :id="ids.pkceWarn" class="mt-1 flex items-start gap-1 text-xs text-base-content">
-          <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
+          <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" aria-hidden="true" />
           {{ labels.pkceOffWarning }}
         </p>
       </fieldset>
@@ -242,7 +242,7 @@ function patch(next: Partial<ClientFields>) {
         {{ labels.consentImplicit }}
       </label>
       <p v-if="fields.consent === 'implicit'" :id="ids.consentWarn" class="mt-1 flex items-start gap-1 text-xs text-base-content">
-        <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
+        <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" aria-hidden="true" />
         {{ labels.consentImplicitWarning }}
       </p>
     </fieldset>
