@@ -47,6 +47,11 @@ describe('dataTable', () => {
     expect(w.text()).not.toContain('none');
   });
 
+  it('adds a per-row class when given one', () => {
+    const w = mount(DataTable, { props: { columns, rows, rowKey: 'id', caption: 'Agents', rowClass: (r: { name: string }) => (r.name === 'Order Status' ? 'text-base-content/70' : '') } });
+    expect(w.findAll('tbody tr').map(tr => tr.classes())).toEqual([[], ['text-base-content/70']]);
+  });
+
   it('shows the empty slot when done with no rows, and keeps the table in its scroll box on phones', () => {
     expect(mount(DataTable, { props: { columns, rows: [], rowKey: 'id', caption: 'Agents' }, slots: { empty: '<p>none</p>' } }).text()).toBe('none');
     const w = mount(DataTable, { props: { columns, rows, rowKey: 'id', caption: 'Agents' } });

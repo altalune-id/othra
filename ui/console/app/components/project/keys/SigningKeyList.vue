@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import type { Column, StatusTone } from '#base/components/ui/types';
 import type { KeyRow, KeyStatus } from './keyRows';
 import CopyButton from '#base/components/ui/CopyButton.vue';
+import DataTable from '#base/components/ui/DataTable.vue';
+import StatusLabel from '#base/components/ui/StatusLabel.vue';
 
 export interface SigningKeyListLabels {
+  caption: string;
   kid: string;
   alg: string;
   status: string;
@@ -18,6 +22,7 @@ export interface SigningKeyListLabels {
 }
 
 const { rows, loading = false, labels = {
+  caption: 'Signing keys',
   kid: 'Key ID',
   alg: 'Algorithm',
   status: 'Status',
@@ -32,108 +37,46 @@ const { rows, loading = false, labels = {
   retiredNote: 'Retired keys are no longer published and are removed from this list after 30 days.',
 } } = defineProps<{ rows: KeyRow[], loading?: boolean, labels?: SigningKeyListLabels }>();
 
-function dot(status: KeyStatus): string {
-  switch (status) {
-    case 'next': return 'status-info';
-    case 'active': return 'status-success';
-    case 'retiring': return 'status-warning';
-    default: return 'hidden';
-  }
+const tones: Record<KeyStatus, StatusTone> = { next: 'info', active: 'success', retiring: 'warning', retired: 'neutral', unknown: 'neutral' };
+
+const columns = computed<Column[]>(() => [
+  { key: 'kid', label: labels.kid },
+  { key: 'alg', label: labels.alg },
+  { key: 'status', label: labels.status },
+  { key: 'created', label: labels.created },
+  { key: 'retires', label: labels.retires },
+]);
+
+function dim(row: KeyRow): string {
+  return row.status === 'retired' ? 'text-base-content/70' : '';
 }
 </script>
 
 <template>
-  <div class="space-y-2">
-    <table class="table table-sm max-sm:hidden">
-      <thead class="text-base-content/70">
-        <tr>
-          <th>{{ labels.kid }}</th>
-          <th>{{ labels.alg }}</th>
-          <th>{{ labels.status }}</th>
-          <th>{{ labels.created }}</th>
-          <th>{{ labels.retires }}</th>
-        </tr>
-      </thead>
-      <tbody v-if="loading">
-        <tr v-for="n in 3" :key="n">
-          <td v-for="c in 5" :key="c">
-            <div class="skeleton h-4 w-24" />
-          </td>
-        </tr>
-      </tbody>
-      <tbody v-else>
-        <tr v-for="row in rows" :key="row.id" :class="{ 'text-base-content/70': row.status === 'retired' }">
-          <td>
-            <span class="inline-flex items-center gap-1">
-              <code class="font-mono text-xs" :title="row.kid">{{ row.short }}…</code>
-              <CopyButton :value="row.kid" :label="`${labels.copy} ${labels.kid}`" />
-            </span>
-          </td>
-          <td>{{ row.alg }}</td>
-          <td>
-            <span class="inline-flex items-center gap-1.5 text-sm" :title="row.status === 'retired' ? labels.retiredNote : undefined">
-              <span class="status" :class="dot(row.status)" aria-hidden="true" />
-              {{ labels[row.status] }}
-            </span>
-            <p v-if="row.help" class="text-xs text-base-content/70">
-              {{ row.help }}
-            </p>
-          </td>
-          <td>{{ row.created }}</td>
-          <td>
-            <template v-if="row.retires">
-              {{ row.retires }}
-            </template>
-            <span v-else class="text-base-content/70">—</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <ul class="space-y-2 sm:hidden">
-      <template v-if="loading">
-        <li v-for="n in 3" :key="n" class="rounded-box border border-base-300 p-3">
-          <div class="skeleton h-4 w-32" />
-        </li>
+  <div class="flex flex-col gap-2">
+    <DataTable :caption="labels.caption" row-key="id" :columns="columns" :rows="rows" :loading="loading" :row-class="dim">
+      <template #cell-kid="{ row }">
+        <span class="inline-flex items-center gap-1">
+          <code class="font-mono text-xs" :title="row.kid">{{ row.short }}…</code>
+          <CopyButton :value="row.kid" :label="`${labels.copy} ${labels.kid}`" />
+        </span>
       </template>
-      <template v-else>
-        <li v-for="row in rows" :key="row.id" class="space-y-1 rounded-box border border-base-300 p-3" :class="{ 'text-base-content/70': row.status === 'retired' }">
-          <div class="flex items-center justify-between gap-2">
-            <span class="inline-flex items-center gap-1">
-              <code class="font-mono text-xs" :title="row.kid">{{ row.short }}…</code>
-              <CopyButton :value="row.kid" :label="`${labels.copy} ${labels.kid}`" />
-            </span>
-            <span class="inline-flex items-center gap-1.5 text-sm">
-              <span class="status" :class="dot(row.status)" aria-hidden="true" />
-              {{ labels[row.status] }}
-            </span>
-          </div>
-          <p v-if="row.help" class="text-xs text-base-content/70">
-            {{ row.help }}
-          </p>
-          <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
-            <dt class="text-base-content/70">
-              {{ labels.alg }}
-            </dt>
-            <dd>{{ row.alg }}</dd>
-            <dt class="text-base-content/70">
-              {{ labels.created }}
-            </dt>
-            <dd>{{ row.created }}</dd>
-            <dt class="text-base-content/70">
-              {{ labels.retires }}
-            </dt>
-            <dd>
-              <template v-if="row.retires">
-                {{ row.retires }}
-              </template>
-              <span v-else class="text-base-content/70">—</span>
-            </dd>
-          </dl>
-        </li>
+      <template #cell-status="{ row }">
+        <span :title="row.status === 'retired' ? labels.retiredNote : undefined">
+          <StatusLabel :tone="tones[row.status]" :label="labels[row.status]" />
+        </span>
+        <p v-if="row.help" class="text-xs text-base-content/70">
+          {{ row.help }}
+        </p>
       </template>
-    </ul>
-
+      <template #cell-created="{ row }">
+        <span class="whitespace-nowrap tabular-nums">{{ row.created }}</span>
+      </template>
+      <template #cell-retires="{ row }">
+        <span v-if="row.retires" class="whitespace-nowrap tabular-nums">{{ row.retires }}</span>
+        <span v-else class="text-base-content/70">—</span>
+      </template>
+    </DataTable>
     <p v-if="!loading && rows.some(r => r.status === 'retired')" class="text-xs text-base-content/70">
       {{ labels.retiredNote }}
     </p>

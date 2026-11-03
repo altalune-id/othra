@@ -2,12 +2,13 @@
 import type { Column } from './types';
 import { useSlots } from 'vue';
 
-const { columns, rows, rowKey, caption, loading = false } = defineProps<{
+const { columns, rows, rowKey, caption, loading = false, rowClass } = defineProps<{
   columns: Column[],
   rows: T[],
   rowKey: keyof T & string,
   caption: string,
   loading?: boolean,
+  rowClass?: (row: T) => string,
 }>();
 
 const slots = useSlots();
@@ -43,7 +44,7 @@ function cell(row: T, key: string): unknown {
             </tr>
           </tbody>
           <tbody v-else>
-            <tr v-for="row in rows" :key="String(cell(row, rowKey))">
+            <tr v-for="row in rows" :key="String(cell(row, rowKey))" :class="rowClass?.(row)">
               <td v-for="col in columns" :key="col.key" :class="{ 'text-end tabular-nums': col.align === 'end', 'font-mono text-xs': col.mono }">
                 <slot :name="`cell-${col.key}`" :row="row">
                   {{ cell(row, col.key) }}

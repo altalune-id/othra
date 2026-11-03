@@ -191,9 +191,9 @@ describe('signing keys page', () => {
 
   it('shows the Rotation card to editors only, and replaces Rotate with the waiting line while a key is Next', () => {
     const source = page();
-    expect(source).toMatch(/<section v-if="canEdit && loaded" class="card[^"]*" data-testid="rotation-card">/);
+    expect(source).toMatch(/<Section v-if="canEdit && loaded" [^>]*data-testid="rotation-card">/);
     expect(source).toMatch(/<p v-if="waitingUntil && !noActive" role="status"/);
-    expect(source).toMatch(/<button v-else type="button" class="btn btn-primary btn-sm [^"]*max-sm:btn-block[^"]*" @click="keys\.askRotate\(\)">/);
+    expect(source).toMatch(/<AppButton v-else size="sm" class="[^"]*max-sm:btn-block[^"]*" @click="keys\.askRotate\(\)">/);
     expect(source).toContain('keys.emergency');
     expect(source).toMatch(/`othra project keys rotate \$\{listed\.value\?\.id\} --now`/);
   });
@@ -207,24 +207,24 @@ describe('signing keys page', () => {
     const source = page();
     expect(source).toContain('<AppModal :open="confirming" :title="t(\'keys.rotate_title\')" @close="keys.cancelRotate()">');
     expect(source).toContain('<ErrorText :error="error" />');
-    expect(source).toMatch(/class="btn btn-primary btn-sm text-ui" :disabled="busy" @click="keys\.confirmRotate\(\)"/);
+    expect(source).toMatch(/<AppButton size="sm" :busy="busy" @click="keys\.confirmRotate\(\)">/);
   });
 
-  it('lists keys as a table on desktop and a stacked list on mobile, with status text and decorative dots', () => {
+  it('lists keys on the shared table, scrolling on phones, with a status word beside each dot', () => {
     const source = list();
-    expect(source).toMatch(/<table class="table table-sm max-sm:hidden"/);
-    expect(source).toMatch(/<ul class="space-y-2 sm:hidden"/);
-    expect(source).toContain('<span class="status" :class="dot(row.status)" aria-hidden="true" />');
+    expect(source).toContain('<DataTable');
+    expect(source).not.toContain('sm:hidden');
+    expect(source).toContain('<StatusLabel :tone="tones[row.status]" :label="labels[row.status]" />');
     expect(source).toContain('labels.retiredNote');
-    expect(source).toContain('skeleton');
   });
 });
 
 describe('m2 design review contrast', () => {
   it('dims retired key rows to the AA muted /70, never lower (SF1)', () => {
     const list = read('./keys/SigningKeyList.vue');
-    expect(list).not.toMatch(/'text-base-content\/[1-6]0': row\.status === 'retired'/);
-    expect(list.match(/'text-base-content\/70': row\.status === 'retired'/g)).toHaveLength(2);
+    expect(list).not.toMatch(/text-base-content\/[1-6]0/);
+    expect(list).toContain('return row.status === \'retired\' ? \'text-base-content/70\' : \'\';');
+    expect(list).toContain(':row-class="dim"');
   });
 });
 

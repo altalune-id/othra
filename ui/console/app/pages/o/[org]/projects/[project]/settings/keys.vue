@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import CopyButton from '#base/components/ui/CopyButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import LoadError from '#base/components/ui/LoadError.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import Section from '#base/components/ui/Section.vue';
 import { keyRows } from '~/components/project/keys/keyRows';
 import SigningKeyList from '~/components/project/keys/SigningKeyList.vue';
 import { formatWhen, shortKid, useSigningKeys } from '~/components/project/keys/useSigningKeys';
@@ -29,6 +33,7 @@ const keys = useSigningKeys(listed.value.id);
 const { loading, loaded, loadError, confirming, busy, error, rotated, waitingUntil, noActive } = keys;
 const rows = computed(() => keyRows(keys.keys.value, { t, locale: locale.value }));
 const listLabels = computed(() => ({
+  caption: t('keys.title'),
   kid: t('keys.col_kid'),
   alg: t('keys.col_alg'),
   status: t('keys.col_status'),
@@ -61,73 +66,49 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('keys
 </script>
 
 <template>
-  <div class="max-w-4xl space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold">
-        {{ t('keys.title') }}
-      </h1>
-      <p class="text-sm text-base-content/70">
-        {{ t('keys.subtitle') }}
-      </p>
-    </div>
+  <div class="flex max-w-4xl flex-col gap-5">
+    <PageHeader :title="t('keys.title')" :description="t('keys.subtitle')" />
     <ProjectReadOnlyNote v-if="!canEdit" :text="t('keys.members_note')" />
-    <div v-if="noActive" role="note" class="alert alert-soft">
-      <Icon name="lucide:triangle-alert" size="18" class="text-warning" />
-      <span class="text-sm text-base-content">{{ canEdit ? t('keys.no_active') : t('keys.no_active_member') }}</span>
+    <div v-if="noActive" role="note" class="alert items-start text-ui">
+      <Icon name="lucide:triangle-alert" size="16" class="shrink-0 text-warning" aria-hidden="true" />
+      <span>{{ canEdit ? t('keys.no_active') : t('keys.no_active_member') }}</span>
     </div>
 
-    <section class="card border border-base-300 bg-base-100" data-testid="keys-card">
-      <div class="card-body gap-2">
-        <template v-if="loadError">
-          <ErrorText :error="loadError" />
-          <div>
-            <button type="button" class="btn btn-sm text-ui" @click="keys.load()">
-              {{ t('common.retry') }}
-            </button>
-          </div>
-        </template>
-        <SigningKeyList v-else :rows="rows" :loading="loading" :labels="listLabels" />
-      </div>
-    </section>
+    <LoadError v-if="loadError" :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="keys.load()" />
+    <SigningKeyList v-else :rows="rows" :loading="loading" :labels="listLabels" data-testid="keys-card" />
 
-    <section v-if="canEdit && loaded" class="card border border-base-300 bg-base-100" data-testid="rotation-card">
-      <div class="card-body gap-3">
-        <h2 class="card-title text-base">
-          {{ t('keys.rotation_title') }}
-        </h2>
-        <p v-if="waitingUntil && !noActive" role="status" class="flex items-center gap-2 text-sm text-base-content">
-          <Icon name="lucide:clock" size="16" class="shrink-0 text-info" />
-          {{ waitingText }}
-        </p>
-        <button v-else type="button" class="btn btn-primary btn-sm self-start max-sm:btn-block max-sm:self-stretch text-ui" @click="keys.askRotate()">
-          <Icon name="lucide:refresh-cw" size="16" />
-          {{ t('keys.rotate') }}
-        </button>
-        <SavedNote v-if="rotatedText" :label="rotatedText" />
-        <div class="divider my-1" />
-        <p class="text-sm text-base-content/70">
-          {{ t('keys.emergency') }}
-        </p>
-        <div class="flex items-center gap-1 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-          <code class="min-w-0 flex-1 font-mono text-xs break-all">{{ command }}</code>
-          <CopyButton :value="command" :label="t('common.copy')" class="shrink-0" />
-        </div>
+    <Section v-if="canEdit && loaded" :title="t('keys.rotation_title')" data-testid="rotation-card">
+      <p v-if="waitingUntil && !noActive" role="status" class="flex items-center gap-2 text-ui">
+        <Icon name="lucide:clock" size="16" class="shrink-0 text-info" aria-hidden="true" />
+        {{ waitingText }}
+      </p>
+      <AppButton v-else size="sm" class="self-start max-sm:btn-block max-sm:self-stretch" @click="keys.askRotate()">
+        <Icon name="lucide:refresh-cw" size="16" class="shrink-0" aria-hidden="true" />
+        {{ t('keys.rotate') }}
+      </AppButton>
+      <SavedNote v-if="rotatedText" :label="rotatedText" />
+      <div class="divider my-0" />
+      <p class="text-ui text-base-content/70">
+        {{ t('keys.emergency') }}
+      </p>
+      <div class="flex items-center gap-1 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
+        <code class="min-w-0 flex-1 font-mono text-xs break-all">{{ command }}</code>
+        <CopyButton :value="command" :label="t('common.copy')" class="shrink-0" />
       </div>
-    </section>
+    </Section>
 
     <AppModal :open="confirming" :title="t('keys.rotate_title')" @close="keys.cancelRotate()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ t('keys.rotate_body') }}
       </p>
       <ErrorText :error="error" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="busy" @click="keys.cancelRotate()">
+        <AppButton variant="ghost" size="sm" :disabled="busy" autofocus @click="keys.cancelRotate()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-primary btn-sm text-ui" :disabled="busy" @click="keys.confirmRotate()">
-          <span v-if="busy" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton size="sm" :busy="busy" @click="keys.confirmRotate()">
           {{ t('keys.rotate_confirm') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
   </div>
