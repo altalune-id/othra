@@ -170,7 +170,12 @@ jobs:
       - name: Build the embedded UI (sign-in assets, MCP views, console)
         run: make ui
       - name: Built HTML keeps every placeholder the server rewrites
-        run: go test ./internal/web/console/ ./internal/web/portal/ -run TestBuiltIndex -v
+        env:
+          REQUIRE_BUILT_UI: "1"
+        run: |
+          set -o pipefail
+          go test ./internal/web/console/ ./internal/web/portal/ -run TestBuiltIndex -v | tee built-index.out
+          test "$(grep -c -- '--- PASS: TestBuiltIndex' built-index.out)" -eq 2
       - name: Storybook
         run: pnpm --filter @othra/console build-storybook --quiet
 
