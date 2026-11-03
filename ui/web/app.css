@@ -139,7 +139,9 @@
   }
 }
 
-.alert-soft {
+.alert-soft,
+.badge-soft,
+.btn-soft:not(:hover, :active) {
   color: var(--color-base-content);
 }
 

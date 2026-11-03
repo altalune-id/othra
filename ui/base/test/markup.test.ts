@@ -185,6 +185,24 @@ describe('guard: theme contrast', () => {
     expect(failures).toEqual([]);
   });
 
+  it.each(['base/app/assets/css/main.css', 'mcp/src/style.css', 'web/app.css'])('keeps soft alert, badge and button text at AA on their soft tint in %s', (sheet) => {
+    const rules = [...readFileSync(join(ui, sheet), 'utf8').matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+    const failures: string[] = [];
+    for (const part of ['alert', 'badge', 'btn']) {
+      const neutral = rules.some(([, sel, body]) => sel!.includes(`.${part}-soft`) && /color:\s*var\(--color-base-content\)/.test(body!));
+      for (const { name, colors: c } of themes) {
+        for (const k of ['info', 'success', 'warning', 'error']) {
+          const tint = c[k]!.map((v, i) => 0.08 * v + 0.92 * c['base-100']![i]!) as RGB;
+          const ratio = contrast(neutral ? c['base-content']! : c[k]!, tint);
+          if (ratio < 4.5) {
+            failures.push(`${name}: ${part}-soft ${k} ${ratio.toFixed(2)}`);
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
   it('lifts every table header from daisyUI base-content/60 to the AA muted /70', () => {
     const bare = files.flatMap(f => (f.text.match(/<thead\b[^>]*>/g) ?? []).filter(t => !t.includes('text-base-content/70')).map(t => `${f.path}: ${t}`));
     expect(bare).toEqual([]);
