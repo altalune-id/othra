@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { Client } from '#gen/client/v1/client_pb';
 import type { LinkRow } from '~/components/link/LinkList.vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import Section from '#base/components/ui/Section.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 import UrlField from '#base/components/ui/UrlField.vue';
 import { useDates } from '#base/composables/useDates';
@@ -163,139 +166,124 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0">
-        <NuxtLink :to="`${base}/clients`" class="inline-flex items-center gap-1 text-xs text-base-content/70 transition-colors hover:text-base-content">
-          <Icon name="lucide:chevron-left" size="14" />
-          {{ t('clients.title') }}
-        </NuxtLink>
-        <h1 class="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold break-words">
-          {{ client.name }}
-          <span v-if="cimd" class="badge badge-soft badge-warning badge-sm font-normal" data-testid="client-cimd-badge">{{ t('clients.cimd_badge') }}</span>
-          <SystemBadge v-if="system" :label="t('common.system')" class="font-normal" />
-        </h1>
-      </div>
-      <button v-if="canEdit && !system" type="button" class="btn btn-ghost btn-sm max-sm:btn-block text-ui" @click="page.askDelete()">
-        <Icon :name="cimd ? 'lucide:ban' : 'lucide:trash-2'" size="16" class="text-error" />
-        {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
-      </button>
-    </div>
+  <div class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="client.name">
+      <template #meta>
+        <span v-if="cimd" class="badge badge-soft badge-warning badge-sm" data-testid="client-cimd-badge">{{ t('clients.cimd_badge') }}</span>
+        <SystemBadge v-if="system" :label="t('common.system')" />
+      </template>
+      <template v-if="canEdit && !system" #actions>
+        <AppButton variant="error" size="sm" soft @click="page.askDelete()">
+          <Icon :name="cimd ? 'lucide:ban' : 'lucide:trash-2'" size="16" class="shrink-0" aria-hidden="true" />
+          {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
+        </AppButton>
+      </template>
+    </PageHeader>
     <ProjectReadOnlyNote v-if="system" icon="lucide:shield" :text="t('clients.system_client_note')" />
     <ProjectReadOnlyNote v-else-if="!canEdit" />
 
-    <section class="card border border-base-300 bg-base-100" data-testid="client-details">
-      <div class="card-body gap-3">
-        <h2 class="card-title text-base">
-          {{ t('clients.details') }}
-        </h2>
-        <UrlField
-          v-if="cimd"
-          :label="t('rs.metadata_url')"
-          :value="client.metadataUrl"
-          :help="fetched ? `${t('rs.cimd_fetched')} ${fetched}` : ''"
-          size="sm"
-          open
-          testid="client-metadata-url"
-          v-bind="urlLabels"
-        />
-        <UrlField v-else :label="t('clients.client_id')" :value="client.id" :help="t('clients.client_id_help')" size="sm" testid="client-id" v-bind="urlLabels" />
-        <UrlField v-if="issuerUrl" :label="t('clients.issuer')" :value="issuerUrl" size="sm" v-bind="urlLabels" />
-        <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+    <Section :title="t('clients.details')" data-testid="client-details">
+      <UrlField
+        v-if="cimd"
+        :label="t('rs.metadata_url')"
+        :value="client.metadataUrl"
+        :help="fetched ? `${t('rs.cimd_fetched')} ${fetched}` : ''"
+        size="sm"
+        open
+        testid="client-metadata-url"
+        v-bind="urlLabels"
+      />
+      <UrlField v-else :label="t('clients.client_id')" :value="client.id" :help="t('clients.client_id_help')" size="sm" testid="client-id" v-bind="urlLabels" />
+      <UrlField v-if="issuerUrl" :label="t('clients.issuer')" :value="issuerUrl" size="sm" v-bind="urlLabels" />
+      <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-ui">
+        <dt class="text-base-content/70">
+          {{ t('clients.kind') }}
+        </dt>
+        <dd>{{ t(kind.labelKey) }}</dd>
+        <template v-if="kind.secret">
           <dt class="text-base-content/70">
-            {{ t('clients.kind') }}
+            {{ t('clients.auth_method') }}
           </dt>
-          <dd>{{ t(kind.labelKey) }}</dd>
-          <template v-if="kind.secret">
-            <dt class="text-base-content/70">
-              {{ t('clients.auth_method') }}
-            </dt>
-            <dd><code class="font-mono text-xs" data-testid="client-auth-method">{{ client.tokenEndpointAuthMethod }}</code></dd>
-            <dt class="text-base-content/70">
-              {{ t('clients.pkce') }}
-            </dt>
-            <dd v-if="client.pkceRequired">
-              {{ t('clients.pkce_on') }}
-            </dd>
-            <dd v-else class="flex items-start gap-1" data-testid="client-pkce-off">
-              <Icon name="lucide:triangle-alert" size="14" class="mt-0.5 shrink-0 text-warning" />
-              {{ t('clients.pkce_off') }}
-            </dd>
-          </template>
+          <dd><code class="font-mono text-xs" data-testid="client-auth-method">{{ client.tokenEndpointAuthMethod }}</code></dd>
           <dt class="text-base-content/70">
-            {{ t('clients.scopes') }}
+            {{ t('clients.pkce') }}
           </dt>
-          <dd class="flex flex-wrap gap-1">
-            <span v-for="scope in client.allowedScopes" :key="scope" class="badge badge-ghost badge-sm font-mono">{{ scope }}</span>
+          <dd v-if="client.pkceRequired">
+            {{ t('clients.pkce_on') }}
           </dd>
-          <dt class="text-base-content/70">
-            {{ t('clients.col_created') }}
-          </dt>
-          <dd>{{ created }}</dd>
-        </dl>
-      </div>
-    </section>
-
-    <section class="card border border-base-300 bg-base-100" data-testid="client-settings">
-      <div class="card-body gap-3">
-        <h2 class="card-title text-base">
-          {{ t('clients.settings_title') }}
-        </h2>
-        <template v-if="editable">
-          <ClientForm
-            v-model:fields="fields"
-            mode="edit"
-            :kinds="kinds"
-            :uri-errors="uriErrors"
-            :warnings="warnings"
-            :name-error="nameError"
-            :busy="busy"
-            :error="error"
-            :labels="formLabels"
-            @edit="form.clearRow"
-            @remove="form.removeRow"
-            @submit="save"
-          />
-          <SavedNote v-if="done" :label="t('common.saved')" />
+          <dd v-else class="flex items-start gap-1" data-testid="client-pkce-off">
+            <Icon name="lucide:triangle-alert" size="14" class="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
+            {{ t('clients.pkce_off') }}
+          </dd>
         </template>
-        <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm" data-testid="client-settings-readonly">
+        <dt class="text-base-content/70">
+          {{ t('clients.scopes') }}
+        </dt>
+        <dd class="flex flex-wrap gap-1">
+          <span v-for="scope in client.allowedScopes" :key="scope" class="badge badge-ghost badge-sm font-mono">{{ scope }}</span>
+        </dd>
+        <dt class="text-base-content/70">
+          {{ t('clients.col_created') }}
+        </dt>
+        <dd>{{ created }}</dd>
+      </dl>
+    </Section>
+
+    <Section :title="t('clients.settings_title')" data-testid="client-settings">
+      <template v-if="editable">
+        <ClientForm
+          v-model:fields="fields"
+          mode="edit"
+          :kinds="kinds"
+          :uri-errors="uriErrors"
+          :warnings="warnings"
+          :name-error="nameError"
+          :busy="busy"
+          :error="error"
+          :labels="formLabels"
+          @edit="form.clearRow"
+          @remove="form.removeRow"
+          @submit="save"
+        />
+        <SavedNote v-if="done" :label="t('common.saved')" />
+      </template>
+      <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-ui" data-testid="client-settings-readonly">
+        <dt class="text-base-content/70">
+          {{ t('common.name') }}
+        </dt>
+        <dd>{{ client.name }}</dd>
+        <dt class="text-base-content/70">
+          {{ t('clients.redirect_uris') }}
+        </dt>
+        <dd>
+          <ul class="space-y-0.5">
+            <li v-for="uri in client.redirectUris" :key="uri">
+              <code class="font-mono text-xs break-all">{{ uri }}</code>
+            </li>
+          </ul>
+        </dd>
+        <template v-if="client.postLogoutRedirectUris.length > 0">
           <dt class="text-base-content/70">
-            {{ t('common.name') }}
-          </dt>
-          <dd>{{ client.name }}</dd>
-          <dt class="text-base-content/70">
-            {{ t('clients.redirect_uris') }}
+            {{ t('clients.post_logout_uris') }}
           </dt>
           <dd>
             <ul class="space-y-0.5">
-              <li v-for="uri in client.redirectUris" :key="uri">
+              <li v-for="uri in client.postLogoutRedirectUris" :key="uri">
                 <code class="font-mono text-xs break-all">{{ uri }}</code>
               </li>
             </ul>
           </dd>
-          <template v-if="client.postLogoutRedirectUris.length > 0">
-            <dt class="text-base-content/70">
-              {{ t('clients.post_logout_uris') }}
-            </dt>
-            <dd>
-              <ul class="space-y-0.5">
-                <li v-for="uri in client.postLogoutRedirectUris" :key="uri">
-                  <code class="font-mono text-xs break-all">{{ uri }}</code>
-                </li>
-              </ul>
-            </dd>
-          </template>
-          <dt class="text-base-content/70">
-            {{ t('clients.refresh') }}
-          </dt>
-          <dd>{{ client.refreshTokens ? t('clients.refresh_on') : t('clients.refresh_off') }}</dd>
-          <dt class="text-base-content/70">
-            {{ t('clients.consent') }}
-          </dt>
-          <dd>{{ consentLabel }}</dd>
-        </dl>
-      </div>
-    </section>
+        </template>
+        <dt class="text-base-content/70">
+          {{ t('clients.refresh') }}
+        </dt>
+        <dd>{{ client.refreshTokens ? t('clients.refresh_on') : t('clients.refresh_off') }}</dd>
+        <dt class="text-base-content/70">
+          {{ t('clients.consent') }}
+        </dt>
+        <dd>{{ consentLabel }}</dd>
+      </dl>
+    </Section>
 
     <ClientSecrets
       v-if="kind.secret && !cimd && !system"
@@ -335,18 +323,17 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
     />
 
     <AppModal :open="!!revoking" :title="t('secrets.revoke_title')" @close="secrets.cancelRevoke()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ t('secrets.revoke_old_body', { hint: revoking?.hint ?? '' }) }}
       </p>
       <ErrorText :error="secretError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="secretBusy" autofocus @click="secrets.cancelRevoke()">
+        <AppButton variant="ghost" size="sm" :disabled="secretBusy" autofocus @click="secrets.cancelRevoke()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="secretBusy" @click="revoke">
-          <span v-if="secretBusy" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="secretBusy" @click="revoke">
           {{ t('secrets.revoke_old') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
 
@@ -377,34 +364,32 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
     />
 
     <AppModal :open="!!unlinking" :title="t('links.unlink_title', { name: unlinkingName })" @close="links.cancelUnlink()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ t('links.unlink_body', { client: client.name, rs: unlinkingName }) }}
       </p>
       <ErrorText :error="linkError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
+        <AppButton variant="ghost" size="sm" :disabled="linkBusy" autofocus @click="links.cancelUnlink()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="linkBusy" @click="links.confirmUnlink()">
-          <span v-if="linkBusy" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="linkBusy" @click="links.confirmUnlink()">
           {{ t('links.unlink') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
 
     <AppModal :open="page.deleting.value" :title="cimd ? t('rs.cimd_revoke_title', { name: client.name }) : t('clients.delete_title', { name: client.name })" @close="page.cancelDelete()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ cimd ? t('rs.cimd_revoke_body', { name: client.name }) : t('clients.delete_body') }}
       </p>
       <ErrorText :error="page.error.value" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="page.busy.value" autofocus @click="page.cancelDelete()">
+        <AppButton variant="ghost" size="sm" :disabled="page.busy.value" autofocus @click="page.cancelDelete()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm text-ui" :disabled="page.busy.value" @click="remove">
-          <span v-if="page.busy.value" class="loading loading-spinner loading-xs" />
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="page.busy.value" @click="remove">
           {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
   </div>
