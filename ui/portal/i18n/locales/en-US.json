@@ -33,6 +33,7 @@
   "methods.only_method": "This is your only way to sign in.",
   "methods.subtitle": "The ways you can sign in to {project}.",
   "nav.apps": "Connected apps",
+  "nav.breadcrumbs": "Breadcrumbs",
   "nav.profile": "Profile",
   "nav.sessions": "Sessions",
   "nav.sign_in": "Sign-in methods",

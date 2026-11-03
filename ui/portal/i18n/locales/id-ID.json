@@ -33,6 +33,7 @@
   "methods.only_method": "Ini satu-satunya cara Anda masuk.",
   "methods.subtitle": "Cara Anda bisa masuk ke {project}.",
   "nav.apps": "Aplikasi terhubung",
+  "nav.breadcrumbs": "Jejak navigasi",
   "nav.profile": "Profil",
   "nav.sessions": "Sesi",
   "nav.sign_in": "Metode masuk",
