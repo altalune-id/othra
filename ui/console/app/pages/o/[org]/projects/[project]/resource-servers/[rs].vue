@@ -173,7 +173,7 @@ useHead({ title: () => `${server.value.name} · ${t('rs.title')} · Othra` });
     <PageHeader :title="server.name">
       <template v-if="canEdit" #actions>
         <AppButton variant="error" size="sm" soft @click="page.askDelete()">
-          <Icon name="lucide:trash-2" size="16" class="shrink-0" aria-hidden="true" />
+          <Icon name="lucide:trash-2" size="16" class="shrink-0 text-error" aria-hidden="true" />
           {{ t('common.delete') }}
         </AppButton>
       </template>

@@ -177,7 +177,7 @@ useHead({ title: () => `${client.value.name} · ${t('clients.title')} · Othra` 
       </template>
       <template v-if="canEdit && !system" #actions>
         <AppButton variant="error" size="sm" soft @click="page.askDelete()">
-          <Icon :name="cimd ? 'lucide:ban' : 'lucide:trash-2'" size="16" class="shrink-0" aria-hidden="true" />
+          <Icon :name="cimd ? 'lucide:ban' : 'lucide:trash-2'" size="16" class="shrink-0 text-error" aria-hidden="true" />
           {{ cimd ? t('rs.cimd_revoke') : t('common.delete') }}
         </AppButton>
       </template>

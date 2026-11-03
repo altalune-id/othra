@@ -112,7 +112,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('lega
         <SavedNote v-if="bumpedTo" :label="t('legal.bump_done', { version: bumpedTo })" />
         <div v-if="canEdit" class="flex justify-end">
           <AppButton variant="warning" soft size="sm" :disabled="busy" @click="legal.askBump()">
-            <Icon name="lucide:triangle-alert" size="16" class="shrink-0" aria-hidden="true" />
+            <Icon name="lucide:triangle-alert" size="16" class="shrink-0 text-warning" aria-hidden="true" />
             {{ t('legal.bump') }}
           </AppButton>
         </div>

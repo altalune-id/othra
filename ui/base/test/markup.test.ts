@@ -49,6 +49,16 @@ describe('guard: markup in every app', () => {
     expect(offenders(/<(?:button|NuxtLink|label|a)\s[^>]*\bclass="(?:[^"]*\s)?btn\s(?:[^"]*\s)?text-(?:error|warning|success|info)\b/)).toEqual([]);
   });
 
+  it('gives a soft button with neutral text an icon in its status color', () => {
+    const soft = files.flatMap(f => [...f.text.matchAll(/<AppButton variant="(error|warning)"[^>]*\bsoft\b[^>]*>\s*<Icon [^>]*class="([^"]*)"/g)].map(m => ({ path: f.path, variant: m[1]!, cls: m[2]! })));
+    expect(soft.length).toBeGreaterThan(0);
+    expect(soft.filter(s => !s.cls.split(' ').includes(`text-${s.variant}`)).map(s => s.path)).toEqual([]);
+  });
+
+  it.each(['base/app/assets/css/main.css', 'mcp/src/style.css', 'web/app.css'])('drops a colored icon to the fill text on a hovered or pressed soft button in %s', (sheet) => {
+    expect(readFileSync(join(ui, sheet), 'utf8')).toMatch(/\.btn-soft:is\(:hover, :active\) \*\s*\{\s*color: inherit;\s*\}/);
+  });
+
   it('builds every dropdown through AppDropdown (popover API), never the CSS-focus dropdown-content pattern', () => {
     expect(offenders(/\bdropdown-content\b/)).toEqual([]);
     const own = files.filter(f => /class="dropdown[\s"]/.test(f.text)).map(f => f.path);

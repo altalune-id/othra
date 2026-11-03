@@ -220,7 +220,7 @@ function onToggle(event: Event) {
         </div>
         <div class="space-y-1">
           <AppButton variant="error" size="sm" soft :disabled="busy || locked || removeLocked" :aria-describedby="removeLocked ? ids.removeLocked : undefined" @click="emit('remove')">
-            <Icon name="lucide:trash-2" size="16" class="shrink-0" aria-hidden="true" />
+            <Icon name="lucide:trash-2" size="16" class="shrink-0 text-error" aria-hidden="true" />
             {{ labels.remove }}
           </AppButton>
           <p v-if="removeLocked" :id="ids.removeLocked" class="flex items-start gap-1 text-xs text-base-content">

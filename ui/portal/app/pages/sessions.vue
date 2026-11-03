@@ -34,7 +34,7 @@ await list.load();
       </ul>
       <div v-if="others.length > 0" class="border-t border-base-300 px-4 py-3">
         <AppButton variant="error" soft size="sm" @click="endOthers.ask(true)">
-          <Icon name="lucide:log-out" size="16" class="shrink-0" aria-hidden="true" />
+          <Icon name="lucide:log-out" size="16" class="shrink-0 text-error" aria-hidden="true" />
           {{ t('sessions.sign_out_others') }}
         </AppButton>
       </div>
