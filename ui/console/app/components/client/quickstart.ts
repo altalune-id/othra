@@ -2,17 +2,16 @@ export interface QuickstartInput {
   issuer: string;
   clientId: string;
   redirectUri: string;
-  secret?: string;
 }
 
-// quickstartEnv is the .env an app needs to sign in with this client; the secret is in it only while it is known.
-export function quickstartEnv(q: QuickstartInput): Record<string, string> {
+// quickstartEnv is the .env an app needs to sign in with this client; a secret client gets an empty secret line to paste into.
+export function quickstartEnv(q: QuickstartInput, secret = false): Record<string, string> {
   const env: Record<string, string> = { OIDC_ISSUER: q.issuer, OIDC_CLIENT_ID: q.clientId };
   if (q.redirectUri) {
     env.OIDC_REDIRECT_URI = q.redirectUri;
   }
-  if (q.secret) {
-    env.OIDC_CLIENT_SECRET = q.secret;
+  if (secret) {
+    env.OIDC_CLIENT_SECRET = '';
   }
   return env;
 }
@@ -36,10 +35,10 @@ export function goLines(q: QuickstartInput, secret: boolean): string[] {
     'import "github.com/altalune-id/oidcrp"',
     '',
     'rp := oidcrp.New(oidcrp.Config{',
-    `\tIssuer:      "${q.issuer}",`,
-    `\tClientID:    "${q.clientId}",`,
+    `\tIssuer:      ${JSON.stringify(q.issuer)},`,
+    `\tClientID:    ${JSON.stringify(q.clientId)},`,
     ...(secret ? ['\tClientSecret: os.Getenv("OIDC_CLIENT_SECRET"),'] : []),
-    ...(q.redirectUri ? [`\tRedirectURI: "${q.redirectUri}",`] : []),
+    ...(q.redirectUri ? [`\tRedirectURI: ${JSON.stringify(q.redirectUri)},`] : []),
     '\tScopes:      []string{"openid", "profile", "email"},',
     '})',
   ];

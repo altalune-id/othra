@@ -88,7 +88,7 @@ describe('new client: secret then quickstart', () => {
     toasts.splice(0);
   });
 
-  it('opens the quickstart with the real values once the secret is stored, the secret in the .env', async () => {
+  it('opens the quickstart with the real values once the secret is stored, and forgets the secret', async () => {
     generateClientSecret.mockReset().mockResolvedValue({ client: web, secret: 'othra_cs_x' });
     const w = await created();
     expect(button(w, 'clients.continue_quickstart').attributes('disabled')).toBeDefined();
@@ -99,12 +99,25 @@ describe('new client: secret then quickstart', () => {
     expect(env).toContain(`OIDC_ISSUER=${issuer}`);
     expect(env).toContain(`OIDC_CLIENT_ID=${web.id}`);
     expect(env).toContain('OIDC_REDIRECT_URI=https://store.example/cb');
-    expect(env).toContain('OIDC_CLIENT_SECRET=othra_cs_x');
+    expect(env).toContain('OIDC_CLIENT_SECRET=');
+    expect(w.html()).not.toContain('othra_cs_x');
     const open = vi.fn();
     vi.stubGlobal('open', open);
     await button(w, 'clients.try_signin').trigger('click');
     await vi.waitFor(() => expect(open).toHaveBeenCalled());
     expect(open.mock.calls[0]![0]).toMatch(new RegExp(`^${issuer}/oauth2/authorize\\?`));
+  });
+
+  it('shows Retry when the project fails to load, and offers no test sign-in without an issuer', async () => {
+    const getProject = vi.fn().mockRejectedValue(connectError('GEN900')).mockRejectedValueOnce(connectError('GEN900'));
+    setClient('$projectClient', { getProject });
+    generateClientSecret.mockReset().mockResolvedValue({ client: web, secret: 'othra_cs_x' });
+    const w = await created();
+    expect(w.findAll('button').some(b => b.text().includes('common.retry'))).toBe(true);
+    await w.get('input[type="checkbox"]').setValue(true);
+    await button(w, 'clients.continue_quickstart').trigger('click');
+    await flushPromises();
+    expect(w.findAll('button').some(b => b.text().includes('clients.try_signin'))).toBe(false);
   });
 
   it('starts on Type, and Change goes back to it from Details', async () => {

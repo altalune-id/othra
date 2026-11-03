@@ -7,7 +7,7 @@ import { authorizeLines, goLines, quickstartEnv, tryAuthorizeUrl } from './quick
 const { values, openTo, backTo, secret = false } = defineProps<{ values: QuickstartInput, openTo: string, backTo: string, secret?: boolean }>();
 
 const { t } = useI18n();
-const envLines = computed(() => Object.entries(quickstartEnv(values)).map(([k, v]) => `${k}=${v}`));
+const envLines = computed(() => Object.entries(quickstartEnv(values, secret)).map(([k, v]) => `${k}=${v}`));
 const env = computed(() => envLines.value.join('\n'));
 const tabs = computed(() => [
   { key: 'env', label: '.env', lines: envLines.value },
@@ -35,18 +35,18 @@ async function trySignIn() {
           </div>
           <div v-if="tab.key === 'env'" class="flex flex-col gap-2 pt-3">
             <CopyButton :value="env" :label="t('clients.copy_env')" :text="t('clients.copy_env')" class="self-start" />
-            <p v-if="values.secret" class="text-xs text-base-content/70">
+            <p v-if="secret" class="text-xs text-base-content/70">
               {{ t('clients.quickstart_secret_note') }}
             </p>
           </div>
         </div>
       </template>
     </div>
-    <p v-if="values.redirectUri" class="text-xs text-base-content/70">
+    <p v-if="values.redirectUri && values.issuer" class="text-xs text-base-content/70">
       {{ t('clients.try_signin_note') }}
     </p>
     <div class="flex flex-wrap gap-2">
-      <AppButton v-if="values.redirectUri" size="sm" @click="trySignIn">
+      <AppButton v-if="values.redirectUri && values.issuer" size="sm" @click="trySignIn">
         <Icon name="lucide:external-link" size="16" class="shrink-0" aria-hidden="true" />
         {{ t('clients.try_signin') }}
       </AppButton>

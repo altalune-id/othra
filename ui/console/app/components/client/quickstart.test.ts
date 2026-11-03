@@ -6,7 +6,8 @@ const q = { issuer: 'https://id.acme.test/p/apps/', clientId: 'dPm7fmQRJKPVw8Pxr
 describe('quickstartEnv', () => {
   it('has the real values, and the secret only when it is known', () => {
     expect(quickstartEnv(q)).toEqual({ OIDC_ISSUER: q.issuer, OIDC_CLIENT_ID: q.clientId, OIDC_REDIRECT_URI: q.redirectUri });
-    expect(quickstartEnv({ ...q, secret: 'othra_cs_x' }).OIDC_CLIENT_SECRET).toBe('othra_cs_x');
+    expect(quickstartEnv(q, true)).toHaveProperty('OIDC_CLIENT_SECRET', '');
+    expect(quickstartEnv(q)).not.toHaveProperty('OIDC_CLIENT_SECRET');
     expect(quickstartEnv({ ...q, redirectUri: '' })).not.toHaveProperty('OIDC_REDIRECT_URI');
   });
 });
@@ -43,5 +44,12 @@ describe('quickstart snippets', () => {
     expect(goLines(q, true).slice(0, 2)).toEqual(['import "os"', 'import "github.com/altalune-id/oidcrp"']);
     expect(goLines(q, false).join('\n')).not.toContain('ClientSecret');
     expect(goLines(q, false).slice(0, 3)).toEqual(['import "github.com/altalune-id/oidcrp"', '', 'rp := oidcrp.New(oidcrp.Config{']);
+  });
+
+  it('quotes the issuer, client ID and redirect so a quote or backslash cannot break the Go literal', () => {
+    const lines = goLines({ issuer: 'https://a.test/p/x"y', clientId: 'c\\1', redirectUri: 'https://a.test/cb?q="z"' }, false);
+    expect(lines).toContain('\tIssuer:      "https://a.test/p/x\\"y",');
+    expect(lines).toContain('\tClientID:    "c\\\\1",');
+    expect(lines).toContain('\tRedirectURI: "https://a.test/cb?q=\\"z\\"",');
   });
 });

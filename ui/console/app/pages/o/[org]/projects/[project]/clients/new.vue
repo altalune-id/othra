@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '#base/components/ui/AppButton.vue';
+import LoadError from '#base/components/ui/LoadError.vue';
 import PageHeader from '#base/components/ui/PageHeader.vue';
 import SecretReveal from '#base/components/ui/SecretReveal.vue';
 import { useToast } from '#base/components/ui/toast';
@@ -80,8 +81,12 @@ const values = computed(() => ({
   issuer: detail.get(projectId)?.issuerUrl ?? '',
   clientId: result.value?.id ?? '',
   redirectUri: result.value?.redirectUris[0] ?? '',
-  secret: revealed.value?.secret,
 }));
+
+function continueToQuickstart() {
+  secretDone.value = true;
+  form.forget();
+}
 
 async function submit() {
   const client = await form.submit();
@@ -130,6 +135,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
       {{ t('clients.step_of', { n: stepIndex + 1, total: steps.length }) }}
     </p>
     <PageHeader :title="heading.title" :description="heading.description" />
+    <LoadError v-if="detail.error" :error="detail.error" :busy="detail.loading" :retry-label="t('common.retry')" @retry="detail.load(projectId)" />
 
     <div v-if="step === 'type'" class="flex flex-col gap-4" data-testid="type-step">
       <ClientKindPicker
@@ -190,7 +196,7 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('clie
         </template>
       </SecretReveal>
       <div>
-        <AppButton size="sm" :disabled="!revealed || !stored" @click="secretDone = true">
+        <AppButton size="sm" :disabled="!revealed || !stored" @click="continueToQuickstart()">
           {{ t('clients.continue_quickstart') }}
         </AppButton>
       </div>

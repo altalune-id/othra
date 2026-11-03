@@ -142,7 +142,7 @@
   "clients.post_logout_uri_remove": "Remove sign-out return URI",
   "clients.post_logout_uris": "Sign-out return URIs",
   "clients.quickstart_body": "These values are for this client and this issuer.",
-  "clients.quickstart_secret_note": "The secret is in this .env only while you stay on this page.",
+  "clients.quickstart_secret_note": "Paste the client secret you stored into OIDC_CLIENT_SECRET. Othra no longer has it.",
   "clients.quickstart_snippets": "Setup snippets",
   "clients.quickstart_title": "Connect {name}",
   "clients.redirect_help_native": "For example http://127.0.0.1/callback. Leave out the port: any port works.",

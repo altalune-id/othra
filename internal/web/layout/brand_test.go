@@ -157,6 +157,10 @@ func TestBrandFooter_LanguageSelect(t *testing.T) {
 	redirect := render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}, Refresh: "https://app.test/cb"}))
 	assert.NotContains(t, redirect, "data-lang-select", "a page that redirects at once has nothing to switch")
 	assert.NotContains(t, redirect, "<script")
+
+	posted := render(t, t.Context(), brandFooter(LayoutData{Brand: &Brand{}, Posted: true}))
+	assert.NotContains(t, posted, "data-lang-select", "a reload would resend the form")
+	assert.NotContains(t, posted, "lang.js")
 }
 
 func TestLayout_UnbrandedPagesHaveNoLanguageSelect(t *testing.T) {

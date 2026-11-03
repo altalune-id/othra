@@ -479,6 +479,8 @@ func TestWeb_InvalidEmailAndDisabledEmail(t *testing.T) {
 	login := f.get(f.client, "/p/acme/login")
 	bad := f.submit(f.client, login, "/login", url.Values{"email": {"not an email"}})
 	assert.Equal(t, http.StatusUnprocessableEntity, bad.status)
+	assert.Contains(t, login.body, "data-lang-select", "a GET page offers the language switch")
+	assert.NotContains(t, bad.body, "data-lang-select", "its reload would resend the post")
 	assert.Contains(t, bad.body, "Enter a valid email address.")
 	assert.Contains(t, bad.body, `value="not an email"`)
 	assert.Empty(t, f.users.issued)

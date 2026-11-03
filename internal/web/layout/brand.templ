@@ -27,7 +27,7 @@ templ MailButton(href, label, primary string) {
 templ brandFooter(d LayoutData) {
 	<footer class={ "flex w-full flex-col gap-2 text-xs text-base-content/70", templ.KV("max-w-100", !d.Wide), templ.KV("max-w-112", d.Wide) }>
 		<div class="flex flex-wrap items-center justify-between gap-3">
-			if d.Refresh == "" {
+			if d.langSwitch() {
 				<label class="sr-only" for="lang">{ i18n.T(ctx, "common.language") }</label>
 				<select id="lang" class="select select-xs w-28" data-lang-select data-cookie={ i18n.Cookie } hidden>
 					for _, l := range i18n.Locales() {
@@ -50,7 +50,7 @@ templ brandFooter(d LayoutData) {
 			</nav>
 		}
 	</footer>
-	if d.Refresh == "" {
+	if d.langSwitch() {
 		<script type="module" src={ d.Static("/lang.js") }></script>
 	}
 }

@@ -142,7 +142,7 @@
   "clients.post_logout_uri_remove": "Hapus URI kembali setelah logout",
   "clients.post_logout_uris": "URI kembali setelah logout",
   "clients.quickstart_body": "Nilai ini untuk klien dan issuer ini.",
-  "clients.quickstart_secret_note": "Rahasia hanya ada di .env ini selama Anda tetap di halaman ini.",
+  "clients.quickstart_secret_note": "Tempel rahasia klien yang sudah Anda simpan ke OIDC_CLIENT_SECRET. Othra tidak lagi menyimpannya.",
   "clients.quickstart_snippets": "Cuplikan penyiapan",
   "clients.quickstart_title": "Hubungkan {name}",
   "clients.redirect_help_native": "Misalnya http://127.0.0.1/callback. Jangan tulis port: port apa pun bisa dipakai.",

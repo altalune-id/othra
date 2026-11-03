@@ -24,8 +24,14 @@ type LayoutData struct {
 	Refresh  string
 	// Wide gives the hosted footer the consent page's wider column.
 	Wide bool
+	// Posted marks a response to a form post, where the language switch's reload would resend the form.
+	Posted bool
 	// Version returns a static file's content hash for a cache-busting ?v=; nil leaves asset URLs plain.
 	Version func(name string) string
+}
+
+func (d LayoutData) langSwitch() bool {
+	return d.Refresh == "" && !d.Posted
 }
 
 // Href returns sub (which starts with "/") under the base path.
