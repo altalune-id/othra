@@ -1,9 +1,10 @@
 import type { Ref } from 'vue';
 import { create } from '@bufbuild/protobuf';
 import { Code, ConnectError } from '@connectrpc/connect';
+import { config } from '@vue/test-utils';
 import { defineStore } from 'pinia';
 import { afterEach, beforeEach, vi } from 'vitest';
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, useSlots, watch } from 'vue';
+import { computed, defineComponent, nextTick, onBeforeUnmount, onErrorCaptured, onMounted, reactive, ref, shallowRef, useId, useSlots, watch } from 'vue';
 
 import { ErrorDetailSchema } from '#gen/apperror/v1/error_pb';
 
@@ -16,7 +17,7 @@ let known = new Set<string>();
 let states = new Map<string, Ref<unknown>>();
 
 const locale = ref('en-US');
-const locales = ref([{ code: 'en-US', name: 'English (US)' }, { code: 'id-ID', name: 'Bahasa Indonesia' }]);
+const locales = ref([{ code: 'en-US', name: 'English' }, { code: 'id-ID', name: 'Bahasa Indonesia' }]);
 
 export const setLocale = vi.fn(async (code: string) => {
   locale.value = code;
@@ -79,11 +80,34 @@ export function fakeStorage() {
     setItem: vi.fn((key: string, value: string) => {
       data.set(key, value);
     }),
+    removeItem: vi.fn((key: string) => {
+      data.delete(key);
+    }),
   };
 }
 
 export const navigateTo = vi.fn(async (_to: string) => undefined);
 export const useRuntimeConfig = vi.fn(() => runtimeConfig);
+export const clearError = vi.fn(async (_options?: { redirect?: string }) => undefined);
+export const nuxtError = ref<unknown>(null);
+
+// NOTE: mirrors the client path of nuxt/dist/app/components/nuxt-error-boundary.vue, which needs a Nuxt app to run.
+export const NuxtErrorBoundary = defineComponent({
+  name: 'NuxtErrorBoundary',
+  setup(_props, { slots, expose }) {
+    const error = shallowRef<unknown>(null);
+    const clear = () => {
+      error.value = null;
+    };
+    onErrorCaptured((err) => {
+      error.value = err;
+      return false;
+    });
+    expose({ error, clearError: clear });
+    return () => (error.value ? slots.error?.({ error: error.value, clearError: clear }) : slots.default?.());
+  },
+});
+config.global.components = { ...config.global.components, NuxtErrorBoundary };
 
 Object.assign(globalThis, {
   ref,
@@ -100,6 +124,8 @@ Object.assign(globalThis, {
   createError: (input: { statusCode: number, statusMessage?: string }) => Object.assign(new Error(input.statusMessage), input),
   defineStore,
   navigateTo,
+  clearError,
+  useError: () => nuxtError,
   useRuntimeConfig,
   useAppConfig: () => appConfig,
   defineAppConfig: <T>(config: T) => config,
@@ -125,6 +151,8 @@ beforeEach(() => {
   router.replace.mockClear();
   router.push.mockClear();
   navigateTo.mockClear();
+  clearError.mockClear();
+  nuxtError.value = null;
   useRuntimeConfig.mockClear();
 });
 

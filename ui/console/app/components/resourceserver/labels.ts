@@ -14,7 +14,18 @@ import { failureText, verificationStates } from './verification';
 type Translate = (key: string, params?: Record<string, unknown>) => string;
 
 export function resourceServerListLabels(t: Translate): ResourceServerListLabels {
-  return { name: t('common.name'), identifier: t('rs.uri'), status: t('rs.col_verification'), checked: t('rs.col_checked') };
+  return {
+    caption: t('rs.title'),
+    name: t('common.name'),
+    identifier: t('rs.uri'),
+    status: t('rs.col_verification'),
+    checked: t('rs.col_checked'),
+    actions: t('rs.col_actions'),
+    moreFor: t('rs.more_for', { name: '{name}' }),
+    open: t('common.open'),
+    copyUri: t('rs.copy_uri'),
+    copied: t('common.copied'),
+  };
 }
 
 export function cimdCardLabels(t: Translate): CimdCardLabels {

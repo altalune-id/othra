@@ -46,6 +46,10 @@ type ComplianceConfig struct {
 	PrivacyURL        string `yaml:"privacyURL"        mapstructure:"privacyURL"        validate:"omitempty,url"`
 	// TermsUpdatedAt is the external terms' last change, as YYYY-MM-DD.
 	TermsUpdatedAt string `yaml:"termsUpdatedAt" mapstructure:"termsUpdatedAt" validate:"omitempty,datetime=2006-01-02"`
+	// Company names who operates this instance on the built-in legal pages.
+	Company string `yaml:"company" mapstructure:"company"`
+	// ContactEmail is where the built-in legal pages send questions.
+	ContactEmail string `yaml:"contactEmail" mapstructure:"contactEmail" validate:"omitempty,email"`
 }
 
 // TermsUpdated returns TermsUpdatedAt as a UTC date, or the zero time when it is unset.

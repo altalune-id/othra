@@ -48,3 +48,20 @@ func TestLegalPages_URLOverride(t *testing.T) {
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "https://example.com/privacy", rec.Header().Get("Location"))
 }
+
+func TestLegalPages_CompanyAndContact(t *testing.T) {
+	srv := web.NewServer(web.ServerOpts{Routes: []web.Registrar{NewWeb(WebOpts{Company: "Example <Ltd>", ContactEmail: "legal@example.com"})}})
+	for _, path := range []string{"/terms", "/privacy"} {
+		body := get(t, srv, path).Body.String()
+		assert.Contains(t, body, `<dt class="text-base-content/70">Operated by</dt><dd class="break-words">Example &lt;Ltd&gt;</dd>`, path)
+		assert.Contains(t, body, `<dd><a class="link break-all" href="mailto:legal@example.com">legal@example.com</a></dd>`, path)
+	}
+
+	only := web.NewServer(web.ServerOpts{Routes: []web.Registrar{NewWeb(WebOpts{ContactEmail: "legal@example.com"})}})
+	body := get(t, only, "/terms").Body.String()
+	assert.NotContains(t, body, "Operated by", "no company, no empty row")
+	assert.Contains(t, body, "mailto:legal@example.com")
+
+	none := get(t, web.NewServer(web.ServerOpts{Routes: []web.Registrar{NewWeb(WebOpts{})}}), "/terms").Body.String()
+	assert.NotContains(t, none, "<dl", "neither set: no contact block")
+}

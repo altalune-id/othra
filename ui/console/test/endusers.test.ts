@@ -9,8 +9,8 @@ import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
 import { EndUserSchema } from '#gen/enduser/v1/enduser_pb';
 import { mountPage } from '#test/mount-page';
 import { connectError, setClient, setKnownKeys, setRoute, useHead } from '#test/nuxt-globals';
-import App from '~/app.vue';
 import ProjectSidebar from '~/components/project/ProjectSidebar.vue';
+import DefaultLayout from '~/layouts/default.vue';
 import EndUserDetail from '~/pages/o/[org]/projects/[project]/end-users/[user].vue';
 import EndUserList from '~/pages/o/[org]/projects/[project]/end-users/index.vue';
 import { useOrgsStore } from '~/stores/orgs';
@@ -52,7 +52,7 @@ beforeEach(() => {
 
 describe('console shell', () => {
   it('sets <html lang> from the locale', async () => {
-    await mountPage(App, { global: { stubs: { NuxtLayout: { template: '<slot />' }, NuxtPage: true } } });
+    await mountPage(DefaultLayout, { global: { stubs: { AppNavbar: true, ToastHost: true, OrgCreateModal: true, ProjectCreateModal: true } } });
     const head = useHead.mock.calls[0]![0] as { htmlAttrs: { lang: { value: string } } };
     expect(head.htmlAttrs.lang.value).toBe('en-US');
   });
@@ -62,7 +62,7 @@ describe('project sidebar', () => {
   it('shows End users only to people who may read them', async () => {
     const labels = async () => {
       const w = await mountPage(ProjectSidebar);
-      const shown = w.findAll('nav button').map(b => b.text());
+      const shown = w.findAll('nav a').map(b => b.text());
       w.unmount();
       return shown;
     };
@@ -86,7 +86,7 @@ describe('end users list', () => {
     expect(w.text()).not.toContain('endusers.empty');
   });
 
-  it('keeps the empty message on the shown search while the box changes, with daisyUI 5 row hover', async () => {
+  it('keeps the empty message on the shown search while the box changes, then lists the match as a link', async () => {
     endUsers.listEndUsers!.mockResolvedValueOnce({ endUsers: [], next: '' });
     const w = await mountPage(EndUserList);
     expect(w.text()).toContain('endusers.empty');
@@ -95,7 +95,20 @@ describe('end users list', () => {
     endUsers.listEndUsers!.mockResolvedValueOnce({ endUsers: [ana], next: '' });
     await w.get('form').trigger('submit');
     await new Promise(r => setTimeout(r));
-    expect(w.get('[data-testid="end-users"] tbody tr').classes()).toContain('row-hover');
+    expect(w.get('[data-testid="end-users"] tbody td a').text()).toBe(ana.email);
+  });
+});
+
+describe('end users load more', () => {
+  it('keeps the loaded rows when the next page fails, with Retry under them', async () => {
+    setKnownKeys('apperror.GEN900');
+    endUsers.listEndUsers!.mockResolvedValueOnce({ endUsers: [ana], next: 'c1' }).mockRejectedValueOnce(connectError('GEN900'));
+    const w = await mountPage(EndUserList);
+    await w.findAll('button').find(b => b.text().includes('endusers.more'))!.trigger('click');
+    await new Promise(r => setTimeout(r));
+    expect(w.findAll('[data-testid="end-users"] tbody tr')).toHaveLength(1);
+    expect(w.get('[role="alert"]').text()).toContain('apperror.GEN900');
+    expect(w.findAll('button').some(b => b.text().includes('endusers.more'))).toBe(false);
   });
 });
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import GoogleUpstreamCard from '~/components/project/signin/GoogleUpstreamCard.vue';
 import { googleUpstreamCardLabels } from '~/components/project/signin/labels';
@@ -48,53 +50,44 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('sign
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold">
-        {{ t('signin.title') }}
-      </h1>
-      <p class="text-sm text-base-content/60">
-        {{ t('signin.subtitle') }}
-      </p>
-    </div>
+  <div class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="t('signin.title')" :description="t('signin.subtitle')" />
     <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="t('project.system_note')" />
     <ProjectReadOnlyNote v-else-if="!canEdit" />
     <ErrorText :error="loadError" />
 
-    <section class="card border border-base-300 bg-base-100" data-testid="email-link-card">
-      <div class="card-body gap-2">
-        <template v-if="canEdit">
-          <label :for="ids.email" class="flex items-center gap-3 text-sm font-medium">
-            <input
-              :id="ids.email"
-              :checked="emailLink"
-              type="checkbox"
-              class="toggle toggle-sm"
-              :class="{ 'cursor-not-allowed': emailLockedOn }"
-              :disabled="busy"
-              :aria-disabled="emailLockedOn"
-              :aria-describedby="emailLockedOn ? `${ids.emailHelp} ${ids.emailLocked}` : ids.emailHelp"
-              @click="emailLockedOn && $event.preventDefault()"
-              @change="onEmailToggle"
-            >
-            {{ t('signin.email_link') }}
-          </label>
-          <p :id="ids.emailHelp" class="label whitespace-normal">
-            {{ t('signin.email_link_help') }}
-          </p>
-          <p v-if="emailLockedOn" :id="ids.emailLocked" class="flex items-start gap-1 text-xs text-base-content">
-            <Icon name="lucide:lock" size="14" class="shrink-0 text-info" />
-            {{ emailLockText }}
-          </p>
-          <ErrorText :error="emailError" />
-        </template>
-        <dl v-else class="space-y-1 text-sm">
-          <dt class="fieldset-legend">
-            {{ t('signin.email_link') }}
-          </dt>
-          <dd>{{ emailLink ? t('signin.on') : t('signin.off') }}</dd>
-        </dl>
-      </div>
+    <section class="flex flex-col gap-2 rounded-box border border-base-300 bg-base-100 p-4" data-testid="email-link-card">
+      <template v-if="canEdit">
+        <label :for="ids.email" class="flex items-center gap-3 text-ui font-medium">
+          <input
+            :id="ids.email"
+            :checked="emailLink"
+            type="checkbox"
+            class="toggle toggle-sm"
+            :class="{ 'cursor-not-allowed': emailLockedOn }"
+            :disabled="busy"
+            :aria-disabled="emailLockedOn"
+            :aria-describedby="emailLockedOn ? `${ids.emailHelp} ${ids.emailLocked}` : ids.emailHelp"
+            @click="emailLockedOn && $event.preventDefault()"
+            @change="onEmailToggle"
+          >
+          {{ t('signin.email_link') }}
+        </label>
+        <p :id="ids.emailHelp" class="label whitespace-normal text-xs text-base-content/70">
+          {{ t('signin.email_link_help') }}
+        </p>
+        <p v-if="emailLockedOn" :id="ids.emailLocked" class="flex items-start gap-1 text-xs text-base-content">
+          <Icon name="lucide:lock" size="14" class="shrink-0 text-info" aria-hidden="true" />
+          {{ emailLockText }}
+        </p>
+        <ErrorText :error="emailError" />
+      </template>
+      <dl v-else class="space-y-1 text-ui">
+        <dt class="label text-ui text-base-content">
+          {{ t('signin.email_link') }}
+        </dt>
+        <dd>{{ emailLink ? t('signin.on') : t('signin.off') }}</dd>
+      </dl>
     </section>
 
     <GoogleUpstreamCard
@@ -121,17 +114,17 @@ useHead({ title: () => `${listed.value?.name ?? t('project.title')} · ${t('sign
     />
 
     <AppModal :open="removing" :title="t('signin.google_remove_title')" @close="signIn.cancelRemove()">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ t('signin.google_remove_body') }}
       </p>
       <ErrorText :error="removeError" />
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="signIn.cancelRemove()">
+        <AppButton variant="ghost" size="sm" :disabled="busy" autofocus @click="signIn.cancelRemove()">
           {{ t('common.cancel') }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="busy" @click="signIn.confirmRemove()">
+        </AppButton>
+        <AppButton variant="error" size="sm" :busy="busy" @click="signIn.confirmRemove()">
           {{ t('signin.google_remove') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
   </div>

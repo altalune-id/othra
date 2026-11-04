@@ -28,10 +28,10 @@ templ Login(d layout.LayoutData, v LoginData) {
 	@layout.Layout(d) {
 		@layout.Card(d.Title) {
 			if v.Notice != "" {
-				<div role="status" class="alert alert-success alert-soft">{ v.Notice }</div>
+				<div role="status" class="alert alert-success alert-soft text-base-content">{ v.Notice }</div>
 			}
 			if v.Error != "" {
-				<div role="alert" class="alert alert-error alert-soft">{ v.Error }</div>
+				<div role="alert" class="alert alert-error alert-soft text-base-content">{ v.Error }</div>
 			}
 			if v.OthraURL != "" {
 				if v.LastUser != "" {
@@ -52,7 +52,7 @@ templ Login(d layout.LayoutData, v LoginData) {
 			if !v.PasswordOff {
 				@passwordForm(d, v)
 			}
-			<p class="text-xs text-base-content/60">
+			<p class="text-xs text-base-content/70">
 				<a class="link" href={ d.Href("/terms") }>Terms</a> · <a class="link" href={ d.Href("/privacy") }>Privacy</a>
 			</p>
 		}

@@ -46,10 +46,10 @@ function setDescription(index: number, value: string) {
 
 <template>
   <fieldset v-if="editable" class="fieldset">
-    <legend class="fieldset-legend">
+    <legend class="fieldset-legend text-ui">
       {{ labels.legend }}
     </legend>
-    <div class="hidden gap-2 text-xs font-medium text-base-content/70 sm:grid sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_2rem]" aria-hidden="true" data-testid="scope-columns">
+    <div class="hidden grid-cols-[minmax(0,1fr)] gap-2 text-xs font-medium text-base-content/70 sm:grid sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_2rem]" aria-hidden="true" data-testid="scope-columns">
       <span>{{ labels.scope }}</span>
       <span>{{ labels.description }}</span>
     </div>
@@ -61,7 +61,7 @@ function setDescription(index: number, value: string) {
             :id="`${id}-scope-${i}`"
             :value="row"
             type="text"
-            class="input w-full font-mono"
+            class="input input-sm w-full font-mono text-ui"
             :class="{ 'input-error': errors[i] }"
             :placeholder="i === 0 ? 'devices:read' : ''"
             :disabled="disabled"
@@ -79,7 +79,7 @@ function setDescription(index: number, value: string) {
             :id="`${id}-desc-${i}`"
             :value="descriptions[i] ?? ''"
             type="text"
-            class="input w-full"
+            class="input input-sm w-full text-ui"
             maxlength="120"
             :placeholder="i === 0 ? labels.descriptionPlaceholder : ''"
             :disabled="disabled"
@@ -91,24 +91,24 @@ function setDescription(index: number, value: string) {
         <button
           v-if="rows.length > 1"
           type="button"
-          class="btn btn-ghost btn-sm btn-square col-start-2 row-span-2 row-start-1 self-center sm:col-start-3 sm:row-span-1 sm:self-end"
+          class="btn btn-ghost btn-sm btn-square col-start-2 row-span-2 row-start-1 self-center sm:col-start-3 sm:row-span-1 sm:self-end text-ui"
           :disabled="disabled"
           :aria-label="`${labels.remove} ${i + 1}`"
           :title="`${labels.remove} ${i + 1}`"
           @click="emit('remove', i)"
         >
-          <Icon name="lucide:x" size="16" />
+          <Icon name="lucide:x" size="16" class="shrink-0" aria-hidden="true" />
         </button>
       </div>
       <FieldError :id="`${id}-err-${i}`" :message="errors[i]" />
     </div>
     <div v-if="!full">
-      <button type="button" class="btn btn-ghost btn-sm" :disabled="disabled" @click="emit('add')">
-        <Icon name="lucide:plus" size="16" />
+      <button type="button" class="btn btn-ghost btn-sm text-ui" :disabled="disabled" @click="emit('add')">
+        <Icon name="lucide:plus" size="16" class="shrink-0" aria-hidden="true" />
         {{ labels.add }}
       </button>
     </div>
-    <p class="label whitespace-normal">
+    <p class="label whitespace-normal text-xs text-base-content/70">
       {{ labels.help }}
     </p>
   </fieldset>

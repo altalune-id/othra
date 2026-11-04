@@ -4,11 +4,11 @@ import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import ToastHost from '#base/components/ui/ToastHost.vue';
 import { AppResourceSchema, ConnectedAppSchema, ProfileSchema, SessionSchema, SignInMethodKind, SignInMethodLock, SignInMethodSchema, TokenServerSchema } from '#gen/account/v1/account_pb';
 import { mountPage } from '#test/mount-page';
 import { connectError, router, runtimeConfig, setClient, setKnownKeys, setRoute, useHead } from '#test/nuxt-globals';
 import appConfig from '~/app.config';
-import App from '~/app.vue';
 import Layout from '~/layouts/default.vue';
 import Apps from '~/pages/apps.vue';
 import Sessions from '~/pages/sessions.vue';
@@ -50,24 +50,28 @@ beforeEach(() => {
 
 describe('portal shell', () => {
   it('sets <html lang> from the locale and keeps the portal\'s own theme key', async () => {
-    await mountPage(App, { global: { stubs: { NuxtLayout: { template: '<slot />' }, NuxtPage: true } } });
+    await mountPage(Layout);
     const head = useHead.mock.calls[0]![0] as { htmlAttrs: { lang: { value: string } } };
     expect(head.htmlAttrs.lang.value).toBe('en-US');
     expect(appConfig.theme).toEqual({ storageKey: 'othra_portal_theme', followSystem: true });
   });
 
-  it('opens the account menu from a focusable trigger and switches account back to the portal base', async () => {
+  it('opens the account menu from a popover button and switches account back to the portal base', async () => {
     const w = await mountPage(Layout);
-    const trigger = w.findAll('.dropdown [role="button"][aria-haspopup="true"]').find(b => b.text().includes('menu.account'))!;
-    expect(trigger.element.tagName).toBe('DIV');
-    expect(trigger.attributes('tabindex')).toBe('0');
+    const trigger = w.findAll('button[popovertarget][aria-haspopup="true"]').find(b => b.text().includes('menu.account'))!;
+    expect(trigger.element.tagName).toBe('BUTTON');
     expect(trigger.text()).toContain('ana@acme.test');
     expect(router.resolve).toHaveBeenCalledWith('/');
-    const menu = trigger.element.parentElement!;
-    expect(menu.querySelector('.dropdown-content a')!.getAttribute('href')).toBe('/p/acme/login?add=1&return_to=%2Fbase%2F');
-    const form = menu.querySelector('.dropdown-content form')!;
+    const menu = trigger.element.parentElement!.querySelector('[popover]')!;
+    expect(menu.querySelector('a')!.getAttribute('href')).toBe('/p/acme/login?add=1&return_to=%2Fbase%2F');
+    const form = menu.querySelector('form')!;
     expect(form.getAttribute('action')).toBe('/p/acme/login/signout');
     expect((form.querySelector('input[name="user_session"]') as HTMLInputElement).value).toBe(here.id);
+  });
+
+  it('mounts the toast host so copy buttons announce Copied', async () => {
+    const w = await mountPage(Layout);
+    expect(w.findComponent(ToastHost).exists()).toBe(true);
   });
 });
 

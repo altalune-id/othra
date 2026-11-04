@@ -99,6 +99,8 @@ type Deps struct {
 	Identities Identities
 	Invites    ConsoleInvites
 	OrgCreator OrgCreator
+	// SystemSessions ends the person's /p/system sessions on sign out everywhere; nil skips that step.
+	SystemSessions SystemSessions
 	// OpenSignup lets a /p/system sign-in with no account create one (cloud); otherwise only an invite does.
 	OpenSignup bool
 }
@@ -108,6 +110,11 @@ type Identities interface {
 	ByIDP(ctx context.Context, issuer, subject string) (*user.User, error)
 	LinkIDP(ctx context.Context, id uuid.UUID, issuer, subject string) (bool, error)
 	CreateLinked(ctx context.Context, email, name, issuer, subject string) (*user.User, error)
+}
+
+// SystemSessions ends the /p/system sessions of the end user subject, the IDPSubject a console account is linked to.
+type SystemSessions interface {
+	EndAll(ctx context.Context, subject string) error
 }
 
 // OrgCreator creates an org; with CreatedBy set, its creator owns it, once per person (org.Service and boot's after-create hook).

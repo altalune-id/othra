@@ -13,7 +13,7 @@ import (
 )
 
 // OthraPrimary is Othra's primary colour as hex, for places that cannot read the theme, such as email.
-const OthraPrimary = "#432dd7"
+const OthraPrimary = "#005b5c"
 
 // CSRFField is the form field that carries the hosted pages' CSRF token.
 const CSRFField = "csrf"
@@ -28,6 +28,7 @@ type Brand struct {
 	OnPrimary  string
 	TermsURL   string
 	PrivacyURL string
+	Issuer     string
 }
 
 // NewBrand returns a brand whose primary colour is kept only when it is valid hex, with a readable text colour on it.
@@ -74,6 +75,20 @@ func (b *Brand) CSS() string {
 		return ""
 	}
 	return ":root{--color-primary:" + b.Primary + ";--color-primary-content:" + ReadableOn(b.Primary) + "}"
+}
+
+// Branded reports a colour or a logo; only unbranded pages follow the system dark mode, as brand assets are light-only.
+func (b *Brand) Branded() bool {
+	return b != nil && (b.CSS() != "" || b.LogoURL != "")
+}
+
+// IssuerHost is the issuer URL without its scheme, as the footer of a hosted page shows it.
+func (b *Brand) IssuerHost() string {
+	_, rest, found := strings.Cut(b.Issuer, "://")
+	if !found {
+		return b.Issuer
+	}
+	return rest
 }
 
 func (b *Brand) initial() string {

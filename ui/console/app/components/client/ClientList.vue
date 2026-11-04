@@ -1,101 +1,85 @@
 <script setup lang="ts">
-import CopyButton from '#base/components/ui/CopyButton.vue';
+import type { Column } from '#base/components/ui/types';
+import AppBadge from '#base/components/ui/AppBadge.vue';
+import AppDropdown from '#base/components/ui/AppDropdown.vue';
+import { useCopy } from '#base/components/ui/copy';
+import DataTable from '#base/components/ui/DataTable.vue';
 import SystemBadge from '#base/components/ui/SystemBadge.vue';
 
 export interface ClientRow {
   id: string;
   name: string;
-  kind: string;
-  created: string;
+  type: string;
+  icon: string;
+  host: string;
+  lastUsed: string;
   to: string;
   system?: boolean;
 }
 
 export interface ClientListLabels {
+  caption: string;
   name: string;
+  type: string;
   clientId: string;
-  kind: string;
-  created: string;
-  copyFor: string;
+  host: string;
+  lastUsed: string;
+  actions: string;
+  moreFor: string;
+  open: string;
+  copyId: string;
+  copied: string;
   system: string;
 }
 
-const { rows, loading = false, labels = {
-  name: 'Name',
-  clientId: 'Client ID',
-  kind: 'Kind',
-  created: 'Created',
-  copyFor: 'Copy client ID for {name}',
-  system: 'System',
-} } = defineProps<{ rows: ClientRow[], loading?: boolean, labels?: ClientListLabels }>();
+const { rows, loading = false, labels } = defineProps<{ rows: ClientRow[], loading?: boolean, labels: ClientListLabels }>();
+const { copy } = useCopy();
+
+const columns = computed<Column[]>(() => [
+  { key: 'name', label: labels.name },
+  { key: 'type', label: labels.type },
+  { key: 'id', label: labels.clientId, mono: true },
+  { key: 'host', label: labels.host, mono: true },
+  { key: 'lastUsed', label: labels.lastUsed },
+  { key: 'menu', label: labels.actions, hideLabel: true, align: 'end' },
+]);
 </script>
 
 <template>
-  <div>
-    <div class="overflow-x-auto max-sm:hidden">
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>{{ labels.name }}</th>
-            <th>{{ labels.clientId }}</th>
-            <th>{{ labels.kind }}</th>
-            <th>{{ labels.created }}</th>
-          </tr>
-        </thead>
-        <tbody v-if="loading">
-          <tr v-for="n in 3" :key="n">
-            <td v-for="c in 4" :key="c">
-              <div class="skeleton h-4 w-24" />
-            </td>
-          </tr>
-        </tbody>
-        <tbody v-else>
-          <tr v-for="row in rows" :key="row.id">
-            <td>
-              <span class="inline-flex flex-wrap items-center gap-2">
-                <NuxtLink :to="row.to" class="link link-hover font-medium">
-                  {{ row.name }}
-                </NuxtLink>
-                <SystemBadge v-if="row.system" :label="labels.system" />
-              </span>
-            </td>
-            <td>
-              <span class="inline-flex items-center gap-1">
-                <code class="font-mono text-xs">{{ row.id }}</code>
-                <CopyButton :value="row.id" :label="labels.copyFor.replace('{name}', row.name)" />
-              </span>
-            </td>
-            <td>{{ row.kind }}</td>
-            <td class="whitespace-nowrap">
-              {{ row.created }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <ul class="divide-y divide-base-300 sm:hidden">
-      <template v-if="loading">
-        <li v-for="n in 3" :key="n" class="py-3">
-          <div class="skeleton h-4 w-32" />
-        </li>
-      </template>
-      <template v-else>
-        <li v-for="row in rows" :key="row.id" class="space-y-1 py-3">
-          <span class="flex flex-wrap items-center gap-2">
-            <NuxtLink :to="row.to" class="link link-hover font-medium">
-              {{ row.name }}
+  <DataTable :caption="labels.caption" row-key="id" :columns="columns" :rows="rows" :loading="loading">
+    <template #cell-name="{ row }">
+      <span class="inline-flex flex-wrap items-center gap-2">
+        <NuxtLink :to="row.to" class="link link-hover font-medium">{{ row.name }}</NuxtLink>
+        <SystemBadge v-if="row.system" :label="labels.system" />
+      </span>
+    </template>
+    <template #cell-type="{ row }">
+      <AppBadge :label="row.type" :icon="row.icon" />
+    </template>
+    <template #cell-id="{ row }">
+      <span class="block max-w-44 truncate" :title="row.id">{{ row.id }}</span>
+    </template>
+    <template #cell-lastUsed="{ row }">
+      <span class="tabular-nums text-base-content/70">{{ row.lastUsed }}</span>
+    </template>
+    <template #cell-menu="{ row }">
+      <AppDropdown placement="end" size="xs" trigger-class="btn-square" content-class="w-48" :label="labels.moreFor.replace('{name}', row.name)">
+        <template #trigger>
+          <Icon name="lucide:ellipsis" size="14" class="shrink-0" aria-hidden="true" />
+        </template>
+        <ul class="menu menu-sm w-full p-0 text-ui">
+          <li>
+            <NuxtLink :to="row.to">
+              {{ labels.open }}
             </NuxtLink>
-            <SystemBadge v-if="row.system" :label="labels.system" />
-          </span>
-          <span class="flex items-center gap-1">
-            <code class="min-w-0 font-mono text-xs break-all">{{ row.id }}</code>
-            <CopyButton :value="row.id" :label="labels.copyFor.replace('{name}', row.name)" />
-          </span>
-          <p class="text-xs text-base-content/70">
-            {{ row.kind }} · {{ row.created }}
-          </p>
-        </li>
-      </template>
-    </ul>
-  </div>
+          </li>
+          <li>
+            <button type="button" @click="copy(row.id, labels.copied)">
+              {{ labels.copyId }}
+            </button>
+          </li>
+        </ul>
+      </AppDropdown>
+    </template>
+  </DataTable>
 </template>

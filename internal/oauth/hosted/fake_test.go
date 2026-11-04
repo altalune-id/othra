@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/internal/enduser"
 	"github.com/altalune-id/othra/internal/oauth/oidc"
 	"github.com/altalune-id/othra/internal/project"
 	"github.com/altalune-id/othra/mailer"
@@ -47,6 +48,8 @@ type fakeUsers struct {
 	failOn   string
 	seq      int
 	names    map[uuid.UUID]string
+	// composing is true while Compose runs, where the real store holds the link transaction open.
+	composing bool
 }
 
 const fakeCooldown = time.Minute
@@ -119,7 +122,9 @@ func (f *fakeUsers) IssueLink(ctx context.Context, req IssueRequest) (Link, bool
 	l := Link{ID: "id-" + token, Email: req.Email, URL: req.Project.IssuerURL + "/login/verify?t=" + token, SignUp: !known}
 	f.links[token] = &fakeLink{project: req.Project, email: req.Email, returnTo: req.ReturnTo, pending: req.Pending}
 	if req.Compose != nil {
+		f.composing = true
 		m, err := req.Compose(l)
+		f.composing = false
 		if err != nil {
 			return Link{}, false, err
 		}
@@ -137,10 +142,13 @@ func (f *fakeUsers) LinkByToken(_ context.Context, p Project, token string) (Lin
 		return LinkRef{}, errFake
 	}
 	l, ok := f.links[token]
-	if !ok || l.used || l.project.ID != p.ID {
+	switch {
+	case !ok || l.project.ID != p.ID:
 		return LinkRef{}, notUsable()
+	case l.used:
+		return LinkRef{}, &enduser.LinkNotUsableError{ReturnTo: l.returnTo}
 	}
-	return LinkRef{ID: "id-" + token, Email: l.email, Pending: l.pending}, nil
+	return LinkRef{ID: "id-" + token, Email: l.email, ReturnTo: l.returnTo, Pending: l.pending}, nil
 }
 
 func (f *fakeUsers) Redeem(ctx context.Context, req RedeemRequest) (*Redeemed, error) {

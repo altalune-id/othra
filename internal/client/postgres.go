@@ -58,6 +58,7 @@ type clientRow struct {
 	MetadataFetchedAt      *time.Time `alias:"oauth_clients.metadata_fetched_at"`
 	MetadataExpiresAt      *time.Time `alias:"oauth_clients.metadata_expires_at"`
 	RegistrationKind       string     `alias:"oauth_clients.registration_kind"`
+	LastUsedAt             *time.Time `alias:"oauth_clients.last_used_at"`
 }
 
 func (r *clientRow) toClient() (*Client, error) {
@@ -80,7 +81,7 @@ func (r *clientRow) toClient() (*Client, error) {
 		ConsentPolicy: ConsentPolicy(r.ConsentPolicy), PKCERequired: r.PKCERequired,
 		CreatedAt: r.CreatedAt.UTC(), UpdatedAt: r.UpdatedAt.UTC(), Secrets: []Secret{},
 		MetadataURL: deref(r.MetadataURL), ClientURI: deref(r.ClientURI), MetadataFetchedAt: utc(r.MetadataFetchedAt),
-		MetadataExpiresAt: utc(r.MetadataExpiresAt), System: r.RegistrationKind == kindSystem,
+		MetadataExpiresAt: utc(r.MetadataExpiresAt), System: r.RegistrationKind == kindSystem, LastUsedAt: utc(r.LastUsedAt),
 	}, nil
 }
 

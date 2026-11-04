@@ -27,6 +27,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
-export const Refused: Story = { args: { handle: handle({ message: 'Couldn\'t revoke the token.', reference: 'Ref: req-1' }) } };
-export const Busy: Story = { args: { handle: handle(null, true) } };
+function withHandle(error: { message: string, reference?: string } | null = null, busy = false): Story['render'] {
+  return args => ({
+    components: { ConfirmModal },
+    setup: () => ({ args, state: handle(error, busy) }),
+    template: '<ConfirmModal v-bind="args" :handle="state" />',
+  });
+}
+
+export const Default: Story = { render: withHandle() };
+export const Refused: Story = { render: withHandle({ message: 'Couldn\'t revoke the token.', reference: 'Ref: req-1' }) };
+export const Busy: Story = { render: withHandle(null, true) };

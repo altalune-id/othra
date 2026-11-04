@@ -355,3 +355,25 @@ func TestPostgres_SystemClient(t *testing.T) {
 	_, err = f.db.ExecContext(ctx, `UPDATE oauth_clients SET grant_types = '{authorization_code,refresh_token}' WHERE id = $1`, c.ID)
 	assert.Error(t, err, "oauth_clients_system_shape")
 }
+
+func TestPostgres_TouchLastUsedNeverMovesBack(t *testing.T) {
+	f := newPGFixture(t)
+	org, prj := f.seed(t)
+	c, err := f.svc.Create(t.Context(), org, prj, client.KindCLI, client.Settings{Name: "CLI", RedirectURIs: []string{"http://127.0.0.1/cb"}})
+	require.NoError(t, err)
+	store := client.NewStore(f.pool, f.schema, "")
+	scope := tenant.Into(t.Context(), tenant.Context{OrgID: org, ProjectID: prj})
+	later := time.Date(2026, 11, 2, 10, 0, 0, 0, time.UTC)
+
+	require.NoError(t, store.TouchLastUsed(scope, map[uuid.UUID]time.Time{c.ID: later}))
+	require.NoError(t, store.TouchLastUsed(scope, map[uuid.UUID]time.Time{c.ID: later.Add(-time.Hour)}))
+	got, err := f.svc.Get(t.Context(), org, prj, c.PublicID)
+	require.NoError(t, err)
+	require.NotNil(t, got.LastUsedAt)
+	assert.True(t, later.Equal(*got.LastUsedAt), "an older use never moves it back")
+	_, err = f.svc.Update(t.Context(), org, prj, c.PublicID, client.Settings{Name: "CLI 2", RedirectURIs: []string{"http://127.0.0.1/cb"}})
+	require.NoError(t, err)
+	got, err = f.svc.Get(t.Context(), org, prj, c.PublicID)
+	require.NoError(t, err)
+	assert.True(t, later.Equal(*got.LastUsedAt), "saving the client keeps it")
+}

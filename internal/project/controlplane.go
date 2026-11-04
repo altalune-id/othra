@@ -148,6 +148,19 @@ func (s *ProjectService) UpdateProjectSignIn(
 	return connect.NewResponse(&projectv1.UpdateProjectSignInResponse{Project: out}), nil
 }
 
+// UpdateProjectEnvironment tags a project as production, staging, development or labs; unspecified clears the tag.
+func (s *ProjectService) UpdateProjectEnvironment(
+	ctx context.Context, req *connect.Request[projectv1.UpdateProjectEnvironmentRequest],
+) (*connect.Response[projectv1.UpdateProjectEnvironmentResponse], error) {
+	out, err := s.update(ctx, req.Msg.GetId(), func(p *Project) (*Project, error) {
+		return s.projects.UpdateEnvironment(ctx, p.ID, environmentFromProto(req.Msg.GetEnvironment()))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&projectv1.UpdateProjectEnvironmentResponse{Project: out}), nil
+}
+
 // UpdateProjectTerms sets a project's terms and privacy links.
 func (s *ProjectService) UpdateProjectTerms(
 	ctx context.Context,

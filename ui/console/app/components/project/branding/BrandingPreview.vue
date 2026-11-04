@@ -1,35 +1,48 @@
 <script setup lang="ts">
 import type { BrandingPreviewModel } from './useBranding';
 import { computed } from 'vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 
 export interface BrandingPreviewLabels {
   preview: string;
   note: string;
+  title: string;
   heading: string;
+  placeholder: string;
   email: string;
   cta: string;
   terms: string;
   privacy: string;
-  help: string;
-  secured: string;
+  newHere: string;
+  acceptBoth: string;
+  acceptOne: string;
+  language: string;
+  languageName: string;
   light: string;
   dark: string;
 }
 
 const props = withDefaults(defineProps<{
   model: BrandingPreviewModel,
+  issuerHost?: string,
   labels?: BrandingPreviewLabels,
 }>(), {
+  issuerHost: '',
   labels: () => ({
     preview: 'Preview',
     note: 'A close approximation of the sign-in page.',
-    heading: 'Sign in to continue to Example app',
+    title: 'Sign in to {project}',
+    heading: 'Continue to Example app',
+    placeholder: 'you@example.com',
     email: 'Email',
-    cta: 'Email me a sign-in link',
-    terms: 'Terms',
-    privacy: 'Privacy',
-    help: 'Need help? Contact {email}.',
-    secured: 'Secured by Othra',
+    cta: 'Continue with email',
+    terms: 'Terms of Service',
+    privacy: 'Privacy Policy',
+    newHere: 'New here? Signing in creates your {project} account.',
+    acceptBoth: 'By continuing you accept {project}\'s {terms} and {privacy}.',
+    acceptOne: 'By continuing you accept {project}\'s {link}.',
+    language: 'Language',
+    languageName: 'English',
     light: 'Light',
     dark: 'Dark',
   }),
@@ -40,53 +53,89 @@ const theme = defineModel<'othra-light' | 'othra-dark'>('theme', { default: 'oth
 const style = computed(() => (props.model.primary
   ? { '--color-primary': props.model.primary, '--color-primary-content': props.model.primaryContent }
   : {}));
-const help = computed(() => props.labels.help.replace('{email}', props.model.supportEmail));
+const title = computed(() => props.labels.title.replace('{project}', props.model.name));
+const initial = computed(() => [...props.model.name.trim()][0]?.toUpperCase() ?? '');
+const newHere = computed(() => props.labels.newHere.replace('{project}', props.model.name));
+
+interface AcceptPart { text: string; link: boolean; }
+
+// acceptParts splits the hosted accept sentence around its link placeholders, as the hosted page's splitAround does.
+function acceptParts(template: string, links: Record<string, string>): AcceptPart[] {
+  return template.replace('{project}', props.model.name).split(/(\{\w+\})/).filter(Boolean).map((part) => {
+    const key = part.match(/^\{(\w+)\}$/)?.[1];
+    return key && key in links ? { text: links[key]!, link: true } : { text: part, link: false };
+  });
+}
+
+const accept = computed<AcceptPart[]>(() => {
+  const { termsUrl, privacyUrl } = props.model;
+  if (termsUrl && privacyUrl) {
+    return acceptParts(props.labels.acceptBoth, { terms: props.labels.terms, privacy: props.labels.privacy });
+  }
+  if (termsUrl || privacyUrl) {
+    return acceptParts(props.labels.acceptOne, { link: termsUrl ? props.labels.terms : props.labels.privacy });
+  }
+  return [];
+});
 </script>
 
 <template>
-  <section class="space-y-2">
+  <section class="flex flex-col gap-2">
     <div class="flex items-center justify-between gap-2">
-      <h2 class="text-sm font-semibold">
+      <h2 class="text-ui font-semibold">
         {{ labels.preview }}
       </h2>
       <div class="join">
-        <button type="button" class="btn join-item btn-xs" :class="{ 'btn-active': theme === 'othra-light' }" :aria-pressed="theme === 'othra-light'" @click="theme = 'othra-light'">
+        <AppButton variant="plain" size="xs" class="join-item" :class="{ 'btn-active': theme === 'othra-light' }" :aria-pressed="theme === 'othra-light'" @click="theme = 'othra-light'">
           {{ labels.light }}
-        </button>
-        <button type="button" class="btn join-item btn-xs" :class="{ 'btn-active': theme === 'othra-dark' }" :aria-pressed="theme === 'othra-dark'" @click="theme = 'othra-dark'">
+        </AppButton>
+        <AppButton variant="plain" size="xs" class="join-item" :class="{ 'btn-active': theme === 'othra-dark' }" :aria-pressed="theme === 'othra-dark'" @click="theme = 'othra-dark'">
           {{ labels.dark }}
-        </button>
+        </AppButton>
       </div>
     </div>
-    <div :data-theme="theme" :style="style" class="rounded-box bg-base-200 p-4" data-testid="branding-preview">
-      <div class="pointer-events-none card mx-auto max-w-xs border border-base-300 bg-base-100 text-base-content" aria-hidden="true">
-        <div class="card-body gap-3 p-5">
-          <div class="flex items-center gap-2">
-            <img v-if="model.logoUrl" :src="model.logoUrl" alt="" class="size-8 rounded object-contain">
-            <span class="font-semibold">{{ model.name }}</span>
-          </div>
-          <p class="text-sm text-base-content/70">
+    <div :data-theme="theme" :style="style" class="flex flex-col gap-8 rounded-box border border-base-300 bg-base-100 px-5 py-6 text-sm leading-[normal] text-base-content" data-testid="branding-preview">
+      <div class="pointer-events-none flex flex-col gap-5" aria-hidden="true">
+        <div class="flex flex-col gap-3">
+          <img v-if="model.logoUrl" :src="model.logoUrl" alt="" class="size-10 rounded-field border border-base-300 bg-base-100 object-contain p-1">
+          <span v-else-if="initial" class="grid size-10 place-items-center rounded-field bg-primary text-lg font-semibold text-primary-content">{{ initial }}</span>
+          <p class="text-2xl font-semibold text-balance break-words">
+            {{ title }}
+          </p>
+          <p class="-mt-2 text-base-content/70">
             {{ labels.heading }}
           </p>
-          <input type="email" class="input w-full" :placeholder="labels.email" tabindex="-1">
-          <button type="button" class="btn btn-primary btn-sm" tabindex="-1">
-            {{ labels.cta }}
-          </button>
-          <p v-if="model.termsUrl || model.privacyUrl" class="text-xs text-base-content/60">
-            <span v-if="model.termsUrl" class="link">{{ labels.terms }}</span>
-            <span v-if="model.termsUrl && model.privacyUrl"> · </span>
-            <span v-if="model.privacyUrl" class="link">{{ labels.privacy }}</span>
-          </p>
-          <p v-if="model.supportEmail" class="text-xs text-base-content/60">
-            {{ help }}
-          </p>
-          <p class="text-center text-xs text-base-content/50">
-            {{ labels.secured }}
-          </p>
+        </div>
+        <div class="flex flex-col gap-3">
+          <label class="fieldset gap-1 p-0">
+            <span class="label text-ui text-base-content">{{ labels.email }}</span>
+            <input type="email" class="input w-full" :placeholder="labels.placeholder" tabindex="-1">
+          </label>
+          <span class="btn btn-primary w-full">{{ labels.cta }}</span>
+        </div>
+        <p class="text-ui text-base-content/70" data-testid="preview-accept">
+          {{ newHere }}<template v-if="accept.length">
+            {{ ' ' }}<template v-for="(part, i) in accept" :key="i">
+              <span v-if="part.link" class="link">{{ part.text }}</span><template v-else>
+                {{ part.text }}
+              </template>
+            </template>
+          </template>
+        </p>
+      </div>
+      <div class="pointer-events-none flex flex-col gap-2 text-xs text-base-content/70" aria-hidden="true" data-testid="preview-footer">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <label>
+            <span class="sr-only">{{ labels.language }}</span>
+            <select class="select select-xs w-28" tabindex="-1">
+              <option>{{ labels.languageName }}</option>
+            </select>
+          </label>
+          <span v-if="issuerHost" class="ms-auto font-mono break-all">{{ issuerHost }}</span>
         </div>
       </div>
     </div>
-    <p class="text-xs text-base-content/60">
+    <p class="text-xs text-base-content/70">
       {{ labels.note }}
     </p>
   </section>

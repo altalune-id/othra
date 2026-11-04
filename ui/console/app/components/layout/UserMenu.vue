@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 import AppDropdown from '#base/components/ui/AppDropdown.vue';
 import Avatar from '#base/components/ui/Avatar.vue';
 import { isPerson } from '~/lib/auth/person';
@@ -22,9 +22,10 @@ export interface UserMenuLabels {
   basic: string;
   profile: string;
   apiKeys: string;
+  language: string;
 }
 
-const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys', labels = {
+const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys', placement = 'end', version = '', locale = '', locales = [], labels = {
   signOut: 'Sign out',
   signedInAs: 'Signed in as',
   operator: 'Operator',
@@ -32,7 +33,12 @@ const { me, logoutUrl, profileUrl = '/account', apiKeysUrl = '/account/api-keys'
   basic: 'Basic auth',
   profile: 'Profile',
   apiKeys: 'My API keys',
-} } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, apiKeysUrl?: string, labels?: UserMenuLabels }>();
+  language: 'Language',
+} } = defineProps<{ me: UserMenuIdentity | null, logoutUrl: string, profileUrl?: string, apiKeysUrl?: string, placement?: 'end' | 'top', version?: string, locale?: string, locales?: { code: string, name: string }[], labels?: UserMenuLabels }>();
+
+const emit = defineEmits<{ locale: [code: string] }>();
+
+const logoutForm = `logout-${useId()}`;
 
 const display = computed(() => me?.name || me?.email || (me?.source === 'apikey' ? labels.apikey : ''));
 const person = computed(() => isPerson(me));
@@ -46,41 +52,55 @@ const sourceBadge = computed(() => {
 </script>
 
 <template>
-  <AppDropdown v-if="me" class="dropdown-end" :label="labels.signedInAs" trigger-class="gap-2 px-1.5">
+  <AppDropdown v-if="me" :placement="placement" :class="{ 'w-full': placement === 'top' }" content-class="w-60" :label="labels.signedInAs" :trigger-class="placement === 'top' ? 'w-full justify-start text-ui' : 'gap-2 px-1.5'">
     <template #trigger>
       <span aria-hidden="true">
-        <Avatar :id="me.userId ?? ''" :name="me.name || display" :email="me.email" :avatar-url="me.avatarUrl" size="sm" />
+        <Avatar :id="me.userId ?? ''" :name="me.name || display" :email="me.email" :avatar-url="me.avatarUrl" :size="placement === 'top' ? 'xs' : 'sm'" />
       </span>
-      <span class="max-w-40 truncate max-sm:hidden">{{ display }}</span>
+      <span class="truncate" :class="{ 'max-w-40 max-sm:hidden': placement !== 'top' }">{{ display }}</span>
     </template>
-    <div tabindex="0" class="dropdown-content z-30 mt-2 w-64 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg">
-      <p class="text-xs text-base-content/60">
-        {{ labels.signedInAs }}
-      </p>
-      <p class="truncate font-medium">
-        {{ display }}
-      </p>
-      <p v-if="me.email && me.email !== display" class="truncate text-sm text-base-content/70">
-        {{ me.email }}
-      </p>
-      <div v-if="sourceBadge || me.operator" class="mt-2 flex flex-wrap gap-1">
-        <span v-if="sourceBadge" class="badge badge-sm badge-outline">{{ sourceBadge }}</span>
-        <span v-if="me.operator" class="badge badge-sm badge-warning">{{ labels.operator }}</span>
-      </div>
-      <NuxtLink v-if="person" :to="profileUrl" class="btn btn-ghost btn-sm btn-block mt-3 justify-start gap-2">
-        <Icon name="lucide:user-round" size="16" />
-        {{ labels.profile }}
-      </NuxtLink>
-      <NuxtLink v-if="person" :to="apiKeysUrl" class="btn btn-ghost btn-sm btn-block mt-1 justify-start gap-2">
-        <Icon name="lucide:key-round" size="16" />
-        {{ labels.apiKeys }}
-      </NuxtLink>
-      <form v-if="person" method="post" :action="logoutUrl" class="mt-1">
-        <button type="submit" class="btn btn-sm btn-block justify-start gap-2">
-          <Icon name="lucide:log-out" size="16" />
-          {{ labels.signOut }}
-        </button>
-      </form>
-    </div>
+    <ul class="menu menu-sm w-full p-0 text-ui">
+      <li class="menu-title text-base-content/70">
+        <span class="truncate">{{ me.email || display }}</span>
+      </li>
+      <li v-if="locales.length" class="menu-title">
+        <label class="font-normal">
+          <span class="sr-only">{{ labels.language }}</span>
+          <select class="select select-xs w-28" :value="locale" @change="emit('locale', ($event.target as HTMLSelectElement).value)">
+            <option v-for="l in locales" :key="l.code" :value="l.code">{{ l.name }}</option>
+          </select>
+        </label>
+      </li>
+      <li v-if="sourceBadge || me.operator" class="menu-title">
+        <span class="flex flex-wrap gap-1">
+          <span v-if="sourceBadge" class="badge badge-sm badge-outline">{{ sourceBadge }}</span>
+          <span v-if="me.operator" class="badge badge-sm badge-warning">{{ labels.operator }}</span>
+        </span>
+      </li>
+      <template v-if="person">
+        <li>
+          <NuxtLink :to="profileUrl">
+            <Icon name="lucide:user" size="16" class="shrink-0" />
+            {{ labels.profile }}
+          </NuxtLink>
+        </li>
+        <li>
+          <NuxtLink :to="apiKeysUrl">
+            <Icon name="lucide:key-round" size="16" class="shrink-0" />
+            {{ labels.apiKeys }}
+          </NuxtLink>
+        </li>
+        <li>
+          <button type="submit" :form="logoutForm">
+            <Icon name="lucide:log-out" size="16" class="shrink-0" />
+            {{ labels.signOut }}
+          </button>
+        </li>
+      </template>
+    </ul>
+    <p v-if="version" class="px-2 pt-1 text-xs text-base-content/70">
+      Othra v{{ version }}
+    </p>
+    <form v-if="person" :id="logoutForm" method="post" :action="logoutUrl" hidden />
   </AppDropdown>
 </template>

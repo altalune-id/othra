@@ -97,7 +97,9 @@ type Client struct {
 	System    bool
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Secrets   []Secret
+	// LastUsedAt is the client's last token issue, written in batches; nil when it never got a token.
+	LastUsedAt *time.Time
+	Secrets    []Secret
 }
 
 // Secret is one of a client's live secrets; the plaintext is never kept.

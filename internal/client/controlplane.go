@@ -239,6 +239,9 @@ func toProto(c *Client) *clientv1.Client {
 		UpdatedAt:               timestamppb.New(c.UpdatedAt),
 		Registration:            clientv1.ClientRegistration_CLIENT_REGISTRATION_REGISTERED,
 	}
+	if c.LastUsedAt != nil {
+		out.LastUsedAt = timestamppb.New(*c.LastUsedAt)
+	}
 	if c.System {
 		out.Registration = clientv1.ClientRegistration_CLIENT_REGISTRATION_SYSTEM
 	}

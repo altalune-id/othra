@@ -2,8 +2,10 @@
 import AppAccess from '#base/components/account/AppAccess.vue';
 import AppButton from '#base/components/ui/AppButton.vue';
 import ConfirmModal from '#base/components/ui/ConfirmModal.vue';
+import EmptyState from '#base/components/ui/EmptyState.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import { useConnectedApps } from '~/components/portal/useConnectedApps';
 
 const { t } = useI18n();
@@ -18,29 +20,19 @@ await list.load();
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold">
-        {{ t('nav.apps') }}
-      </h1>
-      <p class="text-sm text-base-content/70">
-        {{ t('apps.subtitle', { project: config.project }) }}
-      </p>
-    </div>
+  <div class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="t('nav.apps')" :description="t('apps.subtitle', { project: config.project })" />
     <LoadError :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
     <LoadingStatus v-if="loading" :label="t('common.loading')" />
-    <p v-else-if="!loadError && apps.length === 0" class="card border border-base-300 bg-base-100 p-6 text-sm text-base-content/70">
-      {{ t('apps.empty') }}
-    </p>
+    <EmptyState v-else-if="!loadError && apps.length === 0" icon="lucide:blocks" :title="t('apps.empty')" />
 
-    <section v-for="app in apps" :key="app.clientId" class="card border border-base-300 bg-base-100" data-testid="app">
-      <div class="card-body">
-        <AppAccess :app="app" :signs-in="t(`apps.sees_${app.sees}`)">
-          <AppButton variant="ghost" size="sm" class="shrink-0" @click="disconnect.ask(app)">
-            {{ t('apps.disconnect') }}
-          </AppButton>
-        </AppAccess>
-      </div>
+    <section v-for="app in apps" :key="app.clientId" class="rounded-box border border-base-300 bg-base-100 p-4" data-testid="app">
+      <AppAccess :app="app" :signs-in="t(`apps.sees_${app.sees}`)">
+        <AppButton variant="ghost" size="sm" class="shrink-0" @click="disconnect.ask(app)">
+          <Icon name="lucide:unplug" size="16" class="shrink-0 text-error" aria-hidden="true" />
+          {{ t('apps.disconnect') }}
+        </AppButton>
+      </AppAccess>
     </section>
 
     <ConfirmModal

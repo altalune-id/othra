@@ -41,6 +41,7 @@ export function clientFormLabels(t: Translate, mode: 'create' | 'edit'): ClientF
     submit: mode === 'create' ? t('clients.create') : t('common.save'),
     submitting: mode === 'create' ? t('common.creating') : t('common.saving'),
     cancel: t('common.cancel'),
+    back: t('common.back'),
     uriList: uriList(t, 'redirect_uri'),
     postLogoutList: uriList(t, 'post_logout_uri'),
   };
@@ -50,7 +51,7 @@ export function clientFormLabels(t: Translate, mode: 'create' | 'edit'): ClientF
 export function kindOptions(t: Translate): ClientKindOption[] {
   return clientKindNames.map((value) => {
     const k = clientKinds[value];
-    return { value, icon: k.icon, label: t(k.labelKey), help: t(k.helpKey), redirectHelp: t(k.redirectHelpKey), placeholder: k.placeholder, postLogout: k.postLogout, secret: k.secret };
+    return { value, icon: k.icon, label: t(k.labelKey), help: t(k.helpKey), rec: t(k.recKey), redirectHelp: t(k.redirectHelpKey), placeholder: k.placeholder, postLogout: k.postLogout, secret: k.secret };
   });
 }
 

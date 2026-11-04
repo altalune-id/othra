@@ -220,8 +220,14 @@ func TestRedeem_SignsInOnceAndRotatesTheBrowserSecret(t *testing.T) {
 
 	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err), "single use from another browser")
+	reused, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Equal(t, "/p/acme/account/", reused.ReturnTo, "a spent link posted again still says where it was going")
 	_, err = h.svc.LinkByToken(context.Background(), h.project, tokenOf(t, l.URL))
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err))
+	spent, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Equal(t, "/p/acme/account/", spent.ReturnTo, "a spent link still says where it was going, for a new request")
 
 	repeat, err := h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL), BrowserSecret: r.Secret})
 	require.NoError(t, err, "a second Continue from the same browser succeeds")
@@ -251,6 +257,13 @@ func TestRedeem_ExpiredAndUnknownLinks(t *testing.T) {
 	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
 	assert.Equal(t, apperror.CodeSignInLinkNotUsable, codeOf(err))
 	assert.Empty(t, h.store.users, "a refused redeem creates no end user")
+	expired, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Equal(t, "/p/acme/account/", expired.ReturnTo, "an expired link posted still says where it was going")
+	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: "nope"})
+	unknown, ok := errors.AsType[*LinkNotUsableError](err)
+	require.True(t, ok)
+	assert.Empty(t, unknown.ReturnTo, "an unknown token goes nowhere in particular")
 
 	for _, token := range []string{"", "nope"} {
 		_, err = h.svc.LinkByToken(context.Background(), h.project, token)
@@ -265,6 +278,12 @@ func TestRedeem_ExpiredAndUnknownLinks(t *testing.T) {
 	h.store.failOn = "LinkByTokenHash"
 	_, err = h.svc.LinkByToken(context.Background(), h.project, tokenOf(t, l.URL))
 	assert.Equal(t, apperror.CodeUnexpected, codeOf(err))
+	h.store.failOn = ""
+	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
+	require.NoError(t, err)
+	h.store.failOn = "LinkByTokenHash"
+	_, err = h.svc.Redeem(context.Background(), h.project, RedeemRequest{Token: tokenOf(t, l.URL)})
+	assert.Equal(t, apperror.CodeUnexpected, codeOf(err), "a store fault reading a spent link is a fault, not an unusable link")
 }
 
 func TestSessions_SelectSignOutAndTheAccountCap(t *testing.T) {

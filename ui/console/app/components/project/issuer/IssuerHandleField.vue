@@ -74,40 +74,42 @@ function onInput(event: Event) {
 
 <template>
   <div class="fieldset">
-    <label :for="ids.input" class="fieldset-legend">{{ labels.handle }}</label>
-    <div class="join w-full">
-      <span v-if="prefix" class="join-item flex items-center border border-base-300 bg-base-200 px-3 font-mono text-sm text-base-content/70">{{ prefix }}</span>
-      <input
-        :id="ids.input"
-        :value="modelValue"
-        type="text"
-        class="input join-item w-full font-mono"
-        :class="{ 'input-error': bad || !!fieldError }"
-        :readonly="locked"
-        :disabled="disabled"
-        autocomplete="off"
-        spellcheck="false"
-        maxlength="40"
-        :aria-invalid="bad || !!fieldError"
-        :aria-describedby="describedBy"
-        @input="onInput"
-      >
-      <span v-if="locked" class="join-item flex items-center border border-base-300 bg-base-200 px-3" :title="labels.locked">
-        <Icon name="lucide:lock" size="14" />
-        <span class="sr-only">{{ labels.locked }}</span>
+    <label class="flex flex-col gap-1">
+      <span class="label text-ui text-base-content">{{ labels.handle }}</span>
+      <span class="join w-full">
+        <span v-if="prefix" class="join-item flex items-center border border-base-300 bg-base-200 px-3 font-mono text-xs text-base-content/70">{{ prefix }}</span>
+        <input
+          :id="ids.input"
+          :value="modelValue"
+          type="text"
+          class="input input-sm join-item w-full font-mono text-ui"
+          :class="{ 'input-error': bad || !!fieldError }"
+          :readonly="locked"
+          :disabled="disabled"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="40"
+          :aria-invalid="bad || !!fieldError"
+          :aria-describedby="describedBy"
+          @input="onInput"
+        >
+        <span v-if="locked" class="join-item flex items-center border border-base-300 bg-base-200 px-3" :title="labels.locked">
+          <Icon name="lucide:lock" size="14" aria-hidden="true" />
+          <span class="sr-only">{{ labels.locked }}</span>
+        </span>
       </span>
-    </div>
-    <p v-if="statusText" :id="ids.status" class="flex items-center gap-1 text-sm" :class="bad ? 'text-base-content' : 'text-base-content/70'" aria-live="polite">
-      <span v-if="status === 'checking'" class="loading loading-spinner loading-xs" />
-      <Icon v-else-if="status === 'available'" name="lucide:check" size="14" class="text-success" />
-      <Icon v-else name="lucide:x" size="14" :class="{ 'text-error': bad }" />
+    </label>
+    <p v-if="statusText" :id="ids.status" class="flex items-center gap-1 text-xs" :class="bad ? 'text-base-content' : 'text-base-content/70'" aria-live="polite">
+      <span v-if="status === 'checking'" class="loading loading-spinner loading-xs" aria-hidden="true" />
+      <Icon v-else-if="status === 'available'" name="lucide:check" size="14" class="shrink-0 text-success" aria-hidden="true" />
+      <Icon v-else name="lucide:x" size="14" class="shrink-0" :class="{ 'text-error': bad }" aria-hidden="true" />
       {{ statusText }}
     </p>
-    <p v-if="fieldError" :id="ids.error" class="flex items-start gap-1 text-sm text-base-content">
-      <Icon name="lucide:circle-alert" size="14" class="mt-0.5 shrink-0 text-error" />
+    <p v-if="fieldError" :id="ids.error" class="flex items-start gap-1 text-xs text-base-content">
+      <Icon name="lucide:circle-alert" size="14" class="shrink-0 text-error" aria-hidden="true" />
       {{ fieldError }}
     </p>
-    <p :id="ids.help" class="label whitespace-normal">
+    <p :id="ids.help" class="label whitespace-normal text-xs text-base-content/70">
       {{ labels.help }}
     </p>
   </div>

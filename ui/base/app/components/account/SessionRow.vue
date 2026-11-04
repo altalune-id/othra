@@ -10,12 +10,12 @@ const { when } = useDates();
 </script>
 
 <template>
-  <li class="list-row items-center">
+  <li class="list-row items-center text-ui">
     <Icon name="lucide:monitor-smartphone" size="20" />
     <div class="min-w-0">
       <p class="flex flex-wrap items-center gap-2 font-medium" :title="session.userAgent">
         {{ deviceName(session, t) }}
-        <span v-if="session.current" class="badge badge-soft badge-sm">{{ t('sessions.this_device') }}</span>
+        <span v-if="session.current" class="badge badge-soft text-base-content badge-sm">{{ t('sessions.this_device') }}</span>
       </p>
       <p class="text-xs text-base-content/70">
         {{ session.google ? t('methods.google') : t('methods.email') }} · {{ t('sessions.signed_in', { when: when(session.signedInAt) }) }} · {{ t('sessions.active', { when: when(session.lastSeenAt) }) }}

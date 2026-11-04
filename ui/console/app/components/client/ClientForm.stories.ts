@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import ClientForm from './ClientForm.vue';
 
 const kinds = [
-  { value: 'web' as const, icon: 'lucide:globe', label: 'Web app', help: 'Runs on a server and keeps a secret.', redirectHelp: 'For example https://app.example.com/oauth/callback. For local dev, http://127.0.0.1:5100/… with the exact port.', placeholder: 'https://app.example.com/oauth/callback', postLogout: true, secret: true },
-  { value: 'cli' as const, icon: 'lucide:terminal', label: 'CLI or desktop app', help: 'Runs on the end user\'s computer. Has no secret.', redirectHelp: 'For example http://127.0.0.1/callback. Leave out the port: any port works.', placeholder: 'http://127.0.0.1/callback', postLogout: false, secret: false },
+  { value: 'web' as const, icon: 'lucide:app-window', label: 'Web app', help: 'Runs on a server and keeps a secret.', rec: 'Recommended: authorization code with PKCE', redirectHelp: 'For example https://app.example.com/oauth/callback. For local dev, http://127.0.0.1:5100/… with the exact port.', placeholder: 'https://app.example.com/oauth/callback', postLogout: true, secret: true },
+  { value: 'cli' as const, icon: 'lucide:monitor-smartphone', label: 'CLI or desktop app', help: 'Runs on the end user\'s computer. Has no secret.', rec: 'Recommended: authorization code with PKCE and a loopback redirect', redirectHelp: 'For example http://127.0.0.1/callback. Leave out the port: any port works.', placeholder: 'http://127.0.0.1/callback', postLogout: false, secret: false },
 ];
 
 const meta = {

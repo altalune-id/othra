@@ -19,6 +19,8 @@ type WebOpts struct {
 	TermsURL          string
 	PrivacyURL        string
 	RequireAcceptance bool
+	Company           string
+	ContactEmail      string
 }
 
 // Web serves /terms, /privacy and /welcome.
@@ -78,7 +80,9 @@ func (h *Web) document(slug, override string) http.HandlerFunc {
 			h.o.Kit.Fail(w, r, "web: legal page", err)
 			return
 		}
-		data := views.DocumentData{Title: doc.Title, HTML: doc.HTML, UpdatedAt: doc.UpdatedAt}
+		data := views.DocumentData{
+			Title: doc.Title, HTML: doc.HTML, UpdatedAt: doc.UpdatedAt, Company: h.o.Company, ContactEmail: h.o.ContactEmail,
+		}
 		h.o.Kit.Render(w, r, http.StatusOK, views.Document(h.o.Kit.Layout(doc.Title), data))
 	}
 }

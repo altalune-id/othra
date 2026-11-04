@@ -132,3 +132,17 @@ export function serverRow(field: string, uri: string, list: UriList): number {
   const at = uri ? list.uris.indexOf(uri) : -1;
   return at < 0 ? -1 : list.rows[at]!;
 }
+
+// redirectHost names where a client's first redirect URI sends people: its host, or its scheme for a native app link; "" when it has none.
+export function redirectHost(uris: string[]): string {
+  const first = uris[0];
+  if (!first) {
+    return '';
+  }
+  try {
+    const url = new URL(first);
+    return url.host || url.protocol.replace(/:$/, '');
+  } catch {
+    return first;
+  }
+}

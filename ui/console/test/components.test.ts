@@ -14,8 +14,11 @@ import ClientList from '~/components/client/ClientList.vue';
 import MemberList from '~/components/member/MemberList.vue';
 import OrgCreateModal from '~/components/org/create/OrgCreateModal.vue';
 import OrgFields from '~/components/org/create/OrgFields.vue';
+import ProjectSelector from '~/components/project/ProjectSelector.vue';
+import ResourceServerList from '~/components/resourceserver/ResourceServerList.vue';
 import WebhookList from '~/components/webhook/list/WebhookList.vue';
 import OrgSettings from '~/pages/o/[org]/settings/index.vue';
+import { useAuthStore } from '~/stores/auth';
 import { useOrgsStore } from '~/stores/orgs';
 
 const orgId = 'B6rTn1YkM8wQz3XpL5vGd';
@@ -56,21 +59,36 @@ describe('org fields', () => {
 
 describe('client list', () => {
   it('marks the console client with the system badge', () => {
-    const row = { name: 'App', kind: 'Web app', created: 'Oct 20, 2026', to: '#' };
-    const w = mount(ClientList, { props: { rows: [{ ...row, id: 'Lq3vT8nWx2KpZr6YbM9cD', system: true }, { ...row, id: 'dPm7fmQRJKPVw8PxrgdrN' }] } });
+    const row = { name: 'App', type: 'Web', icon: 'lucide:app-window', host: 'app.example', lastUsed: 'Never', to: '#' };
+    const labels = { caption: 'Clients', name: 'Name', type: 'Type', clientId: 'Client ID', host: 'Redirect host', lastUsed: 'Last used', actions: 'Actions', moreFor: 'More actions for {name}', open: 'Open', copyId: 'Copy client ID', copied: 'Copied', system: 'System' };
+    const w = mount(ClientList, { props: { labels, rows: [{ ...row, id: 'Lq3vT8nWx2KpZr6YbM9cD', system: true }, { ...row, id: 'dPm7fmQRJKPVw8PxrgdrN' }] } });
     const cells = w.findAll('tbody tr').map(r => r.find('td').text());
     expect(cells).toEqual(['App System', 'App']);
   });
 });
 
+describe('resource server list', () => {
+  it('names each row menu for its server and offers Open and Copy identifier', () => {
+    const row = { id: 'R7kLm2XwQ8kRt3VnZ7bYc', name: 'Orders API', identifier: 'https://api.acme.test/orders', status: 'verified' as const, statusLabel: 'Verified', checked: '', checkedTitle: '', to: '/rs/1' };
+    const w = mount(ResourceServerList, { props: { rows: [row] } });
+    expect(w.get('table button[popovertarget] .sr-only').text()).toBe('More actions for Orders API');
+    expect(w.findAll('[popover] li').map(li => li.text())).toEqual(['Open', 'Copy identifier']);
+    expect(w.get('tbody td:nth-child(2) span').attributes('title')).toBe('https://api.acme.test/orders');
+  });
+});
+
 describe('member list', () => {
-  it('collapses row actions into a menu below sm, named for the member', () => {
+  it('puts row actions in a menu named for the member', () => {
     const w = mount(MemberList, { props: { rows: [{ userId: 'F5pLm2XwQ8kRt3VnZ7bYc', email: 'budi@acme.test', name: 'Budi', role: 'member', initials: 'B', self: false, roles: ['member'], removable: true }] } });
-    const menu = w.get('.dropdown');
-    expect(menu.classes()).toEqual(expect.arrayContaining(['dropdown-left', 'sm:hidden']));
-    expect(menu.get('[role="button"] .sr-only').text()).toBe('Actions for Budi');
-    expect(menu.find('[data-icon="lucide:ellipsis"]').exists()).toBe(true);
-    expect(w.findAll('.max-sm\\:hidden button').map(b => b.text())).toContain('Remove');
+    const menu = w.get('table [popover]');
+    expect(menu.classes()).toContain('dropdown-end');
+    expect(w.get('table button[popovertarget] .sr-only').text()).toBe('Actions for Budi');
+    expect(menu.findAll('button').map(b => b.text())).toEqual(['Remove']);
+  });
+
+  it('shows no menu for a member the viewer cannot act on', () => {
+    const w = mount(MemberList, { props: { rows: [{ userId: 'F5pLm2XwQ8kRt3VnZ7bYc', email: 'budi@acme.test', name: 'Budi', role: 'owner', initials: 'B', self: false, roles: [], removable: false }] } });
+    expect(w.find('button[popovertarget]').exists()).toBe(false);
   });
 });
 
@@ -83,9 +101,19 @@ describe('member-visible write actions', () => {
     readOnly.unmount();
     setActivePinia(createPinia());
     const w = await mountPage(APIKeyList, { pageProps: { orgId, canManage: true }, attachTo: document.body });
-    await w.get('tbody button').trigger('click');
+    expect(w.get('tbody button[popovertarget] .sr-only').text()).toContain('deploy-bot');
+    await w.get('tbody [popover] button').trigger('click');
     expect(openDialog()!.textContent).toContain('apikeys.revoke_confirm');
     expect(openDialog()!.textContent).toContain('apikeys.revoke_body');
+  });
+
+  it('shows an expired org key as Expired, with no Revoke', async () => {
+    const expired = create(APIKeySchema, { id: 'M4pXc7RtV2nKw9BsL6yQd', name: 'old-bot', kind: 'org', secretHint: 'cd34', expiresAt: { seconds: 1n, nanos: 0 } });
+    setClient('$apiKeyClient', { listAPIKeys: vi.fn().mockResolvedValue({ keys: [expired] }) });
+    const w = await mountPage(APIKeyList, { pageProps: { orgId, canManage: true } });
+    expect(w.get('tbody').text()).toContain('tokens.status_expired');
+    expect(w.get('tbody').text()).not.toContain('tokens.status_active');
+    expect(w.findAll('tbody button')).toHaveLength(0);
   });
 
   it('asks before deleting a webhook', async () => {
@@ -96,13 +124,25 @@ describe('member-visible write actions', () => {
     expect(openDialog()!.textContent).toContain('webhooks.delete_title');
   });
 
+  it('offers New project only to people with project:write', async () => {
+    useOrgsStore().items = [{ id: orgId, slug: 'acme', name: 'Acme', role: 'member', permissions: [] }];
+    setRoute({ path: '/o/acme', params: { org: 'acme' } });
+    useAuthStore().me = { permissions: ['project:read'] } as never;
+    const member = mount(ProjectSelector);
+    expect(member.text()).not.toContain('project.new');
+    member.unmount();
+    useAuthStore().me = { permissions: ['project:*'] } as never;
+    expect(mount(ProjectSelector).text()).toContain('project.new');
+  });
+
   it('makes org settings read-only for people without org:write', async () => {
     useOrgsStore().items = [{ id: orgId, slug: 'acme', name: 'Acme', role: 'member', permissions: [] }];
     setRoute({ path: '/o/acme/settings', params: { org: 'acme' } });
     setClient('$authClient', { whoami: vi.fn().mockResolvedValue(create(WhoamiResponseSchema, { permissions: ['org:read'] })) });
     const w = await mountPage(OrgSettings);
     expect(w.find('form').exists()).toBe(false);
-    expect(w.find('dl').exists()).toBe(true);
+    expect(w.get('[data-testid="org-settings-readonly"] dl').text()).toContain('Acme');
+    expect(w.get('[data-testid="org-settings-readonly"] dl').text()).toContain('acme');
     expect(w.text()).toContain('settings.read_only');
   });
 

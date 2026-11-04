@@ -1,32 +1,41 @@
 <script setup lang="ts">
+import { provide } from 'vue';
 import LanguageSwitcher from '#base/components/layout/LanguageSwitcher.vue';
 import ThemeSwitcher from '#base/components/layout/ThemeSwitcher.vue';
+import { useTheme } from '#base/components/layout/useTheme';
 import AppButton from '#base/components/ui/AppButton.vue';
 import AppDropdown from '#base/components/ui/AppDropdown.vue';
+import AppShell from '#base/components/ui/AppShell.vue';
+import { copiedLabelKey } from '#base/components/ui/copy';
 import NavbarShell from '#base/components/ui/NavbarShell.vue';
 import SidebarNav from '#base/components/ui/SidebarNav.vue';
+import ToastHost from '#base/components/ui/ToastHost.vue';
 import { switchAccountURL } from '~/lib/hosted';
-import { navItems, screenPath } from '~/lib/nav';
+import { navItems } from '~/lib/nav';
 import { useAccountStore } from '~/stores/account';
 
 const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const config = useRuntimeConfig().public;
 const account = useAccountStore();
 const navOpen = ref(false);
+provide(copiedLabelKey, () => t('common.copied'));
+onMounted(useTheme().init);
 
-const items = computed(() => navItems(route.path, t));
+useHead({
+  htmlAttrs: { lang: locale },
+  bodyAttrs: { class: 'text-sm leading-[normal]' },
+  titleTemplate: title => (title ? `${title} · ${config.project}` : t('portal.title', { project: config.project })),
+});
+
+const groups = computed(() => [{ items: navItems(route.path, t) }]);
 const initial = computed(() => [...config.project][0]?.toUpperCase() ?? '');
 const switchURL = computed(() => switchAccountURL(config.hostedUrl, router.resolve('/').href));
 
 watch(() => route.fullPath, () => {
   navOpen.value = false;
 });
-
-function go(key: string) {
-  return navigateTo(screenPath(key));
-}
 
 await account.ensureLoaded();
 </script>
@@ -35,7 +44,7 @@ await account.ensureLoaded();
   <div class="flex min-h-dvh flex-col bg-base-100 text-base-content">
     <NavbarShell>
       <template #brand>
-        <AppButton variant="ghost" size="sm" square class="md:hidden" :aria-label="t('menu.open')" :aria-expanded="navOpen" @click="navOpen = !navOpen">
+        <AppButton variant="ghost" size="sm" square class="md:hidden" :aria-label="t('menu.open')" :aria-expanded="navOpen" aria-controls="app-sidebar" @click="navOpen = !navOpen">
           <Icon name="lucide:menu" size="18" />
         </AppButton>
         <span class="flex min-w-0 items-center gap-2">
@@ -47,13 +56,13 @@ await account.ensureLoaded();
       <template #end>
         <LanguageSwitcher />
         <ThemeSwitcher />
-        <AppDropdown class="dropdown-end" :label="t('menu.account')" trigger-class="max-w-48">
+        <AppDropdown placement="end" content-class="w-60 p-2" :label="t('menu.account')" trigger-class="max-w-48">
           <template #trigger>
             <span class="truncate max-sm:hidden">{{ account.profile?.email }}</span>
             <Icon name="lucide:circle-user-round" size="18" class="sm:hidden" />
             <Icon name="lucide:chevron-down" size="14" />
           </template>
-          <ul tabindex="-1" class="menu dropdown-content z-50 mt-2 w-60 rounded-box border border-base-300 bg-base-100 p-2 shadow">
+          <ul class="menu w-full p-0">
             <li class="menu-title break-all">
               {{ account.profile?.email }}
             </li>
@@ -78,16 +87,10 @@ await account.ensureLoaded();
         </AppDropdown>
       </template>
     </NavbarShell>
-    <div class="flex flex-1">
-      <div v-if="navOpen" class="fixed inset-x-0 top-14 bottom-0 z-40 bg-black/40 md:hidden" @click="navOpen = false" />
-      <div
-        class="z-40"
-        :class="navOpen
-          ? 'fixed top-14 bottom-0 left-0 flex flex-col overflow-y-auto bg-base-100 shadow-xl md:static md:z-auto md:flex-row md:overflow-visible md:bg-transparent md:shadow-none'
-          : 'hidden md:flex md:flex-row'"
-      >
-        <SidebarNav :label="t('portal.nav_label')" :items="items" @select="go" />
-      </div>
+    <AppShell v-model:open="navOpen" :close-label="t('menu.close')">
+      <template #sidebar>
+        <SidebarNav :label="t('portal.nav_label')" :groups="groups" />
+      </template>
       <main class="min-w-0 flex-1 p-4 sm:p-6">
         <slot />
         <footer v-if="config.termsUrl || config.privacyUrl" class="mt-10 flex gap-4 text-xs text-base-content/70">
@@ -95,6 +98,7 @@ await account.ensureLoaded();
           <a v-if="config.privacyUrl" class="link" :href="config.privacyUrl" target="_blank" rel="noopener noreferrer">{{ t('portal.privacy') }}</a>
         </footer>
       </main>
-    </div>
+    </AppShell>
+    <ToastHost :close-label="t('common.close')" />
   </div>
 </template>

@@ -124,7 +124,7 @@ func (h *Web) answerConsent(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 	returnTo := h.returnTo(s, r.PostFormValue("return_to"))
 	if r.PostFormValue("deny") == "1" {
-		if !h.declineToClient(w, r, s, returnTo, descDenied) {
+		if !h.declineToClient(w, r, s, returnTo, descDenied, views.OutcomeDenied) {
 			h.refused(w, r, s, apperror.CodeAuthorizeRequestInvalid)
 		}
 		return
@@ -151,5 +151,5 @@ func (h *Web) answerConsent(w http.ResponseWriter, r *http.Request, s *site) {
 		h.fail(w, r, s, "hosted: grant consent", err)
 		return
 	}
-	h.toReturnTo(w, r, s, returnTo)
+	h.toReturnToAs(w, r, s, returnTo, views.OutcomeAllowed)
 }

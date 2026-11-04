@@ -35,3 +35,9 @@ describe('session copy', () => {
     expect(enUS['sessions.sign_out_body']).toContain('except apps you allowed to stay connected');
   });
 });
+
+describe('portal copy', () => {
+  it('never puts the project name in front of "apps", since a project may be called Apps', () => {
+    expect(Object.values(enUS).filter(v => /\{project\} apps\b/i.test(v))).toEqual([]);
+  });
+});

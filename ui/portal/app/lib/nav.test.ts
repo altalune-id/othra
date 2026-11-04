@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { navItems, screenPath } from './nav';
+import { navItems } from './nav';
 
 const t = (key: string) => key;
 
@@ -13,9 +13,8 @@ describe('nav', () => {
     expect(navItems('/', t)[1]).toMatchObject({ label: 'nav.sign_in', icon: 'lucide:log-in' });
   });
 
-  it('maps a key back to its path', () => {
-    expect(screenPath('apps')).toBe('/apps');
-    expect(screenPath('nope')).toBe('/');
+  it('links each screen to its path', () => {
+    expect(navItems('/', t).map(i => i.to)).toEqual(['/', '/sign-in', '/sessions', '/apps', '/tokens']);
   });
 });
 

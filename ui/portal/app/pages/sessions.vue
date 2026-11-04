@@ -4,6 +4,7 @@ import AppButton from '#base/components/ui/AppButton.vue';
 import ConfirmModal from '#base/components/ui/ConfirmModal.vue';
 import LoadError from '#base/components/ui/LoadError.vue';
 import LoadingStatus from '#base/components/ui/LoadingStatus.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import { useSessions } from '~/components/portal/useSessions';
 
 const { t } = useI18n();
@@ -17,33 +18,25 @@ await list.load();
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold">
-        {{ t('nav.sessions') }}
-      </h1>
-      <p class="text-sm text-base-content/70">
-        {{ t('sessions.subtitle', { project: config.project }) }}
-      </p>
-    </div>
+  <div class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="t('nav.sessions')" :description="t('sessions.subtitle', { project: config.project })" />
     <LoadError :error="loadError" :busy="loading" :retry-label="t('common.retry')" @retry="list.load()" />
     <LoadingStatus v-if="loading" :label="t('common.loading')" />
 
-    <section v-else-if="!loadError" class="card border border-base-300 bg-base-100">
+    <section v-else-if="!loadError" class="rounded-box border border-base-300 bg-base-100">
       <ul class="list" data-testid="sessions">
         <SessionRow v-for="s in sessions" :key="s.id" :session="s">
           <AppButton v-if="!s.current" variant="ghost" size="sm" @click="end.ask(s)">
+            <Icon name="lucide:log-out" size="16" class="shrink-0 text-error" aria-hidden="true" />
             {{ t('sessions.sign_out') }}
           </AppButton>
         </SessionRow>
       </ul>
-      <div v-if="others.length > 0" class="card-body border-t border-base-300 py-3">
-        <div class="card-actions justify-end">
-          <AppButton variant="error" soft size="sm" @click="endOthers.ask(true)">
-            <Icon name="lucide:log-out" size="16" />
-            {{ t('sessions.sign_out_others') }}
-          </AppButton>
-        </div>
+      <div v-if="others.length > 0" class="border-t border-base-300 px-4 py-3">
+        <AppButton variant="error" soft size="sm" @click="endOthers.ask(true)">
+          <Icon name="lucide:log-out" size="16" class="shrink-0 text-error" aria-hidden="true" />
+          {{ t('sessions.sign_out_others') }}
+        </AppButton>
       </div>
     </section>
 

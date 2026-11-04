@@ -29,6 +29,8 @@ type Reader interface {
 // Writer writes Project aggregates.
 type Writer interface {
 	Save(ctx context.Context, p *Project) error
+	// SetEnvironment writes only the environment tag of the project id.
+	SetEnvironment(ctx context.Context, id uuid.UUID, env string) error
 	// SetIssuerHandle changes the handle of the project id while it is unlocked.
 	SetIssuerHandle(ctx context.Context, id uuid.UUID, handle string) error
 	// LockIssuerHandle freezes the handle of the project id at at; a locked handle keeps its first lock time.

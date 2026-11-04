@@ -88,7 +88,25 @@ func TestConsoleSignOut_EndsTheSystemSession(t *testing.T) {
 	out := f.do(browser, http.MethodPost, "/logout", url.Values{})
 	require.Equal(t, http.StatusSeeOther, out.status, out.body)
 	assert.True(t, strings.HasPrefix(out.header.Get("Location"), f.srv.URL+"/p/system/oauth2/end-session?"), out.header.Get("Location"))
+	assertSignedOutOfSystem(t, f, browser)
+}
 
+// SECURITY: sign out everywhere ends the person's /p/system sessions on every browser, not only the console sessions.
+func TestSignOutEverywhere_EndsTheSystemSessions(t *testing.T) {
+	f := newSignInFixture(t, func(c *config.Config) { c.Auth.SessionTTL = time.Hour })
+	browser := f.signInDevice(t, "/p/system", "root@example.com")
+	consoleSignIn(t, f, browser)
+	other := f.signInDevice(t, "/p/system", "root@example.com")
+	root, err := f.svcs.Users.ByEmail(t.Context(), "root@example.com")
+	require.NoError(t, err)
+
+	require.NoError(t, f.svcs.Auth.SignOutEverywhere(t.Context(), root.ID))
+	assertSignedOutOfSystem(t, f, browser)
+	assertSignedOutOfSystem(t, f, other)
+}
+
+func assertSignedOutOfSystem(t *testing.T, f *signInFixture, browser *http.Client) {
+	t.Helper()
 	start := f.do(browser, http.MethodGet, "/login/oidc?return_to=/console/", nil)
 	require.Equal(t, http.StatusFound, start.status, start.body)
 	next := strings.TrimPrefix(start.header.Get("Location"), f.srv.URL)

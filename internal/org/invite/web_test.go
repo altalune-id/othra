@@ -204,7 +204,8 @@ func TestWeb_DeadLinks(t *testing.T) {
 	f.clock = f.clock.Add(invite.TTL)
 	rec := f.get(strings.TrimPrefix(expired.Link, "https://othra.example.com"))
 	assert.Equal(t, http.StatusGone, rec.Code)
-	assert.Contains(t, rec.Body.String(), "This invite has expired.")
+	assert.Regexp(t, `Your invite to join Acme has expired\. Ask \S.* to send you a new one\.`, rec.Body.String(), "names the org and who to ask")
+	assert.Contains(t, rec.Body.String(), `href="/login"`, "signed out: an existing account may already have access")
 }
 
 func TestWeb_NoCookie(t *testing.T) {
@@ -435,10 +436,22 @@ func TestWeb_ExpiredWhileTheCookieLives(t *testing.T) {
 	f.clock = f.clock.Add(invite.TTL)
 	rec := f.get("/invite", ck)
 	assert.Equal(t, http.StatusGone, rec.Code)
-	assert.Contains(t, rec.Body.String(), "This invite has expired.")
+	assert.Contains(t, rec.Body.String(), "Your invite to join Acme has expired.")
 	gone := cookieNamed(rec, "othra_invite")
 	require.NotNil(t, gone)
 	assert.Negative(t, gone.MaxAge, "a definitive failure clears the cookie")
+}
+
+func TestWeb_ExpiredWhileSignedInOffersTheConsole(t *testing.T) {
+	f := newWebFixture(t, false)
+	ck := f.open(t, f.create("bob@x.io", member.RoleMember))
+	f.account(t, "bob@x.io")
+	s := f.sessionFor(t, "bob@x.io")
+	f.clock = f.clock.Add(invite.TTL)
+	rec := f.get("/invite", ck, s)
+	assert.Equal(t, http.StatusGone, rec.Code)
+	assert.Contains(t, rec.Body.String(), `href="/console/"`, "signed in: a way back into the console")
+	assert.NotContains(t, rec.Body.String(), `href="/login"`, "already signed in")
 }
 
 func TestWeb_GetsNeverWrite(t *testing.T) {
@@ -486,6 +499,7 @@ func TestWeb_JoinWithOthraOnly(t *testing.T) {
 	assert.Contains(t, body, "Continue with Othra")
 	assert.Contains(t, body, "/login/oidc?invite="+c.Invite.PublicID)
 	assert.Contains(t, body, "login_hint=bob%40x.io")
+	assert.Contains(t, body, "return_to=%2Fconsole%2Fo%2Facme", "the console opens the org the invite joins")
 	assert.NotContains(t, body, `name="password"`)
 
 	rec = f.post("/invite/join", url.Values{"name": {"Bob"}, "password": {"quiet forest lamp nine"}}, ck)

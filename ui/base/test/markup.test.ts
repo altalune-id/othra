@@ -17,6 +17,7 @@ function sources(dir: string, ext: RegExp): string[] {
 }
 
 const files = apps.flatMap(app => sources(join(ui, app, 'app'), /\.(?:vue|ts)$/).map(path => ({ app, path: path.slice(ui.length), text: readFileSync(path, 'utf8') })));
+const mcpFiles = sources(join(ui, 'mcp', 'src'), /\.vue$/).map(path => ({ app: 'mcp', path: path.slice(ui.length), text: readFileSync(path, 'utf8') }));
 const offenders = (re: RegExp) => files.filter(f => re.test(f.text)).map(f => f.path);
 
 describe('guard: markup in every app', () => {
@@ -26,16 +27,21 @@ describe('guard: markup in every app', () => {
     }
   });
 
-  it('uses no daisyUI 4 bordered or small form controls', () => {
-    expect(offenders(/\b(?:input|select|textarea|file-input)-(?:bordered|sm|xs)\b/)).toEqual([]);
+  it('uses no daisyUI 4 bordered form controls', () => {
+    expect(offenders(/\b(?:input|select|textarea|file-input)-bordered\b/)).toEqual([]);
+  });
+
+  it('gives a two-column grid a base column that can shrink, so it never scrolls sideways on a phone', () => {
+    const bad = files.flatMap(f => (f.text.match(/class="[^"]*\b(?:sm|md|lg|xl):grid-cols-\[[^"]*"/g) ?? []).filter(c => !/(?:^|[\s"])grid-cols-/.test(c)).map(c => `${f.path}: ${c}`));
+    expect(bad).toEqual([]);
   });
 
   it('uses the daisyUI 5 row-hover, not the removed table hover class', () => {
     expect(offenders(/<tr\s(?:[^>]*\s)?class="(?:[^"]*\s)?hover(?:\s[^"]*)?"/)).toEqual([]);
   });
 
-  it('keeps text neutral: error, warning, success and info colours go on icons only', () => {
-    expect(offenders(/<(?:p|span|div|dd|li|label)\s[^>]*\bclass="[^"]*\btext-(?:error|warning|success|info)\b/)).toEqual([]);
+  it('keeps text neutral: error, warning, success and info colours go on icons only, except the field error message', () => {
+    expect(offenders(/<(?:p|span|div|dd|li|label)\s[^>]*\bclass="[^"]*\btext-(?:error|warning|success|info)\b(?!-content)/).filter(p => !p.endsWith('/FieldError.vue'))).toEqual([]);
     expect(offenders(/<(?:p|span|div|dd|li|label)\s[^>]*:class="[^"]*'text-(?:error|warning|success|info)'/)).toEqual([]);
   });
 
@@ -43,8 +49,14 @@ describe('guard: markup in every app', () => {
     expect(offenders(/<(?:button|NuxtLink|label|a)\s[^>]*\bclass="(?:[^"]*\s)?btn\s(?:[^"]*\s)?text-(?:error|warning|success|info)\b/)).toEqual([]);
   });
 
-  it('opens every focus dropdown from a focusable trigger, never a <button> Safari will not focus', () => {
-    expect(offenders(/class="dropdown\b[^"]*"[^>]*>\s*<button\b/)).toEqual([]);
+  it('gives a soft button with neutral text an icon in its status color', () => {
+    const soft = files.flatMap(f => [...f.text.matchAll(/<AppButton variant="(error|warning)"[^>]*\bsoft\b[^>]*>\s*<Icon [^>]*class="([^"]*)"/g)].map(m => ({ path: f.path, variant: m[1]!, cls: m[2]! })));
+    expect(soft.length).toBeGreaterThan(0);
+    expect(soft.filter(s => !s.cls.split(' ').includes(`text-${s.variant}`)).map(s => s.path)).toEqual([]);
+  });
+
+  it('builds every dropdown through AppDropdown (popover API), never the CSS-focus dropdown-content pattern', () => {
+    expect(offenders(/\bdropdown-content\b/)).toEqual([]);
     const own = files.filter(f => /class="dropdown[\s"]/.test(f.text)).map(f => f.path);
     expect(own).toEqual(['base/app/components/ui/AppDropdown.vue']);
   });
@@ -74,10 +86,203 @@ describe('guard: forms that show field errors', () => {
   });
 });
 
+type RGB = [number, number, number];
+
+function oklchToSRGB(value: string): RGB {
+  const [l, c, h] = value.match(/oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)/)!.slice(1).map(Number) as [number, number, number];
+  const L = l / 100;
+  const a = c * Math.cos((h * Math.PI) / 180);
+  const b = c * Math.sin((h * Math.PI) / 180);
+  const lms = [
+    (L + 0.3963377774 * a + 0.2158037573 * b) ** 3,
+    (L - 0.1055613458 * a - 0.0638541728 * b) ** 3,
+    (L - 0.0894841775 * a - 1.291485548 * b) ** 3,
+  ] as const;
+  const linear = [
+    4.0767416621 * lms[0] - 3.3077115913 * lms[1] + 0.2309699292 * lms[2],
+    -1.2684380046 * lms[0] + 2.6097574011 * lms[1] - 0.3413193965 * lms[2],
+    -0.0041960863 * lms[0] - 0.7034186147 * lms[1] + 1.707614701 * lms[2],
+  ];
+  return linear.map(x => Math.min(1, Math.max(0, x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055))) as RGB;
+}
+
+function luminance(rgb: RGB): number {
+  const [r, g, b] = rgb.map(c => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)) as RGB;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(fg: RGB, bg: RGB, alpha = 1): number {
+  const mixed = fg.map((f, i) => alpha * f + (1 - alpha) * bg[i]!) as RGB;
+  const [x, y] = [luminance(mixed), luminance(bg)];
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+
+describe('guard: foundations', () => {
+  const css = readFileSync(join(ui, 'base/app/assets/css/main.css'), 'utf8');
+  const tokens = readFileSync(join(ui, 'theme.css'), 'utf8');
+
+  it('self-hosts IBM Plex Sans and Mono from @fontsource and never loads fonts from a CDN', () => {
+    for (const face of ['ibm-plex-sans/400', 'ibm-plex-sans/500', 'ibm-plex-sans/600', 'ibm-plex-mono/400', 'ibm-plex-mono/500']) {
+      expect(css).toContain(`@import '@fontsource/${face}.css';`);
+    }
+    expect(css).not.toMatch(/@fontsource\/[\w-]+\/latin/);
+    expect(tokens).toMatch(/--font-sans: 'IBM Plex Sans'/);
+    expect(tokens).toMatch(/--font-mono: 'IBM Plex Mono'/);
+    expect(offenders(/fonts\.(?:googleapis|gstatic)\.com/)).toEqual([]);
+  });
+
+  it('defines the dense text-ui size in the shared theme, so the MCP view and sign-in pages get it too', () => {
+    expect(tokens).toContain('--text-ui: 0.8125rem;');
+    expect(tokens).toContain('--text-ui--line-height: 1.25rem;');
+  });
+});
+
 describe('guard: theme contrast', () => {
-  it('darkens the othra-dark primary for button text contrast', () => {
-    const theme = readFileSync(join(ui, 'theme.css'), 'utf8');
-    const dark = theme.slice(theme.indexOf('name: \'othra-dark\''));
-    expect(dark.slice(0, dark.indexOf('}'))).toContain('--color-primary: oklch(55% 0.233 277.117);');
+  it('keeps muted text at /70 or darker: /60, /50 and /40 fail AA in some themes (decorative icons excepted)', () => {
+    const lines = files.flatMap(f => f.text.split('\n').filter(l => /text-base-content\/[1-6]\d\b/.test(l) && !/<Icon\b/.test(l)).map(l => `${f.path}: ${l.trim()}`));
+    expect(lines).toEqual([]);
+  });
+
+  it('never colours links or body text with primary: it fails AA in several themes', () => {
+    expect(offenders(/\blink-primary\b/)).toEqual([]);
+  });
+
+  const theme = readFileSync(join(ui, 'theme.css'), 'utf8');
+  const themes = [...theme.matchAll(/name: '([\w-]+)';([\s\S]*?)\n\}/g)].map(([, name, body]) => ({
+    name: name!,
+    colors: Object.fromEntries([...body!.matchAll(/--color-([\w-]+):\s*(oklch\([^)]*\))/g)].map(([, k, v]) => [k!, oklchToSRGB(v!)])),
+  }));
+  const block = (name: string) => {
+    const from = theme.slice(theme.indexOf(`name: '${name}'`));
+    return from.slice(0, from.indexOf('}'));
+  };
+
+  it.each([
+    ['othra-light', 'oklch(42% 0.09 195)', 'oklch(98% 0.01 195)'],
+    ['othra-dark', 'oklch(73% 0.09 195)', 'oklch(19% 0.03 200)'],
+  ])('keeps the AA-checked deep teal primary pair in %s', (name, primary, content) => {
+    expect(block(name)).toContain(`--color-primary: ${primary};`);
+    expect(block(name)).toContain(`--color-primary-content: ${content};`);
+  });
+
+  it('reads every theme', () => {
+    expect(themes.length).toBe(14);
+    expect(contrast([0, 0, 0], [1, 1, 1])).toBeCloseTo(21);
+  });
+
+  it('keeps muted text, *-content and status text at WCAG AA (4.5:1)', () => {
+    const failures: string[] = [];
+    for (const { name, colors: c } of themes) {
+      const check = (label: string, ratio: number) => {
+        if (ratio < 4.5) {
+          failures.push(`${name}: ${label} ${ratio.toFixed(2)}`);
+        }
+      };
+      for (const bg of ['base-100', 'base-200', 'base-300']) {
+        check(`base-content/70 on ${bg}`, contrast(c['base-content']!, c[bg]!, 0.7));
+      }
+      for (const k of ['primary', 'secondary', 'accent', 'neutral', 'info', 'success', 'warning', 'error']) {
+        check(`${k}-content on ${k}`, contrast(c[`${k}-content`]!, c[k]!));
+      }
+      for (const k of ['info', 'success', 'warning', 'error']) {
+        check(`text-${k} on base-100`, contrast(c[k]!, c['base-100']!));
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('keeps *-content at AA on a hovered solid button as Chromium renders it: fill mixed with 7% black in oklab, channels clipped and rounded to 8 bits', () => {
+    const failures: string[] = [];
+    for (const [, name, body] of theme.matchAll(/name: '([\w-]+)';([\s\S]*?)\n\}/g)) {
+      const raw = Object.fromEntries([...body!.matchAll(/--color-([\w-]+):\s*oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)/g)].map(([, k, l, c, h]) => [k!, [Number(l), Number(c), Number(h)] as const]));
+      const srgb = ([l, c, h]: readonly [number, number, number]) => oklchToSRGB(`oklch(${l}% ${c} ${h})`).map(v => Math.round(v * 255) / 255) as RGB;
+      for (const k of ['primary', 'secondary', 'accent', 'neutral', 'info', 'success', 'warning', 'error']) {
+        const [l, c, h] = raw[k]!;
+        const ratio = contrast(srgb(raw[`${k}-content`]!), srgb([l * 0.93, c * 0.93, h]));
+        if (ratio < 4.5) {
+          failures.push(`${name}: ${k}-content on hovered ${k} ${ratio.toFixed(3)}`);
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  const softMarkup = [...files, ...mcpFiles, ...sources(join(ui, '..', 'internal'), /\.templ$/).map(path => ({ app: 'web', path: path.slice(ui.length), text: readFileSync(path, 'utf8') }))];
+  const softUses = (part: string) => softMarkup.flatMap(f => [...f.text.matchAll(new RegExp(`[^"'\`]*\\b${part}-soft\\b[^"'\`]*`, 'g'))].map(m => ({ path: f.path, cls: m[0].trim() })));
+  const neutralText = (cls: string) => cls.split(/\s+/).includes('text-base-content');
+  const appButton = readFileSync(join(ui, 'base/app/components/ui/AppButton.vue'), 'utf8');
+  const softButtonNeutral = appButton.includes('[--btn-rest-fg:var(--color-base-content)]');
+
+  it('sets every soft alert and badge in base-content in the markup', () => {
+    const uses = ['alert', 'badge'].flatMap(softUses);
+    expect(uses.length).toBeGreaterThan(0);
+    expect(uses.filter(u => !neutralText(u.cls)).map(u => `${u.path}: ${u.cls}`)).toEqual([]);
+  });
+
+  it('rests AppButton soft text on base-content and lets its icon take the hover and press fill text', () => {
+    expect(softButtonNeutral).toBe(true);
+    expect(appButton).toContain('hover:*:text-current active:*:text-current');
+  });
+
+  it('keeps soft alert, badge and button text at AA on their soft tint', () => {
+    const failures: string[] = [];
+    for (const part of ['alert', 'badge', 'btn']) {
+      const neutral = part === 'btn' ? softButtonNeutral : softUses(part).every(u => neutralText(u.cls));
+      for (const { name, colors: c } of themes) {
+        for (const k of ['info', 'success', 'warning', 'error']) {
+          const tint = c[k]!.map((v, i) => 0.08 * v + 0.92 * c['base-100']![i]!) as RGB;
+          const ratio = contrast(neutral ? c['base-content']! : c[k]!, tint);
+          if (ratio < 4.5) {
+            failures.push(`${name}: ${part}-soft ${k} ${ratio.toFixed(2)}`);
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('lifts every table header from daisyUI base-content/60 to the AA muted /70', () => {
+    const bare = files.flatMap(f => (f.text.match(/<thead\b[^>]*>/g) ?? []).filter(t => !t.includes('text-base-content/70')).map(t => `${f.path}: ${t}`));
+    expect(bare).toEqual([]);
+    expect(theme).not.toContain(':where(thead');
+  });
+
+  it('keeps fieldset-legend for group legends only and mutes every hint at text-xs /70', () => {
+    const legends = files.flatMap(f => (f.text.match(/<[a-z][a-z0-9]*\s[^<>]*fieldset-legend[^<>]*>/g) ?? []).filter(t => !/^<legend\s[^<>]*class="fieldset-legend text-ui"/.test(t)).map(t => `${f.path}: ${t}`));
+    const hints = files.flatMap(f => (f.text.match(/class="label whitespace-normal[^"]*"/g) ?? []).filter(c => !c.includes('text-xs text-base-content/70')).map(c => `${f.path}: ${c}`));
+    expect([...legends, ...hints]).toEqual([]);
+  });
+
+  it('puts field labels above their control, never daisyUI floating labels', () => {
+    expect(files.filter(f => f.text.includes('floating-label')).map(f => f.path)).toEqual([]);
+  });
+
+  it('sizes console and portal inputs and selects compactly, except the hosted sign-in preview', () => {
+    const full = files.filter(f => !f.path.endsWith('BrandingPreview.vue')).flatMap(f => [...f.text.matchAll(/class="((input|select)(?: [^"]*)?)"/g)].filter(m => !m[1]!.split(' ').some(c => /^(?:input|select)-(?:xs|sm)$/.test(c))).map(m => `${f.path}: ${m[0]}`));
+    expect(full).toEqual([]);
+  });
+
+  it('sets every textarea in the dense text-ui size', () => {
+    const loose = files.flatMap(f => (f.text.match(/class="textarea(?: [^"]*)?"/g) ?? []).filter(c => !c.split(/[ "]/).includes('text-ui')).map(c => `${f.path}: ${c}`));
+    expect(loose).toEqual([]);
+  });
+
+  it('sets every small button in the dense text-ui size, MCP App views included', () => {
+    const loose = [...files, ...mcpFiles].flatMap(f => [...f.text.matchAll(/(?<![:\w-])class="([^"]*)"/g)].filter(m => m[1]!.split(' ').includes('btn-sm') && !m[1]!.split(' ').includes('text-ui')).map(m => `${f.path}: ${m[0]}`));
+    expect(loose).toEqual([]);
+  });
+
+  it('sets mono values at text-xs, never text-sm', () => {
+    const loose = files.flatMap(f => [...f.text.matchAll(/(?<![:\w-])class="([^"]*)"/g)].filter(m => m[1]!.split(' ').includes('font-mono') && m[1]!.split(' ').includes('text-sm')).map(m => `${f.path}: ${m[0]}`));
+    expect(loose).toEqual([]);
+  });
+
+  it('sets every label in the dense text-ui size, never text-sm', () => {
+    const loose = files.flatMap(f => (f.text.match(/<label\s[^>]*class="[^"]*"/g) ?? []).filter(t => /\btext-sm\b/.test(t)).map(t => `${f.path}: ${t}`));
+    expect(loose).toEqual([]);
+  });
+
+  it('drops the old shared indigo', () => {
+    expect(theme).not.toContain('277.117');
   });
 });

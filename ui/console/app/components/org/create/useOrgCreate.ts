@@ -4,7 +4,7 @@ import type { Org } from '~/stores/orgs';
 
 import { create } from '@bufbuild/protobuf';
 import { useValidation } from '#base/composables/useValidation';
-import { CreateOrgRequestSchema } from '#gen/org/v1/org_pb';
+import { CreateOwnOrgRequestSchema } from '#gen/auth/v1/auth_pb';
 import { useOrgsStore } from '~/stores/orgs';
 import { useUIStore } from '~/stores/ui';
 
@@ -23,11 +23,11 @@ export function useOrgCreate(options: OrgCreateOptions = {}) {
 
   const orgs = useOrgsStore();
   const ui = useUIStore();
-  const validation = useValidation(CreateOrgRequestSchema, {
+  const validation = useValidation(CreateOwnOrgRequestSchema, {
     fields: ['name', 'slug'],
     codes: { ORG002: 'slug', ORG003: 'slug', ORG004: 'name' },
   });
-  const { $orgClient: client } = useNuxtApp();
+  const { $authClient: client } = useNuxtApp();
 
   const open = computed(() => ui.orgCreateOpen);
 
@@ -45,14 +45,14 @@ export function useOrgCreate(options: OrgCreateOptions = {}) {
       return;
     }
     const req = { name: name.value.trim(), slug: slug.value.trim() };
-    if (!validation.check(create(CreateOrgRequestSchema, req))) {
+    if (!validation.check(create(CreateOwnOrgRequestSchema, req))) {
       error.value = validation.formError.value;
       return;
     }
     busy.value = true;
     error.value = null;
     try {
-      const res = await (options.create ?? (r => client.createOrg(r)))(req);
+      const res = await (options.create ?? (r => client.createOwnOrg(r)))(req);
       const org = res.org;
       if (org) {
         const added = { id: org.id, slug: org.slug, name: org.name, role: 'owner' };

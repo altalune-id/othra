@@ -1,29 +1,55 @@
 // @vitest-environment happy-dom
-import { mount } from '@vue/test-utils';
+import { mount, RouterLinkStub } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import SidebarNav from './SidebarNav.vue';
 
-const items = [
-  { key: 'profile', label: 'Profile', icon: 'lucide:user-round', active: true },
-  { key: 'sessions', label: 'Sessions', active: false },
+const groups = [
+  { items: [{ key: 'overview', label: 'Overview', to: '/o/acme', icon: 'lucide:house', active: true }] },
+  { label: 'Build', items: [{ key: 'agents', label: 'Agents', to: '/o/acme/agents', badge: 3 }] },
 ];
 
 describe('sidebarNav', () => {
-  it('is a named navigation landmark that marks only the current page', () => {
-    const w = mount(SidebarNav, { props: { label: 'Account', items } });
-    expect(w.get('nav').attributes('aria-label')).toBe('Account');
-    const buttons = w.findAll('nav button');
-    expect(buttons.map(b => b.attributes('aria-current'))).toEqual(['page', undefined]);
+  it('is a named navigation landmark of links that marks only the current page', () => {
+    const w = mount(SidebarNav, { props: { label: 'Project', groups } });
+    expect(w.get('nav').attributes('aria-label')).toBe('Project');
+    expect(w.findAllComponents(RouterLinkStub).map(l => l.props('to'))).toEqual(['/o/acme', '/o/acme/agents']);
+    const links = w.findAll('nav a');
+    expect(links.map(a => a.attributes('aria-current'))).toEqual(['page', undefined]);
+    expect(links[0]!.classes()).toContain('menu-active');
+    expect(links.every(a => ['focus-visible:outline-2', 'focus-visible:outline-solid!', 'focus-visible:-outline-offset-2', 'focus-visible:outline-base-content'].every(c => a.classes().includes(c)))).toBe(true);
   });
 
-  it('emits the picked item and drops the landmark name when there is no label', async () => {
-    const w = mount(SidebarNav, { props: { items } });
+  it('draws the design menu: dense small menu, muted group titles, a bordered footer', () => {
+    const w = mount(SidebarNav, { props: { groups }, slots: { footer: 'Sam Rivera' } });
+    expect(w.get('aside').classes()).toEqual(['flex', 'h-full', 'min-h-full', 'w-60', 'shrink-0', 'flex-col', 'border-e', 'border-base-300', 'bg-base-200']);
+    expect(w.get('ul').classes()).toEqual(['menu', 'menu-sm', 'w-full', 'py-0', 'text-ui']);
+    expect(w.get('.menu-title').classes()).toEqual(['menu-title', 'pt-3', 'text-xs', 'text-base-content/70']);
+    expect(w.get('[data-sidebar-footer]').classes()).toEqual(['flex', 'flex-col', 'gap-1', 'border-t', 'border-base-300', 'p-2']);
+  });
+
+  it('titles a group only when it has a label, and shows item badges', () => {
+    const w = mount(SidebarNav, { props: { groups } });
     expect(w.get('nav').attributes('aria-label')).toBeUndefined();
-    await w.findAll('nav button')[1]!.trigger('click');
-    expect(w.emitted('select')).toEqual([['sessions']]);
+    expect(w.findAll('.menu-title').map(t => t.text())).toEqual(['Build']);
+    expect(w.get('.badge').text()).toBe('3');
   });
 
-  it('shows the version in the footer', () => {
-    expect(mount(SidebarNav, { props: { items, version: '1.2.3' } }).get('[data-sidebar-footer]').text()).toBe('Othra v1.2.3');
+  it('puts the lead groups, then the between row in a bordered strip, then the groups', () => {
+    const lead = [{ items: [{ key: 'org', label: 'Org overview', to: '/o/acme' }] }];
+    const w = mount(SidebarNav, { props: { groups, lead }, slots: { between: '<b>acme-prod</b>' } });
+    const nav = w.get('nav').element;
+    expect([...nav.children].map(c => c.tagName)).toEqual(['UL', 'DIV', 'UL']);
+    expect(nav.children[1]!.className).toBe('my-1 border-y border-base-300 p-2');
+    expect(nav.children[1]!.textContent).toBe('acme-prod');
+    expect(nav.children[0]!.textContent).toContain('Org overview');
+    expect(mount(SidebarNav, { props: { groups } }).get('nav').element.children).toHaveLength(1);
+  });
+
+  it('renders the top, back and footer slots only when given', () => {
+    expect(mount(SidebarNav, { props: { groups } }).find('[data-sidebar-footer]').exists()).toBe(false);
+    const w = mount(SidebarNav, { props: { groups }, slots: { top: 'Switcher', back: 'Back', footer: 'Othra v1.2.3' } });
+    expect(w.get('[data-sidebar-footer]').text()).toBe('Othra v1.2.3');
+    expect(w.text()).toContain('Switcher');
+    expect(w.text()).toContain('Back');
   });
 });

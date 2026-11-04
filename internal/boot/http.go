@@ -175,13 +175,17 @@ func warnSampleLegal(cfg config.Config, log *slog.Logger, serving bool) {
 		slog.String("missing", strings.Join(missing, " ")))
 }
 
+func pageKit(cfg config.Config, log *slog.Logger, unexpected apperror.UnexpectedFunc) layout.Kit {
+	return layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected, Version: web.StaticVersion}
+}
+
 func buildIssuerRoutes(
 	cfg config.Config, svcs *Services, inProcess *http.ServeMux, log *slog.Logger, unexpected apperror.UnexpectedFunc,
 ) (public, hosted []web.Registrar) {
 	if svcs == nil || svcs.IssuerResolver == nil {
 		return nil, nil
 	}
-	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
+	kit := pageKit(cfg, log, unexpected)
 	resolver := svcs.IssuerResolver.WithLimiter(svcs.AuthLimiter, cfg.HTTP.TrustedProxyHops)
 	issuers := oidc.NewWeb(resolver, kit, oidc.Config{
 		PublicBase: publicBase(cfg.HTTP),
@@ -192,7 +196,7 @@ func buildIssuerRoutes(
 		issuers.WithTokens(oidc.Tokens{
 			Clients: svcs.Clients, Grants: svcs.Grants, EndUsers: svcs.EndUsers, IDTokens: keys.NewSigner(svcs.Keys),
 			IDTokenTTL: cfg.OAuth.IDTokenTTL, CORS: middleware.BearerCORS,
-			Limits: authLimits(cfg, svcs),
+			Limits: authLimits(cfg, svcs), Usage: clientUsage(svcs),
 		})
 		if in := buildIntrospection(svcs); in != nil {
 			issuers.WithIntrospection(*in)
@@ -211,6 +215,13 @@ func buildIssuerRoutes(
 		return []web.Registrar{issuers}, []web.Registrar{pages, plane}
 	}
 	return []web.Registrar{issuers}, []web.Registrar{pages}
+}
+
+func clientUsage(svcs *Services) oidc.Usage {
+	if svcs.ClientUsage == nil {
+		return nil
+	}
+	return svcs.ClientUsage
 }
 
 func issuesTokens(svcs *Services) bool {
@@ -247,8 +258,11 @@ func consoleWeb(
 func buildRoutes(
 	cfg config.Config, svcs *Services, rp auth.ConsoleRP, log *slog.Logger, unexpected apperror.UnexpectedFunc,
 ) []web.Registrar {
-	kit := layout.Kit{BasePath: cfg.HTTP.BasePath, Log: log, Unexpected: unexpected}
-	legalOpts := legal.WebOpts{Kit: kit, TermsURL: cfg.Compliance.TermsURL, PrivacyURL: cfg.Compliance.PrivacyURL}
+	kit := pageKit(cfg, log, unexpected)
+	legalOpts := legal.WebOpts{
+		Kit: kit, TermsURL: cfg.Compliance.TermsURL, PrivacyURL: cfg.Compliance.PrivacyURL,
+		Company: cfg.Compliance.Company, ContactEmail: cfg.Compliance.ContactEmail,
+	}
 	if svcs == nil || !svcs.Caps.LocalLogin {
 		return []web.Registrar{legal.NewWeb(legalOpts)}
 	}
@@ -288,6 +302,12 @@ func buildRoutes(
 			Limits:       limits,
 		}),
 	}
+}
+
+func notFoundPage(kit layout.Kit) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		kit.Render(w, r, http.StatusNotFound, layout.Error(kit.Layout("Page not found"), "There is no page at this address."))
+	})
 }
 
 func authLimits(cfg config.Config, svcs *Services) layout.Limits {
@@ -358,6 +378,7 @@ func buildHTTPHandler(s httpSurfaces) http.Handler {
 		PortalAssets: s.portal,
 		Routes:       s.routes,
 		PublicRoutes: s.public,
+		NotFound:     notFoundPage(layout.Kit{BasePath: s.basePath, Log: s.log, Unexpected: s.unexpected, Version: web.StaticVersion}),
 		HostedPages:  s.hosted,
 
 		HostedImageBases: s.images,

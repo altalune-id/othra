@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import Section from '#base/components/ui/Section.vue';
 
 export interface ProfileSessionsLabels {
   title: string;
@@ -22,34 +24,26 @@ const emit = defineEmits<{ ask: [], confirm: [], cancel: [] }>();
 </script>
 
 <template>
-  <section class="card border border-base-300 bg-base-100">
-    <div class="card-body gap-3">
-      <h2 class="card-title text-base">
-        {{ labels.title }}
-      </h2>
-      <p class="text-sm text-base-content/70">
-        {{ labels.body }}
-      </p>
-      <ErrorText :error="error" />
-      <div class="card-actions justify-end">
-        <button type="button" class="btn btn-outline btn-error btn-sm" :disabled="busy" @click="emit('ask')">
-          <Icon name="lucide:log-out" size="16" />
-          {{ labels.signOut }}
-        </button>
-      </div>
+  <Section :title="labels.title" :description="labels.body">
+    <ErrorText :error="error" />
+    <div>
+      <AppButton variant="error" size="sm" soft :disabled="busy" @click="emit('ask')">
+        <Icon name="lucide:log-out" size="16" class="shrink-0 text-error" aria-hidden="true" />
+        {{ labels.signOut }}
+      </AppButton>
     </div>
     <AppModal :open="confirming" :title="labels.confirmTitle" @close="emit('cancel')">
-      <p class="text-sm">
+      <p class="text-ui">
         {{ labels.confirmBody }}
       </p>
       <template #footer>
-        <button type="button" class="btn btn-ghost btn-sm" @click="emit('cancel')">
+        <AppButton variant="ghost" size="sm" @click="emit('cancel')">
           {{ labels.cancel }}
-        </button>
-        <button type="button" class="btn btn-error btn-sm" :disabled="busy" @click="emit('confirm')">
+        </AppButton>
+        <AppButton variant="error" size="sm" :disabled="busy" @click="emit('confirm')">
           {{ labels.signOut }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
-  </section>
+  </Section>
 </template>

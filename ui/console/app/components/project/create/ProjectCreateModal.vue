@@ -31,22 +31,22 @@ const handleLabels = computed(() => ({
   <AppModal :open="open" :title="t('project.new')" @close="hide()">
     <form novalidate class="space-y-1" @submit.prevent="submit()">
       <div class="fieldset">
-        <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
+        <label :for="ids.name" class="label text-ui text-base-content">{{ t('common.name') }}</label>
         <input
-          :id="ids.name" v-model="name" type="text" class="input w-full" :class="{ 'input-error': fieldErrors.name }"
+          :id="ids.name" v-model="name" type="text" class="input input-sm w-full text-ui" :class="{ 'input-error': fieldErrors.name }"
           :placeholder="t('project.name_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.name" :aria-describedby="ids.nameErr"
         >
         <FieldError :id="ids.nameErr" :message="fieldErrors.name" />
       </div>
       <div class="fieldset">
-        <label :for="ids.slug" class="fieldset-legend">{{ t('project.console_slug') }}</label>
+        <label :for="ids.slug" class="label text-ui text-base-content">{{ t('project.console_slug') }}</label>
         <input
-          :id="ids.slug" :value="slug" type="text" class="input w-full font-mono" :class="{ 'input-error': fieldErrors.slug }"
+          :id="ids.slug" :value="slug" type="text" class="input input-sm w-full font-mono text-ui" :class="{ 'input-error': fieldErrors.slug }"
           :placeholder="t('project.slug_placeholder')" :disabled="busy" :aria-invalid="!!fieldErrors.slug" :aria-describedby="`${ids.slugHelp} ${ids.slugErr}`"
           @input="create.setSlug(($event.target as HTMLInputElement).value)"
         >
         <FieldError :id="ids.slugErr" :message="fieldErrors.slug" />
-        <p :id="ids.slugHelp" class="label whitespace-normal">
+        <p :id="ids.slugHelp" class="label whitespace-normal text-xs text-base-content/70">
           {{ t('project.slug_random_help') }}
         </p>
       </div>
@@ -62,10 +62,10 @@ const handleLabels = computed(() => ({
       <ErrorText :error="error" />
     </form>
     <template #footer>
-      <button class="btn btn-ghost btn-sm" type="button" :disabled="busy" @click="hide()">
+      <button class="btn btn-ghost btn-sm text-ui" type="button" :disabled="busy" @click="hide()">
         {{ t('common.cancel') }}
       </button>
-      <button class="btn btn-primary btn-sm" type="button" :disabled="!canSubmit" @click="submit()">
+      <button class="btn btn-primary btn-sm text-ui" type="button" :disabled="!canSubmit" @click="submit()">
         {{ busy ? t('common.creating') : t('common.create') }}
       </button>
     </template>

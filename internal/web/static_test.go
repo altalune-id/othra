@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/altalune-id/othra/internal/web/assets"
 	"github.com/altalune-id/othra/password"
 )
 
@@ -56,10 +57,12 @@ func builtAsset(t *testing.T, name string) []byte {
 
 func TestStaticHandler(t *testing.T) {
 	t.Parallel()
-	h := staticHandler("/static/", fstest.MapFS{
-		"app.css":    {Data: []byte("body{}")},
-		"app.css.br": {Data: []byte("BR")},
-		"app.css.gz": {Data: []byte("GZ")},
+	h := staticHandler("/static/", func() (assets.Files, error) {
+		return assets.Load(fstest.MapFS{
+			"app.css":    {Data: []byte("body{}")},
+			"app.css.br": {Data: []byte("BR")},
+			"app.css.gz": {Data: []byte("GZ")},
+		})
 	})
 
 	tests := []struct {
@@ -93,7 +96,7 @@ func TestStaticHandler(t *testing.T) {
 			assert.Equal(t, tt.wantBody, rec.Body.String())
 			assert.Equal(t, tt.wantEnc, rec.Header().Get("Content-Encoding"))
 			assert.Equal(t, "text/css; charset=utf-8", rec.Header().Get("Content-Type"))
-			assert.Equal(t, "public, max-age=3600", rec.Header().Get("Cache-Control"))
+			assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"), "unversioned: revalidate every time")
 			assert.Equal(t, "Accept-Encoding", rec.Header().Get("Vary"))
 			etag := rec.Header().Get("ETag")
 			require.NotEmpty(t, etag)
@@ -109,10 +112,29 @@ func TestStaticHandler(t *testing.T) {
 func TestStaticHandler_UnreadableIsNotFound(t *testing.T) {
 	t.Parallel()
 	rec := httptest.NewRecorder()
-	staticHandler("/static/", brokenFS{}).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/static/app.css", nil))
+	staticHandler("/static/", func() (assets.Files, error) { return assets.Load(brokenFS{}) }).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/static/app.css", nil))
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 type brokenFS struct{}
 
 func (brokenFS) Open(string) (fs.File, error) { return nil, errors.New("broken") }
+
+func TestStaticBundles_ImportNothing(t *testing.T) {
+	for _, name := range []string{"password.js", "lang.js"} {
+		assert.NotRegexp(t, `(?m)^\s*import[\s{*"']`, string(builtAsset(t, name)), "%s must stay one file: an imported chunk would be served without ?v=", name)
+	}
+}
+
+func TestStaticVersion(t *testing.T) {
+	builtAsset(t, "app.css")
+	v := StaticVersion("app.css")
+	assert.Regexp(t, `^[0-9a-f]{32}$`, v)
+	assert.Empty(t, StaticVersion("missing.css"))
+
+	srv := NewServer(ServerOpts{})
+	rec := get(t, srv, "/static/app.css?v="+v)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, assets.Immutable, rec.Header().Get("Cache-Control"), "the current version is cached for a year")
+	assert.Equal(t, "no-cache", get(t, srv, "/static/app.css?v=stale").Header().Get("Cache-Control"), "an old version revalidates")
+}

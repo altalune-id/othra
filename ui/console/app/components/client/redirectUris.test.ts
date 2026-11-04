@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { checkUriList, redirectUriProblem, serverRow, usesLocalhost } from './redirectUris';
+import { checkUriList, redirectHost, redirectUriProblem, serverRow, usesLocalhost } from './redirectUris';
 
 describe('redirectUriProblem', () => {
   it.each([
@@ -86,5 +86,14 @@ describe('serverRow', () => {
     expect(serverRow('redirect_uris', 'https://b.example/cb', list)).toBe(2);
     expect(serverRow('redirect_uris', 'https://c.example/cb', list)).toBe(-1);
     expect(serverRow('', '', list)).toBe(-1);
+  });
+});
+
+describe('redirectHost', () => {
+  it('names the host, the scheme of a native app link, or nothing', () => {
+    expect(redirectHost(['https://portal.acme.example/callback', 'https://x.example/cb'])).toBe('portal.acme.example');
+    expect(redirectHost(['http://127.0.0.1/callback'])).toBe('127.0.0.1');
+    expect(redirectHost(['com.acme.field:/callback'])).toBe('com.acme.field');
+    expect(redirectHost([])).toBe('');
   });
 });

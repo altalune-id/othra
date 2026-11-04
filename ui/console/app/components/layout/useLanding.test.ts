@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeStorage, setClient } from '#test/nuxt-globals';
 import { useOrgsStore } from '~/stores/orgs';
-import { usePinnedStore } from '~/stores/pinned';
+import { useRecentStore } from '~/stores/recent';
 import { useLanding } from './useLanding';
 
 const acme = { id: 'V3StGXR8Z5jdHj6BmyT2a', slug: 'acme', name: 'Acme' };
@@ -43,10 +43,18 @@ describe('useLanding', () => {
     expect(listProjects).toHaveBeenCalledWith({ orgId: 'V3StGXR8Z5jdHj6BmyT2a' });
   });
 
-  it('lands on the pinned org and project', async () => {
+  it('lands on the last opened org and project', async () => {
     withOrgs(beta, acme);
-    usePinnedStore().setProject('acme', 'api');
+    useRecentStore().visit('acme', 'api');
     expect(await useLanding().resolve()).toBe('/o/acme/projects/api');
+  });
+
+  it('falls back to the first org and its first project when the last opened ones are gone', async () => {
+    withOrgs(acme, beta);
+    useRecentStore().visit('deleted-org', 'x');
+    expect(await useLanding().resolve()).toBe('/o/acme/projects/web');
+    useRecentStore().visit('acme', 'deleted-project');
+    expect(await useLanding().resolve()).toBe('/o/acme/projects/web');
   });
 
   it('uses the requested org, falling back to the first org for an unknown slug', async () => {
@@ -56,7 +64,7 @@ describe('useLanding', () => {
     expect(await useLanding().resolve('nope')).toBe('/o/acme');
   });
 
-  it('lands on the active org when nothing is pinned', async () => {
+  it('lands on the active org when nothing was opened yet', async () => {
     withOrgs(acme, beta);
     listProjects.mockResolvedValue({ projects: [] });
     setClient('$authClient', { whoami: vi.fn().mockResolvedValue({ source: 'local', userId: 'u1', activeOrgSlug: 'beta' }), setActiveOrg: vi.fn() });

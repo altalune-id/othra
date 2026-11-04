@@ -57,6 +57,7 @@ func TestConsolePages(t *testing.T) {
 	p := newConsolePages(config.HTTPConfig{BaseURL: "https://admin.example/", BasePath: "/othra"})
 	assert.Equal(t, "https://admin.example/othra/console/", p.root())
 	assert.Equal(t, "https://admin.example/othra/console/o/acme/projects/web-app/clients/c1x2", p.client("acme", "web-app", "c1x2"))
+	assert.Equal(t, "https://admin.example/othra/console/o/acme/settings/members", p.members("acme"))
 	assert.Equal(t, "https://admin.example/othra/console/o/a%2Fb/projects/p/clients/c", p.client("a/b", "p", "c"))
 	assert.Equal(t, p.root(), consoleURIs(config.HTTPConfig{BaseURL: "https://admin.example/", BasePath: "/othra"}).PostLogoutURI)
 }

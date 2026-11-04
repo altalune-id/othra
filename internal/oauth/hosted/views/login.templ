@@ -24,17 +24,17 @@ type LoginData struct {
 	EmailOff    bool
 }
 
-// Login is the email form that sends a magic link.
+// Login is the email form that sends a magic link, with Google under it when the project offers it.
 templ Login(d layout.LayoutData, v LoginData) {
-	@layout.Layout(titled(d, loginTitle(ctx, v))) {
+	@layout.Layout(titled(withoutLegalFooter(d), loginTitle(ctx, v))) {
 		@layout.Card(loginTitle(ctx, v)) {
 			if v.Client != "" {
-				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle_client", "client", v.Client) }</p>
-				if v.ClientHost != "" {
-					<p class="text-xs text-base-content/70">{ i18n.T(ctx, "consent.from_host", "host", v.ClientHost) }</p>
-				}
-			} else {
-				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.subtitle", "project", v.Project) }</p>
+				<div class="-mt-2 flex flex-col gap-1">
+					<p class="text-base-content/70">{ i18n.T(ctx, "login.continue_to", "client", v.Client) }</p>
+					if v.ClientHost != "" {
+						<p class="text-xs text-base-content/70">{ i18n.T(ctx, "consent.from_host", "host", v.ClientHost) }</p>
+					}
+				</div>
 			}
 			if v.Reauth && v.Client != "" {
 				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "login.reauth_client", "client", v.Client) }</p>
@@ -46,22 +46,17 @@ templ Login(d layout.LayoutData, v LoginData) {
 					@withEmail(i18n.T(ctx, "picker.signed_out_notice"), v.Notice)
 				}
 			}
-			if v.Google {
-				@googleStart(d, v.Site, v.GoogleToken, v.ReturnTo)
-				if !v.EmailOff {
-					<div class="divider my-0 text-xs text-base-content/70">{ i18n.T(ctx, "login.or_email") }</div>
-				}
-			}
 			if !v.EmailOff || !v.Google {
 				<form method="post" action={ v.href(d, "/login") } class="flex flex-col gap-3">
 					@layout.CSRFInput(v.LoginToken)
 					if v.ReturnTo != "" {
 						<input type="hidden" name="return_to" value={ v.ReturnTo }/>
 					}
-					<label class="floating-label">
-						<span>{ i18n.T(ctx, "common.email") }</span>
+					<div class="fieldset gap-1 p-0">
+						<label class="label text-ui text-base-content" for="email">{ i18n.T(ctx, "common.email") }</label>
 						<input
-							class="input w-full"
+							id="email"
+							class="input validator w-full"
 							type="email"
 							name="email"
 							value={ v.Email }
@@ -73,22 +68,66 @@ templ Login(d layout.LayoutData, v LoginData) {
 							autofocus
 							if v.Error != "" {
 								aria-invalid="true"
-								aria-describedby="email-error"
+								aria-describedby="email-hint email-error"
+							} else {
+								aria-describedby="email-hint"
 							}
 						/>
-					</label>
+						<p id="email-hint" class="validator-hint hidden">{ i18n.T(ctx, "login.email_hint") }</p>
+					</div>
 					if v.Error != "" {
 						<p id="email-error" class="flex items-start gap-1.5 text-sm text-base-content">
 							@iconError()
 							<span>{ v.Error }</span>
 						</p>
 					}
-					<button class="btn btn-primary btn-block" type="submit">{ i18n.T(ctx, "login.submit") }</button>
+					<button class="btn btn-primary w-full" type="submit">{ i18n.T(ctx, "login.submit") }</button>
 				</form>
 			}
+			if v.Google {
+				if !v.EmailOff {
+					<div class="divider my-0 text-xs">{ i18n.T(ctx, "common.or") }</div>
+				}
+				@googleStart(d, v.Site, v.GoogleToken, v.ReturnTo)
+			}
+			@acceptSentence(d, v.Project, !v.Reauth)
 			if v.FromPicker && !v.Reauth {
 				<p class="text-sm"><a class="link" href={ templ.SafeURL(v.login(d, url.Values{"return_to": {v.ReturnTo}})) }>← { i18n.T(ctx, "login.back_to_accounts") }</a></p>
 			}
 		}
+	}
+}
+
+// acceptSentence says that signing in creates an account and names the project's Terms and Privacy Policy, from its legal settings.
+templ acceptSentence(d layout.LayoutData, project string, newHere bool) {
+	if d.Brand != nil && (newHere || d.Brand.TermsURL != "" || d.Brand.PrivacyURL != "") {
+		<p class="text-ui text-base-content/70">
+			if newHere {
+				{ i18n.T(ctx, "login.new_here", "project", project) }
+			}
+			if newHere && (d.Brand.TermsURL != "" || d.Brand.PrivacyURL != "") {
+				{ " " }
+			}
+			if d.Brand.TermsURL != "" && d.Brand.PrivacyURL != "" {
+				for _, p := range splitAround(i18n.T(ctx, "login.accept_both", "project", project), "{terms}", "{privacy}") {
+					@legalPart(d.Brand, p)
+				}
+			} else if d.Brand.TermsURL != "" || d.Brand.PrivacyURL != "" {
+				for _, p := range splitAround(i18n.T(ctx, "login.accept_one", "project", project), "{link}") {
+					@legalPart(d.Brand, p)
+				}
+			}
+		</p>
+	}
+}
+
+templ legalPart(b *layout.Brand, p string) {
+	switch {
+		case p == "{terms}" || (p == "{link}" && b.TermsURL != ""):
+			@layout.NewTabLink(b.TermsURL, i18n.T(ctx, "terms.terms_link"))
+		case p == "{privacy}" || p == "{link}":
+			@layout.NewTabLink(b.PrivacyURL, i18n.T(ctx, "terms.privacy_link"))
+		default:
+			{ p }
 	}
 }

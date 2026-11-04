@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
-import CopyButton from '#base/components/ui/CopyButton.vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
+import KeyValue from '#base/components/ui/KeyValue.vue';
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
+import ProjectEnvironmentCard from '~/components/project/ProjectEnvironmentCard.vue';
 import ProjectReadOnlyNote from '~/components/project/ProjectReadOnlyNote.vue';
 import { useProjectGuard } from '~/components/project/useProjectAccess';
 import { useAuthStore } from '~/stores/auth';
@@ -12,7 +15,7 @@ import { useProjectsStore } from '~/stores/projects';
 
 const route = useRoute();
 const { t } = useI18n();
-const ids = { name: useId(), slug: useId(), slugHelp: useId() };
+const ids = { slugHelp: useId() };
 const errorMessage = useErrorMessage();
 const orgs = useOrgsStore();
 const projects = useProjectsStore();
@@ -63,73 +66,52 @@ async function save() {
 }
 
 useHead({ title: () => `${project.value?.name ?? t('project.title')} · ${t('project.settings_general')} · Othra` });
+
+const facts = computed(() => {
+  const id = { label: t('common.id'), value: project.value?.id ?? '', mono: true, copy: true };
+  if (canEdit.value) {
+    return [id];
+  }
+  return [id, { label: t('common.name'), value: project.value?.name ?? '' }, { label: t('project.console_slug'), value: project.value?.slug ?? '', mono: true }];
+});
 </script>
 
 <template>
-  <div v-if="project" class="max-w-2xl space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold">
-        {{ t('project.settings_general') }}
-      </h1>
-      <p class="text-sm text-base-content/60">
-        {{ t('project.settings_general_subtitle') }}
-      </p>
-    </div>
+  <div v-if="project" class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="t('project.settings_general')" :description="t('project.settings_general_subtitle')" />
     <ProjectReadOnlyNote v-if="guard.system && guard.canWrite" icon="lucide:shield" :text="`${t('project.system_note')} ${t('project.system_general')}`" />
     <ProjectReadOnlyNote v-else-if="!canEdit" />
 
-    <section class="card border border-base-300 bg-base-100">
-      <div class="card-body gap-2">
-        <div class="fieldset">
-          <h2 class="fieldset-legend">
-            {{ t('common.id') }}
-          </h2>
-          <div class="flex items-center gap-2 rounded-box border border-base-300 bg-base-200 py-1.5 pr-1.5 pl-3">
-            <code class="min-w-0 flex-1 font-mono text-sm break-all">{{ project.id }}</code>
-            <CopyButton :value="project.id" :label="t('common.copy')" class="shrink-0" />
-          </div>
-        </div>
+    <div class="rounded-box border border-base-300 bg-base-100" :data-testid="canEdit ? undefined : 'general-readonly'">
+      <KeyValue :items="facts" :copy-label="t('common.copy_label', { label: '{label}' })" />
+    </div>
 
-        <form v-if="canEdit" novalidate class="space-y-2" @submit.prevent="save()">
-          <div class="fieldset">
-            <label :for="ids.name" class="fieldset-legend">{{ t('common.name') }}</label>
-            <input :id="ids.name" v-model="name" type="text" class="input w-full" :disabled="busy">
-          </div>
-          <div class="fieldset">
-            <label :for="ids.slug" class="fieldset-legend">{{ t('project.console_slug') }}</label>
-            <input :id="ids.slug" v-model="slug" type="text" class="input w-full font-mono" :aria-describedby="ids.slugHelp" :disabled="busy">
-            <p :id="ids.slugHelp" class="label whitespace-normal">
-              {{ t('project.console_slug_help') }}
-            </p>
-          </div>
-          <ErrorText :error="error" />
-          <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="btn btn-primary btn-sm" :disabled="busy || !name.trim()">
-              {{ busy ? t('common.saving') : t('common.save') }}
-            </button>
-            <SavedNote v-if="saved" :label="t('common.saved')" />
-          </div>
-        </form>
-        <dl v-else class="space-y-2" data-testid="general-readonly">
-          <div class="fieldset">
-            <dt class="fieldset-legend">
-              {{ t('common.name') }}
-            </dt>
-            <dd>{{ project.name }}</dd>
-          </div>
-          <div class="fieldset">
-            <dt class="fieldset-legend">
-              {{ t('project.console_slug') }}
-            </dt>
-            <dd class="font-mono text-sm">
-              {{ project.slug }}
-            </dd>
-            <dd class="label whitespace-normal">
-              {{ t('project.console_slug_help') }}
-            </dd>
-          </div>
-        </dl>
+    <form v-if="canEdit" novalidate class="flex flex-col gap-4 rounded-box border border-base-300 bg-base-100 p-4" @submit.prevent="save()">
+      <label class="flex flex-col gap-1">
+        <span class="label text-ui text-base-content">{{ t('common.name') }}</span>
+        <input v-model="name" type="text" class="input input-sm w-full text-ui" :disabled="busy">
+      </label>
+      <div class="flex flex-col gap-1">
+        <label class="flex flex-col gap-1">
+          <span class="label text-ui text-base-content">{{ t('project.console_slug') }}</span>
+          <input v-model="slug" type="text" class="input input-sm w-full font-mono text-ui" :aria-describedby="ids.slugHelp" :disabled="busy">
+        </label>
+        <p :id="ids.slugHelp" class="label whitespace-normal text-xs text-base-content/70">
+          {{ t('project.console_slug_help') }}
+        </p>
       </div>
-    </section>
+      <ErrorText :error="error" />
+      <div class="flex items-center gap-3">
+        <AppButton type="submit" size="sm" :disabled="busy || !name.trim()">
+          {{ busy ? t('common.saving') : t('common.save') }}
+        </AppButton>
+        <SavedNote v-if="saved" :label="t('common.saved')" />
+      </div>
+    </form>
+    <p v-else class="text-xs text-base-content/70">
+      {{ t('project.console_slug_help') }}
+    </p>
+
+    <ProjectEnvironmentCard v-if="!guard.system" :project-id="project.id" :environment="project.environment" :can-edit="canEdit" />
   </div>
 </template>

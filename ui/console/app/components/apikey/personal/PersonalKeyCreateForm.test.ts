@@ -4,16 +4,16 @@ import { describe, expect, it } from 'vitest';
 const template = readFileSync(new URL('./PersonalKeyCreateForm.vue', import.meta.url), 'utf8').split('<template>').slice(1).join('<template>');
 
 describe('the personal key create form', () => {
-  it('labels every text input and select through a matching label', () => {
-    const controls = [...template.matchAll(/<(?:select|input)\b[^>]*>/g)]
-      .map(m => m[0])
-      .filter(tag => tag.startsWith('<select') || /type="text"/.test(tag));
+  it('labels every text input and select, by wrapping label or a matching :for', () => {
+    const controls = [...template.matchAll(/<(?:select|input)\s[^>]*>/g)]
+      .filter(m => m[0].startsWith('<select') || /type="text"/.test(m[0]));
     expect(controls.length).toBeGreaterThanOrEqual(3);
-    const labelled = new Set([...template.matchAll(/<label\b[^>]*:for="([^"]+)"/g)].map(m => m[1]));
-    for (const tag of controls) {
-      const id = /:id="([^"]+)"/.exec(tag)?.[1];
-      expect(id, `${tag} needs an id`).toBeTruthy();
-      expect(labelled.has(id!), `${tag} needs <label :for="${id}">`).toBe(true);
+    const wrappers = [...template.matchAll(/<label\s[^>]*>[\s\S]*?<\/label>/g)].map(m => [m.index, m.index + m[0].length]);
+    const labelled = new Set([...template.matchAll(/<label\s[^>]*:for="([^"]+)"/g)].map(m => m[1]));
+    for (const m of controls) {
+      const id = /:id="([^"]+)"/.exec(m[0])?.[1];
+      const wrapped = wrappers.some(([from, to]) => m.index > from! && m.index < to!);
+      expect(wrapped || labelled.has(id!), `${m[0]} needs a label`).toBe(true);
     }
   });
 

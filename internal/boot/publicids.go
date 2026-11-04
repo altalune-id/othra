@@ -51,6 +51,15 @@ func (p publicIDs) OrgID(ctx context.Context, publicID string) (uuid.UUID, bool,
 	return o.ID, true, nil
 }
 
+// MembersURL serves invite.OrgIDs.
+func (p publicIDs) MembersURL(ctx context.Context, orgID uuid.UUID) (string, error) {
+	o, err := p.orgs.Get(ctx, orgID)
+	if err != nil {
+		return "", err
+	}
+	return p.console.members(o.Slug), nil
+}
+
 // IDByPublicID serves invite.OrgIDs; an unknown public id is an *org.NotFoundError.
 func (p publicIDs) IDByPublicID(ctx context.Context, publicID string) (uuid.UUID, error) {
 	o, err := p.orgs.ByPublicID(ctx, publicID)

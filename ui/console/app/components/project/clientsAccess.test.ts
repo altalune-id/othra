@@ -15,13 +15,15 @@ describe('clients and resource server pages', () => {
   });
 
   it.each(lists)('$path offers New only to editors', ({ source }) => {
-    for (const link of source.match(/<NuxtLink[^>]*\/new`[^>]*>/g) ?? []) {
-      expect(link).toContain('v-if="canEdit"');
+    for (const m of source.matchAll(/<NuxtLink[^>]*\/new`[^>]*>/g)) {
+      const opener = source.slice(0, m.index).split('\n').slice(-1)[0]! + m[0];
+      const slot = source.slice(0, m.index).match(/<template[^>]*>\s*$/)?.[0] ?? '';
+      expect(opener + slot).toContain('v-if="canEdit"');
     }
   });
 
   it.each(details)('$path gates Delete and every write form on canEdit', ({ source }) => {
-    expect(source).toMatch(/<button v-if="canEdit(?: && !system)?"[^>]*@click="page\.askDelete\(\)"/);
+    expect(source).toMatch(/<button v-if="canEdit(?: && !system)?"[^>]*@click="page\.askDelete\(\)"|<template v-if="canEdit(?: && !system)?" #actions>\s*<AppButton[^>]*@click="page\.askDelete\(\)"/);
     for (const form of source.match(/<form\s[^>]*>/g) ?? []) {
       expect(form).toContain('v-if="canEdit"');
     }
@@ -37,10 +39,10 @@ describe('clients and resource server pages', () => {
   });
 
   it('holds the page while a new secret is shown and drops it once saved', () => {
-    for (const { source } of [creates[0]!, details[0]!]) {
-      expect(source).toContain('onBeforeRouteLeave(() => !revealed.value);');
-      expect(source).toContain('<ClientSecretDialog');
-    }
+    expect(creates[0]!.source).toContain('onBeforeRouteLeave(');
+    expect(creates[0]!.source).toContain('<SecretReveal');
+    expect(details[0]!.source).toContain('onBeforeRouteLeave(() => !revealed.value);');
+    expect(details[0]!.source).toContain('<ClientSecretDialog');
   });
 
   it('checks a new resource server once, right after create', () => {
@@ -56,8 +58,8 @@ describe('clients and resource server pages', () => {
   });
 
   it('lists Clients and Resource servers in the project sidebar above Webhooks', () => {
-    const sidebar = read('./ProjectSidebar.vue');
-    const order = ['nav.overview', 'nav.clients', 'nav.resource_servers', 'webhooks.title', 'nav.settings'].map(k => sidebar.indexOf(`t('${k}')`));
+    const sidebar = read('./useProjectNav.ts');
+    const order = ['nav.overview', 'nav.clients', 'nav.resource_servers', 'webhooks.title'].map(k => sidebar.indexOf(`t('${k}')`));
     expect(order.every(i => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
@@ -78,9 +80,9 @@ describe('clients and resource server pages', () => {
     expect(read('../client/RedirectUriList.vue')).toMatch(/function set\(index: number, value: string\) \{[^}]+emit\('edit', index\);/);
   });
 
-  it('puts focus back after the secret is saved on create and after Verify now', () => {
-    expect(creates[0]!.source).toContain('query: { focus: \'secrets\' }');
-    expect(details[0]!.source).toMatch(/route\.query\.focus !== 'secrets'[\s\S]+secretsCard\.value\?\.focusTitle\(\);/);
+  it('ends create on the quickstart, and puts focus back on the secrets card and after Verify now', () => {
+    expect(creates[0]!.source).toContain('<ClientQuickstart');
+    expect(details[0]!.source).toMatch(/route\.query\.focus !== 'secrets'[\s\S]+secretsCard\.value\?\.focusAction\(\);/);
     expect(details[1]!.source).toMatch(/async function verifyNow\(\) \{\s+await page\.verify\(\);\s+await nextTick\(\);\s+verifyCard\.value\?\.focusVerify\(\);/);
     expect(read('../resourceserver/VerificationCard.vue')).toContain('defineExpose({ focusVerify: () => verifyButton.value?.focus() });');
   });

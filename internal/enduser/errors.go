@@ -7,8 +7,11 @@ import (
 	"github.com/altalune-id/othra/apperror"
 )
 
-// LinkNotUsableError signals a magic link that is unknown, expired or already used. SECURITY: one error for every cause.
-type LinkNotUsableError struct{}
+// LinkNotUsableError signals an unknown, expired or used link. SECURITY: one type and message for all causes; a known link adds ReturnTo.
+type LinkNotUsableError struct {
+	// ReturnTo is where a known link was going, so a new sign-in can continue there; empty for an unknown one.
+	ReturnTo string
+}
 
 func (*LinkNotUsableError) Error() string { return "enduser: sign-in link not usable" }
 

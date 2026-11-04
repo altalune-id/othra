@@ -124,6 +124,36 @@ func (f *webFixture) signInVia(c *http.Client, login hostedPage, email string) h
 	return f.submit(c, verify, "/login/verify", nil)
 }
 
+// check-inbox and confirm keep the app's name, so the person knows where the link returns them; the sign-up subject names the project.
+func TestAuthorize_SentAndVerifyNameTheClientAndTheSignUpSubjectTheProject(t *testing.T) {
+	f := newWebFixture(t)
+	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
+	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
+	inbox := f.get(f.client, sent.location())
+	assert.Contains(t, inbox.body, "It opens Openwa Web.")
+	assert.Equal(t, "Finish signing up to Acme", f.users.mails[len(f.users.mails)-1].Subject, "a sign-up subject names the project the account lives in")
+	link := linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody)
+	verify := f.get(f.client, f.get(f.client, strings.TrimPrefix(link, f.srv.URL)).location())
+	assert.Contains(t, verify.body, ">Sign in to Openwa Web</h1>")
+}
+
+// SECURITY: a metadata document client names itself, so check-inbox and confirm keep the project's name instead.
+func TestAuthorize_SentAndVerifyNeverNameAMetadataClient(t *testing.T) {
+	f := newWebFixture(t)
+	f.clients[cimdClient] = Client{ID: cimdClient, RowID: rowID(cimdClient), MetadataHost: "claude.ai", Name: "Claude Code", Native: true}
+	u := authorizeURL("client_id", cimdClient, "redirect_uri", "http://localhost:53999/callback", "resource", mcpResource, "scope", "sample:read")
+	login := f.get(f.client, f.get(f.client, u).location())
+	require.Contains(t, login.body, "claude.ai", "the login page shows the unverified host")
+	sent := f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
+	inbox := f.get(f.client, sent.location())
+	assert.NotContains(t, inbox.body, "Claude Code")
+	assert.NotContains(t, f.users.mails[len(f.users.mails)-1].Subject, "Claude Code")
+	link := linkIn(t, f.users.mails[len(f.users.mails)-1].TextBody)
+	verify := f.get(f.client, f.get(f.client, strings.TrimPrefix(link, f.srv.URL)).location())
+	assert.NotContains(t, verify.body, "Claude Code")
+	assert.Contains(t, verify.body, ">Sign in to Acme</h1>", "the admin-set project name stays")
+}
+
 // before the redirect URI is trusted, a branded 400 page, never a redirect, and no way to the sign-in page.
 func TestAuthorize_PageErrors(t *testing.T) {
 	f := newWebFixture(t)
@@ -161,12 +191,13 @@ func TestAuthorize_SignInThenCode(t *testing.T) {
 	first := f.get(f.client, authorizeURL("nonce", "n-1", "login_hint", "ana@example.com"))
 	require.Equal(t, http.StatusSeeOther, first.status)
 	login := f.get(f.client, first.location())
-	assert.Contains(t, login.body, "Sign in to continue to Openwa Web.")
+	assert.Contains(t, login.body, "Continue to Openwa Web<")
 	assert.Contains(t, login.body, `value="ana@example.com"`, "login_hint pre-fills the email")
 
 	done := f.signInVia(f.client, login, "ana@example.com")
 	require.Equal(t, http.StatusOK, done.status, "a POST whose next stop is /authorize answers with the continue page")
 	assert.Contains(t, done.body, "Continuing to Openwa Web")
+	assert.NotContains(t, done.body, "Access allowed", "only a consent answer reports an outcome")
 	final := f.follow(f.client, done)
 	assert.Equal(t, http.StatusFound, final.status, "the last hop to the client is a GET 302")
 	q := redirectParams(t, final)
@@ -505,4 +536,26 @@ func TestAuthorize_KeepsUILocales(t *testing.T) {
 func TestMarkerExpiryIsConfigured(t *testing.T) {
 	m := NewMarker([]byte("k"), time.Minute)
 	assert.Equal(t, time.Minute, m.maxAge)
+}
+
+type txGuardClients struct {
+	Clients
+	t     *testing.T
+	users *fakeUsers
+}
+
+func (g txGuardClients) Client(ctx context.Context, p Project, id string) (Client, bool, error) {
+	if g.users.composing {
+		g.t.Error("a client lookup ran inside the magic-link transaction: it takes a second pool connection")
+	}
+	return g.Clients.Client(ctx, p, id)
+}
+
+// the mail names the app, read before IssueLink opens its transaction, never from inside Compose.
+func TestAuthorize_MailClientIsReadBeforeTheLinkTransaction(t *testing.T) {
+	f := newWebFixture(t)
+	f.web.oauth.Clients = txGuardClients{Clients: f.web.oauth.Clients, t: t, users: f.users}
+	login := f.get(f.client, f.get(f.client, authorizeURL("nonce", "n-1")).location())
+	f.submit(f.client, login, "/login", url.Values{"email": {"ana@example.com"}})
+	assert.Equal(t, "Finish signing up to Acme", f.users.mails[len(f.users.mails)-1].Subject, "the subject names the project, read before the transaction")
 }

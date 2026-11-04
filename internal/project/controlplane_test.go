@@ -149,6 +149,15 @@ func TestProjectService_IssuerRPCs(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, on.Msg.GetProject().GetSigninEmailLink())
 
+	tagged, err := c.UpdateProjectEnvironment(ctx, connect.NewRequest(&projectv1.UpdateProjectEnvironmentRequest{
+		Id: p.PublicID, Environment: projectv1.ProjectEnvironment_PROJECT_ENVIRONMENT_STAGING,
+	}))
+	require.NoError(t, err)
+	assert.Equal(t, projectv1.ProjectEnvironment_PROJECT_ENVIRONMENT_STAGING, tagged.Msg.GetProject().GetEnvironment())
+	cleared, err := c.UpdateProjectEnvironment(ctx, connect.NewRequest(&projectv1.UpdateProjectEnvironmentRequest{Id: p.PublicID}))
+	require.NoError(t, err)
+	assert.Equal(t, projectv1.ProjectEnvironment_PROJECT_ENVIRONMENT_UNSPECIFIED, cleared.Msg.GetProject().GetEnvironment(), "unspecified clears the tag")
+
 	deleted, err := c.DeleteProjectLogo(ctx, connect.NewRequest(&projectv1.DeleteProjectLogoRequest{Id: p.PublicID}))
 	require.NoError(t, err)
 	assert.Empty(t, deleted.Msg.GetProject().GetLogoUrl(), "no logo answers an empty URL")

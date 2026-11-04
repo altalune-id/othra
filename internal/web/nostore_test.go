@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/altalune-id/othra/internal/web/assets"
 )
 
 type preSignIn struct{}
@@ -51,7 +53,7 @@ func TestPreSignInPagesAreNeverCached(t *testing.T) {
 
 func TestStaticAssetsKeepTheirCacheBesidePreSignInPages(t *testing.T) {
 	srv := NewServer(ServerOpts{Routes: []Registrar{preSignIn{}}})
-	rec := get(t, srv, "/static/favicon.ico")
+	rec := get(t, srv, "/static/favicon.ico?v="+StaticVersion("favicon.ico"))
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, "public, max-age=3600", rec.Header().Get("Cache-Control"))
+	assert.Equal(t, assets.Immutable, rec.Header().Get("Cache-Control"), "versioned static assets keep their cache, not no-store")
 }

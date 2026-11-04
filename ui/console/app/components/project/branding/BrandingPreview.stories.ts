@@ -4,7 +4,7 @@ import BrandingPreview from './BrandingPreview.vue';
 const model = {
   name: 'Acme App',
   logoUrl: '',
-  primary: '#4f46e5',
+  primary: '#005b5c',
   primaryContent: '#ffffff',
   termsUrl: 'https://acme.example.com/terms',
   privacyUrl: 'https://acme.example.com/privacy',

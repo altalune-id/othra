@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from '#base/components/ui/PageHeader.vue';
 import PersonalKeyCreateForm from '~/components/apikey/personal/PersonalKeyCreateForm.vue';
 import { usePersonalKeyCreate } from '~/components/apikey/personal/usePersonalKeyCreate';
 
@@ -31,16 +32,8 @@ useHead({ title: () => `${t('apikeys.personal_new')} · ${t('apikeys.personal_ti
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-6">
-    <div>
-      <NuxtLink to="/account/api-keys" class="inline-flex items-center gap-1 text-xs text-base-content/60 transition-colors hover:text-base-content">
-        <Icon name="lucide:chevron-left" size="14" />
-        {{ t('apikeys.personal_title') }}
-      </NuxtLink>
-      <h1 class="mt-1 text-2xl font-bold">
-        {{ t('apikeys.personal_new') }}
-      </h1>
-    </div>
+  <div class="flex max-w-2xl flex-col gap-5">
+    <PageHeader :title="t('apikeys.personal_new')" :description="t('apikeys.personal_subtitle')" />
     <PersonalKeyCreateForm
       v-model:name="name"
       v-model:org-id="orgId"

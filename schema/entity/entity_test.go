@@ -49,7 +49,7 @@ func TestBindings(t *testing.T) {
 				"id", "public_id", "org_id", "project_id", "name", "client_type", "application_type",
 				"token_endpoint_auth_method", "grant_types", "allowed_scopes", "redirect_uris",
 				"post_logout_redirect_uris", "consent_policy", "pkce_required", "registration_kind", "metadata_url",
-				"metadata_fetched_at", "metadata_expires_at", "client_uri", "created_at", "updated_at",
+				"metadata_fetched_at", "metadata_expires_at", "client_uri", "created_at", "updated_at", "last_used_at",
 			},
 		},
 		{
@@ -226,7 +226,7 @@ func TestBindings(t *testing.T) {
 		{
 			"projects",
 			func(s, p string) binding { b := entity.NewProjects(s, p); return binding{b, b.AllColumns} },
-			[]string{"id", "public_id", "org_id", "slug", "name", "created_by", "created_at", "updated_at", "issuer_handle", "issuer_handle_locked_at", "display_name", "primary_color", "support_email", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link", "logo_file_id"},
+			[]string{"id", "public_id", "org_id", "slug", "name", "created_by", "created_at", "updated_at", "issuer_handle", "issuer_handle_locked_at", "display_name", "primary_color", "support_email", "terms_url", "privacy_url", "terms_version", "terms_published_at", "signin_email_link", "logo_file_id", "environment"},
 		},
 		{
 			"password_resets",

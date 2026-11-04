@@ -12,12 +12,18 @@ func TestLoad_ComplianceDefaults(t *testing.T) {
 	c := validConfig(t)
 	assert.Empty(t, c.Compliance.TermsURL)
 	assert.Empty(t, c.Compliance.PrivacyURL)
+	assert.Empty(t, c.Compliance.Company)
+	assert.Empty(t, c.Compliance.ContactEmail)
 }
 
 func TestLoad_ComplianceFromEnv(t *testing.T) {
 	t.Setenv("OTHRA_COMPLIANCE_TERMS_URL", "https://example.com/terms")
 	t.Setenv("OTHRA_COMPLIANCE_PRIVACY_URL", "https://example.com/privacy")
+	t.Setenv("OTHRA_COMPLIANCE_COMPANY", "Example Ltd")
+	t.Setenv("OTHRA_COMPLIANCE_CONTACT_EMAIL", "legal@example.com")
 	c := validConfig(t)
+	assert.Equal(t, "Example Ltd", c.Compliance.Company)
+	assert.Equal(t, "legal@example.com", c.Compliance.ContactEmail)
 	assert.Equal(t, "https://example.com/terms", c.Compliance.TermsURL)
 	assert.Equal(t, "https://example.com/privacy", c.Compliance.PrivacyURL)
 }

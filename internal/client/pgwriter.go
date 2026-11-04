@@ -151,3 +151,17 @@ func (s *postgresStore) PruneShadows(ctx context.Context, projectID uuid.UUID, c
 	}
 	return int(n), nil
 }
+
+// TouchLastUsed moves each of the scoped project's clients' last_used_at forward to its time; it never moves it back.
+func (s *postgresStore) TouchLastUsed(ctx context.Context, used map[uuid.UUID]time.Time) error {
+	t := s.clients
+	for id, at := range used {
+		ts := postgres.TimestampzT(at.UTC())
+		stmt := t.UPDATE(t.LastUsedAt).SET(ts).
+			WHERE(t.ID.EQ(postgres.UUID(id)).AND(t.LastUsedAt.IS_NULL().OR(t.LastUsedAt.LT(ts))))
+		if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
+			return fmt.Errorf("client.postgres: TouchLastUsed: %w", err)
+		}
+	}
+	return nil
+}

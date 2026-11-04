@@ -2,7 +2,13 @@ package layout
 
 templ Layout(d LayoutData) {
 	<!DOCTYPE html>
-	<html lang={ d.lang() } data-theme="othra-light" data-brand?={ d.Brand != nil }>
+	<html
+		lang={ d.lang() }
+		if d.Brand.Branded() {
+			data-theme="othra-light"
+		}
+		data-brand?={ d.Brand != nil }
+	>
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -16,17 +22,17 @@ templ Layout(d LayoutData) {
 			}
 			@brandStyle(d.Brand)
 		</head>
-		<body class="min-h-screen bg-base-200 text-base-content">
-			<main class="flex min-h-screen items-center justify-center p-4">
+		<body class="min-h-dvh bg-base-100 text-sm leading-[normal] text-base-content">
+			<main class="flex min-h-dvh flex-col items-center justify-between gap-8 px-4 py-10">
+				<div aria-hidden="true"></div>
 				if d.Brand != nil {
-					<div class="flex w-full max-w-md flex-col items-center gap-3">
-						@brandScope(d.Brand) {
-							{ children... }
-						}
-						@brandFooter(d.Brand)
-					</div>
+					@brandScope(d.Brand) {
+						{ children... }
+					}
+					@brandFooter(d)
 				} else {
 					{ children... }
+					<div aria-hidden="true"></div>
 				}
 			</main>
 		</body>
@@ -39,23 +45,18 @@ templ Card(title string) {
 	}
 }
 
-// CardWith is Card with lead (an app mark) beside the title, in the title row.
+// CardWith is Card with lead (an icon tile) in place of the project's brand tile above the title.
 templ CardWith(title string, lead templ.Component) {
-	<div class="card w-full max-w-md bg-base-100 shadow-sm">
-		<div class="card-body gap-4">
-			if b := brandFrom(ctx); b != nil {
-				@BrandHeader(b)
-			}
+	<div class="flex w-full max-w-100 flex-col gap-5">
+		<div class="flex flex-col gap-3">
 			if lead != nil {
-				<div class="flex items-center gap-3">
-					@lead
-					<h1 class="card-title text-2xl break-words max-sm:text-xl">{ title }</h1>
-				</div>
-			} else {
-				<h1 class="card-title text-2xl break-words max-sm:text-xl">{ title }</h1>
+				@lead
+			} else if b := brandFrom(ctx); b != nil {
+				@BrandTile(b)
 			}
-			{ children... }
+			<h1 class="text-2xl font-semibold text-balance break-words">{ title }</h1>
 		</div>
+		{ children... }
 	</div>
 }
 

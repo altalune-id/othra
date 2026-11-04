@@ -57,8 +57,8 @@ func procedures(files ...protoreflect.FileDescriptor) []string {
 
 func TestEveryRPCHasAPermission(t *testing.T) {
 	procs := allProcedures()
-	require.Len(t, procs, 85,
-		"Org 4, Project 13, APIKey 3, Webhook 11, Auth 6, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 16, Upstream 6, EndUser 5")
+	require.Len(t, procs, 86,
+		"Org 4, Project 14, APIKey 3, Webhook 11, Auth 6, Member 4, Invite 7, SigningKey 2, Client 8, ResourceServer 16, Upstream 6, EndUser 5")
 	table := Table()
 	for _, proc := range procs {
 		perms := table[proc]
@@ -98,6 +98,7 @@ func TestPermissionTable_Spec15(t *testing.T) {
 		"/org.v1.OrgService/UpdateOrg":                                        "org:write",
 		"/project.v1.ProjectService/UpdateProject":                            "project:write",
 		"/project.v1.ProjectService/UpdateProjectSignIn":                      "project:write",
+		"/project.v1.ProjectService/UpdateProjectEnvironment":                 "project:write",
 		"/upstream.v1.UpstreamService/ListUpstreams":                          "project:read",
 		"/upstream.v1.UpstreamService/GetUpstream":                            "project:read",
 		"/upstream.v1.UpstreamService/CreateUpstream":                         "project:write",

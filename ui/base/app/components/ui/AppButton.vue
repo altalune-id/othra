@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-type Variant = 'primary' | 'neutral' | 'ghost' | 'outline' | 'error' | 'plain';
+type Variant = 'primary' | 'neutral' | 'ghost' | 'outline' | 'warning' | 'error' | 'plain';
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 
 const props = withDefaults(defineProps<{
@@ -30,7 +30,8 @@ const classes = computed(() => [
   'btn',
   props.variant === 'plain' ? '' : `btn-${props.variant}`,
   props.size === 'md' ? '' : `btn-${props.size}`,
-  { 'btn-soft': props.soft, 'btn-square': props.square },
+  props.size === 'sm' ? 'text-ui' : '',
+  { 'btn-soft [--btn-rest-fg:var(--color-base-content)] hover:*:text-current active:*:text-current': props.soft, 'btn-square': props.square },
 ]);
 </script>
 

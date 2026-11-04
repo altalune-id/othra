@@ -1,4 +1,5 @@
 import type { ShownError } from '#base/lib/apperror/message';
+import type { ProjectEnvironment } from '#gen/project/v1/project_pb';
 import { useErrorMessage } from '#base/composables/useErrorMessage';
 
 export interface Project {
@@ -7,6 +8,7 @@ export interface Project {
   slug: string;
   name: string;
   system?: boolean;
+  environment?: ProjectEnvironment;
 }
 
 export const useProjectsStore = defineStore('projects', () => {
@@ -35,6 +37,10 @@ export const useProjectsStore = defineStore('projects', () => {
     items.value = items.value.map(p => (p.id === id ? { ...p, name: patch.name, slug: patch.slug } : p));
   }
 
+  function setEnvironment(id: string, environment: ProjectEnvironment) {
+    items.value = items.value.map(p => (p.id === id ? { ...p, environment } : p));
+  }
+
   async function load(orgId: string) {
     const mine = ++latest;
     loading.value = true;
@@ -44,7 +50,7 @@ export const useProjectsStore = defineStore('projects', () => {
       if (mine !== latest) {
         return;
       }
-      items.value = (res.projects ?? []).map(p => ({ id: p.id, orgId: p.orgId, slug: p.slug, name: p.name, system: p.system }));
+      items.value = (res.projects ?? []).map(p => ({ id: p.id, orgId: p.orgId, slug: p.slug, name: p.name, system: p.system, environment: p.environment }));
       loadedFor = orgId;
     } catch (e) {
       if (mine === latest) {
@@ -74,5 +80,5 @@ export const useProjectsStore = defineStore('projects', () => {
     return run;
   }
 
-  return { items, loading, error, forOrg, add, update, load, ensureLoaded };
+  return { items, loading, error, forOrg, add, update, setEnvironment, load, ensureLoaded };
 });

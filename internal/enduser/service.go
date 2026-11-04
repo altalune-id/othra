@@ -177,7 +177,7 @@ func (s *Service) usable(ctx context.Context, l *Link, err error) (*Link, error)
 		return nil, s.errOrReport(ctx, "enduser: link", err)
 	}
 	if !l.Usable(s.now()) {
-		return nil, &LinkNotUsableError{}
+		return nil, &LinkNotUsableError{ReturnTo: l.ReturnTo}
 	}
 	return l, nil
 }
@@ -208,6 +208,16 @@ func (s *Service) Redeem(ctx context.Context, p Project, req RedeemRequest) (*Re
 			return err
 		}
 		l, err := s.store.UseLink(ctx, p.ID, hash, b.ID, now)
+		if IsLinkNotUsableError(err) {
+			known, kerr := s.store.LinkByTokenHash(ctx, p.ID, hash)
+			switch {
+			case kerr == nil:
+				return &LinkNotUsableError{ReturnTo: known.ReturnTo}
+			case IsLinkNotUsableError(kerr):
+				return err
+			}
+			return kerr
+		}
 		if err != nil {
 			return err
 		}

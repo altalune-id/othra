@@ -27,6 +27,7 @@ type OAuthClients struct {
 	ClientURI               postgres.ColumnString
 	CreatedAt               postgres.ColumnTimestampz
 	UpdatedAt               postgres.ColumnTimestampz
+	LastUsedAt              postgres.ColumnTimestampz
 
 	AllColumns postgres.ColumnList
 }
@@ -58,10 +59,11 @@ func NewOAuthClients(schema, tablePrefix string) *OAuthClients {
 		clientURI               = postgres.StringColumn("client_uri")
 		createdAt               = postgres.TimestampzColumn("created_at")
 		updatedAt               = postgres.TimestampzColumn("updated_at")
+		lastUsedAt              = postgres.TimestampzColumn("last_used_at")
 		all                     = postgres.ColumnList{
 			id, publicID, orgID, projectID, name, clientType, applicationType, tokenEndpointAuthMethod,
 			grantTypes, allowedScopes, redirectURIs, postLogoutRedirectURIs, consentPolicy, pkceRequired, registrationKind, metadataURL,
-			metadataFetchedAt, metadataExpiresAt, clientURI, createdAt, updatedAt,
+			metadataFetchedAt, metadataExpiresAt, clientURI, createdAt, updatedAt, lastUsedAt,
 		}
 	)
 	return &OAuthClients{
@@ -87,6 +89,7 @@ func NewOAuthClients(schema, tablePrefix string) *OAuthClients {
 		ClientURI:               clientURI,
 		CreatedAt:               createdAt,
 		UpdatedAt:               updatedAt,
+		LastUsedAt:              lastUsedAt,
 		AllColumns:              all,
 	}
 }

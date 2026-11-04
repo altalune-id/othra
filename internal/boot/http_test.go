@@ -1,8 +1,11 @@
 package boot
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +24,7 @@ import (
 	"github.com/altalune-id/othra/internal/oauth/oidc"
 	"github.com/altalune-id/othra/internal/testutil/fakes"
 	"github.com/altalune-id/othra/internal/user"
+	"github.com/altalune-id/othra/internal/web"
 	"github.com/altalune-id/othra/internal/web/layout"
 )
 
@@ -41,6 +45,31 @@ func TestBuildHTTPHandler_ServesPages(t *testing.T) {
 	rec = httptest.NewRecorder()
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/app/", nil))
 	assert.Equal(t, http.StatusFound, rec.Code)
+}
+
+func TestBuildHTTPHandler_BrandsUnknownPathsAndKeeps405(t *testing.T) {
+	users := &user.Service{}
+	local := &Services{Caps: capabilities.Capabilities{LocalLogin: true}, Auth: &auth.Service{}, Users: users, Legal: legal.NewService(users, legal.NewStore(db.Pool{}, "", ""), fakes.Transactor{})}
+	for _, svcs := range []*Services{nil, local} {
+		for _, base := range []string{"", "/app"} {
+			cfg := config.Config{HTTP: config.HTTPConfig{Addr: ":5150", BasePath: base}}
+			name := fmt.Sprintf("local=%t base=%q", svcs != nil, base)
+
+			rec := serveRoutes(cfg, svcs, http.MethodGet, base+"/nope")
+			assert.Equal(t, http.StatusNotFound, rec.Code, name)
+			assert.Equal(t, "text/html; charset=utf-8", rec.Header().Get("Content-Type"), name)
+			assert.Contains(t, rec.Body.String(), "Page not found", name)
+			assert.Contains(t, rec.Body.String(), "Go to the console", "%s: an unknown page offers a way back", name)
+			assert.NotContains(t, rec.Body.String(), "404 page not found", name)
+
+			rec = serveRoutes(cfg, svcs, http.MethodGet, base+"/favicon.ico")
+			assert.Equal(t, http.StatusFound, rec.Code, name)
+			assert.Equal(t, base+"/static/favicon.ico", rec.Header().Get("Location"), name)
+		}
+	}
+	rec := serveRoutes(config.Config{HTTP: config.HTTPConfig{Addr: ":5150"}}, local, http.MethodGet, "/logout")
+	assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "a wrong method on a real route keeps its 405")
+	assert.Equal(t, "POST", rec.Header().Get("Allow"))
 }
 
 func serveRoutes(cfg config.Config, svcs *Services, method, path string) *httptest.ResponseRecorder {
@@ -199,4 +228,25 @@ func TestBuildLegal_AnyCustomURLKeepsNoHistory(t *testing.T) {
 func TestHostedImageBases_OnlyWithStorage(t *testing.T) {
 	assert.Nil(t, hostedImageBases(config.StorageConfig{PublicBaseURL: "https://files.example.com"}), "no driver, no logos")
 	assert.Equal(t, []string{"https://files.example.com"}, hostedImageBases(config.StorageConfig{Driver: config.StorageDriverS3, PublicBaseURL: "https://files.example.com"}))
+}
+
+func TestBuildRoutes_StaticURLsAreVersionedAndImmutable(t *testing.T) {
+	if web.StaticVersion("app.css") == "" && os.Getenv("CI") == "" {
+		t.Skip("internal/web/static/app.css is not built; run make web")
+	}
+	cfg := config.Config{HTTP: config.HTTPConfig{BasePath: "/app"}}
+	h := buildHTTPHandler(httpSurfaces{basePath: "/app", routes: buildRoutes(cfg, nil, nil, nil, nil)})
+	page := httptest.NewRecorder()
+	h.ServeHTTP(page, httptest.NewRequest(http.MethodGet, "/app/terms", nil))
+	require.Equal(t, http.StatusOK, page.Code)
+
+	urls := regexp.MustCompile(`"(/app/static/[^"?]+)(\?v=[0-9a-f]+)?"`).FindAllStringSubmatch(page.Body.String(), -1)
+	require.NotEmpty(t, urls)
+	for _, m := range urls {
+		require.NotEmpty(t, m[2], "%s has no ?v=: the page kit lost its Version", m[1])
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, m[1]+m[2], nil))
+		assert.Equal(t, http.StatusOK, rec.Code, m[1])
+		assert.Equal(t, "public, max-age=31536000, immutable", rec.Header().Get("Cache-Control"), m[1])
+	}
 }

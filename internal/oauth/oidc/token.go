@@ -90,6 +90,13 @@ type Tokens struct {
 	Limits     layout.Limits
 	// CORS wraps the token and userinfo endpoints, which browser apps call with an Authorization header.
 	CORS func(http.Handler) http.Handler
+	// Usage records each token issue as the client's last use; nil records nothing.
+	Usage Usage
+}
+
+// Usage queues a client's last-use time in its tenant scope without waiting on a write; usage.Worker is it.
+type Usage interface {
+	Record(scope tenant.Context, id uuid.UUID, at time.Time)
 }
 
 type tokenResponse struct {
@@ -329,6 +336,9 @@ func (h *Web) respondTokens(req *tokenRequest, c *client.Client, issued *grant.T
 	if err != nil {
 		h.oauthFail(req.w, http.StatusInternalServerError, errServer, "")
 		return
+	}
+	if h.tokens.Usage != nil {
+		h.tokens.Usage.Record(tenant.Context{OrgID: e.issuer.OrgID, ProjectID: e.issuer.ProjectID}, c.ID, time.Now())
 	}
 	writeJSON(req.w, http.StatusOK, body)
 }

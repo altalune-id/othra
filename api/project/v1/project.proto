@@ -41,6 +41,7 @@ service ProjectService {
   rpc UpdateProjectBranding(UpdateProjectBrandingRequest) returns (UpdateProjectBrandingResponse);
   rpc UpdateProjectTerms(UpdateProjectTermsRequest) returns (UpdateProjectTermsResponse);
   rpc UpdateProjectSignIn(UpdateProjectSignInRequest) returns (UpdateProjectSignInResponse);
+  rpc UpdateProjectEnvironment(UpdateProjectEnvironmentRequest) returns (UpdateProjectEnvironmentResponse);
   rpc BumpTermsVersion(BumpTermsVersionRequest) returns (BumpTermsVersionResponse);
   rpc CheckIssuerHandle(CheckIssuerHandleRequest) returns (CheckIssuerHandleResponse);
   rpc CreateProjectLogoUpload(CreateProjectLogoUploadRequest) returns (CreateProjectLogoUploadResponse);
@@ -74,6 +75,16 @@ message Project {
   string logo_url = 22;
   // system is true for the console project Othra seeds at install; only its branding, terms and upstream IdPs can change.
   bool system = 23;
+  ProjectEnvironment environment = 24;
+}
+
+// ProjectEnvironment is an optional tag for what a project is used for; UNSPECIFIED is no tag.
+enum ProjectEnvironment {
+  PROJECT_ENVIRONMENT_UNSPECIFIED = 0;
+  PROJECT_ENVIRONMENT_PRODUCTION = 1;
+  PROJECT_ENVIRONMENT_STAGING = 2;
+  PROJECT_ENVIRONMENT_DEVELOPMENT = 3;
+  PROJECT_ENVIRONMENT_LABS = 4;
 }
 
 message CreateProjectRequest {
@@ -205,6 +216,19 @@ message UpdateProjectSignInRequest {
 }
 
 message UpdateProjectSignInResponse {
+  Project project = 1;
+}
+
+message UpdateProjectEnvironmentRequest {
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(othra.v1.public_id) = true
+  ];
+  // UNSPECIFIED clears the tag.
+  ProjectEnvironment environment = 2 [(buf.validate.field).enum.defined_only = true];
+}
+
+message UpdateProjectEnvironmentResponse {
   Project project = 1;
 }
 

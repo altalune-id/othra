@@ -13,7 +13,7 @@ import (
 	"github.com/altalune-id/othra/schema/entity"
 )
 
-// Save upserts a project by id, bumping updated_at; the issuer handle and its lock change only through their own methods.
+// Save upserts a project by id, bumping updated_at; the issuer handle, its lock and the environment change only through their own methods.
 func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 	now := time.Now().UTC()
 	t := s.projects
@@ -22,6 +22,7 @@ func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 			p.ID, p.PublicID, p.OrgID, p.Slug, p.Name, createdByExpr(p), p.CreatedAt.UTC(), now,
 			p.IssuerHandle, timeExpr(p.IssuerHandleLockedAt), p.DisplayName, p.PrimaryColor, p.SupportEmail,
 			p.TermsURL, p.PrivacyURL, p.TermsVersion, timeExpr(p.TermsPublishedAt), p.SignInEmailLink, logoFileExpr(p.LogoFileID),
+			p.Environment,
 		).
 		ON_CONFLICT(t.ID).
 		DO_UPDATE(postgres.SET(
@@ -39,6 +40,31 @@ func (s *postgresStore) Save(ctx context.Context, p *Project) error {
 		))
 	if err := db.Write(ctx, s.pool, func(q qrm.DB) error { _, err := stmt.ExecContext(ctx, q); return err }); err != nil {
 		return s.saveError("Save", p, err)
+	}
+	return nil
+}
+
+// SetEnvironment writes only the environment tag of the project id, so a concurrent save of other settings keeps it.
+func (s *postgresStore) SetEnvironment(ctx context.Context, id uuid.UUID, env string) error {
+	t := s.projects
+	stmt := t.UPDATE(t.Environment, t.UpdatedAt).
+		SET(postgres.String(env), postgres.TimestampzT(time.Now().UTC())).
+		WHERE(t.ID.EQ(postgres.UUID(id)))
+	var n int64
+	err := db.Write(ctx, s.pool, func(q qrm.DB) error {
+		res, err := stmt.ExecContext(ctx, q)
+		if err != nil {
+			return err
+		}
+		n, err = res.RowsAffected()
+		return err
+	})
+	if err != nil {
+		return s.saveError("SetEnvironment", &Project{Environment: env}, err)
+	}
+	if n == 0 {
+		_, err := s.ByID(ctx, id)
+		return err
 	}
 	return nil
 }
@@ -129,7 +155,7 @@ func logoFileExpr(id *uuid.UUID) postgres.Expression {
 
 func timeExpr(t *time.Time) postgres.TimestampzExpression {
 	if t == nil {
-		return postgres.TimestampzExp(postgres.NULL)
+		return entity.NullTimestampz()
 	}
 	return postgres.TimestampzT(t.UTC())
 }

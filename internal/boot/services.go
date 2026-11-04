@@ -91,6 +91,7 @@ type Services struct {
 	Federation      *federation.Service
 	PersonalTokens  *pat.Service
 	TokenUsage      *usage.Worker
+	ClientUsage     *usage.Worker
 	ConsolePages    consolePages
 }
 
@@ -138,6 +139,7 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 	keyAuthn := apikey.NewAuthenticator(apiKeyStore, keyUsage, keyScheme, owners, k.Reporter.Unexpected)
 	sessions := buildSessionStore(k, cfg, sl, secretsLog(k.Log, caps))
 	mailQueue := buildMailQueue(k.Pool, cfg, sl)
+	clients, clientUsage := buildClients(k, cfg, uow, projects)
 	svcs := &Services{
 		ConsolePages: newConsolePages(cfg.HTTP),
 		OrgStore:     orgStore,
@@ -162,7 +164,8 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		AuthLimiter:  ratelimit.Disabled(),
 		Storage:      files,
 		Keys:         signingKeys,
-		Clients:      buildClients(k, cfg, uow, projects),
+		Clients:      clients,
+		ClientUsage:  clientUsage,
 	}
 	svcs.ResourceServers = buildResourceServers(k, cfg, uow, projects, users, svcs.Clients)
 	svcs.Clients.WithLinks(rsLinks{servers: svcs.ResourceServers})
@@ -200,22 +203,23 @@ func buildServices(k kernel.Kernel, cfg config.Config) *Services {
 		Unexpected: k.Reporter.Unexpected,
 	})
 	svcs.Auth = auth.NewService(auth.Deps{
-		Users:      users,
-		Members:    members,
-		Orgs:       orgs,
-		Projects:   projects,
-		Sessions:   sessions,
-		Passwords:  users,
-		Basic:      basicCredentials(cfg, caps),
-		Profiles:   users,
-		Transactor: uow,
-		Mail:       mailQueue,
-		From:       cfg.Mail.From,
-		BaseURL:    publicBase(cfg.HTTP),
-		Identities: users,
-		Invites:    consoleInvites{invites: svcs.Invites},
-		OrgCreator: orgs,
-		OpenSignup: cfg.OpenSignup(),
+		Users:          users,
+		Members:        members,
+		Orgs:           orgs,
+		Projects:       projects,
+		Sessions:       sessions,
+		Passwords:      users,
+		Basic:          basicCredentials(cfg, caps),
+		Profiles:       users,
+		Transactor:     uow,
+		Mail:           mailQueue,
+		From:           cfg.Mail.From,
+		BaseURL:        publicBase(cfg.HTTP),
+		Identities:     users,
+		Invites:        consoleInvites{invites: svcs.Invites},
+		OrgCreator:     orgs,
+		SystemSessions: systemSessions{svcs: svcs},
+		OpenSignup:     cfg.OpenSignup(),
 	}).WithOperatorOrgSupport(caps.OperatorOrgSupport)
 	svcs.Install = buildInstall(cfg, svcs, uow)
 	return svcs

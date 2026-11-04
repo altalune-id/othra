@@ -6,7 +6,7 @@ import (
 )
 
 templ svgIcon(class string) {
-	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class={ "shrink-0", class } aria-hidden="true">
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class={ "shrink-0", class } aria-hidden="true">
 		{ children... }
 	</svg>
 }
@@ -20,7 +20,7 @@ templ iconError() {
 }
 
 templ iconChevron() {
-	@svgIcon("size-4 text-base-content/60") {
+	@svgIcon("size-4 text-base-content/70") {
 		<path d="m9 18 6-6-6-6"></path>
 	}
 }
@@ -47,6 +47,44 @@ templ iconMail(class string) {
 	}
 }
 
+// iconTile is the square tile above a hosted page's title when the page shows an icon instead of the project's brand.
+templ iconTile(icon templ.Component) {
+	<span class="grid size-10 place-items-center rounded-field bg-base-200" aria-hidden="true">
+		@icon
+	</span>
+}
+
+
+
+templ iconDevice() {
+	@svgIcon("size-4") {
+		<rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
+		<path d="M12 18h.01"></path>
+	}
+}
+
+templ iconClock() {
+	@svgIcon("size-4") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<path d="M12 6v6h4"></path>
+	}
+}
+
+templ iconInbox() {
+	@svgIcon("size-4") {
+		<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+		<path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+	}
+}
+
+templ iconArrowRight() {
+	@svgIcon("size-4 text-base-content/70") {
+		<path d="M5 12h14"></path>
+		<path d="m12 5 7 7-7 7"></path>
+	}
+}
+
+
 templ iconCircle() {
 	<div class="flex size-12 items-center justify-center self-center rounded-full bg-base-200">
 		{ children... }
@@ -61,14 +99,14 @@ templ iconCheck() {
 }
 
 templ alertError(msg string) {
-	<div role="alert" class="alert alert-error alert-soft items-start">
+	<div role="alert" class="alert alert-error alert-soft text-base-content items-start">
 		@iconError()
 		<span>{ msg }</span>
 	</div>
 }
 
 templ alertSuccess() {
-	<div role="status" class="alert alert-success alert-soft items-start">
+	<div role="status" class="alert alert-success alert-soft text-base-content items-start">
 		@iconCheck()
 		<span class="min-w-0">
 			{ children... }
@@ -100,17 +138,81 @@ templ accountTile(d layout.LayoutData, s Site, email, returnTo string) {
 	</div>
 }
 
-templ iconShieldAlert() {
-	@svgIcon("size-5 text-warning") {
-		<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
-		<path d="M12 8v4"></path>
-		<path d="M12 16h.01"></path>
+templ iconMailCheck() {
+	@svgIcon("size-5") {
+		<path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"></path>
+		<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+		<path d="m16 19 2 2 4-4"></path>
 	}
 }
 
-templ iconReturn() {
-	@svgIcon("mt-0.5 size-4") {
-		<polyline points="9 10 4 15 9 20"></polyline>
-		<path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+templ iconAppWindow() {
+	@svgIcon("size-5") {
+		<rect x="2" y="4" width="20" height="16" rx="2"></rect>
+		<path d="M10 4v4"></path>
+		<path d="M2 8h20"></path>
+		<path d="M6 4v4"></path>
+	}
+}
+
+templ iconPlug(class string) {
+	@svgIcon(class) {
+		<path d="M12 22v-5"></path>
+		<path d="M15 8V2"></path>
+		<path d="M17 8a1 1 0 0 1 1 1v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1z"></path>
+		<path d="M9 8V2"></path>
+	}
+}
+
+templ iconCircleHelp() {
+	@svgIcon("size-3") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+		<path d="M12 17h.01"></path>
+	}
+}
+
+templ iconLaptop() {
+	@svgIcon("size-4") {
+		<path d="M18 5a2 2 0 0 1 2 2v8.526a2 2 0 0 0 .212.897l1.068 2.127a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45l1.068-2.127A2 2 0 0 0 4 15.526V7a2 2 0 0 1 2-2z"></path>
+		<path d="M20.054 15.987H3.946"></path>
+	}
+}
+
+templ iconUserRound() {
+	@svgIcon("size-4") {
+		<circle cx="12" cy="8" r="5"></circle>
+		<path d="M20 21a8 8 0 0 0-16 0"></path>
+	}
+}
+
+templ iconRefresh() {
+	@svgIcon("size-4") {
+		<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+		<path d="M21 3v5h-5"></path>
+		<path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+		<path d="M8 16H3v5"></path>
+	}
+}
+
+templ iconKeyRound() {
+	@svgIcon("size-4") {
+		<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+		<circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+	}
+}
+
+templ iconCircleCheck() {
+	@svgIcon("size-6") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<path d="m16 9-5.5 5.5L8 12"></path>
+	}
+}
+
+templ iconCircleX() {
+	@svgIcon("size-6") {
+		<circle cx="12" cy="12" r="10"></circle>
+		<path d="m15 9-6 6"></path>
+		<path d="m9 9 6 6"></path>
 	}
 }

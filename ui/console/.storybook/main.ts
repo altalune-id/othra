@@ -1,4 +1,5 @@
 import type { StorybookConfig } from '@storybook/vue3-vite';
+import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import { baseAliases } from '../../base/aliases.ts';
@@ -6,6 +7,7 @@ import { baseAliases } from '../../base/aliases.ts';
 const config: StorybookConfig = {
   stories: ['../app/**/*.stories.@(ts|js)', '../../base/app/**/*.stories.@(ts|js)'],
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
+  staticDirs: [{ from: '../../../internal/web/static', to: '/static' }],
   framework: { name: '@storybook/vue3-vite', options: {} },
   async viteFinal(viteConfig) {
     return {
@@ -15,6 +17,8 @@ const config: StorybookConfig = {
         ...viteConfig.resolve,
         alias: {
           ...(viteConfig.resolve?.alias as Record<string, string> | undefined),
+          '~~': fileURLToPath(new URL('..', import.meta.url)),
+          '~': fileURLToPath(new URL('../app', import.meta.url)),
           ...baseAliases,
         },
       },

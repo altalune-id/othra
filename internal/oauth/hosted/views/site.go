@@ -49,7 +49,12 @@ func loginTitle(ctx context.Context, v LoginData) string {
 	if v.Reauth && v.Client == "" {
 		return i18n.T(ctx, "login.title_reauth")
 	}
-	return i18n.T(ctx, "login.title")
+	return i18n.T(ctx, "verify.title", "project", v.Project)
+}
+
+func wide(d layout.LayoutData) layout.LayoutData {
+	d.Wide = true
+	return d
 }
 
 func titled(d layout.LayoutData, title string) layout.LayoutData {
@@ -64,10 +69,23 @@ func initial(email string) string {
 	return ""
 }
 
-func splitAround(msg, placeholder string) []string {
-	before, after, found := strings.Cut(msg, placeholder)
-	if !found {
-		return []string{msg}
+func splitAround(msg string, placeholders ...string) []string {
+	var out []string
+	for msg != "" {
+		at, hit := -1, ""
+		for _, p := range placeholders {
+			if i := strings.Index(msg, p); i >= 0 && (at < 0 || i < at) {
+				at, hit = i, p
+			}
+		}
+		if at < 0 {
+			return append(out, msg)
+		}
+		if at > 0 {
+			out = append(out, msg[:at])
+		}
+		out = append(out, hit)
+		msg = msg[at+len(hit):]
 	}
-	return []string{before, placeholder, after}
+	return out
 }

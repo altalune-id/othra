@@ -15,6 +15,7 @@ export function useEndUserList(projectId: string) {
   const loadError = ref<ShownError | null>(null);
   const shown = ref('');
   let latest = 0;
+  let failedAfter = '';
 
   async function fetch(filter: string, after: string): Promise<boolean> {
     const ticket = ++latest;
@@ -31,6 +32,11 @@ export function useEndUserList(projectId: string) {
     } catch (e) {
       if (ticket === latest) {
         loadError.value = errorMessage(e, 'error.load_end_users');
+        failedAfter = after;
+        if (!after) {
+          users.value = [];
+          next.value = '';
+        }
       }
       return false;
     } finally {
@@ -49,5 +55,9 @@ export function useEndUserList(projectId: string) {
     return next.value ? fetch(shown.value, next.value) : Promise.resolve(false);
   }
 
-  return { users, query, shown, next, loading, loadError, load, more };
+  function retry() {
+    return fetch(shown.value, failedAfter);
+  }
+
+  return { users, query, shown, next, loading, loadError, load, more, retry };
 }

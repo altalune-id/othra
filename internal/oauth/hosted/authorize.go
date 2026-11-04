@@ -323,8 +323,12 @@ func (h *Web) authorizeFailed(w http.ResponseWriter, r *http.Request, s *site, e
 	return true
 }
 
-// SECURITY: only a redirect URI registered for the client, with state and iss on every answer (RFC 9207).
 func (h *Web) toClient(w http.ResponseWriter, r *http.Request, s *site, req *authRequest, params url.Values) {
+	h.toClientAs(w, r, s, req, params, views.OutcomeNone)
+}
+
+// SECURITY: only a redirect URI registered for the client, with state and iss on every answer (RFC 9207).
+func (h *Web) toClientAs(w http.ResponseWriter, r *http.Request, s *site, req *authRequest, params url.Values, outcome views.Outcome) {
 	u, err := url.Parse(req.redirectURI)
 	if err != nil {
 		h.fail(w, r, s, "hosted: redirect uri", err)
@@ -338,7 +342,7 @@ func (h *Web) toClient(w http.ResponseWriter, r *http.Request, s *site, req *aut
 	q.Set("iss", s.issuerURL)
 	u.RawQuery = q.Encode()
 	if r.Method == http.MethodPost && r.URL.Path != s.path+authorizePath {
-		h.forward(w, r, s, req.client.Name, u.String())
+		h.forward(w, r, s, req.client.Name, u.String(), outcome)
 		return
 	}
 	http.Redirect(w, r, u.String(), http.StatusFound) //nolint:gosec // G710: a redirect URI registered for this client.
@@ -530,6 +534,14 @@ type pending struct {
 	reauth bool
 }
 
+// SECURITY: a metadata document client names itself, so only a registered client's name may stand in for the project's.
+func (p pending) registeredName() string {
+	if p.host != "" {
+		return ""
+	}
+	return p.client
+}
+
 func (h *Web) pending(r *http.Request, s *site, returnTo string) pending {
 	u, err := url.Parse(returnTo)
 	if err != nil || h.oauth.Clients == nil || u.Path != s.path+authorizePath {
@@ -550,7 +562,7 @@ func (h *Web) pending(r *http.Request, s *site, returnTo string) pending {
 // NOTE: declining the terms records nothing; an authorize request hears access_denied, anything else gets a page.
 func (h *Web) declineTerms(w http.ResponseWriter, r *http.Request, s *site, returnTo string) {
 	ctx := r.Context()
-	if h.declineToClient(w, r, s, returnTo, "the end user declined the terms") {
+	if h.declineToClient(w, r, s, returnTo, "the end user declined the terms", views.OutcomeNone) {
 		return
 	}
 	d := views.TermsDeclined(ctx, s.views())
@@ -558,7 +570,7 @@ func (h *Web) declineTerms(w http.ResponseWriter, r *http.Request, s *site, retu
 	h.kit.Render(w, r, http.StatusOK, views.Error(h.layout(r, s), d))
 }
 
-func (h *Web) declineToClient(w http.ResponseWriter, r *http.Request, s *site, returnTo, description string) bool {
+func (h *Web) declineToClient(w http.ResponseWriter, r *http.Request, s *site, returnTo, description string, outcome views.Outcome) bool {
 	u, err := url.Parse(returnTo)
 	if err != nil || h.oauth.Clients == nil || u.Path != s.path+authorizePath {
 		return false
@@ -567,7 +579,7 @@ func (h *Web) declineToClient(w http.ResponseWriter, r *http.Request, s *site, r
 	if h.authorizeFailed(w, r, s, err) {
 		return true
 	}
-	h.toClient(w, r, s, req, url.Values{"error": {"access_denied"}, "error_description": {description}})
+	h.toClientAs(w, r, s, req, url.Values{"error": {"access_denied"}, "error_description": {description}}, outcome)
 	return true
 }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
 import { useId } from 'vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import AppModal from '#base/components/ui/AppModal.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
@@ -51,47 +52,51 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
 <template>
   <AppModal :open="open" :title="labels.title" @close="emit('close')">
     <div class="space-y-3">
-      <p v-if="mode === 'new' && targets.length === 0" class="text-sm text-base-content/70">
+      <p v-if="mode === 'new' && targets.length === 0" class="text-ui text-base-content/70">
         {{ labels.noneLeft }}
       </p>
       <template v-else>
         <div class="fieldset">
-          <label :for="ids.target" class="fieldset-legend">{{ labels.target }}</label>
-          <p v-if="mode === 'edit'" :id="ids.target" class="text-sm font-medium">
-            {{ fixedName }}
-          </p>
-          <select
-            v-else
-            :id="ids.target"
-            :value="targetId"
-            class="select w-full border-base-300"
-            :disabled="busy"
-            @change="emit('target', ($event.target as HTMLSelectElement).value)"
-          >
-            <option v-for="o in targets" :key="o.value" :value="o.value">
-              {{ o.label }}
-            </option>
-          </select>
+          <template v-if="mode === 'edit'">
+            <span class="label text-ui text-base-content">{{ labels.target }}</span>
+            <p :id="ids.target" class="text-ui font-medium">
+              {{ fixedName }}
+            </p>
+          </template>
+          <label v-else class="flex flex-col gap-1">
+            <span class="label text-ui text-base-content">{{ labels.target }}</span>
+            <select
+              :id="ids.target"
+              :value="targetId"
+              class="select select-sm w-full text-ui"
+              :disabled="busy"
+              @change="emit('target', ($event.target as HTMLSelectElement).value)"
+            >
+              <option v-for="o in targets" :key="o.value" :value="o.value">
+                {{ o.label }}
+              </option>
+            </select>
+          </label>
         </div>
-        <p v-if="unverified" class="flex items-start gap-1.5 text-sm text-base-content">
-          <Icon name="lucide:info" size="16" class="mt-0.5 shrink-0 text-info" />
+        <p v-if="unverified" class="flex items-start gap-1.5 text-ui text-base-content">
+          <Icon name="lucide:info" size="16" class="mt-0.5 shrink-0 text-info" aria-hidden="true" />
           {{ labels.unverified }}
         </p>
         <fieldset class="fieldset" :aria-describedby="`${ids.scopes} ${ids.err}`">
-          <legend class="fieldset-legend">
+          <legend class="fieldset-legend text-ui">
             {{ labels.scopes }}
           </legend>
-          <p v-if="scopeOptions.length === 0" class="text-sm text-base-content/70">
+          <p v-if="scopeOptions.length === 0" class="text-ui text-base-content/70">
             {{ labels.noScopes }}
           </p>
           <div v-else class="space-y-1">
-            <label v-for="scope in scopeOptions" :key="scope" class="flex items-center gap-2 text-sm">
-              <input v-model="picked" type="checkbox" :value="scope" class="checkbox checkbox-sm rounded-sm" :disabled="busy">
+            <label v-for="scope in scopeOptions" :key="scope" class="flex items-center gap-2 text-ui">
+              <input v-model="picked" type="checkbox" :value="scope" class="checkbox checkbox-xs rounded-sm" :disabled="busy">
               <span class="font-mono">{{ scope }}</span>
             </label>
           </div>
           <FieldError :id="ids.err" :message="pickError ? labels.pickScope : ''" />
-          <p :id="ids.scopes" class="label whitespace-normal">
+          <p :id="ids.scopes" class="label whitespace-normal text-xs text-base-content/70">
             {{ labels.scopesHelp }}
           </p>
         </fieldset>
@@ -99,13 +104,12 @@ const ids = { target: useId(), scopes: useId(), err: useId() };
       <ErrorText :error="error" />
     </div>
     <template #footer>
-      <button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="emit('close')">
+      <AppButton variant="ghost" size="sm" :disabled="busy" @click="emit('close')">
         {{ labels.cancel }}
-      </button>
-      <button type="button" class="btn btn-primary btn-sm" :disabled="busy || scopeOptions.length === 0 || (mode === 'new' && targets.length === 0)" @click="emit('confirm')">
-        <span v-if="busy" class="loading loading-spinner loading-xs" />
+      </AppButton>
+      <AppButton variant="primary" size="sm" :disabled="busy || scopeOptions.length === 0 || (mode === 'new' && targets.length === 0)" @click="emit('confirm')">
         {{ labels.confirm }}
-      </button>
+      </AppButton>
     </template>
   </AppModal>
 </template>

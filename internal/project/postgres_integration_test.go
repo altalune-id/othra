@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -148,6 +149,66 @@ func TestProjectStore_SaveUpdatesMutableColumnsOnly(t *testing.T) {
 	inA, err := f.projects.List(tenant.Into(ctx, tenant.Context{OrgID: orgA}), orgA)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"web-renamed"}, slugsOf(inA), "upsert by id must not insert a second row")
+}
+
+func TestProjectStore_Environment(t *testing.T) {
+	f := newProjectFixture(t)
+	orgA := f.seedOrg(t, "acme")
+	scope := tenant.Into(t.Context(), tenant.Context{OrgID: orgA})
+	p := newProject(t, orgA, "web", uuid.New())
+	require.NoError(t, f.projects.Save(scope, p))
+	require.NoError(t, f.projects.SetEnvironment(scope, p.ID, project.EnvironmentStaging))
+	got, err := f.projects.ByID(scope, p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, project.EnvironmentStaging, got.Environment)
+	assert.True(t, project.IsNotFoundError(f.projects.SetEnvironment(scope, uuid.New(), project.EnvironmentStaging)))
+
+	assert.Equal(t, "23514", pgCode(f.projects.SetEnvironment(scope, p.ID, "qa")), "the check constraint refuses an unknown tag")
+}
+
+func TestService_EnvironmentSurvivesAStaleSave(t *testing.T) {
+	f := newProjectFixture(t)
+	orgID := f.seedOrg(t, "acme")
+	scope := tenant.Into(t.Context(), tenant.Context{OrgID: orgID})
+	p := newProject(t, orgID, "web", uuid.New())
+	require.NoError(t, f.projects.Save(scope, p))
+	stale, err := f.projects.ByID(scope, p.ID)
+	require.NoError(t, err)
+
+	svc := project.NewService(f.projects, db.NewTransactor(f.pool), fakes.NoMemberships{}, nil, "", apperror.NewReporter(nil, false).Unexpected)
+	_, err = svc.UpdateEnvironment(scope, p.ID, project.EnvironmentStaging)
+	require.NoError(t, err)
+	stale.Name = "Web renamed"
+	require.NoError(t, f.projects.Save(scope, stale), "a rename read before the tag change writes after it")
+
+	got, err := f.projects.ByID(scope, p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "Web renamed", got.Name)
+	assert.Equal(t, project.EnvironmentStaging, got.Environment, "the rename keeps the tag set in between")
+}
+
+// Run with -race: projects saved at once with no terms date share no SQL NULL expression.
+func TestProjectStore_ParallelSavesWithoutATermsDate(t *testing.T) {
+	f := newProjectFixture(t)
+	orgID := f.seedOrg(t, "acme")
+	scope := tenant.Into(t.Context(), tenant.Context{OrgID: orgID})
+	const workers = 8
+	start := make(chan struct{})
+	errs := make([]error, workers)
+	var wg sync.WaitGroup
+	for i := range workers {
+		p := newProject(t, orgID, fmt.Sprintf("web-%d", i), uuid.Nil)
+		require.Nil(t, p.TermsPublishedAt)
+		wg.Go(func() {
+			<-start
+			errs[i] = f.projects.Save(scope, p)
+		})
+	}
+	close(start)
+	wg.Wait()
+	for _, err := range errs {
+		require.NoError(t, err)
+	}
 }
 
 func TestProjectStore_UniqueConstraints(t *testing.T) {

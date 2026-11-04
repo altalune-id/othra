@@ -18,7 +18,7 @@ describe('project settings pages', () => {
 
   it('hides the publish button from people who cannot edit', () => {
     const legal = pages.find(p => p.name === 'legal')!.source;
-    expect(legal).toMatch(/<div v-if="canEdit"[^>]*>\s*<button[^>]*@click="legal\.askBump\(\)"/);
+    expect(legal).toMatch(/<div v-if="canEdit"[^>]*>\s*<(?:button|AppButton)[^>]*@click="legal\.askBump\(\)"/);
   });
 
   it('shows the locked issuer note as a note, not an alert', () => {
@@ -58,7 +58,7 @@ describe('project settings markup', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
     expect(branding).not.toContain('#000000');
     expect(branding).not.toContain('opacity-0');
-    expect(branding).toContain('branding.default_colour');
+    expect(branding).toContain('branding.default_color');
   });
 
   it('prefixes the handle with /p/ only', () => {
@@ -74,15 +74,16 @@ describe('project settings markup', () => {
 
   it('builds the edit project modal from daisyUI 5 fieldsets', () => {
     const modal = read('./edit/ProjectEditModal.vue');
-    expect(modal).not.toMatch(/input-(?:sm|bordered)/);
+    expect(modal).not.toContain('input-bordered');
+    expect(modal.match(/class="input input-sm [^"]*text-ui"/g)).toHaveLength(2);
     expect(modal.match(/class="fieldset"/g)).toHaveLength(2);
-    expect(modal.match(/<label :for="ids\.\w+" class="fieldset-legend">/g)).toHaveLength(2);
+    expect(modal.match(/<label :for="ids\.\w+" class="label text-ui text-base-content">/g)).toHaveLength(2);
   });
 
-  it('puts the branding form in a card on a width-capped page, like its sibling pages', () => {
+  it('puts the branding form in a bordered box on a width-capped page, like its sibling pages', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
-    expect(branding).toMatch(/<div class="max-w-5xl space-y-6">/);
-    expect(branding).toMatch(/<form v-if="canEdit" novalidate class="card self-start border border-base-300 bg-base-100"/);
+    expect(branding).toMatch(/<div class="flex max-w-5xl flex-col gap-5">/);
+    expect(branding).toMatch(/<form v-if="canEdit" novalidate class="[^"]*rounded-box border border-base-300 bg-base-100[^"]*"/);
   });
 
   it('calls the slug "Console URL name" on the projects table and edit modal', () => {
@@ -90,10 +91,9 @@ describe('project settings markup', () => {
     expect(read('./edit/ProjectEditModal.vue')).not.toContain('common.slug');
   });
 
-  it('puts the project logo in the Overview header, not the Issuer card title', () => {
+  it('keeps the Overview header to the issuer title, as the design does: no logo on it', () => {
     const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
-    expect(overview).toMatch(/<img v-if="full\?\.logoUrl"[^>]*class="size-10 [^"]*max-sm:size-8/);
-    expect(overview).not.toContain('size-6');
+    expect(overview).not.toContain('full?.logoUrl');
   });
 });
 
@@ -102,25 +102,22 @@ describe('m1.5 design re-check', () => {
     const list = read('../../pages/o/[org]/projects/index.vue');
     expect(list).toContain('useCanEditProject');
     expect(list).toMatch(/<AppButton v-if="org && canEdit"[^>]*@click="ui\.openProjectCreate\(\)"/);
-    expect(list).toMatch(/<button v-if="canEdit && !project\.system"[^>]*@click="edit\(project\)"/);
+    expect(list).toMatch(/<li v-if="canEdit && !row\.system">\s*<button[^>]*@click="edit\(row as Project\)"/);
   });
 
   it('puts the logo file input before its label as a peer, so keyboard focus shows on the label', () => {
     const branding = pages.find(p => p.name === 'branding')!.source;
-    expect(branding).toMatch(/<input :id="ids\.logo"[^>]*type="file"[^>]*class="peer sr-only"[^>]*>\s*<label :for="ids\.logo" class="btn btn-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-base-content/);
+    expect(branding).toMatch(/<label class="btn btn-sm has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-base-content[^"]*"[^>]*>\s*<input :id="ids\.logo"[^>]*type="file"[^>]*class="sr-only"/);
     expect(branding).not.toContain('has-[:focus-visible]');
   });
 
-  it('puts General in a card on a max-w-2xl page with a plain primary Save', () => {
+  it('heads General with PageHeader on a max-w-2xl page, with the id block and one primary Save', () => {
     const general = pages.find(p => p.name === 'index')!.source;
-    expect(general).toContain('<div v-if="project" class="max-w-2xl space-y-6">');
-    expect(general).toMatch(/<section class="card border border-base-300 bg-base-100">\s*<div class="card-body gap-2">/);
+    expect(general).toContain('<div v-if="project" class="flex max-w-2xl flex-col gap-5">');
+    expect(general).toContain('<PageHeader :title="t(\'project.settings_general\')" :description="t(\'project.settings_general_subtitle\')" />');
+    expect(general).toContain('<KeyValue :items="facts"');
     expect(general).toMatch(/<form v-if="canEdit" novalidate/);
-    expect(general).toMatch(/<dl v-else /);
-    expect(general).not.toContain('text-xs text-base-content/60">{{ t(\'common.id\') }}');
-    expect(general).toContain('<button type="submit" class="btn btn-primary btn-sm"');
-    expect(general).not.toContain('AppButton');
-    expect(general).toContain('project.settings_general_subtitle');
+    expect(general).toMatch(/<AppButton type="submit" size="sm"/);
   });
 
   it('styles the read-only issuer labels alike and hides the logo help when storage is off', () => {
@@ -149,10 +146,11 @@ describe('m1.5 design re-check', () => {
     }
   });
 
-  it('lets issuer URLs wrap after /p/ and calls the Overview link "Edit issuer"', () => {
+  it('gives the Overview header the design actions: Copy issuer, View as JSON and Try sign-in', () => {
     const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
-    expect(overview).toContain('issuer.edit');
-    expect(overview).toContain('<UrlField');
+    expect(overview).toContain('overview.copy_issuer');
+    expect(overview).toContain('overview.view_json');
+    expect(overview).toContain('overview.try_signin');
     expect(pages.find(p => p.name === 'issuer')!.source).toContain('<UrlField');
   });
 });
@@ -166,18 +164,13 @@ describe('m2 discovery and signing keys (no RPC)', () => {
     expect(fields).toEqual(['oidc', 'oauth', 'jwks']);
   });
 
-  it('shows the issuer and discovery URLs on the Overview, without JWKS or Open', () => {
-    const overview = read('../../pages/o/[org]/projects/[project]/index.vue');
-    expect(overview).toContain('overview.discovery');
-    expect(overview).not.toContain('discovery.jwks');
-    expect(overview).not.toMatch(/<UrlField[^>]*\sopen[\s>]/);
+  it('checks discovery on the Overview, taking the JWKS URL from the discovery document', () => {
+    const status = read('./overview/IssuerStatus.vue');
+    expect(status).toContain('overview.discovery');
+    expect(read('./overview/useDiscoveryCheck.ts')).toContain('found.jwks_uri');
   });
 
-  it('lists Signing keys after Issuer in the settings sidebar, with its own page', () => {
-    const sidebar = read('./ProjectSettingsSidebar.vue');
-    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'keys\''));
-    expect(sidebar.indexOf('\'keys\'')).toBeLessThan(sidebar.indexOf('\'branding\''));
-    expect(sidebar).toContain('lucide:key-square');
+  it('gives Signing keys its own page', () => {
     const keys = read('../../pages/o/[org]/projects/[project]/settings/keys.vue');
     expect(keys).toContain('keys.title');
     expect(keys).toContain('keys.subtitle');
@@ -195,9 +188,9 @@ describe('signing keys page', () => {
 
   it('shows the Rotation card to editors only, and replaces Rotate with the waiting line while a key is Next', () => {
     const source = page();
-    expect(source).toMatch(/<section v-if="canEdit && loaded" class="card[^"]*" data-testid="rotation-card">/);
+    expect(source).toMatch(/<Section v-if="canEdit && loaded" [^>]*data-testid="rotation-card">/);
     expect(source).toMatch(/<p v-if="waitingUntil && !noActive" role="status"/);
-    expect(source).toMatch(/<button v-else type="button" class="btn btn-primary btn-sm [^"]*max-sm:btn-block[^"]*" @click="keys\.askRotate\(\)">/);
+    expect(source).toMatch(/<AppButton v-else size="sm" class="[^"]*max-sm:btn-block[^"]*" @click="keys\.askRotate\(\)">/);
     expect(source).toContain('keys.emergency');
     expect(source).toMatch(/`othra project keys rotate \$\{listed\.value\?\.id\} --now`/);
   });
@@ -211,36 +204,30 @@ describe('signing keys page', () => {
     const source = page();
     expect(source).toContain('<AppModal :open="confirming" :title="t(\'keys.rotate_title\')" @close="keys.cancelRotate()">');
     expect(source).toContain('<ErrorText :error="error" />');
-    expect(source).toMatch(/class="btn btn-primary btn-sm" :disabled="busy" @click="keys\.confirmRotate\(\)"/);
+    expect(source).toMatch(/<AppButton size="sm" :busy="busy" @click="keys\.confirmRotate\(\)">/);
   });
 
-  it('lists keys as a table on desktop and a stacked list on mobile, with status text and decorative dots', () => {
+  it('lists keys on the shared table, scrolling on phones, with a status word beside each dot', () => {
     const source = list();
-    expect(source).toMatch(/<table class="table table-sm max-sm:hidden"/);
-    expect(source).toMatch(/<ul class="space-y-2 sm:hidden"/);
-    expect(source).toContain('<span class="status" :class="dot(row.status)" aria-hidden="true" />');
+    expect(source).toContain('<DataTable');
+    expect(source).not.toContain('sm:hidden');
+    expect(source).toContain('<StatusLabel :tone="tones[row.status]" :label="labels[row.status]" />');
     expect(source).toContain('labels.retiredNote');
-    expect(source).toContain('skeleton');
   });
 });
 
 describe('m2 design review contrast', () => {
-  it('dims retired key rows to /60, not /50 (SF1)', () => {
+  it('dims retired key rows to the AA muted /70, never lower (SF1)', () => {
     const list = read('./keys/SigningKeyList.vue');
-    expect(list).not.toContain('\'text-base-content/50\': row.status === \'retired\'');
-    expect(list.match(/'text-base-content\/60': row\.status === 'retired'/g)).toHaveLength(2);
+    expect(list).not.toMatch(/text-base-content\/[1-6]0/);
+    expect(list).toContain('return row.status === \'retired\' ? \'text-base-content/70\' : \'\';');
+    expect(list).toContain(':row-class="dim"');
   });
 });
 
 describe('sign-in methods page', () => {
   const page = () => read('../../pages/o/[org]/projects/[project]/settings/sign-in.vue');
   const card = () => read('./signin/GoogleUpstreamCard.vue');
-
-  it('has its own sidebar item after Issuer', () => {
-    const sidebar = read('./ProjectSettingsSidebar.vue');
-    expect(sidebar.indexOf('\'issuer\'')).toBeLessThan(sidebar.indexOf('\'sign-in\''));
-    expect(sidebar).toContain('signin.title');
-  });
 
   it('gives editing controls to editors only and tells others why', () => {
     expect(page()).toMatch(/<ProjectReadOnlyNote v-(?:else-)?if="!canEdit"/);

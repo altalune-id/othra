@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { ShownError } from '#base/lib/apperror/message';
 import { useId } from 'vue';
+import AppButton from '#base/components/ui/AppButton.vue';
 import ErrorText from '#base/components/ui/ErrorText.vue';
 import FieldError from '#base/components/ui/FieldError.vue';
 import SavedNote from '#base/components/ui/SavedNote.vue';
+import Section from '#base/components/ui/Section.vue';
 
 export interface CimdApp {
   id: string;
@@ -76,39 +78,36 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
 </script>
 
 <template>
-  <section class="card border border-base-300 bg-base-100" data-testid="cimd-card">
-    <div class="card-body gap-3">
-      <h2 class="card-title text-base">
-        {{ labels.title }}
-      </h2>
-      <form v-if="canEdit" novalidate class="space-y-3" @submit.prevent="emit('save')">
-        <div class="space-y-1">
-          <label :for="ids.accept" class="flex items-center gap-3 text-sm font-medium">
-            <input
-              :id="ids.accept"
-              v-model="accept"
-              type="checkbox"
-              class="toggle toggle-sm"
-              :disabled="busy || (locked && !accept)"
-              :aria-describedby="ids.help"
-            >
-            {{ labels.accept }}
-          </label>
-          <p :id="ids.help" class="label whitespace-normal">
-            {{ labels.acceptHelp }}
-          </p>
-          <p v-if="locked && !accept" class="flex items-start gap-1 text-xs text-base-content">
-            <Icon name="lucide:lock" size="14" class="shrink-0 text-info" />
-            {{ labels.locked }}
-          </p>
-        </div>
-        <template v-if="accept">
-          <div class="fieldset">
-            <label :for="ids.hosts" class="fieldset-legend">{{ labels.hosts }}</label>
+  <Section :title="labels.title" data-testid="cimd-card">
+    <form v-if="canEdit" novalidate class="space-y-3" @submit.prevent="emit('save')">
+      <div class="space-y-1">
+        <label :for="ids.accept" class="flex items-center gap-3 text-ui font-medium">
+          <input
+            :id="ids.accept"
+            v-model="accept"
+            type="checkbox"
+            class="toggle toggle-sm"
+            :disabled="busy || (locked && !accept)"
+            :aria-describedby="ids.help"
+          >
+          {{ labels.accept }}
+        </label>
+        <p :id="ids.help" class="label whitespace-normal text-xs text-base-content/70">
+          {{ labels.acceptHelp }}
+        </p>
+        <p v-if="locked && !accept" class="flex items-start gap-1 text-xs text-base-content">
+          <Icon name="lucide:lock" size="14" class="shrink-0 text-info" aria-hidden="true" />
+          {{ labels.locked }}
+        </p>
+      </div>
+      <template v-if="accept">
+        <div class="fieldset">
+          <label class="flex flex-col gap-1">
+            <span class="label text-ui text-base-content">{{ labels.hosts }}</span>
             <textarea
               :id="ids.hosts"
               v-model="hosts"
-              class="textarea w-full font-mono text-sm"
+              class="textarea w-full font-mono text-ui leading-relaxed"
               :class="{ 'textarea-error': hostsError }"
               rows="3"
               placeholder="claude.ai"
@@ -118,91 +117,90 @@ const ids = { accept: useId(), help: useId(), hosts: useId(), hostsHelp: useId()
               :aria-invalid="!!hostsError"
               :aria-describedby="`${ids.hostsHelp} ${ids.hostsErr}`"
             />
-            <FieldError :id="ids.hostsErr" :message="hostsError" />
-            <p v-if="hosts.trim() === ''" class="mt-1 flex items-start gap-1 text-xs text-base-content">
-              <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" />
-              {{ labels.hostsAny }}
-            </p>
-            <p :id="ids.hostsHelp" class="label whitespace-normal">
-              {{ labels.hostsHelp }}
-            </p>
-          </div>
-          <fieldset class="fieldset">
-            <legend class="fieldset-legend">
-              {{ labels.scopes }}
-            </legend>
-            <label class="flex items-center gap-2 text-sm">
-              <input type="radio" name="cimd-scopes" class="radio radio-sm" :checked="allScopes" :disabled="busy" @change="allScopes = true">
-              {{ labels.scopesAll }}
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-              <input type="radio" name="cimd-scopes" class="radio radio-sm" :checked="!allScopes" :disabled="busy" @change="allScopes = false">
-              {{ labels.scopesSome }}
-            </label>
-            <div v-if="!allScopes" class="mt-1 space-y-1 pl-6">
-              <label v-for="scope in catalog" :key="scope" class="flex items-center gap-2 text-sm">
-                <input v-model="picked" type="checkbox" :value="scope" class="checkbox checkbox-sm rounded-sm" :disabled="busy">
-                <span class="font-mono">{{ scope }}</span>
-              </label>
-            </div>
-          </fieldset>
-        </template>
-        <ErrorText :error="error" />
-        <div class="flex items-center gap-3">
-          <button type="submit" class="btn btn-primary btn-sm" :disabled="busy">
-            <span v-if="busy" class="loading loading-spinner loading-xs" />
-            {{ labels.save }}
-          </button>
-          <SavedNote v-if="saved" :label="labels.saved" />
+          </label>
+          <FieldError :id="ids.hostsErr" :message="hostsError" />
+          <p v-if="hosts.trim() === ''" class="mt-1 flex items-start gap-1 text-xs text-base-content">
+            <Icon name="lucide:triangle-alert" size="14" class="shrink-0 text-warning" aria-hidden="true" />
+            {{ labels.hostsAny }}
+          </p>
+          <p :id="ids.hostsHelp" class="label whitespace-normal text-xs text-base-content/70">
+            {{ labels.hostsHelp }}
+          </p>
         </div>
-      </form>
-      <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-        <dt class="text-base-content/60">
-          {{ labels.accept }}
-        </dt>
-        <dd>{{ accept ? labels.on : labels.off }}</dd>
-        <template v-if="accept">
-          <dt class="text-base-content/60">
-            {{ labels.hosts }}
-          </dt>
-          <dd class="font-mono text-xs break-all">
-            {{ hosts.trim() ? hosts.split('\n').join(', ') : '—' }}
-          </dd>
-          <dt class="text-base-content/60">
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend text-ui">
             {{ labels.scopes }}
-          </dt>
-          <dd>{{ allScopes ? labels.scopesAll : picked.join(', ') }}</dd>
-        </template>
-      </dl>
-
-      <div class="divider my-0" />
-      <h3 class="text-sm font-medium">
-        {{ labels.apps }}
-      </h3>
-      <p v-if="apps.length === 0" class="text-sm text-base-content/70">
-        {{ labels.appsEmpty }}
-      </p>
-      <ul v-else class="divide-y divide-base-300">
-        <li v-for="app in apps" :key="app.id" class="flex flex-wrap items-start justify-between gap-2 py-2">
-          <div class="min-w-0 space-y-0.5">
-            <p class="text-sm font-medium break-words">
-              {{ app.name }}
-            </p>
-            <p class="font-mono text-xs break-all text-base-content/70">
-              {{ app.url }}
-            </p>
-            <p class="text-xs text-base-content/70">
-              {{ labels.firstSeen }} {{ app.firstSeen }}<template v-if="app.fetched">
-                · {{ labels.fetched }} {{ app.fetched }}
-              </template>
-            </p>
+          </legend>
+          <label class="flex items-center gap-2 text-ui">
+            <input type="radio" name="cimd-scopes" class="radio radio-sm" :checked="allScopes" :disabled="busy" @change="allScopes = true">
+            {{ labels.scopesAll }}
+          </label>
+          <label class="flex items-center gap-2 text-ui">
+            <input type="radio" name="cimd-scopes" class="radio radio-sm" :checked="!allScopes" :disabled="busy" @change="allScopes = false">
+            {{ labels.scopesSome }}
+          </label>
+          <div v-if="!allScopes" class="mt-1 space-y-1 pl-6">
+            <label v-for="scope in catalog" :key="scope" class="flex items-center gap-2 text-ui">
+              <input v-model="picked" type="checkbox" :value="scope" class="checkbox checkbox-xs rounded-sm" :disabled="busy">
+              <span class="font-mono">{{ scope }}</span>
+            </label>
           </div>
-          <button v-if="canEdit" type="button" class="btn btn-ghost btn-xs" @click="emit('revoke', app)">
-            <Icon name="lucide:ban" size="14" class="text-error" />
-            {{ labels.revoke }}
-          </button>
-        </li>
-      </ul>
-    </div>
-  </section>
+        </fieldset>
+      </template>
+      <ErrorText :error="error" />
+      <div class="flex items-center gap-3">
+        <AppButton type="submit" variant="primary" size="sm" :busy="busy">
+          {{ labels.save }}
+        </AppButton>
+        <SavedNote v-if="saved" :label="labels.saved" />
+      </div>
+    </form>
+    <dl v-else class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-ui">
+      <dt class="text-base-content/70">
+        {{ labels.accept }}
+      </dt>
+      <dd>{{ accept ? labels.on : labels.off }}</dd>
+      <template v-if="accept">
+        <dt class="text-base-content/70">
+          {{ labels.hosts }}
+        </dt>
+        <dd class="font-mono text-xs break-all">
+          {{ hosts.trim() ? hosts.split('\n').join(', ') : '—' }}
+        </dd>
+        <dt class="text-base-content/70">
+          {{ labels.scopes }}
+        </dt>
+        <dd>{{ allScopes ? labels.scopesAll : picked.join(', ') }}</dd>
+      </template>
+    </dl>
+
+    <div class="divider my-0" />
+    <h3 class="text-ui font-semibold">
+      {{ labels.apps }}
+    </h3>
+    <p v-if="apps.length === 0" class="text-ui text-base-content/70">
+      {{ labels.appsEmpty }}
+    </p>
+    <ul v-else class="divide-y divide-base-300">
+      <li v-for="app in apps" :key="app.id" class="flex flex-wrap items-start justify-between gap-2 py-2">
+        <div class="min-w-0 space-y-0.5">
+          <p class="text-ui font-medium break-words">
+            {{ app.name }}
+          </p>
+          <p class="font-mono text-xs break-all text-base-content/70">
+            {{ app.url }}
+          </p>
+          <p class="text-xs text-base-content/70">
+            {{ labels.firstSeen }} {{ app.firstSeen }}<template v-if="app.fetched">
+              · {{ labels.fetched }} {{ app.fetched }}
+            </template>
+          </p>
+        </div>
+        <AppButton v-if="canEdit" variant="ghost" size="xs" @click="emit('revoke', app)">
+          <Icon name="lucide:ban" size="14" class="shrink-0 text-error" aria-hidden="true" />
+          {{ labels.revoke }}
+        </AppButton>
+      </li>
+    </ul>
+  </Section>
 </template>

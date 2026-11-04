@@ -37,13 +37,13 @@ onMounted(sync);
 <template>
   <dialog ref="dialog" class="modal" :closedby="dismissible ? undefined : 'none'" :aria-labelledby="title ? titleId : undefined" @cancel.prevent="cancel()">
     <div class="modal-box">
-      <h3 v-if="title" :id="titleId" class="text-lg font-bold">
+      <h2 v-if="title" :id="titleId" class="text-base font-semibold">
         {{ title }}
-      </h3>
+      </h2>
       <div class="py-4">
         <slot />
       </div>
-      <div class="modal-action">
+      <div class="modal-action [&_.btn]:text-ui">
         <slot name="footer" />
       </div>
     </div>

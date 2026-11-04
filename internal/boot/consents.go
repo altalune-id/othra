@@ -12,6 +12,7 @@ import (
 	"github.com/altalune-id/othra/internal/consent"
 	"github.com/altalune-id/othra/internal/kernel"
 	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/usage"
 	"github.com/altalune-id/othra/internal/project"
 	"github.com/altalune-id/othra/internal/resourceserver"
 )
@@ -25,14 +26,18 @@ func buildConsents(k kernel.Kernel, cfg config.Config, uow db.Transactor, svcs *
 	return consents
 }
 
-func buildClients(k kernel.Kernel, cfg config.Config, uow db.Transactor, projects *project.Service) *client.Service {
+const clientUsageInterval = 10 * time.Minute
+
+func buildClients(k kernel.Kernel, cfg config.Config, uow db.Transactor, projects *project.Service) (*client.Service, *usage.Worker) {
 	m := cfg.OAuth.CIMD
 	meta := client.MetadataConfig{
 		Cache:      client.MetadataCache{Min: m.CacheMin, Max: m.CacheMax, Default: defaultMetadataTTL(m)},
 		IssuerHost: hostOf(publicBase(cfg.HTTP)), MaxBytes: m.MaxBytes,
 	}
-	return client.NewService(client.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix), uow, projects,
-		client.NewMetadataFetcher(m.FetchTimeout, m.AllowPrivateHosts), meta, k.Reporter.Unexpected).WithLogger(orDiscard(k.Log))
+	store := client.NewStore(k.Pool, cfg.Postgres.Schema, cfg.Postgres.TablePrefix)
+	fetcher := client.NewMetadataFetcher(m.FetchTimeout, m.AllowPrivateHosts)
+	svc := client.NewService(store, uow, projects, fetcher, meta, k.Reporter.Unexpected).WithLogger(orDiscard(k.Log))
+	return svc, usage.New("client-usage", store, clientUsageInterval, k.Log)
 }
 
 // NOTE: a document without a usable max-age is kept an hour, inside the configured bounds.
