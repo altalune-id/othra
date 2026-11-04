@@ -163,9 +163,12 @@ describe('project overview', () => {
     setup({}, 0, 'down');
     const w = await mountPage(Overview);
     await flushPromises();
-    const status = w.get('[data-testid="issuer-status"]').text();
-    expect(status).not.toContain('common.loading');
-    expect(status).toContain('—');
+    const status = w.get('[data-testid="issuer-status"]');
+    expect(status.text()).not.toContain('common.loading');
+    const label = status.get('.sr-only');
+    expect(label.text()).toBe('overview.keys_not_checked');
+    const dash = label.element.previousElementSibling!;
+    expect([dash.textContent, dash.getAttribute('aria-hidden')]).toEqual(['—', 'true']);
   });
 
   it('counts the setup steps from real data', async () => {

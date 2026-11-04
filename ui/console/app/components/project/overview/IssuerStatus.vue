@@ -54,7 +54,7 @@ const methodsText = computed(() => (methodsFailed ? t('overview.methods_failed')
       <template #value-1>
         <StatusLabel v-if="keys !== null" :tone="keys > 0 ? 'success' : 'warning'" :label="t('overview.keys_published', { n: keys })" :detail="keys > 0 ? t('overview.keys_reachable') : ''" />
         <span v-else-if="state === 'checking'" class="text-base-content/70">{{ t('common.loading') }}</span>
-        <span v-else class="text-base-content/70">—</span>
+        <span v-else class="text-base-content/70"><span aria-hidden="true">—</span><span class="sr-only">{{ t('overview.keys_not_checked') }}</span></span>
       </template>
       <template v-if="activeKey" #value-2>
         <StatusLabel tone="success" mono :label="activeKey.kid" :detail="t('overview.active_key_detail', { alg: activeKey.alg, n: activeKey.days }, activeKey.days)" />

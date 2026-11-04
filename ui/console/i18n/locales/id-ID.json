@@ -427,6 +427,7 @@
   "overview.hosted_page": "Lihat halaman masuk",
   "overview.issuer_for": "Issuer untuk login pelanggan {project}",
   "overview.keys": "Kunci penandatanganan",
+  "overview.keys_not_checked": "Belum diperiksa",
   "overview.keys_published": "{n} diterbitkan",
   "overview.keys_reachable": "JWKS dapat dijangkau",
   "overview.method_email": "Tautan email",

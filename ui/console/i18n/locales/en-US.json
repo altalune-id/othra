@@ -427,6 +427,7 @@
   "overview.hosted_page": "See the hosted page",
   "overview.issuer_for": "Issuer for {project}'s customer sign-in",
   "overview.keys": "Signing keys",
+  "overview.keys_not_checked": "Not checked",
   "overview.keys_published": "{n} published",
   "overview.keys_reachable": "JWKS reachable",
   "overview.method_email": "Email link",
