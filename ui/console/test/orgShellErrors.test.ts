@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import type { Component } from 'vue';
 import { create } from '@bufbuild/protobuf';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent } from 'vue';
+import { defineComponent, h } from 'vue';
 
 import { WhoamiResponseSchema } from '#gen/auth/v1/auth_pb';
 import { ProjectSchema } from '#gen/project/v1/project_pb';
@@ -59,6 +59,38 @@ describe('errors inside an org', () => {
     expect(w.get('h1').text()).toBe('error_page.not_found_title');
     expect(w.text()).toContain('Client not found');
     expect(w.findAll('main')).toHaveLength(1);
+  });
+
+  function failsOnce() {
+    let throws = 1;
+    return defineComponent({
+      setup() {
+        if (throws-- > 0) {
+          throw Object.assign(new Error('Failed to load clients'), { statusCode: 502, statusMessage: 'Failed to load clients' });
+        }
+      },
+      render: () => h('p', { 'data-testid': 'page' }, 'page'),
+    });
+  }
+
+  it('mount the page again on Retry', async () => {
+    setClient('$projectClient', { listProjects: vi.fn().mockResolvedValue({ projects: [] }) });
+    const w = await mountPage(OrgShell, { global: { stubs: { ...shellStubs, NuxtPage: failsOnce() } } });
+    expect(w.find('[data-testid="page"]').exists()).toBe(false);
+    await w.findAll('button').find(b => b.text().includes('common.retry'))!.trigger('click');
+    await flushPromises();
+    expect(w.find('[data-testid="page"]').exists()).toBe(true);
+    expect(w.text()).not.toContain('error_page.failed_title');
+  });
+
+  it('clear the error when the route changes', async () => {
+    setClient('$projectClient', { listProjects: vi.fn().mockResolvedValue({ projects: [] }) });
+    const w = await mountPage(OrgShell, { global: { stubs: { ...shellStubs, NuxtPage: failsOnce() } } });
+    expect(w.text()).toContain('error_page.failed_title');
+    setRoute({ path: '/o/acme/projects/shop/clients', params: { org: 'acme', project: 'shop' } });
+    await flushPromises();
+    expect(w.find('[data-testid="page"]').exists()).toBe(true);
+    expect(w.text()).not.toContain('error_page.failed_title');
   });
 
   it('say a failed project load is a failure with Retry, not "not found"', async () => {
