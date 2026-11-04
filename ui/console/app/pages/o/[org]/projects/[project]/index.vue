@@ -78,7 +78,7 @@ const activeKey = computed(() => {
   const k = signingKeys.keys.value.find(key => key.status === SigningKeyStatus.ACTIVE);
   const since = k?.activatedAt ?? k?.createdAt;
   const next = signingKeys.keys.value.find(key => key.status === SigningKeyStatus.NEXT)?.activatesAt;
-  return k ? { kid: k.kid.slice(0, 8), alg: k.alg, days: since ? Math.max(0, Math.floor((Date.now() - timestampDate(since).getTime()) / 86_400_000)) : 0, next: next ? formatDate(timestampDate(next), locale.value) : '' } : null;
+  return k ? { kid: k.kid.slice(0, 8), alg: k.alg, days: since ? Math.max(0, Math.floor((Date.now() - timestampDate(since).getTime()) / 86_400_000)) : 0, next: next ? { date: formatDate(timestampDate(next), locale.value), days: Math.max(0, Math.ceil((timestampDate(next).getTime() - Date.now()) / 86_400_000)) } : null } : null;
 });
 
 const full = computed(() => detail.get(projectId));

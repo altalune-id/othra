@@ -436,6 +436,7 @@
   "overview.methods_failed": "Gagal dimuat",
   "overview.methods_none": "Belum ada",
   "overview.next_rotation": "Rotasi berikutnya",
+  "overview.next_rotation_in": "Dalam {n} hari | Dalam {n} hari",
   "overview.next_rotation_none": "Belum dijadwalkan",
   "overview.rotation_active": "Aktif sejak {date}",
   "overview.rotation_next": "Berikutnya, menandatangani mulai {date}",

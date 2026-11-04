@@ -37,7 +37,7 @@ const steps = computed(() => keys
             {{ step.when }}
           </div>
           <div class="timeline-middle" :class="{ 'text-primary': step.active }">
-            <Icon :name="step.active ? 'lucide:circle-dot' : step.next ? 'lucide:circle-dashed' : 'lucide:circle'" :size="step.active ? 16 : 14" class="shrink-0" aria-hidden="true" />
+            <Icon :name="step.active ? 'lucide:circle-dot' : step.next ? 'lucide:circle-dashed' : 'lucide:circle'" class="shrink-0" :class="step.active ? 'size-4' : 'size-3.5'" aria-hidden="true" />
           </div>
           <div class="timeline-end timeline-box font-mono text-xs">
             {{ step.kid }}

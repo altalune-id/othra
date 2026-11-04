@@ -436,6 +436,7 @@
   "overview.methods_failed": "Couldn't load",
   "overview.methods_none": "None yet",
   "overview.next_rotation": "Next rotation",
+  "overview.next_rotation_in": "In {n} day | In {n} days",
   "overview.next_rotation_none": "Not scheduled",
   "overview.rotation_active": "Active since {date}",
   "overview.rotation_next": "Next, signs from {date}",

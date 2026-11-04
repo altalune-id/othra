@@ -72,8 +72,13 @@ describe('project overview', () => {
     expect(rotation.findAll('.timeline-box').map(b => b.text())).toEqual(['2026-02-', '2026-08-', '2026-11-']);
     expect(rotation.findAll('.timeline-start').at(-1)!.text()).toMatch(/^overview\.rotation_next\|\{"date":"[^"]+"\}$/);
     expect(rotation.findAll('.timeline-middle').at(-1)!.get('[data-icon]').attributes('data-icon')).toBe('lucide:circle-dashed');
-    expect(status.text()).toContain('overview.next_rotation');
-    expect(status.text()).not.toContain('overview.next_rotation_none');
+    const next = status.findAll('.font-medium').find(e => e.text().startsWith('overview.next_rotation_in'))!;
+    expect(next.text()).toBe('overview.next_rotation_in|{"n":7}');
+    const nextRow = next.element.parentElement!;
+    expect(nextRow.className).toBe('inline-flex min-w-0 flex-wrap items-center gap-x-2 text-ui');
+    expect(nextRow.querySelector('[aria-hidden="true"]')!.className).toBe('status status-warning');
+    expect(nextRow.querySelector('.text-base-content\\/70')!.textContent).not.toBe('');
+    expect(rotation.findAll('.timeline-middle [data-icon]').map(i => i.classes().filter(c => c.startsWith('size-')))).toEqual([['size-3.5'], ['size-4'], ['size-3.5']]);
     expect(rotation.get('.timeline-middle.text-primary').exists()).toBe(true);
     const row = w.get('[data-testid="setup-checklist"] li');
     expect(row.classes()).toEqual(['flex', 'items-start', 'gap-2', 'px-4', 'py-2', 'text-ui']);
@@ -88,7 +93,8 @@ describe('project overview', () => {
     ] }) });
     const w = await mountPage(Overview);
     await flushPromises();
-    expect(w.get('[data-testid="issuer-status"]').text()).toContain('overview.next_rotation_none');
+    const none = w.get('[data-testid="issuer-status"]').findAll('.font-medium').find(e => e.text() === 'overview.next_rotation_none')!;
+    expect(none.element.parentElement!.querySelector('[aria-hidden="true"]')!.className).toBe('status status-success');
   });
 
   it('titles the page with the issuer and shows live discovery and the published keys', async () => {

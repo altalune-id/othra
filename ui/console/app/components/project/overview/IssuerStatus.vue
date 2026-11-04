@@ -8,7 +8,7 @@ export interface ActiveKey {
   kid: string;
   alg: string;
   days: number;
-  next: string;
+  next: { date: string, days: number } | null;
 }
 
 const { state, keys, activeKey, methods, methodsFailed = false, hostedUrl } = defineProps<{
@@ -60,7 +60,8 @@ const methodsText = computed(() => (methodsFailed ? t('overview.methods_failed')
         <StatusLabel tone="success" mono :label="activeKey.kid" :detail="t('overview.active_key_detail', { alg: activeKey.alg, n: activeKey.days }, activeKey.days)" />
       </template>
       <template v-if="activeKey" #value-3>
-        <span :class="{ 'text-base-content/70': !activeKey.next }">{{ activeKey.next || t('overview.next_rotation_none') }}</span>
+        <StatusLabel v-if="activeKey.next" tone="warning" :label="t('overview.next_rotation_in', { n: activeKey.next.days }, activeKey.next.days)" :detail="activeKey.next.date" />
+        <StatusLabel v-else tone="success" :label="t('overview.next_rotation_none')" />
       </template>
       <template #[methodsSlot]>
         <StatusLabel :tone="methodsFailed ? 'error' : methods?.length ? 'success' : 'warning'" :label="methodsText">
