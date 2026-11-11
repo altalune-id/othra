@@ -11,7 +11,7 @@ It covers authorize, token, userinfo, revoke, RFC 7662 introspection and RP-init
 
 ## Requirements
 
-- Go 1.26.10
+- Go 1.26.11
 - Node 24.15 or newer
 - pnpm 10 (`corepack enable` picks the version pinned in `package.json`)
 - Docker, for local dependencies and the integration tests
