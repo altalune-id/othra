@@ -21,6 +21,7 @@ type Config struct {
 	Compliance ComplianceConfig `yaml:"compliance" mapstructure:"compliance"`
 	CLI        CLIConfig        `yaml:"cli"        mapstructure:"cli"`
 	Mail       MailConfig       `yaml:"mail"       mapstructure:"mail"`
+	Outbox     OutboxConfig     `yaml:"outbox"     mapstructure:"outbox"`
 	RateLimit  RateLimitConfig  `yaml:"rateLimit"  mapstructure:"rateLimit"`
 	Redis      RedisConfig      `yaml:"redis"      mapstructure:"redis"`
 	NATS       NATSConfig       `yaml:"nats"       mapstructure:"nats"`
@@ -102,6 +103,11 @@ type OpenAPIConfig struct {
 type SchedulerConfig struct {
 	Enabled       bool          `yaml:"enabled"       mapstructure:"enabled"`
 	ShutdownGrace time.Duration `yaml:"shutdownGrace" mapstructure:"shutdownGrace" validate:"gte=0"`
+}
+
+// OutboxConfig tunes the webhook outbox dispatch worker.
+type OutboxConfig struct {
+	IdlePoll time.Duration `yaml:"idlePoll" mapstructure:"idlePoll" validate:"gte=0"`
 }
 
 // Mode selects the deployment posture: selfhosted (single tenant) or cloud (multi-tenant).

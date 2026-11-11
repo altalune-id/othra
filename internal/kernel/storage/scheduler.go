@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	sweepEvery   = 5 * time.Minute
-	sweepJitter  = 30 * time.Second
+	sweepEvery   = 15 * time.Minute
+	sweepJitter  = 90 * time.Second
 	sweepTimeout = 2 * time.Minute
 	sweepBatch   = 100
 	sweepJobName = "storage-sweep"

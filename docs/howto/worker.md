@@ -24,22 +24,28 @@ Pick the shape first:
 1. **The type** with `Name()` and `Run(ctx)`, plus `var _ worker.Worker = (*Worker)(nil)`. One constructor; `*slog.Logger` and ports are injected; no goroutine starts in the constructor.
 
    ```go
-   // Run implements worker.Worker, sweeping due entries every tick until ctx is done.
+   // Run implements worker.Worker, sweeping at startup and then on each wake, due retry or idle poll until ctx is done.
    func (w *Worker) Run(ctx context.Context) error {
-   	t := time.NewTicker(w.opts.Tick)
+   	t := time.NewTimer(0)
    	defer t.Stop()
    	for {
    		select {
    		case <-ctx.Done():
    			return nil
+   		case <-w.wake:
    		case <-t.C:
-   			w.sweep(ctx)
    		}
+   		if w.sweep(ctx) {
+   			t.Reset(w.opts.Tick)
+   			continue
+   		}
+   		t.Reset(w.nextSweep(time.Now()))
    	}
    }
    ```
 
-   - A ticker and `ctx.Done()`, never `time.Sleep` in a loop.
+   - A timer or ticker and `ctx.Done()`, never `time.Sleep` in a loop.
+   - A queue that rows are written to (`outbox`, `mailqueue`) sweeps at startup, then waits for `Wake`, a retry it scheduled, or its idle poll. The store calls `Wake` through `db.AfterCommit` after the row commits; boot hands the worker's `Wake` to the store with `OnEnqueue`. `nextSweep` waits for the earliest pending retry, never longer than the idle poll and never shorter than `Tick`. A failed claim retries after `Tick`; a failed settle retries when the claim lease ends.
    - A failed tick is logged (or reported) and the loop goes on. Returning an error from `Run` stops every worker and the process.
    - On cancel return `nil` or `ctx.Err()`: `Supervisor.Run` treats `context.Canceled` during shutdown as a clean exit.
    - Work that must survive the cancel (a final flush) uses `context.WithTimeout(context.WithoutCancel(ctx), …)`, as `UsageWorker.Run` does.
@@ -76,7 +82,7 @@ Pick the shape first:
 ## Review
 
 - [ ] `Run` never returns an error for a single failed tick.
-- [ ] No `time.Sleep` loop; the ticker is stopped; cancel is honoured within the shutdown window.
+- [ ] No `time.Sleep` loop; the timer or ticker is stopped; cancel is honoured within the shutdown window.
 - [ ] Tenant data is read under a bound org scope, never across tenants.
 - [ ] Registered in `Boot` behind the right condition; closers added for held resources.
 - [ ] `internal/boot/README.md` updated in the same commit: the boot order diagram if a step changed, the **Background workers** table (name, what, when) and the **Files** table.
