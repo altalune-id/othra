@@ -16,17 +16,23 @@ import (
 
 func testHealthLogger() *slog.Logger { return slog.New(slog.NewTextHandler(io.Discard, nil)) }
 
+func probedReady(m *pg.HealthMonitor) func() bool {
+	return func() bool {
+		s := m.Snapshot()
+		return s != nil && s.Ready
+	}
+}
+
 func healthCfg() pg.HealthConfig {
 	return pg.HealthConfig{Interval: 30 * time.Second, Timeout: 2 * time.Second}
 }
 
-func TestHealthMonitor_NotReadyBeforeFirstProbe(t *testing.T) {
+func TestHealthMonitor_NoSnapshotBeforeFirstProbe(t *testing.T) {
 	sqlDB, _, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = sqlDB.Close() })
 
 	m := pg.NewHealthMonitor(sqlDB, sqlDB, healthCfg(), testHealthLogger(), nil)
-	require.False(t, m.Ready(), "readiness must be false until the first probe lands")
 	require.Nil(t, m.Snapshot())
 }
 
@@ -106,7 +112,7 @@ func TestHealthMonitor_RunProbesOnceBeforeTheFirstTick(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- m.Run(ctx) }()
 
-	require.Eventually(t, m.Ready, 2*time.Second, 5*time.Millisecond,
+	require.Eventually(t, probedReady(m), 2*time.Second, 5*time.Millisecond,
 		"Run must probe immediately, not wait a full interval")
 	cancel()
 	require.NoError(t, <-done, "a canceled context is a clean shutdown, not a worker failure")
@@ -158,7 +164,7 @@ func TestHealthMonitor_RunClampsNonPositiveConfigToDefaults(t *testing.T) {
 			require.NotPanics(t, func() { go func() { done <- m.Run(ctx) }() },
 				"a non-positive interval must be clamped before it reaches time.NewTicker")
 
-			require.Eventually(t, m.Ready, 2*time.Second, 5*time.Millisecond)
+			require.Eventually(t, probedReady(m), 2*time.Second, 5*time.Millisecond)
 			cancel()
 			require.NoError(t, <-done)
 		})
@@ -174,5 +180,52 @@ func TestHealthMonitor_ProbeSucceedsWithZeroConfiguredTimeout(t *testing.T) {
 	m := pg.NewHealthMonitor(sqlDB, sqlDB, pg.HealthConfig{}, testHealthLogger(), nil)
 	require.NoError(t, m.Probe(t.Context()))
 	require.True(t, m.Ready())
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestHealthMonitor_RunDoesNotPollAfterTheFirstProbe(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = sqlDB.Close() })
+	mock.ExpectPing()
+
+	m := pg.NewHealthMonitor(sqlDB, sqlDB,
+		pg.HealthConfig{Interval: time.Millisecond, Timeout: time.Second}, testHealthLogger(), nil)
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+	go func() { done <- m.Run(ctx) }()
+
+	require.Eventually(t, func() bool { return m.Snapshot() != nil }, 2*time.Second, 5*time.Millisecond)
+	first := m.Snapshot()
+	time.Sleep(50 * time.Millisecond)
+	cancel()
+	require.NoError(t, <-done)
+	require.Same(t, first, m.Snapshot(), "Run must not ping again without a probe asking")
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestHealthMonitor_ReadyReusesAFreshProbe(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = sqlDB.Close() })
+	mock.ExpectPing()
+
+	m := pg.NewHealthMonitor(sqlDB, sqlDB, pg.HealthConfig{Interval: time.Hour, Timeout: time.Second}, testHealthLogger(), nil)
+	require.True(t, m.Ready(), "the first Ready probes on demand")
+	require.True(t, m.Ready(), "a fresh snapshot answers without a second ping")
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestHealthMonitor_ReadyProbesAgainOnceStale(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = sqlDB.Close() })
+	mock.ExpectPing()
+	mock.ExpectPing().WillReturnError(context.DeadlineExceeded)
+
+	m := pg.NewHealthMonitor(sqlDB, sqlDB, pg.HealthConfig{Interval: time.Millisecond, Timeout: time.Second}, testHealthLogger(), nil)
+	require.True(t, m.Ready())
+	time.Sleep(5 * time.Millisecond)
+	require.False(t, m.Ready(), "a stale snapshot is replaced by a new probe")
 	require.NoError(t, mock.ExpectationsWereMet())
 }

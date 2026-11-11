@@ -205,8 +205,8 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 	if sh != nil {
 		sup.Register(sh)
 	}
-	sup.Register(buildOutboxWorker(svcs, log))
-	sup.Register(buildMailWorker(svcs, log))
+	sup.Register(buildOutboxWorker(svcs, cfg.Outbox, log))
+	sup.Register(buildMailWorker(svcs, cfg.Mail, log))
 	sup.Register(svcs.KeyUsage)
 	if svcs.TokenUsage != nil {
 		sup.Register(svcs.TokenUsage)
@@ -220,6 +220,9 @@ func Boot(ctx context.Context, cfg config.Config, log *slog.Logger, opts ...Opti
 
 	var runner *scheduler.Runner
 	if off := schedulerOff(o, cfg); off == "" {
+		if o.schedulerOnly && svcs.Keys != nil {
+			svcs.Keys.WithRemoteRotations()
+		}
 		r, schedErr := buildScheduler(k, cfg, svcs, log)
 		if schedErr != nil {
 			return nil, schedErr

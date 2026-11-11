@@ -346,8 +346,9 @@ mail queue and the sessions keep their tables there. `postgres.*` is the connect
   that forgets its policy is refused without any list to update.
 
 - **Shutdown and readiness:** the kernel closes the pool on shutdown. The `db-health` worker
-  (`pg.HealthMonitor`) pings the writer and a distinct reader every `postgres.health.interval`;
-  while one does not answer, `/readyz` answers 503.
+  (`pg.HealthMonitor`) pings the writer and a distinct reader once at start; after that it pings only
+  when `/readyz` asks and the last result is older than `postgres.health.interval`. While one does
+  not answer, `/readyz` answers 503.
 
 ## Redis
 
@@ -446,7 +447,7 @@ config Othra never connects; an `s3.endpoint` that no feature uses is ignored wi
 store. Without a driver the service is disabled: every call returns `STO003` and `Enabled()` is false. Domains
 declare a `storage.Purpose` and call `BeginUpload` (record a pending file and sign its PUT), `Verify` (HEAD and magic
 bytes, outside any transaction), then `MarkReady` / `MarkDeleting` inside their own unit of work. The scheduler
-runs `storage-sweep` every 5 min, once per org: it deletes the object and the row of every file marked deleting
+runs `storage-sweep` every 15 min, once per org: it deletes the object and the row of every file marked deleting
 and of every pending upload past `storage.upload.pendingTTL`, 100 per org per run.
 
 ## Signing keys
@@ -458,7 +459,10 @@ sealed by the sealer (`secrets.encryptionKey`, required in every mode) and bound
 project. A key moves `next` (published, not signing) → `active` (the only signer) → `retiring` (published until
 `retire_after`) → `retired` (unpublished, deleted with its sealed key after 30 days). Rotate creates a `next` key;
 `keys-promote` makes it active once `rotation.prePublish` has passed, and the old key retires for `rotation.overlap`;
-`immediate` (CLI `--now`) promotes at once. `keys.Service.JWKS` returns the published keys as fixed bytes, cached
+`immediate` (CLI `--now`) promotes at once. `keys-promote` ticks every minute but reads Postgres only at start, when an
+`activates_at` this process saw (a rotate, or a pending key from the last pass) is due, after a failed pass, and hourly;
+the hourly pass catches a key rotated by another process. Under `serve --scheduler-only`, where another process serves
+rotations, that fallback pass runs every `keys.rotation.prePublish` instead. `keys.Service.JWKS` returns the published keys as fixed bytes, cached
 30 s per project and dropped on every change (`WithOnChange`).
 
 ## End users
@@ -733,12 +737,12 @@ The supervisor runs these next to the HTTP server.
 | Worker                    | What it does                                                                                                                                                                                                                                                                                                                        | When it runs                                                     |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | `http`                    | the HTTP server (all surfaces above)                                                                                                                                                                                                                                                                                                | always                                                           |
-| `db-health`               | pings the pool; `health` reads it for `/readyz`                                                                                                                                                                                                                                                                                     | always                                                           |
+| `db-health`               | pings the pool at start, then only when `/readyz` asks                                                                                                                                                                                                                                                                              | always                                                           |
 | `redis-health`            | pings Redis every 5 s; `health` reads it for `/readyz`                                                                                                                                                                                                                                                                              | when a feature uses Redis                                        |
 | `nats-health`             | checks the NATS connection every 5 s; `health` reads it for `/readyz`                                                                                                                                                                                                                                                               | when a feature uses NATS                                         |
 | `s3-health`               | checks the S3 bucket every 30 s; `health` reads it for `/readyz`                                                                                                                                                                                                                                                                    | when a feature uses S3                                           |
-| `outbox`                  | claims due outbox entries, delivers signed webhooks                                                                                                                                                                                                                                                                                 | always                                                           |
-| `mailqueue.send`          | claims due queued mail, sends it through the mailer, erases the sealed payload once sent or failed                                                                                                                                                                                                                                  | always                                                           |
+| `outbox`                  | claims due outbox entries, delivers signed webhooks; sweeps at start, after an enqueue commits, a tick after a failed claim or a full batch, when a retry it scheduled falls due, and every `outbox.idlePoll` (default 5 s)                                                                                                         | always                                                           |
+| `mailqueue.send`          | claims due queued mail, sends it through the mailer, erases the sealed payload once sent or failed; sweeps at start, after an enqueue commits, a tick after a failed claim, at once after a full round, when a retry it scheduled falls due, and every `mail.idlePoll` (default 5 s)                                                | always                                                           |
 | `apikey-usage`            | batches API keys' `last_used_at` writes every 30 s (a `kernel/usage` worker, flushed per tenant)                                                                                                                                                                                                                                    | always                                                           |
 | `pat-usage`               | batches personal tokens' `last_used_at` writes every 10 min (a `kernel/usage` worker, flushed per tenant)                                                                                                                                                                                                                           | always                                                           |
 | `client-usage`            | batches OAuth clients' `last_used_at` writes every 10 min, one per token issue (a `kernel/usage` worker, flushed per tenant)                                                                                                                                                                                                        | always                                                           |

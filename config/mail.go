@@ -24,10 +24,11 @@ const (
 
 // MailConfig configures outgoing email.
 type MailConfig struct {
-	Driver MailDriver       `yaml:"driver" mapstructure:"driver" validate:"oneof=console smtp resend"`
-	From   string           `yaml:"from"   mapstructure:"from"   validate:"omitempty,mail_address"`
-	SMTP   MailSMTPConfig   `yaml:"smtp"   mapstructure:"smtp"`
-	Resend MailResendConfig `yaml:"resend" mapstructure:"resend"`
+	Driver   MailDriver       `yaml:"driver"   mapstructure:"driver"   validate:"oneof=console smtp resend"`
+	From     string           `yaml:"from"     mapstructure:"from"     validate:"omitempty,mail_address"`
+	SMTP     MailSMTPConfig   `yaml:"smtp"     mapstructure:"smtp"`
+	Resend   MailResendConfig `yaml:"resend"   mapstructure:"resend"`
+	IdlePoll time.Duration    `yaml:"idlePoll" mapstructure:"idlePoll" validate:"gte=0"`
 }
 
 // MailSMTPConfig configures the SMTP driver.

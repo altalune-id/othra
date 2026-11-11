@@ -54,6 +54,11 @@ type Service struct {
 
 	mu    sync.Mutex
 	cache map[uuid.UUID]*cached
+
+	promoteMu       sync.Mutex
+	promoteAt       time.Time
+	passAt          time.Time
+	promoteFallback time.Duration
 }
 
 // NewService builds the Service; sl must be enabled, since every key is sealed.
@@ -63,7 +68,17 @@ func NewService(store Store, uow db.Transactor, sl sealer.Sealer, cfg Config, un
 		generate: func(bits int) (*rsa.PrivateKey, error) { return rsa.GenerateKey(rand.Reader, bits) },
 		cache:    map[uuid.UUID]*cached{},
 		log:      slog.New(slog.DiscardHandler),
+
+		promoteFallback: promoteFallback,
 	}
+}
+
+// WithRemoteRotations caps the promote fallback at rotation.prePublish, for a process that does not serve rotations itself.
+func (s *Service) WithRemoteRotations() *Service {
+	if s.cfg.PrePublish > 0 {
+		s.promoteFallback = min(s.promoteFallback, s.cfg.PrePublish)
+	}
+	return s
 }
 
 // WithLogger sets where rotations and promotions are logged.
@@ -140,6 +155,9 @@ func (s *Service) Rotate(ctx context.Context, orgID, projectID uuid.UUID, immedi
 	if err != nil {
 		return nil, s.errOrReport(ctx, "keys: rotate", err)
 	}
+	if out.Status == StatusNext && out.ActivatesAt != nil {
+		s.notePromote(*out.ActivatesAt)
+	}
 	s.changed(projectID)
 	return out, nil
 }
@@ -148,6 +166,7 @@ func (s *Service) Rotate(ctx context.Context, orgID, projectID uuid.UUID, immedi
 func (s *Service) Promote(ctx context.Context, orgID, projectID uuid.UUID) (bool, error) {
 	ctx = scope(ctx, orgID, projectID)
 	promoted, kid, keyID := false, "", ""
+	var pending time.Time
 	err := s.uow.RunInTx(ctx, func(ctx context.Context) error {
 		next, active, err := s.store.Live(ctx, projectID)
 		if err != nil || next == nil {
@@ -155,13 +174,18 @@ func (s *Service) Promote(ctx context.Context, orgID, projectID uuid.UUID) (bool
 		}
 		now := s.now().UTC()
 		if next.ActivatesAt != nil && next.ActivatesAt.After(now) {
+			pending = *next.ActivatesAt
 			return nil
 		}
 		promoted, kid, keyID = true, next.KID, next.PublicID
 		return s.promote(ctx, next, active, now)
 	})
 	if err != nil {
+		s.notePromote(s.now().UTC())
 		return false, s.errOrReport(ctx, "keys: promote", err)
+	}
+	if !pending.IsZero() {
+		s.notePromote(pending)
 	}
 	if promoted {
 		s.log.LogAttrs(ctx, slog.LevelInfo, "keys: promoted",
@@ -169,6 +193,26 @@ func (s *Service) Promote(ctx context.Context, orgID, projectID uuid.UUID) (bool
 		s.changed(projectID)
 	}
 	return promoted, nil
+}
+
+func (s *Service) notePromote(at time.Time) {
+	s.promoteMu.Lock()
+	defer s.promoteMu.Unlock()
+	if s.promoteAt.IsZero() || at.Before(s.promoteAt) {
+		s.promoteAt = at
+	}
+}
+
+func (s *Service) promotePassDue() bool {
+	now := s.now().UTC()
+	s.promoteMu.Lock()
+	defer s.promoteMu.Unlock()
+	due := s.passAt.IsZero() || !now.Before(s.passAt.Add(s.promoteFallback)) ||
+		(!s.promoteAt.IsZero() && !now.Before(s.promoteAt))
+	if due {
+		s.passAt, s.promoteAt = now, time.Time{}
+	}
+	return due
 }
 
 // Prune unpublishes retiring keys past retire_after and deletes keys retired more than 30 days ago; it returns how many keys changed.

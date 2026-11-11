@@ -3,6 +3,7 @@ package boot
 import (
 	"context"
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/google/uuid"
@@ -10,12 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/altalune-id/othra/apperror"
+	"github.com/altalune-id/othra/config"
 	"github.com/altalune-id/othra/internal/kernel/db"
+	"github.com/altalune-id/othra/internal/kernel/mailqueue"
 	"github.com/altalune-id/othra/internal/kernel/outbox"
 	"github.com/altalune-id/othra/internal/kernel/tenant"
 	"github.com/altalune-id/othra/internal/org"
 	"github.com/altalune-id/othra/internal/testutil/fakes"
 	"github.com/altalune-id/othra/internal/webhook"
+	"github.com/altalune-id/othra/mailer/console"
 	"github.com/altalune-id/othra/sealer"
 )
 
@@ -56,7 +60,37 @@ func TestBuildOutboxWorker(t *testing.T) {
 		Sealer:       sealer.Disabled(),
 		Orgs:         org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, testUnexpected()),
 	}
-	w := buildOutboxWorker(svcs, nil)
+	w := buildOutboxWorker(svcs, config.OutboxConfig{}, nil)
 	require.NotNil(t, w)
 	assert.Equal(t, outbox.WorkerName, w.Name())
+}
+
+type notifyingOutbox struct {
+	outbox.Store
+	wake func()
+}
+
+func (n *notifyingOutbox) OnEnqueue(fn func()) { n.wake = fn }
+
+type notifyingMailQueue struct {
+	mailqueue.Store
+	wake func()
+}
+
+func (n *notifyingMailQueue) OnEnqueue(fn func()) { n.wake = fn }
+
+func TestBuildWorkersWakeOnEnqueue(t *testing.T) {
+	ob, mq := &notifyingOutbox{}, &notifyingMailQueue{}
+	svcs := &Services{
+		Outbox:       ob,
+		MailQueue:    mq,
+		Mailer:       console.New("", io.Discard),
+		WebhookStore: webhook.NewStore(db.Pool{}, "public", ""),
+		Sealer:       sealer.Disabled(),
+		Orgs:         org.NewService(&fakes.OrgStore{}, fakes.Transactor{}, fakes.NoMemberRoles{}, nil, testUnexpected()),
+	}
+	buildOutboxWorker(svcs, config.OutboxConfig{}, nil)
+	buildMailWorker(svcs, config.MailConfig{}, nil)
+	assert.NotNil(t, ob.wake, "the outbox store must wake its worker after an enqueue commits")
+	assert.NotNil(t, mq.wake, "the mail queue must wake its worker after an enqueue commits")
 }

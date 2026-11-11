@@ -121,6 +121,8 @@ mail:
   driver: console
   # env: OTHRA_MAIL_FROM
   from: ""
+  # env: OTHRA_MAIL_IDLE_POLL
+  idlePoll: 5s
   resend:
     # [secret] env: OTHRA_MAIL_RESEND_API_KEY
     apiKey: ""
@@ -192,6 +194,10 @@ oauth:
     absolute: 2160h
     # env: OTHRA_OAUTH_REFRESH_IDLE
     idle: 720h
+
+outbox:
+  # env: OTHRA_OUTBOX_IDLE_POLL
+  idlePoll: 5s
 
 postgres:
   # env: OTHRA_POSTGRES_CONN_MAX_IDLE_TIME

@@ -12,13 +12,14 @@ import (
 )
 
 const (
-	promoteEvery   = time.Minute
-	promoteJitter  = 5 * time.Second
-	pruneEvery     = time.Hour
-	pruneJitter    = 5 * time.Minute
-	jobTimeout     = 2 * time.Minute
-	promoteJobName = "keys-promote"
-	pruneJobName   = "keys-prune"
+	promoteEvery    = time.Minute
+	promoteFallback = time.Hour
+	promoteJitter   = 5 * time.Second
+	pruneEvery      = time.Hour
+	pruneJitter     = 5 * time.Minute
+	jobTimeout      = 2 * time.Minute
+	promoteJobName  = "keys-promote"
+	pruneJobName    = "keys-prune"
 )
 
 // Scheduler adapts the Service to scheduler.Provider.
@@ -35,18 +36,27 @@ func NewScheduler(svc *Service, projects Projects, log *slog.Logger) *Scheduler 
 
 // SchedulerJobs implements scheduler.Provider.
 func (a *Scheduler) SchedulerJobs() []scheduler.Job {
-	return []scheduler.Job{
-		a.job(promoteJobName, scheduler.MustEveryInterval(promoteEvery, promoteJitter), func(
-			ctx context.Context, org, project uuid.UUID,
-		) (int, error) {
-			ok, err := a.svc.Promote(ctx, org, project)
-			if ok {
-				return 1, err
-			}
-			return 0, err
-		}),
-		a.job(pruneJobName, scheduler.MustEveryInterval(pruneEvery, pruneJitter), a.svc.Prune),
+	promote := a.job(promoteJobName, scheduler.MustEveryInterval(promoteEvery, promoteJitter), func(
+		ctx context.Context, org, project uuid.UUID,
+	) (int, error) {
+		ok, err := a.svc.Promote(ctx, org, project)
+		if ok {
+			return 1, err
+		}
+		return 0, err
+	})
+	pass := promote.Run
+	promote.Run = func(ctx context.Context) error {
+		if !a.svc.promotePassDue() {
+			return nil
+		}
+		err := pass(ctx)
+		if err != nil {
+			a.svc.notePromote(a.svc.now().UTC())
+		}
+		return err
 	}
+	return []scheduler.Job{promote, a.job(pruneJobName, scheduler.MustEveryInterval(pruneEvery, pruneJitter), a.svc.Prune)}
 }
 
 func (a *Scheduler) job(

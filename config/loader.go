@@ -135,6 +135,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("mail.smtp.port", 587)
 	v.SetDefault("mail.smtp.tls", string(MailTLSStartTLS))
 	v.SetDefault("mail.smtp.timeout", "10s")
+	v.SetDefault("mail.idlePoll", "5s")
+	v.SetDefault("outbox.idlePoll", "5s")
 	v.SetDefault("rateLimit.driver", string(RateLimitDriverMemory))
 	v.SetDefault("rateLimit.maxKeys", 100_000)
 	v.SetDefault("rateLimit.auth.enabled", true)

@@ -18,7 +18,6 @@ func TestHealthMonitor_ProbesASingleHandleOnce(t *testing.T) {
 	sqlDB := openReplica(t, pgtest.New(t).DSN)
 	m := pg.NewHealthMonitor(sqlDB, sqlDB, pg.HealthConfig{}, nil, nil)
 	require.Nil(t, m.Snapshot())
-	require.False(t, m.Ready())
 
 	require.NoError(t, m.Probe(t.Context()))
 	snap := m.Snapshot()
@@ -69,7 +68,7 @@ func TestHealthMonitor_RunProbesImmediatelyAndStopsWithItsContext(t *testing.T) 
 	ctx, cancel := context.WithCancel(t.Context())
 	done := make(chan error, 1)
 	go func() { done <- m.Run(ctx) }()
-	require.Eventually(t, m.Ready, 10*time.Second, 10*time.Millisecond, "Run must probe before the first interval")
+	require.Eventually(t, func() bool { return m.Snapshot() != nil }, 10*time.Second, 10*time.Millisecond, "Run must probe at start")
 	cancel()
 	require.NoError(t, <-done)
 }
