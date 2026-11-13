@@ -53,6 +53,10 @@ func (s *postgresStore) save(ctx context.Context, tx *sql.Tx, tc tenant.Context,
 			).WHERE(s.endpoints.OrgID.EQ(postgres.UUID(tc.OrgID))),
 		)
 	res, err := stmt.ExecContext(ctx, tx)
+	// NOTE: Postgres 17.12 and later refuse another org's conflicting row through RLS instead of the org guard.
+	if db.IsPolicyViolation(err) {
+		return &NotFoundError{ID: e.ID.String()}
+	}
 	if err != nil {
 		return fmt.Errorf("webhook.postgres.Save: %w", err)
 	}

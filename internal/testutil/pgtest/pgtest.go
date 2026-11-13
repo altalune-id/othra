@@ -28,7 +28,7 @@ import (
 const (
 	envDSN       = "TEST_PG_DSN"
 	envCI        = "CI"
-	image        = "postgres:17-alpine"
+	image        = "postgres:17.12-alpine"
 	labelOwner   = "id.altalune.othra.pgtest"
 	staleAfter   = 30 * time.Minute
 	schemaPrefix = "pgt_"
