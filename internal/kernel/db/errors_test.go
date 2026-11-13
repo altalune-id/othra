@@ -35,6 +35,12 @@ func TestIsForeignKeyViolation(t *testing.T) {
 	assert.False(t, IsForeignKeyViolation(nil))
 }
 
+func TestIsPolicyViolation(t *testing.T) {
+	assert.True(t, IsPolicyViolation(fmt.Errorf("upsert: %w", &pgconn.PgError{Code: "42501"})))
+	assert.False(t, IsPolicyViolation(&pgconn.PgError{Code: "23505"}))
+	assert.False(t, IsPolicyViolation(nil))
+}
+
 func TestViolatedConstraint(t *testing.T) {
 	name, ok := ViolatedConstraint(fmt.Errorf("insert: %w", &pgconn.PgError{Code: "23505", ConstraintName: "t_api_keys_hint_idx"}))
 	assert.True(t, ok)

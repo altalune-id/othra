@@ -13,6 +13,7 @@ import (
 const (
 	sqlstateUniqueViolation     = "23505"
 	sqlstateForeignKeyViolation = "23503"
+	sqlstatePolicyViolation     = "42501"
 )
 
 // ErrTenantMismatch rejects joining a unit of work scoped to one org from a context scoped to another.
@@ -28,6 +29,9 @@ func IsUniqueViolation(err error) bool { return hasCode(err, sqlstateUniqueViola
 
 // IsForeignKeyViolation reports whether err's tree holds a foreign-key violation.
 func IsForeignKeyViolation(err error) bool { return hasCode(err, sqlstateForeignKeyViolation) }
+
+// IsPolicyViolation reports whether err's tree holds a row-level security refusal (insufficient_privilege).
+func IsPolicyViolation(err error) bool { return hasCode(err, sqlstatePolicyViolation) }
 
 // ViolatedConstraint returns the name of the constraint a database error in err's tree names, if any.
 func ViolatedConstraint(err error) (string, bool) {
