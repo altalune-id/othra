@@ -69,6 +69,23 @@ func TestParseMetadata_ClaudeCode(t *testing.T) {
 	assert.Equal(t, "claude.ai", m.Host())
 }
 
+// claude.ai's real web document: an https redirect on its own host, and a grant Othra doesn't issue, ignored.
+func TestParseMetadata_ClaudeWeb(t *testing.T) {
+	const id = "https://claude.ai/oauth/mcp-oauth-client-metadata"
+	m, err := ParseMetadata(id, []byte(`{"client_id":"`+id+`","client_name":"Claude","client_uri":"https://claude.ai",`+
+		`"redirect_uris":["https://claude.ai/api/mcp/auth_callback"],`+
+		`"grant_types":["authorization_code","refresh_token","urn:ietf:params:oauth:grant-type:jwt-bearer"],`+
+		`"response_types":["code"],"token_endpoint_auth_method":"none"}`))
+	require.NoError(t, err)
+	assert.Equal(t, []string{"https://claude.ai/api/mcp/auth_callback"}, m.RedirectURIs)
+	assert.True(t, m.Refresh)
+}
+
+func TestParseMetadata_LoopbackAndHTTPSTogether(t *testing.T) {
+	_, err := ParseMetadata(claudeURL, []byte(doc(`"client_name":"C","redirect_uris":["http://localhost/cb","https://claude.ai/cb"]`)))
+	require.NoError(t, err)
+}
+
 func TestParseMetadata_Refusals(t *testing.T) {
 	for name, tc := range map[string]struct {
 		doc    string
@@ -82,14 +99,16 @@ func TestParseMetadata_Refusals(t *testing.T) {
 		"blank client_name":   {doc(`"client_name":"  ","redirect_uris":["http://localhost/cb"]`), MetadataClientName},
 		"long client_name":    {doc(`"client_name":"` + strings.Repeat("é", 101) + `","redirect_uris":["http://localhost/cb"]`), MetadataClientName},
 		"no redirect_uris":    {doc(`"client_name":"C"`), MetadataRedirectURIs},
-		"https redirect":      {doc(`"client_name":"C","redirect_uris":["https://app.example/cb"]`), MetadataRedirectURIs},
+		"https other host":    {doc(`"client_name":"C","redirect_uris":["https://app.example/cb"]`), MetadataRedirectURIs},
+		"https subdomain":     {doc(`"client_name":"C","redirect_uris":["https://evil.claude.ai/cb"]`), MetadataRedirectURIs},
+		"http not loopback":   {doc(`"client_name":"C","redirect_uris":["http://claude.ai/cb"]`), MetadataRedirectURIs},
+		"custom scheme":       {doc(`"client_name":"C","redirect_uris":["claude://cb"]`), MetadataRedirectURIs},
+		"duplicate":           {doc(`"client_name":"C","redirect_uris":["https://claude.ai/cb","https://claude.ai/cb"]`), MetadataRedirectURIs},
 		"loopback with port":  {doc(`"client_name":"C","redirect_uris":["http://localhost:8080/cb"]`), MetadataRedirectURIs},
 		"secret basic":        {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"token_endpoint_auth_method":"client_secret_basic"`), MetadataAuthMethod},
 		"private_key_jwt":     {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"token_endpoint_auth_method":"private_key_jwt"`), MetadataAuthMethod},
 		"auth method omitted": {`{"client_id":"` + claudeURL + `","client_name":"C","redirect_uris":["http://localhost/cb"]}`, MetadataAuthMethod},
 		"client_secret":       {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"client_secret":"s"`), MetadataAuthMethod},
-		"implicit grant":      {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"grant_types":["implicit"]`), MetadataGrantTypes},
-		"client_credentials":  {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"grant_types":["client_credentials"]`), MetadataGrantTypes},
 		"token response":      {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"response_types":["token"]`), MetadataGrantTypes},
 		"http client_uri":     {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"client_uri":"http://claude.ai"`), MetadataURI},
 		"http logo_uri":       {doc(`"client_name":"C","redirect_uris":["http://localhost/cb"],"logo_uri":"http://claude.ai/l.png"`), MetadataURI},
