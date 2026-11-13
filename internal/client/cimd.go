@@ -118,12 +118,12 @@ func ParseMetadata(clientID string, body []byte) (*Metadata, error) {
 		return nil, &MetadataError{Reason: MetadataClientID}
 	case name == "" || utf8.RuneCountInString(name) > maxNameLen:
 		return nil, &MetadataError{Reason: MetadataClientName}
-	case redirecturi.ValidateList(redirecturi.Native, d.RedirectURIs, true) != nil:
+	case !validRedirects(clientID, d.RedirectURIs):
 		return nil, &MetadataError{Reason: MetadataRedirectURIs}
 	// NOTE: RFC 7591 §2: an omitted token_endpoint_auth_method is client_secret_basic, which a CIMD client can't use.
 	case d.ClientSecret != nil || d.ClientSecretExpiresAt != nil || d.TokenEndpointAuthMethod != AuthNone:
 		return nil, &MetadataError{Reason: MetadataAuthMethod}
-	case !subset(d.GrantTypes, GrantAuthorizationCode, GrantRefreshToken) || !subset(d.ResponseTypes, "code"):
+	case !subset(d.ResponseTypes, "code"):
 		return nil, &MetadataError{Reason: MetadataGrantTypes}
 	case !optionalHTTPS(d.ClientURI) || !optionalHTTPS(d.LogoURI):
 		return nil, &MetadataError{Reason: MetadataURI}
@@ -132,6 +132,21 @@ func ParseMetadata(clientID string, body []byte) (*Metadata, error) {
 		ClientID: d.ClientID, ClientName: name, ClientURI: d.ClientURI, RedirectURIs: d.RedirectURIs,
 		Refresh: slices.Contains(d.GrantTypes, GrantRefreshToken),
 	}, nil
+}
+
+// SECURITY: an https redirect must be on the client_id's host, so a document can't send codes to another site.
+func validRedirects(clientID string, uris []string) bool {
+	loopback := slices.DeleteFunc(slices.Clone(uris), func(u string) bool { return !strings.HasPrefix(u, "http://") })
+	web := slices.DeleteFunc(slices.Clone(uris), func(u string) bool { return strings.HasPrefix(u, "http://") })
+	if len(uris) == 0 || len(uris) > redirecturi.MaxURIs ||
+		redirecturi.ValidateList(redirecturi.Native, loopback, false) != nil || redirecturi.ValidateList(redirecturi.Web, web, false) != nil {
+		return false
+	}
+	host := (&Metadata{ClientID: clientID}).Host()
+	return !slices.ContainsFunc(web, func(uri string) bool {
+		u, err := url.Parse(uri)
+		return err != nil || u.Scheme != "https" || !strings.EqualFold(u.Hostname(), host)
+	})
 }
 
 func subset(values []string, allowed ...string) bool {
