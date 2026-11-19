@@ -16,6 +16,7 @@
     "antfu-frontend@altalune": true,
     "alt-go@altalune": true,
     "alt-workflow@altalune": true,
-    "alt-oauth@altalune": true
+    "alt-oauth@altalune": true,
+    "alt-mcp@altalune": true
   }
 }
