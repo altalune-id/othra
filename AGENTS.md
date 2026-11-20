@@ -50,10 +50,21 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 
 **Surfaces**
 
+- **No MCP tool manages API keys;** org managers create and revoke them in the console or over Connect.
 - Signed-in surfaces (Connect, MCP, signed-in pages) call the `controlplane` handlers, never a service directly.
 - Every RPC has an entry in the permission table (`internal/permission`) and protovalidate rules in its proto.
 - Only pre-sign-in pages (login, install, invite landing, legal) are templ pages. Everything signed-in goes in the console.
 - Exception: the hosted end-user pages under `/p/<handle>/` (sign-in, account picker, terms) are templ too, and `/p/<handle>/account/` serves the end-user portal SPA (`ui/portal`).
+
+**Go design**
+
+- **Small interfaces at the consumer:** each domain declares the ports it calls in its own `ports.go`.
+- **Errors are values:** typed `apperror` errors with a code, causes wrapped with `%w`, mapped to HTTP, RPC or MCP once at the edge; never branch on error strings.
+- **Share memory by communicating:** workers, consumers and the outbox pass work over channels or the queue and stop on context cancellation; mutexes for small caches only.
+- **Clear over clever:** explicit wiring in `internal/boot`, plain code in services, no reflection-driven helpers.
+- **A little copying over a little dependency:** check whether a few lines in-house would do before adding a module.
+- **Useful zero values:** unset config fields behave sensibly, or fail validation at load time.
+- **Adding a domain touches about seven places;** this is accepted and is not a one-source-of-truth finding.
 
 **Data**
 
@@ -87,6 +98,7 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
   - Exported symbols get a one-sentence doc.
   - Keep only markers (`TODO`, `NOTE`, `SECURITY`…) or links. No rationale, history or section headers.
   - Never reference untracked files or IDs defined only in them.
+  - `make comment-check` checks Go files only; other file types follow `alt-go:alt-comment-discipline` by review.
 - Generated code (`gen/`, `*_templ.go`, `ui/base/gen/`) is never edited by hand.
 
 **Versions**
@@ -99,21 +111,25 @@ Fix the cause of a failing gate. Never skip a hook (`--no-verify`) or weaken a l
 
 - Conventional Commits, one line (`feat(scope): …`), template in `.gitmessage.txt`.
 - Every commit is signed (GPG or SSH). The pre-push hook refuses unsigned commits.
-- No AI attribution anywhere: no `Co-Authored-By` trailers, no "Generated with" lines, in commits, PRs, code or docs.
 - Playwright output stays in `.playwright-mcp/` (git-ignored); delete it after use.
 
 ## Agent skills
 
-Skills in `.agents/skills/` (each linked from `.claude/skills/`) and agents in `.agents/agents/` (each linked from `.claude/agents/`) are committed and carry the same conventions. The linters skip them:
+Shared skills and agents come from the `altalune` Claude Code plugin marketplace (`altalune-id/agent-plugins`), enabled in `.claude/settings.json`. Codex and opencode users run that repo's `install.sh`.
 
-- `othra-go-convention`: build a change the Othra way.
+- `go:go`, `alt-go:alt-go-concurrency`, `alt-go:alt-go-proverb`, `alt-go:alt-comment-discipline`: Go and comment style.
+- `cobra-viper:cobra-viper`, `go-release:go-release`, `go-spec-reviewer:go-spec-reviewer`: CLI and config, releases, spec review.
+- `antfu-frontend:vue`, `antfu-frontend:pinia`, `antfu-frontend:vite`, `antfu-frontend:vitest`, `antfu-frontend:nuxt`: the console and the UI toolchain.
+- `daisyui:daisyui`: daisyUI 5 classes, colors and themes for the console and the sign-in pages.
+- Agent `alt-workflow:alt-go-reviewer`: an independent, read-only Go review or repo scorecard.
+- Agent `alt-oauth:alt-oauth-reviewer`: an independent, read-only OAuth / OIDC review.
+
+Othra's own skills live in `.agents/skills/` (each linked from `.claude/skills/`) and its agents in `.agents/agents/` (each linked from `.claude/agents/`). They carry the same conventions; the linters skip them:
+
+- `othra-go-convention`: build a change the Othra way, including the UI conventions.
 - `othra-go-review`: review a change; it runs the gates.
-- `go`, `go-concurrency`, `go-proverb`, `comment-discipline`: Go and comment style.
-- `vue`, `pinia`, `vite`, `vitest`, `nuxt`, `eslint-config`: the console and the UI toolchain.
-- `daisyui`: daisyUI 5 classes, colors and themes for the console and the sign-in pages.
-- `cobra-viper`, `go-release`, `go-spec-reviewer`: CLI and config, releases, spec review.
+- `eslint-config`: the ESLint setup and the JS/TS style it enforces.
 - `oauth-spec-checklist`: OAuth 2.1, OIDC, RFC 9700 and MCP authorization dimensions with a scoring rubric and an RFC section index.
 - Agent `oauth-reviewer`: an independent, read-only OAuth / OIDC conformance review against the Othra profile; it loads `oauth-spec-checklist`.
-- Agent `go-expert-reviewer`: an independent, read-only scorecard of a Go repo (idioms, packaging and cycles, architecture, production readiness); it loads `go` and `go-proverb`.
 
-A new skill or agent goes in `.agents/{skills,agents}/<name>` with a `.claude/{skills,agents}/<name>` link, in the same commit.
+A new repo skill or agent goes in `.agents/{skills,agents}/<name>` with a `.claude/{skills,agents}/<name>` link, in the same commit.
